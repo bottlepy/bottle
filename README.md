@@ -40,24 +40,23 @@ Features
 Example
 -------
 
-    from bottle import route, run
+    from bottle import route, run, request, response
 
     @route('/')
-    def hello_world(request):
+    def hello_world():
         return 'Hello World!'
 
     @route('/hello/:name')
-    def hello_name(request, name):
+    def hello_name(name):
         return 'Hello %s!' % name
 
     @route('/hello', method='POST')
-    def hello_post(request):
+    def hello_post():
         return 'Hello %s!' % request.POST['name']
 
     @route('/static/:filename#.*#')
-    def static_file(request, filename):
-        # On failure, this automatically raises NotFoundError or AccessError
-        raise SendFile(filename, root='/path/to/static/files/')
+    def static_file(filename):
+        response.send_file(filename, root='/path/to/static/files/')
 
     run(host='localhost', port=8080)
     
