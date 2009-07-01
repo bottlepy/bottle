@@ -596,10 +596,3 @@ def error404(exception):
 
 request = Request()
 response = Response()
-
-
-
-
-
-
-# len(__file__) == 600  :D
