@@ -5,11 +5,17 @@ Bottle Web Framework
 full-stack framework with a ton of features, but a useful mirco-framework for
 small web-applications that stays out of your way.
 
+
+
 Dependencies
 ------------
 
-`bottle.py` only depends on stdlib and is tested with python 2.5 and 2.6.
- 
+`bottle.py` only depends on the Python Standard Library.
+If you want to use a HTTP server other than wsgiref.simple_server you may need
+cherrypy, flup or paste (your choice)
+
+
+
 Features
 --------
 
@@ -37,10 +43,12 @@ Features
     * A specific Caching-facility (beaker, memcache)
     * But you may use all of these if you want to.
 
+
+
 Example
 -------
 
-    from bottle import route, run, request, response
+    from bottle import route, run, request, response, send_file, abort
 
     @route('/')
     def hello_world():
@@ -52,13 +60,37 @@ Example
 
     @route('/hello', method='POST')
     def hello_post():
-        return 'Hello %s!' % request.POST['name']
+        name = request.POST['name']
+        return 'Hello %s!' % name
 
     @route('/static/:filename#.*#')
     def static_file(filename):
-        response.send_file(filename, root='/path/to/static/files/')
+        send_file(filename, root='/path/to/static/files/')
 
     run(host='localhost', port=8080)
-    
 
+
+
+Licence (MIT)
+-------------
+
+    Copyright (c) 2009, Marcel Hellkamp.
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in
+    all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+    THE SOFTWARE.
 

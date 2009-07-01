@@ -1,5 +1,6 @@
 """
-bottle.py is a one-file micro web framework inspired by itty.py (Daniel Lindsley)
+bottle.py is a one-file micro web framework.
+Inspired by itty.py (Daniel Lindsley)
 
 Licence (MIT)
 -------------
@@ -28,20 +29,24 @@ Licence (MIT)
 Example
 -------
 
-    from bottle import route, run, request, response
+    from bottle import route, run, request, response, send_file, abort
 
     @route('/')
-    def index():
+    def hello_world():
         return 'Hello World!'
 
     @route('/hello/:name')
-    def say(name):
+    def hello_name(name):
         return 'Hello %s!' % name
 
     @route('/hello', method='POST')
-    def say():
+    def hello_post():
         name = request.POST['name']
         return 'Hello %s!' % name
+
+    @route('/static/:filename#.*#')
+    def static_file(filename):
+        send_file(filename, root='/path/to/static/files/')
 
     run(host='localhost', port=8080)
 
