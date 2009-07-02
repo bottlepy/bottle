@@ -430,14 +430,17 @@ def WSGIHandler(environ, start_response):
         if response.status == 500:
             request._environ['wsgi.errors'].write("Error (500) on '%s': %s\n" % (request.path, exception))
 
-    if hasattr(output, 'read'):
-        if 'wsgi.file_wrapper' in environ:
-            output = environ['wsgi.file_wrapper'](output)
-        else:
-            output =  iter(lambda: output.read(8192), '')
 
-    if hasattr(output, '__len__') and 'Content-Length' not in response.header:
-        response.header['Content-Length'] = len(output)
+    if hasattr(output, 'fileno') and 'Content-Length' not in response.header:
+        size = os.fstat(output.fileno()).st_size
+        response.header['Content-Length'] = size
+
+    if hasattr(output, 'read'):
+        fileoutput = output
+        if 'wsgi.file_wrapper' in environ:
+            output = environ['wsgi.file_wrapper'](fileoutput)
+        else:
+            output = iter(lambda: fileoutput.read(8192), '')
 
     for c in response.COOKIES.values():
       response.header.add('Set-Cookie', c.OutputString())
