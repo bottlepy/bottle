@@ -227,7 +227,7 @@ class Request(threading.local):
     def GET(self):
         """Returns a dict with GET parameters."""
         if self._GET is None:
-            raw_dict = parse_qs(self.query, keep_blank_values=1)
+            raw_dict = parse_qs(self.query_string, keep_blank_values=1)
             self._GET = {}
             for key, value in raw_dict.items():
                 if len(value) == 1:
