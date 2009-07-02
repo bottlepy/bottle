@@ -492,7 +492,9 @@ class FlupServer(ServerAdapter):
 class PasteServer(ServerAdapter):
     def run(self, handler):
         from paste import httpserver
-        httpserver.serve(handler, host=self.host, port=str(self.port))
+        from paste.translogger import TransLogger
+        app = TransLogger(handler)
+        httpserver.serve(app, host=self.host, port=str(self.port))
 
 
 def run(server=WSGIRefServer, host='127.0.0.1', port=8080, **kargs):
