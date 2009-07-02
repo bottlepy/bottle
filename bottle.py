@@ -64,6 +64,7 @@ import re
 import random
 import Cookie
 import threading
+import time
 try:
     from urlparse import parse_qs
 except ImportError:
@@ -430,11 +431,6 @@ def WSGIHandler(environ, start_response):
         if response.status == 500:
             request._environ['wsgi.errors'].write("Error (500) on '%s': %s\n" % (request.path, exception))
 
-
-    if hasattr(output, 'fileno') and 'Content-Length' not in response.header:
-        size = os.fstat(output.fileno()).st_size
-        response.header['Content-Length'] = size
-
     if hasattr(output, 'read'):
         fileoutput = output
         if 'wsgi.file_wrapper' in environ:
@@ -565,7 +561,14 @@ def send_file(filename, root, guessmime = True, mimetype = 'text/plain'):
     elif mimetype:
         response.content_type = mimetype
 
-    # TODO: Add Last-Modified header (Wed, 15 Nov 1995 04:58:08 GMT)
+    stats = os.stat(filename)
+    if 'Content-Length' not in response.header:
+        response.header['Content-Length'] = stats.st_size
+    if 'Last-Modified' not in response.header:
+        ts = time.gmtime(stats.st_mtime)
+        ts = time.strftime("%a, %d %b %Y %H:%M:%S +0000", ts)
+        response.header['Last-Modified'] = ts
+
     raise BreakTheBottle(open(filename, 'r'))
 
 
