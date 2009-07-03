@@ -72,7 +72,7 @@ except ImportError:
 
 
 DEBUG = False
-OPTIMIZER = True
+OPTIMIZER = False
 ROUTES_SIMPLE = {}
 ROUTES_REGEXP = {}
 ERROR_HANDLER = {}
@@ -493,13 +493,15 @@ class PasteServer(ServerAdapter):
         httpserver.serve(app, host=self.host, port=str(self.port))
 
 
-def run(server=WSGIRefServer, host='127.0.0.1', port=8080, **kargs):
+def run(server=WSGIRefServer, host='127.0.0.1', port=8080, optinmize = False, **kargs):
     """ Runs bottle as a web server, using Python's built-in wsgiref implementation by default.
     
     You may choose between WSGIRefServer, CherryPyServer, FlupServer and
     PasteServer or write your own server adapter.
     """
-
+    global OPTIMIZER
+    
+    OPTIMIZER = bool(optinmize)
     quiet = bool('quiet' in kargs and kargs['quiet'])
 
     # Instanciate server, if it is a class instead of an instance
@@ -562,6 +564,7 @@ def send_file(filename, root, guessmime = True, mimetype = 'text/plain'):
         response.content_type = mimetype
 
     stats = os.stat(filename)
+    # TODO: HTTP_IF_MODIFIED_SINCE -> 304 (Thu, 02 Jul 2009 23:16:31 CEST)
     if 'Content-Length' not in response.header:
         response.header['Content-Length'] = stats.st_size
     if 'Last-Modified' not in response.header:
