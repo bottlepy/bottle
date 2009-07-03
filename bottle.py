@@ -53,13 +53,15 @@ Example
 """
 
 __author__ = 'Marcel Hellkamp'
-__version__ = ('0', '3', '4')
+__version__ = ('0', '3', '5')
 __license__ = 'MIT'
 
 
 import cgi
 import mimetypes
 import os
+import sys
+import traceback
 import re
 import random
 import Cookie
@@ -243,13 +245,13 @@ class Request(threading.local):
         if self._POST is None:
             raw_data = cgi.FieldStorage(fp=self._environ['wsgi.input'], environ=self._environ)
             self._POST = {}
-            for key, value in raw_data:
-                if value.filename:
-                    self._POST[key] = value
-                elif isinstance(value, list):
-                    self._POST[key] = [v.value for v in value]
+            for key in raw_data:
+                if raw_data[key].filename:
+                    self._POST[key] = raw_data[key]
+                elif isinstance(raw_data[key], list):
+                    self._POST[key] = [v.value for v in raw_data[key]]
                 else:
-                    self._POST[key] = value.value
+                    self._POST[key] = raw_data[key].value
         return self._POST
 
     @property
@@ -585,7 +587,7 @@ def send_file(filename, root, guessmime = True, mimetype = 'text/plain'):
 def error500(exception):
     """If an exception is thrown, deal with it and present an error page."""
     if DEBUG:
-        return str(exception)
+        return "<br>\n".join(traceback.format_exc(10).splitlines()).replace('  ','&nbsp;&nbsp;')
     else:
         return """<b>Error:</b> Internal server error."""
 
