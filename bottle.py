@@ -589,13 +589,17 @@ def error500(exception):
     else:
         return """<b>Error:</b> Internal server error."""
 
+@error(401)
 @error(404)
-def error404(exception):
+def error_http(exception):
+    status = response.status
+    name = HTTP_CODES.get(status,'Unknown').title()
+    url = request.path
     """If an exception is thrown, deal with it and present an error page."""
     yield '<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">'
-    yield '<html><head><title>Error 404: Not found</title>'
-    yield '</head><body><h1>Error 404: Not found</h1>'
-    yield '<p>The requested URL %s was not found on this server.</p>' % request.path
+    yield '<html><head><title>Error %d: %s</title>' % (status, name)
+    yield '</head><body><h1>Error %d: %s</h1>' % (status, name)
+    yield '<p>Sorry, the requested URL %s caused an error.</p>' % url
     yield '</body></html>'
 
 
