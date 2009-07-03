@@ -494,6 +494,20 @@ class PasteServer(ServerAdapter):
         app = TransLogger(handler)
         httpserver.serve(app, host=self.host, port=str(self.port))
 
+class FapwsServer(ServerAdapter):
+    """ Extreamly fast Webserver using libev (see http://william-os4y.livejournal.com/)
+        Experimental ... """
+    def run(self, handler):
+        import fapws._evwsgi as evwsgi
+        from fapws import base
+        import sys
+        evwsgi.start(self.host, self.port)
+        evwsgi.set_base_module(base)
+        def app(environ, start_response):
+            environ['wsgi.multiprocess'] = False
+            return handler(environ, start_response)
+        evwsgi.wsgi_cb(('',app))
+        evwsgi.run()
 
 def run(server=WSGIRefServer, host='127.0.0.1', port=8080, optinmize = False, **kargs):
     """ Runs bottle as a web server, using Python's built-in wsgiref implementation by default.
