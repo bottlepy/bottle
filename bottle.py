@@ -595,6 +595,40 @@ def send_file(filename, root, guessmime = True, mimetype = 'text/plain'):
 
 
 
+# Decorator
+
+def validate(**vkargs):
+    ''' Validates and manipulates keyword arguments by user defined callables 
+    and handles ValueError and missing arguments by raising HTTPError(400)
+    
+    Examples:
+    @validate(id=int, x=float, y=float)
+        def move(id, x, y):
+            assert isinstance(id, list)
+            assert isinstance(x, float)
+    
+    @validate(cvs=lambda x: map(int, x.strip().split(',')))
+        def add_list(cvs):
+            assert isinstance(cvs, list)
+    '''
+    def decorator(func):
+        def wrapper(**kargs):
+            for key in vkargs:
+                if key not in kargs:
+                    abort(400, 'Missing parameter: %s' % key)
+                try:
+                    kargs[key] = vkargs[key](kargs[key])
+                except ValueError, e:
+                    abort(400, 'Wrong parameter format for: %s' % key)
+            return func(**kargs)
+        return wrapper
+    return decorator
+
+
+
+
+
+
 # Default error handler
 
 @error(500)
@@ -605,6 +639,7 @@ def error500(exception):
     else:
         return """<b>Error:</b> Internal server error."""
 
+@error(400)
 @error(401)
 @error(404)
 def error_http(exception):
@@ -616,6 +651,8 @@ def error_http(exception):
     yield '<html><head><title>Error %d: %s</title>' % (status, name)
     yield '</head><body><h1>Error %d: %s</h1>' % (status, name)
     yield '<p>Sorry, the requested URL %s caused an error.</p>' % url
+    if hasattr(exception, 'output'):
+      yield exception.output
     yield '</body></html>'
 
 

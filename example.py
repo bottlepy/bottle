@@ -1,4 +1,4 @@
-from bottle import route, run, request, response, send_file, abort
+from bottle import route, run, request, response, send_file, abort, validate
 
 # Lets start with "Hello World!"
 # Point your Browser to 'http://localhost:8080/' and greet the world :D
@@ -59,5 +59,12 @@ def private():
     if request.GET.get('password','') != 'secret':
         abort(401, 'Go away!')
     return "Welcome!"
+
+# Validating URL Parameter
+@route('/validate/:i/:f/:csv')
+@validate(i=int, f=float, csv=lambda x: map(int, x.strip().split(',')))
+def validate_test(i, f, csv):
+    return "Int: %d, Float:%f, List:%s" % (i, f, repr(csv))
+
 
 run(host='localhost', port=8080) 
