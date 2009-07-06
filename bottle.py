@@ -53,7 +53,7 @@ Example
 """
 
 __author__ = 'Marcel Hellkamp'
-__version__ = ('0', '4', '0')
+__version__ = ('0', '4', '1')
 __license__ = 'MIT'
 
 
@@ -148,14 +148,14 @@ def WSGIHandler(environ, start_response):
             output = environ['wsgi.file_wrapper'](fileoutput)
         else:
             output = iter(lambda: fileoutput.read(8192), '')
+    elif isinstance(output, str):
+        output = [output]
 
     for c in response.COOKIES.values():
-      response.header.add('Set-Cookie', c.OutputString())
+        response.header.add('Set-Cookie', c.OutputString())
 
     status = '%d %s' % (response.status, HTTP_CODES[response.status])
     start_response(status, list(response.header.items()))
-    if isinstance(output, str):
-      output = [output]
     return output
 
 
