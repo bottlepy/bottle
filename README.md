@@ -25,11 +25,11 @@ Features
     * Input: `request.GET['parameter']` or `request.POST['form-field']`
     * HTTP header: `response.header['Content-Type'] = 'text/html'`
     * Cookie Management: `response.COOKIES['session'] = 'new_key'`
-    * Static files: `send_file('movie.fli', '/downloads/')` with automatic mime-type guessing
+    * Static files: `send_file('movie.flv', '/downloads/')` with automatic mime-type guessing
     * Errors: Throw HTTP errors using `abort(404, 'Not here')` or subclass `HTTPError` and use custom error handlers
   * Templates: Integrated template language
-    * Plain simple: Execute python code with '%...' or use the inline syntax `{{...}}` for one-line expressions
-    * No IndentationErrors: Blocks are closed by `%end`. Indentation is ignorable.
+    * Plain simple: Execute python code with `%...` or use the inline syntax `{{...}}` for one-line expressions
+    * No IndentationErrors: Blocks are closed by `%end`. Indentation is optional.
     * Extremely fast: Parses and renders templates 5 to 10 times faster than [mako][]
     * Support for [Mako-Templates][mako] (requires [mako][])
   * HTTP Server: Build in WSGI/HTTP Gateway server (for development and production mode)
