@@ -154,6 +154,8 @@ def WSGIHandler(environ, start_response):
 
     status = '%d %s' % (response.status, HTTP_CODES[response.status])
     start_response(status, list(response.header.items()))
+    if isinstance(output, str):
+      output = [output]
     return output
 
 
@@ -571,13 +573,29 @@ def run(server=WSGIRefServer, host='127.0.0.1', port=8080, optinmize = False, **
 # Templates
 
 class BaseTemplate(object):
+  pass
+
+
+class MakoTemplate(BaseTemplate):
     def __init__(self, template):
-        self.code = self.compile(template)
-        self.co = compile(self.code, '<string>', 'exec')
+        from mako.template import Template
+        self.tpl = Template(template)
+
+    def render(self, **args):
+        eval(self.co, {}, args)
+        return self.tpl.render(**args)
         
-    def compile(self, template):
-        ''' Compiles a template provided as file object or list of lines into a python script '''
-        pass
+        
+class SimpleTemplate(BaseTemplate):
+
+    re_block = re.compile(r'^\s*%\s*((if|elif|else|try|except|finally|for|while|with).*:)\s*$')
+    re_end   = re.compile(r'^\s*%\s*end(.*?)\s*$')
+    re_code  = re.compile(r'^\s*%\s*(.*?)\s*$')
+    re_inc   = re.compile(r'\{\{(.*?)\}\}')
+
+    def __init__(self, template):
+        self.code = "\n".join(self.compile(template))
+        self.co = compile(self.code, '<string>', 'exec')
 
     def render(self, **args):
         ''' Returns the rendered template using keyword arguments as local variables. '''
@@ -586,18 +604,7 @@ class BaseTemplate(object):
         eval(self.co, {}, args)
         return ''.join(args['stdout'])
 
-
-class SimpleTemplate(BaseTemplate):
-
-    re_block = re.compile(r'^\s*%\s*((if|elif|else|try|except|finally|for|while|with).*:)\s*$')
-    re_end   = re.compile(r'^\s*%\s*end(.*?)\s*$')
-    re_code  = re.compile(r'^\s*%\s*(.*?)\s*$')
-    re_inc   = re.compile(r'\{\{(.*?)\}\}')
-
     def compile(self, template):
-        return "\n".join(self._compile(template))
-        
-    def _compile(self, template):
         def code_str(level, line, value):
             value = "".join(value)
             value = value.replace("'","\'").replace('\\','\\\\')
@@ -662,6 +669,7 @@ def render_template(name, **args):
     ''' Returns a string from a template '''
     if name not in TEMPLATES:
         TEMPLATES[name] = TEMPLATE_GENERATOR(name)
+        print 'rendering'
     
     args['subtemplate'] = render_template
     return TEMPLATES[name].render(**args)

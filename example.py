@@ -68,7 +68,7 @@ def validate_test(i, f, csv):
 
 # Templates
 @route('/template')
-def validate_test():
+def template_test():
     items = ['Bottle is nice!', 2, 0.09]
     render('example', items=items)
 
