@@ -1,4 +1,4 @@
-from bottle import route, run, request, response, send_file, abort, validate
+from bottle import route, run, request, response, send_file, abort, validate, render
 
 # Lets start with "Hello World!"
 # Point your Browser to 'http://localhost:8080/' and greet the world :D
@@ -66,5 +66,12 @@ def private():
 def validate_test(i, f, csv):
     return "Int: %d, Float:%f, List:%s" % (i, f, repr(csv))
 
+# Templates
+@route('/template')
+def validate_test():
+    items = ['Bottle is nice!', 2, 0.09]
+    render('example', items=items)
 
+import bottle
+bottle.DEBUG = True
 run(host='localhost', port=8080) 

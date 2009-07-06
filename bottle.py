@@ -53,7 +53,7 @@ Example
 """
 
 __author__ = 'Marcel Hellkamp'
-__version__ = ('0', '3', '7')
+__version__ = ('0', '4', '0')
 __license__ = 'MIT'
 
 
@@ -71,56 +71,6 @@ try:
     from urlparse import parse_qs
 except ImportError:
     from cgi import parse_qs
-
-
-DEBUG = False
-OPTIMIZER = False
-ROUTES_SIMPLE = {}
-ROUTES_REGEXP = {}
-ERROR_HANDLER = {}
-HTTP_CODES = {
-    100: 'CONTINUE',
-    101: 'SWITCHING PROTOCOLS',
-    200: 'OK',
-    201: 'CREATED',
-    202: 'ACCEPTED',
-    203: 'NON-AUTHORITATIVE INFORMATION',
-    204: 'NO CONTENT',
-    205: 'RESET CONTENT',
-    206: 'PARTIAL CONTENT',
-    300: 'MULTIPLE CHOICES',
-    301: 'MOVED PERMANENTLY',
-    302: 'FOUND',
-    303: 'SEE OTHER',
-    304: 'NOT MODIFIED',
-    305: 'USE PROXY',
-    306: 'RESERVED',
-    307: 'TEMPORARY REDIRECT',
-    400: 'BAD REQUEST',
-    401: 'UNAUTHORIZED',
-    402: 'PAYMENT REQUIRED',
-    403: 'FORBIDDEN',
-    404: 'NOT FOUND',
-    405: 'METHOD NOT ALLOWED',
-    406: 'NOT ACCEPTABLE',
-    407: 'PROXY AUTHENTICATION REQUIRED',
-    408: 'REQUEST TIMEOUT',
-    409: 'CONFLICT',
-    410: 'GONE',
-    411: 'LENGTH REQUIRED',
-    412: 'PRECONDITION FAILED',
-    413: 'REQUEST ENTITY TOO LARGE',
-    414: 'REQUEST-URI TOO LONG',
-    415: 'UNSUPPORTED MEDIA TYPE',
-    416: 'REQUESTED RANGE NOT SATISFIABLE',
-    417: 'EXPECTATION FAILED',
-    500: 'INTERNAL SERVER ERROR',
-    501: 'NOT IMPLEMENTED',
-    502: 'BAD GATEWAY',
-    503: 'SERVICE UNAVAILABLE',
-    504: 'GATEWAY TIMEOUT',
-    505: 'HTTP VERSION NOT SUPPORTED',
-}
 
 
 
@@ -153,45 +103,58 @@ class BreakTheBottle(BottleException):
         self.output = output
 
 
+class TemplateError(BottleException):
+    """ Thrown by template engines during compilation of templates """
+    pass
 
 
 
 
-# Classes
 
-class HeaderDict(dict):
-    ''' A dictionary with case insensitive (titled) keys.
-    
-    You may add a list of strings to send multible headers with the same name.'''
-    def __setitem__(self, key, value):
-        return dict.__setitem__(self,key.title(), value)
-    def __getitem__(self, key):
-        return dict.__getitem__(self,key.title())
-    def __delitem__(self, key):
-        return dict.__delitem__(self,key.title())
-    def __contains__(self, key):
-        return dict.__contains__(self,key.title())
 
-    def items(self):
-        """ Returns a list of (key, value) tuples """
-        for key, values in dict.items(self):
-            if not isinstance(values, list):
-                values = [values]
-            for value in values:
-                yield (key, str(value))
-                
-    def add(self, key, value):
-        """ Adds a new header without deleting old ones """
-        if isinstance(value, list):
-            for v in value:
-                self.add(key, v)
-        elif key in self:
-            if isinstance(self[key], list):
-                self[key].append(value)
-            else:
-                self[key] = [self[key], value]
+# WSGI abstraction: Request and response management
+
+def WSGIHandler(environ, start_response):
+    """The bottle WSGI-handler."""
+    global request
+    global response
+    request.bind(environ)
+    response.bind()
+    try:
+        handler, args = match_url(request.path, request.method)
+        output = handler(**args)
+    except BreakTheBottle, shard:
+        output = shard.output
+    except Exception, exception:
+        response.status = getattr(exception, 'http_status', 500)
+        errorhandler = ERROR_HANDLER.get(response.status, None)
+        if errorhandler:
+            try:
+                output = errorhandler(exception)
+            except:
+                output = "Exception within error handler! Application stopped."
         else:
-          self[key] = [value]
+            if DEBUG:
+                output = "Exception %s: %s" % (exception.__class__.__name__, str(exception))
+            else:
+                output = "Unhandled exception: Application stopped."
+
+        if response.status == 500:
+            request._environ['wsgi.errors'].write("Error (500) on '%s': %s\n" % (request.path, exception))
+
+    if hasattr(output, 'read'):
+        fileoutput = output
+        if 'wsgi.file_wrapper' in environ:
+            output = environ['wsgi.file_wrapper'](fileoutput)
+        else:
+            output = iter(lambda: fileoutput.read(8192), '')
+
+    for c in response.COOKIES.values():
+      response.header.add('Set-Cookie', c.OutputString())
+
+    status = '%d %s' % (response.status, HTTP_CODES[response.status])
+    start_response(status, list(response.header.items()))
+    return output
 
 
 class Request(threading.local):
@@ -306,6 +269,87 @@ class Response(threading.local):
     content_type = property(get_content_type, set_content_type, None, get_content_type.__doc__)
 
 
+class HeaderDict(dict):
+    ''' A dictionary with case insensitive (titled) keys.
+    
+    You may add a list of strings to send multible headers with the same name.'''
+    def __setitem__(self, key, value):
+        return dict.__setitem__(self,key.title(), value)
+    def __getitem__(self, key):
+        return dict.__getitem__(self,key.title())
+    def __delitem__(self, key):
+        return dict.__delitem__(self,key.title())
+    def __contains__(self, key):
+        return dict.__contains__(self,key.title())
+
+    def items(self):
+        """ Returns a list of (key, value) tuples """
+        for key, values in dict.items(self):
+            if not isinstance(values, list):
+                values = [values]
+            for value in values:
+                yield (key, str(value))
+                
+    def add(self, key, value):
+        """ Adds a new header without deleting old ones """
+        if isinstance(value, list):
+            for v in value:
+                self.add(key, v)
+        elif key in self:
+            if isinstance(self[key], list):
+                self[key].append(value)
+            else:
+                self[key] = [self[key], value]
+        else:
+          self[key] = [value]
+
+
+def abort(code=500, text='Unknown Error: Appliction stopped.'):
+    """ Aborts execution and causes a HTTP error. """
+    raise HTTPError(code, text)
+
+
+def redirect(url, code=307):
+    """ Aborts execution and causes a 307 redirect """
+    response.status = code
+    response.header['Location'] = url
+    raise BreakTheBottle("")
+
+
+def send_file(filename, root, guessmime = True, mimetype = 'text/plain'):
+    """ Aborts execution and sends a static files as response. """
+    root = os.path.abspath(root) + '/'
+    filename = os.path.normpath(filename).strip('/')
+    filename = os.path.join(root, filename)
+    
+    if not filename.startswith(root):
+        abort(401, "Access denied.")
+    if not os.path.exists(filename) or not os.path.isfile(filename):
+        abort(404, "File does not exist.")
+    if not os.access(filename, os.R_OK):
+        abort(401, "You do not have permission to access this file.")
+
+    if guessmime:
+        guess = mimetypes.guess_type(filename)[0]
+        if guess:
+            response.content_type = guess
+        elif mimetype:
+            response.content_type = mimetype
+    elif mimetype:
+        response.content_type = mimetype
+
+    stats = os.stat(filename)
+    # TODO: HTTP_IF_MODIFIED_SINCE -> 304 (Thu, 02 Jul 2009 23:16:31 CEST)
+    if 'Content-Length' not in response.header:
+        response.header['Content-Length'] = stats.st_size
+    if 'Last-Modified' not in response.header:
+        ts = time.gmtime(stats.st_mtime)
+        ts = time.strftime("%a, %d %b %Y %H:%M:%S +0000", ts)
+        response.header['Last-Modified'] = ts
+
+    raise BreakTheBottle(open(filename, 'r'))
+
+
 
 
 
@@ -379,6 +423,34 @@ def route(url, **kargs):
     return wrapper
 
 
+def validate(**vkargs):
+    ''' Validates and manipulates keyword arguments by user defined callables 
+    and handles ValueError and missing arguments by raising HTTPError(400)
+    
+    Examples:
+    @validate(id=int, x=float, y=float)
+        def move(id, x, y):
+            assert isinstance(id, list)
+            assert isinstance(x, float)
+    
+    @validate(cvs=lambda x: map(int, x.strip().split(',')))
+        def add_list(cvs):
+            assert isinstance(cvs, list)
+    '''
+    def decorator(func):
+        def wrapper(**kargs):
+            for key in vkargs:
+                if key not in kargs:
+                    abort(400, 'Missing parameter: %s' % key)
+                try:
+                    kargs[key] = vkargs[key](kargs[key])
+                except ValueError, e:
+                    abort(400, 'Wrong parameter format for: %s' % key)
+            return func(**kargs)
+        return wrapper
+    return decorator
+
+
 
 
 
@@ -397,55 +469,6 @@ def error(code=500):
         set_error_handler(code, handler)
         return handler
     return wrapper
-
-
-
-
-
-
-# Actual WSGI Stuff
-
-def WSGIHandler(environ, start_response):
-    """The bottle WSGI-handler."""
-    global request
-    global response
-    request.bind(environ)
-    response.bind()
-    try:
-        handler, args = match_url(request.path, request.method)
-        output = handler(**args)
-    except BreakTheBottle, shard:
-        output = shard.output
-    except Exception, exception:
-        response.status = getattr(exception, 'http_status', 500)
-        errorhandler = ERROR_HANDLER.get(response.status, None)
-        if errorhandler:
-            try:
-                output = errorhandler(exception)
-            except:
-                output = "Exception within error handler! Application stopped."
-        else:
-            if DEBUG:
-                output = "Exception %s: %s" % (exception.__class__.__name__, str(exception))
-            else:
-                output = "Unhandled exception: Application stopped."
-
-        if response.status == 500:
-            request._environ['wsgi.errors'].write("Error (500) on '%s': %s\n" % (request.path, exception))
-
-    if hasattr(output, 'read'):
-        fileoutput = output
-        if 'wsgi.file_wrapper' in environ:
-            output = environ['wsgi.file_wrapper'](fileoutput)
-        else:
-            output = iter(lambda: fileoutput.read(8192), '')
-
-    for c in response.COOKIES.values():
-      response.header.add('Set-Cookie', c.OutputString())
-
-    status = '%d %s' % (response.status, HTTP_CODES[response.status])
-    start_response(status, list(response.header.items()))
-    return output
 
 
 
@@ -494,6 +517,7 @@ class PasteServer(ServerAdapter):
         app = TransLogger(handler)
         httpserver.serve(app, host=self.host, port=str(self.port))
 
+
 class FapwsServer(ServerAdapter):
     """ Extreamly fast Webserver using libev (see http://william-os4y.livejournal.com/)
         Experimental ... """
@@ -508,6 +532,7 @@ class FapwsServer(ServerAdapter):
             return handler(environ, start_response)
         evwsgi.wsgi_cb(('',app))
         evwsgi.run()
+
 
 def run(server=WSGIRefServer, host='127.0.0.1', port=8080, optinmize = False, **kargs):
     """ Runs bottle as a web server, using Python's built-in wsgiref implementation by default.
@@ -543,93 +568,169 @@ def run(server=WSGIRefServer, host='127.0.0.1', port=8080, optinmize = False, **
 
 
 
-# Helper
+# Templates
 
-def abort(code=500, text='Unknown Error: Appliction stopped.'):
-    """ Aborts execution and causes a HTTP error. """
-    raise HTTPError(code, text)
+class BaseTemplate(object):
+    def __init__(self, template):
+        self.code = self.compile(template)
+        self.co = compile(self.code, '<string>', 'exec')
+        
+    def compile(self, template):
+        ''' Compiles a template provided as file object or list of lines into a python script '''
+        pass
+
+    def render(self, **args):
+        ''' Returns the rendered template using keyword arguments as local variables. '''
+        args['stdout'] = []
+        args['__builtins__'] = __builtins__
+        eval(self.co, {}, args)
+        return ''.join(args['stdout'])
 
 
-def redirect(url, code=307):
-    """ Aborts execution and causes a 307 redirect """
-    response.status = code
-    response.header['Location'] = url
-    raise BreakTheBottle("")
+class SimpleTemplate(BaseTemplate):
+
+    re_block = re.compile(r'^\s*%\s*((if|elif|else|try|except|finally|for|while|with).*:)\s*$')
+    re_end   = re.compile(r'^\s*%\s*end(.*?)\s*$')
+    re_code  = re.compile(r'^\s*%\s*(.*?)\s*$')
+    re_inc   = re.compile(r'\{\{(.*?)\}\}')
+
+    def compile(self, template):
+        return "\n".join(self._compile(template))
+        
+    def _compile(self, template):
+        def code_str(level, line, value):
+            value = "".join(value)
+            value = value.replace("'","\'").replace('\\','\\\\')
+            return '    '*level + "stdout.append(r'''%s''')" % value
+        def code_print(level, line, value):
+            return '    '*level + "stdout.append(str(%s)) # Line: %d" % (value.strip(), line)
+        def code_raw(level, line, value):
+            return '    '*level + value.strip() + ' # Line: %d' % line
+
+        level = 0
+        ln = 0
+        sbuffer = []
+        for line in template.splitlines(True):
+            ln += 1
+            # Line with block starting code
+            m = self.re_block.match(line)
+            if m:
+                if sbuffer:
+                    yield code_str(level, ln, sbuffer)
+                    sbuffer = []
+                if m.group(2).strip().lower() in ('elif','else','except','finally'):
+                    if level == 0:
+                        raise TemplateError('#Unexpected end of block in line %d' % ln)
+                    level -= 1
+                yield code_raw(level, ln, m.group(1).strip())
+                level += 1
+                continue
+            # Line with % end marker
+            m = self.re_end.match(line)
+            if m:
+                if sbuffer:
+                    yield code_str(level, ln, sbuffer)
+                    sbuffer = []
+                if level == 0:
+                    raise TemplateError('#Unexpected end of block in line %d' % ln)
+                level -= 1
+                continue
+            # Line with % marker
+            m = self.re_code.match(line)
+            if m:
+                yield code_raw(level, ln, m.group(1).strip())
+                continue
+            # Line with inline code
+            lasts = 0
+            for m in self.re_inc.finditer(line):
+                sbuffer.append(line[lasts:m.start(0)])
+                yield code_str(level, ln, sbuffer)
+                sbuffer = []
+                lasts = m.end(0)
+                yield code_print(level, ln, m.group(1))
+            if lasts:
+                sbuffer.append(line[lasts:])
+                continue
+            # Stupid line
+            sbuffer.append(line)
+
+        if sbuffer:
+            yield code_str(level, ln, sbuffer)
 
 
-def send_file(filename, root, guessmime = True, mimetype = 'text/plain'):
-    """ Aborts execution and sends a static files as response. """
-    root = os.path.abspath(root) + '/'
-    filename = os.path.normpath(filename).strip('/')
-    filename = os.path.join(root, filename)
+def render_template(name, **args):
+    ''' Returns a string from a template '''
+    if name not in TEMPLATES:
+        TEMPLATES[name] = TEMPLATE_GENERATOR(name)
     
-    if not filename.startswith(root):
-        abort(401, "Access denied.")
-    if not os.path.exists(filename) or not os.path.isfile(filename):
-        abort(404, "File does not exist.")
-    if not os.access(filename, os.R_OK):
-        abort(401, "You do not have permission to access this file.")
+    args['subtemplate'] = render_template
+    return TEMPLATES[name].render(**args)
 
-    if guessmime:
-        guess = mimetypes.guess_type(filename)[0]
-        if guess:
-            response.content_type = guess
-        elif mimetype:
-            response.content_type = mimetype
-    elif mimetype:
-        response.content_type = mimetype
 
-    stats = os.stat(filename)
-    # TODO: HTTP_IF_MODIFIED_SINCE -> 304 (Thu, 02 Jul 2009 23:16:31 CEST)
-    if 'Content-Length' not in response.header:
-        response.header['Content-Length'] = stats.st_size
-    if 'Last-Modified' not in response.header:
-        ts = time.gmtime(stats.st_mtime)
-        ts = time.strftime("%a, %d %b %Y %H:%M:%S +0000", ts)
-        response.header['Last-Modified'] = ts
-
-    raise BreakTheBottle(open(filename, 'r'))
+def render(template, **args):
+    """ Aborts execution and renders the key arguments into a template """
+    raise BreakTheBottle(render_template(template, **args))
 
 
 
 
 
 
-# Decorator
+# Modul initialization
 
-def validate(**vkargs):
-    ''' Validates and manipulates keyword arguments by user defined callables 
-    and handles ValueError and missing arguments by raising HTTPError(400)
-    
-    Examples:
-    @validate(id=int, x=float, y=float)
-        def move(id, x, y):
-            assert isinstance(id, list)
-            assert isinstance(x, float)
-    
-    @validate(cvs=lambda x: map(int, x.strip().split(',')))
-        def add_list(cvs):
-            assert isinstance(cvs, list)
-    '''
-    def decorator(func):
-        def wrapper(**kargs):
-            for key in vkargs:
-                if key not in kargs:
-                    abort(400, 'Missing parameter: %s' % key)
-                try:
-                    kargs[key] = vkargs[key](kargs[key])
-                except ValueError, e:
-                    abort(400, 'Wrong parameter format for: %s' % key)
-            return func(**kargs)
-        return wrapper
-    return decorator
+request = Request()
+response = Response()
+DEBUG = False
+OPTIMIZER = False
+TEMPLATE_GENERATOR = lambda x: SimpleTemplate(open('./%s.tpl' % x, 'r').read())
+TEMPLATES = {}
+ROUTES_SIMPLE = {}
+ROUTES_REGEXP = {}
+ERROR_HANDLER = {}
+HTTP_CODES = {
+    100: 'CONTINUE',
+    101: 'SWITCHING PROTOCOLS',
+    200: 'OK',
+    201: 'CREATED',
+    202: 'ACCEPTED',
+    203: 'NON-AUTHORITATIVE INFORMATION',
+    204: 'NO CONTENT',
+    205: 'RESET CONTENT',
+    206: 'PARTIAL CONTENT',
+    300: 'MULTIPLE CHOICES',
+    301: 'MOVED PERMANENTLY',
+    302: 'FOUND',
+    303: 'SEE OTHER',
+    304: 'NOT MODIFIED',
+    305: 'USE PROXY',
+    306: 'RESERVED',
+    307: 'TEMPORARY REDIRECT',
+    400: 'BAD REQUEST',
+    401: 'UNAUTHORIZED',
+    402: 'PAYMENT REQUIRED',
+    403: 'FORBIDDEN',
+    404: 'NOT FOUND',
+    405: 'METHOD NOT ALLOWED',
+    406: 'NOT ACCEPTABLE',
+    407: 'PROXY AUTHENTICATION REQUIRED',
+    408: 'REQUEST TIMEOUT',
+    409: 'CONFLICT',
+    410: 'GONE',
+    411: 'LENGTH REQUIRED',
+    412: 'PRECONDITION FAILED',
+    413: 'REQUEST ENTITY TOO LARGE',
+    414: 'REQUEST-URI TOO LONG',
+    415: 'UNSUPPORTED MEDIA TYPE',
+    416: 'REQUESTED RANGE NOT SATISFIABLE',
+    417: 'EXPECTATION FAILED',
+    500: 'INTERNAL SERVER ERROR',
+    501: 'NOT IMPLEMENTED',
+    502: 'BAD GATEWAY',
+    503: 'SERVICE UNAVAILABLE',
+    504: 'GATEWAY TIMEOUT',
+    505: 'HTTP VERSION NOT SUPPORTED',
+}
 
-
-
-
-
-
-# Default error handler
 
 @error(500)
 def error500(exception):
@@ -654,13 +755,3 @@ def error_http(exception):
     if hasattr(exception, 'output'):
       yield exception.output
     yield '</body></html>'
-
-
-
-
-
-
-# Last but not least
-
-request = Request()
-response = Response()
