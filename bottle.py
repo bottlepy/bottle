@@ -53,7 +53,7 @@ Example
 """
 
 __author__ = 'Marcel Hellkamp'
-__version__ = ('0', '4', '2')
+__version__ = (0, 4, 3)
 __license__ = 'MIT'
 
 
@@ -584,8 +584,8 @@ class MakoTemplate(BaseTemplate):
     def render(self, **args):
         eval(self.co, {}, args)
         return self.tpl.render(**args)
-        
-        
+
+
 class SimpleTemplate(BaseTemplate):
 
     re_block = re.compile(r'^\s*%\s*((if|elif|else|try|except|finally|for|while|with).*:)\s*$')
@@ -627,7 +627,7 @@ class SimpleTemplate(BaseTemplate):
                     sbuffer = []
                 if m.group(2).strip().lower() in ('elif','else','except','finally'):
                     if level == 0:
-                        raise TemplateError('#Unexpected end of block in line %d' % ln)
+                        raise TemplateError('Unexpected end of block in line %d' % ln)
                     level -= 1
                 yield code_raw(level, ln, m.group(1).strip())
                 level += 1
@@ -639,7 +639,7 @@ class SimpleTemplate(BaseTemplate):
                     yield code_str(level, ln, sbuffer)
                     sbuffer = []
                 if level == 0:
-                    raise TemplateError('#Unexpected end of block in line %d' % ln)
+                    raise TemplateError('Unexpected end of block in line %d' % ln)
                 level -= 1
                 continue
             # Line with % marker
