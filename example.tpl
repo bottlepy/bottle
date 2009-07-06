@@ -1,10 +1,11 @@
-%header = 'Test Template'
+%message = 'Hello world!'
 <html>
   <head>
-    <title>{{header.title()}}</title>
+    <title>{{title.title()}}</title>
   </head>
   <body>
-    <h1>{{header.title()}}</h1>
+    <h1>{{title.title()}}</h1>
+    <p>{{message}}</p>
     <p>Items in list: {{len(items)}}</p>
     <ul>
     %for item in items:
@@ -13,9 +14,9 @@
         Zahl: {{item}}
       %else:
         %try:
-        Other type: ({{type(item).__name__}}) {{repr(item)}}
+          Other type: ({{type(item).__name__}}) {{repr(item)}}
         %except:
-        Error: Item has no string representation.
+          Error: Item has no string representation.
         %end try-block (yes, you may add comments here)
       %end
       </li>

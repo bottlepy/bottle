@@ -67,11 +67,10 @@ def validate_test(i, f, csv):
     return "Int: %d, Float:%f, List:%s" % (i, f, repr(csv))
 
 # Templates
-@route('/template')
+@route('/template/test')
 def template_test():
-    items = ['Bottle is nice!', 2, 0.09]
-    render('example', items=items)
-
+    return render('example', title='Template Test', items=[1,2,3,'fly'])
+        
 import bottle
 bottle.DEBUG = True
-run(host='localhost', port=8080) 
+run(server=bottle.PasteServer, host='localhost', port=8080) 

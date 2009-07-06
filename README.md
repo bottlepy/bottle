@@ -19,36 +19,43 @@ cherrypy, flup or paste (your choice)
 Features
 --------
 
-  * Handy dictionaries for query-parameter (GET), wsgi.input data (POST) and cookies
-    * Parsing happens on demand. No parsing overhead for dicts you're not using
-  * Cookie- and HTTP-header manipulation with full featured helper-methods or simple dicts. 
-  * A single decorator to bind handler-functions to specific URLs (Routing)
-    * Static routes: `/hello/world` --> `say_hello(request)`
-    * URL parameter: `/object/:id/:action` --> `do_something(request, id, action)`
-      * Parameter validation: `/hello/:name![A-Z][a-z]+!`
-      * Full-featured regular expressions: `/hello/(?P<name>[A-Z][a-z]+)`
-    * Self optimising routes (frequently used routes are tested first)
-  * Exceptions for common HTTP error-codes (NotFoundError, AccessError, ...)
-  * Instant redirects (301 and 307)
-  * Support for static-files using platform-specific high-performance file-transmission facilities, such as the Unix sendfile()
-    * Depends on `wsgi.file_wrapper` provided by your WSGI-Server implementation.
-    * Secure by denying access to files not in the specified directory
-    * Automatic mime-type guessing
-  * Adapter for common WSGI-Server modules
-    * Currently supports wsgiref.simple_server (default), cherrypy, flup and paste. More to come...
-  * Stays out of your way and does not force you to use:
-    * Stiff `/:controller/:action` URL schemes or controller-classes
-    * A specific template-engine (mako, cheetah, genshi, string.Template)
-    * Specific Models or ORMs (SQLAlchemy, Elixir)
-    * A specific Caching-facility (beaker, memcache)
-    * But you may use all of these if you want to.
+  * Request dispatching: Map requests to handler-callables using URL-routes
+    * URL parameters: Use regular expressions `/object/(?P<id>[0-9]+)` or simplified syntax `/object/:id` to extract data out of URLs
+  * WSGI abstraction: Don't worry about cgi and wsgi internals
+    * Input: `request.GET['parameter']` or `request.POST['form-field']`
+    * HTTP header: `response.header['Content-Type'] = 'text/html'`
+    * Cookie Management: `response.COOKIES['session'] = 'new_key'`
+    * Static files: `send_file('movie.fli', '/downloads/')` with automatic mime-type guessing
+    * Errors: Throw HTTP errors using `abort(404, 'Not here')` or subclass `HTTPError` and use custom error handlers
+  * Templates: Integrated template language
+    * Plain simple: Execute python code with '%...' or use the inline syntax `{{...}}` for one-line expressions
+    * No IndentationErrors: Blocks are closed by `%end`. Indentation is ignorable.
+    * Extremely fast: Parses and renders templates 5 to 10 times faster than [mako][]
+    * Support for [Mako-Templates][mako] (requires [mako][])
+  * HTTP Server: Build in WSGI/HTTP Gateway server (for development and production mode)
+    * Currently supports wsgiref.simple_server (default), [cherrypy][], [flup][], [paste][] and [fapws3][]
+  * Speed optimisations:
+    * Sendfile: Support for platform-specific high-performance file-transmission facilities, such as the Unix sendfile()
+      * Depends on `wsgi.file_wrapper` provided by your WSGI-Server implementation.
+    * Self optimising routes: Frequently used routes are tested first (optional)
+    * Fast static routes (single dict lookup)
+  
+Bottle does **not** include:
 
-
+  * Models and ORMs: Choose your own (SQLAlchemy, Elixr)
+  * HTML-Helper, Session, Identification and Authentication: Do it yourself
+  * Scaffolding: No, sorry
+  
+  [mako]: http://www.makotemplates.org/
+  [cherrypy]: http://www.cherrypy.org/
+  [flup]: http://trac.saddi.com/flup
+  [paste]: http://pythonpaste.org/
+  [fapws3]: http://github.com/william-os4y/fapws3
 
 Example
 -------
 
-    from bottle import route, run, request, response, send_file, abort
+    from bottle import route, run, request, response, send_file, abort, render
 
     @route('/')
     def hello_world():
@@ -67,8 +74,59 @@ Example
     def static_file(filename):
         send_file(filename, root='/path/to/static/files/')
 
+    @route('/template/test')
+    def template_test():
+        return render('template_name', title='Template Test', items=[1,2,3,'fly'])
+        
     run(host='localhost', port=8080)
 
+Template example:
+
+    %message = 'Hello world!'
+    <html>
+      <head>
+        <title>{{title.title()}}</title>
+      </head>
+      <body>
+        <h1>{{title.title()}}</h1>
+        <p>{{message}}</p>
+        <p>Items in list: {{len(items)}}</p>
+        <ul>
+        %for item in items:
+          <li>
+          %if isinstance(item, int):
+            Zahl: {{item}}
+          %else:
+            %try:
+              Other type: ({{type(item).__name__}}) {{repr(item)}}
+            %except:
+              Error: Item has no string representation.
+            %end try-block (yes, you may add comments here)
+          %end
+          </li>
+        %end
+        </ul>
+      </body>
+    </html>
+
+
+Benchmark
+---------
+
+Using ApacheBench on my AMD 2800+ (2GB) on `/template/test` (`Bottle 0.4.2` and `run(server=PasteServer)`
+
+    marc@nava:/work/bottle$ ab -c10 -n1000 http://localhost:8080/template/test
+    This is ApacheBench, Version 2.3 <$Revision: 655654 $>
+    ...
+    Server Software:        PasteWSGIServer/0.5
+    ...
+    Concurrency Level:      10
+    Time taken for tests:   2.238 seconds
+    Complete requests:      1000
+    ...
+    Requests per second:    446.83 [#/sec] (mean)
+    Time per request:       22.380 [ms] (mean)
+    Time per request:       2.238 [ms] (mean, across all concurrent requests)
 
 
 Licence (MIT)

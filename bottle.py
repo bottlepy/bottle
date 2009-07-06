@@ -53,7 +53,7 @@ Example
 """
 
 __author__ = 'Marcel Hellkamp'
-__version__ = ('0', '4', '1')
+__version__ = ('0', '4', '2')
 __license__ = 'MIT'
 
 
@@ -665,19 +665,14 @@ class SimpleTemplate(BaseTemplate):
             yield code_str(level, ln, sbuffer)
 
 
-def render_template(name, **args):
+def render(name, **args):
     ''' Returns a string from a template '''
     if name not in TEMPLATES:
         TEMPLATES[name] = TEMPLATE_GENERATOR(name)
         print 'rendering'
     
-    args['subtemplate'] = render_template
+    args['subtemplate'] = render
     return TEMPLATES[name].render(**args)
-
-
-def render(template, **args):
-    """ Aborts execution and renders the key arguments into a template """
-    raise BreakTheBottle(render_template(template, **args))
 
 
 
