@@ -5,8 +5,7 @@ import bottle
 
 setup(name='Bottle',
       version='%d.%d.%d' % bottle.__version__,
-      description='Bottle Web Framework',
-      long_description=open('README.md').read(),
+      description='WSGI micro web framework + templates',
       author='Marcel Hellkamp',
       author_email='marc@gsites.de',
       url='http://github.com/defnull/bottle',
