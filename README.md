@@ -5,7 +5,10 @@ Bottle Web Framework
 full-stack framework with a ton of features, but a useful mirco-framework for
 small web-applications that stays out of your way.
 
+To install, just type `easy_install bottle`. For news, bugs and new releases
+visit my [GitHub repository][www].
 
+  [www]: http://github.com/defnull/bottle
 
 Dependencies
 ------------
