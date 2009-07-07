@@ -363,15 +363,10 @@ def compile_route(route):
     """ Compiles a route string and returns a precompiled RegexObject.
 
     Routes may contain regular expressions with named groups to support url parameters.
-    Example:
-      '/user/(?P<id>[0-9]+)' will match '/user/5' with {'id':'5'}
+    Example: '/user/(?P<id>[0-9]+)' will match '/user/5' with {'id':'5'}
 
     A more human readable syntax is supported too.
-    Example:
-      '/user/:id/:action' will match '/user/5/kiss' with {'id':'5', 'action':'kiss'}
-      Placeholders match everything up to the next slash.
-      '/user/:id#[0-9]+#' will match '/user/5' but not '/user/tim'
-      Instead of "#" you can use any single special char other than "/"
+    Example: '/user/:id/:action' will match '/user/5/kiss' with {'id':'5', 'action':'kiss'}
     """
     route = route.strip().lstrip('$^/ ').rstrip('$^ ')
     route = re.sub(r':([a-zA-Z_]+)(?P<uniq>[^\w/])(?P<re>.+?)(?P=uniq)',r'(?P<\1>\g<re>)',route)
@@ -428,18 +423,7 @@ def route(url, **kargs):
 
 def validate(**vkargs):
     ''' Validates and manipulates keyword arguments by user defined callables 
-    and handles ValueError and missing arguments by raising HTTPError(400)
-    
-    Examples:
-    @validate(id=int, x=float, y=float)
-        def move(id, x, y):
-            assert isinstance(id, list)
-            assert isinstance(x, float)
-    
-    @validate(cvs=lambda x: map(int, x.strip().split(',')))
-        def add_list(cvs):
-            assert isinstance(cvs, list)
-    '''
+    and handles ValueError and missing arguments by raising HTTPError(400) '''
     def decorator(func):
         def wrapper(**kargs):
             for key in vkargs:
