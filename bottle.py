@@ -53,7 +53,7 @@ Example
 """
 
 __author__ = 'Marcel Hellkamp'
-__version__ = (0, 4, 3)
+__version__ = ('0', '4', '3')
 __license__ = 'MIT'
 
 
@@ -573,7 +573,7 @@ def run(server=WSGIRefServer, host='127.0.0.1', port=8080, optinmize = False, **
 # Templates
 
 class BaseTemplate(object):
-  pass
+    pass
 
 
 class MakoTemplate(BaseTemplate):
@@ -665,14 +665,21 @@ class SimpleTemplate(BaseTemplate):
             yield code_str(level, ln, sbuffer)
 
 
-def render(name, **args):
+def prepare_template(name, template):
+    TEMPLATES[name] = TEMPLATE_GENERATOR(template)
+
+
+def template(template_name, **args):
     ''' Returns a string from a template '''
-    if name not in TEMPLATES:
-        TEMPLATES[name] = TEMPLATE_GENERATOR(name)
-        print 'rendering'
+    if template_name not in TEMPLATES:
+        template = TEMPLATE_FINDER(template_name)
+        prepare_template(template_name, template)
     
-    args['subtemplate'] = render
-    return TEMPLATES[name].render(**args)
+    args['template'] = template
+    args['abort'] = abort
+    args['request'] = request
+    args['response'] = response
+    return TEMPLATES[template_name].render(**args)
 
 
 
@@ -685,7 +692,8 @@ request = Request()
 response = Response()
 DEBUG = False
 OPTIMIZER = False
-TEMPLATE_GENERATOR = lambda x: SimpleTemplate(open('./%s.tpl' % x, 'r').read())
+TEMPLATE_GENERATOR = lambda x: SimpleTemplate(x)
+TEMPLATE_FINDER = lambda x: open('./%s.tpl' % x, 'r').read()
 TEMPLATES = {}
 ROUTES_SIMPLE = {}
 ROUTES_REGEXP = {}

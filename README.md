@@ -54,7 +54,7 @@ Bottle does **not** include:
 Example
 -------
 
-    from bottle import route, run, request, response, send_file, abort, render
+    from bottle import route, run, request, response, send_file, abort, template
 
     @route('/')
     def hello_world():
@@ -75,7 +75,7 @@ Example
 
     @route('/template/test')
     def template_test():
-        return render('template_name', title='Template Test', items=[1,2,3,'fly'])
+        return template('template_name', title='Template Test', items=[1,2,3,'fly'])
         
     run(host='localhost', port=8080)
 

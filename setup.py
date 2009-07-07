@@ -4,7 +4,7 @@ from distutils.core import setup
 import bottle
 
 setup(name='bottle',
-      version='%d.%d.%d' % bottle.__version__,
+      version='%s.%s.%s' % bottle.__version__,
       description='WSGI micro web framework + templates',
       author='Marcel Hellkamp',
       author_email='marc@gsites.de',
