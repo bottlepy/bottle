@@ -3,7 +3,7 @@
 from distutils.core import setup
 import bottle
 
-setup(name='Bottle',
+setup(name='bottle',
       version='%d.%d.%d' % bottle.__version__,
       description='WSGI micro web framework + templates',
       author='Marcel Hellkamp',
