@@ -60,6 +60,7 @@ __license__ = 'MIT'
 import cgi
 import mimetypes
 import os
+import os.path
 import sys
 import traceback
 import re
@@ -580,9 +581,8 @@ class MakoTemplate(BaseTemplate):
     def __init__(self, template):
         from mako.template import Template
         self.tpl = Template(template)
-
+ 
     def render(self, **args):
-        eval(self.co, {}, args)
         return self.tpl.render(**args)
 
 
@@ -665,16 +665,16 @@ class SimpleTemplate(BaseTemplate):
             yield code_str(level, ln, sbuffer)
 
 
-def prepare_template(name, template):
-    TEMPLATES[name] = TEMPLATE_GENERATOR(template)
-
-
-def template(template_name, **args):
+def template(template_name, template_adapter=SimpleTemplate, **args):
     ''' Returns a string from a template '''
     if template_name not in TEMPLATES:
-        template = TEMPLATE_FINDER(template_name)
-        prepare_template(template_name, template)
-    
+        for path in TEMPLATE_PATH:
+            if os.path.isfile(path % template_name) \
+            and os.access(path % template_name, os.R_OK):
+                source = open(path % template_name).read()
+                TEMPLATES[template_name] = template_adapter(source)
+    if template_name not in TEMPLATES:
+        abort(500, 'Template not found')
     args['template'] = template
     args['abort'] = abort
     args['request'] = request
@@ -682,7 +682,8 @@ def template(template_name, **args):
     return TEMPLATES[template_name].render(**args)
 
 
-
+def mako_template(template_name, **args):
+    return template(template_name, template_adapter=MakoTemplate, **args)
 
 
 
@@ -692,8 +693,7 @@ request = Request()
 response = Response()
 DEBUG = False
 OPTIMIZER = False
-TEMPLATE_GENERATOR = lambda x: SimpleTemplate(x)
-TEMPLATE_FINDER = lambda x: open('./%s.tpl' % x, 'r').read()
+TEMPLATE_PATH = ['./%s.tpl', './views/%s.tpl']
 TEMPLATES = {}
 ROUTES_SIMPLE = {}
 ROUTES_REGEXP = {}
