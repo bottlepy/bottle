@@ -123,6 +123,8 @@ def WSGIHandler(environ, start_response):
     response.bind()
     try:
         handler, args = match_url(request.path, request.method)
+        if not handler:
+            raise HTTPError(404, "Not found")
         output = handler(**args)
     except BreakTheBottle, shard:
         output = shard.output
@@ -375,7 +377,7 @@ def compile_route(route):
 
 
 def match_url(url, method='GET'):
-    """Returns the first matching handler and a parameter dict or raises HTTPError(404).
+    """Returns the first matching handler and a parameter dict or (None, None).
     
     This reorders the ROUTING_REGEXP list every 1000 requests. To turn this off, use OPTIMIZER=False"""
     url = '/' + url.strip().lstrip("/")
@@ -394,8 +396,8 @@ def match_url(url, method='GET'):
               # Every 1000 requests, we swap the matching route with its predecessor.
               # Frequently used routes will slowly wander up the list.
               routes[i-1], routes[i] = routes[i], routes[i-1]
-            return handler, match.groupdict()
-    raise HTTPError(404, "Not found")
+            return (handler, match.groupdict())
+    return (None, None)
 
 
 def add_route(route, handler, method='GET', simple=False):
