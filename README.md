@@ -1,23 +1,19 @@
 Bottle Web Framework
 ====================
 
-`Bottle` is a simple, fast and useful one-file WSGI-framework. It is not a
-full-stack framework with a ton of features, but a useful mirco-framework for
-small web-applications that stays out of your way.
+Bottle is a fast and simple mirco-framework for small web-applications. It
+offers request dispatching with url parameter support, templates, a buildin HTTP
+server and adapters for many third party WSGI/HTTP-server and template engines.
+All in a single file and with no dependencies other than the Python Standard
+Library.
 
-To install, just type `easy_install bottle`. For news, bugs and new releases
-visit my [GitHub repository][www].
+You can install bottle with `easy_install bottle` or just download bottle.py
+and place it in your project directory. There are no (hard) dependencies other
+than the Python Standard Library. For news, bugs and new releases
+visit my [GitHub repository][www] or the [bottle.py wiki][wiki].
 
   [www]: http://github.com/defnull/bottle
-
-Dependencies
-------------
-
-`bottle.py` only depends on the Python Standard Library.
-If you want to use a HTTP server other than wsgiref.simple_server you may need
-cherrypy, flup or paste (your choice)
-
-
+  [wiki]: http://wiki.github.com/defnull/bottle
 
 Features
 --------
