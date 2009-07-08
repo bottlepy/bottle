@@ -594,7 +594,7 @@ class MakoTemplate(BaseTemplate):
 
 class SimpleTemplate(BaseTemplate):
 
-    re_python = re.compile(r'^\s*%\s*(?:(if|elif|else|try|except|finally|for|while|with|include|def|class)|(end.*)|(.*))')
+    re_python = re.compile(r'^\s*%\s*(?:(if|elif|else|try|except|finally|for|while|with|def|class)|(include.*)|(end.*)|(.*))')
     re_inline = re.compile(r'\{\{(.*?)\}\}')
     dedent_keywords = ('elif', 'else', 'except', 'finally')
 
@@ -614,23 +614,23 @@ class SimpleTemplate(BaseTemplate):
             m = self.re_python.match(line)
             if m:
                 flush()
-                keyword, end, statement = m.groups()
-                if keyword == 'include':
-                    tmp = line[m.end(1):].strip().split(None, 1)
-                    name = tmp[0]
-                    args = tmp[1:] and tmp[1] or ''
-                    self.subtemplates[name] = SimpleTemplate.find(name)
-                    code.append(" " * indent + "stdout.append(_subtemplates[%s].render(%s))\n" % (repr(name), args))
-                elif keyword:
+                keyword, include, end, statement = m.groups()
+                if keyword:
                     if keyword in self.dedent_keywords:
                         indent -= 1
                     code.append(" " * indent + line[m.start(1):])
                     indent += 1
+                elif include:
+                    tmp = line[m.end(2):].strip().split(None, 1)
+                    name = tmp[0]
+                    args = tmp[1:] and tmp[1] or ''
+                    self.subtemplates[name] = SimpleTemplate.find(name)
+                    code.append(" " * indent + "stdout.append(_subtemplates[%s].render(%s))\n" % (repr(name), args))
                 elif end:
                     indent -= 1
-                    code.append(" " * indent + '#' + line[m.start(2):])
+                    code.append(" " * indent + '#' + line[m.start(3):])
                 elif statement:
-                    code.append(" " * indent + line[m.start(3):])
+                    code.append(" " * indent + line[m.start(4):])
             else:
                 splits = self.re_inline.split(line) # text, (expr, text)*
                 if len(splits) == 1:
@@ -654,7 +654,7 @@ class SimpleTemplate(BaseTemplate):
 def template(template, template_adapter=SimpleTemplate, **args):
     ''' Returns a string from a template '''
     if template not in TEMPLATES:
-        if template.find("\n") == -1:
+        if template.find("\n") == -1 and template.find("{") == -1 and template.find("%") == -1:
             try:
                 TEMPLATES[template] = template_adapter.find(template)
             except TemplateNotFoundError: pass
@@ -745,12 +745,12 @@ def error_http(exception):
     name = HTTP_CODES.get(status,'Unknown').title()
     url = request.path
     """If an exception is thrown, deal with it and present an error page."""
-    yield template_string('<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">'+\
+    yield template('<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">'+\
       '<html><head><title>Error {{status}}: {{msg}}</title>'+\
       '</head><body><h1>Error {{status}}: {{msg}}</h1>'+\
       '<p>Sorry, the requested URL {{url}} caused an error.</p>', 
         status=status,
-        name=name,
+        msg=name,
         url=url
       )
     if hasattr(exception, 'output'):
