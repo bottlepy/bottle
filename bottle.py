@@ -1,6 +1,8 @@
 """
 bottle.py is a one-file micro web framework.
-Inspired by itty.py (Daniel Lindsley)
+
+Special thanks to Stefan Matthias Aust [http://github.com/sma]
+  for his contribution to SimpelTemplate
 
 Licence (MIT)
 -------------
@@ -53,7 +55,7 @@ Example
 """
 
 __author__ = 'Marcel Hellkamp'
-__version__ = ('0', '4', '4')
+__version__ = ('0', '4', '5')
 __license__ = 'MIT'
 
 
@@ -558,13 +560,31 @@ def run(server=WSGIRefServer, host='127.0.0.1', port=8080, optinmize = False, **
 
 
 # Templates
+class TemplateError(BottleException): pass
+class TemplateNotFoundError(BottleException): pass
+
 
 class BaseTemplate(object):
-    pass
+    def __init__(self, template='', filename='<template>'):
+        self.source = filename
+        if self.source != '<template>':
+            fp = open(filename)
+            template = fp.read()
+            fp.close()
+        self.parse(template)
+    def parse(self, template): raise NotImplementedError
+    def render(self, **args): raise NotImplementedError
+    @classmethod
+    def find(cls, name):
+        files = [path % name for path in TEMPLATE_PATH if os.path.isfile(path % name)]
+        if files:
+            return cls(filename = files[0])
+        else:
+            raise TemplateError('Template not found: %s' % repr(name))
 
 
 class MakoTemplate(BaseTemplate):
-    def __init__(self, template):
+    def parse(self, template):
         from mako.template import Template
         self.tpl = Template(template)
  
@@ -574,98 +594,78 @@ class MakoTemplate(BaseTemplate):
 
 class SimpleTemplate(BaseTemplate):
 
-    re_block = re.compile(r'^\s*%\s*((if|elif|else|try|except|finally|for|while|with).*:)\s*$')
-    re_end   = re.compile(r'^\s*%\s*end(.*?)\s*$')
-    re_code  = re.compile(r'^\s*%\s*(.*?)\s*$')
-    re_inc   = re.compile(r'\{\{(.*?)\}\}')
+    re_python = re.compile(r'^\s*%\s*(?:(if|elif|else|try|except|finally|for|while|with|include)|(end.*)|(.*))')
+    re_inline = re.compile(r'\{\{(.*?)\}\}')
+    dedent_keywords = ('elif', 'else', 'except', 'finally')
 
-    def __init__(self, template):
-        self.code = "\n".join(self.compile(template))
-        self.co = compile(self.code, '<string>', 'exec')
+    def parse(self, template):
+        indent = 0
+        strbuffer = []
+        code = []
+        self.subtemplates = {}
+        class PyStmt(str):
+            def __repr__(self): return 'str(' + self + ')'
+        def flush():
+            if len(strbuffer):
+                code.append(" " * indent + "stdout.append(%s)" % repr(''.join(strbuffer)))
+                code.append("\n" * len(strbuffer)) # to preserve line numbers 
+                del strbuffer[:]
+        for line in template.splitlines(True):
+            m = self.re_python.match(line)
+            if m:
+                flush()
+                keyword, end, statement = m.groups()
+                if keyword == 'include':
+                    tmp = line[m.end(1):].strip().split(None, 1)
+                    name = tmp[0]
+                    args = tmp[1:] and tmp[1] or ''
+                    self.subtemplates[name] = SimpleTemplate.find(name)
+                    code.append(" " * indent + "stdout.append(_subtemplates[%s].render(%s))\n" % (repr(name), args))
+                elif keyword:
+                    if keyword in self.dedent_keywords:
+                        indent -= 1
+                    code.append(" " * indent + line[m.start(1):])
+                    indent += 1
+                elif end:
+                    indent -= 1
+                    code.append(" " * indent + '#' + line[m.start(2):])
+                elif statement:
+                    code.append(" " * indent + line[m.start(3):])
+            else:
+                splits = self.re_inline.split(line) # text, (expr, text)*
+                if len(splits) == 1:
+                    strbuffer.append(line)
+                else:
+                    flush()
+                    for i in xrange(1, len(splits), 2):
+                        splits[i] = PyStmt(splits[i])
+                    code.append(" " * indent + "stdout.extend(%s)\n" % repr(splits))
+        flush()
+        self.co = compile("".join(code), self.source, 'exec')
 
     def render(self, **args):
         ''' Returns the rendered template using keyword arguments as local variables. '''
         args['stdout'] = []
-        args['__builtins__'] = __builtins__
-        eval(self.co, {}, args)
+        args['_subtemplates'] = self.subtemplates
+        eval(self.co, args, globals())
         return ''.join(args['stdout'])
 
-    def compile(self, template):
-        def code_str(level, line, value):
-            value = "".join(value)
-            value = value.replace("'","\'").replace('\\','\\\\')
-            return '    '*level + "stdout.append(r'''%s''')" % value
-        def code_print(level, line, value):
-            return '    '*level + "stdout.append(str(%s)) # Line: %d" % (value.strip(), line)
-        def code_raw(level, line, value):
-            return '    '*level + value.strip() + ' # Line: %d' % line
 
-        level = 0
-        ln = 0
-        sbuffer = []
-        for line in template.splitlines(True):
-            ln += 1
-            # Line with block starting code
-            m = self.re_block.match(line)
-            if m:
-                if sbuffer:
-                    yield code_str(level, ln, sbuffer)
-                    sbuffer = []
-                if m.group(2).strip().lower() in ('elif','else','except','finally'):
-                    if level == 0:
-                        raise TemplateError('Unexpected end of block in line %d' % ln)
-                    level -= 1
-                yield code_raw(level, ln, m.group(1).strip())
-                level += 1
-                continue
-            # Line with % end marker
-            m = self.re_end.match(line)
-            if m:
-                if sbuffer:
-                    yield code_str(level, ln, sbuffer)
-                    sbuffer = []
-                if level == 0:
-                    raise TemplateError('Unexpected end of block in line %d' % ln)
-                level -= 1
-                continue
-            # Line with % marker
-            m = self.re_code.match(line)
-            if m:
-                yield code_raw(level, ln, m.group(1).strip())
-                continue
-            # Line with inline code
-            lasts = 0
-            for m in self.re_inc.finditer(line):
-                sbuffer.append(line[lasts:m.start(0)])
-                yield code_str(level, ln, sbuffer)
-                sbuffer = []
-                lasts = m.end(0)
-                yield code_print(level, ln, m.group(1))
-            if lasts:
-                sbuffer.append(line[lasts:])
-                continue
-            # Stupid line
-            sbuffer.append(line)
-
-        if sbuffer:
-            yield code_str(level, ln, sbuffer)
-
-
-def template(template_name, template_adapter=SimpleTemplate, **args):
+def template(template, template_adapter=SimpleTemplate, **args):
     ''' Returns a string from a template '''
-    if template_name not in TEMPLATES:
-        for path in TEMPLATE_PATH:
-            if os.path.isfile(path % template_name) \
-            and os.access(path % template_name, os.R_OK):
-                source = open(path % template_name).read()
-                TEMPLATES[template_name] = template_adapter(source)
-    if template_name not in TEMPLATES:
+    if template not in TEMPLATES:
+        if template.find("\n") == -1:
+            try:
+                TEMPLATES[template] = template_adapter.find(template)
+            except TemplateNotFoundError: pass
+        else:
+            TEMPLATES[template] = template_adapter(template)
+    if template not in TEMPLATES:
         abort(500, 'Template not found')
-    args['template'] = template
     args['abort'] = abort
     args['request'] = request
     args['response'] = response
-    return TEMPLATES[template_name].render(**args)
+    return TEMPLATES[template].render(**args)
 
 
 def mako_template(template_name, **args):
@@ -745,10 +745,14 @@ def error_http(exception):
     name = HTTP_CODES.get(status,'Unknown').title()
     url = request.path
     """If an exception is thrown, deal with it and present an error page."""
-    yield '<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">'
-    yield '<html><head><title>Error %d: %s</title>' % (status, name)
-    yield '</head><body><h1>Error %d: %s</h1>' % (status, name)
-    yield '<p>Sorry, the requested URL %s caused an error.</p>' % url
+    yield template_string('<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">'+\
+      '<html><head><title>Error {{status}}: {{msg}}</title>'+\
+      '</head><body><h1>Error {{status}}: {{msg}}</h1>'+\
+      '<p>Sorry, the requested URL {{url}} caused an error.</p>', 
+        status=status,
+        name=name,
+        url=url
+      )
     if hasattr(exception, 'output'):
       yield exception.output
     yield '</body></html>'
