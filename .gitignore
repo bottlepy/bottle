@@ -2,5 +2,9 @@
 ._*
 *.*~
 dist/
+docs
 release.sh
+*.db
 
+benchmark.py
+test*
