@@ -693,35 +693,48 @@ def mako_template(template_name, **args):
 
 # Database
 
-class BottleBucket(dict):
+class BottleBucket(object):
     '''Memory-caching wrapper around anydbm'''
     def __init__(self, name):
         self.__dict__['name'] = name
         self.__dict__['db'] = dbm.open(DB_PATH + '/%s.db' % name, 'c')
         self.__dict__['mmap'] = {}
             
-    def __getattr__(self, key):        return self.__getitem__(key)
-    def __setattr__(self, key, value): return self.__setitem__(key, value)
-    def __delattr__(self, key):        return self.__delitem__(key)
-
     def __getitem__(self, key):
-        if key not in self.mmap and not key.startswith('_'):
+        if key not in self.mmap:
             self.mmap[key] = pickle.loads(self.db[key])
         return self.mmap[key]
-
+    
     def __setitem__(self, key, value):
         self.mmap[key] = value
-
+    
     def __delitem__(self, key):
         if key in self.mmap:
             del self.mmap[key]
         del self.db[key]
 
+    def __getattr__(self, key):
+        try: return self[key]
+        except KeyError: raise AttributeError(key)
+
+    def __setattr__(self, key, value):
+        self[key] = value
+
+    def __delattr__(self, key):
+        try: del self[key]
+        except KeyError: raise AttributeError(key)
+
     def __iter__(self):
         return iter(set(self.db.keys() + self.mmap.keys()))
     
     def __contains__(self, key):
-        return bool(key in self.mmap or key in self.db)
+        return bool(key in self.keys())
+  
+    def __len__(self):
+        return len(self.keys())
+
+    def keys(self):
+        return list(iter(self))
 
     def save(self):
         self.close()
@@ -738,17 +751,25 @@ class BottleBucket(dict):
     def clear(self):
         for key in self.db.keys():
             del self.db[key]
+        self.mmap.clear()
         
+    def update(self, other):
+        self.mmap.update(other)
+
+    def get(self, key, default=None):
+        try:
+            return self[key]
+        except KeyError:
+            if default:
+                return default
+            raise
+
 
 class BottleDB(threading.local):
     '''Holds multible BottleBucket instances in a thread-local way.'''
     def __init__(self):
         self.__dict__['open'] = {}
         
-    def __getattr__(self, key):        return self.__getitem__(key)
-    def __setattr__(self, key, value): return self.__setitem__(key, value)
-    def __delattr__(self, key):        return self.__delitem__(key)
-
     def __getitem__(self, key):
         if key not in self.open and not key.startswith('_'):
             self.open[key] = BottleBucket(key)
@@ -764,13 +785,24 @@ class BottleDB(threading.local):
             for k, v in value.items():
                 self.open[key][k] = v
         else:
-            raise AttributeError("Only dicts and BottleBuckets are allowed.")
+            raise ValueError("Only dicts and BottleBuckets are allowed.")
 
     def __delitem__(self, key):
         if key not in self.open:
             self.open[key].clear()
             self.open[key].save()
             del self.open[key]
+
+    def __getattr__(self, key):
+        try: return self[key]
+        except KeyError: raise AttributeError(key)
+
+    def __setattr__(self, key, value):
+        self[key] = value
+
+    def __delattr__(self, key):
+        try: del self[key]
+        except KeyError: raise AttributeError(key)
 
     def save(self):
         self.close()
