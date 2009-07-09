@@ -55,7 +55,7 @@ Example
 """
 
 __author__ = 'Marcel Hellkamp'
-__version__ = ('0', '4', '5')
+__version__ = ('0', '4', '6')
 __license__ = 'MIT'
 
 
@@ -722,7 +722,9 @@ class BottleBucket(dict):
     
     def close(self):
         for key in self.mmap.keys():
-            self.db[key] = pickle.dumps(self.mmap[key], pickle.HIGHEST_PROTOCOL)
+            pvalue = pickle.dumps(self.mmap[key], pickle.HIGHEST_PROTOCOL)
+            if key not in self.db or pvalue != self.db[key]:
+                self.db[key] = pvalue
         self.mmap.clear()
         self.db.close()
         
