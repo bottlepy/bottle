@@ -69,7 +69,7 @@ def validate_test(i, f, csv):
 # Templates
 @route('/template/test')
 def template_test():
-    return template('example', title='Template Test', items=[1,2,3,'fly'])
+    return template('howto', title='Template Test', items=[1,2,3,'fly'])
         
 # Database
 @route('/db/counter')
