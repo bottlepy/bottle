@@ -73,7 +73,7 @@ def template_test():
         
 # Database
 @route('/db/counter')
-def template_test():
+def db_counter_test():
     if 'hits' not in db.counter:
         db.counter.hits = 0
         print 'fresh', db.counter.keys()
