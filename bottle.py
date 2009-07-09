@@ -774,7 +774,7 @@ class BottleDB(threading.local):
 
     def save(self):
         self.close()
-        self.__init__(self.name)
+        self.__init__()
     
     def close(self):
         for db in self.open.values():
