@@ -2,3 +2,5 @@ include bottle.py
 include setup.py
 include README.*
 include docs/*.html
+include examples/*.py
+include examples/*.tpl
