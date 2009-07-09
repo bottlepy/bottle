@@ -2,14 +2,14 @@ Bottle Web Framework
 ====================
 
 Bottle is a fast and simple mirco-framework for small web-applications. It
-offers request dispatching with url parameter support, templates, a buildin HTTP
-server and adapters for many third party WSGI/HTTP-server and template engines.
-All in a single file and with no dependencies other than the Python Standard
-Library.
+offers request dispatching with url parameter support, templates, key/value
+databases, a build-in HTTP server and adapters for many third party
+WSGI/HTTP-server and template engines. All in a single file and with no
+dependencies other than the Python Standard Library.
 
 You can install bottle with `easy_install bottle` or just download bottle.py
 and place it in your project directory. There are no (hard) dependencies other
-than the Python Standard Library. For news, bugs and new releases
+than the Python Standard Library. For news, bugs and documentation
 visit my [GitHub repository][www] or the [bottle.py wiki][wiki].
 
   [www]: http://github.com/defnull/bottle
@@ -26,11 +26,14 @@ Features
     * Cookie Management: `response.COOKIES['session'] = 'new_key'`
     * Static files: `send_file('movie.flv', '/downloads/')` with automatic mime-type guessing
     * Errors: Throw HTTP errors using `abort(404, 'Not here')` or subclass `HTTPError` and use custom error handlers
+  * Databases: Build in persistent key/value databases with fast memory caching.
+    * Use `db.db_name.key_name` or `db[db_name][key_name]` to access stored values. Missing databases are created on demand. Missing keys raise KeyError.
+    * Values are automatically pickled and saved at the end of the request live cycle.
   * Templates: Integrated template language
     * Plain simple: Execute python code with `%...` or use the inline syntax `{{...}}` for one-line expressions
-    * No IndentationErrors: Blocks are closed by `%end`. Indentation is optional.
+    * No IndentationErrors: You don’t have to worry about indentions. Blocks are closed by `%end`.
     * Extremely fast: Parses and renders templates 5 to 10 times faster than [mako][]
-    * Support for [Mako-Templates][mako] (requires [mako][])
+    * Optional support for [Mako-Templates][mako] (requires [mako][])
   * HTTP Server: Build in WSGI/HTTP Gateway server (for development and production mode)
     * Currently supports wsgiref.simple_server (default), [cherrypy][], [flup][], [paste][] and [fapws3][]
   * Speed optimisations:
