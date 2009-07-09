@@ -1,5 +1,11 @@
 """
-bottle.py is a one-file micro web framework.
+Bottle is a fast and simple mirco-framework for small web-applications. It
+offers request dispatching (Routes) with url parameter support, Templates,
+key/value Databases, a build-in HTTP Server? and adapters for many third party
+WSGI/HTTP-server and template engines. All in a single file and with no
+dependencies other than the Python Standard Library.
+
+Homepage and documentation: http://wiki.github.com/defnull/bottle
 
 Special thanks to Stefan Matthias Aust [http://github.com/sma]
   for his contribution to SimpelTemplate
