@@ -5,7 +5,8 @@ import bottle
 
 setup(name='bottle',
       version='%s.%s.%s' % bottle.__version__,
-      description='WSGI micro web framework + templates',
+      description='Fast and simple WSGI-framework for small web-applications.',
+      long_description='Bottle is a fast and simple mirco-framework for small web-applications. It offers request dispatching (Routes) with url parameter support, Templates, key/value Databases, a build-in HTTP Server and adapters for many third party WSGI/HTTP-server and template engines. All in a single file and with no dependencies other than the Python Standard Library.',
       author='Marcel Hellkamp',
       author_email='marc@gsites.de',
       url='http://github.com/defnull/bottle',
