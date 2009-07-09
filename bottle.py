@@ -688,6 +688,7 @@ def mako_template(template_name, **args):
 # Database
 
 class BottleBucket(dict):
+    '''Memory-caching wrapper around anydbm'''
     def __init__(self, name):
         self.__dict__['name'] = name
         self.__dict__['db'] = dbm.open(DB_PATH + '/%s.db' % name, 'c')
@@ -698,7 +699,7 @@ class BottleBucket(dict):
     def __delattr__(self, key):        return self.__delitem__(key)
 
     def __getitem__(self, key):
-        if key not in self.mmap:
+        if key not in self.mmap and not key.startswith('_'):
             self.mmap[key] = pickle.loads(self.db[key])
         return self.mmap[key]
 
@@ -734,6 +735,7 @@ class BottleBucket(dict):
         
 
 class BottleDB(threading.local):
+    '''Holds multible BottleBucket instances in a thread-local way.'''
     def __init__(self):
         self.__dict__['open'] = {}
         
@@ -742,7 +744,7 @@ class BottleDB(threading.local):
     def __delattr__(self, key):        return self.__delitem__(key)
 
     def __getitem__(self, key):
-        if key not in self.open:
+        if key not in self.open and not key.startswith('_'):
             self.open[key] = BottleBucket(key)
         return self.open[key]
 
