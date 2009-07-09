@@ -74,8 +74,14 @@ try:
     from urlparse import parse_qs
 except ImportError:
     from cgi import parse_qs
-
-
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
+try:
+    import anydbm as dbm
+except ImportError:
+    import dbm
 
 
 
@@ -147,6 +153,8 @@ def WSGIHandler(environ, start_response):
         if response.status == 500:
             request._environ['wsgi.errors'].write("Error (500) on '%s': %s\n" % (request.path, exception))
 
+    db.close() # DB cleanup
+
     if hasattr(output, 'read'):
         fileoutput = output
         if 'wsgi.file_wrapper' in environ:
@@ -159,6 +167,7 @@ def WSGIHandler(environ, start_response):
     for c in response.COOKIES.values():
         response.header.add('Set-Cookie', c.OutputString())
 
+    # finish
     status = '%d %s' % (response.status, HTTP_CODES[response.status])
     start_response(status, list(response.header.items()))
     return output
@@ -673,14 +682,113 @@ def mako_template(template_name, **args):
 
 
 
+
+
+
+# Database
+
+class BottleBucket(dict):
+    def __init__(self, name):
+        self.__dict__['name'] = name
+        self.__dict__['db'] = dbm.open(DB_PATH + '/%s.db' % name, 'c')
+        self.__dict__['mmap'] = {}
+            
+    def __getattr__(self, key):        return self.__getitem__(key)
+    def __setattr__(self, key, value): return self.__setitem__(key, value)
+    def __delattr__(self, key):        return self.__delitem__(key)
+
+    def __getitem__(self, key):
+        if key not in self.mmap:
+            self.mmap[key] = pickle.loads(self.db[key])
+        return self.mmap[key]
+
+    def __setitem__(self, key, value):
+        self.mmap[key] = value
+
+    def __delitem__(self, key):
+        if key in self.mmap:
+            del self.mmap[key]
+        del self.db[key]
+
+    def __iter__(self):
+        return iter(set(self.db.keys() + self.mmap.keys()))
+    
+    def __contains__(self, key):
+        return bool(key in self.mmap or key in self.db)
+
+    def save(self):
+        self.close()
+        self.__init__(self.name)
+    
+    def close(self):
+        for key in self.mmap.keys():
+            self.db[key] = pickle.dumps(self.mmap[key], pickle.HIGHEST_PROTOCOL)
+        self.mmap.clear()
+        self.db.close()
+        
+    def clear(self):
+        for key in self.db.keys():
+            del self.db[key]
+        
+
+class BottleDB(threading.local):
+    def __init__(self):
+        self.__dict__['open'] = {}
+        
+    def __getattr__(self, key):        return self.__getitem__(key)
+    def __setattr__(self, key, value): return self.__setitem__(key, value)
+    def __delattr__(self, key):        return self.__delitem__(key)
+
+    def __getitem__(self, key):
+        if key not in self.open:
+            self.open[key] = BottleBucket(key)
+        return self.open[key]
+
+    def __setitem__(self, key, value):
+        if isinstance(value, BottleBucket):
+            self.open[key] = value
+        elif hasattr(value, 'items'):
+            if key not in self.open:
+                self.open[key] = BottleBucket(key)
+            self.open[key].clear()
+            for k, v in value.items():
+                self.open[key][k] = v
+        else:
+            raise AttributeError("Only dicts and BottleBuckets are allowed.")
+
+    def __delitem__(self, key):
+        if key not in self.open:
+            self.open[key].clear()
+            self.open[key].save()
+            del self.open[key]
+
+    def save(self):
+        self.close()
+        self.__init__(self.name)
+    
+    def close(self):
+        for db in self.open.values():
+            db.close()
+        self.open.clear()
+
+
+
+
+
+
 # Modul initialization
 
 request = Request()
 response = Response()
+
+DB_PATH = './'
+db = BottleDB()
+
 DEBUG = False
 OPTIMIZER = False
 TEMPLATE_PATH = ['./%s.tpl', './views/%s.tpl']
 TEMPLATES = {}
+
 ROUTES_SIMPLE = {}
 ROUTES_REGEXP = {}
 ERROR_HANDLER = {}
