@@ -820,12 +820,7 @@ class BottleDB(threading.local):
 
 # Modul initialization
 
-request = Request()
-response = Response()
-
 DB_PATH = './'
-db = BottleDB()
-
 DEBUG = False
 OPTIMIZER = False
 TEMPLATE_PATH = ['./%s.tpl', './views/%s.tpl']
@@ -877,6 +872,11 @@ HTTP_CODES = {
     504: 'GATEWAY TIMEOUT',
     505: 'HTTP VERSION NOT SUPPORTED',
 }
+
+request = Request()
+response = Response()
+db = BottleDB()
+local = threading.local()
 
 
 @error(500)
