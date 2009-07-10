@@ -232,10 +232,10 @@ class Request(threading.local):
             self._POST = {}
             if raw_data:
                 for key in raw_data:
-                    if hasattr(raw_data[key],'filename'):
-                        self._POST[key] = raw_data[key]
-                    elif isinstance(raw_data[key], list):
+                    if isinstance(raw_data[key], list):
                         self._POST[key] = [v.value for v in raw_data[key]]
+                    elif raw_data[key].filename:
+                        self._POST[key] = raw_data[key]
                     else:
                         self._POST[key] = raw_data[key].value
         return self._POST
@@ -245,7 +245,7 @@ class Request(threading.local):
         ''' Returns a mix of GET and POST data. POST overwrites GET '''
         if self._GETPOST is None:
             self._GETPOST = dict(self.GET)
-            self._GETPOST.update(self.POST)
+            self._GETPOST.update(dict(self.POST))
         return self._GETPOST
 
     @property
