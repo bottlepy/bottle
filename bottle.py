@@ -232,7 +232,7 @@ class Request(threading.local):
             self._POST = {}
             if raw_data:
                 for key in raw_data:
-                    if raw_data[key].filename:
+                    if hasattr(raw_data[key],'filename'):
                         self._POST[key] = raw_data[key]
                     elif isinstance(raw_data[key], list):
                         self._POST[key] = [v.value for v in raw_data[key]]
