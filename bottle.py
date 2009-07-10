@@ -230,7 +230,7 @@ class Request(threading.local):
         if self._POST is None:
             raw_data = cgi.FieldStorage(fp=self._environ['wsgi.input'], environ=self._environ)
             self._POST = {}
-            if raw_dara:
+            if raw_data:
                 for key in raw_data:
                     if raw_data[key].filename:
                         self._POST[key] = raw_data[key]
