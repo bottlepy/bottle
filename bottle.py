@@ -61,7 +61,7 @@ Example
 """
 
 __author__ = 'Marcel Hellkamp'
-__version__ = '0.4.7'
+__version__ = '0.4.9'
 __license__ = 'MIT'
 
 
@@ -230,13 +230,14 @@ class Request(threading.local):
         if self._POST is None:
             raw_data = cgi.FieldStorage(fp=self._environ['wsgi.input'], environ=self._environ)
             self._POST = {}
-            for key in raw_data:
-                if raw_data[key].filename:
-                    self._POST[key] = raw_data[key]
-                elif isinstance(raw_data[key], list):
-                    self._POST[key] = [v.value for v in raw_data[key]]
-                else:
-                    self._POST[key] = raw_data[key].value
+            if raw_dara:
+                for key in raw_data:
+                    if raw_data[key].filename:
+                        self._POST[key] = raw_data[key]
+                    elif isinstance(raw_data[key], list):
+                        self._POST[key] = [v.value for v in raw_data[key]]
+                    else:
+                        self._POST[key] = raw_data[key].value
         return self._POST
 
     @property
