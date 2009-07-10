@@ -144,17 +144,11 @@ def WSGIHandler(environ, start_response):
         output = shard.output
     except Exception, exception:
         response.status = getattr(exception, 'http_status', 500)
-        errorhandler = ERROR_HANDLER.get(response.status, None)
-        if errorhandler:
-            try:
-                output = errorhandler(exception)
-            except:
-                output = "Exception within error handler! Application stopped."
-        else:
-            if DEBUG:
-                output = "Exception %s: %s" % (exception.__class__.__name__, str(exception))
-            else:
-                output = "Unhandled exception: Application stopped."
+        errorhandler = ERROR_HANDLER.get(response.status, error_default)
+        try:
+            output = errorhandler(exception)
+        except:
+            output = "Exception within error handler! Application stopped."
 
         if response.status == 500:
             request._environ['wsgi.errors'].write("Error (500) on '%s': %s\n" % (request.path, exception))
@@ -449,11 +443,11 @@ def validate(**vkargs):
         def wrapper(**kargs):
             for key in vkargs:
                 if key not in kargs:
-                    abort(400, 'Missing parameter: %s' % key)
+                    abort(403, 'Missing parameter: %s' % key)
                 try:
                     kargs[key] = vkargs[key](kargs[key])
                 except ValueError, e:
-                    abort(400, 'Wrong parameter format for: %s' % key)
+                    abort(403, 'Wrong parameter format for: %s' % key)
             return func(**kargs)
         return wrapper
     return decorator
@@ -889,10 +883,7 @@ def error500(exception):
     else:
         return """<b>Error:</b> Internal server error."""
 
-@error(400)
-@error(401)
-@error(404)
-def error_http(exception):
+def error_default(exception):
     status = response.status
     name = HTTP_CODES.get(status,'Unknown').title()
     url = request.path
