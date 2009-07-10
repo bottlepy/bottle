@@ -245,6 +245,7 @@ class Request(threading.local):
         if self._GETPOST is None:
             self._GETPOST = dict(self.GET)
             self._GETPOST.update(self.POST)
+        return self._GETPOST
 
     @property
     def COOKIES(self):
