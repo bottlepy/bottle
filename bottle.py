@@ -583,8 +583,10 @@ class BaseTemplate(object):
             template = fp.read()
             fp.close()
         self.parse(template)
+
     def parse(self, template): raise NotImplementedError
     def render(self, **args): raise NotImplementedError
+    
     @classmethod
     def find(cls, name):
         files = [path % name for path in TEMPLATE_PATH if os.path.isfile(path % name)]
@@ -609,7 +611,7 @@ class SimpleTemplate(BaseTemplate):
     re_inline = re.compile(r'\{\{(.*?)\}\}')
     dedent_keywords = ('elif', 'else', 'except', 'finally')
 
-    def parse(self, template):
+    def translate(self, template):
         indent = 0
         strbuffer = []
         code = []
@@ -652,7 +654,10 @@ class SimpleTemplate(BaseTemplate):
                         splits[i] = PyStmt(splits[i])
                     code.append(" " * indent + "stdout.extend(%s)\n" % repr(splits))
         flush()
-        self.co = compile("".join(code), self.source, 'exec')
+        return "".join(code)
+
+    def parse(self, template):
+        self.co = compile("".join(self.translate(template)), self.source, 'exec')
 
     def render(self, **args):
         ''' Returns the rendered template using keyword arguments as local variables. '''
