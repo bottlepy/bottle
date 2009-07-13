@@ -61,7 +61,7 @@ Example
 """
 
 __author__ = 'Marcel Hellkamp'
-__version__ = '0.4.10'
+__version__ = '0.4.11'
 __license__ = 'MIT'
 
 
@@ -69,7 +69,6 @@ import cgi
 import mimetypes
 import os
 import os.path
-import sys
 import traceback
 import re
 import random
