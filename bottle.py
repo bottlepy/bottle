@@ -75,7 +75,7 @@ import random
 import Cookie
 import threading
 import time
-try:
+try:  
     from urlparse import parse_qs
 except ImportError:
     from cgi import parse_qs
@@ -87,6 +87,8 @@ try:
     import anydbm as dbm
 except ImportError:
     import dbm
+
+
 
 
 
@@ -129,7 +131,7 @@ class TemplateError(BottleException):
 # WSGI abstraction: Request and response management
 
 def WSGIHandler(environ, start_response):
-    """The bottle WSGI-handler."""
+    """ The bottle WSGI-handler ."""
     global request
     global response
     request.bind(environ)
@@ -139,37 +141,33 @@ def WSGIHandler(environ, start_response):
         if not handler:
             raise HTTPError(404, "Not found")
         output = handler(**args)
-    except BreakTheBottle, shard:
-        output = shard.output
-    except Exception, exception:
-        response.status = getattr(exception, 'http_status', 500)
+    except BreakTheBottle, e:
+        output = e.output
+    except Exception, e:
+        response.status = getattr(e, 'http_status', 500)
         errorhandler = ERROR_HANDLER.get(response.status, error_default)
         try:
             output = errorhandler(exception)
         except:
-            output = "Exception within error handler! Application stopped."
-
+            output = "Exception within error handler!"
         if response.status == 500:
             request._environ['wsgi.errors'].write("Error (500) on '%s': %s\n" % (request.path, exception))
 
-    db.close() # DB cleanup
-
-    if hasattr(output, 'read'):
-        fileoutput = output
-        if 'wsgi.file_wrapper' in environ:
-            output = environ['wsgi.file_wrapper'](fileoutput)
-        else:
-            output = iter(lambda: fileoutput.read(8192), '')
-    elif isinstance(output, str):
-        output = [output]
-
+    db.close()
     for c in response.COOKIES.values():
         response.header.add('Set-Cookie', c.OutputString())
-
-    # finish
     status = '%d %s' % (response.status, HTTP_CODES[response.status])
     start_response(status, list(response.header.items()))
-    return output
+
+    if hasattr(output, 'read'):
+        if 'wsgi.file_wrapper' in environ:
+            return environ['wsgi.file_wrapper'](output)
+        else:
+            return iter(lambda: fileoutput.read(8192), '')
+    elif isinstance(output, str):
+        return [output]
+    else:
+        return output
 
 
 class Request(threading.local):
@@ -258,7 +256,6 @@ class Response(threading.local):
     def bind(self):
         """ Clears old data and creates a brand new Response object """
         self._COOKIES = None
-
         self.status = 200
         self.header = HeaderDict()
         self.content_type = 'text/html'
@@ -395,7 +392,7 @@ def match_url(url, method='GET'):
     # Search for static routes first
     route = ROUTES_SIMPLE.get(method,{}).get(url,None)
     if route:
-      return (route, {})
+        return (route, {})
     
     # Now search regexp routes
     routes = ROUTES_REGEXP.get(method,[])
@@ -404,9 +401,7 @@ def match_url(url, method='GET'):
         if match:
             handler = routes[i][1]
             if i > 0 and OPTIMIZER and random.random() <= 0.001:
-              # Every 1000 requests, we swap the matching route with its predecessor.
-              # Frequently used routes will slowly wander up the list.
-              routes[i-1], routes[i] = routes[i], routes[i-1]
+                routes[i-1], routes[i] = routes[i], routes[i-1]
             return (handler, match.groupdict())
     return (None, None)
 
@@ -588,11 +583,10 @@ class BaseTemplate(object):
     
     @classmethod
     def find(cls, name):
-        files = [path % name for path in TEMPLATE_PATH if os.path.isfile(path % name)]
-        if files:
-            return cls(filename = files[0])
-        else:
-            raise TemplateError('Template not found: %s' % repr(name))
+        for path in TEMPLATE_PATH:
+            if os.path.isfile(path % name):
+                return cls(filename = path % name)
+        raise TemplateError('Template not found: %s' % repr(name))
 
 
 class MakoTemplate(BaseTemplate):
@@ -618,11 +612,11 @@ class SimpleTemplate(BaseTemplate):
         class PyStmt(str):
             def __repr__(self): return 'str(' + self + ')'
         def flush(allow_nobreak=False):
-            bfr = ''.join(strbuffer)
-            if len(bfr):
-                if allow_nobreak and bfr.endswith("\\\\\n"): bfr=bfr[:-3]
-                code.append(" " * indent + "stdout.append(%s)" % repr(bfr))
-                code.append("\n" * len(strbuffer)) # to preserve line numbers 
+            if len(strbuffer):
+                if allow_nobreak and strbuffer[-1].endswith("\\\\\n"):
+                    strbuffer[-1]=strbuffer[-1][:-3]
+                code.append(" " * indent + "stdout.append(%s)" % repr(''.join(strbuffer)))
+                code.append((" " * indent + "\n") * len(strbuffer)) # to preserve line numbers 
                 del strbuffer[:]
         for line in template.splitlines(True):
             m = self.re_python.match(line)
@@ -883,7 +877,6 @@ local = threading.local()
 
 @error(500)
 def error500(exception):
-    """If an exception is thrown, deal with it and present an error page."""
     if DEBUG:
         return "<br>\n".join(traceback.format_exc(10).splitlines()).replace('  ','&nbsp;&nbsp;')
     else:
@@ -893,15 +886,11 @@ def error_default(exception):
     status = response.status
     name = HTTP_CODES.get(status,'Unknown').title()
     url = request.path
-    """If an exception is thrown, deal with it and present an error page."""
-    yield template('<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">'+\
-      '<html><head><title>Error {{status}}: {{msg}}</title>'+\
+    yield '<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">'
+    yield template('<html><head><title>Error {{status}}: {{msg}}</title>'+\
       '</head><body><h1>Error {{status}}: {{msg}}</h1>'+\
       '<p>Sorry, the requested URL {{url}} caused an error.</p>', 
-        status=status,
-        msg=name,
-        url=url
-      )
+      status=status, msg=name, url=url)
     if hasattr(exception, 'output'):
       yield exception.output
     yield '</body></html>'
