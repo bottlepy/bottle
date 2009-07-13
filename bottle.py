@@ -383,17 +383,16 @@ def compile_route(route):
     A more human readable syntax is supported too.
     Example: '/user/:id/:action' will match '/user/5/kiss' with {'id':'5', 'action':'kiss'}
     """
-    route = route.strip().lstrip('$^/ ').rstrip('$^ ')
     route = re.sub(r':([a-zA-Z_]+)(?P<uniq>[^\w/])(?P<re>.+?)(?P=uniq)',r'(?P<\1>\g<re>)',route)
     route = re.sub(r':([a-zA-Z_]+)',r'(?P<\1>[^/]+)', route)
-    return re.compile('^/%s$' % route)
+    return re.compile('^%s$' % route)
 
 
 def match_url(url, method='GET'):
     """Returns the first matching handler and a parameter dict or (None, None).
     
     This reorders the ROUTING_REGEXP list every 1000 requests. To turn this off, use OPTIMIZER=False"""
-    url = '/' + url.strip().lstrip("/")
+    url = url.strip().lstrip("/ ")
     # Search for static routes first
     route = ROUTES_SIMPLE.get(method,{}).get(url,None)
     if route:
@@ -421,7 +420,8 @@ def add_route(route, handler, method='GET', simple=False):
           return "Hello world!"
         add_route(r'/hello', hello)"""
     method = method.strip().upper()
-    if re.match(r'^/(\w+/)*\w*$', route) or simple:
+    route = route.strip().lstrip('$^/ ').rstrip('$^ ')
+    if re.match(r'^(\w+/)*\w*$', route) or simple:
         ROUTES_SIMPLE.setdefault(method, {})[route] = handler
     else:
         route = compile_route(route)
@@ -618,15 +618,17 @@ class SimpleTemplate(BaseTemplate):
         self.subtemplates = {}
         class PyStmt(str):
             def __repr__(self): return 'str(' + self + ')'
-        def flush():
-            if len(strbuffer):
-                code.append(" " * indent + "stdout.append(%s)" % repr(''.join(strbuffer)))
+        def flush(allow_nobreak=False):
+            bfr = ''.join(strbuffer)
+            if len(bfr):
+                if allow_nobreak and bfr.endswith("\\\\\n"): bfr=bfr[:-3]
+                code.append(" " * indent + "stdout.append(%s)" % repr(bfr))
                 code.append("\n" * len(strbuffer)) # to preserve line numbers 
                 del strbuffer[:]
         for line in template.splitlines(True):
             m = self.re_python.match(line)
             if m:
-                flush()
+                flush(allow_nobreak=True)
                 keyword, include, end, statement = m.groups()
                 if keyword:
                     if keyword in self.dedent_keywords:

@@ -4,3 +4,4 @@ include README.*
 include docs/*.html
 include examples/*.py
 include examples/*.tpl
+include test/*.py

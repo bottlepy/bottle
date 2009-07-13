@@ -7,4 +7,3 @@ release.sh
 *.db
 MANIFEST
 benchmark.py
-test*
