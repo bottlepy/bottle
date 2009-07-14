@@ -147,11 +147,11 @@ def WSGIHandler(environ, start_response):
         response.status = getattr(e, 'http_status', 500)
         errorhandler = ERROR_HANDLER.get(response.status, error_default)
         try:
-            output = errorhandler(exception)
+            output = errorhandler(e)
         except:
             output = "Exception within error handler!"
         if response.status == 500:
-            request._environ['wsgi.errors'].write("Error (500) on '%s': %s\n" % (request.path, exception))
+            request._environ['wsgi.errors'].write("Error (500) on '%s': %s\n" % (request.path, e))
 
     db.close()
     for c in response.COOKIES.values():
