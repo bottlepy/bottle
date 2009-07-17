@@ -659,7 +659,7 @@ class SimpleTemplate(BaseTemplate):
         ''' Returns the rendered template using keyword arguments as local variables. '''
         args['stdout'] = []
         args['_subtemplates'] = self.subtemplates
-        exec self.co in args, globals()
+        exec self.co in args
         return ''.join(args['stdout'])
 
 
