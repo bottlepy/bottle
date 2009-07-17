@@ -647,6 +647,7 @@ class SimpleTemplate(BaseTemplate):
                     flush()
                     for i in xrange(1, len(splits), 2):
                         splits[i] = PyStmt(splits[i])
+                    splits = filter(lambda x: bool(x), splits)
                     code.append(" " * indent + "stdout.extend(%s)\n" % repr(splits))
         flush()
         return "".join(code)
