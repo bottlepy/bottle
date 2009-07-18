@@ -53,7 +53,7 @@ def main():
     for page in pages:
         raw = '\n'.join(fetch_page(USER, PROJECT, page))
         raw = re.sub(r'http://wiki.github.com/%s/%s/(\w+)' % (USER, PROJECT), './\\1.html', raw)
-        fp = open('%s.html' % page, 'w')
+        fp = open('%s/%s.html' % (DOCDIR, page), 'w')
         fp.write(tpl.render(title=page.title(), html=raw, pages=pages))
         fp.close()
         print "Updated", page.title(), "-->", page.lower() + '.html'
