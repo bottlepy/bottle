@@ -407,12 +407,7 @@ def match_url(url, method='GET'):
 
 
 def add_route(route, handler, method='GET', simple=False):
-    """ Adds a new route to the route mappings.
-
-        Example:
-        def hello():
-          return "Hello world!"
-        add_route(r'/hello', hello)"""
+    """ Adds a new route to the route mappings. """
     method = method.strip().upper()
     route = route.strip().lstrip('$^/ ').rstrip('$^ ')
     if re.match(r'^(\w+/)*\w*$', route) or simple:
@@ -423,7 +418,7 @@ def add_route(route, handler, method='GET', simple=False):
 
 
 def route(url, **kargs):
-    """ Decorator for request handler. Same as add_route(url, handler)."""
+    """ Decorator for request handler. Same as add_route(url, handler, **kargs)."""
     def wrapper(handler):
         add_route(url, handler, **kargs)
         return handler
@@ -432,7 +427,7 @@ def route(url, **kargs):
 
 def validate(**vkargs):
     ''' Validates and manipulates keyword arguments by user defined callables 
-    and handles ValueError and missing arguments by raising HTTPError(400) '''
+    and handles ValueError and missing arguments by raising HTTPError(403) '''
     def decorator(func):
         def wrapper(**kargs):
             for key in vkargs:
@@ -454,7 +449,7 @@ def validate(**vkargs):
 # Error handling
 
 def set_error_handler(code, handler):
-    """ Sets a new error handler. """
+    """ Adds a new error handler. """
     code = int(code)
     ERROR_HANDLER[code] = handler
 
@@ -586,7 +581,7 @@ class BaseTemplate(object):
         for path in TEMPLATE_PATH:
             if os.path.isfile(path % name):
                 return cls(filename = path % name)
-        raise TemplateError('Template not found: %s' % repr(name))
+        raise TemplateNotFoundError('Template not found: %s' % repr(name))
 
 
 class MakoTemplate(BaseTemplate):
@@ -650,10 +645,11 @@ class SimpleTemplate(BaseTemplate):
                     splits = filter(lambda x: bool(x), splits)
                     code.append(" " * indent + "stdout.extend(%s)\n" % repr(splits))
         flush()
-        return "".join(code)
+        return ''.join(code)
 
     def parse(self, template):
-        self.co = compile("".join(self.translate(template)), self.source, 'exec')
+        code = self.translate(template)
+        self.co = compile(code, self.source, 'exec')
 
     def render(self, **args):
         ''' Returns the rendered template using keyword arguments as local variables. '''
