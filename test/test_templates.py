@@ -5,7 +5,7 @@ DISTDIR = os.path.dirname(TESTDIR)
 sys.path.insert(0, TESTDIR)
 sys.path.insert(0, DISTDIR)
 
-from bottle import SimpleTemplate
+from bottle import SimpleTemplate, TemplateNotFoundError
 
 class TestSimpleTemplate(unittest.TestCase):
 
@@ -36,6 +36,15 @@ class TestSimpleTemplate(unittest.TestCase):
         """ Templates: Escaped nobreak statements"""
         t = SimpleTemplate("start\\\\\n\\\\\n%pass\nend")
         self.assertEqual('start\\\\\nend', t.render())
+
+    def test_notfound(self):
+        """ Templates: Unavailable templates"""
+        self.assertRaises(TemplateNotFoundError, SimpleTemplate.find, "abcdef")
+
+    def test_error(self):
+        """ Templates: Exceptions"""
+        self.assertRaises(SyntaxError, SimpleTemplate, '%for badsyntax')
+        self.assertRaises(IndexError, SimpleTemplate('{{i[5]}}').render, i=[0])
 
 suite = unittest.TestSuite()
 suite.addTest(unittest.makeSuite(TestSimpleTemplate))

@@ -30,6 +30,14 @@ class TestRoutes(unittest.TestCase):
         self.assertEqual(None, match_url('/aa')[0])
         self.assertEqual(repr({'a':'aa','b':'bb'}), repr(match_url('/aa/bb')[1]))
 
+    def test_syntax(self):
+        """ Routes: Syntax """ 
+        self.assertEqual(r'^/(?P<bla>[^/]+)$', compile_route('/:bla').pattern)
+        self.assertEqual(r'^/(?P<bla>[^/]+)/(?P<blub>[^/]+)$', compile_route('/:bla/:blub').pattern)
+        self.assertEqual(r'^/(?P<bla>[0-9]+)$', compile_route('/:bla#[0-9]+#').pattern)
+        self.assertEqual(r'^/(?P<bla>[0-9]+)$', compile_route('/:bla:[0-9]+:').pattern)
+        self.assertEqual(r'^/(?P<bla>[0-9]+)$', compile_route('/:bla|[0-9]+|').pattern)
+
 
 suite = unittest.TestSuite()
 suite.addTest(unittest.makeSuite(TestRoutes))
