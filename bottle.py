@@ -61,7 +61,7 @@ Example
 """
 
 __author__ = 'Marcel Hellkamp'
-__version__ = '0.4.13'
+__version__ = '0.4.14'
 __license__ = 'MIT'
 
 
