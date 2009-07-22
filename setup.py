@@ -21,7 +21,8 @@ setup(name='bottle',
         'Topic :: Internet :: WWW/HTTP :: WSGI :: Application',
         'Topic :: Internet :: WWW/HTTP :: WSGI :: Middleware',
         'Topic :: Internet :: WWW/HTTP :: WSGI :: Server',
-        'Topic :: Software Development :: Libraries :: Application Frameworks']
+        'Topic :: Software Development :: Libraries :: Application Frameworks',
+        'Programming Language :: Python :: 2']
      )
 
 
