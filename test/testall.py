@@ -1,3 +1,6 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
 import unittest
 import sys, os.path
 TESTDIR = os.path.dirname(os.path.abspath(__file__))
@@ -5,14 +8,16 @@ DISTDIR = os.path.dirname(TESTDIR)
 sys.path.insert(0, TESTDIR)
 sys.path.insert(0, DISTDIR)
 
-from test_templates import suite as suite1
-from test_routes import suite as suite2
-from test_environ import suite as suite3
+import test_templates
+import test_routes
+import test_environ
+import test_db
 
 suite = unittest.TestSuite()
-suite.addTest(suite1)
-suite.addTest(suite2)
-suite.addTest(suite3)
+suite.addTest(test_templates.suite)
+suite.addTest(test_routes.suite)
+suite.addTest(test_environ.suite)
+suite.addTest(test_db.suite)
 
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite)

@@ -1,3 +1,6 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
 import unittest
 import sys, os.path
 TESTDIR = os.path.dirname(os.path.abspath(__file__))
@@ -16,7 +19,7 @@ class TestRoutes(unittest.TestCase):
         for r in routes:
             add_route(r, token, simple=True)
         self.assertTrue('GET' in ROUTES_SIMPLE)
-        r = [r for r in ROUTES_SIMPLE['GET'].values() if r == 'abc']
+        r = [r for r in ROUTES_SIMPLE['GET'].itervalues() if r == 'abc']
         self.assertEqual(5, len(r))
         for r in routes:
             self.assertEqual(token, match_url(r)[0])

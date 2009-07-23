@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Bottle is a fast and simple mirco-framework for small web-applications. It
 offers request dispatching (Routes) with url parameter support, Templates,
@@ -72,21 +73,12 @@ import os.path
 import traceback
 import re
 import random
-import Cookie
+from Cookie import SimpleCookie
 import threading
 import time
-try:  
-    from urlparse import parse_qs
-except ImportError:
-    from cgi import parse_qs
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
-try:
-    import anydbm as dbm
-except ImportError:
-    import dbm
+from urlparse import parse_qs
+import cPickle as pickle
+import anydbm as dbm
 
 
 
@@ -154,10 +146,10 @@ def WSGIHandler(environ, start_response):
             request._environ['wsgi.errors'].write("Error (500) on '%s': %s\n" % (request.path, e))
 
     db.close()
-    for c in response.COOKIES.values():
+    for c in response.COOKIES.itervalues():
         response.header.add('Set-Cookie', c.OutputString())
     status = '%d %s' % (response.status, HTTP_CODES[response.status])
-    start_response(status, list(response.header.items()))
+    start_response(status, response.header.header_items())
 
     if hasattr(output, 'read'):
         if 'wsgi.file_wrapper' in environ:
@@ -208,7 +200,7 @@ class Request(threading.local):
         if self._GET is None:
             raw_dict = parse_qs(self.query_string, keep_blank_values=1)
             self._GET = {}
-            for key, value in raw_dict.items():
+            for key, value in raw_dict.iteritems():
                 if len(value) == 1:
                     self._GET[key] = value[0]
                 else:
@@ -243,9 +235,9 @@ class Request(threading.local):
     def COOKIES(self):
         """Returns a dict with COOKIES."""
         if self._COOKIES is None:
-            raw_dict = Cookie.SimpleCookie(self._environ.get('HTTP_COOKIE',''))
+            raw_dict = SimpleCookie(self._environ.get('HTTP_COOKIE',''))
             self._COOKIES = {}
-            for cookie in raw_dict.values():
+            for cookie in raw_dict.itervalues():
                 self._COOKIES[cookie.key] = cookie.value
         return self._COOKIES
 
@@ -264,7 +256,7 @@ class Response(threading.local):
     @property
     def COOKIES(self):
         if not self._COOKIES:
-            self._COOKIES = Cookie.SimpleCookie()
+            self._COOKIES = SimpleCookie()
         return self._COOKIES
 
     def set_cookie(self, key, value, **kargs):
@@ -296,16 +288,16 @@ class HeaderDict(dict):
     def __contains__(self, key):
         return dict.__contains__(self,key.title())
 
-    def items(self):
+    def header_items(self):
         """ Returns a list of (key, value) tuples """
-        for key, values in dict.items(self):
+        for key, values in dict.iteritems(self):
             if not isinstance(values, list):
                 values = [values]
             for value in values:
                 yield (key, str(value))
-                
+        
     def add(self, key, value):
-        """ Adds a new header without deleting old ones """
+        """ Adds a new header without deleting the old one """
         if isinstance(value, list):
             for v in value:
                 self.add(key, v)
@@ -642,7 +634,7 @@ class SimpleTemplate(BaseTemplate):
                     flush()
                     for i in xrange(1, len(splits), 2):
                         splits[i] = PyStmt(splits[i])
-                    splits = filter(lambda x: bool(x), splits)
+                    splits = [x for x in splits if bool(x)]
                     code.append(" " * indent + "stdout.extend(%s)\n" % repr(splits))
         flush()
         return ''.join(code)
@@ -718,23 +710,26 @@ class BottleBucket(object):
         except KeyError: raise AttributeError(key)
 
     def __iter__(self):
-        return iter(set(self.db.keys() + self.mmap.keys()))
+        return iter(self.ukeys())
     
     def __contains__(self, key):
-        return bool(key in self.keys())
+        return key in self.ukeys()
   
     def __len__(self):
-        return len(self.keys())
+        return len(self.ukeys())
 
     def keys(self):
-        return list(iter(self))
+        return list(self.ukeys())
+
+    def ukeys(self):
+      return set(self.db.keys() + self.mmap.keys())
 
     def save(self):
         self.close()
         self.__init__(self.name)
     
     def close(self):
-        for key in self.mmap.keys():
+        for key in self.mmap.iterkeys():
             pvalue = pickle.dumps(self.mmap[key], pickle.HIGHEST_PROTOCOL)
             if key not in self.db or pvalue != self.db[key]:
                 self.db[key] = pvalue
@@ -742,7 +737,7 @@ class BottleBucket(object):
         self.db.close()
         
     def clear(self):
-        for key in self.db.keys():
+        for key in self.db.iterkeys():
             del self.db[key]
         self.mmap.clear()
         
@@ -775,7 +770,7 @@ class BottleDB(threading.local):
             if key not in self.open:
                 self.open[key] = BottleBucket(key)
             self.open[key].clear()
-            for k, v in value.items():
+            for k, v in value.iteritems():
                 self.open[key][k] = v
         else:
             raise ValueError("Only dicts and BottleBuckets are allowed.")
@@ -802,7 +797,7 @@ class BottleDB(threading.local):
         self.__init__()
     
     def close(self):
-        for db in self.open.values():
+        for db in self.open.itervalues():
             db.close()
         self.open.clear()
 
