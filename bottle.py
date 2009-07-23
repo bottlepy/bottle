@@ -79,7 +79,7 @@ import time
 from urlparse import parse_qs
 import cPickle as pickle
 import anydbm as dbm
-
+from wsgiref.headers import Headers as HeaderWrapper
 
 
 
@@ -146,10 +146,8 @@ def WSGIHandler(environ, start_response):
             request._environ['wsgi.errors'].write("Error (500) on '%s': %s\n" % (request.path, e))
 
     db.close()
-    for c in response.COOKIES.itervalues():
-        response.header.add('Set-Cookie', c.OutputString())
     status = '%d %s' % (response.status, HTTP_CODES[response.status])
-    start_response(status, response.header.header_items())
+    start_response(status, response.wsgiheaders())
 
     if hasattr(output, 'read'):
         if 'wsgi.file_wrapper' in environ:
@@ -249,9 +247,16 @@ class Response(threading.local):
         """ Clears old data and creates a brand new Response object """
         self._COOKIES = None
         self.status = 200
-        self.header = HeaderDict()
+        self.header_list = []
+        self.header = HeaderWrapper(self.header_list)
         self.content_type = 'text/html'
         self.error = None
+
+    def wsgiheaders(self):
+        ''' Returns a wsgi conform list of header/value pairs '''
+        for c in self.COOKIES.itervalues():
+            self.header.add_header('Set-Cookie', c.OutputString())
+        return [(h.title(), v) for h, v in self.header_list]
 
     @property
     def COOKIES(self):
@@ -273,41 +278,6 @@ class Response(threading.local):
         self.header['Content-Type'] = value
         
     content_type = property(get_content_type, set_content_type, None, get_content_type.__doc__)
-
-
-class HeaderDict(dict):
-    ''' A dictionary with case insensitive (titled) keys.
-    
-    You may add a list of strings to send multible headers with the same name.'''
-    def __setitem__(self, key, value):
-        return dict.__setitem__(self,key.title(), value)
-    def __getitem__(self, key):
-        return dict.__getitem__(self,key.title())
-    def __delitem__(self, key):
-        return dict.__delitem__(self,key.title())
-    def __contains__(self, key):
-        return dict.__contains__(self,key.title())
-
-    def header_items(self):
-        """ Returns a list of (key, value) tuples """
-        for key, values in dict.iteritems(self):
-            if not isinstance(values, list):
-                values = [values]
-            for value in values:
-                yield (key, str(value))
-        
-    def add(self, key, value):
-        """ Adds a new header without deleting the old one """
-        if isinstance(value, list):
-            for v in value:
-                self.add(key, v)
-        elif key in self:
-            if isinstance(self[key], list):
-                self[key].append(value)
-            else:
-                self[key] = [self[key], value]
-        else:
-          self[key] = [value]
 
 
 def abort(code=500, text='Unknown Error: Appliction stopped.'):
