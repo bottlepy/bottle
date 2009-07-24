@@ -132,42 +132,41 @@ class TemplateError(BottleException):
 
 # WSGI abstraction: Request and response management
 
-def WSGIHandler(environ, start_response):
-    """ The bottle WSGI-handler ."""
-    global request
-    global response
-    request.bind(environ)
-    response.bind()
-    try:
-        handler, args = match_url(request.path, request.method)
-        if not handler:
-            raise HTTPError(404, "Not found")
-        output = handler(**args)
-    except BreakTheBottle as e:
-        output = e.output
-    except Exception as e:
-        response.status = getattr(e, 'http_status', 500)
-        errorhandler = ERROR_HANDLER.get(response.status, error_default)
+class WSGIHandler(object):
+    def __call__(self, environ, start_response):
+        """ The bottle WSGI-interface ."""
+        request.bind(environ)
+        response.bind()
         try:
-            output = errorhandler(e)
-        except:
-            output = "Exception within error handler!"
-        if response.status == 500:
-            request._environ['wsgi.errors'].write("Error (500) on '%s': %s\n" % (request.path, e))
+            handler, args = match_url(request.path, request.method)
+            if not handler:
+                raise HTTPError(404, "Not found")
+            output = handler(**args)
+        except BreakTheBottle as e:
+            output = e.output
+        except Exception as e:
+            response.status = getattr(e, 'http_status', 500)
+            errorhandler = ERROR_HANDLER.get(response.status, error_default)
+            try:
+                output = errorhandler(e)
+            except:
+                output = "Exception within error handler!"
+            if response.status == 500:
+                request._environ['wsgi.errors'].write("Error (500) on '%s': %s\n" % (request.path, e))
 
-    db.close()
-    status = '%d %s' % (response.status, HTTP_CODES[response.status])
-    start_response(status, response.wsgiheaders())
+        db.close()
+        status = '%d %s' % (response.status, HTTP_CODES[response.status])
+        start_response(status, response.wsgiheaders())
 
-    if hasattr(output, 'read'):
-        if 'wsgi.file_wrapper' in environ:
-            return environ['wsgi.file_wrapper'](output)
+        if hasattr(output, 'read'):
+            if 'wsgi.file_wrapper' in environ:
+                return environ['wsgi.file_wrapper'](output)
+            else:
+                return iter(lambda: fileoutput.read(8192), '')
+        elif isinstance(output, str):
+            return [output]
         else:
-            return iter(lambda: fileoutput.read(8192), '')
-    elif isinstance(output, str):
-        return [output]
-    else:
-        return output
+            return output
 
 
 class Request(threading.local):
@@ -497,13 +496,14 @@ class FapwsServer(ServerAdapter):
         evwsgi.run()
 
 
-def run(server=WSGIRefServer, host='127.0.0.1', port=8080, optinmize = False, **kargs):
+def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080, optinmize = False, **kargs):
     """ Runs bottle as a web server, using Python's built-in wsgiref implementation by default.
     
     You may choose between WSGIRefServer, CherryPyServer, FlupServer and
     PasteServer or write your own server adapter.
     """
-    global OPTIMIZER
+    if not app:
+        app = WSGIHandler()
     
     OPTIMIZER = bool(optinmize)
     quiet = bool('quiet' in kargs and kargs['quiet'])
@@ -519,10 +519,10 @@ def run(server=WSGIRefServer, host='127.0.0.1', port=8080, optinmize = False, **
         print('Bottle server starting up (using %s)...' % repr(server))
         print('Listening on http://%s:%d/' % (server.host, server.port))
         print('Use Ctrl-C to quit.')
-        print()
+        print('')
 
     try:
-        server.run(WSGIHandler)
+        server.run(app)
     except KeyboardInterrupt:
         print("Shuting down...")
 
@@ -845,7 +845,6 @@ request = Request()
 response = Response()
 db = BottleDB()
 local = threading.local()
-
 
 @error(500)
 def error500(exception):
