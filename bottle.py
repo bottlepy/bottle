@@ -62,7 +62,7 @@ Example
 """
 
 __author__ = 'Marcel Hellkamp'
-__version__ = '0.4.15'
+__version__ = '0.5.1'
 __license__ = 'MIT'
 
 import sys
@@ -503,7 +503,7 @@ def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080, optinmize =
     PasteServer or write your own server adapter.
     """
     if not app:
-        app = WSGIHandler()
+        app = default_app
     
     OPTIMIZER = bool(optinmize)
     quiet = bool('quiet' in kargs and kargs['quiet'])
@@ -845,6 +845,7 @@ request = Request()
 response = Response()
 db = BottleDB()
 local = threading.local()
+default_app = WSGIHandler()
 
 @error(500)
 def error500(exception):
