@@ -15,11 +15,6 @@ class TestDB(unittest.TestCase):
 
     def test_save(self):
         """ DB: Save to disk """
-        if os.path.exists('/tmp/db1.db'):
-            os.unlink('/tmp/db1.db')
-        if os.path.exists('/tmp/db2.db'):
-            os.unlink('/tmp/db2.db')
-
         data = [1, 1.5, 'a', u'ä']
         bottle.db.db1.value1 = data
         bottle.db['db2']['value2'] = data
@@ -29,8 +24,6 @@ class TestDB(unittest.TestCase):
         bottle.db.close()
         self.assertEqual(bottle.db['db1']['value1'], data)
         self.assertEqual(bottle.db.db2.value2, data)
-        self.assertTrue(os.path.exists('/tmp/db1.db'))
-        self.assertTrue(os.path.exists('/tmp/db2.db'))
 
 suite = unittest.TestSuite()
 suite.addTest(unittest.makeSuite(TestDB))
