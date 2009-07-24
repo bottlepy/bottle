@@ -32,8 +32,11 @@ class TestEnviron(unittest.TestCase):
         self.assertEqual(qd, request.POST)
 
     def test_multipart(self):
-        """ Environ: POST (multipart) """ 
-        import StringIO
+        """ Environ: POST (multipart) """
+        if sys.version_info[0] == 2:
+            from StringIO import StringIO
+        else:
+            from io import StringIO
         e = {}
         e['SERVER_PROTOCOL'] = "HTTP/1.1"
         e['REQUEST_METHOD'] = 'POST'
@@ -50,7 +53,7 @@ class TestEnviron(unittest.TestCase):
         e['wsgi.input'] += 'Content-Transfer-Encoding: binary\n'
         e['wsgi.input'] += 'This is a sample\n'
         e['wsgi.input'] += '------------------314159265358979323846--\n'
-        e['wsgi.input'] = StringIO.StringIO(e['wsgi.input'])
+        e['wsgi.input'] = StringIO(e['wsgi.input'])
         e['wsgi.input'].seek(0)
         request.bind(e)
         self.assertTrue('test.txt' in request.POST)

@@ -15,7 +15,7 @@ class TestDB(unittest.TestCase):
 
     def test_save(self):
         """ DB: Save to disk """
-        data = [1, 1.5, 'a', u'ä']
+        data = [1, 1.5, 'a', 'ä']
         bottle.db.db1.value1 = data
         bottle.db['db2']['value2'] = data
 

@@ -62,10 +62,10 @@ Example
 """
 
 __author__ = 'Marcel Hellkamp'
-__version__ = '0.4.14'
+__version__ = '0.4.15'
 __license__ = 'MIT'
 
-
+import sys
 import cgi
 import mimetypes
 import os
@@ -73,13 +73,23 @@ import os.path
 import traceback
 import re
 import random
-from Cookie import SimpleCookie
 import threading
 import time
-from urlparse import parse_qs
-import cPickle as pickle
-import anydbm as dbm
 from wsgiref.headers import Headers as HeaderWrapper
+
+if (2,6) <= sys.version_info < (3,0):
+    from Cookie import SimpleCookie
+    from urlparse import parse_qs
+    import cPickle as pickle
+    import anydbm as dbm
+elif (3,0) <= sys.version_info:
+    from http.cookies import SimpleCookie
+    from urllib.parse import parse_qs
+    import pickle
+    import dbm
+else:
+    raise NotImplementedError("Sorry, you need at least Python 2.6 or Python 3.x to use bottle.")
+
 
 
 
@@ -133,9 +143,9 @@ def WSGIHandler(environ, start_response):
         if not handler:
             raise HTTPError(404, "Not found")
         output = handler(**args)
-    except BreakTheBottle, e:
+    except BreakTheBottle as e:
         output = e.output
-    except Exception, e:
+    except Exception as e:
         response.status = getattr(e, 'http_status', 500)
         errorhandler = ERROR_HANDLER.get(response.status, error_default)
         try:
@@ -198,7 +208,7 @@ class Request(threading.local):
         if self._GET is None:
             raw_dict = parse_qs(self.query_string, keep_blank_values=1)
             self._GET = {}
-            for key, value in raw_dict.iteritems():
+            for key, value in raw_dict.items():
                 if len(value) == 1:
                     self._GET[key] = value[0]
                 else:
@@ -235,7 +245,7 @@ class Request(threading.local):
         if self._COOKIES is None:
             raw_dict = SimpleCookie(self._environ.get('HTTP_COOKIE',''))
             self._COOKIES = {}
-            for cookie in raw_dict.itervalues():
+            for cookie in raw_dict.values():
                 self._COOKIES[cookie.key] = cookie.value
         return self._COOKIES
 
@@ -254,7 +264,7 @@ class Response(threading.local):
 
     def wsgiheaders(self):
         ''' Returns a wsgi conform list of header/value pairs '''
-        for c in self.COOKIES.itervalues():
+        for c in self.COOKIES.values():
             self.header.add_header('Set-Cookie', c.OutputString())
         return [(h.title(), v) for h, v in self.header_list]
 
@@ -358,7 +368,7 @@ def match_url(url, method='GET'):
     
     # Now search regexp routes
     routes = ROUTES_REGEXP.get(method,[])
-    for i in xrange(len(routes)):
+    for i in range(len(routes)):
         match = routes[i][0].match(url)
         if match:
             handler = routes[i][1]
@@ -397,7 +407,7 @@ def validate(**vkargs):
                     abort(403, 'Missing parameter: %s' % key)
                 try:
                     kargs[key] = vkargs[key](kargs[key])
-                except ValueError, e:
+                except ValueError as e:
                     abort(403, 'Wrong parameter format for: %s' % key)
             return func(**kargs)
         return wrapper
@@ -506,15 +516,15 @@ def run(server=WSGIRefServer, host='127.0.0.1', port=8080, optinmize = False, **
         raise RuntimeError("Server must be a subclass of ServerAdapter")
 
     if not quiet:
-        print 'Bottle server starting up (using %s)...' % repr(server)
-        print 'Listening on http://%s:%d/' % (server.host, server.port)
-        print 'Use Ctrl-C to quit.'
-        print
+        print('Bottle server starting up (using %s)...' % repr(server))
+        print('Listening on http://%s:%d/' % (server.host, server.port))
+        print('Use Ctrl-C to quit.')
+        print()
 
     try:
         server.run(WSGIHandler)
     except KeyboardInterrupt:
-        print "Shuting down..."
+        print("Shuting down...")
 
 
 
@@ -602,7 +612,7 @@ class SimpleTemplate(BaseTemplate):
                     strbuffer.append(line)
                 else:
                     flush()
-                    for i in xrange(1, len(splits), 2):
+                    for i in range(1, len(splits), 2):
                         splits[i] = PyStmt(splits[i])
                     splits = [x for x in splits if bool(x)]
                     code.append(" " * indent + "stdout.extend(%s)\n" % repr(splits))
@@ -617,7 +627,7 @@ class SimpleTemplate(BaseTemplate):
         ''' Returns the rendered template using keyword arguments as local variables. '''
         args['stdout'] = []
         args['_subtemplates'] = self.subtemplates
-        exec self.co in args
+        eval(self.co, args)
         return ''.join(args['stdout'])
 
 
@@ -692,14 +702,14 @@ class BottleBucket(object):
         return list(self.ukeys())
 
     def ukeys(self):
-      return set(self.db.keys() + self.mmap.keys())
+      return set(self.db.keys()) | set(self.mmap.keys())
 
     def save(self):
         self.close()
         self.__init__(self.name)
     
     def close(self):
-        for key in self.mmap.iterkeys():
+        for key in self.mmap.keys():
             pvalue = pickle.dumps(self.mmap[key], pickle.HIGHEST_PROTOCOL)
             if key not in self.db or pvalue != self.db[key]:
                 self.db[key] = pvalue
@@ -707,7 +717,7 @@ class BottleBucket(object):
         self.db.close()
         
     def clear(self):
-        for key in self.db.iterkeys():
+        for key in self.db.keys():
             del self.db[key]
         self.mmap.clear()
         
@@ -740,7 +750,7 @@ class BottleDB(threading.local):
             if key not in self.open:
                 self.open[key] = BottleBucket(key)
             self.open[key].clear()
-            for k, v in value.iteritems():
+            for k, v in value.items():
                 self.open[key][k] = v
         else:
             raise ValueError("Only dicts and BottleBuckets are allowed.")
@@ -767,7 +777,7 @@ class BottleDB(threading.local):
         self.__init__()
     
     def close(self):
-        for db in self.open.itervalues():
+        for db in self.open.values():
             db.close()
         self.open.clear()
 
