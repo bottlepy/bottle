@@ -62,7 +62,7 @@ Example
 """
 
 __author__ = 'Marcel Hellkamp'
-__version__ = '0.5.1'
+__version__ = '0.5.2'
 __license__ = 'MIT'
 
 import sys
@@ -205,9 +205,9 @@ class Request(threading.local):
     def GET(self):
         """Returns a dict with GET parameters."""
         if self._GET is None:
-            raw_dict = parse_qs(self.query_string, keep_blank_values=1)
+            data = parse_qs(self.query_string, keep_blank_values=True)
             self._GET = {}
-            for key, value in raw_dict.items():
+            for key, value in data.items():
                 if len(value) == 1:
                     self._GET[key] = value[0]
                 else:
@@ -216,18 +216,18 @@ class Request(threading.local):
 
     @property
     def POST(self):
-        """Returns a dict with parsed POST data."""
+        """Returns a dict with parsed POST or PUT data."""
         if self._POST is None:
-            raw_data = cgi.FieldStorage(fp=self._environ['wsgi.input'], environ=self._environ)
-            self._POST = {}
-            if raw_data:
-                for key in raw_data:
-                    if isinstance(raw_data[key], list):
-                        self._POST[key] = [v.value for v in raw_data[key]]
-                    elif raw_data[key].filename:
-                        self._POST[key] = raw_data[key]
-                    else:
-                        self._POST[key] = raw_data[key].value
+            data = cgi.FieldStorage(fp=self._environ['wsgi.input'], environ=self._environ, keep_blank_values=True)
+            self._POST  = {}
+            for item in data.list:
+                name = item.name
+                if not item.filename:
+                    item = item.value
+                self._POST.setdefault(name, []).append(item)
+            for key in self._POST:
+                if len(self._POST[key]) == 1:
+                    self._POST[key] = self._POST[key][0]
         return self._POST
 
     @property
