@@ -5,7 +5,7 @@ DISTDIR = os.path.dirname(TESTDIR)
 sys.path.insert(0, TESTDIR)
 sys.path.insert(0, DISTDIR)
 
-from bottle import SimpleTemplate, TemplateNotFoundError
+from bottle import SimpleTemplate
 
 class TestSimpleTemplate(unittest.TestCase):
 
@@ -39,7 +39,7 @@ class TestSimpleTemplate(unittest.TestCase):
 
     def test_notfound(self):
         """ Templates: Unavailable templates"""
-        self.assertRaises(TemplateNotFoundError, SimpleTemplate.find, "abcdef")
+        self.assertEqual(None, SimpleTemplate.find("abcdef"))
 
     def test_error(self):
         """ Templates: Exceptions"""
