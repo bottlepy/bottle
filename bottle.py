@@ -108,8 +108,21 @@ class HTTPError(BottleException):
         self.output = text
         self.http_status = int(status)
 
+    def __repr__(self):
+        return "HTTPError(%d,%s)" % (self.http_status, repr(self.output))
+
     def __str__(self):
-        return self.output
+        out = []
+        status = self.http_status
+        name = HTTP_CODES.get(status,'Unknown').title()
+        url = request.path
+        out.append('<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">')
+        out.append('<html><head><title>Error %d: %s</title>' % (status, name))
+        out.append('</head><body><h1>Error %d: %s</h1>' % (status, name))
+        out.append('<p>Sorry, the requested URL "%s" caused an error.</p>' % url)
+        out.append(''.join(list(self.output)))
+        out.append('</body></html>')
+        return "\n".join(out)
 
 
 class BreakTheBottle(BottleException):
@@ -139,12 +152,13 @@ def default_app():
 
 class Bottle(object):
 
-    def __init__(self):
+    def __init__(self, catchall=True, debug=False, optimize=False):
         self.simple_routes = {}
         self.regexp_routes = {}
         self.error_handler = {}
-        self.optimize = False
-        self.debug = False
+        self.optimize = optimize
+        self.debug = debug
+        self.catchall = catchall
 
     def match_url(self, url, method='GET'):
         """Returns the first matching handler and a parameter dict or (None, None) """
@@ -196,39 +210,39 @@ class Bottle(object):
             return handler
         return wrapper
         
-    def handle_error(self, exception):
-        response.status = getattr(exception, 'http_status', 500)
-        try:
-            output = self.error_handler.get(response.status, error_default)(exception)
-        except:
-            output = "Exception within error handler!"
-        if response.status == 500:
-            request._environ['wsgi.errors'].write("Error (500) on '%s': %s\n" % (request.path, exception))
-        return output
-
     def __call__(self, environ, start_response):
         """ The bottle WSGI-interface ."""
         request.bind(environ)
         response.bind()
-        try:
-            handler, args = self.match_url(request.path, request.method)
-            if not handler:
-                raise HTTPError(404, "Not found")
-            output = handler(**args)
-        except BreakTheBottle as e:
-            output = e.output
+        try: # Unhandled Exceptions
+            try: # Bottle Error Handling
+                handler, args = self.match_url(request.path, request.method)
+                if not handler: raise HTTPError(404, "Not found")
+                output = handler(**args)
+                db.close()
+            except BreakTheBottle as e:
+                output = e.output
+            except HTTPError as e:
+                response.status = e.http_status
+                output = self.error_handler.get(response.status, str)(e)
         except Exception as e:
-            output = self.handle_error(e)
+            response.status == 500
+            if self.catchall:
+                err = "Unhandled Exception: %s\n" % (repr(e))
+                if self.debug:
+                    err += "<h2>Traceback:</h2>\n<pre>\n"
+                    err += traceback.format_exc(10)
+                    err += "\n</pre>"
+                output = str(HTTPError(500, err))
+                request._environ['wsgi.errors'].write(err)
+            else:
+                raise
 
-        db.close()
         status = '%d %s' % (response.status, HTTP_CODES[response.status])
         start_response(status, response.wsgiheaders())
 
         if hasattr(output, 'read'):
-            if 'wsgi.file_wrapper' in environ:
-                return environ['wsgi.file_wrapper'](output)
-            else:
-                return iter(lambda: fileoutput.read(8192), '')
+            return environ.get('wsgi.file_wrapper', lambda x: iter(lambda: x.read(8192), ''))(output)
         elif isinstance(output, str):
             return [output]
         else:
@@ -501,7 +515,7 @@ class FapwsServer(ServerAdapter):
         evwsgi.run()
 
 
-def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080, optinmize = False, **kargs):
+def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080, **kargs):
     """ Runs bottle as a web server, using Python's built-in wsgiref implementation by default.
     
     You may choose between WSGIRefServer, CherryPyServer, FlupServer and
@@ -510,7 +524,6 @@ def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080, optinmize =
     if not app:
         app = default_app()
     
-    OPTIMIZER = bool(optinmize)
     quiet = bool('quiet' in kargs and kargs['quiet'])
 
     # Instanciate server, if it is a class instead of an instance
@@ -785,13 +798,11 @@ class BottleDB(threading.local):
 
 
 
-
+def debug(mode=True): default_app().debug = bool(mode)
 
 # Modul initialization
 
 DB_PATH = './'
-DEBUG = False
-OPTIMIZER = False
 TEMPLATE_PATH = ['./%s.tpl', './views/%s.tpl']
 TEMPLATES = {}
 HTTP_CODES = {
@@ -843,22 +854,3 @@ response = Response()
 db = BottleDB()
 local = threading.local()
 
-@error(500)
-def error500(exception):
-    if DEBUG:
-        return "<br>\n".join(traceback.format_exc(10).splitlines()).replace('  ','&nbsp;&nbsp;')
-    else:
-        return """<b>Error:</b> Internal server error."""
-
-def error_default(exception):
-    status = response.status
-    name = HTTP_CODES.get(status,'Unknown').title()
-    url = request.path
-    yield '<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">'
-    yield template('<html><head><title>Error {{status}}: {{msg}}</title>'+\
-      '</head><body><h1>Error {{status}}: {{msg}}</h1>'+\
-      '<p>Sorry, the requested URL {{url}} caused an error.</p>', 
-      status=status, msg=name, url=url)
-    if hasattr(exception, 'output'):
-      yield exception.output
-    yield '</body></html>'
