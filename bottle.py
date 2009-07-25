@@ -115,44 +115,110 @@ class HTTPError(BottleException):
 class BreakTheBottle(BottleException):
     """ Not an exception, but a straight jump out of the controller code.
     
-    Causes the WSGIHandler to instantly call start_response() and return the
+    Causes the Bottle to instantly call start_response() and return the
     content of output """
     def __init__(self, output):
         self.output = output
-
-
-class TemplateError(BottleException):
-    """ Thrown by template engines during compilation of templates """
-    pass
-
-
+        
+        
 
 
 
 
 # WSGI abstraction: Request and response management
 
-class WSGIHandler(object):
+
+_default_app = None
+def default_app():
+    global _default_app
+    if not _default_app:
+        _default_app = Bottle()
+    return _default_app
+
+
+
+class Bottle(object):
+
+    def __init__(self):
+        self.simple_routes = {}
+        self.regexp_routes = {}
+        self.error_handler = {}
+        self.optimize = False
+        self.debug = False
+
+    def match_url(self, url, method='GET'):
+        """Returns the first matching handler and a parameter dict or (None, None) """
+        url = url.strip().lstrip("/ ")
+        # Search for static routes first
+        route = self.simple_routes.get(method,{}).get(url,None)
+        if route:
+            return (route, {})
+        
+        # Now search regexp routes
+        routes = self.regexp_routes.get(method,[])
+        for i in range(len(routes)):
+            match = routes[i][0].match(url)
+            if match:
+                handler = routes[i][1]
+                if i > 0 and self.optimize and random.random() <= 0.001:
+                    routes[i-1], routes[i] = routes[i], routes[i-1]
+                return (handler, match.groupdict())
+        return (None, None)
+
+    def add_route(self, route, handler, method='GET', simple=False):
+        """ Adds a new route to the route mappings. """
+        method = method.strip().upper()
+        route = route.strip().lstrip('$^/ ').rstrip('$^ ')
+        if re.match(r'^(\w+/)*\w*$', route) or simple:
+            self.simple_routes.setdefault(method, {})[route] = handler
+        else:
+            route = re.sub(r':([a-zA-Z_]+)(?P<uniq>[^\w/])(?P<re>.+?)(?P=uniq)',r'(?P<\1>\g<re>)',route)
+            route = re.sub(r':([a-zA-Z_]+)',r'(?P<\1>[^/]+)', route)
+            route = re.compile('^%s$' % route)
+            self.regexp_routes.setdefault(method, []).append([route, handler])
+
+    def route(self, url, **kargs):
+        """ Decorator for request handler. Same as add_route(url, handler, **kargs)."""
+        def wrapper(handler):
+            self.add_route(url, handler, **kargs)
+            return handler
+        return wrapper
+
+    def set_error_handler(self, code, handler):
+        """ Adds a new error handler. """
+        code = int(code)
+        self.error_handler[code] = handler
+
+    def error(self, code=500):
+        """ Decorator for error handler. Same as set_error_handler(code, handler)."""
+        def wrapper(handler):
+            self.set_error_handler(code, handler)
+            return handler
+        return wrapper
+        
+    def handle_error(self, exception):
+        response.status = getattr(exception, 'http_status', 500)
+        try:
+            output = self.error_handler.get(response.status, error_default)(exception)
+        except:
+            output = "Exception within error handler!"
+        if response.status == 500:
+            request._environ['wsgi.errors'].write("Error (500) on '%s': %s\n" % (request.path, exception))
+        return output
+
     def __call__(self, environ, start_response):
         """ The bottle WSGI-interface ."""
         request.bind(environ)
         response.bind()
         try:
-            handler, args = match_url(request.path, request.method)
+            handler, args = self.match_url(request.path, request.method)
             if not handler:
                 raise HTTPError(404, "Not found")
             output = handler(**args)
         except BreakTheBottle as e:
             output = e.output
         except Exception as e:
-            response.status = getattr(e, 'http_status', 500)
-            errorhandler = ERROR_HANDLER.get(response.status, error_default)
-            try:
-                output = errorhandler(e)
-            except:
-                output = "Exception within error handler!"
-            if response.status == 500:
-                request._environ['wsgi.errors'].write("Error (500) on '%s': %s\n" % (request.path, e))
+            output = self.handle_error(e)
 
         db.close()
         status = '%d %s' % (response.status, HTTP_CODES[response.status])
@@ -167,6 +233,10 @@ class WSGIHandler(object):
             return [output]
         else:
             return output
+
+
+
+
 
 
 class Request(threading.local):
@@ -339,62 +409,7 @@ def send_file(filename, root, guessmime = True, mimetype = 'text/plain'):
 
 
 
-# Routing
-
-def compile_route(route):
-    """ Compiles a route string and returns a precompiled RegexObject.
-
-    Routes may contain regular expressions with named groups to support url parameters.
-    Example: '/user/(?P<id>[0-9]+)' will match '/user/5' with {'id':'5'}
-
-    A more human readable syntax is supported too.
-    Example: '/user/:id/:action' will match '/user/5/kiss' with {'id':'5', 'action':'kiss'}
-    """
-    route = re.sub(r':([a-zA-Z_]+)(?P<uniq>[^\w/])(?P<re>.+?)(?P=uniq)',r'(?P<\1>\g<re>)',route)
-    route = re.sub(r':([a-zA-Z_]+)',r'(?P<\1>[^/]+)', route)
-    return re.compile('^%s$' % route)
-
-
-def match_url(url, method='GET'):
-    """Returns the first matching handler and a parameter dict or (None, None).
-    
-    This reorders the ROUTING_REGEXP list every 1000 requests. To turn this off, use OPTIMIZER=False"""
-    url = url.strip().lstrip("/ ")
-    # Search for static routes first
-    route = ROUTES_SIMPLE.get(method,{}).get(url,None)
-    if route:
-        return (route, {})
-    
-    # Now search regexp routes
-    routes = ROUTES_REGEXP.get(method,[])
-    for i in range(len(routes)):
-        match = routes[i][0].match(url)
-        if match:
-            handler = routes[i][1]
-            if i > 0 and OPTIMIZER and random.random() <= 0.001:
-                routes[i-1], routes[i] = routes[i], routes[i-1]
-            return (handler, match.groupdict())
-    return (None, None)
-
-
-def add_route(route, handler, method='GET', simple=False):
-    """ Adds a new route to the route mappings. """
-    method = method.strip().upper()
-    route = route.strip().lstrip('$^/ ').rstrip('$^ ')
-    if re.match(r'^(\w+/)*\w*$', route) or simple:
-        ROUTES_SIMPLE.setdefault(method, {})[route] = handler
-    else:
-        route = compile_route(route)
-        ROUTES_REGEXP.setdefault(method, []).append([route, handler])
-
-
-def route(url, **kargs):
-    """ Decorator for request handler. Same as add_route(url, handler, **kargs)."""
-    def wrapper(handler):
-        add_route(url, handler, **kargs)
-        return handler
-    return wrapper
-
+# Decorators
 
 def validate(**vkargs):
     ''' Validates and manipulates keyword arguments by user defined callables 
@@ -413,24 +428,14 @@ def validate(**vkargs):
     return decorator
 
 
-
-
-
-
-# Error handling
-
-def set_error_handler(code, handler):
-    """ Adds a new error handler. """
-    code = int(code)
-    ERROR_HANDLER[code] = handler
+def route(url, **kargs):
+    """ Decorator for request handler. Same as add_route(url, handler, **kargs)."""
+    return default_app().route(url, **kargs)
 
 
 def error(code=500):
     """ Decorator for error handler. Same as set_error_handler(code, handler)."""
-    def wrapper(handler):
-        set_error_handler(code, handler)
-        return handler
-    return wrapper
+    return default_app().error(code)
 
 
 
@@ -503,7 +508,7 @@ def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080, optinmize =
     PasteServer or write your own server adapter.
     """
     if not app:
-        app = default_app
+        app = default_app()
     
     OPTIMIZER = bool(optinmize)
     quiet = bool('quiet' in kargs and kargs['quiet'])
@@ -532,8 +537,6 @@ def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080, optinmize =
 
 
 # Templates
-class TemplateError(BottleException): pass
-class TemplateNotFoundError(BottleException): pass
 
 
 class BaseTemplate(object):
@@ -553,7 +556,7 @@ class BaseTemplate(object):
         for path in TEMPLATE_PATH:
             if os.path.isfile(path % name):
                 return cls(filename = path % name)
-        raise TemplateNotFoundError('Template not found: %s' % repr(name))
+        return None
 
 
 class MakoTemplate(BaseTemplate):
@@ -635,12 +638,10 @@ def template(template, template_adapter=SimpleTemplate, **args):
     ''' Returns a string from a template '''
     if template not in TEMPLATES:
         if template.find("\n") == -1 and template.find("{") == -1 and template.find("%") == -1:
-            try:
-                TEMPLATES[template] = template_adapter.find(template)
-            except TemplateNotFoundError: pass
+            TEMPLATES[template] = template_adapter.find(template)
         else:
             TEMPLATES[template] = template_adapter(template)
-    if template not in TEMPLATES:
+    if not TEMPLATES[template]:
         abort(500, 'Template not found')
     args['abort'] = abort
     args['request'] = request
@@ -793,10 +794,6 @@ DEBUG = False
 OPTIMIZER = False
 TEMPLATE_PATH = ['./%s.tpl', './views/%s.tpl']
 TEMPLATES = {}
-
-ROUTES_SIMPLE = {}
-ROUTES_REGEXP = {}
-ERROR_HANDLER = {}
 HTTP_CODES = {
     100: 'CONTINUE',
     101: 'SWITCHING PROTOCOLS',
@@ -845,7 +842,6 @@ request = Request()
 response = Response()
 db = BottleDB()
 local = threading.local()
-default_app = WSGIHandler()
 
 @error(500)
 def error500(exception):
