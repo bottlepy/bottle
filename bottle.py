@@ -132,14 +132,13 @@ class BreakTheBottle(BottleException):
     content of output """
     def __init__(self, output):
         self.output = output
-        
-        
+
+
 
 
 
 
 # WSGI abstraction: Request and response management
-
 
 _default_app = None
 def default_app():
@@ -147,7 +146,6 @@ def default_app():
     if not _default_app:
         _default_app = Bottle()
     return _default_app
-
 
 
 class Bottle(object):
@@ -168,7 +166,6 @@ class Bottle(object):
         if route:
             return (route, {})
         
-        # Now search regexp routes
         routes = self.regexp_routes.get(method,[])
         for i in range(len(routes)):
             match = routes[i][0].match(url)
@@ -247,10 +244,6 @@ class Bottle(object):
             return [output]
         else:
             return output
-
-
-
-
 
 
 class Request(threading.local):
@@ -551,7 +544,6 @@ def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080, **kargs):
 
 # Templates
 
-
 class BaseTemplate(object):
     def __init__(self, template='', filename='<template>'):
         self.source = filename
@@ -798,9 +790,9 @@ class BottleDB(threading.local):
 
 
 
-def debug(mode=True): default_app().debug = bool(mode)
 
-# Modul initialization
+
+# Modul initialization and configuration
 
 DB_PATH = './'
 TEMPLATE_PATH = ['./%s.tpl', './views/%s.tpl']
@@ -853,4 +845,8 @@ request = Request()
 response = Response()
 db = BottleDB()
 local = threading.local()
+
+def debug(mode=True): default_app().debug = bool(mode)
+def optimize(mode=True): default_app().optimize = bool(mode)
+
 
