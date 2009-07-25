@@ -2,7 +2,7 @@
 """
 Bottle is a fast and simple mirco-framework for small web-applications. It
 offers request dispatching (Routes) with url parameter support, Templates,
-key/value Databases, a build-in HTTP Server? and adapters for many third party
+key/value Databases, a build-in HTTP Server and adapters for many third party
 WSGI/HTTP-server and template engines. All in a single file and with no
 dependencies other than the Python Standard Library.
 
@@ -141,8 +141,12 @@ class BreakTheBottle(BottleException):
 # WSGI abstraction: Request and response management
 
 _default_app = None
-def default_app():
+def default_app(newapp = None):
+    ''' Returns the current default app or sets a new one.
+        Defaults to an instance of Bottle '''
     global _default_app
+    if newapp:
+        _default_app = newapp
     if not _default_app:
         _default_app = Bottle()
     return _default_app
@@ -642,7 +646,7 @@ class SimpleTemplate(BaseTemplate):
 def template(template, template_adapter=SimpleTemplate, **args):
     ''' Returns a string from a template '''
     if template not in TEMPLATES:
-        if template.find("\n") == -1 and template.find("{") == -1 and template.find("%") == -1:
+        if template.find("\n") == template.find("{") == template.find("%") == -1:
             TEMPLATES[template] = template_adapter.find(template)
         else:
             TEMPLATES[template] = template_adapter(template)
