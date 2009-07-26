@@ -1,19 +1,24 @@
 Bottle Web Framework
 ====================
 
-Bottle is a fast and simple mirco-framework for small web-applications. It
-offers request dispatching with url parameter support, templates, key/value
+<div style="float: right; padding: 0px 0px 2em 2em"><img src="/bottle-logo.png" alt="Botle Logo" /></div>
+
+Bottle is a fast and simple [WSGI][wsgi]-framework for the [Python Programming Language][py]. It
+offers request dispatching with url parameter support routes, templates, key/value
 databases, a build-in HTTP server and adapters for many third party
-WSGI/HTTP-server and template engines. All in a single file and with no
-dependencies other than the Python Standard Library.
+WSGI/HTTP-server and template engines. All in a single file and with no dependencies other than the Python Standard Library.
 
-You can install bottle with `easy_install bottle` or just download bottle.py
-and place it in your project directory. There are no (hard) dependencies other
-than the Python Standard Library. For news, bugs and documentation
-visit my [GitHub repository][www] or the [bottle.py wiki][wiki].
+For news, bugs and documentation visit my [GitHub repository][www] or the [bottle.py homepage][home].
 
+  [wsgi]: http://www.wsgi.org/wsgi/
+  [py]: http://python.org/
   [www]: http://github.com/defnull/bottle
-  [wiki]: http://wiki.github.com/defnull/bottle
+  [bottle-dl]: http://pypi.python.org/pypi/bottle
+
+Installation and Dependencies
+-----------------------------
+
+You can install bottle with `easy_install bottle` or just [download][bottle-dl] bottle.py and place it in your project directory. There are no (hard) dependencies other than the Pyt$
 
 Features
 --------
@@ -44,7 +49,7 @@ Features
   
 Bottle does **not** include:
 
-  * Models and ORMs: Choose your own (SQLAlchemy, Elixr)
+  * Models and ORMs: Choose your own (SQLAlchemy, Elixir)
   * HTML-Helper, Session, Identification and Authentication: Do it yourself
   * Scaffolding: No, sorry
   
