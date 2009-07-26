@@ -62,7 +62,7 @@ Example
 """
 
 __author__ = 'Marcel Hellkamp'
-__version__ = '0.5.3'
+__version__ = '0.5.4'
 __license__ = 'MIT'
 
 import sys
@@ -346,7 +346,7 @@ class Response(threading.local):
         ''' Returns a wsgi conform list of header/value pairs '''
         for c in self.COOKIES.values():
             self.header.add_header('Set-Cookie', c.OutputString())
-        return [(h.title(), v) for h, v in self.header_list]
+        return [(h.title(), str(v)) for h, v in self.header_list]
 
     @property
     def COOKIES(self):
