@@ -1,7 +1,7 @@
 Bottle Web Framework
 ====================
 
-<div style="float: right; padding: 0px 0px 2em 2em"><img src="/bottle-logo.png" alt="Botle Logo" /></div>
+<div style="float: right; padding: 0px 0px 2em 2em"><img src="http://bottle.paws.de/bottle-logo.png" alt="Bottle Logo" /></div>
 
 Bottle is a fast and simple [WSGI][wsgi]-framework for the [Python Programming Language][py]. It
 offers request dispatching with url parameter support routes, templates, key/value
