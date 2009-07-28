@@ -62,7 +62,7 @@ Example
 """
 
 __author__ = 'Marcel Hellkamp'
-__version__ = '0.5.4'
+__version__ = '0.5.5'
 __license__ = 'MIT'
 
 import sys
@@ -227,7 +227,7 @@ class Bottle(object):
                 response.status = e.http_status
                 output = self.error_handler.get(response.status, str)(e)
         except Exception as e:
-            response.status == 500
+            response.status = 500
             if self.catchall:
                 err = "Unhandled Exception: %s\n" % (repr(e))
                 if self.debug:
