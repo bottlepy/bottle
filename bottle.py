@@ -76,19 +76,20 @@ import random
 import threading
 import time
 from wsgiref.headers import Headers as HeaderWrapper
+from Cookie import SimpleCookie
+import anydbm as dbm
 
-if (2,6) <= sys.version_info < (3,0):
-    from Cookie import SimpleCookie
-    from urlparse import parse_qs
-    import cPickle as pickle
-    import anydbm as dbm
-elif (3,0) <= sys.version_info:
-    from http.cookies import SimpleCookie
-    from urllib.parse import parse_qs
-    import pickle
-    import dbm
-else:
-    raise NotImplementedError("Sorry, you need at least Python 2.6 or Python 3.x to use bottle.")
+try:
+  from urlparse import parse_qs
+except ImportError:
+  from cgi import parse_qs
+
+try:
+  import cPickle as pickle
+except ImportError:
+  import pickle as pickle
+  
+
 
 
 
@@ -221,12 +222,12 @@ class Bottle(object):
                 if not handler: raise HTTPError(404, "Not found")
                 output = handler(**args)
                 db.close()
-            except BreakTheBottle as e:
+            except BreakTheBottle, e:
                 output = e.output
-            except HTTPError as e:
+            except HTTPError, e:
                 response.status = e.http_status
                 output = self.error_handler.get(response.status, str)(e)
-        except Exception as e:
+        except Exception, e:
             response.status = 500
             if self.catchall:
                 err = "Unhandled Exception: %s\n" % (repr(e))
@@ -288,7 +289,7 @@ class Request(threading.local):
         if self._GET is None:
             data = parse_qs(self.query_string, keep_blank_values=True)
             self._GET = {}
-            for key, value in data.items():
+            for key, value in data.iteritems():
                 if len(value) == 1:
                     self._GET[key] = value[0]
                 else:
@@ -325,7 +326,7 @@ class Request(threading.local):
         if self._COOKIES is None:
             raw_dict = SimpleCookie(self._environ.get('HTTP_COOKIE',''))
             self._COOKIES = {}
-            for cookie in raw_dict.values():
+            for cookie in raw_dict.itervalues():
                 self._COOKIES[cookie.key] = cookie.value
         return self._COOKIES
 
@@ -344,7 +345,7 @@ class Response(threading.local):
 
     def wsgiheaders(self):
         ''' Returns a wsgi conform list of header/value pairs '''
-        for c in self.COOKIES.values():
+        for c in self.COOKIES.itervalues():
             self.header.add_header('Set-Cookie', c.OutputString())
         return [(h.title(), str(v)) for h, v in self.header_list]
 
@@ -432,7 +433,7 @@ def validate(**vkargs):
                     abort(403, 'Missing parameter: %s' % key)
                 try:
                     kargs[key] = vkargs[key](kargs[key])
-                except ValueError as e:
+                except ValueError, e:
                     abort(403, 'Wrong parameter format for: %s' % key)
             return func(**kargs)
         return wrapper
@@ -531,15 +532,15 @@ def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080, **kargs):
         raise RuntimeError("Server must be a subclass of ServerAdapter")
 
     if not quiet:
-        print('Bottle server starting up (using %s)...' % repr(server))
-        print('Listening on http://%s:%d/' % (server.host, server.port))
-        print('Use Ctrl-C to quit.')
-        print('')
+        print 'Bottle server starting up (using %s)...' % repr(server)
+        print 'Listening on http://%s:%d/' % (server.host, server.port)
+        print 'Use Ctrl-C to quit.'
+        print
 
     try:
         server.run(app)
     except KeyboardInterrupt:
-        print("Shuting down...")
+        print "Shuting down..."
 
 
 
@@ -733,7 +734,7 @@ class BottleBucket(object):
         self.__init__(self.name)
     
     def close(self):
-        for key in self.mmap.keys():
+        for key in self.mmap:
             pvalue = pickle.dumps(self.mmap[key], pickle.HIGHEST_PROTOCOL)
             if key not in self.db or pvalue != self.db[key]:
                 self.db[key] = pvalue
@@ -741,7 +742,7 @@ class BottleBucket(object):
         self.db.close()
         
     def clear(self):
-        for key in self.db.keys():
+        for key in self.db:
             del self.db[key]
         self.mmap.clear()
         
@@ -774,7 +775,7 @@ class BottleDB(threading.local):
             if key not in self.open:
                 self.open[key] = BottleBucket(key)
             self.open[key].clear()
-            for k, v in value.items():
+            for k, v in value.iteritems():
                 self.open[key][k] = v
         else:
             raise ValueError("Only dicts and BottleBuckets are allowed.")
@@ -801,8 +802,8 @@ class BottleDB(threading.local):
         self.__init__()
     
     def close(self):
-        for db in self.open.values():
-            db.close()
+        for db in self.open:
+            self.open[db].close()
         self.open.clear()
 
 

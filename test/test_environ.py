@@ -1,11 +1,7 @@
 import unittest
 import sys, os.path
-TESTDIR = os.path.dirname(os.path.abspath(__file__))
-DISTDIR = os.path.dirname(TESTDIR)
-sys.path.insert(0, TESTDIR)
-sys.path.insert(0, DISTDIR)
-
 from bottle import request, response
+
 if sys.version_info[0] == 2:
     from StringIO import StringIO
 else:

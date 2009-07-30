@@ -3,15 +3,21 @@
 
 import unittest
 import sys, os, os.path
-TESTDIR = os.path.dirname(os.path.abspath(__file__))
-DISTDIR = os.path.dirname(TESTDIR)
-sys.path.insert(0, TESTDIR)
-sys.path.insert(0, DISTDIR)
-
 import bottle
-bottle.DB_PATH = '/tmp/'
+import tempfile
+TMPDIR = tempfile.mkdtemp(prefix='bottle_unittest_') + '/'
 
 class TestDB(unittest.TestCase):
+
+    def setUp(self):
+        bottle.DB_PATH = TMPDIR
+        for f in os.listdir(TMPDIR):
+            os.unlink(os.path.join(TMPDIR, f))
+
+    def tearDown(self):
+        for f in os.listdir(TMPDIR):
+            os.unlink(os.path.join(TMPDIR, f))
+        os.rmdir(TMPDIR)
 
     def test_save(self):
         """ DB: Save to disk """

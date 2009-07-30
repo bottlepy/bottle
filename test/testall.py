@@ -3,11 +3,6 @@
 
 import unittest
 import sys, os.path
-TESTDIR = os.path.dirname(os.path.abspath(__file__))
-DISTDIR = os.path.dirname(TESTDIR)
-sys.path.insert(0, TESTDIR)
-sys.path.insert(0, DISTDIR)
-
 import test_templates
 import test_routes
 import test_environ
@@ -20,5 +15,6 @@ suite.addTest(test_environ.suite)
 suite.addTest(test_db.suite)
 
 if __name__ == '__main__':
-    unittest.TextTestRunner(verbosity=2).run(suite)
+    result = unittest.TextTestRunner(verbosity=0).run(suite)
+    sys.exit((result.errors or result.failures) and 1 or 0)
 
