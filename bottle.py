@@ -549,9 +549,9 @@ def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080, **kargs):
 # Templates
 
 class BaseTemplate(object):
-    def __init__(self, template='', filename='<template>'):
+    def __init__(self, template='', filename=None):
         self.source = filename
-        if self.source != '<template>':
+        if self.source:
             fp = open(filename)
             template = fp.read()
             fp.close()
@@ -577,8 +577,21 @@ class MakoTemplate(BaseTemplate):
         return self.tpl.render(**args)
 
 
-class SimpleTemplate(BaseTemplate):
+class CheetahTemplate(BaseTemplate):
+    def parse(self, template):
+        from Cheetah.Template import Template
+        self.context = threading.local()
+        self.context.vars = {}
+        self.tpl = Template(source = template, searchList=[self.context.vars])
+ 
+    def render(self, **args):
+        self.context.vars.update(args)
+        out = str(self.tpl)
+        self.context.vars.clear()
+        return out
 
+
+class SimpleTemplate(BaseTemplate):
     re_python = re.compile(r'^\s*%\s*(?:(if|elif|else|try|except|finally|for|while|with|def|class)|(include)|(end)|(.*))')
     re_inline = re.compile(r'\{\{(.*?)\}\}')
     dedent_keywords = ('elif', 'else', 'except', 'finally')
@@ -633,7 +646,7 @@ class SimpleTemplate(BaseTemplate):
 
     def parse(self, template):
         code = self.translate(template)
-        self.co = compile(code, self.source, 'exec')
+        self.co = compile(code, self.source or '<template>', 'exec')
 
     def render(self, **args):
         ''' Returns the rendered template using keyword arguments as local variables. '''
@@ -658,8 +671,9 @@ def template(template, template_adapter=SimpleTemplate, **args):
     return TEMPLATES[template].render(**args)
 
 
-def mako_template(template_name, **args):
-    return template(template_name, template_adapter=MakoTemplate, **args)
+def mako_template(template_name, **args): return template(template_name, template_adapter=MakoTemplate, **args)
+
+def cheetah_template(template_name, **args): return template(template_name, template_adapter=CheetahTemplate, **args)
 
 
 
