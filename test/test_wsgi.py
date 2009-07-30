@@ -38,7 +38,9 @@ class TestWsgi(unittest.TestCase):
 
     def test_404(self):
         """ WSGI: 404 """
+        self.wsgi.add_route('/post/only', lambda: 'test', method='POST')
         self.assertEqual(404, self.simulate('/not/found')[0])
+        self.assertEqual(404, self.simulate('/post/only')[0])
         
     def test_500(self):
         """ WSGI: 500 """
