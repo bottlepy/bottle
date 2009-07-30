@@ -227,6 +227,8 @@ class Bottle(object):
             except HTTPError, e:
                 response.status = e.http_status
                 output = self.error_handler.get(response.status, str)(e)
+        except (KeyboardInterrupt, SystemExit, MemoryError):
+            raise
         except Exception, e:
             response.status = 500
             if self.catchall:
