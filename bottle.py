@@ -359,7 +359,7 @@ class Response(threading.local):
         ''' Returns a wsgi conform list of header/value pairs '''
         for c in self.COOKIES.itervalues():
             self.header.add_header('Set-Cookie', c.OutputString())
-        return [(h.title(), str(v)) for h, v in self.header_list]
+        return [(h.title(), str(v)) for h, v in self.header.items()]
 
     @property
     def COOKIES(self):

@@ -31,7 +31,7 @@ class TestWsgi(unittest.TestCase):
         setup_testing_defaults(environ)
         def start_response(status, header):
             meta['status'] = int(status.split()[0])
-            meta['header'] = header
+            meta['header'] = dict(header)
         for part in self.wsgi(environ, start_response):
             out += part
         return meta['status'], meta['header'], out
@@ -56,6 +56,13 @@ class TestWsgi(unittest.TestCase):
         self.assertEqual('test', self.simulate('/page1')[2])
         self.assertEqual('test', self.simulate('/page2')[2])
      
+    def test_json(self):
+        """ WSGI: json """
+        self.wsgi.add_route('/json', lambda: {'a':1})
+        self.assertEqual(200, self.simulate('/json')[0])
+        self.assertEqual('application/json', self.simulate('/json')[1].get('Content-Type',''))
+        self.assertEqual(r'{"a": 1}', self.simulate('/json')[2])
+
 
 suite = unittest.TestSuite()
 suite.addTest(unittest.makeSuite(TestWsgi))
