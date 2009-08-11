@@ -90,9 +90,12 @@ except ImportError:
     import pickle as pickle
   
 try:
-    import json.dumps as json_dump
+    try:
+        from json import dumps as json_dumps
+    except ImportError:
+        from simplejson import dumps as json_dumps 
 except ImportError:
-    json = None
+    json_dumps = None
 
 
 
@@ -234,8 +237,8 @@ class Bottle(object):
             # output casting
             if hasattr(output, 'read'):
                 output = environ.get('wsgi.file_wrapper', lambda x: iter(lambda: x.read(8192), ''))(output)
-            elif self.autojson and json and isinstance(output, dict):
-                output = json_dump(output)
+            elif self.autojson and json_dumps and isinstance(output, dict):
+                output = json_dumps(output)
                 response.content_type = 'application/json'
             if isinstance(output, str):
                 response.header['Content-Length'] = str(len(output))
