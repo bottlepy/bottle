@@ -62,7 +62,7 @@ Example
 """
 
 __author__ = 'Marcel Hellkamp'
-__version__ = '0.5.6'
+__version__ = '0.5.7'
 __license__ = 'MIT'
 
 import sys
@@ -80,16 +80,19 @@ from Cookie import SimpleCookie
 import anydbm as dbm
 
 try:
-  from urlparse import parse_qs
+    from urlparse import parse_qs
 except ImportError:
-  from cgi import parse_qs
+    from cgi import parse_qs
 
 try:
-  import cPickle as pickle
+    import cPickle as pickle
 except ImportError:
-  import pickle as pickle
+    import pickle as pickle
   
-
+try:
+    import json.dumps as json_dump
+except ImportError:
+    json = None
 
 
 
@@ -155,12 +158,13 @@ def default_app(newapp = None):
 
 class Bottle(object):
 
-    def __init__(self, catchall=True, debug=False, optimize=False):
+    def __init__(self, catchall=True, debug=False, optimize=False, autojson=False):
         self.simple_routes = {}
         self.regexp_routes = {}
         self.error_handler = {}
         self.optimize = optimize
         self.debug = debug
+        self.autojson = autojson
         self.catchall = catchall
 
     def match_url(self, url, method='GET'):
@@ -211,7 +215,7 @@ class Bottle(object):
             self.set_error_handler(code, handler)
             return handler
         return wrapper
-        
+
     def __call__(self, environ, start_response):
         """ The bottle WSGI-interface ."""
         request.bind(environ)
@@ -227,6 +231,15 @@ class Bottle(object):
             except HTTPError, e:
                 response.status = e.http_status
                 output = self.error_handler.get(response.status, str)(e)
+            # output casting
+            if hasattr(output, 'read'):
+                output = environ.get('wsgi.file_wrapper', lambda x: iter(lambda: x.read(8192), ''))(output)
+            elif self.autojson and json and isinstance(output, dict):
+                output = json_dump(output)
+                response.content_type = 'application/json'
+            if isinstance(output, str):
+                response.header['Content-Length'] = str(len(output))
+                output = [output]
         except (KeyboardInterrupt, SystemExit, MemoryError):
             raise
         except Exception, e:
@@ -241,16 +254,10 @@ class Bottle(object):
                 request._environ['wsgi.errors'].write(err)
             else:
                 raise
-
         status = '%d %s' % (response.status, HTTP_CODES[response.status])
         start_response(status, response.wsgiheaders())
+        return output
 
-        if hasattr(output, 'read'):
-            return environ.get('wsgi.file_wrapper', lambda x: iter(lambda: x.read(8192), ''))(output)
-        elif isinstance(output, str):
-            return [output]
-        else:
-            return output
 
 
 class Request(threading.local):
