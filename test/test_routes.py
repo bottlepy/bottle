@@ -3,9 +3,30 @@
 
 import unittest
 import sys, os.path
-from bottle import route, Bottle
+from bottle import route, Bottle, BaseController
+from wsgiref.util import setup_testing_defaults
+
 
 class TestRoutes(unittest.TestCase):
+
+    def setUp(self):
+        self.wsgi = Bottle()
+
+    def simulate(self, url, **kargs):
+        environ = {}
+        meta = {}
+        out = ''
+        url = url.split('?')
+        environ['PATH_INFO'] = url[0]
+        if len(url) > 1: environ['QUERY_STRING'] = url[1]
+        environ.update(kargs)
+        setup_testing_defaults(environ)
+        def start_response(status, header):
+            meta['status'] = int(status.split()[0])
+            meta['header'] = dict(header)
+        for part in self.wsgi(environ, start_response):
+            out += part
+        return meta['status'], meta['header'], out
 
     def test_static(self):
         """ Routes: Static routes """
@@ -37,7 +58,7 @@ class TestRoutes(unittest.TestCase):
         @app.route('/exists')
         def test1():
             return 'test1'
-        @app.default()
+        @app.default
         def test2():
             return 'test2'
         self.assertEqual(test1, app.match_url('/exists')[0])
@@ -45,14 +66,21 @@ class TestRoutes(unittest.TestCase):
         self.assertEqual(test2, app.match_url('/does_not_exist')[0])
         self.assertNotEqual(test1, app.match_url('/does_not_exist')[0])
 
-
-    def test_syntax(self):
-        """ Routes: Syntax """ 
-        #self.assertEqual(r'^/(?P<bla>[^/]+)$', compile_route('/:bla').pattern)
-        #self.assertEqual(r'^/(?P<bla>[^/]+)/(?P<blub>[^/]+)$', compile_route('/:bla/:blub').pattern)
-        #self.assertEqual(r'^/(?P<bla>[0-9]+)$', compile_route('/:bla#[0-9]+#').pattern)
-        #self.assertEqual(r'^/(?P<bla>[0-9]+)$', compile_route('/:bla:[0-9]+:').pattern)
-        #self.assertEqual(r'^/(?P<bla>[0-9]+)$', compile_route('/:bla|[0-9]+|').pattern)
+    def test_controller(self):
+        """ Routes: Controller Syntax """
+        app = self.wsgi
+        @app.route('/ctest/{action}')
+        @app.route('/ctest/yes/:test', action='yes2')
+        class CTest(BaseController): 
+            def _no(self): return 'no'
+            def yes(self): return 'yes'
+            def yes2(self, test): return test
+        self.assertEqual(404, self.simulate('/ctest/no')[0])
+        self.assertEqual(404, self.simulate('/ctest/_no')[0])
+        self.assertEqual(200, self.simulate('/ctest/yes')[0])
+        self.assertEqual(200, self.simulate('/ctest/yes/test')[0])
+        self.assertEqual('yes', self.simulate('/ctest/yes')[2])
+        self.assertEqual('test', self.simulate('/ctest/yes/test')[2])
 
 
 suite = unittest.TestSuite()

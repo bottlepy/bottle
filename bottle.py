@@ -191,8 +191,22 @@ class Bottle(object):
             return (self.default_route, {})
         return (None, None)
 
-    def add_route(self, route, handler, method='GET', simple=False):
+    def add_controller(self, route, controller, **kargs):
+        """ Adds a controller class or object """
+        if '{action}' not in route and 'action' not in kargs:
+            raise BottleException('Routes to controller classes or object MUST contain an {action} placeholder or use the action-parameter')
+        for action in [m for m in dir(controller) if not m.startswith('_')]:
+            handler = getattr(controller,action)
+            if callable(handler) and action == kargs.get('action', action):
+                self.add_route(route.replace('{action}',action), handler, **kargs)
+
+    def add_route(self, route, handler, method='GET', simple=False, **kargs):
         """ Adds a new route to the route mappings. """
+        if isinstance(handler, type) and issubclass(handler, BaseController):
+            handler = handler()
+        if isinstance(handler, BaseController):
+            self.add_controller(route, handler, method=method, simple=simple, **kargs)
+            return
         method = method.strip().upper()
         route = route.strip().lstrip('$^/ ').rstrip('$^ ')
         if re.match(r'^(\w+/)*\w*$', route) or simple:
@@ -396,6 +410,14 @@ class Response(threading.local):
     content_type = property(get_content_type, set_content_type, None, get_content_type.__doc__)
 
 
+class BaseController(object):
+    _singleton = None
+    def __new__(cls, *a, **k):
+        if not cls._singleton:
+            cls._singleton = object.__new__(cls, *a, **k)
+        return cls._singleton
+
+
 def abort(code=500, text='Unknown Error: Appliction stopped.'):
     """ Aborts execution and causes a HTTP error. """
     raise HTTPError(code, text)
@@ -469,9 +491,9 @@ def route(url, **kargs):
     """ Decorator for request handler. Same as add_route(url, handler, **kargs)."""
     return default_app().route(url, **kargs)
 
-def default():
+def default(handler):
     """ Decorator for request handler. Same as set_default(handler)."""
-    return default_app().default()
+    return default_app().default(handler)
 
 def error(code=500):
     """ Decorator for error handler. Same as set_error_handler(code, handler)."""
