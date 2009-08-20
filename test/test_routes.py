@@ -30,6 +30,22 @@ class TestRoutes(unittest.TestCase):
         self.assertEqual(None, app.match_url('/aa')[0])
         self.assertEqual(repr({'a':'aa','b':'bb'}), repr(app.match_url('/aa/bb')[1]))
 
+    def test_default(self):
+        """ Routes: Decorator and default routes """
+        app = Bottle()
+        token = 'abc'
+        @app.route('/exists')
+        def test1():
+            return 'test1'
+        @app.default()
+        def test2():
+            return 'test2'
+        self.assertEqual(test1, app.match_url('/exists')[0])
+        self.assertNotEqual(test2, app.match_url('/exists')[0])
+        self.assertEqual(test2, app.match_url('/does_not_exist')[0])
+        self.assertNotEqual(test1, app.match_url('/does_not_exist')[0])
+
+
     def test_syntax(self):
         """ Routes: Syntax """ 
         #self.assertEqual(r'^/(?P<bla>[^/]+)$', compile_route('/:bla').pattern)

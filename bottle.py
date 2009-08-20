@@ -164,6 +164,7 @@ class Bottle(object):
     def __init__(self, catchall=True, debug=False, optimize=False, autojson=True):
         self.simple_routes = {}
         self.regexp_routes = {}
+        self.default_route = None
         self.error_handler = {}
         self.optimize = optimize
         self.debug = debug
@@ -186,6 +187,8 @@ class Bottle(object):
                 if i > 0 and self.optimize and random.random() <= 0.001:
                     routes[i-1], routes[i] = routes[i], routes[i-1]
                 return (handler, match.groupdict())
+        if self.default_route:
+            return (self.default_route, {})
         return (None, None)
 
     def add_route(self, route, handler, method='GET', simple=False):
@@ -204,6 +207,16 @@ class Bottle(object):
         """ Decorator for request handler. Same as add_route(url, handler, **kargs)."""
         def wrapper(handler):
             self.add_route(url, handler, **kargs)
+            return handler
+        return wrapper
+
+    def set_default(self, handler):
+        self.default_route = handler
+
+    def default(self):
+        """ Decorator for request handler. Same as add_defroute( handler )."""
+        def wrapper(handler):
+            self.set_default(handler)
             return handler
         return wrapper
 
@@ -456,6 +469,9 @@ def route(url, **kargs):
     """ Decorator for request handler. Same as add_route(url, handler, **kargs)."""
     return default_app().route(url, **kargs)
 
+def default():
+    """ Decorator for request handler. Same as set_default(handler)."""
+    return default_app().default()
 
 def error(code=500):
     """ Decorator for error handler. Same as set_error_handler(code, handler)."""
