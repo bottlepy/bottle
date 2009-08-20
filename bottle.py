@@ -600,7 +600,19 @@ class BaseTemplate(object):
 class MakoTemplate(BaseTemplate):
     def parse(self, template):
         from mako.template import Template
-        self.tpl = Template(template)
+        from mako.lookup import TemplateLookup
+        class MyLookup(TemplateLookup):
+            def get_template(self, uri):
+                if uri in self.__collection:
+                    return super(TemplateLookup, self).get_template(uri)
+                else:
+                    for path in TEMPLATE_PATH:
+                        if os.path.isfile(path % name):
+                            return self.__load(path % name, uri)
+            def __load(self, filename, uri):
+                self._uri_cache[filename] = uri
+                return super(TemplateLookup, self).__load(filename, uri)
+        self.tpl = Template(template, lookup=MyLookup)
  
     def render(self, **args):
         return self.tpl.render(**args)
