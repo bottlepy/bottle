@@ -801,7 +801,10 @@ class BottleBucket(object):
             if key not in self.db or pvalue != self.db[key]:
                 self.db[key] = pvalue
         self.mmap.clear()
-        self.db.close()
+        if hasattr(self.db, 'sync'):
+            self.db.sync()
+        if hasattr(self.db, 'close'):
+            self.db.close()
         
     def clear(self):
         for key in self.db:
