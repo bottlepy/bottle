@@ -58,7 +58,7 @@ class TestRoutes(unittest.TestCase):
         @app.route('/exists')
         def test1():
             return 'test1'
-        @app.default
+        @app.default()
         def test2():
             return 'test2'
         self.assertEqual(test1, app.match_url('/exists')[0])

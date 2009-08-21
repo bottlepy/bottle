@@ -491,9 +491,9 @@ def route(url, **kargs):
     """ Decorator for request handler. Same as add_route(url, handler, **kargs)."""
     return default_app().route(url, **kargs)
 
-def default(handler):
+def default():
     """ Decorator for request handler. Same as set_default(handler)."""
-    return default_app().default(handler)
+    return default_app().default()
 
 def error(code=500):
     """ Decorator for error handler. Same as set_error_handler(code, handler)."""
