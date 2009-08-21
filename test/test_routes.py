@@ -68,13 +68,15 @@ class TestRoutes(unittest.TestCase):
 
     def test_controller(self):
         """ Routes: Controller Syntax """
+        """ Not testing decorator mode here because it is a SyntaxError in Python 2.5 """
         app = self.wsgi
-        @app.route('/ctest/{action}')
-        @app.route('/ctest/yes/:test', action='yes2')
         class CTest(BaseController): 
             def _no(self): return 'no'
             def yes(self): return 'yes'
             def yes2(self, test): return test
+        app.add_route('/ctest/{action}', CTest)
+        app.add_route('/ctest/yes/:test', CTest, action='yes2')
+
         self.assertEqual(404, self.simulate('/ctest/no')[0])
         self.assertEqual(404, self.simulate('/ctest/_no')[0])
         self.assertEqual(200, self.simulate('/ctest/yes')[0])
