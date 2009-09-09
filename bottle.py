@@ -455,13 +455,13 @@ def send_file(filename, root, guessmime = True, mimetype = 'text/plain'):
     stats = os.stat(filename)
     # TODO: HTTP_IF_MODIFIED_SINCE -> 304 (Thu, 02 Jul 2009 23:16:31 CEST)
     if 'Content-Length' not in response.header:
-        response.header['Content-Length'] = stats.st_size
+        response.header['Content-Length'] = str(stats.st_size)
     if 'Last-Modified' not in response.header:
         ts = time.gmtime(stats.st_mtime)
         ts = time.strftime("%a, %d %b %Y %H:%M:%S +0000", ts)
         response.header['Last-Modified'] = ts
 
-    raise BreakTheBottle(open(filename, 'r'))
+    raise BreakTheBottle(open(filename, 'rb'))
 
 
 
@@ -932,5 +932,6 @@ local = threading.local()
 
 def debug(mode=True): default_app().debug = bool(mode)
 def optimize(mode=True): default_app().optimize = bool(mode)
+
 
 
