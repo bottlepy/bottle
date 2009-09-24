@@ -6,9 +6,9 @@ Bottle Web Framework
 Bottle is a fast and simple [WSGI][wsgi]-framework for the [Python Programming Language][py]. It
 offers request dispatching with url parameter support (routes), templates, key/value
 databases, a build-in HTTP server and adapters for many third party
-WSGI/HTTP-server and template engines. All in a single file and with no dependencies other than the Python Standard Library.
+WSGI/HTTP-server and template engines - all in a single file and with no dependencies other than the Python Standard Library.
 
-For news, bugs and documentation visit my [GitHub repository][www] or the [bottle.py homepage][home].
+For news, bugs and documentation visit the [bottle.py homepage][home].
 
   [wsgi]: http://www.wsgi.org/wsgi/
   [home]: http://bottle.paws.de/
@@ -21,39 +21,6 @@ Installation and Dependencies
 
 You can install bottle with `easy_install bottle` or just [download][bottle-dl] bottle.py and place it in your project directory. There are no (hard) dependencies other than the Pyt$
 
-Features
---------
-
-  * Request dispatching: Map requests to handler-callables using URL-routes
-    * URL parameters: Use regular expressions `/object/(?P<id>[0-9]+)` or simplified syntax `/object/:id` to extract data out of URLs
-  * WSGI abstraction: Don't worry about cgi and wsgi internals
-    * Input: `request.GET['parameter']` or `request.POST['form-field']`
-    * HTTP header: `response.header['Content-Type'] = 'text/html'`
-    * Cookie Management: `response.COOKIES['session'] = 'new_key'`
-    * Static files: `send_file('movie.flv', '/downloads/')` with automatic mime-type guessing
-    * Errors: Throw HTTP errors using `abort(404, 'Not here')` or subclass `HTTPError` and use custom error handlers
-  * Databases: Build in persistent key/value databases with fast memory caching.
-    * Use `db.db_name.key_name` or `db[db_name][key_name]` to access stored values. Missing databases are created on demand. Missing keys raise KeyError.
-    * Values are automatically pickled and saved at the end of the request live cycle.
-  * Templates: Integrated template language
-    * Plain simple: Execute python code with `%...` or use the inline syntax `{{...}}` for one-line expressions
-    * No IndentationErrors: You don’t have to worry about indentions. Blocks are closed by `%end`.
-    * Extremely fast: Parses and renders templates 5 to 10 times faster than [mako][]
-    * Optional support for [Mako-Templates][mako] (requires [mako][])
-  * HTTP Server: Build in WSGI/HTTP Gateway server (for development and production mode)
-    * Currently supports wsgiref.simple_server (default), [cherrypy][], [flup][], [paste][] and [fapws3][]
-  * Speed optimisations:
-    * Sendfile: Support for platform-specific high-performance file-transmission facilities, such as the Unix sendfile()
-      * Depends on `wsgi.file_wrapper` provided by your WSGI-Server implementation.
-    * Self optimising routes: Frequently used routes are tested first (optional)
-    * Fast static routes (single dict lookup)
-  
-Bottle does **not** include:
-
-  * Models and ORMs: Choose your own (SQLAlchemy, Elixir)
-  * HTML-Helper, Session, Identification and Authentication: Do it yourself
-  * Scaffolding: No, sorry
-  
   [mako]: http://www.makotemplates.org/
   [cherrypy]: http://www.cherrypy.org/
   [flup]: http://trac.saddi.com/flup
@@ -116,25 +83,6 @@ Template example:
         </ul>
       </body>
     </html>
-
-
-Benchmark
----------
-
-Using ApacheBench on my AMD 2800+ (2GB) on `/template/test` (`Bottle 0.4.2` and `run(server=PasteServer)`
-
-    marc@nava:/work/bottle$ ab -c10 -n1000 http://localhost:8080/template/test
-    This is ApacheBench, Version 2.3 <$Revision: 655654 $>
-    ...
-    Server Software:        PasteWSGIServer/0.5
-    ...
-    Concurrency Level:      10
-    Time taken for tests:   2.238 seconds
-    Complete requests:      1000
-    ...
-    Requests per second:    446.83 [#/sec] (mean)
-    Time per request:       22.380 [ms] (mean)
-    Time per request:       2.238 [ms] (mean, across all concurrent requests)
 
 
 Licence (MIT)
