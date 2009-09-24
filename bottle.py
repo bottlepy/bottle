@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 """
-Bottle is a fast and simple mirco-framework for small web-applications. It
-offers request dispatching (Routes) with url parameter support, Templates,
-key/value Databases, a build-in HTTP Server and adapters for many third party
-WSGI/HTTP-server and template engines. All in a single file and with no
+Bottle is a fast and simple micro-framework for small web applications. It
+offers request dispatching (Routes) with url parameter support, templates,
+key/value databases, a built-in HTTP Server and adapters for many third party
+WSGI/HTTP-server and template engines - all in a single file and with no
 dependencies other than the Python Standard Library.
 
 Homepage and documentation: http://wiki.github.com/defnull/bottle
 
 Special thanks to Stefan Matthias Aust [http://github.com/sma]
-  for his contribution to SimpelTemplate
+  for his contribution to SimpleTemplate
 
 Licence (MIT)
 -------------
@@ -591,7 +591,7 @@ def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080, **kargs):
     
     quiet = bool('quiet' in kargs and kargs['quiet'])
 
-    # Instanciate server, if it is a class instead of an instance
+    # Instantiate server, if it is a class instead of an instance
     if isinstance(server, type):
         if issubclass(server, CGIServer):
             server = server()
