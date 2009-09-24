@@ -263,13 +263,18 @@ class Bottle(object):
                 output = self.error_handler.get(response.status, str)(e)
             # output casting
             if hasattr(output, 'read'):
-                output = environ.get('wsgi.file_wrapper', lambda x: iter(lambda: x.read(8192), ''))(output)
+                output = environ.get('wsgi.file_wrapper',
+                  lambda x: iter(lambda: x.read(8192), ''))(output)
             elif self.autojson and json_dumps and isinstance(output, dict):
                 output = json_dumps(output)
                 response.content_type = 'application/json'
             if isinstance(output, str):
                 response.header['Content-Length'] = str(len(output))
                 output = [output]
+            if not hasattr(output, '__iter__'):
+                raise TypeError('Request handler for route "%s" returned [%s],\
+                which is not iterable.' % (request.path, type(output).__name__))
+                
         except (KeyboardInterrupt, SystemExit, MemoryError):
             raise
         except Exception, e:
@@ -715,6 +720,7 @@ class SimpleTemplate(BaseTemplate):
         ''' Returns the rendered template using keyword arguments as local variables. '''
         args['stdout'] = []
         args['_subtemplates'] = self.subtemplates
+        args['tpl'] = args
         eval(self.co, args)
         return ''.join(args['stdout'])
 
