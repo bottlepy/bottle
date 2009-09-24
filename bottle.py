@@ -492,7 +492,7 @@ def send_file(filename, root, guessmime = True, mimetype = 'text/plain'):
     if 'Content-Length' not in response.header:
         response.header['Content-Length'] = str(stats.st_size)
     if 'Last-Modified' not in response.header:
-        ts = time.strftime("%a, %d %b %Y %H:%M:%S +0000", ts)
+        ts = time.strftime("%a, %d %b %Y %H:%M:%S GMT", ts)
         response.header['Last-Modified'] = ts
 
     raise BreakTheBottle(open(filename, 'rb'))
