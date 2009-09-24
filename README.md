@@ -19,7 +19,7 @@ For news, bugs and documentation visit the [bottle.py homepage][home].
 Installation and Dependencies
 -----------------------------
 
-You can install bottle with `easy_install bottle` or just [download][bottle-dl] bottle.py and place it in your project directory. There are no (hard) dependencies other than the Pyt$
+You can install bottle with `easy_install bottle` or just [download][bottle-dl] bottle.py and place it in your project directory. There are no (hard) dependencies other than the Python Standard Library.
 
   [mako]: http://www.makotemplates.org/
   [cherrypy]: http://www.cherrypy.org/
