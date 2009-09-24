@@ -78,7 +78,9 @@ import time
 from wsgiref.headers import Headers as HeaderWrapper
 from Cookie import SimpleCookie
 import anydbm as dbm
-import time
+import subprocess
+import thread
+
 
 try:
     from urlparse import parse_qs
@@ -619,7 +621,8 @@ class FapwsServer(ServerAdapter):
         evwsgi.run()
 
 
-def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080, **kargs):
+def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080,
+        interval=2, reloader=False,  **kargs):
     """ Runs bottle as a web server, using Python's built-in wsgiref implementation by default.
     
     You may choose between WSGIRefServer, CherryPyServer, FlupServer and
@@ -639,17 +642,55 @@ def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080, **kargs):
 
     if not isinstance(server, WSGIAdapter):
         raise RuntimeError("Server must be a subclass of WSGIAdapter")
-
+ 
     if not quiet and isinstance(server, ServerAdapter):
-        print 'Bottle server starting up (using %s)...' % repr(server)
-        print 'Listening on http://%s:%d/' % (server.host, server.port)
-        print 'Use Ctrl-C to quit.'
-        print
-
+        if not reloader or os.environ.get('BOTTLE_CHILD') == 'true':
+            print 'Bottle server starting up (using %s)...' % repr(server)
+            print 'Listening on http://%s:%d/' % (server.host, server.port)
+            print 'Use Ctrl-C to quit.'
+            print
+        else:
+            print 'Bottle auto reloader starting up...'
+ 
     try:
-        server.run(app)
+        if reloader and interval:
+            if os.environ.get('BOTTLE_CHILD') == 'true':
+                # We are a child process
+                files = dict()
+                for module in sys.modules.values():
+                    file_path = getattr(module, '__file__', None)
+                    if file_path and os.path.isfile(file_path):
+                        file_split = os.path.splitext(file_path)
+                        if file_split[1] in ('.py', '.pyc', '.pyo'):
+                            file_path = file_split[0] + '.py'
+                            files[file_path] = os.stat(file_path).st_mtime
+                thread.start_new_thread(server.run, (app,))
+                while True:
+                    time.sleep(interval)
+                    for file_path, file_mtime in files.iteritems():
+                        if not os.path.exists(file_path):
+                            print "File changed: %s (deleted)" % file_path
+                            print "Restarting..."
+                            sys.exit(3)
+                        if os.stat(file_path).st_mtime > file_mtime:
+                            print "File changed: %s (modified)" % file_path
+                            print "Restarting..."
+                            sys.exit(3)
+            while True:
+                args = [sys.executable] + sys.argv
+                environ = os.environ.copy()
+                environ['BOTTLE_CHILD'] = 'true'
+                exit_status = subprocess.call(args, env=environ)
+                if exit_status != 3:
+                    sys.exit(exit_status)
+        else:
+            server.run(app)
     except KeyboardInterrupt:
-        print "Shuting down..."
+        print 'Shutting Down...'
+
+
+
+
 
 
 # Templates
