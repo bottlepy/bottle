@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 """
-Bottle is a fast and simple mirco-framework for small web-applications. It
-offers request dispatching (Routes) with url parameter support, Templates,
-key/value Databases, a build-in HTTP Server and adapters for many third party
-WSGI/HTTP-server and template engines. All in a single file and with no
+Bottle is a fast and simple micro-framework for small web applications. It
+offers request dispatching (Routes) with url parameter support, templates,
+key/value databases, a built-in HTTP Server and adapters for many third party
+WSGI/HTTP-server and template engines - all in a single file and with no
 dependencies other than the Python Standard Library.
 
 Homepage and documentation: http://wiki.github.com/defnull/bottle
 
 Special thanks to Stefan Matthias Aust [http://github.com/sma]
-  for his contribution to SimpelTemplate
+  for his contribution to SimpleTemplate
 
 Licence (MIT)
 -------------
@@ -545,8 +545,25 @@ def error(code=500):
 
 # Server adapter
 
-class ServerAdapter(object):
+class WSGIAdapter(object):
+
+    def run(self, handler):
+        pass
+
+    def __repr__(self):
+        return "%s()" % (self.__class__.__name__)
+
+class CGIServer(WSGIAdapter):
+
+    def run(self, handler):
+        from wsgiref.handlers import CGIHandler
+        CGIHandler().run(handler)
+
+class ServerAdapter(WSGIAdapter):
+
+
     def __init__(self, host='127.0.0.1', port=8080, **kargs):
+        WSGIAdapter.__init__(self)
         self.host = host
         self.port = int(port)
         self.options = kargs
@@ -613,14 +630,17 @@ def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080, **kargs):
     
     quiet = bool('quiet' in kargs and kargs['quiet'])
 
-    # Instanciate server, if it is a class instead of an instance
-    if isinstance(server, type) and issubclass(server, ServerAdapter):
-        server = server(host=host, port=port, **kargs)
+    # Instantiate server, if it is a class instead of an instance
+    if isinstance(server, type):
+        if issubclass(server, CGIServer):
+            server = server()
+        elif issubclass(server, ServerAdapter):
+            server = server(host=host, port=port, **kargs)
 
-    if not isinstance(server, ServerAdapter):
-        raise RuntimeError("Server must be a subclass of ServerAdapter")
+    if not isinstance(server, WSGIAdapter):
+        raise RuntimeError("Server must be a subclass of WSGIAdapter")
 
-    if not quiet:
+    if not quiet and isinstance(server, ServerAdapter):
         print 'Bottle server starting up (using %s)...' % repr(server)
         print 'Listening on http://%s:%d/' % (server.host, server.port)
         print 'Use Ctrl-C to quit.'
@@ -630,10 +650,6 @@ def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080, **kargs):
         server.run(app)
     except KeyboardInterrupt:
         print "Shuting down..."
-
-
-
-
 
 
 # Templates
