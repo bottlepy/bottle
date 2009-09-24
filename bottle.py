@@ -506,8 +506,25 @@ def error(code=500):
 
 # Server adapter
 
-class ServerAdapter(object):
+class WSGIAdapter(object):
+
+    def run(self, handler):
+        pass
+
+    def __repr__(self):
+        return "%s()" % (self.__class__.__name__)
+
+class CGIServer(WSGIAdapter):
+
+    def run(self, handler):
+        from wsgiref.handlers import CGIHandler
+        CGIHandler().run(handler)
+
+class ServerAdapter(WSGIAdapter):
+
+
     def __init__(self, host='127.0.0.1', port=8080, **kargs):
+        WSGIAdapter.__init__(self)
         self.host = host
         self.port = int(port)
         self.options = kargs
@@ -575,13 +592,16 @@ def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080, **kargs):
     quiet = bool('quiet' in kargs and kargs['quiet'])
 
     # Instanciate server, if it is a class instead of an instance
-    if isinstance(server, type) and issubclass(server, ServerAdapter):
-        server = server(host=host, port=port, **kargs)
+    if isinstance(server, type):
+        if issubclass(server, CGIServer):
+            server = server()
+        elif issubclass(server, ServerAdapter):
+            server = server(host=host, port=port, **kargs)
 
-    if not isinstance(server, ServerAdapter):
-        raise RuntimeError("Server must be a subclass of ServerAdapter")
+    if not isinstance(server, WSGIAdapter):
+        raise RuntimeError("Server must be a subclass of WSGIAdapter")
 
-    if not quiet:
+    if not quiet and isinstance(server, ServerAdapter):
         print 'Bottle server starting up (using %s)...' % repr(server)
         print 'Listening on http://%s:%d/' % (server.host, server.port)
         print 'Use Ctrl-C to quit.'
@@ -591,10 +611,6 @@ def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080, **kargs):
         server.run(app)
     except KeyboardInterrupt:
         print "Shuting down..."
-
-
-
-
 
 
 # Templates
