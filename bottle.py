@@ -695,41 +695,32 @@ def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080,
 
 # Templates
 
-class BaseTemplate(object):
-    def __init__(self, template='', filename=None):
-        self.source = filename
-        if self.source:
-            fp = open(filename)
-            template = fp.read()
-            fp.close()
-        self.parse(template)
+class TemplateError(HTTPError):
+    def __init__(self, message):
+        HTTPError.__init__(self, 500, message)
 
-    def parse(self, template): raise NotImplementedError
+class BaseTemplate(object):
+    def __init__(self, template=None, name=None, filename=None, lookup=None):
+        self.name = name
+        self.filename = filename
+        self.template = template or ''
+        self.lookup = lookup or []
+        if self.name and not self.filename and not self.template:
+            for path in self.lookup:
+                fpath = os.path.join(path, self.name+'.tpl')
+                if os.path.isfile(fpath):
+                    self.filename = fpath
+        self.prepare()
+
+    def prepare(self): raise NotImplementedError
     def render(self, **args): raise NotImplementedError
-    
-    @classmethod
-    def find(cls, name):
-        for path in TEMPLATE_PATH:
-            if os.path.isfile(path % name):
-                return cls(filename = path % name)
-        return None
 
 
 class MakoTemplate(BaseTemplate):
-    def parse(self, template):
+    def prepare(self):
         from mako.template import Template
         from mako.lookup import TemplateLookup
-        class MyLookup(TemplateLookup):
-            def get_template(self, uri):
-                if uri in self.__collection:
-                    return super(TemplateLookup, self).get_template(uri)
-                else:
-                    for path in TEMPLATE_PATH:
-                        if os.path.isfile(path % name):
-                            return self.__load(path % name, uri)
-            def __load(self, filename, uri):
-                self._uri_cache[filename] = uri
-                return super(TemplateLookup, self).__load(filename, uri)
+        #bla
         self.tpl = Template(template, lookup=MyLookup)
  
     def render(self, **args):
@@ -737,17 +728,23 @@ class MakoTemplate(BaseTemplate):
 
 
 class CheetahTemplate(BaseTemplate):
-    def parse(self, template):
+    def prepare(self):
         from Cheetah.Template import Template
         self.context = threading.local()
         self.context.vars = {}
-        self.tpl = Template(source = template, searchList=[self.context.vars])
+
+        if self.template:
+            self.tpl = Template(source = self.template, searchList=[self.context.vars])
+        elif self.filename:
+            self.tpl = Template(file = self.filename, searchList=[self.context.vars])
+        else:
+            raise TemplateError('Template not found.')
  
     def render(self, **args):
         self.context.vars.update(args)
         out = str(self.tpl)
         self.context.vars.clear()
-        return out
+        return [out]
 
 
 class SimpleTemplate(BaseTemplate):
@@ -755,6 +752,23 @@ class SimpleTemplate(BaseTemplate):
     re_inline = re.compile(r'\{\{(.*?)\}\}')
     dedent_keywords = ('elif', 'else', 'except', 'finally')
 
+    def prepare(self):
+        if self.name and not self.filename and not self.template:
+            for path in self.lookup:
+                fpath = os.path.join(path, name+'.tpl')
+                if os.path.isfile(fpath):
+                    self.filename = fpath
+            if not self.filename:
+                raise TemplateError('Template (%s) not found.' % self.name)
+        if self.filename and not self.template:
+            fp = open(self.filename)
+            self.template = fp.read()
+            fp.close()
+        if not self.template:
+            raise TemplateError('No template spcified.')
+        code = self.translate(self.template)
+        self.co = compile(code, self.filename or '<template>', 'exec')
+        
     def translate(self, template):
         indent = 0
         strbuffer = []
@@ -783,8 +797,8 @@ class SimpleTemplate(BaseTemplate):
                     tmp = line[m.end(2):].strip().split(None, 1)
                     name = tmp[0]
                     args = tmp[1:] and tmp[1] or ''
-                    self.subtemplates[name] = SimpleTemplate.find(name)
-                    code.append(" " * indent + "stdout.append(_subtemplates[%s].render(%s))\n" % (repr(name), args))
+                    self.subtemplates[name] = SimpleTemplate(name = name, lookup=self.lookup)
+                    code.append(" " * indent + "stdout.extend(_subtemplates[%s].render(%s))\n" % (repr(name), args))
                 elif end:
                     indent -= 1
                     code.append(" " * indent + '#' + line[m.start(3):])
@@ -803,17 +817,13 @@ class SimpleTemplate(BaseTemplate):
         flush()
         return ''.join(code)
 
-    def parse(self, template):
-        code = self.translate(template)
-        self.co = compile(code, self.source or '<template>', 'exec')
-
     def render(self, **args):
         ''' Returns the rendered template using keyword arguments as local variables. '''
         args['stdout'] = []
         args['_subtemplates'] = self.subtemplates
         args['tpl'] = args
         eval(self.co, args)
-        return ''.join(args['stdout'])
+        return args['stdout']
 
 
 def template(template, template_adapter=SimpleTemplate, **args):
@@ -976,7 +986,7 @@ class BottleDB(threading.local):
 # Modul initialization and configuration
 
 DB_PATH = './'
-TEMPLATE_PATH = ['./%s.tpl', './views/%s.tpl']
+TEMPLATE_PATH = ['./', './views/']
 TEMPLATES = {}
 HTTP_CODES = {
     100: 'CONTINUE',
