@@ -304,6 +304,7 @@ class Request(threading.local):
     def bind(self, environ):
         """ Binds the enviroment of the current request to this request handler """
         self._environ = environ
+        self.environ = self._environ
         self._GET = None
         self._POST = None
         self._GETPOST = None
