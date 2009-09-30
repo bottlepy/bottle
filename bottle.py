@@ -62,7 +62,7 @@ Example
 """
 
 __author__ = 'Marcel Hellkamp'
-__version__ = '0.6.0'
+__version__ = '0.6.1'
 __license__ = 'MIT'
 
 import sys
@@ -288,7 +288,7 @@ class Bottle(object):
                     err += "<h2>Traceback:</h2>\n<pre>\n"
                     err += traceback.format_exc(10)
                     err += "\n</pre>"
-                output = str(HTTPError(500, err))
+                output = [str(HTTPError(500, err))]
                 request._environ['wsgi.errors'].write(err)
             else:
                 raise
@@ -548,7 +548,6 @@ def error(code=500):
 # Server adapter
 
 class WSGIAdapter(object):
-
     def run(self, handler):
         pass
 
@@ -556,14 +555,12 @@ class WSGIAdapter(object):
         return "%s()" % (self.__class__.__name__)
 
 class CGIServer(WSGIAdapter):
-
     def run(self, handler):
         from wsgiref.handlers import CGIHandler
         CGIHandler().run(handler)
 
+
 class ServerAdapter(WSGIAdapter):
-
-
     def __init__(self, host='127.0.0.1', port=8080, **kargs):
         WSGIAdapter.__init__(self)
         self.host = host
@@ -606,17 +603,22 @@ class PasteServer(ServerAdapter):
 
 
 class FapwsServer(ServerAdapter):
-    """ Extreamly fast Webserver using libev (see http://william-os4y.livejournal.com/)
-        Experimental ... """
+    """
+    Extremly fast webserver using libev (see http://william-os4y.livejournal.com/).
+    Experimental ... """
     def run(self, handler):
         import fapws._evwsgi as evwsgi
         from fapws import base
-        import sys
         evwsgi.start(self.host, self.port)
         evwsgi.set_base_module(base)
         def app(environ, start_response):
             environ['wsgi.multiprocess'] = False
-            return handler(environ, start_response)
+            result = handler(environ, start_response)
+            if isinstance(result, basestring):
+                # fapws doesn't handle strings correctly
+                return iter(result)
+            else:
+                return result
         evwsgi.wsgi_cb(('',app))
         evwsgi.run()
 
