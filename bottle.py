@@ -475,18 +475,17 @@ def send_file(filename, root, guessmime = True, mimetype = 'text/plain'):
     raise BreakTheBottle(open(filename, 'rb'))
 
 
-
 def parse_date(ims):
     ''' Parses date strings usually found in HTTP header and returns epoch.
         Understands rfc1123, rfc850 and asctime.'''
     # rfc1123-date : Mon, 02 Jun 1982 00:00:00 GMT
     # rfc850-date  : Monday, 02-Jun-82 00:00:00 GMT
     # asctime-date : Mon Jun  2 00:00:00 1982
-    # IE sends "<date>; length=146"
-    ims = ims.strip().split(";")[0].strip()
-    # According to the RFC 2616, All date must be in GMT
-    if ims.endswith("+0000"): ims = ims[:-5]+"GMT"
     try:
+        # IE sends "<date>; length=146"
+        ims = ims.strip().split(";")[0].strip()
+        # According to the RFC 2616, All date must be in GMT
+        if ims.endswith("+0000"): ims = ims[:-5]+"GMT"
         if ims[3] == ",": #rfc1123
             return time.strptime(ims,"%a, %d %b %Y %H:%M:%S %Z")
         elif "-" in ims.split()[1]: #rfc850
@@ -495,6 +494,8 @@ def parse_date(ims):
             return time.strptime(ims+' GMT',"%a %b %d %H:%M:%S %Y %Z")
     except (ValueError, IndexError):
         return None
+
+
 
 
 
