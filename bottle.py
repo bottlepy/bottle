@@ -164,13 +164,12 @@ def default_app(newapp = None):
 
 class Bottle(object):
 
-    def __init__(self, catchall=True, debug=False, optimize=False, autojson=True):
+    def __init__(self, catchall=True, optimize=False, autojson=True):
         self.simple_routes = {}
         self.regexp_routes = {}
         self.default_route = None
         self.error_handler = {}
         self.optimize = optimize
-        self.debug = debug
         self.autojson = autojson
         self.catchall = catchall
 
@@ -275,8 +274,8 @@ class Bottle(object):
                 response.header['Content-Length'] = str(len(output))
                 output = [output]
             if not hasattr(output, '__iter__'):
-                raise TypeError('Request handler for route "%s" returned [%s],\
-                which is not iterable.' % (request.path, type(output).__name__))
+                raise TypeError('Request handler for route "%s" returned [%s] '\
+                'which is not iterable.' % (request.path, type(output).__name__))
                 
         except (KeyboardInterrupt, SystemExit, MemoryError):
             raise
@@ -284,7 +283,7 @@ class Bottle(object):
             response.status = 500
             if self.catchall:
                 err = "Unhandled Exception: %s\n" % (repr(e))
-                if self.debug:
+                if DEBUG:
                     err += "<h2>Traceback:</h2>\n<pre>\n"
                     err += traceback.format_exc(10)
                     err += "\n</pre>"
@@ -836,7 +835,7 @@ class SimpleTemplate(BaseTemplate):
 
 def template(template, template_adapter=SimpleTemplate, **args):
     ''' Returns a string from a template '''
-    if template not in TEMPLATES:
+    if template not in TEMPLATES or DEBUG:
         if template.find("\n") == template.find("{") == template.find("%") == -1:
             TEMPLATES[template] = template_adapter(name=template)
         else:
@@ -996,6 +995,7 @@ class BottleDB(threading.local):
 DB_PATH = './'
 TEMPLATE_PATH = ['./', './views/']
 TEMPLATES = {}
+DEBUG = False
 HTTP_CODES = {
     100: 'CONTINUE',
     101: 'SWITCHING PROTOCOLS',
@@ -1045,8 +1045,12 @@ response = Response()
 db = BottleDB()
 local = threading.local()
 
-def debug(mode=True): default_app().debug = bool(mode)
-def optimize(mode=True): default_app().optimize = bool(mode)
+def debug(mode=True):
+  global DEBUG
+  DEBUG = bool(mode)
+
+def optimize(mode=True):
+  default_app().optimize = bool(mode)
 
 
 
