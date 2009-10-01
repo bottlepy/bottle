@@ -2,14 +2,18 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-import sys, os.path
+import sys
 import test_templates
+import test_stpl
+import test_mako
 import test_routes
 import test_environ
 import test_db
 import test_wsgi
 
 suite = unittest.TestSuite()
+suite.addTest(test_stpl.suite)
+suite.addTest(test_mako.suite)
 suite.addTest(test_templates.suite)
 suite.addTest(test_routes.suite)
 suite.addTest(test_environ.suite)

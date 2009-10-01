@@ -117,6 +117,7 @@ class HTTPError(BottleException):
     def __init__(self, status, text):
         self.output = text
         self.http_status = int(status)
+        BottleException.__init__(self, status, text)
 
     def __repr__(self):
         return "HTTPError(%d,%s)" % (self.http_status, repr(self.output))
