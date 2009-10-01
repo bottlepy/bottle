@@ -279,7 +279,6 @@ class Bottle(object):
             if not hasattr(output, '__iter__'):
                 raise TypeError('Request handler for route "%s" returned [%s] '\
                 'which is not iterable.' % (request.path, type(output).__name__))
-                
         except (KeyboardInterrupt, SystemExit, MemoryError):
             raise
         except Exception, e:
@@ -350,7 +349,9 @@ class Request(threading.local):
     def POST(self):
         """Returns a dict with parsed POST or PUT data."""
         if self._POST is None:
-            data = cgi.FieldStorage(fp=self._environ['wsgi.input'], environ=self._environ, keep_blank_values=True)
+            data = cgi.FieldStorage(fp=self._environ['wsgi.input'],
+                                    environ=self._environ,
+                                    keep_blank_values=True)
             self._POST  = {}
             for item in data.list:
                 name = item.name
@@ -406,13 +407,14 @@ class Response(threading.local):
         return self._COOKIES
 
     def set_cookie(self, key, value, **kargs):
-        """ Sets a Cookie. Optional settings: expires, path, comment, domain, max-age, secure, version, httponly """
+        """ Sets a Cookie. Optional settings: expires, path, comment, domain,
+            max-age, secure, version, httponly """
         self.COOKIES[key] = value
         for k in kargs:
             self.COOKIES[key][k] = kargs[k]
 
     def get_content_type(self):
-        '''Gives access to the 'Content-Type' header and defaults to 'text/html'.'''
+        '''Returns the current 'Content-Type' header.'''
         return self.header['Content-Type']
         
     def set_content_type(self, value):
@@ -441,7 +443,7 @@ def redirect(url, code=307):
     raise BreakTheBottle("")
 
 
-def send_file(filename, root, guessmime = True, mimetype = 'text/plain'):
+def send_file(filename, root, guessmime = True, mimetype = None):
     """ Aborts execution and sends a static files as response. """
     root = os.path.abspath(root) + '/'
     filename = os.path.normpath(filename).strip('/')
@@ -454,31 +456,28 @@ def send_file(filename, root, guessmime = True, mimetype = 'text/plain'):
     if not os.access(filename, os.R_OK):
         abort(401, "You do not have permission to access this file.")
 
-    if guessmime:
-        guess = mimetypes.guess_type(filename)[0]
-        if guess:
-            response.content_type = guess
-        elif mimetype:
-            response.content_type = mimetype
-    elif mimetype:
-        response.content_type = mimetype
+    if guessmime and not mimetype:
+        miemtype = mimetypes.guess_type(filename)[0]
+    if not mimetype: mimetype = 'text/plain'
+    response.content_type = mimetype
 
     stats = os.stat(filename)
     ts = time.gmtime(stats.st_mtime)
-    ifms = request._environ.get('HTTP_IF_MODIFIED_SINCE', None)
-    if ifms: ifms = parse_date(ifms)
-    if ifms and ifms <= ts: abort(304, "Not modified")
-    if 'Content-Length' not in response.header:
-        response.header['Content-Length'] = str(stats.st_size)
     if 'Last-Modified' not in response.header:
         ts = time.strftime("%a, %d %b %Y %H:%M:%S GMT", ts)
         response.header['Last-Modified'] = ts
+    if 'HTTP_IF_MODIFIED_SINCE' in request.environ:
+        ims = parse_date(request.environ['HTTP_IF_MODIFIED_SINCE'])
+        if ims and ims <= ts:
+           abort(304, "Not modified")
+    if 'Content-Length' not in response.header:
+        response.header['Content-Length'] = str(stats.st_size)
 
     raise BreakTheBottle(open(filename, 'rb'))
 
 
 def parse_date(ims):
-    ''' Parses date strings usually found in HTTP header and returns epoch.
+    ''' Parses date strings usually found in HTTP header and returns epoch ts.
         Understands rfc1123, rfc850 and asctime.'''
     # rfc1123-date : Mon, 02 Jun 1982 00:00:00 GMT
     # rfc850-date  : Monday, 02-Jun-82 00:00:00 GMT
