@@ -173,6 +173,7 @@ class Bottle(object):
         self.optimize = optimize
         self.autojson = autojson
         self.catchall = catchall
+        self.serve = True
 
     def match_url(self, url, method='GET'):
         """Returns the first matching handler and a parameter dict or (None, None) """
@@ -255,6 +256,7 @@ class Bottle(object):
         response.bind()
         try: # Unhandled Exceptions
             try: # Bottle Error Handling
+                if not self.serve: abort(503, "Server stopped")
                 handler, args = self.match_url(request.path, request.method)
                 if not handler: raise HTTPError(404, "Not found")
                 output = handler(**args)
@@ -504,7 +506,8 @@ def parse_date(ims):
 
 def validate(**vkargs):
     ''' Validates and manipulates keyword arguments by user defined callables 
-    and handles ValueError and missing arguments by raising HTTPError(403) '''
+        and handles ValueError and missing arguments by raising HTTPError(403)
+    '''
     def decorator(func):
         def wrapper(**kargs):
             for key in vkargs:
@@ -594,9 +597,9 @@ class PasteServer(ServerAdapter):
 
 
 class FapwsServer(ServerAdapter):
-    """
-    Extremly fast webserver using libev (see http://william-os4y.livejournal.com/).
-    Experimental ... """
+    """ Extremly fast webserver using libev
+        (see http://william-os4y.livejournal.com/).
+        Experimental ... """
     def run(self, handler):
         import fapws._evwsgi as evwsgi
         from fapws import base
@@ -615,12 +618,8 @@ class FapwsServer(ServerAdapter):
 
 
 def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080,
-        interval=2, reloader=False,  **kargs):
-    """ Runs bottle as a web server, using Python's built-in wsgiref implementation by default.
-    
-    You may choose between WSGIRefServer, CherryPyServer, FlupServer and
-    PasteServer or write your own server adapter.
-    """
+        interval=2, reloader=False, **kargs):
+    """ Runs bottle as a web server. """
     if not app:
         app = default_app()
     
@@ -644,43 +643,47 @@ def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080,
             print
         else:
             print 'Bottle auto reloader starting up...'
- 
+
     try:
         if reloader and interval:
-            if os.environ.get('BOTTLE_CHILD') == 'true':
-                # We are a child process
-                files = dict()
-                for module in sys.modules.values():
-                    file_path = getattr(module, '__file__', None)
-                    if file_path and os.path.isfile(file_path):
-                        file_split = os.path.splitext(file_path)
-                        if file_split[1] in ('.py', '.pyc', '.pyo'):
-                            file_path = file_split[0] + '.py'
-                            files[file_path] = os.stat(file_path).st_mtime
-                thread.start_new_thread(server.run, (app,))
-                while True:
-                    time.sleep(interval)
-                    for file_path, file_mtime in files.iteritems():
-                        if not os.path.exists(file_path):
-                            print "File changed: %s (deleted)" % file_path
-                            print "Restarting..."
-                            sys.exit(3)
-                        if os.stat(file_path).st_mtime > file_mtime:
-                            print "File changed: %s (modified)" % file_path
-                            print "Restarting..."
-                            sys.exit(3)
-            while True:
-                args = [sys.executable] + sys.argv
-                environ = os.environ.copy()
-                environ['BOTTLE_CHILD'] = 'true'
-                exit_status = subprocess.call(args, env=environ)
-                if exit_status != 3:
-                    sys.exit(exit_status)
+            reloader_run(server, app, interval)
         else:
             server.run(app)
     except KeyboardInterrupt:
         print 'Shutting Down...'
 
+
+def reloader_run(server, app, interval):
+    if os.environ.get('BOTTLE_CHILD') == 'true':
+        # We are a child process
+        files = dict()
+        for module in sys.modules.values():
+            file_path = getattr(module, '__file__', None)
+            if file_path and os.path.isfile(file_path):
+                file_split = os.path.splitext(file_path)
+                if file_split[1] in ('.py', '.pyc', '.pyo'):
+                    file_path = file_split[0] + '.py'
+                    files[file_path] = os.stat(file_path).st_mtime
+        thread.start_new_thread(server.run, (app,))
+        while True:
+            time.sleep(interval)
+            for file_path, file_mtime in files.iteritems():
+                if not os.path.exists(file_path):
+                    print "File changed: %s (deleted)" % file_path
+                elif os.stat(file_path).st_mtime > file_mtime:
+                    print "File changed: %s (modified)" % file_path
+                else: continue
+                print "Restarting..."
+                app.serve = False
+                time.sleep(interval) # be nice and wait for running requests
+                sys.exit(3)
+    while True:
+        args = [sys.executable] + sys.argv
+        environ = os.environ.copy()
+        environ['BOTTLE_CHILD'] = 'true'
+        exit_status = subprocess.call(args, env=environ)
+        if exit_status != 3:
+            sys.exit(exit_status)
 
 
 
@@ -746,7 +749,8 @@ class CheetahTemplate(BaseTemplate):
 
 
 class SimpleTemplate(BaseTemplate):
-    re_python = re.compile(r'^\s*%\s*(?:(if|elif|else|try|except|finally|for|while|with|def|class)|(include)|(end)|(.*))')
+    re_python = re.compile(r'^\s*%\s*(?:(if|elif|else|try|except|finally|for|'
+                            'while|with|def|class)|(include)|(end)|(.*))')
     re_inline = re.compile(r'\{\{(.*?)\}\}')
     dedent_keywords = ('elif', 'else', 'except', 'finally')
 
@@ -771,7 +775,7 @@ class SimpleTemplate(BaseTemplate):
         indent = 0
         strbuffer = []
         code = []
-        self.subtemplates = {}
+        self.includes = dict()
         class PyStmt(str):
             def __repr__(self): return 'str(' + self + ')'
         def flush(allow_nobreak=False):
@@ -795,8 +799,10 @@ class SimpleTemplate(BaseTemplate):
                     tmp = line[m.end(2):].strip().split(None, 1)
                     name = tmp[0]
                     args = tmp[1:] and tmp[1] or ''
-                    self.subtemplates[name] = SimpleTemplate(name=name, lookup=self.lookup)
-                    code.append(" " * indent + "stdout.extend(_subtemplates[%s].render(%s))\n" % (repr(name), args))
+                    self.includes[name] = SimpleTemplate(name=name, lookup=self.lookup)
+                    code.append(" " * indent + 
+                               "stdout.extend(_includes[%s].render(%s))\n"
+                               % (repr(name), args))
                 elif end:
                     indent -= 1
                     code.append(" " * indent + '#' + line[m.start(3):])
@@ -818,7 +824,7 @@ class SimpleTemplate(BaseTemplate):
     def render(self, **args):
         ''' Returns the rendered template using keyword arguments as local variables. '''
         args['stdout'] = []
-        args['_subtemplates'] = self.subtemplates
+        args['_includes'] = self.includes
         args['tpl'] = args
         eval(self.co, args)
         return args['stdout']
