@@ -62,7 +62,7 @@ Example
 """
 
 __author__ = 'Marcel Hellkamp'
-__version__ = '0.6.1'
+__version__ = '0.6.2'
 __license__ = 'MIT'
 
 import sys
@@ -833,9 +833,9 @@ def template(template, template_adapter=SimpleTemplate, **args):
     ''' Returns a string from a template '''
     if template not in TEMPLATES:
         if template.find("\n") == template.find("{") == template.find("%") == -1:
-            TEMPLATES[template] = template_adapter.find(template)
+            TEMPLATES[template] = template_adapter(template=template)
         else:
-            TEMPLATES[template] = template_adapter(template)
+            TEMPLATES[template] = template_adapter(name=template)
     if not TEMPLATES[template]:
         abort(500, 'Template not found')
     args['abort'] = abort
