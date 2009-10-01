@@ -62,7 +62,7 @@ Example
 """
 
 __author__ = 'Marcel Hellkamp'
-__version__ = '0.6.1'
+__version__ = '0.6.2'
 __license__ = 'MIT'
 
 import sys
@@ -707,7 +707,7 @@ class BaseTemplate(object):
         self.name = name
         self.filename = filename
         self.template = template or ''
-        self.lookup = lookup or []
+        self.lookup = lookup or TEMPLATE_PATH
         if self.name and not self.filename and not self.template:
             for path in self.lookup:
                 fpath = os.path.join(path, self.name+'.tpl')
@@ -723,8 +723,13 @@ class MakoTemplate(BaseTemplate):
     def prepare(self):
         from mako.template import Template
         from mako.lookup import TemplateLookup
-        #bla
-        self.tpl = Template(template, lookup=MyLookup)
+        mylookup = TemplateLookup(directories=self.lookup)
+        if self.template:
+            self.tpl = Template(self.template, lookup=mylookup)
+        elif self.filename:
+            self.tpl = Template(filename = self.filename, lookup=mylookup)
+        else:
+            raise TemplateError('Template not found.')
  
     def render(self, **args):
         return self.tpl.render(**args)
@@ -758,7 +763,7 @@ class SimpleTemplate(BaseTemplate):
     def prepare(self):
         if self.name and not self.filename and not self.template:
             for path in self.lookup:
-                fpath = os.path.join(path, name+'.tpl')
+                fpath = os.path.join(path, self.name+'.tpl')
                 if os.path.isfile(fpath):
                     self.filename = fpath
             if not self.filename:
@@ -800,7 +805,7 @@ class SimpleTemplate(BaseTemplate):
                     tmp = line[m.end(2):].strip().split(None, 1)
                     name = tmp[0]
                     args = tmp[1:] and tmp[1] or ''
-                    self.subtemplates[name] = SimpleTemplate(name = name, lookup=self.lookup)
+                    self.subtemplates[name] = SimpleTemplate(name=name, lookup=self.lookup)
                     code.append(" " * indent + "stdout.extend(_subtemplates[%s].render(%s))\n" % (repr(name), args))
                 elif end:
                     indent -= 1
@@ -833,9 +838,9 @@ def template(template, template_adapter=SimpleTemplate, **args):
     ''' Returns a string from a template '''
     if template not in TEMPLATES:
         if template.find("\n") == template.find("{") == template.find("%") == -1:
-            TEMPLATES[template] = template_adapter.find(template)
+            TEMPLATES[template] = template_adapter(name=template)
         else:
-            TEMPLATES[template] = template_adapter(template)
+            TEMPLATES[template] = template_adapter(template=template)
     if not TEMPLATES[template]:
         abort(500, 'Template not found')
     args['abort'] = abort
