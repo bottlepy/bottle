@@ -462,41 +462,10 @@ def send_file(filename, root, guessmime = True, mimetype = 'text/plain'):
         response.content_type = mimetype
 
     stats = os.stat(filename)
-    # TODO: HTTP_IF_MODIFIED_SINCE -> 304 (Thu, 02 Jul 2009 23:16:31 CEST)
     ts = time.gmtime(stats.st_mtime)
-    # rfc1123-date : Mon, 02 Jun 1982 00:00:00 GMT
-    # rfc850-date  : Monday, 02-Jun-82 00:00:00 GMT
-    #   (if YY more than 50 in the future, it's in the past)
-    # asctime-date : Mon Jun  2 00:00:00 1982
-    if request._environ.has_key('HTTP_IF_MODIFIED_SINCE'):
-        imsdt = None
-        # IE sends "<date>; length=146"
-        ims = request._environ['HTTP_IF_MODIFIED_SINCE'].split(";")[0]
-        # According to the RFC 2616, All date must be in GMT
-        # both rfc1123-date and rfc850-date MUST ends with GMT (no tz like +xxxx)
-        # Third possible date, asctime-date, doesn't handle TZ
-        if ims.endswith("+0000"):
-            ims = ims[:-5]+"GMT"
-        try:
-            # Sanitize double space on single digit day
-            splitted_ainsi = ims.replace("  "," ").split(" ")
-            # convert asctime to rfc1123 and add TZ
-            if ims[3] == " " and not "-" in ims[1]: # asctime-date
-                ims = "%s, %s %s %s %s GMT"%(
-                    splitted_ainsi[0],
-                    splitted_ainsi[2],
-                    splitted_ainsi[1],
-                    splitted_ainsi[4],
-                    splitted_ainsi[3]
-                    )
-            if "-" in splitted_ainsi[1]:
-                imsdt = time.strptime(ims,"%A, %d-%b-%y %H:%M:%S %Z")
-            if ims[3] == ",": # rfc1123-date
-                imsdt = time.strptime(ims,"%a, %d %b %Y %H:%M:%S %Z")
-        except: pass
-        if imsdt == ts:
-            abort(304, "Not modified")
-
+    ifms = request._environ.get('HTTP_IF_MODIFIED_SINCE', None)
+    if ifms: ifms = parse_date(ifms)
+    if ifms and ifms <= ts: abort(304, "Not modified")
     if 'Content-Length' not in response.header:
         response.header['Content-Length'] = str(stats.st_size)
     if 'Last-Modified' not in response.header:
@@ -506,6 +475,26 @@ def send_file(filename, root, guessmime = True, mimetype = 'text/plain'):
     raise BreakTheBottle(open(filename, 'rb'))
 
 
+
+def parse_date(ims):
+    ''' Parses date strings usually found in HTTP header and returns epoch.
+        Understands rfc1123, rfc850 and asctime.'''
+    # rfc1123-date : Mon, 02 Jun 1982 00:00:00 GMT
+    # rfc850-date  : Monday, 02-Jun-82 00:00:00 GMT
+    # asctime-date : Mon Jun  2 00:00:00 1982
+    # IE sends "<date>; length=146"
+    ims = ims.strip().split(";")[0].strip()
+    # According to the RFC 2616, All date must be in GMT
+    if ims.endswith("+0000"): ims = ims[:-5]+"GMT"
+    try:
+        if ims[3] == ",": #rfc1123
+            return time.strptime(ims,"%a, %d %b %Y %H:%M:%S %Z")
+        elif "-" in ims.split()[1]: #rfc850
+            return time.strptime(ims,"%A, %d-%b-%y %H:%M:%S %Z")
+        elif ',' not in ims and "-" not in ims: #asctime
+            return time.strptime(ims+' GMT',"%a %b %d %H:%M:%S %Y %Z")
+    except (ValueError, IndexError):
+        return None
 
 
 
