@@ -695,7 +695,7 @@ class TemplateError(HTTPError):
         HTTPError.__init__(self, 500, message)
 
 class BaseTemplate(object):
-    def __init__(self, template='', name=None, filename=None, lookup=[]):
+    def __init__(self, template='', name=None, filename=None, lookup=['./']):
         """
         Create a new template.
         If a name is provided, but no filename and no template string, the
@@ -834,45 +834,55 @@ class SimpleTemplate(BaseTemplate):
         return args['_stdout']
 
 
-def template(tpl, template_adapter=None, **args):
+def template(tpl, template_adapter=SimpleTemplate, **args):
     '''
     Get a rendered template as a string iterator.
     You can use a name, a filename or a template string as first parameter.
     '''
-    if not template_adapter:
-        template_adapter = TEMPLATE_ADAPTER
+    if 'lookup' not in args:
+        args['lookup'] = TEMPLATE_PATH
     if tpl not in TEMPLATES or DEBUG:
         if "\n" in tpl or "{" in tpl or "%" in tpl or '$' in tpl:
-            TEMPLATES[template] = template_adapter(template=template)
+            TEMPLATES[tpl] = template_adapter(template=tpl)
         elif '.' in tpl:
-            TEMPLATES[template] = template_adapter(filename=template)
+            TEMPLATES[tpl] = template_adapter(filename=tpl)
         else:
-            TEMPLATES[template] = template_adapter(name=template)
-    if not TEMPLATES[template]:
-        abort(500, 'Template not found')
+            TEMPLATES[tpl] = template_adapter(name=tpl)
+    if not TEMPLATES[tpl]:
+        abort(500, 'Template (%s) not found' % tpl)
     args['abort'] = abort
     args['request'] = request
     args['response'] = response
-    return TEMPLATES[template].render(**args)
+    return TEMPLATES[tpl].render(**args)
 
 
-def mako_template(template_name, **args):
-   return template(template_name, template_adapter=MakoTemplate, **args)
+def mako_template(tpl_name, **kargs):
+    kargs['template_adapter'] = MakoTemplate
+    return template(tpl_name, **kargs)
 
-def cheetah_template(template_name, **args):
-   return template(template_name, template_adapter=CheetahTemplate, **args)
+def cheetah_template(tpl_name, **kargs):
+    kargs['template_adapter'] = CheetahTemplate
+    return template(tpl_name, **kargs)
 
-def tpl(*args, **kargs):
+def view(tpl_name, **defaults):
     ''' Decorator: Rendes a template for a handler.
         Return a dict of template vars to fill out the template.
     '''
     def decorator(func):
         def wrapper(**kargs):
             out = func(**kargs)
-            kargs.update(out)
-            return template(*args, **kargs)
+            defaults.update(out)
+            return template(tpl_name, **defaults)
         return wrapper
     return decorator
+
+def mako_view(tpl_name, **kargs):
+    kargs['template_adapter'] = MakoTemplate
+    return view(tpl_name, **kargs)
+
+def cheetah_view(tpl_name, **kargs):
+    kargs['template_adapter'] = CheetahTemplate
+    return view(tpl_name, **kargs)
 
 
 
@@ -1017,7 +1027,6 @@ class BottleDB(threading.local):
 DB_PATH = './'
 TEMPLATE_PATH = ['./', './views/']
 TEMPLATES = {}
-TEMPLATE_ADAPTER = SimpleTemplate
 DEBUG = False
 HTTP_CODES = {
     100: 'CONTINUE',
@@ -1067,6 +1076,8 @@ request = Request()
 response = Response()
 db = BottleDB()
 local = threading.local()
+
+#TODO: Global and app local configuration (debug, defaults, ...) is a mess
 
 def debug(mode=True):
   global DEBUG
