@@ -62,7 +62,7 @@ Example
 """
 
 __author__ = 'Marcel Hellkamp'
-__version__ = '0.6.2'
+__version__ = '0.6.3'
 __license__ = 'MIT'
 
 import sys
