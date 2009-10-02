@@ -695,20 +695,40 @@ class TemplateError(HTTPError):
         HTTPError.__init__(self, 500, message)
 
 class BaseTemplate(object):
-    def __init__(self, template=None, name=None, filename=None, lookup=None):
+    def __init__(self, template='', name=None, filename=None, lookup=[]):
+        """
+        Create a new template.
+        If a name is provided, but no filename and no template string, the
+        filename is guessed using the lookup path list.
+        Subclasses can assume that either self.template or self.filename is set.
+        If both are present, self.template should be used.
+        """
         self.name = name
         self.filename = filename
-        self.template = template or ''
-        self.lookup = lookup or TEMPLATE_PATH
-        if self.name and not self.filename and not self.template:
+        self.template = template
+        self.lookup = lookup
+        if self.name and not self.filename:
             for path in self.lookup:
                 fpath = os.path.join(path, self.name+'.tpl')
                 if os.path.isfile(fpath):
                     self.filename = fpath
+        if not self.template and not self.filename:
+            raise TemplateError('Template (%s) not found.' % self.name)
         self.prepare()
 
-    def prepare(self): raise NotImplementedError
-    def render(self, **args): raise NotImplementedError
+    def prepare(self):
+        """
+        Run preparatios (parsing, caching, ...).
+        It should be possible to call this multible times to refresh a template.
+        """
+        raise NotImplementedError
+
+    def render(self, **args):
+        """
+        Render the template with the specified local variables and return an
+        iterator of strings (bytes). This must be thread save!
+        """
+        raise NotImplementedError
 
 
 class MakoTemplate(BaseTemplate):
@@ -718,10 +738,8 @@ class MakoTemplate(BaseTemplate):
         mylookup = TemplateLookup(directories=self.lookup)
         if self.template:
             self.tpl = Template(self.template, lookup=mylookup)
-        elif self.filename:
-            self.tpl = Template(filename = self.filename, lookup=mylookup)
         else:
-            raise TemplateError('Template not found.')
+            self.tpl = Template(filename=self.filename, lookup=mylookup)
  
     def render(self, **args):
         return self.tpl.render(**args)
@@ -732,13 +750,10 @@ class CheetahTemplate(BaseTemplate):
         from Cheetah.Template import Template
         self.context = threading.local()
         self.context.vars = {}
-
         if self.template:
             self.tpl = Template(source = self.template, searchList=[self.context.vars])
-        elif self.filename:
-            self.tpl = Template(file = self.filename, searchList=[self.context.vars])
         else:
-            raise TemplateError('Template not found.')
+            self.tpl = Template(file = self.filename, searchList=[self.context.vars])
  
     def render(self, **args):
         self.context.vars.update(args)
@@ -754,21 +769,12 @@ class SimpleTemplate(BaseTemplate):
     dedent_keywords = ('elif', 'else', 'except', 'finally')
 
     def prepare(self):
-        if self.name and not self.filename and not self.template:
-            for path in self.lookup:
-                fpath = os.path.join(path, self.name+'.tpl')
-                if os.path.isfile(fpath):
-                    self.filename = fpath
-            if not self.filename:
-                raise TemplateError('Template (%s) not found.' % self.name)
-        if self.filename and not self.template:
-            fp = open(self.filename)
-            self.template = fp.read()
-            fp.close()
-        if not self.template:
-            raise TemplateError('No template spcified.')
-        code = self.translate(self.template)
-        self.co = compile(code, self.filename or '<template>', 'exec')
+        if self.template:
+            code = self.translate(self.template)
+            self.co = compile(code, '<string>', 'exec')
+        else:
+            code = self.translate(open(self.filename).read())
+            self.co = compile(code, self.filename, 'exec')
         
     def translate(self, template):
         indent = 0
@@ -781,7 +787,7 @@ class SimpleTemplate(BaseTemplate):
             if len(strbuffer):
                 if allow_nobreak and strbuffer[-1].endswith("\\\\\n"):
                     strbuffer[-1]=strbuffer[-1][:-3]
-                code.append(" " * indent + "stdout.append(%s)" % repr(''.join(strbuffer)))
+                code.append(" " * indent + "_stdout.append(%s)" % repr(''.join(strbuffer)))
                 code.append((" " * indent + "\n") * len(strbuffer)) # to preserve line numbers 
                 del strbuffer[:]
         for line in template.splitlines(True):
@@ -800,7 +806,7 @@ class SimpleTemplate(BaseTemplate):
                     args = tmp[1:] and tmp[1] or ''
                     self.includes[name] = SimpleTemplate(name=name, lookup=self.lookup)
                     code.append(" " * indent + 
-                               "stdout.extend(_includes[%s].render(%s))\n"
+                               "_stdout.extend(_includes[%s].render(%s))\n"
                                % (repr(name), args))
                 elif end:
                     indent -= 1
@@ -816,26 +822,32 @@ class SimpleTemplate(BaseTemplate):
                     for i in range(1, len(splits), 2):
                         splits[i] = PyStmt(splits[i])
                     splits = [x for x in splits if bool(x)]
-                    code.append(" " * indent + "stdout.extend(%s)\n" % repr(splits))
+                    code.append(" " * indent + "_stdout.extend(%s)\n" % repr(splits))
         flush()
         return ''.join(code)
 
     def render(self, **args):
-        ''' Returns the rendered template using keyword arguments as local variables. '''
-        args['stdout'] = []
+        args['_stdout'] = []
         args['_includes'] = self.includes
-        args['tpl'] = args
+        args['_tpl'] = args
         eval(self.co, args)
-        return args['stdout']
+        return args['_stdout']
 
 
-def template(template, template_adapter=SimpleTemplate, **args):
-    ''' Returns a string from a template '''
-    if template not in TEMPLATES or DEBUG:
-        if template.find("\n") == template.find("{") == template.find("%") == -1:
-            TEMPLATES[template] = template_adapter(name=template)
-        else:
+def template(tpl, template_adapter=None, **args):
+    '''
+    Get a rendered template as a string iterator.
+    You can use a name, a filename or a template string as first parameter.
+    '''
+    if not template_adapter:
+        template_adapter = TEMPLATE_ADAPTER
+    if tpl not in TEMPLATES or DEBUG:
+        if "\n" in tpl or "{" in tpl or "%" in tpl or '$' in tpl:
             TEMPLATES[template] = template_adapter(template=template)
+        elif '.' in tpl:
+            TEMPLATES[template] = template_adapter(filename=template)
+        else:
+            TEMPLATES[template] = template_adapter(name=template)
     if not TEMPLATES[template]:
         abort(500, 'Template not found')
     args['abort'] = abort
@@ -844,9 +856,23 @@ def template(template, template_adapter=SimpleTemplate, **args):
     return TEMPLATES[template].render(**args)
 
 
-def mako_template(template_name, **args): return template(template_name, template_adapter=MakoTemplate, **args)
+def mako_template(template_name, **args):
+   return template(template_name, template_adapter=MakoTemplate, **args)
 
-def cheetah_template(template_name, **args): return template(template_name, template_adapter=CheetahTemplate, **args)
+def cheetah_template(template_name, **args):
+   return template(template_name, template_adapter=CheetahTemplate, **args)
+
+def tpl(*args, **kargs):
+    ''' Decorator: Rendes a template for a handler.
+        Return a dict of template vars to fill out the template.
+    '''
+    def decorator(func):
+        def wrapper(**kargs):
+            out = func(**kargs)
+            kargs.update(out)
+            return template(*args, **kargs)
+        return wrapper
+    return decorator
 
 
 
@@ -991,6 +1017,7 @@ class BottleDB(threading.local):
 DB_PATH = './'
 TEMPLATE_PATH = ['./', './views/']
 TEMPLATES = {}
+TEMPLATE_ADAPTER = SimpleTemplate
 DEBUG = False
 HTTP_CODES = {
     100: 'CONTINUE',
