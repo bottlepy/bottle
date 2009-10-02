@@ -75,6 +75,7 @@ import re
 import random
 import threading
 import time
+import email.utils
 from wsgiref.headers import Headers as HeaderWrapper
 from Cookie import SimpleCookie
 import anydbm as dbm
@@ -470,44 +471,38 @@ def send_file(filename, root, guessmime = True, mimetype = None):
         abort(401, "You do not have permission to access this file.")
 
     if guessmime and not mimetype:
-        miemtype = mimetypes.guess_type(filename)[0]
+        mimetype = mimetypes.guess_type(filename)[0]
     if not mimetype: mimetype = 'text/plain'
     response.content_type = mimetype
 
     stats = os.stat(filename)
-    ts = time.gmtime(stats.st_mtime)
     if 'Last-Modified' not in response.header:
-        ts = time.strftime("%a, %d %b %Y %H:%M:%S GMT", ts)
-        response.header['Last-Modified'] = ts
+        lm = time.strftime("%a, %d %b %Y %H:%M:%S GMT", stats.st_mtime)
+        response.header['Last-Modified'] = lm
     if 'HTTP_IF_MODIFIED_SINCE' in request.environ:
-        ims = parse_date(request.environ['HTTP_IF_MODIFIED_SINCE'])
-        if ims and ims <= ts:
+        ims = request.environ['HTTP_IF_MODIFIED_SINCE']
+        # IE sends "<date>; length=146"
+        ims = ims.split(";")[0].strip()
+        ims = parse_date(ims)
+        if ims is not None and ims <= stats.st_mtime:
            abort(304, "Not modified")
     if 'Content-Length' not in response.header:
         response.header['Content-Length'] = str(stats.st_size)
-
     raise BreakTheBottle(open(filename, 'rb'))
 
 
 def parse_date(ims):
     """
-    Parses date strings usually found in HTTP header and returns epoch ts.
+    Parses date strings usually found in HTTP header and returns UTC epoch.
     Understands rfc1123, rfc850 and asctime.
     """
-    # rfc1123-date : Mon, 02 Jun 1982 00:00:00 GMT
-    # rfc850-date  : Monday, 02-Jun-82 00:00:00 GMT
-    # asctime-date : Mon Jun  2 00:00:00 1982
     try:
-        # IE sends "<date>; length=146"
-        ims = ims.strip().split(";")[0].strip()
-        # According to the RFC 2616, All date must be in GMT
-        if ims.endswith("+0000"): ims = ims[:-5]+"GMT"
-        if ims[3] == ",": #rfc1123
-            return time.strptime(ims,"%a, %d %b %Y %H:%M:%S %Z")
-        elif "-" in ims.split()[1]: #rfc850
-            return time.strptime(ims,"%A, %d-%b-%y %H:%M:%S %Z")
-        elif ',' not in ims and "-" not in ims: #asctime
-            return time.strptime(ims+' GMT',"%a %b %d %H:%M:%S %Y %Z")
+        ts = email.utils.parsedate_tz(ims)
+        if ts is not None:
+            if ts[9] is None:
+                return time.mktime(ts[:8] + (0,)) - time.timezone
+            else:
+                return time.mktime(ts[:8] + (0,)) - ts[9] - time.timezone
     except (ValueError, IndexError):
         return None
 
