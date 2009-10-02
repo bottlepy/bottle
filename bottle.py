@@ -298,7 +298,7 @@ class Bottle(object):
             if self.catchall:
                 err = "Unhandled Exception: %s\n" % (repr(e))
                 if DEBUG:
-                    err += TRACEBACK_TEMPALTE % traceback.format_exc(10)
+                    err += TRACEBACK_TEMPLATE % traceback.format_exc(10)
                 output = [str(HTTPError(500, err))]
                 request._environ['wsgi.errors'].write(err)
             else:
@@ -477,7 +477,7 @@ def send_file(filename, root, guessmime = True, mimetype = None):
 
     stats = os.stat(filename)
     if 'Last-Modified' not in response.header:
-        lm = time.strftime("%a, %d %b %Y %H:%M:%S GMT", stats.st_mtime)
+        lm = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(stats.st_mtime))
         response.header['Last-Modified'] = lm
     if 'HTTP_IF_MODIFIED_SINCE' in request.environ:
         ims = request.environ['HTTP_IF_MODIFIED_SINCE']
