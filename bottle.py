@@ -196,7 +196,10 @@ class Bottle(object):
                 return (handler, match.groupdict())
         if self.default_route:
             return (self.default_route, {})
-        return (None, None)
+        if method == 'HEAD': # Fall back to GET
+            return self.match_url(url)
+        else:
+            return (None, None)
 
     def add_controller(self, route, controller, **kargs):
         """ Adds a controller class or object """
