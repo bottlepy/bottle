@@ -718,7 +718,7 @@ class TemplateError(HTTPError):
         HTTPError.__init__(self, 500, message)
 
 class BaseTemplate(object):
-    def __init__(self, template='', name=None, filename=None, lookup=['./']):
+    def __init__(self, template='', name=None, filename=None, lookup=[]):
         """
         Create a new template.
         If a name is provided, but no filename and no template string, the
@@ -863,15 +863,14 @@ def template(tpl, template_adapter=SimpleTemplate, **args):
     Get a rendered template as a string iterator.
     You can use a name, a filename or a template string as first parameter.
     '''
-    if 'lookup' not in args:
-        args['lookup'] = TEMPLATE_PATH
+    lookup = args.get('template_lookup', TEMPLATE_PATH)
     if tpl not in TEMPLATES or DEBUG:
         if "\n" in tpl or "{" in tpl or "%" in tpl or '$' in tpl:
-            TEMPLATES[tpl] = template_adapter(template=tpl)
+            TEMPLATES[tpl] = template_adapter(template=tpl, lookup=lookup)
         elif '.' in tpl:
-            TEMPLATES[tpl] = template_adapter(filename=tpl)
+            TEMPLATES[tpl] = template_adapter(filename=tpl, lookup=lookup)
         else:
-            TEMPLATES[tpl] = template_adapter(name=tpl)
+            TEMPLATES[tpl] = template_adapter(name=tpl, lookup=lookup)
     if not TEMPLATES[tpl]:
         abort(500, 'Template (%s) not found' % tpl)
     args['abort'] = abort

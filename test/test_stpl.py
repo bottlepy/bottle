@@ -50,7 +50,7 @@ class TestSimpleTemplate(unittest.TestCase):
 
     def test_include(self):
         """ Templates: Include statements"""
-        t = SimpleTemplate(name='stpl_include')
+        t = SimpleTemplate(name='stpl_include', lookup='./')
         self.assertEqual('before\nstart var end\nafter\n', ''.join(t.render(var='var')))
 
     def test_notfound(self):
