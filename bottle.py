@@ -755,17 +755,38 @@ class BaseTemplate(object):
 
 
 class MakoTemplate(BaseTemplate):
+    output_encoding=None
+    input_encoding=None
+    default_filters=[]
+    global_variables={}
+
     def prepare(self):
         from mako.template import Template
         from mako.lookup import TemplateLookup
         mylookup = TemplateLookup(directories=self.lookup)
         if self.template:
-            self.tpl = Template(self.template, lookup=mylookup)
+            self.tpl = Template(self.template,
+                                lookup=mylookup,
+                                output_encoding=MakoTemplate.output_encoding,
+                                input_encoding=MakoTemplate.input_encoding,
+                                default_filters=MakoTemplate.default_filters
+                                )
         else:
-            self.tpl = Template(filename=self.filename, lookup=mylookup)
+            self.tpl = Template(filename=self.filename,
+                                lookup=mylookup,
+                                output_encoding=MakoTemplate.output_encoding,
+                                input_encoding=MakoTemplate.input_encoding,
+                                default_filters=MakoTemplate.default_filters
+                                )
  
     def render(self, **args):
-        return self.tpl.render(**args)
+        targs = {}
+        if MakoTemplate.global_variables:
+            targs = MakoTemplate.global_variables.copy()
+            targs.update(args)
+        else:
+            targs = args
+        return self.tpl.render(**targs)
 
 
 class CheetahTemplate(BaseTemplate):
