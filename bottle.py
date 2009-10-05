@@ -855,8 +855,8 @@ class SimpleTemplate(BaseTemplate):
                         self.includes[name] = SimpleTemplate(name=name, lookup=self.lookup)
                       if subtpl == 'include':
                         code.append(' ' * indent + 
-                                    "_inc=dict(%s);_inc.update(_stdout=_stdout);_includes[%s].render(**_inc)\n"
-                                    % (args, repr(name)))
+                                    "_ = _includes[%s].execute(_stdout, %s)\n"
+                                    % (repr(name), args))
                       else:
                         code.append(' ' * indent + 
                                     "_tpl['_rebase'] = (_includes[%s], dict(%s))\n"
@@ -879,20 +879,22 @@ class SimpleTemplate(BaseTemplate):
         flush()
         return ''.join(code)
 
-    def render(self, **args):
-        """ Render the template using keyword arguments as local variables. """
-        stdout = args.get('_stdout',[])
+    def execute(self, stdout, **args):
         args['_stdout'] = stdout
         args['_includes'] = self.includes
         args['_tpl'] = args
         eval(self.co, args)
-        if '_rebase' not in args:
-          return args['_stdout']
-        subtpl, args = args['_rebase']
-        args['_base'] = stdout[:] #copy stdout
-        del stdout[:] # clear stdout
-        args['_stdout'] = stdout #reattach stdout
-        return subtpl.render(**args)
+        if '_rebase' in args:
+            subtpl, args = args['_rebase']
+            args['_base'] = stdout[:] #copy stdout
+            del stdout[:] # clear stdout
+            return subtpl.execute(stdout, **args)
+        return args
+    def render(self, **args):
+        """ Render the template using keyword arguments as local variables. """
+        stdout = []
+        self.execute(stdout, **args)
+        return stdout
             
 
 
