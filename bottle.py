@@ -487,7 +487,7 @@ def send_file(filename, root, guessmime = True, mimetype = None):
         # IE sends "<date>; length=146"
         ims = ims.split(";")[0].strip()
         ims = parse_date(ims)
-        if ims is not None and ims <= stats.st_mtime:
+        if ims is not None and ims >= stats.st_mtime:
            abort(304, "Not modified")
     if 'Content-Length' not in response.header:
         response.header['Content-Length'] = str(stats.st_size)
@@ -640,7 +640,7 @@ class FapwsServer(ServerAdapter):
 
 
 def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080,
-        interval=2, reloader=False, **kargs):
+        interval=1, reloader=False, **kargs):
     """ Runs bottle as a web server. """
     if not app:
         app = default_app()
