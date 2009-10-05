@@ -53,6 +53,12 @@ class TestSimpleTemplate(unittest.TestCase):
         t = SimpleTemplate(name='stpl_include', lookup='./')
         self.assertEqual('before\nstart var end\nafter\n', ''.join(t.render(var='var')))
 
+    def test_rebase(self):
+        """ Templates: %rebase and method passing """
+        t = SimpleTemplate(name='stpl_t2main', lookup='./')
+        result='+base+\n+main+\n!content!\n+include+\n-main-\n+include+\n-base-\n'
+        self.assertEqual(result, ''.join(t.render()))
+
     def test_notfound(self):
         """ Templates: Unavailable templates"""
         self.assertRaises(TemplateError, SimpleTemplate, name="abcdef")
