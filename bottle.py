@@ -855,8 +855,8 @@ class SimpleTemplate(BaseTemplate):
                         self.includes[name] = SimpleTemplate(name=name, lookup=self.lookup)
                       if subtpl == 'include':
                         code.append(' ' * indent + 
-                                    "_stdout.extend(_includes[%s].render(%s))\n"
-                                    % (repr(name), args))
+                                    "_inc=dict(%s);_inc.update(_stdout=_stdout);_includes[%s].render(**_inc)\n"
+                                    % (args, repr(name)))
                       else:
                         code.append(' ' * indent + 
                                     "_tpl['_rebase'] = (_includes[%s], dict(%s))\n"
