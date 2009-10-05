@@ -808,7 +808,7 @@ class CheetahTemplate(BaseTemplate):
 
 class SimpleTemplate(BaseTemplate):
     re_python = re.compile(r'^\s*%\s*(?:(if|elif|else|try|except|finally|for|'
-                            'while|with|def|class)|(include)|(end)|(.*))')
+                            'while|with|def|class)|(include)|(rebase)|(end)|(.*))')
     re_inline = re.compile(r'\{\{(.*?)\}\}')
     dedent_keywords = ('elif', 'else', 'except', 'finally')
 
@@ -838,25 +838,34 @@ class SimpleTemplate(BaseTemplate):
             m = self.re_python.match(line)
             if m:
                 flush(allow_nobreak=True)
-                keyword, include, end, statement = m.groups()
+                keyword, include, rebase, end, statement = m.groups()
                 if keyword:
                     if keyword in self.dedent_keywords:
                         indent -= 1
                     code.append(" " * indent + line[m.start(1):])
                     indent += 1
-                elif include:
+                elif include or rebase:
                     tmp = line[m.end(2):].strip().split(None, 1)
-                    name = tmp[0]
-                    args = tmp[1:] and tmp[1] or ''
-                    self.includes[name] = SimpleTemplate(name=name, lookup=self.lookup)
-                    code.append(' ' * indent + 
-                               "_stdout.extend(_includes[%s].render(%s))\n"
-                               % (repr(name), args))
+                    if not tmp:
+                      code.append(' ' * indent + "_stdout.extend(_base)\n")
+                    else:
+                      name = tmp[0]
+                      args = tmp[1:] and tmp[1] or ''
+                      if name not in self.includes:
+                        self.includes[name] = SimpleTemplate(name=name, lookup=self.lookup)
+                      if include:
+                        code.append(' ' * indent + 
+                                    "_stdout.extend(_includes[%s].render(%s))\n"
+                                    % (repr(name), args))
+                      else:
+                        code.append(' ' * indent + 
+                                    "_tpl['_rebase'] = (_includes[%s], dict(%s))\n"
+                                    % (repr(name), args))
                 elif end:
                     indent -= 1
-                    code.append(' ' * indent + '#' + line[m.start(3):])
+                    code.append(' ' * indent + '#' + line[m.start(4):])
                 elif statement:
-                    code.append(' ' * indent + line[m.start(4):])
+                    code.append(' ' * indent + line[m.start(5):])
             else:
                 splits = self.re_inline.split(line) # text, (expr, text)*
                 if len(splits) == 1:
@@ -874,9 +883,15 @@ class SimpleTemplate(BaseTemplate):
         """ Render the template using keyword arguments as local variables. """
         args['_stdout'] = []
         args['_includes'] = self.includes
+        args['_rebase'] = None
         args['_tpl'] = args
         eval(self.co, args)
+        if args['_rebase'] is not None:
+          args = args['_rebase'][1]
+          args['_base'] = ''.join(args['_stdout'])
+          return args['_rebase'][0].render(**args)
         return args['_stdout']
+            
 
 
 def template(tpl, template_adapter=SimpleTemplate, **args):
