@@ -758,7 +758,7 @@ class BaseTemplate(object):
 class MakoTemplate(BaseTemplate):
     output_encoding=None
     input_encoding=None
-    default_filters=[]
+    default_filters=None
     global_variables={}
 
     def prepare(self):
@@ -781,13 +781,9 @@ class MakoTemplate(BaseTemplate):
                                 )
  
     def render(self, **args):
-        targs = {}
-        if MakoTemplate.global_variables:
-            targs = MakoTemplate.global_variables.copy()
-            targs.update(args)
-        else:
-            targs = args
-        return self.tpl.render(**targs)
+        _defaults = MakoTemplate.global_variables.copy()
+        _defaults.update(args)
+        return self.tpl.render(**_defaults)
 
 
 class CheetahTemplate(BaseTemplate):
