@@ -29,6 +29,10 @@ class TestMakoTemplate(unittest.TestCase):
         """ Templates: Mako lookup and inherience """
         t = MakoTemplate(name='mako_inherit', lookup=['./views/']).render(var='v')
         self.assertEqual('o\ncvc\no\n', ''.join(t))
+        t = MakoTemplate('<%inherit file="mako_base.tpl"/>\nc${var}c\n', lookup=['./views/']).render(var='v')
+        self.assertEqual('o\ncvc\no\n', ''.join(t))
+        t = MakoTemplate('<%inherit file="views/mako_base.tpl"/>\nc${var}c\n', lookup=['./']).render(var='v')
+        self.assertEqual('o\ncvc\no\n', ''.join(t))
 
 suite = unittest.TestSuite()
 try:
