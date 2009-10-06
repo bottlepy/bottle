@@ -764,7 +764,7 @@ class MakoTemplate(BaseTemplate):
     def prepare(self):
         from mako.template import Template
         from mako.lookup import TemplateLookup
-        mylookup = TemplateLookup(directories=self.lookup)
+        mylookup = TemplateLookup(directories=map(os.path.abspath, self.lookup+['./']))
         if self.template:
             self.tpl = Template(self.template,
                                 lookup=mylookup,

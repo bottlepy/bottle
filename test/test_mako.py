@@ -9,12 +9,12 @@ class TestMakoTemplate(unittest.TestCase):
 
     def test_file(self):
         """ Templates: Mako file"""
-        t = MakoTemplate(filename='./mako_simple.tpl').render(var='var')
+        t = MakoTemplate(filename='./views/mako_simple.tpl').render(var='var')
         self.assertEqual('start var end\n', ''.join(t))
 
     def test_name(self):
         """ Templates: Mako lookup by name """
-        t = MakoTemplate(name='mako_simple', lookup=['./']).render(var='var')
+        t = MakoTemplate(name='mako_simple', lookup=['./views/']).render(var='var')
         self.assertEqual('start var end\n', ''.join(t))
 
     def test_notfound(self):
@@ -27,7 +27,7 @@ class TestMakoTemplate(unittest.TestCase):
 
     def test_inherit(self):
         """ Templates: Mako lookup and inherience """
-        t = MakoTemplate(name='mako_inherit', lookup=['./']).render(var='v')
+        t = MakoTemplate(name='mako_inherit', lookup=['./views/']).render(var='v')
         self.assertEqual('o\ncvc\no\n', ''.join(t))
 
 suite = unittest.TestSuite()

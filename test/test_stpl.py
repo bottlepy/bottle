@@ -9,12 +9,12 @@ class TestSimpleTemplate(unittest.TestCase):
 
     def test_file(self):
         """ Templates: Parse file"""
-        t = SimpleTemplate(filename='./stpl_simple.tpl').render(var='var')
+        t = SimpleTemplate(filename='./views/stpl_simple.tpl').render(var='var')
         self.assertEqual('start var end\n', ''.join(t))
 
     def test_name(self):
         """ Templates: Lookup by name """
-        t = SimpleTemplate(name='stpl_simple', lookup='./').render(var='var')
+        t = SimpleTemplate(name='stpl_simple', lookup=['./views/']).render(var='var')
         self.assertEqual('start var end\n', ''.join(t))
 
     def test_data(self):
@@ -50,12 +50,12 @@ class TestSimpleTemplate(unittest.TestCase):
 
     def test_include(self):
         """ Templates: Include statements"""
-        t = SimpleTemplate(name='stpl_include', lookup='./')
+        t = SimpleTemplate(name='stpl_include', lookup=['./views/'])
         self.assertEqual('before\nstart var end\nafter\n', ''.join(t.render(var='var')))
 
     def test_rebase(self):
         """ Templates: %rebase and method passing """
-        t = SimpleTemplate(name='stpl_t2main', lookup='./')
+        t = SimpleTemplate(name='stpl_t2main', lookup=['./views/'])
         result='+base+\n+main+\n!1234!\n+include+\n-main-\n+include+\n-base-\n'
         self.assertEqual(result, ''.join(t.render(content='1234')))
 
