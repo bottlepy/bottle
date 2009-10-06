@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 """
-Bottle is a fast and simple mirco-framework for small web-applications. It
-offers request dispatching (Routes) with url parameter support, Templates,
-key/value Databases, a build-in HTTP Server and adapters for many third party
-WSGI/HTTP-server and template engines. All in a single file and with no
+Bottle is a fast and simple micro-framework for small web applications. It
+offers request dispatching (Routes) with url parameter support, templates,
+key/value databases, a built-in HTTP Server and adapters for many third party
+WSGI/HTTP-server and template engines - all in a single file and with no
 dependencies other than the Python Standard Library.
 
 Homepage and documentation: http://wiki.github.com/defnull/bottle
 
 Special thanks to Stefan Matthias Aust [http://github.com/sma]
-  for his contribution to SimpelTemplate
+  for his contribution to SimpleTemplate
 
 Licence (MIT)
 -------------
@@ -62,7 +62,7 @@ Example
 """
 
 __author__ = 'Marcel Hellkamp'
-__version__ = '0.5.7'
+__version__ = '0.6.3'
 __license__ = 'MIT'
 
 import sys
@@ -75,9 +75,13 @@ import re
 import random
 import threading
 import time
+import email.utils
 from wsgiref.headers import Headers as HeaderWrapper
 from Cookie import SimpleCookie
 import anydbm as dbm
+import subprocess
+import thread
+
 
 try:
     from urlparse import parse_qs
@@ -105,38 +109,37 @@ except ImportError:
 # Exceptions and Events
 
 class BottleException(Exception):
-    """ A base class for exceptions used by bottle."""
+    """ A base class for exceptions used by bottle. """
     pass
 
 
 class HTTPError(BottleException):
-    """ A way to break the execution and instantly jump to an error handler. """
+    """
+    A way to break the execution and instantly jump to an error handler.
+    """
     def __init__(self, status, text):
         self.output = text
         self.http_status = int(status)
+        BottleException.__init__(self, status, text)
 
     def __repr__(self):
-        return "HTTPError(%d,%s)" % (self.http_status, repr(self.output))
+        return 'HTTPError(%d,%s)' % (self.http_status, repr(self.output))
 
     def __str__(self):
-        out = []
-        status = self.http_status
-        name = HTTP_CODES.get(status,'Unknown').title()
-        url = request.path
-        out.append('<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">')
-        out.append('<html><head><title>Error %d: %s</title>' % (status, name))
-        out.append('</head><body><h1>Error %d: %s</h1>' % (status, name))
-        out.append('<p>Sorry, the requested URL "%s" caused an error.</p>' % url)
-        out.append(''.join(list(self.output)))
-        out.append('</body></html>')
-        return "\n".join(out)
+        return HTTP_ERROR_TEMPLATE % {
+            'status' : self.http_status,
+            'url' : request.path,
+            'error_name' : HTTP_CODES.get(self.http_status, 'Unknown').title(),
+            'error_message' : ''.join(self.output)
+        }
 
 
 class BreakTheBottle(BottleException):
-    """ Not an exception, but a straight jump out of the controller code.
-    
+    """
+    Not an exception, but a straight jump out of the controller code.
     Causes the Bottle to instantly call start_response() and return the
-    content of output """
+    content of output
+    """
     def __init__(self, output):
         self.output = output
 
@@ -149,8 +152,10 @@ class BreakTheBottle(BottleException):
 
 _default_app = None
 def default_app(newapp = None):
-    ''' Returns the current default app or sets a new one.
-        Defaults to an instance of Bottle '''
+    """
+    Returns the current default app or sets a new one.
+    Defaults to an instance of Bottle
+    """
     global _default_app
     if newapp:
         _default_app = newapp
@@ -161,18 +166,20 @@ def default_app(newapp = None):
 
 class Bottle(object):
 
-    def __init__(self, catchall=True, debug=False, optimize=False, autojson=True):
+    def __init__(self, catchall=True, optimize=False, autojson=True):
         self.simple_routes = {}
         self.regexp_routes = {}
         self.default_route = None
         self.error_handler = {}
         self.optimize = optimize
-        self.debug = debug
         self.autojson = autojson
         self.catchall = catchall
+        self.serve = True
 
     def match_url(self, url, method='GET'):
-        """Returns the first matching handler and a parameter dict or (None, None) """
+        """
+        Returns the first matching handler and a parameter dict or (None, None)
+        """
         url = url.strip().lstrip("/ ")
         # Search for static routes first
         route = self.simple_routes.get(method,{}).get(url,None)
@@ -189,16 +196,20 @@ class Bottle(object):
                 return (handler, match.groupdict())
         if self.default_route:
             return (self.default_route, {})
-        return (None, None)
+        if method == 'HEAD': # Fall back to GET
+            return self.match_url(url)
+        else:
+            return (None, None)
 
     def add_controller(self, route, controller, **kargs):
         """ Adds a controller class or object """
         if '{action}' not in route and 'action' not in kargs:
-            raise BottleException('Routes to controller classes or object MUST contain an {action} placeholder or use the action-parameter')
-        for action in [m for m in dir(controller) if not m.startswith('_')]:
-            handler = getattr(controller,action)
+            raise BottleException("Routes to controller classes or object MUST"
+                " contain an {action} placeholder or use the action-parameter")
+        for action in (m for m in dir(controller) if not m.startswith('_')):
+            handler = getattr(controller, action)
             if callable(handler) and action == kargs.get('action', action):
-                self.add_route(route.replace('{action}',action), handler, **kargs)
+                self.add_route(route.replace('{action}', action), handler, **kargs)
 
     def add_route(self, route, handler, method='GET', simple=False, **kargs):
         """ Adds a new route to the route mappings. """
@@ -212,13 +223,17 @@ class Bottle(object):
         if re.match(r'^(\w+/)*\w*$', route) or simple:
             self.simple_routes.setdefault(method, {})[route] = handler
         else:
-            route = re.sub(r':([a-zA-Z_]+)(?P<uniq>[^\w/])(?P<re>.+?)(?P=uniq)',r'(?P<\1>\g<re>)',route)
-            route = re.sub(r':([a-zA-Z_]+)',r'(?P<\1>[^/]+)', route)
+            route = re.sub(r':([a-zA-Z_]+)(?P<uniq>[^\w/])(?P<re>.+?)(?P=uniq)',
+                           r'(?P<\1>\g<re>)',route)
+            route = re.sub(r':([a-zA-Z_]+)', r'(?P<\1>[^/]+)', route)
             route = re.compile('^%s$' % route)
             self.regexp_routes.setdefault(method, []).append([route, handler])
 
     def route(self, url, **kargs):
-        """ Decorator for request handler. Same as add_route(url, handler, **kargs)."""
+        """
+        Decorator for request handler.
+        Same as add_route(url, handler, **kargs).
+        """
         def wrapper(handler):
             self.add_route(url, handler, **kargs)
             return handler
@@ -236,24 +251,29 @@ class Bottle(object):
 
     def set_error_handler(self, code, handler):
         """ Adds a new error handler. """
-        code = int(code)
-        self.error_handler[code] = handler
+        self.error_handler[int(code)] = handler
 
     def error(self, code=500):
-        """ Decorator for error handler. Same as set_error_handler(code, handler)."""
+        """
+        Decorator for error handler.
+        Same as set_error_handler(code, handler).
+        """
         def wrapper(handler):
             self.set_error_handler(code, handler)
             return handler
         return wrapper
 
     def __call__(self, environ, start_response):
-        """ The bottle WSGI-interface ."""
+        """ The bottle WSGI-interface. """
         request.bind(environ)
         response.bind()
         try: # Unhandled Exceptions
             try: # Bottle Error Handling
+                if not self.serve:
+                    abort(503, "Server stopped")
                 handler, args = self.match_url(request.path, request.method)
-                if not handler: raise HTTPError(404, "Not found")
+                if not handler:
+                    raise HTTPError(404, "Not found")
                 output = handler(**args)
                 db.close()
             except BreakTheBottle, e:
@@ -263,24 +283,26 @@ class Bottle(object):
                 output = self.error_handler.get(response.status, str)(e)
             # output casting
             if hasattr(output, 'read'):
-                output = environ.get('wsgi.file_wrapper', lambda x: iter(lambda: x.read(8192), ''))(output)
+                output = environ.get('wsgi.file_wrapper',
+                  lambda x: iter(lambda: x.read(8192), ''))(output)
             elif self.autojson and json_dumps and isinstance(output, dict):
                 output = json_dumps(output)
                 response.content_type = 'application/json'
             if isinstance(output, str):
                 response.header['Content-Length'] = str(len(output))
                 output = [output]
+            if not hasattr(output, '__iter__'):
+                raise TypeError('Request handler for route "%s" returned [%s] '
+                'which is not iterable.' % (request.path, type(output).__name__))
         except (KeyboardInterrupt, SystemExit, MemoryError):
             raise
         except Exception, e:
             response.status = 500
             if self.catchall:
                 err = "Unhandled Exception: %s\n" % (repr(e))
-                if self.debug:
-                    err += "<h2>Traceback:</h2>\n<pre>\n"
-                    err += traceback.format_exc(10)
-                    err += "\n</pre>"
-                output = str(HTTPError(500, err))
+                if DEBUG:
+                    err += TRACEBACK_TEMPLATE % traceback.format_exc(10)
+                output = [str(HTTPError(500, err))]
                 request._environ['wsgi.errors'].write(err)
             else:
                 raise
@@ -294,8 +316,11 @@ class Request(threading.local):
     """ Represents a single request using thread-local namespace. """
 
     def bind(self, environ):
-        """ Binds the enviroment of the current request to this request handler """
+        """
+        Binds the enviroment of the current request to this request handler
+        """
         self._environ = environ
+        self.environ = self._environ
         self._GET = None
         self._POST = None
         self._GETPOST = None
@@ -306,17 +331,17 @@ class Request(threading.local):
 
     @property
     def method(self):
-        ''' Returns the request method (GET,POST,PUT,DELETE,...) '''
+        """ Get the request method (GET,POST,PUT,DELETE,...) """
         return self._environ.get('REQUEST_METHOD', 'GET').upper()
 
     @property
     def query_string(self):
-        ''' Content of QUERY_STRING '''
+        """ Get content of QUERY_STRING """
         return self._environ.get('QUERY_STRING', '')
 
     @property
     def input_length(self):
-        ''' Content of CONTENT_LENGTH '''
+        """ Get content of CONTENT_LENGTH """
         try:
             return int(self._environ.get('CONTENT_LENGTH', '0'))
         except ValueError:
@@ -324,7 +349,7 @@ class Request(threading.local):
 
     @property
     def GET(self):
-        """Returns a dict with GET parameters."""
+        """ Get a dict with GET parameters. """
         if self._GET is None:
             data = parse_qs(self.query_string, keep_blank_values=True)
             self._GET = {}
@@ -337,9 +362,10 @@ class Request(threading.local):
 
     @property
     def POST(self):
-        """Returns a dict with parsed POST or PUT data."""
+        """ Get a dict with parsed POST or PUT data. """
         if self._POST is None:
-            data = cgi.FieldStorage(fp=self._environ['wsgi.input'], environ=self._environ, keep_blank_values=True)
+            data = cgi.FieldStorage(fp=self._environ['wsgi.input'],
+                environ=self._environ, keep_blank_values=True)
             self._POST  = {}
             for item in data.list:
                 name = item.name
@@ -353,7 +379,7 @@ class Request(threading.local):
 
     @property
     def params(self):
-        ''' Returns a mix of GET and POST data. POST overwrites GET '''
+        """ Returns a mix of GET and POST data. POST overwrites GET """
         if self._GETPOST is None:
             self._GETPOST = dict(self.GET)
             self._GETPOST.update(dict(self.POST))
@@ -361,7 +387,7 @@ class Request(threading.local):
 
     @property
     def COOKIES(self):
-        """Returns a dict with COOKIES."""
+        """ Returns a dict with COOKIES. """
         if self._COOKIES is None:
             raw_dict = SimpleCookie(self._environ.get('HTTP_COOKIE',''))
             self._COOKIES = {}
@@ -395,19 +421,23 @@ class Response(threading.local):
         return self._COOKIES
 
     def set_cookie(self, key, value, **kargs):
-        """ Sets a Cookie. Optional settings: expires, path, comment, domain, max-age, secure, version, httponly """
+        """
+        Sets a Cookie. Optional settings:
+        expires, path, comment, domain, max-age, secure, version, httponly
+        """
         self.COOKIES[key] = value
-        for k in kargs:
-            self.COOKIES[key][k] = kargs[k]
+        for k, v in kargs.iteritems():
+            self.COOKIES[key][k] = v
 
     def get_content_type(self):
-        '''Gives access to the 'Content-Type' header and defaults to 'text/html'.'''
+        """ Get the current 'Content-Type' header. """
         return self.header['Content-Type']
         
     def set_content_type(self, value):
         self.header['Content-Type'] = value
         
-    content_type = property(get_content_type, set_content_type, None, get_content_type.__doc__)
+    content_type = property(get_content_type, set_content_type, None,
+                            get_content_type.__doc__)
 
 
 class BaseController(object):
@@ -430,7 +460,7 @@ def redirect(url, code=307):
     raise BreakTheBottle("")
 
 
-def send_file(filename, root, guessmime = True, mimetype = 'text/plain'):
+def send_file(filename, root, guessmime = True, mimetype = None):
     """ Aborts execution and sends a static files as response. """
     root = os.path.abspath(root) + '/'
     filename = os.path.normpath(filename).strip('/')
@@ -443,25 +473,41 @@ def send_file(filename, root, guessmime = True, mimetype = 'text/plain'):
     if not os.access(filename, os.R_OK):
         abort(401, "You do not have permission to access this file.")
 
-    if guessmime:
-        guess = mimetypes.guess_type(filename)[0]
-        if guess:
-            response.content_type = guess
-        elif mimetype:
-            response.content_type = mimetype
-    elif mimetype:
-        response.content_type = mimetype
+    if guessmime and not mimetype:
+        mimetype = mimetypes.guess_type(filename)[0]
+    if not mimetype: mimetype = 'text/plain'
+    response.content_type = mimetype
 
     stats = os.stat(filename)
-    # TODO: HTTP_IF_MODIFIED_SINCE -> 304 (Thu, 02 Jul 2009 23:16:31 CEST)
-    if 'Content-Length' not in response.header:
-        response.header['Content-Length'] = stats.st_size
     if 'Last-Modified' not in response.header:
-        ts = time.gmtime(stats.st_mtime)
-        ts = time.strftime("%a, %d %b %Y %H:%M:%S +0000", ts)
-        response.header['Last-Modified'] = ts
+        lm = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(stats.st_mtime))
+        response.header['Last-Modified'] = lm
+    if 'HTTP_IF_MODIFIED_SINCE' in request.environ:
+        ims = request.environ['HTTP_IF_MODIFIED_SINCE']
+        # IE sends "<date>; length=146"
+        ims = ims.split(";")[0].strip()
+        ims = parse_date(ims)
+        if ims is not None and ims >= stats.st_mtime:
+           abort(304, "Not modified")
+    if 'Content-Length' not in response.header:
+        response.header['Content-Length'] = str(stats.st_size)
+    raise BreakTheBottle(open(filename, 'rb'))
 
-    raise BreakTheBottle(open(filename, 'r'))
+
+def parse_date(ims):
+    """
+    Parses date strings usually found in HTTP header and returns UTC epoch.
+    Understands rfc1123, rfc850 and asctime.
+    """
+    try:
+        ts = email.utils.parsedate_tz(ims)
+        if ts is not None:
+            if ts[9] is None:
+                return time.mktime(ts[:8] + (0,)) - time.timezone
+            else:
+                return time.mktime(ts[:8] + (0,)) - ts[9] - time.timezone
+    except (ValueError, IndexError):
+        return None
 
 
 
@@ -471,15 +517,17 @@ def send_file(filename, root, guessmime = True, mimetype = 'text/plain'):
 # Decorators
 
 def validate(**vkargs):
-    ''' Validates and manipulates keyword arguments by user defined callables 
-    and handles ValueError and missing arguments by raising HTTPError(403) '''
+    """
+    Validates and manipulates keyword arguments by user defined callables. 
+    Handles ValueError and missing arguments by raising HTTPError(403).
+    """
     def decorator(func):
         def wrapper(**kargs):
-            for key in vkargs:
+            for key, value in vkargs.iteritems():
                 if key not in kargs:
                     abort(403, 'Missing parameter: %s' % key)
                 try:
-                    kargs[key] = vkargs[key](kargs[key])
+                    kargs[key] = value(kargs[key])
                 except ValueError, e:
                     abort(403, 'Wrong parameter format for: %s' % key)
             return func(**kargs)
@@ -488,15 +536,21 @@ def validate(**vkargs):
 
 
 def route(url, **kargs):
-    """ Decorator for request handler. Same as add_route(url, handler, **kargs)."""
+    """
+    Decorator for request handler. Same as add_route(url, handler, **kargs).
+    """
     return default_app().route(url, **kargs)
 
 def default():
-    """ Decorator for request handler. Same as set_default(handler)."""
+    """
+    Decorator for request handler. Same as set_default(handler).
+    """
     return default_app().default()
 
 def error(code=500):
-    """ Decorator for error handler. Same as set_error_handler(code, handler)."""
+    """
+    Decorator for error handler. Same as set_error_handler(code, handler).
+    """
     return default_app().error(code)
 
 
@@ -506,8 +560,23 @@ def error(code=500):
 
 # Server adapter
 
-class ServerAdapter(object):
+class WSGIAdapter(object):
+    def run(self, handler):
+        pass
+
+    def __repr__(self):
+        return "%s()" % (self.__class__.__name__)
+
+
+class CGIServer(WSGIAdapter):
+    def run(self, handler):
+        from wsgiref.handlers import CGIHandler
+        CGIHandler().run(handler)
+
+
+class ServerAdapter(WSGIAdapter):
     def __init__(self, host='127.0.0.1', port=8080, **kargs):
+        WSGIAdapter.__init__(self)
         self.host = host
         self.port = int(port)
         self.options = kargs
@@ -548,50 +617,95 @@ class PasteServer(ServerAdapter):
 
 
 class FapwsServer(ServerAdapter):
-    """ Extreamly fast Webserver using libev (see http://william-os4y.livejournal.com/)
-        Experimental ... """
+    """
+    Extremly fast webserver using libev.
+    See http://william-os4y.livejournal.com/
+    Experimental ...
+    """
     def run(self, handler):
         import fapws._evwsgi as evwsgi
         from fapws import base
-        import sys
         evwsgi.start(self.host, self.port)
         evwsgi.set_base_module(base)
         def app(environ, start_response):
             environ['wsgi.multiprocess'] = False
-            return handler(environ, start_response)
+            result = handler(environ, start_response)
+            if isinstance(result, basestring):
+                # fapws doesn't handle strings correctly
+                return iter(result)
+            else:
+                return result
         evwsgi.wsgi_cb(('',app))
         evwsgi.run()
 
 
-def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080, **kargs):
-    """ Runs bottle as a web server, using Python's built-in wsgiref implementation by default.
-    
-    You may choose between WSGIRefServer, CherryPyServer, FlupServer and
-    PasteServer or write your own server adapter.
-    """
+def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080,
+        interval=1, reloader=False, **kargs):
+    """ Runs bottle as a web server. """
     if not app:
         app = default_app()
     
-    quiet = bool('quiet' in kargs and kargs['quiet'])
+    quiet = bool(kargs.get('quiet', False))
 
-    # Instanciate server, if it is a class instead of an instance
-    if isinstance(server, type) and issubclass(server, ServerAdapter):
-        server = server(host=host, port=port, **kargs)
+    # Instantiate server, if it is a class instead of an instance
+    if isinstance(server, type):
+        if issubclass(server, CGIServer):
+            server = server()
+        elif issubclass(server, ServerAdapter):
+            server = server(host=host, port=port, **kargs)
 
-    if not isinstance(server, ServerAdapter):
-        raise RuntimeError("Server must be a subclass of ServerAdapter")
-
-    if not quiet:
-        print 'Bottle server starting up (using %s)...' % repr(server)
-        print 'Listening on http://%s:%d/' % (server.host, server.port)
-        print 'Use Ctrl-C to quit.'
-        print
+    if not isinstance(server, WSGIAdapter):
+        raise RuntimeError("Server must be a subclass of WSGIAdapter")
+ 
+    if not quiet and isinstance(server, ServerAdapter):
+        if not reloader or os.environ.get('BOTTLE_CHILD') == 'true':
+            print "Bottle server starting up (using %s)..." % repr(server)
+            print "Listening on http://%s:%d/" % (server.host, server.port)
+            print "Use Ctrl-C to quit."
+            print
+        else:
+            print "Bottle auto reloader starting up..."
 
     try:
-        server.run(app)
+        if reloader and interval:
+            reloader_run(server, app, interval)
+        else:
+            server.run(app)
     except KeyboardInterrupt:
-        print "Shuting down..."
+        print "Shutting Down..."
 
+
+def reloader_run(server, app, interval):
+    if os.environ.get('BOTTLE_CHILD') == 'true':
+        # We are a child process
+        files = dict()
+        for module in sys.modules.values():
+            file_path = getattr(module, '__file__', None)
+            if file_path and os.path.isfile(file_path):
+                file_split = os.path.splitext(file_path)
+                if file_split[1] in ('.py', '.pyc', '.pyo'):
+                    file_path = file_split[0] + '.py'
+                    files[file_path] = os.stat(file_path).st_mtime
+        thread.start_new_thread(server.run, (app,))
+        while True:
+            time.sleep(interval)
+            for file_path, file_mtime in files.iteritems():
+                if not os.path.exists(file_path):
+                    print "File changed: %s (deleted)" % file_path
+                elif os.stat(file_path).st_mtime > file_mtime:
+                    print "File changed: %s (modified)" % file_path
+                else: continue
+                print "Restarting..."
+                app.serve = False
+                time.sleep(interval) # be nice and wait for running requests
+                sys.exit(3)
+    while True:
+        args = [sys.executable] + sys.argv
+        environ = os.environ.copy()
+        environ['BOTTLE_CHILD'] = 'true'
+        exit_status = subprocess.call(args, env=environ)
+        if exit_status != 3:
+            sys.exit(exit_status)
 
 
 
@@ -599,101 +713,159 @@ def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080, **kargs):
 
 # Templates
 
-class BaseTemplate(object):
-    def __init__(self, template='', filename=None):
-        self.source = filename
-        if self.source:
-            fp = open(filename)
-            template = fp.read()
-            fp.close()
-        self.parse(template)
+class TemplateError(HTTPError):
+    def __init__(self, message):
+        HTTPError.__init__(self, 500, message)
 
-    def parse(self, template): raise NotImplementedError
-    def render(self, **args): raise NotImplementedError
-    
-    @classmethod
-    def find(cls, name):
-        for path in TEMPLATE_PATH:
-            if os.path.isfile(path % name):
-                return cls(filename = path % name)
-        return None
+class BaseTemplate(object):
+    def __init__(self, template='', name=None, filename=None, lookup=[]):
+        """
+        Create a new template.
+        If a name is provided, but no filename and no template string, the
+        filename is guessed using the lookup path list.
+        Subclasses can assume that either self.template or self.filename is set.
+        If both are present, self.template should be used.
+        """
+        self.name = name
+        self.filename = filename
+        self.template = template
+        self.lookup = lookup
+        if self.name and not self.filename:
+            for path in self.lookup:
+                fpath = os.path.join(path, self.name+'.tpl')
+                if os.path.isfile(fpath):
+                    self.filename = fpath
+        if not self.template and not self.filename:
+            raise TemplateError('Template (%s) not found.' % self.name)
+        self.prepare()
+
+    def prepare(self):
+        """
+        Run preparatios (parsing, caching, ...).
+        It should be possible to call this multible times to refresh a template.
+        """
+        raise NotImplementedError
+
+    def render(self, **args):
+        """
+        Render the template with the specified local variables and return an
+        iterator of strings (bytes). This must be thread save!
+        """
+        raise NotImplementedError
 
 
 class MakoTemplate(BaseTemplate):
-    def parse(self, template):
+    output_encoding=None
+    input_encoding=None
+    default_filters=[]
+    global_variables={}
+
+    def prepare(self):
         from mako.template import Template
         from mako.lookup import TemplateLookup
-        class MyLookup(TemplateLookup):
-            def get_template(self, uri):
-                if uri in self.__collection:
-                    return super(TemplateLookup, self).get_template(uri)
-                else:
-                    for path in TEMPLATE_PATH:
-                        if os.path.isfile(path % name):
-                            return self.__load(path % name, uri)
-            def __load(self, filename, uri):
-                self._uri_cache[filename] = uri
-                return super(TemplateLookup, self).__load(filename, uri)
-        self.tpl = Template(template, lookup=MyLookup)
+        mylookup = TemplateLookup(directories=self.lookup)
+        if self.template:
+            self.tpl = Template(self.template,
+                                lookup=mylookup,
+                                output_encoding=MakoTemplate.output_encoding,
+                                input_encoding=MakoTemplate.input_encoding,
+                                default_filters=MakoTemplate.default_filters
+                                )
+        else:
+            self.tpl = Template(filename=self.filename,
+                                lookup=mylookup,
+                                output_encoding=MakoTemplate.output_encoding,
+                                input_encoding=MakoTemplate.input_encoding,
+                                default_filters=MakoTemplate.default_filters
+                                )
  
     def render(self, **args):
-        return self.tpl.render(**args)
+        targs = {}
+        if MakoTemplate.global_variables:
+            targs = MakoTemplate.global_variables.copy()
+            targs.update(args)
+        else:
+            targs = args
+        return self.tpl.render(**targs)
 
 
 class CheetahTemplate(BaseTemplate):
-    def parse(self, template):
+    def prepare(self):
         from Cheetah.Template import Template
         self.context = threading.local()
         self.context.vars = {}
-        self.tpl = Template(source = template, searchList=[self.context.vars])
+        if self.template:
+            self.tpl = Template(source=self.template, searchList=[self.context.vars])
+        else:
+            self.tpl = Template(file=self.filename, searchList=[self.context.vars])
  
     def render(self, **args):
         self.context.vars.update(args)
         out = str(self.tpl)
         self.context.vars.clear()
-        return out
+        return [out]
 
 
 class SimpleTemplate(BaseTemplate):
-    re_python = re.compile(r'^\s*%\s*(?:(if|elif|else|try|except|finally|for|while|with|def|class)|(include)|(end)|(.*))')
+    re_python = re.compile(r'^\s*%\s*(?:(if|elif|else|try|except|finally|for|'
+                            'while|with|def|class)|(include|rebase)|(end)|(.*))')
     re_inline = re.compile(r'\{\{(.*?)\}\}')
     dedent_keywords = ('elif', 'else', 'except', 'finally')
+
+    def prepare(self):
+        if self.template:
+            code = self.translate(self.template)
+            self.co = compile(code, '<string>', 'exec')
+        else:
+            code = self.translate(open(self.filename).read())
+            self.co = compile(code, self.filename, 'exec')
 
     def translate(self, template):
         indent = 0
         strbuffer = []
         code = []
-        self.subtemplates = {}
+        self.includes = dict()
         class PyStmt(str):
             def __repr__(self): return 'str(' + self + ')'
         def flush(allow_nobreak=False):
             if len(strbuffer):
                 if allow_nobreak and strbuffer[-1].endswith("\\\\\n"):
                     strbuffer[-1]=strbuffer[-1][:-3]
-                code.append(" " * indent + "stdout.append(%s)" % repr(''.join(strbuffer)))
-                code.append((" " * indent + "\n") * len(strbuffer)) # to preserve line numbers 
+                code.append(' ' * indent + "_stdout.append(%s)" % repr(''.join(strbuffer)))
+                code.append((' ' * indent + '\n') * len(strbuffer)) # to preserve line numbers 
                 del strbuffer[:]
         for line in template.splitlines(True):
             m = self.re_python.match(line)
             if m:
                 flush(allow_nobreak=True)
-                keyword, include, end, statement = m.groups()
+                keyword, subtpl, end, statement = m.groups()
                 if keyword:
                     if keyword in self.dedent_keywords:
                         indent -= 1
                     code.append(" " * indent + line[m.start(1):])
                     indent += 1
-                elif include:
+                elif subtpl:
                     tmp = line[m.end(2):].strip().split(None, 1)
-                    name = tmp[0]
-                    args = tmp[1:] and tmp[1] or ''
-                    self.subtemplates[name] = SimpleTemplate.find(name)
-                    code.append(" " * indent + "stdout.append(_subtemplates[%s].render(%s))\n" % (repr(name), args))
+                    if not tmp:
+                      code.append(' ' * indent + "_stdout.extend(_base)\n")
+                    else:
+                      name = tmp[0]
+                      args = tmp[1:] and tmp[1] or ''
+                      if name not in self.includes:
+                        self.includes[name] = SimpleTemplate(name=name, lookup=self.lookup)
+                      if subtpl == 'include':
+                        code.append(' ' * indent + 
+                                    "_ = _includes[%s].execute(_stdout, %s)\n"
+                                    % (repr(name), args))
+                      else:
+                        code.append(' ' * indent + 
+                                    "_tpl['_rebase'] = (_includes[%s], dict(%s))\n"
+                                    % (repr(name), args))
                 elif end:
                     indent -= 1
-                    code.append(" " * indent + '#' + line[m.start(3):])
+                    code.append(' ' * indent + '#' + line[m.start(3):])
                 elif statement:
-                    code.append(" " * indent + line[m.start(4):])
+                    code.append(' ' * indent + line[m.start(4):])
             else:
                 splits = self.re_inline.split(line) # text, (expr, text)*
                 if len(splits) == 1:
@@ -703,40 +875,78 @@ class SimpleTemplate(BaseTemplate):
                     for i in range(1, len(splits), 2):
                         splits[i] = PyStmt(splits[i])
                     splits = [x for x in splits if bool(x)]
-                    code.append(" " * indent + "stdout.extend(%s)\n" % repr(splits))
+                    code.append(' ' * indent + "_stdout.extend(%s)\n" % repr(splits))
         flush()
         return ''.join(code)
 
-    def parse(self, template):
-        code = self.translate(template)
-        self.co = compile(code, self.source or '<template>', 'exec')
-
-    def render(self, **args):
-        ''' Returns the rendered template using keyword arguments as local variables. '''
-        args['stdout'] = []
-        args['_subtemplates'] = self.subtemplates
+    def execute(self, stdout, **args):
+        args['_stdout'] = stdout
+        args['_includes'] = self.includes
+        args['_tpl'] = args
         eval(self.co, args)
-        return ''.join(args['stdout'])
+        if '_rebase' in args:
+            subtpl, args = args['_rebase']
+            args['_base'] = stdout[:] #copy stdout
+            del stdout[:] # clear stdout
+            return subtpl.execute(stdout, **args)
+        return args
+    def render(self, **args):
+        """ Render the template using keyword arguments as local variables. """
+        stdout = []
+        self.execute(stdout, **args)
+        return stdout
+            
 
 
-def template(template, template_adapter=SimpleTemplate, **args):
-    ''' Returns a string from a template '''
-    if template not in TEMPLATES:
-        if template.find("\n") == template.find("{") == template.find("%") == -1:
-            TEMPLATES[template] = template_adapter.find(template)
+def template(tpl, template_adapter=SimpleTemplate, **args):
+    '''
+    Get a rendered template as a string iterator.
+    You can use a name, a filename or a template string as first parameter.
+    '''
+    lookup = args.get('template_lookup', TEMPLATE_PATH)
+    if tpl not in TEMPLATES or DEBUG:
+        if "\n" in tpl or "{" in tpl or "%" in tpl or '$' in tpl:
+            TEMPLATES[tpl] = template_adapter(template=tpl, lookup=lookup)
+        elif '.' in tpl:
+            TEMPLATES[tpl] = template_adapter(filename=tpl, lookup=lookup)
         else:
-            TEMPLATES[template] = template_adapter(template)
-    if not TEMPLATES[template]:
-        abort(500, 'Template not found')
+            TEMPLATES[tpl] = template_adapter(name=tpl, lookup=lookup)
+    if not TEMPLATES[tpl]:
+        abort(500, 'Template (%s) not found' % tpl)
     args['abort'] = abort
     args['request'] = request
     args['response'] = response
-    return TEMPLATES[template].render(**args)
+    return TEMPLATES[tpl].render(**args)
 
 
-def mako_template(template_name, **args): return template(template_name, template_adapter=MakoTemplate, **args)
+def mako_template(tpl_name, **kargs):
+    kargs['template_adapter'] = MakoTemplate
+    return template(tpl_name, **kargs)
 
-def cheetah_template(template_name, **args): return template(template_name, template_adapter=CheetahTemplate, **args)
+def cheetah_template(tpl_name, **kargs):
+    kargs['template_adapter'] = CheetahTemplate
+    return template(tpl_name, **kargs)
+
+def view(tpl_name, **defaults):
+    ''' Decorator: Rendes a template for a handler.
+        Return a dict of template vars to fill out the template.
+    '''
+    def decorator(func):
+        def wrapper(**kargs):
+            out = func(**kargs)
+            defaults.update(out)
+            return template(tpl_name, **defaults)
+        return wrapper
+    return decorator
+
+def mako_view(tpl_name, **kargs):
+    kargs['template_adapter'] = MakoTemplate
+    return view(tpl_name, **kargs)
+
+def cheetah_view(tpl_name, **kargs):
+    kargs['template_adapter'] = CheetahTemplate
+    return view(tpl_name, **kargs)
+
 
 
 
@@ -746,7 +956,7 @@ def cheetah_template(template_name, **args): return template(template_name, temp
 # Database
 
 class BottleBucket(object):
-    '''Memory-caching wrapper around anydbm'''
+    """ Memory-caching wrapper around anydbm """
     def __init__(self, name):
         self.__dict__['name'] = name
         self.__dict__['db'] = dbm.open(DB_PATH + '/%s.db' % name, 'c')
@@ -825,7 +1035,7 @@ class BottleBucket(object):
 
 
 class BottleDB(threading.local):
-    '''Holds multible BottleBucket instances in a thread-local way.'''
+    """ Holds multible BottleBucket instances in a thread-local way. """
     def __init__(self):
         self.__dict__['open'] = {}
         
@@ -880,8 +1090,9 @@ class BottleDB(threading.local):
 # Modul initialization and configuration
 
 DB_PATH = './'
-TEMPLATE_PATH = ['./%s.tpl', './views/%s.tpl']
+TEMPLATE_PATH = ['./', './views/']
 TEMPLATES = {}
+DEBUG = False
 HTTP_CODES = {
     100: 'CONTINUE',
     101: 'SWITCHING PROTOCOLS',
@@ -926,12 +1137,41 @@ HTTP_CODES = {
     505: 'HTTP VERSION NOT SUPPORTED',
 }
 
+HTTP_ERROR_TEMPLATE = """
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<html>
+    <head>
+        <title>Error %(status)d: %(error_name)s</title>
+    </head>
+    <body>
+        <h1>Error %(status)d: %(error_name)s</h1>
+        <p>Sorry, the requested URL <tt>%(url)s</tt> caused an error:</p>
+        <pre>
+            %(error_message)s
+        </pre>
+    </body>
+</html>
+"""
+
+TRACEBACK_TEMPLATE = """
+<h2>Traceback:</h2>
+<pre>
+%s
+</pre>
+"""
+
 request = Request()
 response = Response()
 db = BottleDB()
 local = threading.local()
 
-def debug(mode=True): default_app().debug = bool(mode)
-def optimize(mode=True): default_app().optimize = bool(mode)
+#TODO: Global and app local configuration (debug, defaults, ...) is a mess
+
+def debug(mode=True):
+    global DEBUG
+    DEBUG = bool(mode)
+
+def optimize(mode=True):
+    default_app().optimize = bool(mode)
 
 
