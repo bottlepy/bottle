@@ -282,7 +282,9 @@ class Bottle(object):
                 response.status = e.http_status
                 output = self.error_handler.get(response.status, str)(e)
             # output casting
-            if hasattr(output, 'read'):
+            if request.method.upper() == 'HEAD':
+                output = []
+            elif hasattr(output, 'read'):
                 output = environ.get('wsgi.file_wrapper',
                   lambda x: iter(lambda: x.read(8192), ''))(output)
             elif self.autojson and json_dumps and isinstance(output, dict):
@@ -463,8 +465,7 @@ def redirect(url, code=307):
 def send_file(filename, root, guessmime = True, mimetype = None):
     """ Aborts execution and sends a static files as response. """
     root = os.path.abspath(root) + '/'
-    filename = os.path.normpath(filename).strip('/')
-    filename = os.path.join(root, filename)
+    filename = os.path.abspath(os.path.join(root, filename.strip('/')))
     
     if not filename.startswith(root):
         abort(401, "Access denied.")

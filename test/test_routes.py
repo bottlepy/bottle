@@ -12,22 +12,6 @@ class TestRoutes(unittest.TestCase):
     def setUp(self):
         self.wsgi = Bottle()
 
-    def simulate(self, url, **kargs):
-        environ = {}
-        meta = {}
-        out = ''
-        url = url.split('?')
-        environ['PATH_INFO'] = url[0]
-        if len(url) > 1: environ['QUERY_STRING'] = url[1]
-        environ.update(kargs)
-        setup_testing_defaults(environ)
-        def start_response(status, header):
-            meta['status'] = int(status.split()[0])
-            meta['header'] = dict(header)
-        for part in self.wsgi(environ, start_response):
-            out += part
-        return meta['status'], meta['header'], out
-
     def test_static(self):
         """ Routes: Static routes """
         app = Bottle()
@@ -69,7 +53,7 @@ class TestRoutes(unittest.TestCase):
     def test_controller(self):
         """ Routes: Controller Syntax """
         """ Not testing decorator mode here because it is a SyntaxError in Python 2.5 """
-        app = self.wsgi
+        app = Bottle()
         class CTest(BaseController): 
             def _no(self): return 'no'
             def yes(self): return 'yes'
@@ -77,12 +61,10 @@ class TestRoutes(unittest.TestCase):
         app.add_route('/ctest/{action}', CTest)
         app.add_route('/ctest/yes/:test', CTest, action='yes2')
 
-        self.assertEqual(404, self.simulate('/ctest/no')[0])
-        self.assertEqual(404, self.simulate('/ctest/_no')[0])
-        self.assertEqual(200, self.simulate('/ctest/yes')[0])
-        self.assertEqual(200, self.simulate('/ctest/yes/test')[0])
-        self.assertEqual('yes', self.simulate('/ctest/yes')[2])
-        self.assertEqual('test', self.simulate('/ctest/yes/test')[2])
+        self.assertEqual(None, app.match_url('/ctest/no')[0])
+        self.assertEqual(None, app.match_url('/ctest/_no')[0])
+        self.assertEqual('yes', app.match_url('/ctest/yes')[0]())
+        self.assertEqual('test', app.match_url('/ctest/yes/test')[0](test='test'))
 
 
 suite = unittest.TestSuite()
