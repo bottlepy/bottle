@@ -758,6 +758,7 @@ class BottleBucket(object):
         return self.mmap[key]
     
     def __setitem__(self, key, value):
+        if not isinstance(key, str): raise TypeError("Bottle keys must be strings")
         self.mmap[key] = value
     
     def __delitem__(self, key):
