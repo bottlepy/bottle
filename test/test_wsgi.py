@@ -90,6 +90,14 @@ class TestWsgi(WsgiTestBase):
         def test2(): return ['t','e','st']
         self.assertEqual('test', self.urlopen('/str').read())
         self.assertEqual('test', self.urlopen('/list').read())
+
+    def test_unicode(self):
+        """ WSGI: Test Unicode support """
+        @bottle.route('/')
+        def test():
+            bottle.response.content_type = 'text/html; charset=utf-8'
+            return u'test'
+        self.assertEqual('test', self.urlopen('/').read())
      
     def test_json(self):
         """ WSGI: Autojson feature """
