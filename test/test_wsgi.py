@@ -6,10 +6,10 @@ import urllib2
 try:
     import wsgi_intercept
     import wsgi_intercept.urllib2_intercept
+    wsgi_intercept.urllib2_intercept.install_opener()
 except ImportError:
     print "WARNING: WSGI tests need wsgi_intercept. Not testing!"
-
-wsgi_intercept.urllib2_intercept.install_opener()
+    wsgi_intercept = None
 
 class MethodRequest(urllib2.Request):
     ''' Used to create HEAD/PUT/DELETE/... requests with urllib2 '''
@@ -133,8 +133,9 @@ class TestDecorators(WsgiTestBase):
 
 
 suite = unittest.TestSuite()
-suite.addTest(unittest.makeSuite(TestWsgi))
-suite.addTest(unittest.makeSuite(TestDecorators))
+if wsgi_intercept:
+    suite.addTest(unittest.makeSuite(TestWsgi))
+    suite.addTest(unittest.makeSuite(TestDecorators))
 
 if __name__ == '__main__':
     unittest.main()
