@@ -770,11 +770,7 @@ class MakoTemplate(BaseTemplate):
     def prepare(self):
         from mako.template import Template
         from mako.lookup import TemplateLookup
-        if self.filename:
-            lookups = [os.path.relpath(os.path.abspath(path), os.path.abspath(os.path.dirname(self.filename))) for path in self.lookup]
-        else:
-            lookups = [os.path.relpath(os.path.abspath(path), os.path.abspath(os.path.dirname('./'))) for path in self.lookup]
-        mylookup = TemplateLookup(directories=lookups)
+        mylookup = TemplateLookup(directories=map(os.path.abspath,self.lookup)+['./'])
         if self.template:
             self.tpl = Template(self.template,
                                 lookup=mylookup,
