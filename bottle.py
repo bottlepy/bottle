@@ -957,6 +957,10 @@ def cheetah_template(tpl_name, **kargs):
     kargs['template_adapter'] = CheetahTemplate
     return template(tpl_name, **kargs)
 
+def jinja2_template(tpl_name, **kargs):
+    kargs['template_adapter'] = Jinja2Template
+    return template(tpl_name, **kargs)
+
 def view(tpl_name, **defaults):
     ''' Decorator: Rendes a template for a handler.
         Return a dict of template vars to fill out the template.
@@ -975,6 +979,10 @@ def mako_view(tpl_name, **kargs):
 
 def cheetah_view(tpl_name, **kargs):
     kargs['template_adapter'] = CheetahTemplate
+    return view(tpl_name, **kargs)
+
+def jinja2_view(tpl_name, **kargs):
+    kargs['template_adapter'] = Jinja2Template
     return view(tpl_name, **kargs)
 
 
