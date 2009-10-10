@@ -2,8 +2,10 @@
 ._*
 *.*~
 dist/
-docs
-release.sh
+docs/
 *.db
 MANIFEST
-benchmark.py
+bottle.egg-info/
+.htmlcoverage/
+release.sh
+test.sh
