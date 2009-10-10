@@ -809,6 +809,33 @@ class CheetahTemplate(BaseTemplate):
         return [out]
 
 
+class Jinja2Template(BaseTemplate):
+    env = None # hopefully, a Jinja environment is actually thread-safe
+
+    def prepare(self):
+        if not self.env:
+            from jinja2 import Environment, FunctionLoader
+            self.env = Environment(line_statement_prefix="#", loader=FunctionLoader(self.loader))
+        if self.template:
+            self.tpl = self.env.from_string(self.template)
+        else:
+            self.tpl = self.env.get_template(self.filename)
+
+    def render(self, **args):
+        return self.tpl.render(**args).encode("utf-8")
+        
+    def loader(self, name):
+        if not name.endswith(".tpl"):
+            for path in self.lookup:
+                fpath = os.path.join(path, name+'.tpl')
+                if os.path.isfile(fpath):
+                    name = fpath
+                    break
+        f = open(name)
+        try: return f.read()
+        finally: f.close()
+
+
 class SimpleTemplate(BaseTemplate):
     re_python = re.compile(r'^\s*%\s*(?:(if|elif|else|try|except|finally|for|'
                             'while|with|def|class)|(include|rebase)|(end)|(.*))')

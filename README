@@ -27,28 +27,30 @@ Features
     * Static files: `send_file('movie.flv', '/downloads/')` with automatic mime-type guessing
     * Errors: Throw HTTP errors using `abort(404, 'Not here')` or subclass `HTTPError` and use custom error handlers
   * Databases: Build in persistent key/value databases with fast memory caching.
-    * Use `db.db_name.key_name` or `db[db_name][key_name]` to access stored values. Missing databases are created on demand. Missing keys raise KeyError.
+    * Use `db.db_name.key_name` or `db[db_name][key_name]` to access stored values. Missing databases are created on demand. Missing keys raise `KeyError`.
     * Values are automatically pickled and saved at the end of the request live cycle.
   * Templates: Integrated template language
     * Plain simple: Execute python code with `%...` or use the inline syntax `{{...}}` for one-line expressions
-    * No IndentationErrors: You don’t have to worry about indentions. Blocks are closed by `%end`.
+    * No indentation errors: You don’t have to worry about indentions. Blocks are closed by `%end`.
     * Extremely fast: Parses and renders templates 5 to 10 times faster than [mako][]
-    * Optional support for [Mako-Templates][mako] (requires [mako][])
+    * Optional support for [Mako-][mako], [Cheetah-][cheetah] or [Jinja-][jinja] templates.
   * HTTP Server: Build in WSGI/HTTP Gateway server (for development and production mode)
-    * Currently supports wsgiref.simple_server (default), [cherrypy][], [flup][], [paste][] and [fapws3][]
-  * Speed optimisations:
+    * Currently supports `wsgiref.simple_server` (default), [cherrypy][], [flup][], [paste][] and [fapws3][]
+  * Speed optimizations:
     * Sendfile: Support for platform-specific high-performance file-transmission facilities, such as the Unix sendfile()
       * Depends on `wsgi.file_wrapper` provided by your WSGI-Server implementation.
-    * Self optimising routes: Frequently used routes are tested first (optional)
+    * Self optimizing routes: Frequently used routes are tested first (optional)
     * Fast static routes (single dict lookup)
   
 Bottle does **not** include:
 
-  * Models and ORMs: Choose your own (SQLAlchemy, Elixr)
+  * Models and ORMs: Choose your own (SQLAlchemy, Elixir)
   * HTML-Helper, Session, Identification and Authentication: Do it yourself
   * Scaffolding: No, sorry
   
   [mako]: http://www.makotemplates.org/
+  [cheetah]: http://www.cheetahtemplate.org/
+  [jinja]: http://jinja.pocoo.org/2/
   [cherrypy]: http://www.cherrypy.org/
   [flup]: http://trac.saddi.com/flup
   [paste]: http://pythonpaste.org/
