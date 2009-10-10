@@ -33,7 +33,7 @@ Features
     * Plain simple: Execute python code with `%...` or use the inline syntax `{{...}}` for one-line expressions
     * No indentation errors: You don’t have to worry about indentions. Blocks are closed by `%end`.
     * Extremely fast: Parses and renders templates 5 to 10 times faster than [mako][]
-    * Optional support for [Mako-Templates][mako] (requires [mako][])
+    * Optional support for [Mako-][mako], [Cheetah-][cheetah] or [Jinja-][jinja] templates.
   * HTTP Server: Build in WSGI/HTTP Gateway server (for development and production mode)
     * Currently supports `wsgiref.simple_server` (default), [cherrypy][], [flup][], [paste][] and [fapws3][]
   * Speed optimizations:
@@ -49,6 +49,8 @@ Bottle does **not** include:
   * Scaffolding: No, sorry
   
   [mako]: http://www.makotemplates.org/
+  [cheetah]: http://www.cheetahtemplate.org/
+  [jinja]: http://jinja.pocoo.org/2/
   [cherrypy]: http://www.cherrypy.org/
   [flup]: http://trac.saddi.com/flup
   [paste]: http://pythonpaste.org/

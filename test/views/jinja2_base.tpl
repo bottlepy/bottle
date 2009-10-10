@@ -1,0 +1,1 @@
+begin {% block content %}{% endblock %} end
