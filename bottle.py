@@ -75,6 +75,7 @@ import re
 import random
 import threading
 import time
+import warnings
 import email.utils
 from wsgiref.headers import Headers as HeaderWrapper
 from Cookie import SimpleCookie
@@ -1078,6 +1079,7 @@ class BottleDB(threading.local):
         self.__dict__['open'] = {}
         
     def __getitem__(self, key):
+        warnings.warn("Please do not use bottle.db anymore. This feature is deprecated. You may use anydb directly.", DeprecationWarning)
         if key not in self.open and not key.startswith('_'):
             self.open[key] = BottleBucket(key)
         return self.open[key]
