@@ -683,6 +683,7 @@ def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080,
         print "Shutting Down..."
 
 
+#TODO: If the parent process is killed (with SIGTERM) the childs survive...
 def reloader_run(server, app, interval):
     if os.environ.get('BOTTLE_CHILD') == 'true':
         # We are a child process
