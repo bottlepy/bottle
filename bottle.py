@@ -772,6 +772,7 @@ class MakoTemplate(BaseTemplate):
     def prepare(self):
         from mako.template import Template
         from mako.lookup import TemplateLookup
+        #TODO: This is a hack... http://github.com/defnull/bottle/issues#issue/8
         mylookup = TemplateLookup(directories=map(os.path.abspath, self.lookup)+['./'])
         if self.template:
             self.tpl = Template(self.template,
