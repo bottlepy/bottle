@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import unittest
 import sys, os.path
 import bottle
@@ -87,17 +88,20 @@ class TestWsgi(WsgiTestBase):
         @bottle.route('/str')
         def test(): return 'test'
         @bottle.route('/list')
-        def test2(): return ['t','e','st']
+        def test2(): return ['t','e','st']      
         self.assertEqual('test', self.urlopen('/str').read())
         self.assertEqual('test', self.urlopen('/list').read())
 
     def test_unicode(self):
         """ WSGI: Test Unicode support """
-        @bottle.route('/')
-        def test():
-            bottle.response.content_type = 'text/html; charset=utf-8'
-            return u'test'
-        self.assertEqual('test', self.urlopen('/').read())
+        @bottle.route('/unicode')
+        def test3(): return u'äöüß'
+        @bottle.route('/unicode2')
+        def test4():
+          bottle.response.content_type='text/html; charset=iso-8859-15'
+          return u'äöüß'  
+        self.assertEqual(u'äöüß'.encode('utf8'), self.urlopen('/unicode').read())
+        self.assertEqual(u'äöüß'.encode('iso-8859-15'), self.urlopen('/unicode2').read())
      
     def test_json(self):
         """ WSGI: Autojson feature """

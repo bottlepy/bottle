@@ -292,8 +292,8 @@ class Bottle(object):
                 output = json_dumps(output)
                 response.content_type = 'application/json'
             if isinstance(output, unicode):
-                response.header['Content-Length'] = str(len(output))
                 output = [output.encode(response.charset)]
+                response.header['Content-Length'] = str(len(output[0]))
             if isinstance(output, str):
                 response.header['Content-Length'] = str(len(output))
                 output = [output]
@@ -413,7 +413,7 @@ class Response(threading.local):
         self.header = HeaderWrapper(self.header_list)
         self.content_type = 'text/html'
         self.error = None
-        self.charset = None
+        self.charset = 'utf8'
 
     def wsgiheaders(self):
         ''' Returns a wsgi conform list of header/value pairs '''
