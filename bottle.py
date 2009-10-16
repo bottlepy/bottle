@@ -65,6 +65,7 @@ __author__ = 'Marcel Hellkamp'
 __version__ = '0.6.3'
 __license__ = 'MIT'
 
+import types
 import sys
 import cgi
 import mimetypes
@@ -275,7 +276,7 @@ class Bottle(object):
         if not out:
             out = []
             response.header['Content-Length'] = '0'
-        elif isinstance(out, str):
+        elif isinstance(out, types.StringType):
             out = [out]
         elif isinstance(out, unicode):
             out = [out.encode(response.charset)]
@@ -650,12 +651,7 @@ class FapwsServer(ServerAdapter):
         evwsgi.set_base_module(base)
         def app(environ, start_response):
             environ['wsgi.multiprocess'] = False
-            result = handler(environ, start_response)
-            if isinstance(result, basestring):
-                # fapws doesn't handle strings correctly
-                return iter(result)
-            else:
-                return result
+            return handler(environ, start_response)
         evwsgi.wsgi_cb(('',app))
         evwsgi.run()
 
