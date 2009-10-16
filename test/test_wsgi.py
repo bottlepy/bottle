@@ -82,7 +82,7 @@ class TestWsgi(WsgiTestBase):
         @bottle.route('/')
         def test(): return 1/0
         self.assertEqual(500, self.urlopen('/').code)
-        
+
     def test_casting(self):
         """ WSGI: Output Casting (strings an lists) """
         @bottle.route('/str')
@@ -97,12 +97,15 @@ class TestWsgi(WsgiTestBase):
         @bottle.route('/unicode')
         def test3(): return u'äöüß'
         @bottle.route('/unicode2')
-        def test4():
-          bottle.response.content_type='text/html; charset=iso-8859-15'
-          return u'äöüß'  
+        def test4(): return [u'äöüß']
+        @bottle.route('/unicode3')
+        def test5():
+            bottle.response.content_type='text/html; charset=iso-8859-15'
+            return u'äöüß'  
         self.assertEqual(u'äöüß'.encode('utf8'), self.urlopen('/unicode').read())
-        self.assertEqual(u'äöüß'.encode('iso-8859-15'), self.urlopen('/unicode2').read())
-     
+        self.assertEqual(u'äöüß'.encode('utf8'), self.urlopen('/unicode2').read())
+        self.assertEqual(u'äöüß'.encode('iso-8859-15'), self.urlopen('/unicode3').read())
+
     def test_json(self):
         """ WSGI: Autojson feature """
         @bottle.route('/json')

@@ -167,13 +167,14 @@ def default_app(newapp = None):
 
 class Bottle(object):
 
-    def __init__(self, catchall=True, optimize=False, autojson=True):
+    def __init__(self, catchall=True, optimize=False, autojson=True, clearhead=True):
         self.simple_routes = {}
         self.regexp_routes = {}
         self.default_route = None
         self.error_handler = {}
         self.optimize = optimize
         self.autojson = autojson
+        self.clearhead = clearhead
         self.catchall = catchall
         self.serve = True
 
@@ -264,6 +265,38 @@ class Bottle(object):
             return handler
         return wrapper
 
+    def cast(self, out):
+        """
+        Cast the output to an iterable of strings or something WSGI can handle.
+        Set Content-Type and Content-Length when possible. Then clear output
+        on HEAD requests.
+        Supports: False, str, unicode, list(unicode), dict(), open()
+        """
+        if not out:
+            out = []
+            response.header['Content-Length'] = '0'
+        elif isinstance(out, str):
+            out = [out]
+        elif isinstance(out, unicode):
+            out = [out.encode(response.charset)]
+        elif isinstance(out, list) and isinstance(out[0], unicode):
+            out = map(lambda x: x.encode(response.charset), out)
+        elif self.autojson and json_dumps and isinstance(out, dict):
+            out = [json_dumps(out)]
+            response.content_type = 'application/json'
+        elif hasattr(out, 'read'):
+            out = request.environ.get('wsgi.file_wrapper',
+                  lambda x: iter(lambda: x.read(8192), ''))(out)
+        if isinstance(out, list) and len(out) == 1:
+            response.header['Content-Length'] = str(len(out[0]))
+        if request.method.upper() == 'HEAD' and self.clearhead:
+            out = []
+        if not hasattr(out, '__iter__'):
+            raise TypeError('Request handler for route "%s" returned [%s] '
+            'which is not iterable.' % (request.path, type(out).__name__))
+        return out
+
+
     def __call__(self, environ, start_response):
         """ The bottle WSGI-interface. """
         request.bind(environ)
@@ -282,24 +315,7 @@ class Bottle(object):
             except HTTPError, e:
                 response.status = e.http_status
                 output = self.error_handler.get(response.status, str)(e)
-            # output casting
-            if request.method.upper() == 'HEAD':
-                output = []
-            elif hasattr(output, 'read'):
-                output = environ.get('wsgi.file_wrapper',
-                  lambda x: iter(lambda: x.read(8192), ''))(output)
-            elif self.autojson and json_dumps and isinstance(output, dict):
-                output = json_dumps(output)
-                response.content_type = 'application/json'
-            if isinstance(output, unicode):
-                output = [output.encode(response.charset)]
-                response.header['Content-Length'] = str(len(output[0]))
-            if isinstance(output, str):
-                response.header['Content-Length'] = str(len(output))
-                output = [output]
-            if not hasattr(output, '__iter__'):
-                raise TypeError('Request handler for route "%s" returned [%s] '
-                'which is not iterable.' % (request.path, type(output).__name__))
+            output = self.cast(output)
         except (KeyboardInterrupt, SystemExit, MemoryError):
             raise
         except Exception, e:
