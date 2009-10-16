@@ -228,7 +228,7 @@ class TestRun(WsgiTestBase):
     ''' Tests Running a Server '''
 
     def test_wsgiref(self):
-        """ WSGI: Test view-decorator (should override autojson) """
+        """ WSGI: Test wsgiref """
         @bottle.route('/test')
         def test():
             return 'test'
