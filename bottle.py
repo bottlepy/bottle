@@ -86,20 +86,20 @@ import thread
 
 try:
     from urlparse import parse_qs
-except ImportError:
+except ImportError: # pragma: no cover
     from cgi import parse_qs
 
 try:
     import cPickle as pickle
-except ImportError:
+except ImportError: # pragma: no cover
     import pickle as pickle
   
 try:
     try:
         from json import dumps as json_dumps
-    except ImportError:
+    except ImportError: # pragma: no cover
         from simplejson import dumps as json_dumps 
-except ImportError:
+except ImportError: # pragma: no cover
     json_dumps = None
 
 
@@ -365,7 +365,7 @@ class Request(threading.local):
     def input_length(self):
         """ Get content of CONTENT_LENGTH """
         try:
-            return int(self._environ.get('CONTENT_LENGTH', '0'))
+            return max(0,int(self._environ.get('CONTENT_LENGTH', '0')))
         except ValueError:
             return 0
 
@@ -585,7 +585,7 @@ def error(code=500):
 # Server adapter
 
 class WSGIAdapter(object):
-    def run(self, handler):
+    def run(self, handler): # pragma: no cover
         pass
 
     def __repr__(self):
@@ -607,9 +607,6 @@ class ServerAdapter(WSGIAdapter):
 
     def __repr__(self):
         return "%s (%s:%d)" % (self.__class__.__name__, self.host, self.port)
-
-    def run(self, handler):
-        pass
 
 
 class WSGIRefServer(ServerAdapter):
@@ -681,7 +678,7 @@ def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080,
     if not isinstance(server, WSGIAdapter):
         raise RuntimeError("Server must be a subclass of WSGIAdapter")
  
-    if not quiet and isinstance(server, ServerAdapter):
+    if not quiet and isinstance(server, ServerAdapter): # pragma: no cover
         if not reloader or os.environ.get('BOTTLE_CHILD') == 'true':
             print "Bottle server starting up (using %s)..." % repr(server)
             print "Listening on http://%s:%d/" % (server.host, server.port)
@@ -696,7 +693,8 @@ def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080,
         else:
             server.run(app)
     except KeyboardInterrupt:
-        print "Shutting Down..."
+        if not quiet: # pragma: no cover
+            print "Shutting Down..."
 
 
 #TODO: If the parent process is killed (with SIGTERM) the childs survive...
@@ -1012,7 +1010,7 @@ def jinja2_view(tpl_name, **kargs):
 
 # Database
 
-class BottleBucket(object):
+class BottleBucket(object): # pragma: no cover
     """ Memory-caching wrapper around anydbm """
     def __init__(self, name):
         self.__dict__['name'] = name
@@ -1091,7 +1089,7 @@ class BottleBucket(object):
             raise
 
 
-class BottleDB(threading.local):
+class BottleDB(threading.local): # pragma: no cover
     """ Holds multible BottleBucket instances in a thread-local way. """
     def __init__(self):
         self.__dict__['open'] = {}

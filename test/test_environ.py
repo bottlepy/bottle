@@ -9,6 +9,46 @@ else:
             
 class TestEnviron(unittest.TestCase):
 
+    def test_path(self):
+        """ Environ: PATH_INFO """ 
+        t = dict()
+        t[''] = '/'
+        t['bla'] = '/bla'
+        t['bla/'] = '/bla/'
+        t['/bla'] = '/bla'
+        t['/bla/'] = '/bla/'
+        for k, v in t.iteritems():
+            request.bind({'PATH_INFO': k})
+            self.assertEqual(v, request.path)
+        request.bind({})
+        self.assertEqual('/', request.path)
+
+
+    def test_ilength(self):
+        """ Environ: CONTENT_LENGTH """
+        t = dict()
+        t[''] = 0
+        t['0815'] = 815
+        t['-666'] = 0
+        t['0'] = 0
+        t['a'] = 0
+        for k, v in t.iteritems():
+            request.bind({'CONTENT_LENGTH': k})
+            self.assertEqual(v, request.input_length)
+        request.bind({})
+        self.assertEqual(0, request.input_length)
+
+    def test_cookie(self):
+        """ Environ: COOKIES """ 
+        t = dict()
+        t['a=a'] = {'a': 'a'}
+        t['a=a; b=b'] = {'a': 'a', 'b':'b'}
+        t['a=a; a=b'] = {'a': 'b'}
+        for k, v in t.iteritems():
+            request.bind({'HTTP_COOKIE': k})
+            self.assertEqual(v, request.COOKIES)
+
+
     def test_getpost(self):
         """ Environ: GET and POST (simple) """ 
         sq = 'a=a&b=b&c=c'
@@ -19,6 +59,7 @@ class TestEnviron(unittest.TestCase):
         request.bind(e)
         self.assertEqual(qd, request.GET)
         self.assertEqual(qd, request.POST)
+        self.assertEqual(qd, request.params)
 
     def test_multigetpost(self):
         """ Environ: GET and POST (multi values) """ 
@@ -30,6 +71,7 @@ class TestEnviron(unittest.TestCase):
         request.bind(e)
         self.assertEqual(qd, request.GET)
         self.assertEqual(qd, request.POST)
+        self.assertEqual(qd, request.params)
 
     def test_multipart(self):
         """ Environ: POST (multipart files and multible values per key) """
@@ -58,6 +100,7 @@ class TestEnviron(unittest.TestCase):
         e['wsgi.input'] = StringIO(e['wsgi.input'])
         e['wsgi.input'].seek(0)
         request.bind(e)
+        self.assertTrue(e['CONTENT_LENGTH'], request.input_length)
         self.assertTrue('test.txt' in request.POST)
         self.assertTrue('sample.txt' in request.POST)
         self.assertEqual('This is a test.', request.POST['test.txt'].file.read())
