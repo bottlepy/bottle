@@ -54,7 +54,8 @@ class TestEnviron(unittest.TestCase):
         sq = 'a=a&b=b&c=c'
         qd = {'a':'a', 'b':'b','c':'c'}
         e = {}
-        e['wsgi.input']   = sq
+        e['wsgi.input']   = StringIO(sq)
+        e['wsgi.input'].seek(0)
         e['QUERY_STRING'] = sq
         request.bind(e)
         self.assertEqual(qd, request.GET)
@@ -66,7 +67,8 @@ class TestEnviron(unittest.TestCase):
         sq = 'a=a&a=1'
         qd = {'a':['a','1']}
         e = {}
-        e['wsgi.input']   = sq
+        e['wsgi.input']   = StringIO(sq)
+        e['wsgi.input'].seek(0)
         e['QUERY_STRING'] = sq
         request.bind(e)
         self.assertEqual(qd, request.GET)

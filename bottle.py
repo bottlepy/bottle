@@ -83,6 +83,7 @@ from Cookie import SimpleCookie
 import anydbm as dbm
 import subprocess
 import thread
+import tempfile
 
 
 try:
@@ -414,7 +415,7 @@ class Request(threading.local):
     @property
     def body(self):
         if not self._body:
-            self._body = tempfile.TemporaryFile()
+            self._body = tempfile.TemporaryFile(mode='w+b')
             for part in iter(lambda: self.environ['wsgi.input'].read(8192), ''):
                 self._body.write(part)
             self.environ['wsgi.input'] = self._body                
