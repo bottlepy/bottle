@@ -317,6 +317,8 @@ class Bottle(object):
                 response.status = e.http_status
                 output = self.error_handler.get(response.status, str)(e)
             output = self.cast(output)
+            if response.status in (100, 101, 204, 304) or request.method == 'HEAD':
+                output = [] # rfc2616 section 4.3
         except (KeyboardInterrupt, SystemExit, MemoryError):
             raise
         except Exception, e:
