@@ -350,6 +350,7 @@ class Request(threading.local):
         self._POST = None
         self._GETPOST = None
         self._COOKIES = None
+        self._body = None
         self.path = self._environ.get('PATH_INFO', '/').strip()
         if not self.path.startswith('/'):
             self.path = '/' + self.path
@@ -389,7 +390,7 @@ class Request(threading.local):
     def POST(self):
         """ Get a dict with parsed POST or PUT data. """
         if self._POST is None:
-            data = cgi.FieldStorage(fp=self._environ['wsgi.input'],
+            data = cgi.FieldStorage(fp=self.body,
                 environ=self._environ, keep_blank_values=True)
             self._POST  = {}
             for item in data.list:
@@ -412,11 +413,14 @@ class Request(threading.local):
 
     @property
     def body(self):
-        if self._POST:
-            raise AttributeError("You cannot access request.body after request.POST has been parsed.")
-        return self.enciron['wsgi.input']
+        if not self._body:
+            self._body = tempfile.TemporaryFile()
+            for part in iter(lambda: self.environ['wsgi.input'].read(8192), ''):
+                self._body.write(part)
+            self.environ['wsgi.input'] = self._body                
+        self._body.seek(0)
+        return self._body
             
-
     @property
     def COOKIES(self):
         """ Returns a dict with COOKIES. """
