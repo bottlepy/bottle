@@ -411,6 +411,13 @@ class Request(threading.local):
         return self._GETPOST
 
     @property
+    def body(self):
+        if self._POST:
+            raise AttributeError("You cannot access request.body after request.POST has been parsed.")
+        return self.enciron['wsgi.input']
+            
+
+    @property
     def COOKIES(self):
         """ Returns a dict with COOKIES. """
         if self._COOKIES is None:
