@@ -168,14 +168,13 @@ def default_app(newapp = None):
 
 class Bottle(object):
 
-    def __init__(self, catchall=True, optimize=False, autojson=True, clearhead=True):
+    def __init__(self, catchall=True, optimize=False, autojson=True):
         self.simple_routes = {}
         self.regexp_routes = {}
         self.default_route = None
         self.error_handler = {}
         self.optimize = optimize
         self.autojson = autojson
-        self.clearhead = clearhead
         self.catchall = catchall
         self.serve = True
 
@@ -290,8 +289,6 @@ class Bottle(object):
                   lambda x: iter(lambda: x.read(8192), ''))(out)
         if isinstance(out, list) and len(out) == 1:
             response.header['Content-Length'] = str(len(out[0]))
-        if request.method.upper() == 'HEAD' and self.clearhead:
-            out = []
         if not hasattr(out, '__iter__'):
             raise TypeError('Request handler for route "%s" returned [%s] '
             'which is not iterable.' % (request.path, type(out).__name__))
@@ -492,7 +489,7 @@ def send_file(filename, root, guessmime = True, mimetype = None):
     """ Aborts execution and sends a static files as response. """
     root = os.path.abspath(root) + os.sep
     filename = os.path.abspath(os.path.join(root, filename.strip('/\\')))
-    
+
     if not filename.startswith(root):
         abort(401, "Access denied.")
     if not os.path.exists(filename) or not os.path.isfile(filename):
