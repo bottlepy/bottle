@@ -490,8 +490,8 @@ def redirect(url, code=307):
 
 def send_file(filename, root, guessmime = True, mimetype = None):
     """ Aborts execution and sends a static files as response. """
-    root = os.path.abspath(root) + '/'
-    filename = os.path.abspath(os.path.join(root, filename.strip('/')))
+    root = os.path.abspath(root) + os.sep
+    filename = os.path.abspath(os.path.join(root, filename.strip('/\\')))
     
     if not filename.startswith(root):
         abort(401, "Access denied.")
