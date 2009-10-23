@@ -427,9 +427,9 @@ class Response(threading.local):
         self.status = 200
         self.header_list = []
         self.header = HeaderWrapper(self.header_list)
-        self.content_type = 'text/html'
+        self.charset = 'UTF-8'
+        self.content_type = 'text/html; charset=UTF-8'
         self.error = None
-        self.charset = 'utf8'
 
     def wsgiheaders(self):
         ''' Returns a wsgi conform list of header/value pairs '''
