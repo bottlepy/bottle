@@ -64,3 +64,8 @@ class ServerTestBase(unittest.TestCase):
         self.server.shutdown()
         self.thread.join()
         bottle.default_app(self.oldapp)
+    
+    def same(self, data, url):
+        if isinstance(data, unicode):
+            data = data.encode('utf-8')
+        self.assertEqual(data, self.urlopen(url).read())
