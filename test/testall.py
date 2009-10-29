@@ -9,7 +9,6 @@ import test_mako
 import test_jinja2
 import test_routes
 import test_environ
-import test_db
 import test_wsgi
 import test_sendfile
 
@@ -20,7 +19,6 @@ suite.addTest(test_jinja2.suite)
 suite.addTest(test_templates.suite)
 suite.addTest(test_routes.suite)
 suite.addTest(test_environ.suite)
-suite.addTest(test_db.suite)
 suite.addTest(test_wsgi.suite)
 suite.addTest(test_sendfile.suite)
 

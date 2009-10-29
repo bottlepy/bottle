@@ -62,7 +62,7 @@ Example
 """
 
 __author__ = 'Marcel Hellkamp'
-__version__ = '0.6.3'
+__version__ = '0.6.4'
 __license__ = 'MIT'
 
 import types
@@ -84,6 +84,7 @@ import anydbm as dbm
 import subprocess
 import thread
 import tempfile
+from StringIO import StringIO
 
 
 try:
@@ -169,14 +170,13 @@ def default_app(newapp = None):
 
 class Bottle(object):
 
-    def __init__(self, catchall=True, optimize=False, autojson=True, clearhead=True):
+    def __init__(self, catchall=True, optimize=False, autojson=True):
         self.simple_routes = {}
         self.regexp_routes = {}
         self.default_route = None
         self.error_handler = {}
         self.optimize = optimize
         self.autojson = autojson
-        self.clearhead = clearhead
         self.catchall = catchall
         self.serve = True
 
@@ -291,8 +291,6 @@ class Bottle(object):
                   lambda x: iter(lambda: x.read(8192), ''))(out)
         if isinstance(out, list) and len(out) == 1:
             response.header['Content-Length'] = str(len(out[0]))
-        if request.method.upper() == 'HEAD' and self.clearhead:
-            out = []
         if not hasattr(out, '__iter__'):
             raise TypeError('Request handler for route "%s" returned [%s] '
             'which is not iterable.' % (request.path, type(out).__name__))
@@ -391,8 +389,11 @@ class Request(threading.local):
     def POST(self):
         """ Get a dict with parsed POST or PUT data. """
         if self._POST is None:
+            qs_backup = self.environ.get('QUERY_STRING','')
+            self.environ['QUERY_STRING'] = ''
             data = cgi.FieldStorage(fp=self.body,
-                environ=self._environ, keep_blank_values=True)
+                environ=self.environ, keep_blank_values=True)
+            self.environ['QUERY_STRING'] = qs_backup
             self._POST  = {}
             for item in data.list:
                 name = item.name
@@ -450,9 +451,9 @@ class Response(threading.local):
         self.status = 200
         self.header_list = []
         self.header = HeaderWrapper(self.header_list)
-        self.content_type = 'text/html'
+        self.charset = 'UTF-8'
+        self.content_type = 'text/html; charset=UTF-8'
         self.error = None
-        self.charset = 'utf8'
 
     def wsgiheaders(self):
         ''' Returns a wsgi conform list of header/value pairs '''
@@ -510,9 +511,9 @@ def redirect(url, code=307):
 
 def send_file(filename, root, guessmime = True, mimetype = None):
     """ Aborts execution and sends a static files as response. """
-    root = os.path.abspath(root) + '/'
-    filename = os.path.abspath(os.path.join(root, filename.strip('/')))
-    
+    root = os.path.abspath(root) + os.sep
+    filename = os.path.abspath(os.path.join(root, filename.strip('/\\')))
+
     if not filename.startswith(root):
         abort(401, "Access denied.")
     if not os.path.exists(filename) or not os.path.isfile(filename):

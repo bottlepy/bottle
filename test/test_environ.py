@@ -1,14 +1,12 @@
 import unittest
 import sys, os.path
 from bottle import request, response
+from StringIO import StringIO
+import tools
 
-if sys.version_info[0] == 2:
-    from StringIO import StringIO
-else:
-    from io import StringIO
-            
+
+
 class TestEnviron(unittest.TestCase):
-
     def test_path(self):
         """ Environ: PATH_INFO """ 
         t = dict()
@@ -22,7 +20,6 @@ class TestEnviron(unittest.TestCase):
             self.assertEqual(v, request.path)
         request.bind({})
         self.assertEqual('/', request.path)
-
 
     def test_ilength(self):
         """ Environ: CONTENT_LENGTH """
@@ -48,38 +45,40 @@ class TestEnviron(unittest.TestCase):
             request.bind({'HTTP_COOKIE': k})
             self.assertEqual(v, request.COOKIES)
 
-    def test_getpost(self):
-        """ Environ: GET and POST (simple) """ 
-        sq = 'a=a&b=b&c=c'
-        qd = {'a':'a', 'b':'b','c':'c'}
+    def test_get(self):
+        """ Environ: GET data """ 
         e = {}
-        e['wsgi.input']   = StringIO(sq)
-        e['wsgi.input'].seek(0)
-        e['QUERY_STRING'] = sq
+        e['QUERY_STRING'] = 'a=a&a=1&b=b&c=c'
         request.bind(e)
-        self.assertEqual(qd, request.GET)
-        self.assertEqual(qd, request.POST)
-        self.assertEqual(qd, request.params)
-
-    def test_multigetpost(self):
-        """ Environ: GET and POST (multi values) """ 
-        sq = 'a=a&a=1'
-        qd = {'a':['a','1']}
+        self.assertTrue('a' in request.GET)
+        self.assertTrue('b' in request.GET)
+        self.assertTrue(isinstance(request.GET['a'], list))
+        self.assertEqual(2, len(request.GET['a']))
+        self.assertTrue('a' in request.GET['a'])
+        self.assertTrue('1' in request.GET['a'])
+        self.assertEqual('b', request.GET['b'])
+        
+    def test_post(self):
+        """ Environ: POST data """ 
+        sq = 'a=a&a=1&b=b&c=c'
         e = {}
-        e['wsgi.input']   = StringIO(sq)
-        e['wsgi.input'].seek(0)
-        e['QUERY_STRING'] = sq
+        e['wsgi.input'] = StringIO(sq)
+        e['CONTENT_LENGTH'] = str(len(sq))
+        e['REQUEST_METHOD'] = "POST"
         request.bind(e)
-        self.assertEqual(qd, request.GET)
-        self.assertEqual(qd, request.POST)
-        self.assertEqual(qd, request.params)
+        self.assertTrue('a' in request.POST)
+        self.assertTrue('b' in request.POST)
+        self.assertTrue(isinstance(request.POST['a'], list))
+        self.assertEqual(2, len(request.POST['a']))
+        self.assertTrue('a' in request.POST['a'])
+        self.assertTrue('1' in request.POST['a'])
+        self.assertEqual('b', request.POST['b'])
 
     def test_getpostleak(self):
         """ Environ: GET and POST shuld not leak into each other """ 
         e = {}
         e['QUERY_STRING'] = 'a=a'
-        e['wsgi.input']   = StringIO('b=b')
-        e['wsgi.input'].seek(0)
+        e['wsgi.input'] = StringIO('b=b')
         request.bind(e)
         self.assertTrue('b' not in request.GET)
         self.assertTrue('a' not in request.POST)
