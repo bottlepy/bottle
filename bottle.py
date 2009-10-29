@@ -415,13 +415,21 @@ class Request(threading.local):
     @property
     def body(self):
         if not self._body:
-            self._body = tempfile.TemporaryFile(mode='w+b')
-            for part in iter(lambda: self.environ['wsgi.input'].read(8192), ''):
+            maxread = self.input_length
+            if maxread < 1024*100: #TODO Should not be hard coded...
+                self._body = StringIO()
+            else:
+                self._body = tempfile.TemporaryFile(mode='w+b')
+            while maxread > 0:
+                part = self.environ['wsgi.input'].read(min(maxread, 8192))
+                if not part: #TODO: Wrong content_length. Error? Do nothing?
+                    break
                 self._body.write(part)
-            self.environ['wsgi.input'] = self._body                
+                maxread -= len(part)
+            self.environ['wsgi.input'] = self._body
         self._body.seek(0)
         return self._body
-            
+
     @property
     def COOKIES(self):
         """ Returns a dict with COOKIES. """
