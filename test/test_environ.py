@@ -48,7 +48,6 @@ class TestEnviron(unittest.TestCase):
             request.bind({'HTTP_COOKIE': k})
             self.assertEqual(v, request.COOKIES)
 
-
     def test_getpost(self):
         """ Environ: GET and POST (simple) """ 
         sq = 'a=a&b=b&c=c'
@@ -75,45 +74,44 @@ class TestEnviron(unittest.TestCase):
         self.assertEqual(qd, request.POST)
         self.assertEqual(qd, request.params)
 
-    def test_multipart(self):
-        """ Environ: POST (multipart files and multible values per key) """
-
+    def test_getpostleak(self):
+        """ Environ: GET and POST shuld not leak into each other """ 
         e = {}
-        e['SERVER_PROTOCOL'] = "HTTP/1.1"
-        e['REQUEST_METHOD'] = 'POST'
-        e['CONTENT_TYPE'] = 'multipart/form-data; boundary=----------------314159265358979323846'
-        e['wsgi.input']  = '------------------314159265358979323846\n'
-        e['wsgi.input'] += 'Content-Disposition: form-data; name=test.txt; filename=test.txt\n'
-        e['wsgi.input'] += 'Content-Type: application/octet-stream; charset=ISO-8859-1\n'
-        e['wsgi.input'] += 'Content-Transfer-Encoding: binary\n'
-        e['wsgi.input'] += 'This is a test.\n'
-        e['wsgi.input'] += '------------------314159265358979323846\n'
-        e['wsgi.input'] += 'Content-Disposition: form-data; name=sample.txt; filename=sample.txt\n'
-        e['wsgi.input'] += 'Content-Type: text/plain; charset=ISO-8859-1\n'
-        e['wsgi.input'] += 'Content-Transfer-Encoding: binary\n'
-        e['wsgi.input'] += 'This is a sample\n'
-        e['wsgi.input'] += '------------------314159265358979323846\n'
-        e['wsgi.input'] += 'Content-Disposition: form-data; name=sample.txt; filename=sample2.txt\n'
-        e['wsgi.input'] += 'Content-Type: text/plain; charset=ISO-8859-1\n'
-        e['wsgi.input'] += 'Content-Transfer-Encoding: binary\n'
-        e['wsgi.input'] += 'This is a second sample\n'
-        e['wsgi.input'] += '------------------314159265358979323846--\n'
-        e['CONTENT_LENGTH'] = len(e['wsgi.input'])
-        e['wsgi.input'] = StringIO(e['wsgi.input'])
+        e['QUERY_STRING'] = 'a=a'
+        e['wsgi.input']   = StringIO('b=b')
         e['wsgi.input'].seek(0)
         request.bind(e)
+        self.assertTrue('b' not in request.GET)
+        self.assertTrue('a' not in request.POST)
+
+
+class TestMultipart(unittest.TestCase):
+    def test_multipart(self):
+        """ Environ: POST (multipart files and multible values per key) """
+        fields = [('field1','value1'), ('field2','value2'), ('field2','value3')]
+        files = [('file1','filename1.txt','content1'), ('file2','filename2.py','content2')]
+        e = tools.multipart_environ(fields=fields, files=files)
+        request.bind(e)
         self.assertTrue(e['CONTENT_LENGTH'], request.input_length)
-        self.assertTrue('test.txt' in request.POST)
-        self.assertTrue('sample.txt' in request.POST)
-        self.assertEqual('This is a test.', request.POST['test.txt'].file.read())
-        self.assertEqual('test.txt', request.POST['test.txt'].filename)
-        self.assertEqual(2, len(request.POST['sample.txt']))
-        self.assertEqual('This is a sample', request.POST['sample.txt'][0].file.read())
-        self.assertEqual('This is a second sample', request.POST['sample.txt'][1].file.read())
+        # File content
+        self.assertTrue('file1' in request.POST)
+        self.assertEqual('content1', request.POST['file1'].file.read())
+        # File name and meta data
+        self.assertTrue('file2' in request.POST)
+        self.assertEqual('filename2.py', request.POST['file2'].filename)
+        # No file
+        self.assertTrue('file3' not in request.POST)
+        # Field (single)
+        self.assertEqual('value1', request.POST['field1'])
+        # Field (multi)
+        self.assertEqual(2, len(request.POST['field2']))
+        self.assertTrue('value2' in request.POST['field2'])
+        self.assertTrue('value3' in request.POST['field2'])
 
  
 suite = unittest.TestSuite()
 suite.addTest(unittest.makeSuite(TestEnviron))
+suite.addTest(unittest.makeSuite(TestMultipart))
 
 if __name__ == '__main__':
     unittest.main()
