@@ -7,7 +7,10 @@ import time
 import unittest
 import wsgiref
 import wsgiref.simple_server
+import wsgiref.util
 from StringIO import StringIO
+import mimetypes
+import uuid
 
 class MethodRequest(urllib2.Request):
     ''' Used to create HEAD/PUT/DELETE/... requests with urllib2 '''
@@ -69,3 +72,33 @@ class ServerTestBase(unittest.TestCase):
         if isinstance(data, unicode):
             data = data.encode('utf-8')
         self.assertEqual(data, self.urlopen(url).read())
+
+
+def multipart_environ(fields, files):
+    boundary = str(uuid.uuid1())
+    parts = []
+    e = dict()
+    wsgiref.util.setup_testing_defaults(e)
+    e['CONTENT_TYPE'] = 'multipart/form-data; boundary='+boundary
+    e['REQUEST_METHOD'] = 'POST'
+    boundary = '--' + boundary
+    for name, value in fields:
+        parts.append(boundary)
+        parts.append('Content-Disposition: form-data; name="%s"' % name)
+        parts.append('')
+        parts.append(value)    
+    for name, filename, body in files:
+        mimetype = mimetypes.guess_type(filename)[0] or 'application/octet-stream'
+        parts.append(boundary)
+        parts.append('Content-Disposition: file; name="%s"; filename="%s"' % \
+             (name, filename))
+        parts.append('Content-Type: %s' % mimetype)
+        parts.append('')
+        parts.append(body)
+    parts.append(boundary + '--')
+    parts.append('')
+    body = '\n'.join(parts)
+    e['CONTENT_LENGTH'] = str(len(body))
+    e['wsgi.input'] = StringIO(body)
+    e['wsgi.input'].seek(0)
+    return e
