@@ -1,9 +1,9 @@
+# -*- coding: utf-8 -*-
 import unittest
 import sys, os.path
 from bottle import request, response
-from StringIO import StringIO
 import tools
-
+import wsgiref.util
 
 
 class TestEnviron(unittest.TestCase):
@@ -60,9 +60,11 @@ class TestEnviron(unittest.TestCase):
         
     def test_post(self):
         """ Environ: POST data """ 
-        sq = 'a=a&a=1&b=b&c=c'
+        sq = u'a=a&a=1&b=b&c=c'.encode('utf8')
         e = {}
-        e['wsgi.input'] = StringIO(sq)
+        wsgiref.util.setup_testing_defaults(e)
+        e['wsgi.input'].write(sq)
+        e['wsgi.input'].seek(0)
         e['CONTENT_LENGTH'] = str(len(sq))
         e['REQUEST_METHOD'] = "POST"
         request.bind(e)
@@ -77,18 +79,60 @@ class TestEnviron(unittest.TestCase):
     def test_getpostleak(self):
         """ Environ: GET and POST shuld not leak into each other """ 
         e = {}
+        wsgiref.util.setup_testing_defaults(e)
+        e['wsgi.input'].write(u'b=b'.encode('utf8'))
+        e['wsgi.input'].seek(0)
+        e['CONTENT_LENGTH'] = '3'
         e['QUERY_STRING'] = 'a=a'
-        e['wsgi.input'] = StringIO('b=b')
         request.bind(e)
         self.assertTrue('b' not in request.GET)
         self.assertTrue('a' not in request.POST)
 
+    def test_body(self):
+        """ Environ: Request.body should behave like a file object factory """ 
+        e = {}
+        wsgiref.util.setup_testing_defaults(e)
+        e['wsgi.input'].write(u'abc'.encode('utf8'))
+        e['wsgi.input'].seek(0)
+        e['CONTENT_LENGTH'] = str(3)
+        request.bind(e)
+        self.assertEqual(u'abc'.encode('utf8'), request.body.read())
+        self.assertEqual(u'abc'.encode('utf8'), request.body.read(3))
+        self.assertEqual(u'abc'.encode('utf8'), request.body.readline())
+        self.assertEqual(u'abc'.encode('utf8'), request.body.readline(3))
+
+    def test_bigbody(self):
+        """ Environ: Request.body should handle big uploads using files """
+        e = {}
+        wsgiref.util.setup_testing_defaults(e)
+        e['wsgi.input'].write((u'x'*1024*1000).encode('utf8'))
+        e['wsgi.input'].seek(0)
+        e['CONTENT_LENGTH'] = str(1024*1000)
+        request.bind(e)
+        self.assertTrue(hasattr(request.body, 'fileno'))        
+        self.assertEqual(1024*1000, len(request.body.read()))
+        self.assertEqual(1024, len(request.body.read(1024)))
+        self.assertEqual(1024*1000, len(request.body.readline()))
+        self.assertEqual(1024, len(request.body.readline(1024)))
+
+    def test_tobigbody(self):
+        """ Environ: Request.body should truncate to Content-Length bytes """
+        e = {}
+        wsgiref.util.setup_testing_defaults(e)
+        e['wsgi.input'].write((u'x'*1024).encode('utf8'))
+        e['wsgi.input'].seek(0)
+        e['CONTENT_LENGTH'] = '42'
+        request.bind(e)
+        self.assertEqual(42, len(request.body.read()))
+        self.assertEqual(42, len(request.body.read(1024)))
+        self.assertEqual(42, len(request.body.readline()))
+        self.assertEqual(42, len(request.body.readline(1024)))
 
 class TestMultipart(unittest.TestCase):
     def test_multipart(self):
         """ Environ: POST (multipart files and multible values per key) """
         fields = [('field1','value1'), ('field2','value2'), ('field2','value3')]
-        files = [('file1','filename1.txt','content1'), ('file2','filename2.py','content2')]
+        files = [('file1','filename1.txt','content1'), ('file2','filename2.py',u'äöü')]
         e = tools.multipart_environ(fields=fields, files=files)
         request.bind(e)
         self.assertTrue(e['CONTENT_LENGTH'], request.input_length)
@@ -98,6 +142,11 @@ class TestMultipart(unittest.TestCase):
         # File name and meta data
         self.assertTrue('file2' in request.POST)
         self.assertEqual('filename2.py', request.POST['file2'].filename)
+        # UTF-8 files
+        x = request.POST['file2'].file.read()
+        if sys.version_info >= (3,0,0):
+            x = x.encode('ISO-8859-1')
+        self.assertEqual(u'äöü'.encode('utf8'), x)
         # No file
         self.assertTrue('file3' not in request.POST)
         # Field (single)

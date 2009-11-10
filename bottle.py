@@ -84,8 +84,14 @@ import anydbm as dbm
 import subprocess
 import thread
 import tempfile
-from StringIO import StringIO
 
+
+if sys.version_info >= (3,0,0):
+    from io import BytesIO
+    from io import TextIOWrapper
+else:
+    from StringIO import StringIO as BytesIO
+    TextIOWrapper = None
 
 try:
     from urlparse import parse_qs
@@ -391,7 +397,11 @@ class Request(threading.local):
         if self._POST is None:
             qs_backup = self.environ.get('QUERY_STRING','')
             self.environ['QUERY_STRING'] = ''
-            data = cgi.FieldStorage(fp=self.body,
+            if TextIOWrapper:
+                fb = TextIOWrapper(self.body, encoding='ISO-8859-1')
+            else:
+                fb = self.body
+            data = cgi.FieldStorage(fp=fb,
                 environ=self.environ, keep_blank_values=True)
             self.environ['QUERY_STRING'] = qs_backup
             self._POST  = {}
@@ -418,7 +428,7 @@ class Request(threading.local):
         if not self._body:
             maxread = self.input_length
             if maxread < 1024*100: #TODO Should not be hard coded...
-                self._body = StringIO()
+                self._body = BytesIO()
             else:
                 self._body = tempfile.TemporaryFile(mode='w+b')
             while maxread > 0:
