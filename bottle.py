@@ -1341,7 +1341,3 @@ local = threading.local()
 def debug(mode=True):
     global DEBUG
     DEBUG = bool(mode)
-
-def optimize(mode=True):
-    default_app().optimize = bool(mode)
-
