@@ -283,20 +283,23 @@ class RouterCollection(Router):
 
 class Bottle(object):
 
-    def __init__(self, catchall=True, autojson=True):
+    def __init__(self, catchall=True, autojson=True, path = ''):
         self.routes = RouterCollection()
         self.default_route = None
         self.error_handler = {}
         self.autojson = autojson
         self.catchall = catchall
         self.serve = True
+        self.rootpath = path
 
     def match_url(self, path, method='GET'):
         """ Find a callback bound to a path and a specific method.
             Return (callback, param) tuple or (None, None).
             method=HEAD falls back to GET. method=GET fall back to ALL.
         """
-        path = path.strip().lstrip("/ ")
+        if not path.startswith(self.rootpath):
+            return None, None
+        path = path[len(self.rootpath):].strip().lstrip('/')
         method = method.upper()
         handler, param = self.routes.match('%s;%s' % (method, path))
         if not handler and method == 'HEAD':
@@ -311,7 +314,7 @@ class Bottle(object):
         """
         Decorator for request handler.
         """
-        path = url.strip().lstrip("/ ")
+        path = url.strip().lstrip('/')
         method = method.upper()
         uri = '%s;%s' % (method, path)
         
