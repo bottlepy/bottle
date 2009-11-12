@@ -158,42 +158,31 @@ class BreakTheBottle(BottleException):
 
 
 
-# WSGI abstraction: Request and response management
+# Routing and Dispatching
 
-_default_app = None
-def default_app(newapp = None):
-    """
-    Returns the current default app or sets a new one.
-    Defaults to an instance of Bottle
-    """
-    global _default_app
-    if newapp:
-        _default_app = newapp
-    if not _default_app:
-        _default_app = Bottle()
-    return _default_app
+class RouteError(BottleException):
+    """ This is a base class for all Router related exceptions """
 
 
-class RouteError(Exception): pass
-class NoRouteError(RouteError): pass
 class RouteSyntaxError(RouteError):
-    """ The route parser found stuff not supported by this router """
-class TooManyRoutesError(RouteError):
-    """ Open a new router. This one is full """
+    """ The route parser found stuff not supported by this Router """
 
 
 class Router(object):
-    def match(self, uri): 
-        """ Returns a (data, parameter) tuple matching uri or (None, None) """
-        raise NotImplementedError()
-    def add(self, route, data):
-        """Adds a route to the router """
-        raise NotImplementedError()
+    """ Base class for string->data,info maps """
 
+    def match(self, uri): 
+        """ Returns a (data, info) tuple matching uri or (None, None) """
+        raise NotImplementedError()
+        
+    def add(self, route, data):
+        """Adds a route to the router and binds it to the data object"""
+        raise NotImplementedError()
 
 
 class StaticRouter(Router):
-    """ Routes static strings """
+    """ Router matching static strings """
+
     def __init__(self):
         self.routemap = dict()
 
@@ -204,84 +193,93 @@ class StaticRouter(Router):
         self.routemap[route] = data
 
 
-
 class RegexRouter(Router):
-    ''' Matches up to 100* regular expressions at a time and extract
-        parameters from URIs. * This s a limitation of the Python re module '''
+    ''' Router matches regular expressions and has a simple syntax for named
+        groups. '''
+
     def __init__(self):
-        self.routes = []
-        self.full_re = None
+        self.routes = [] # A list of (bigre, subroutes) tuples
 
     def match(self, uri):
-        if not self.full_re:
-            return None, None
-        match = self.full_re.match(uri)
-        if not match:
-            return None, None
-        data, group_re = self.routes[match.lastindex - 1]
-        return data, group_re.match(uri).groupdict()
+        for big_re, subroutes in self.routes:
+            match = big_re.match(uri)
+            if not match:
+                continue
+            data, group_re = subroutes[match.lastindex - 1]
+            if not group_re:
+                return data, None
+            group_match = group_re.match(uri)
+            if not group_match:
+                return None, None
+            return data, group_match.groupdict()
+        return None, None
 
     def add(self, route, data):
-        # Pattern for parameter matching
-        named_re = re.sub(r':([a-zA-Z_]+)(?P<uniq>[^\w/])(?P<re>.+?)(?P=uniq)',
-                          r'(?P<\1>\g<re>)', route)
-        named_re = re.sub(r'(?<!\(\?):([a-zA-Z_]+)', r'(?P<\1>[^/]+)', named_re)
-        # Pattern for full_re: Anonynous groups (?:...) only!
-        anon_re =  re.sub(r':([a-zA-Z_]+)(?P<uniq>[^\w/])(?P<re>.+?)(?P=uniq)',
+        # Create RegexPattern for parameter matching
+        group_re = re.sub(
+            r':([a-zA-Z_]+)(?P<uniq>[^\w/])(?P<re>.+?)(?P=uniq)',
+            r'(?P<\1>\g<re>)', route)
+        group_re = re.sub(r'(?<!\(\?):([a-zA-Z_]+)',
+            r'(?P<\1>[^/]+)', group_re)
+        try:
+            group_re = re.compile('^%s$' % group_re)
+        except re.error, e:
+            raise RouteSyntaxError("Could not parse route '%s'. "
+                                   "Error: %s" % (route, repr(e)))
+        if not group_re.groupindex:
+            group_re = None # No named groups -> Nothing to extract
+
+        # Create new re_full pattern. Anonynous groups (?:...) only!
+        anon_re = re.sub(r':([a-zA-Z_]+)(?P<uniq>[^\w/])(?P<re>.+?)(?P=uniq)',
                           r'(?:\g<re>)', route)
         anon_re = re.sub(r'(?<!\(\?):([a-zA-Z_]+)', r'(?:[^/]+)', anon_re)
         anon_re = re.sub(r'\(\?P<[^>]*>', '(?:', anon_re)
         anon_re = re.sub(r'\((?!\?)', '(?:', anon_re)
-
         try:
             anon_re = re.compile('(^%s$)' % anon_re)
-            named_re = re.compile('^%s$' % named_re)
         except re.error, e:
-            raise RouteSyntaxError("Could not parse route '%s'. Error: %s" % (route, repr(e)))
+            raise RouteSyntaxError("Could not compile route '%s'. "
+                                   "Error: %s" % (route, repr(e)))
+        if anon_re.groups > 1: # Should not be possible.
+            raise RouteSyntaxError("Route contains groups '%s'." % (route))
 
-        if anon_re.groups > 1: # Should be impossivle. Remove?
-            raise RouteSyntaxError("Could not parse route '%s'." % (route))
-
+        # Try to compile the full_re pattern and save route
         try:
-            if self.full_re:
-                self.full_re = re.compile(self.full_re.pattern + '|' + anon_re.pattern)
-            else:
-                self.full_re = re.compile(anon_re.pattern)
-        except AssertionError, e: # RegexpPattern groupes overflow
-            raise TooManyRoutesError("This router only supports up to 100 routes.")
-
-        self.routes.append((data, named_re))
-
+            big_re, subroutes = self.routes[-1]
+            big_re = big_re.pattern + '|' + anon_re.pattern
+            big_re = re.compile(big_re)
+            subroutes.append((data, group_re))
+            self.routes[-1] = (big_re, subroutes)
+        except (AssertionError, IndexError), e:
+            self.routes.append((anon_re, [(data, group_re)]))
 
 
 class RouterCollection(Router):
     """ Handles different types of routers """
 
     def __init__(self):
-        self.simple = [StaticRouter()]
-        self.dynamic = [RegexRouter()]
+        self.simple = StaticRouter()
+        self.dynamic = RegexRouter()
 
     def match(self, uri):
-        for group in (self.simple, self.dynamic):
-            for router in group:
-                m, d = router.match(uri)
-                if m:
-                    return m, d
+        for router in (self.simple, self.dynamic):
+            m, d = router.match(uri)
+            if m:
+                return m, d
         return None, None
 
     def add(self, route, data, simple = False):
         if simple or ('|' not in route and ':' not in route):
-            add_to = self.simple
+            add_to = self.simple.add(route, data)
         else:
-            add_to = self.dynamic
-
-        try:
-            add_to[-1].add(route, data)
-        except TooManyRoutesError, e:
-            add_to.append(add_to[-1].__class__())
-            add_to[-1].add(route, data)
+            add_to = self.dynamic.add(route, data)
 
 
+
+
+
+
+# WSGI abstraction: Request and response management
 
 class Bottle(object):
 
@@ -309,10 +307,9 @@ class Bottle(object):
             handler, param = self.default_route, None
         return handler, param
 
-    def route(self, url, method = 'GET', simple = False):
+    def route(self, url, method='GET', simple=False):
         """
         Decorator for request handler.
-        Same as add_route(url, handler, **kargs).
         """
         path = url.strip().lstrip("/ ")
         method = method.upper()
@@ -323,27 +320,19 @@ class Bottle(object):
             return handler
         return wrapper
 
-    def set_default(self, handler):
-        self.default_route = handler
-
     def default(self):
         """ Decorator for request handler. Same as add_defroute( handler )."""
         def wrapper(handler):
-            self.set_default(handler)
+            self.default_route = handler
             return handler
         return wrapper
-
-    def set_error_handler(self, code, handler):
-        """ Adds a new error handler. """
-        self.error_handler[int(code)] = handler
 
     def error(self, code=500):
         """
         Decorator for error handler.
-        Same as set_error_handler(code, handler).
         """
         def wrapper(handler):
-            self.set_error_handler(code, handler)
+            self.error_handler[int(code)] = handler
             return handler
         return wrapper
 
@@ -415,7 +404,6 @@ class Bottle(object):
         status = '%d %s' % (response.status, HTTP_CODES[response.status])
         start_response(status, response.wsgiheaders())
         return output
-
 
 
 class Request(threading.local):
@@ -583,6 +571,20 @@ class BaseController(object):
         return cls._singleton
 
 
+_default_app = None
+def default_app(newapp = None):
+    """
+    Returns the current default app or sets a new one.
+    Defaults to an instance of Bottle
+    """
+    global _default_app
+    if newapp:
+        _default_app = newapp
+    if not _default_app:
+        _default_app = Bottle()
+    return _default_app
+
+
 def abort(code=500, text='Unknown Error: Appliction stopped.'):
     """ Aborts execution and causes a HTTP error. """
     raise HTTPError(code, text)
@@ -675,11 +677,13 @@ def route(url, **kargs):
     """
     return default_app().route(url, **kargs)
 
+
 def default():
     """
     Decorator for request handler. Same as set_default(handler).
     """
     return default_app().default()
+
 
 def error(code=500):
     """
@@ -839,11 +843,13 @@ def reloader_run(server, app, interval):
 
 
 
+
 # Templates
 
 class TemplateError(HTTPError):
     def __init__(self, message):
         HTTPError.__init__(self, 500, message)
+
 
 class BaseTemplate(object):
     def __init__(self, template='', name=None, filename=None, lookup=[]):
@@ -1047,7 +1053,6 @@ class SimpleTemplate(BaseTemplate):
         stdout = []
         self.execute(stdout, **args)
         return stdout
-            
 
 
 def template(tpl, template_adapter=SimpleTemplate, **args):
@@ -1075,13 +1080,16 @@ def mako_template(tpl_name, **kargs):
     kargs['template_adapter'] = MakoTemplate
     return template(tpl_name, **kargs)
 
+
 def cheetah_template(tpl_name, **kargs):
     kargs['template_adapter'] = CheetahTemplate
     return template(tpl_name, **kargs)
 
+
 def jinja2_template(tpl_name, **kargs):
     kargs['template_adapter'] = Jinja2Template
     return template(tpl_name, **kargs)
+
 
 def view(tpl_name, **defaults):
     ''' Decorator: Rendes a template for a handler.
@@ -1095,18 +1103,20 @@ def view(tpl_name, **defaults):
         return wrapper
     return decorator
 
+
 def mako_view(tpl_name, **kargs):
     kargs['template_adapter'] = MakoTemplate
     return view(tpl_name, **kargs)
+
 
 def cheetah_view(tpl_name, **kargs):
     kargs['template_adapter'] = CheetahTemplate
     return view(tpl_name, **kargs)
 
+
 def jinja2_view(tpl_name, **kargs):
     kargs['template_adapter'] = Jinja2Template
     return view(tpl_name, **kargs)
-
 
 
 
@@ -1334,5 +1344,4 @@ def debug(mode=True):
 
 def optimize(mode=True):
     default_app().optimize = bool(mode)
-
 
