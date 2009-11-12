@@ -299,7 +299,7 @@ class Bottle(object):
             method=HEAD falls back to GET. method=GET fall back to ALL.
         """
         path = path.strip().lstrip("/ ")
-        method = method.upper
+        method = method.upper()
         handler, param = self.routes.match('%s;%s' % (method, path))
         if not handler and method == 'HEAD':
             handler, param = self.routes.match('GET;%s' % path)
@@ -309,13 +309,17 @@ class Bottle(object):
             handler, param = self.default_route, None
         return handler, param
 
-    def route(self, url, **kargs):
+    def route(self, url, method = 'GET', simple = False):
         """
         Decorator for request handler.
         Same as add_route(url, handler, **kargs).
         """
+        path = url.strip().lstrip("/ ")
+        method = method.upper()
+        uri = '%s;%s' % (method, path)
+        
         def wrapper(handler):
-            self.routes.add(url, handler, **kargs)
+            self.routes.add(uri, handler, simple = simple)
             return handler
         return wrapper
 
@@ -384,6 +388,8 @@ class Bottle(object):
                 handler, args = self.match_url(request.path, request.method)
                 if not handler:
                     raise HTTPError(404, "Not found")
+                if args is None:
+                    args = dict()
                 output = handler(**args)
                 db.close()
             except BreakTheBottle, e:
