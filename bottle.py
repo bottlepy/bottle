@@ -174,70 +174,140 @@ def default_app(newapp = None):
     return _default_app
 
 
+class RouteError(Exception): pass
+class NoRouteError(RouteError): pass
+class RouteSyntaxError(RouteError):
+    """ The route parser found stuff not supported by this router """
+class TooManyRoutesError(RouteError):
+    """ Open a new router. This one is full """
+
+
+class Router(object):
+    def match(self, uri): 
+        """ Returns a (data, parameter) tuple matching uri or (None, None) """
+        raise NotImplementedError()
+    def add(self, route, data):
+        """Adds a route to the router """
+        raise NotImplementedError()
+
+
+
+class StaticRouter(Router):
+    """ Routes static strings """
+    def __init__(self):
+        self.routemap = dict()
+
+    def match(self, uri):
+        return self.routemap.get(uri, None), None
+    
+    def add(self, route, data):
+        self.routemap[route] = data
+
+
+
+class RegexRouter(Router):
+    ''' Matches up to 100* regular expressions at a time and extract
+        parameters from URIs. * This s a limitation of the Python re module '''
+    def __init__(self):
+        self.routes = []
+        self.full_re = None
+
+    def match(self, uri):
+        if not self.full_re:
+            return None, None
+        match = self.full_re.match(uri)
+        if not match:
+            return None, None
+        data, group_re = self.routes[match.lastindex - 1]
+        return data, group_re.match(uri).groupdict()
+
+    def add(self, route, data):
+        # Pattern for parameter matching
+        named_re = re.sub(r':([a-zA-Z_]+)(?P<uniq>[^\w/])(?P<re>.+?)(?P=uniq)',
+                          r'(?P<\1>\g<re>)', route)
+        named_re = re.sub(r'(?<!\(\?):([a-zA-Z_]+)', r'(?P<\1>[^/]+)', named_re)
+        # Pattern for full_re: Anonynous groups (?:...) only!
+        anon_re =  re.sub(r':([a-zA-Z_]+)(?P<uniq>[^\w/])(?P<re>.+?)(?P=uniq)',
+                          r'(?:\g<re>)', route)
+        anon_re = re.sub(r'(?<!\(\?):([a-zA-Z_]+)', r'(?:[^/]+)', anon_re)
+        anon_re = re.sub(r'\(\?P<[^>]*>', '(?:', anon_re)
+        anon_re = re.sub(r'\((?!\?)', '(?:', anon_re)
+
+        try:
+            anon_re = re.compile('(^%s$)' % anon_re)
+            named_re = re.compile('^%s$' % named_re)
+        except re.error, e:
+            raise RouteSyntaxError("Could not parse route '%s'. Error: %s" % (route, repr(e)))
+
+        if anon_re.groups > 1: # Should be impossivle. Remove?
+            raise RouteSyntaxError("Could not parse route '%s'." % (route))
+
+        try:
+            if self.full_re:
+                self.full_re = re.compile(self.full_re.pattern + '|' + anon_re.pattern)
+            else:
+                self.full_re = re.compile(anon_re.pattern)
+        except AssertionError, e: # RegexpPattern groupes overflow
+            raise TooManyRoutesError("This router only supports up to 100 routes.")
+
+        self.routes.append((data, named_re))
+
+
+
+class RouterCollection(Router):
+    """ Handles different types of routers """
+
+    def __init__(self):
+        self.simple = [StaticRouter()]
+        self.dynamic = [RegexRouter()]
+
+    def match(self, uri):
+        for group in (self.simple, self.dynamic):
+            for router in group:
+                m, d = router.match(uri)
+                if m:
+                    return m, d
+        return None, None
+
+    def add(self, route, data, simple = False):
+        if simple or ('|' not in route and ':' not in route):
+            add_to = self.simple
+        else:
+            add_to = self.dynamic
+
+        try:
+            add_to[-1].add(route, data)
+        except TooManyRoutesError, e:
+            add_to.append(add_to[-1].__class__())
+            add_to[-1].add(route, data)
+
+
+
 class Bottle(object):
 
-    def __init__(self, catchall=True, optimize=False, autojson=True):
-        self.simple_routes = {}
-        self.regexp_routes = {}
+    def __init__(self, catchall=True, autojson=True):
+        self.routes = RouterCollection()
         self.default_route = None
         self.error_handler = {}
-        self.optimize = optimize
         self.autojson = autojson
         self.catchall = catchall
         self.serve = True
 
-    def match_url(self, url, method='GET'):
+    def match_url(self, path, method='GET'):
+        """ Find a callback bound to a path and a specific method.
+            Return (callback, param) tuple or (None, None).
+            method=HEAD falls back to GET. method=GET fall back to ALL.
         """
-        Returns the first matching handler and a parameter dict or (None, None)
-        """
-        url = url.strip().lstrip("/ ")
-        # Search for static routes first
-        route = self.simple_routes.get(method,{}).get(url,None)
-        if route:
-            return (route, {})
-        
-        routes = self.regexp_routes.get(method,[])
-        for i in range(len(routes)):
-            match = routes[i][0].match(url)
-            if match:
-                handler = routes[i][1]
-                if i > 0 and self.optimize and random.random() <= 0.001:
-                    routes[i-1], routes[i] = routes[i], routes[i-1]
-                return (handler, match.groupdict())
-        if self.default_route:
-            return (self.default_route, {})
-        if method == 'HEAD': # Fall back to GET
-            return self.match_url(url)
-        else:
-            return (None, None)
-
-    def add_controller(self, route, controller, **kargs):
-        """ Adds a controller class or object """
-        if '{action}' not in route and 'action' not in kargs:
-            raise BottleException("Routes to controller classes or object MUST"
-                " contain an {action} placeholder or use the action-parameter")
-        for action in (m for m in dir(controller) if not m.startswith('_')):
-            handler = getattr(controller, action)
-            if callable(handler) and action == kargs.get('action', action):
-                self.add_route(route.replace('{action}', action), handler, **kargs)
-
-    def add_route(self, route, handler, method='GET', simple=False, **kargs):
-        """ Adds a new route to the route mappings. """
-        if isinstance(handler, type) and issubclass(handler, BaseController):
-            handler = handler()
-        if isinstance(handler, BaseController):
-            self.add_controller(route, handler, method=method, simple=simple, **kargs)
-            return
-        method = method.strip().upper()
-        route = route.strip().lstrip('$^/ ').rstrip('$^ ')
-        if re.match(r'^(\w+/)*\w*$', route) or simple:
-            self.simple_routes.setdefault(method, {})[route] = handler
-        else:
-            route = re.sub(r':([a-zA-Z_]+)(?P<uniq>[^\w/])(?P<re>.+?)(?P=uniq)',
-                           r'(?P<\1>\g<re>)',route)
-            route = re.sub(r':([a-zA-Z_]+)', r'(?P<\1>[^/]+)', route)
-            route = re.compile('^%s$' % route)
-            self.regexp_routes.setdefault(method, []).append([route, handler])
+        path = path.strip().lstrip("/ ")
+        method = method.upper
+        handler, param = self.routes.match('%s;%s' % (method, path))
+        if not handler and method == 'HEAD':
+            handler, param = self.routes.match('GET;%s' % path)
+        if not handler:
+            handler, param = self.routes.match('ALL;%s' % path)
+        if not handler:
+            handler, param = self.default_route, None
+        return handler, param
 
     def route(self, url, **kargs):
         """
@@ -245,7 +315,7 @@ class Bottle(object):
         Same as add_route(url, handler, **kargs).
         """
         def wrapper(handler):
-            self.add_route(url, handler, **kargs)
+            self.routes.add(url, handler, **kargs)
             return handler
         return wrapper
 

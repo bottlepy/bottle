@@ -3,72 +3,139 @@
 
 import unittest
 import sys, os.path
-from bottle import route, Bottle, BaseController
+import bottle
 from wsgiref.util import setup_testing_defaults
 
 
-class TestRoutes(unittest.TestCase):
-
+class TestSimpleRouter(unittest.TestCase):
     def setUp(self):
-        self.wsgi = Bottle()
+        self.r = bottle.StaticRouter()
+    
+    def test_match(self):
+        """ SimpleRouter: Hit """
+        td = dict()
+        td['GET:hello'] = 'foo'
+        td['GET:hello/bar'] = 'bar'
+        td['GET:'] = 'empty'
+        td[''] = 'really empty'
+        td['l'+('o'*1024)+'ng'] = 'Kind of long'
+        for k, v in td.iteritems():
+            self.r.add(k, v)
+        for k, v in td.iteritems():
+            self.assertEqual((v, None), self.r.match(k))
+        for r in 'a hello2 hell hello_world rld wor'.split():
+            self.assertTrue((None, None), self.r.match(r))
 
-    def test_static(self):
-        """ Routes: Static routes """
-        app = Bottle()
-        token = 'abc'
-        routes = ['','/','/abc','abc','/abc/','/abc/def','/abc/def.ghi']
-        for r in routes:
-            app.add_route(r, token, simple=True)
-        self.assertTrue('GET' in app.simple_routes)
-        r = [r for r in app.simple_routes['GET'].values() if r == 'abc']
-        self.assertEqual(5, len(r))
-        for r in routes:
-            self.assertEqual(token, app.match_url(r)[0])
+    def test_stress(self):
+        """ SimpleRouter: Stress test """
+        for i in xrange(10000):
+            self.r.add('GET:%d'%i,str(i))
+        for i in xrange(10000):
+            self.assertTrue((str(i), None), self.r.match('GET:%d'%i))
 
-    def test_dynamic(self):
-        """ Routes: Dynamic routes """ 
-        app = Bottle()
-        token = 'abcd'
-        app.add_route('/:a/:b', token)
-        self.assertTrue('GET' in app.regexp_routes)
-        self.assertEqual(token, app.match_url('/aa/bb')[0])
-        self.assertEqual(None, app.match_url('/aa')[0])
-        self.assertEqual(repr({'a':'aa','b':'bb'}), repr(app.match_url('/aa/bb')[1]))
+class TestRexexpRouter(unittest.TestCase):
+    def setUp(self):
+        self.r = bottle.RegexRouter()
+    
+    def test_syntax_plain(self):
+        """ RegexpRouter: Syntax without any special chars """
+        td = dict()
+        td['/foo'] = 'foo'
+        td['GET;/foo/bar'] = 'bar'
+        td['GET;foobar'] = 'foobar'
+        td[''] = 'empty'
+        td['l'+('o'*1024)+'ng'] = 'Kind of long'
+        for k, v in td.iteritems():
+            self.r.add(k, v)
+        for k, v in td.iteritems():
+            self.assertEqual((v, dict()), self.r.match(k))
+        for r in 'a hello2 hell hello_world rld wor'.split():
+            self.assertTrue((None, None), self.r.match(r))
+    
+    def test_syntax_placeholder(self):
+        """ RegexpRouter: Syntax with placeholders """
+        self.r.add('some/:path', 1)
+        self.assertEqual((1, dict(path='test')), self.r.match('some/test'))
+        self.assertEqual((None, None), self.r.match('some/'))
+        self.assertEqual((None, None), self.r.match('some/test/'))
+        self.assertEqual((None, None), self.r.match('somee/test'))
+        self.r.add('some/:path/', 2)
+        self.assertEqual((2, dict(path='test')), self.r.match('some/test/'))
+        self.assertEqual((None, None), self.r.match('some//'))
+        self.assertEqual((None, None), self.r.match('some/'))
+        self.assertEqual((1, dict(path='test')), self.r.match('some/test'))
+        self.assertEqual((None, None), self.r.match('some/test//'))
+        self.r.add(':path/some', 3)
+        self.assertEqual((3, dict(path='test')), self.r.match('test/some'))
+        self.assertEqual((None, None), self.r.match('/some'))
+        self.assertEqual((None, None), self.r.match('some'))
+        self.r.add('/hey:foo/:bar', 4)
+        self.assertEqual((4, dict(foo='1', bar='2')), self.r.match('/hey1/2'))
+        self.assertEqual((None, None), self.r.match('/hey/1/2'))
 
-    def test_default(self):
-        """ Routes: Decorator and default routes """
-        app = Bottle()
-        token = 'abc'
-        @app.route('/exists')
-        def test1():
-            return 'test1'
-        @app.default()
-        def test2():
-            return 'test2'
-        self.assertEqual(test1, app.match_url('/exists')[0])
-        self.assertNotEqual(test2, app.match_url('/exists')[0])
-        self.assertEqual(test2, app.match_url('/does_not_exist')[0])
-        self.assertNotEqual(test1, app.match_url('/does_not_exist')[0])
+    def test_syntax_advanced(self):
+        """ RegexpRouter: Syntax with regex placeholders """
+        self.r.add('some/:path#with([ a-z]+)[0-9]#', 1)
+        self.assertEqual((1, dict(path='withnumbers 4')), self.r.match('some/withnumbers 4'))
+        self.assertEqual((1, dict(path='with 4')), self.r.match('some/with 4'))
+        self.assertEqual((None, None), self.r.match('some/number 4'))
+        self.assertEqual((None, None), self.r.match('some/letters'))
 
-    def test_controller(self):
-        """ Routes: Controller Syntax """
-        """ Not testing decorator mode here because it is a SyntaxError in Python 2.5 """
-        app = Bottle()
-        class CTest(BaseController): 
-            def _no(self): return 'no'
-            def yes(self): return 'yes'
-            def yes2(self, test): return test
-        app.add_route('/ctest/{action}', CTest)
-        app.add_route('/ctest/yes/:test', CTest, action='yes2')
+    def test_stress(self):
+        """ RegexpRouter: Stress test """
+        for i in xrange(99):
+            self.r.add('/get%d/:param'%i,str(i))
+        for i in xrange(99):
+            self.assertTrue((str(i), dict(param=str(i))), self.r.match('/get%d/%d'%(i, i+1)))
+        def tomany():
+            for i in xrange(100,1000):
+                self.r.add('/get%d/:param'%i,str(i))
+        self.assertRaises(bottle.TooManyRoutesError, tomany)
 
-        self.assertEqual(None, app.match_url('/ctest/no')[0])
-        self.assertEqual(None, app.match_url('/ctest/_no')[0])
-        self.assertEqual('yes', app.match_url('/ctest/yes')[0]())
-        self.assertEqual('test', app.match_url('/ctest/yes/test')[0](test='test'))
+class TestRouterCollection(unittest.TestCase):
+    def setUp(self):
+        self.r = bottle.RouterCollection()
+
+    def test_syntax_plain(self):
+        """ RouterCollection: Syntax without any special chars """
+        td = dict()
+        td['/foo'] = 'foo'
+        td['GET;/foo/bar'] = 'bar'
+        td['GET;foobar'] = 'foobar'
+        td[''] = 'empty'
+        td['l'+('o'*1024)+'ng'] = 'Kind of long'
+        for k, v in td.iteritems():
+            self.r.add(k, v)
+        for k, v in td.iteritems():
+            self.assertEqual((v, None), self.r.match(k))
+        for r in 'a hello2 hell hello_world rld wor'.split():
+            self.assertTrue((None, None), self.r.match(r))
+    
+    def test_syntax_placeholder(self):
+        """ RouterCollection: Syntax with placeholders """
+        self.r.add('some/:path', 1)
+        self.assertEqual((1, dict(path='test')), self.r.match('some/test'))
+        self.assertEqual((None, None), self.r.match('some/'))
+        self.assertEqual((None, None), self.r.match('some/test/'))
+        self.assertEqual((None, None), self.r.match('somee/test'))
+        self.r.add('some/:path/', 2)
+        self.assertEqual((2, dict(path='test')), self.r.match('some/test/'))
+        self.assertEqual((None, None), self.r.match('some//'))
+        self.assertEqual((None, None), self.r.match('some/'))
+        self.assertEqual((1, dict(path='test')), self.r.match('some/test'))
+        self.assertEqual((None, None), self.r.match('some/test//'))
+        self.r.add(':path/some', 3)
+        self.assertEqual((3, dict(path='test')), self.r.match('test/some'))
+        self.assertEqual((None, None), self.r.match('/some'))
+        self.assertEqual((None, None), self.r.match('some'))
+        self.r.add('/hey:foo/:bar', 4)
+        self.assertEqual((4, dict(foo='1', bar='2')), self.r.match('/hey1/2'))
+        self.assertEqual((None, None), self.r.match('/hey/1/2'))
+
 
 
 suite = unittest.TestSuite()
-suite.addTest(unittest.makeSuite(TestRoutes))
+suite.addTest(unittest.makeSuite(TestSimpleRouter))
 
 if __name__ == '__main__':
     unittest.main()
