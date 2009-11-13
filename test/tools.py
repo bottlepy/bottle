@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import bottle
 import threading
 import urllib
@@ -9,6 +10,10 @@ import wsgiref
 import wsgiref.simple_server
 import wsgiref.util
 from StringIO import StringIO
+try:
+    from io import BytesIO
+except:
+    pass
 import mimetypes
 import uuid
 
@@ -27,10 +32,18 @@ class NonLoggingRequestHandler(wsgiref.simple_server.WSGIRequestHandler):
         
 class TestServer(bottle.ServerAdapter):
     ''' Bottle compatible ServerAdapter with no logging and a shutdown() routine '''
+    def __init__(self, *a, **k):
+        bottle.ServerAdapter.__init__(self, *a, **k)
+        self.event_running = threading.Event()
+    
     def run(self, handler):
         from wsgiref.simple_server import make_server
-        srv = make_server(self.host, self.port, handler, handler_class=NonLoggingRequestHandler)
-        self.alive = True
+        try:
+            srv = make_server(self.host, self.port, handler, handler_class=NonLoggingRequestHandler)
+            self.alive = True
+        except:
+            pass
+        self.event_running.set()
         while self.alive:
             srv.handle_request()
 
@@ -61,6 +74,7 @@ class ServerTestBase(unittest.TestCase):
         self.urlopen = self.server.urlopen
         self.thread = threading.Thread(target=bottle.run, args=(), kwargs=dict(app=self.app, server=self.server, quiet=True))
         self.thread.start()
+        self.server.event_running.wait()
 
     def tearDown(self):
         ''' Recover the olt default_app and remove wsgi_intercept from urllib2 '''
@@ -72,6 +86,7 @@ class ServerTestBase(unittest.TestCase):
         if isinstance(data, unicode):
             data = data.encode('utf-8')
         self.assertEqual(data, self.urlopen(url).read())
+
 
 
 def multipart_environ(fields, files):
@@ -86,7 +101,7 @@ def multipart_environ(fields, files):
         parts.append(boundary)
         parts.append('Content-Disposition: form-data; name="%s"' % name)
         parts.append('')
-        parts.append(value)    
+        parts.append(value)
     for name, filename, body in files:
         mimetype = mimetypes.guess_type(filename)[0] or 'application/octet-stream'
         parts.append(boundary)
@@ -99,6 +114,10 @@ def multipart_environ(fields, files):
     parts.append('')
     body = '\n'.join(parts)
     e['CONTENT_LENGTH'] = str(len(body))
-    e['wsgi.input'] = StringIO(body)
+    if hasattr(body, 'encode'):
+        body = body.encode('utf8')
+    e['wsgi.input'].write(body)
     e['wsgi.input'].seek(0)
     return e
+        
+        
