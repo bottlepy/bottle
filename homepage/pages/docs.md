@@ -665,3 +665,4 @@ CGI is slow as hell, but it works.
     # ... add or import your bottle app code here ...
     bottle.run(server=bottle.CGIServer)
 
+

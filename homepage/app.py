@@ -7,6 +7,56 @@ import os.path
 import sys
 import re
 import codecs
+import glob
+import datetime
+
+
+class Page(object):
+    pagedir  = './pages'
+    cachedir = './cache'
+
+    def __init__(self, name):
+        self.name = name
+        self.title = name.replace('_',' ').title()
+        self._text = ''
+        self._html = ''
+        self.filename  = os.path.join(self.pagedir,  self.name+'.md')
+        self.cachename = os.path.join(self.cachedir, self.name+'.html')
+
+    @property
+    def rawfile(self):
+        return codecs.open(self.filename, encoding='utf8')
+
+    @property
+    def raw(self):
+        return self.rawfile.read()
+
+    @property
+    def cachefile(self):
+        if not os.path.exists(self.cachename) \
+        or os.path.getmtime(self.filename) > os.path.getmtime(self.cachename):
+           with self.rawfile as f:
+               html = markdown.markdown(f.read(), ['codehilite(force_linenos=True)','wikilink(base_url=/page/)','toc'])
+           with open(self.cachename, 'w') as f:
+               f.write(html.encode('utf-8'))
+        return codecs.open(self.cachename, encoding='utf8')
+
+    @property
+    def html(self):
+        return self.cachefile.read()
+
+    @property
+    def mtime(self):
+        return datetime.datetime.utcfromtimestamp(os.path.getmtime(self.filename))
+
+    @property
+    def ctime(self):
+        return datetime.datetime.utcfromtimestamp(os.path.getctime(self.filename))
+
+    def exists(self):
+        return os.path.exists(self.filename)
+
+
 
 # Static files
 
@@ -16,26 +66,27 @@ def static(filename):
 
 # Bottle Pages
 
-pagedir = './pages'
-cachedir   = './cache'
-
 @route('/')
-@route('/page/:name#[a-zA-Z0-9_]{3,65}#')
+@route('/page/:name#[a-zA-Z0-9_]{3,128}#')
 @view('pagemask')
 def page(name='start'):
-    orig = os.path.join(pagedir, name+'.md')
-    cache = os.path.join(cachedir, name+'.html')
-    if not os.path.exists(orig):
-        abort(404, 'Page %s not found.' % name)
-    if not os.path.exists(cache) \
-    or os.path.getmtime(orig) > os.path.getmtime(cache):
-        with codecs.open(orig, encoding='utf8') as f:
-           html = markdown.markdown(f.read(), ['codehilite(force_linenos=True)','wikilink(base_url=/page/)','toc'])
-        with open(cache, 'w') as f:
-           f.write(html.encode('utf-8'))
-    with open(cache) as f:
-        return dict(content=f.read(), pagename=name.title())
+    p = Page(name)
+    if p.exists():
+        return dict(page=p)
+    else:
+        abort(404, 'Page not found')
+
+@route('/blog')
+@view('blogposts')
+def bloglist():
+    posts = []
+    for post in glob.glob(os.path.join(Page.pagedir, 'blog_*.md')):
+        ts = datetime.datetime.utcfromtimestamp(os.path.getctime(post))
+        posts.append((ts, post))
+    posts.sort()
+    return dict(posts=posts)
+
 
 # Start server
 #bottle.debug(True)
-bottle.run(host='0.0.0.0', reloader=True, port=int(sys.argv[1]), server=bottle.PasteServer)
+bottle.run(host='0.0.0.0', reloader=False, port=int(sys.argv[1]), server=bottle.PasteServer)
