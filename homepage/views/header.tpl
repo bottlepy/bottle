@@ -4,6 +4,7 @@
   <title>{{title or 'Homepage'}} - Bottle Web Framework</title>
   <link type="text/css" rel="stylesheet" href="/main.css" />
   <link type="text/css" rel="stylesheet" href="/pygments.css" />
+  <link rel="alternate" type="application/rss+xml"  href="/rss.xml" title="Changed Pages">
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" >
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js" type="text/javascript"></script>
 </head>

@@ -1,6 +1,6 @@
 #!/usr/bin/env python2.6
 # -*- coding: utf-8 -*-
-from bottle import route, abort, view
+from bottle import route, abort, view, response
 import bottle
 import markdown
 import os.path
@@ -76,14 +76,27 @@ def page(name='start'):
     else:
         abort(404, 'Page not found')
 
+
+@route('/rss.xml')
+@view('rss')
+def blogrss():
+    response.content_type = 'xml/rss'
+    posts = []
+    for post in glob.glob(os.path.join(Page.pagedir, '*.md')):
+        name = os.path.basename(post).split('.',1)[0]
+        posts.append(Page(name))
+    posts.sort(key=lambda x: x.mtime, reverse=True)
+    return dict(posts=posts)
+
+
 @route('/blog')
 @view('blogposts')
 def bloglist():
     posts = []
     for post in glob.glob(os.path.join(Page.pagedir, 'blog_*.md')):
-        ts = datetime.datetime.utcfromtimestamp(os.path.getctime(post))
-        posts.append((ts, post))
-    posts.sort()
+        name = os.path.basename(post).split('.',1)[0]
+        posts.append(Page(name))
+    posts.sort(key=lambda x: x.mtime, reverse=True)
     return dict(posts=posts)
 
 
