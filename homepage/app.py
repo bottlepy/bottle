@@ -9,7 +9,7 @@ import re
 import codecs
 import glob
 import datetime
-
+import cgi
 
 class Page(object):
     pagedir  = './pages'
@@ -53,6 +53,17 @@ class Page(object):
     def ctime(self):
         return datetime.datetime.utcfromtimestamp(os.path.getctime(self.filename))
 
+    @property
+    def preview(self):
+        buffer = []
+        for line in self.raw.splitlines():
+             if len(line) > 32 and not line.startswith('#') \
+             and not line.startswith(' '):
+                 buffer.append(line.strip())
+             elif buffer:
+                 break
+        return ' '.join(buffer)
+
     def exists(self):
         return os.path.exists(self.filename)
 
@@ -82,11 +93,11 @@ def page(name='start'):
 def blogrss():
     response.content_type = 'xml/rss'
     posts = []
-    for post in glob.glob(os.path.join(Page.pagedir, '*.md')):
+    for post in glob.glob(os.path.join(Page.pagedir, 'blog_*.md')):
         name = os.path.basename(post).split('.',1)[0]
         posts.append(Page(name))
     posts.sort(key=lambda x: x.mtime, reverse=True)
-    return dict(posts=posts)
+    return dict(posts=posts, escape=cgi.escape)
 
 
 @route('/blog')
@@ -97,7 +108,7 @@ def bloglist():
         name = os.path.basename(post).split('.',1)[0]
         posts.append(Page(name))
     posts.sort(key=lambda x: x.mtime, reverse=True)
-    return dict(posts=posts)
+    return dict(posts=posts, escape=cgi.escape)
 
 
 # Start server

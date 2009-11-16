@@ -11,7 +11,7 @@
         <link>{{link}}</link>
         <guid isPermaLink="true">{{link}}</guid>
         <pubDate>{{post.ctime.strftime('%a, %d %b %Y %H:%M:%S +0000')}}</pubDate>
-        <description></description>
+        <description>{{escape(post.preview.encode('utf8'))}}</description>
       </item>
     %end
   </channel>
