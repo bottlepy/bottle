@@ -287,16 +287,13 @@ TODO
 
 ## Cookies
 
-Bottle stores cookies sent by the client in a dictionary called `request.COOKIES`. To create new cookies,
-the method `response.set_cookie(name, value[, **params])` is used. It accepts additional parameters as long as they are valid 
-cookie attributes supported by [SimpleCookie](http://docs.python.org/library/cookie.html#morsel-objects).
+Bottle stores cookies sent by the client in a dictionary called `request.COOKIES`. To create new cookies, the method `response.set_cookie(name, value[, **params])` is used. It accepts additional parameters as long as they are valid cookie attributes supported by [SimpleCookie](http://docs.python.org/library/cookie.html#morsel-objects).
 
     #!Python
     from bottle import response
     response.set_cookie('key','value', path='/', domain='example.com', secure=True, expires=+500, ...)
 
-To set the `max-age` attribute (which is not a valid Python parameter name) you can directly access an instance of 
-[cookie.SimpleCookie](http://docs.python.org/library/cookie.html#Cookie.SimpleCookie) in `response.COOKIES`. 
+To set the `max-age` attribute (which is not a valid Python parameter name) you can directly access an instance of [cookie.SimpleCookie](http://docs.python.org/library/cookie.html#Cookie.SimpleCookie) in `response.COOKIES`. 
 
     #!Python
     from bottle import response
@@ -309,7 +306,46 @@ To set the `max-age` attribute (which is not a valid Python parameter name) you 
 
 ## GET and POST values
 
-TODO
+Query strings and/or POST form submissions are parsed into dictionaries and made
+available as `bottle.request.GET` and `bottle.request.POST`. Multiple values per
+key are possible, so each each value of these dictionaries may contain a string
+or a list of strings.
+
+
+    #!html
+    <form action="/search" method="post">
+      <input type="text" name="query" />
+      <input type="submit" />
+    </form>
+
+
+    #!Python
+    from bottle import route, request
+    @route('/search', method='POST')
+    def do_search():
+        query = request.POST.get('query', '').strip()
+        if not query:
+            return "You didn't supply a search query."
+        else:
+            return 'You searched for %s.' % query
+
+## File Uploads
+
+    Bottle handles file uploads similar to normal POST form data.
+    Instead of strings or list of strings, you will get file-like objects. 
+
+    #!html
+    <form action="/upload" method="post" enctype="multipart/form-data">
+      <input name="datafile" type="file" />
+    </form>
+
+    #!Python
+    from bottle import route, request
+    @route('/upload', method='POST')
+    def do_upload():
+        datafile = request.POST.get('datafile')
+        return datafile.read()
+
 
 
 
