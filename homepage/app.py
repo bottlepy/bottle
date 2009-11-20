@@ -12,7 +12,7 @@ import datetime
 import cgi
 
 class Page(object):
-    pagedir  = './pages'
+    pagedir  = '../docs'
     cachedir = './cache'
 
     def __init__(self, name):
