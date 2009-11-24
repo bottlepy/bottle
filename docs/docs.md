@@ -12,11 +12,10 @@
   [paste]: http://pythonpaste.org/
   [wsgi]: http://www.wsgi.org/wsgi/
 
-
 # Bottle Documentation
 
 __This document is a work in progress__ and intended to be a tutorial, howto and an api documentation at the same time. If you have questions not answered here,
-please file a ticket at bottles [issue tracker](http://github.com/defnull/bottle/issues).
+please check the [F.A.Q.](/page/faq) or file a ticket at bottles [issue tracker](http://github.com/defnull/bottle/issues).
 
 
 

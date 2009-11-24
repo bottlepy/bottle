@@ -14,6 +14,7 @@
   <ul>
     <li><a href="/">Home</a></li>
     <li><a href="/page/docs">Documentation</a></li>
+    <li><a href="/page/faq">F.A.Q.</a></li>
   </ul>
   <h1>Links</h1>
   <ul>
