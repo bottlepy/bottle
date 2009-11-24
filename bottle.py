@@ -10,7 +10,6 @@ Homepage and documentation: http://wiki.github.com/defnull/bottle
 
 Licence (MIT)
 -------------
-
     Copyright (c) 2009, Marcel Hellkamp.
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -77,7 +76,6 @@ import warnings
 import email.utils
 from wsgiref.headers import Headers as HeaderWrapper
 from Cookie import SimpleCookie
-import anydbm as dbm
 import subprocess
 import thread
 import tempfile
@@ -312,7 +310,6 @@ class Bottle(object):
                 if not handler:
                     raise HTTPError(404, "Not found")
                 output = handler(**args)
-                db.close()
             except BreakTheBottle, e:
                 output = e.output
             except HTTPError, e:
