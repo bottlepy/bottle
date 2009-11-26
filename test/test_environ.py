@@ -16,9 +16,9 @@ class TestEnviron(unittest.TestCase):
         t['/bla'] = '/bla'
         t['/bla/'] = '/bla/'
         for k, v in t.iteritems():
-            request.bind({'PATH_INFO': k})
+            request.bind({'PATH_INFO': k}, None)
             self.assertEqual(v, request.path)
-        request.bind({})
+        request.bind({}, None)
         self.assertEqual('/', request.path)
 
     def test_ilength(self):
@@ -30,9 +30,9 @@ class TestEnviron(unittest.TestCase):
         t['0'] = 0
         t['a'] = 0
         for k, v in t.iteritems():
-            request.bind({'CONTENT_LENGTH': k})
+            request.bind({'CONTENT_LENGTH': k}, None)
             self.assertEqual(v, request.input_length)
-        request.bind({})
+        request.bind({}, None)
         self.assertEqual(0, request.input_length)
 
     def test_cookie(self):
@@ -42,14 +42,14 @@ class TestEnviron(unittest.TestCase):
         t['a=a; b=b'] = {'a': 'a', 'b':'b'}
         t['a=a; a=b'] = {'a': 'b'}
         for k, v in t.iteritems():
-            request.bind({'HTTP_COOKIE': k})
+            request.bind({'HTTP_COOKIE': k}, None)
             self.assertEqual(v, request.COOKIES)
 
     def test_get(self):
         """ Environ: GET data """ 
         e = {}
         e['QUERY_STRING'] = 'a=a&a=1&b=b&c=c'
-        request.bind(e)
+        request.bind(e, None)
         self.assertTrue('a' in request.GET)
         self.assertTrue('b' in request.GET)
         self.assertTrue(isinstance(request.GET['a'], list))
@@ -67,7 +67,7 @@ class TestEnviron(unittest.TestCase):
         e['wsgi.input'].seek(0)
         e['CONTENT_LENGTH'] = str(len(sq))
         e['REQUEST_METHOD'] = "POST"
-        request.bind(e)
+        request.bind(e, None)
         self.assertTrue('a' in request.POST)
         self.assertTrue('b' in request.POST)
         self.assertTrue(isinstance(request.POST['a'], list))
@@ -84,7 +84,7 @@ class TestEnviron(unittest.TestCase):
         e['wsgi.input'].seek(0)
         e['CONTENT_LENGTH'] = '3'
         e['QUERY_STRING'] = 'a=a'
-        request.bind(e)
+        request.bind(e, None)
         self.assertTrue('b' not in request.GET)
         self.assertTrue('a' not in request.POST)
 
@@ -95,7 +95,7 @@ class TestEnviron(unittest.TestCase):
         e['wsgi.input'].write(u'abc'.encode('utf8'))
         e['wsgi.input'].seek(0)
         e['CONTENT_LENGTH'] = str(3)
-        request.bind(e)
+        request.bind(e, None)
         self.assertEqual(u'abc'.encode('utf8'), request.body.read())
         self.assertEqual(u'abc'.encode('utf8'), request.body.read(3))
         self.assertEqual(u'abc'.encode('utf8'), request.body.readline())
@@ -108,7 +108,7 @@ class TestEnviron(unittest.TestCase):
         e['wsgi.input'].write((u'x'*1024*1000).encode('utf8'))
         e['wsgi.input'].seek(0)
         e['CONTENT_LENGTH'] = str(1024*1000)
-        request.bind(e)
+        request.bind(e, None)
         self.assertTrue(hasattr(request.body, 'fileno'))        
         self.assertEqual(1024*1000, len(request.body.read()))
         self.assertEqual(1024, len(request.body.read(1024)))
@@ -122,7 +122,7 @@ class TestEnviron(unittest.TestCase):
         e['wsgi.input'].write((u'x'*1024).encode('utf8'))
         e['wsgi.input'].seek(0)
         e['CONTENT_LENGTH'] = '42'
-        request.bind(e)
+        request.bind(e, None)
         self.assertEqual(42, len(request.body.read()))
         self.assertEqual(42, len(request.body.read(1024)))
         self.assertEqual(42, len(request.body.readline()))
@@ -134,7 +134,7 @@ class TestMultipart(unittest.TestCase):
         fields = [('field1','value1'), ('field2','value2'), ('field2','value3')]
         files = [('file1','filename1.txt','content1'), ('file2','filename2.py',u'äöü')]
         e = tools.multipart_environ(fields=fields, files=files)
-        request.bind(e)
+        request.bind(e, None)
         self.assertTrue(e['CONTENT_LENGTH'], request.input_length)
         # File content
         self.assertTrue('file1' in request.POST)

@@ -1,5 +1,6 @@
 import unittest
-from bottle import send_file, BreakTheBottle, HTTPError, request, response, parse_date
+from bottle import send_file, BreakTheBottle, HTTPError, request, response, parse_date, Bottle
+import wsgiref.util
 import os
 import os.path
 import tempfile
@@ -30,6 +31,13 @@ class TestDateParser(unittest.TestCase):
 
 
 class TestSendFile(unittest.TestCase):
+    def setUp(self):
+        e = dict()
+        wsgiref.util.setup_testing_defaults(e)
+        b = Bottle()
+        request.bind(e, b)
+        response.bind(b)
+
     def test_valid(self):
         """ SendFile: Valid requests"""
         try:
@@ -76,7 +84,6 @@ class TestSendFile(unittest.TestCase):
     def test_ims(self):
         """ SendFile: If-Modified-Since"""
         request.environ['HTTP_IF_MODIFIED_SINCE'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime())
-        response.bind()
         try:
             send_file(os.path.basename(__file__), root='./')
         except HTTPError, e:

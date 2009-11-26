@@ -2,18 +2,14 @@
 """
 Bottle is a fast and simple micro-framework for small web applications. It
 offers request dispatching (Routes) with url parameter support, templates,
-key/value databases, a built-in HTTP Server and adapters for many third party
-WSGI/HTTP-server and template engines - all in a single file and with no
-dependencies other than the Python Standard Library.
+a built-in HTTP Server and adapters for many third party WSGI/HTTP-server and
+template engines - all in a single file and with no dependencies other than the
+Python Standard Library.
 
 Homepage and documentation: http://wiki.github.com/defnull/bottle
 
-Special thanks to Stefan Matthias Aust [http://github.com/sma]
-  for his contribution to SimpleTemplate
-
 Licence (MIT)
 -------------
-
     Copyright (c) 2009, Marcel Hellkamp.
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -80,11 +76,10 @@ import warnings
 import email.utils
 from wsgiref.headers import Headers as HeaderWrapper
 from Cookie import SimpleCookie
-import anydbm as dbm
 import subprocess
 import thread
 import tempfile
-
+import hmac
 
 if sys.version_info >= (3,0,0):
     from io import BytesIO
@@ -289,6 +284,7 @@ class Bottle(object):
         self.error_handler = {}
         self.autojson = autojson
         self.catchall = catchall
+        self.config = dict()
         self.serve = True
         self.rootpath = path
 
@@ -371,8 +367,8 @@ class Bottle(object):
 
     def __call__(self, environ, start_response):
         """ The bottle WSGI-interface. """
-        request.bind(environ)
-        response.bind()
+        request.bind(environ, self)
+        response.bind(self)
         try: # Unhandled Exceptions
             try: # Bottle Error Handling
                 if not self.serve:
@@ -383,7 +379,6 @@ class Bottle(object):
                 if args is None:
                     args = dict()
                 output = handler(**args)
-                db.close()
             except BreakTheBottle, e:
                 output = e.output
             except HTTPError, e:
@@ -412,7 +407,7 @@ class Bottle(object):
 class Request(threading.local):
     """ Represents a single request using thread-local namespace. """
 
-    def bind(self, environ):
+    def bind(self, environ, app):
         """
         Binds the enviroment of the current request to this request handler
         """
@@ -424,6 +419,7 @@ class Request(threading.local):
         self._COOKIES = None
         self._body = None
         self.path = self._environ.get('PATH_INFO', '/').strip()
+        self.app = app
         if not self.path.startswith('/'):
             self.path = '/' + self.path
 
@@ -512,17 +508,24 @@ class Request(threading.local):
     def COOKIES(self):
         """ Returns a dict with COOKIES. """
         if self._COOKIES is None:
-            raw_dict = SimpleCookie(self._environ.get('HTTP_COOKIE',''))
+            raw_dict = SimpleCookie(self.environ.get('HTTP_COOKIE',''))
             self._COOKIES = {}
             for cookie in raw_dict.itervalues():
                 self._COOKIES[cookie.key] = cookie.value
         return self._COOKIES
 
+    def get_cookie(self, *args):
+        value = self.COOKIES.get(*args)
+        sec = self.app.config['securecookie.key']
+        dec = cookie_decode(value, sec)
+        return dec or value
+
+    
 
 class Response(threading.local):
     """ Represents a single response using thread-local namespace. """
 
-    def bind(self):
+    def bind(self, app):
         """ Clears old data and creates a brand new Response object """
         self._COOKIES = None
         self.status = 200
@@ -531,6 +534,7 @@ class Response(threading.local):
         self.charset = 'UTF-8'
         self.content_type = 'text/html; charset=UTF-8'
         self.error = None
+        self.app = app
 
     def wsgiheaders(self):
         ''' Returns a wsgi conform list of header/value pairs '''
@@ -549,6 +553,9 @@ class Response(threading.local):
         Sets a Cookie. Optional settings:
         expires, path, comment, domain, max-age, secure, version, httponly
         """
+        if not isinstance(value, basestring):
+            sec = self.app.config['securecookie.key']
+            value = cookie_encode(value, sec)
         self.COOKIES[key] = value
         for k, v in kargs.iteritems():
             self.COOKIES[key][k] = v
@@ -647,6 +654,27 @@ def parse_date(ims):
                 return time.mktime(ts[:8] + (0,)) - ts[9] - time.timezone
     except (ValueError, IndexError):
         return None
+
+
+def cookie_encode(data, key):
+    ''' Encode and sign a pickle-able object. Return a string '''
+    msg = pickle.dumps(data, -1).encode('base64').strip()
+    sig = hmac.new(key, msg).digest().encode('base64').strip()
+    return '!%s?%s' % (sig, msg)
+
+
+def cookie_decode(data, key):
+  ''' Verify and decode an encoded string. Return an object or None'''
+  if cookie_is_encoded(data):
+    sig, msg = data[1:].split('?',1)
+    if sig == hmac.new(key, msg).digest().encode('base64').strip():
+      return cPickle.loads(msg.decode('base64'))
+  return None 
+
+
+def cookie_is_encoded(data):
+  ''' Verify and decode an encoded string. Return an object or None'''
+  return bool(data.startswith('!') and '?' in data)
 
 
 
@@ -1126,144 +1154,8 @@ def jinja2_view(tpl_name, **kargs):
 
 
 
-# Database
-
-class BottleBucket(object): # pragma: no cover
-    """ Memory-caching wrapper around anydbm """
-    def __init__(self, name):
-        self.__dict__['name'] = name
-        self.__dict__['db'] = dbm.open(DB_PATH + '/%s.db' % name, 'c')
-        self.__dict__['mmap'] = {}
-            
-    def __getitem__(self, key):
-        if key not in self.mmap:
-            self.mmap[key] = pickle.loads(self.db[key])
-        return self.mmap[key]
-    
-    def __setitem__(self, key, value):
-        if not isinstance(key, str): raise TypeError("Bottle keys must be strings")
-        self.mmap[key] = value
-    
-    def __delitem__(self, key):
-        if key in self.mmap:
-            del self.mmap[key]
-        del self.db[key]
-
-    def __getattr__(self, key):
-        try: return self[key]
-        except KeyError: raise AttributeError(key)
-
-    def __setattr__(self, key, value):
-        self[key] = value
-
-    def __delattr__(self, key):
-        try: del self[key]
-        except KeyError: raise AttributeError(key)
-
-    def __iter__(self):
-        return iter(self.ukeys())
-    
-    def __contains__(self, key):
-        return key in self.ukeys()
-  
-    def __len__(self):
-        return len(self.ukeys())
-
-    def keys(self):
-        return list(self.ukeys())
-
-    def ukeys(self):
-      return set(self.db.keys()) | set(self.mmap.keys())
-
-    def save(self):
-        self.close()
-        self.__init__(self.name)
-    
-    def close(self):
-        for key in self.mmap:
-            pvalue = pickle.dumps(self.mmap[key], pickle.HIGHEST_PROTOCOL)
-            if key not in self.db or pvalue != self.db[key]:
-                self.db[key] = pvalue
-        self.mmap.clear()
-        if hasattr(self.db, 'sync'):
-            self.db.sync()
-        if hasattr(self.db, 'close'):
-            self.db.close()
-        
-    def clear(self):
-        for key in self.db:
-            del self.db[key]
-        self.mmap.clear()
-        
-    def update(self, other):
-        self.mmap.update(other)
-
-    def get(self, key, default=None):
-        try:
-            return self[key]
-        except KeyError:
-            if default:
-                return default
-            raise
-
-
-class BottleDB(threading.local): # pragma: no cover
-    """ Holds multible BottleBucket instances in a thread-local way. """
-    def __init__(self):
-        self.__dict__['open'] = {}
-        
-    def __getitem__(self, key):
-        warnings.warn("Please do not use bottle.db anymore. This feature is deprecated. You may use anydb directly.", DeprecationWarning)
-        if key not in self.open and not key.startswith('_'):
-            self.open[key] = BottleBucket(key)
-        return self.open[key]
-
-    def __setitem__(self, key, value):
-        if isinstance(value, BottleBucket):
-            self.open[key] = value
-        elif hasattr(value, 'items'):
-            if key not in self.open:
-                self.open[key] = BottleBucket(key)
-            self.open[key].clear()
-            for k, v in value.iteritems():
-                self.open[key][k] = v
-        else:
-            raise ValueError("Only dicts and BottleBuckets are allowed.")
-
-    def __delitem__(self, key):
-        if key not in self.open:
-            self.open[key].clear()
-            self.open[key].save()
-            del self.open[key]
-
-    def __getattr__(self, key):
-        try: return self[key]
-        except KeyError: raise AttributeError(key)
-
-    def __setattr__(self, key, value):
-        self[key] = value
-
-    def __delattr__(self, key):
-        try: del self[key]
-        except KeyError: raise AttributeError(key)
-
-    def save(self):
-        self.close()
-        self.__init__()
-    
-    def close(self):
-        for db in self.open:
-            self.open[db].close()
-        self.open.clear()
-
-
-
-
-
-
 # Modul initialization and configuration
 
-DB_PATH = './'
 TEMPLATE_PATH = ['./', './views/']
 TEMPLATES = {}
 DEBUG = False
@@ -1336,7 +1228,6 @@ TRACEBACK_TEMPLATE = """
 
 request = Request()
 response = Response()
-db = BottleDB()
 local = threading.local()
 
 #TODO: Global and app local configuration (debug, defaults, ...) is a mess
