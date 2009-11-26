@@ -158,119 +158,140 @@ class BreakTheBottle(BottleException):
 class RouteError(BottleException):
     """ This is a base class for all Router related exceptions """
 
-
 class RouteSyntaxError(RouteError):
     """ The route parser found stuff not supported by this Router """
 
+class RouteBuildError(RouteError):
+    """ The Router could not build a route """
 
 class Router(object):
-    """ Base class for string->data,info maps """
-
-    def match(self, uri): 
-        """ Returns a (data, info) tuple matching uri or (None, None) """
-        raise NotImplementedError()
-        
-    def add(self, route, data):
-        """Adds a route to the router and binds it to the data object"""
-        raise NotImplementedError()
-
-
-class StaticRouter(Router):
-    """ Router matching static strings """
-
-    def __init__(self):
-        self.routemap = dict()
-
-    def match(self, uri):
-        return self.routemap.get(uri, None), None
-    
-    def add(self, route, data):
-        self.routemap[route] = data
-
-
-class RegexRouter(Router):
     ''' Router matches regular expressions and has a simple syntax for named
-        groups. '''
-
+        groups. Syntax: 
+        :name           --> (?P<name>[^/]+)
+        :name#regexp#   --> (?P<name>regexp)
+        :#regexp#       --> (?:regexp)
+        \:...           --> :...
+    '''
+    syntax = re.compile(r'(?P<pre>.*?)'
+                        r'(?P<escape>\\)?'
+                        r':(?P<name>[a-zA-Z_]+)?'
+                        r'(#(?P<rex>.*?)#)?')
+        
     def __init__(self):
-        self.routes = [] # A list of (bigre, subroutes) tuples
+        self.static = dict()
+        self.dynamic = [] # A list of (bigre, subroutes) tuples
+        self.generators = dict()
 
-    def match(self, uri):
-        for big_re, subroutes in self.routes:
-            match = big_re.match(uri)
-            if not match:
+    def is_dynamic(self, route):
+        for text, name, rex in self.split(route):
+            if name or rex:
+                return True
+        return False
+
+    def split(self, route):
+        ''' Splits a route into (text, name, pattern) triples. '''
+        match = None
+        for match in self.syntax.finditer(route):
+            pre = match.group('pre')
+            name = match.group('name')
+            rex = match.group('rex')
+            if match.group('escape'):
+                yield match.group(0).replace('\\:',':',1), None, None
                 continue
-            data, group_re = subroutes[match.lastindex - 1]
-            if not group_re:
-                return data, None
-            group_match = group_re.match(uri)
-            if not group_match:
-                return None, None
-            return data, group_match.groupdict()
-        return None, None
+            if rex:
+                rex = re.sub(r'\(\?P<[^>]*>', '(?:', rex)
+                rex = re.sub(r'\((?!\?)', '(?:', rex)
+                try:
+                    rex = re.compile(rex)
+                except re.error, e:
+                    raise RouteSyntaxError("Syntax error in '%s' offset %d: %s"
+                          % (route, match.start('rex'), repr(e)))
+                if rex.groups > 1: # Should not be possible.
+                    raise RouteSyntaxError("Groups in route '%s'." % (route))
+            yield pre, name, rex
+        if not match:
+            yield route, None, None
+        elif match.end() < len(route):
+            yield route[match.end():], None, None
 
-    def add(self, route, data):
+    def create_generator(self, route, name):
+        parts = list(self.split(route))
+        def generator(**args):
+            out = []
+            for text, key, rex in parts:
+                out.append(text)
+                if key and key not in args:
+                    raise RouteBuildError("Missing parameter '%s' in route '%s'" % (key, name))
+                if rex and not key:
+                    raise RouteBuildError("Anonymous pattern found. Can't generate the route '%s'." % name)
+                if rex and not re.match('^%s$' % rex.pattern, args[key]):
+                    raise RouteBuildError("Parameter '%s' does not match pattern for route '%s': '%s'" % (key, name, rex.pattern))
+                if key:
+                    out.append(args[key])
+            return ''.join(out)
+        return generator
+
+    def parse(self, route):
+        ''' Parses a route and returns a RegexObject tuple (full, anon) '''
+        rexp = ''
+        fexp = ''
+        isdyn = False
+        for text, name, rex in self.split(route):
+            rexp += re.escape(text)
+            fexp += re.escape(text)
+            if name and rex:
+                rexp += '(?P<%s>%s)' % (name, rex.pattern)
+                fexp += '(?:%s)' % rex.pattern
+            elif name:
+                rexp += '(?P<%s>[^/]+)' % name
+                fexp += '[^/]+'
+            elif rex:
+                rexp += '(?:%s)' % rex.pattern
+                fexp += '(?:%s)' % rex.pattern
+        return re.compile('(^%s$)' % rexp), re.compile('(^%s$)' % fexp)
+
+    def add(self, route, data, static=False, name=None):
         # Create RegexPattern for parameter matching
-        group_re = re.sub(
-            r':([a-zA-Z_]+)(?P<uniq>[^\w/])(?P<re>.+?)(?P=uniq)',
-            r'(?P<\1>\g<re>)', route)
-        group_re = re.sub(r'(?<!\(\?):([a-zA-Z_]+)',
-            r'(?P<\1>[^/]+)', group_re)
-        try:
-            group_re = re.compile('^%s$' % group_re)
-        except re.error, e:
-            raise RouteSyntaxError("Could not parse route '%s'. "
-                                   "Error: %s" % (route, repr(e)))
-        if not group_re.groupindex:
-            group_re = None # No named groups -> Nothing to extract
-
-        # Create new re_full pattern. Anonynous groups (?:...) only!
-        anon_re = re.sub(r':([a-zA-Z_]+)(?P<uniq>[^\w/])(?P<re>.+?)(?P=uniq)',
-                          r'(?:\g<re>)', route)
-        anon_re = re.sub(r'(?<!\(\?):([a-zA-Z_]+)', r'(?:[^/]+)', anon_re)
-        anon_re = re.sub(r'\(\?P<[^>]*>', '(?:', anon_re)
-        anon_re = re.sub(r'\((?!\?)', '(?:', anon_re)
-        try:
-            anon_re = re.compile('(^%s$)' % anon_re)
-        except re.error, e:
-            raise RouteSyntaxError("Could not compile route '%s'. "
-                                   "Error: %s" % (route, repr(e)))
-        if anon_re.groups > 1: # Should not be possible.
+        if not self.is_dynamic(route) or static:
+            self.static[route] = data
+            return
+        rexp, fexp = self.parse(route)
+        if not rexp.groupindex:
+            rexp = None # No named groups -> Nothing to extract
+        if fexp.groups > 1: # Should not be possible.
             raise RouteSyntaxError("Route contains groups '%s'." % (route))
-
-        # Try to compile the full_re pattern and save route
+        # Try to compile the full pattern and save route
         try:
-            big_re, subroutes = self.routes[-1]
-            big_re = big_re.pattern + '|' + anon_re.pattern
+            big_re, subroutes = self.dynamic[-1]
+            big_re = big_re.pattern + '|' + fexp.pattern
             big_re = re.compile(big_re)
-            subroutes.append((data, group_re))
-            self.routes[-1] = (big_re, subroutes)
-        except (AssertionError, IndexError), e:
-            self.routes.append((anon_re, [(data, group_re)]))
-
-
-class RouterCollection(Router):
-    """ Handles different types of routers """
-
-    def __init__(self):
-        self.simple = StaticRouter()
-        self.dynamic = RegexRouter()
+            subroutes.append((data, rexp))
+            self.dynamic[-1] = (big_re, subroutes)
+        except (AssertionError, IndexError), e: # AssertionError: To many groups
+            self.dynamic.append((fexp, [(data, rexp)]))
+        if name:
+            self.generators[name] = self.create_generator(route, name)
 
     def match(self, uri):
-        for router in (self.simple, self.dynamic):
-            m, d = router.match(uri)
-            if m:
-                return m, d
+        if uri in self.static:
+            return self.static[uri], None
+        for big_re, subroutes in self.dynamic:
+            match = big_re.match(uri)
+            if match:
+                data, group_re = subroutes[match.lastindex - 1]
+                if not group_re:
+                    return data, None
+                group_match = group_re.match(uri)
+                if not group_match:
+                    return None, None
+                return data, group_match.groupdict()
         return None, None
 
-    def add(self, route, data, simple = False):
-        if simple or ('|' not in route and ':' not in route):
-            add_to = self.simple.add(route, data)
+    def build(self, gen_name, **kargs):
+        if gen_name in self.generators:
+            return self.generators[gen_name](**kargs)
         else:
-            add_to = self.dynamic.add(route, data)
-
-
-
+            raise RouteBuildError("No route with name %s found." % gen_name)
 
 
 
@@ -279,7 +300,7 @@ class RouterCollection(Router):
 class Bottle(object):
 
     def __init__(self, catchall=True, autojson=True, path = ''):
-        self.routes = RouterCollection()
+        self.routes = dict()
         self.default_route = None
         self.error_handler = {}
         self.autojson = autojson
@@ -297,11 +318,11 @@ class Bottle(object):
             return None, None
         path = path[len(self.rootpath):].strip().lstrip('/')
         method = method.upper()
-        handler, param = self.routes.match('%s;%s' % (method, path))
+        handler, param = self.routes.setdefault(method, Router()).match(path)
         if not handler and method == 'HEAD':
-            handler, param = self.routes.match('GET;%s' % path)
+            handler, param = self.routes.setdefault('GET', Router()).match(path)
         if not handler:
-            handler, param = self.routes.match('ALL;%s' % path)
+            handler, param = self.routes.setdefault('ALL', Router()).match(path)
         if not handler:
             handler, param = self.default_route, None
         return handler, param
@@ -315,7 +336,7 @@ class Bottle(object):
         uri = '%s;%s' % (method, path)
         
         def wrapper(handler):
-            self.routes.add(uri, handler, simple = simple)
+            self.routes.add(uri, handler, static=simple)
             return handler
         return wrapper
 
