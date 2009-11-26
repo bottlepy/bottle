@@ -79,7 +79,7 @@ from Cookie import SimpleCookie
 import subprocess
 import thread
 import tempfile
-
+import hmac
 
 if sys.version_info >= (3,0,0):
     from io import BytesIO
@@ -179,6 +179,7 @@ class Bottle(object):
         self.optimize = optimize
         self.autojson = autojson
         self.catchall = catchall
+        self.config = dict()
         self.serve = True
 
     def match_url(self, url, method='GET'):
@@ -300,8 +301,8 @@ class Bottle(object):
 
     def __call__(self, environ, start_response):
         """ The bottle WSGI-interface. """
-        request.bind(environ)
-        response.bind()
+        request.bind(environ, self)
+        response.bind(self)
         try: # Unhandled Exceptions
             try: # Bottle Error Handling
                 if not self.serve:
@@ -339,7 +340,7 @@ class Bottle(object):
 class Request(threading.local):
     """ Represents a single request using thread-local namespace. """
 
-    def bind(self, environ):
+    def bind(self, environ, app):
         """
         Binds the enviroment of the current request to this request handler
         """
@@ -351,6 +352,7 @@ class Request(threading.local):
         self._COOKIES = None
         self._body = None
         self.path = self._environ.get('PATH_INFO', '/').strip()
+        self.app = app
         if not self.path.startswith('/'):
             self.path = '/' + self.path
 
@@ -439,17 +441,24 @@ class Request(threading.local):
     def COOKIES(self):
         """ Returns a dict with COOKIES. """
         if self._COOKIES is None:
-            raw_dict = SimpleCookie(self._environ.get('HTTP_COOKIE',''))
+            raw_dict = SimpleCookie(self.environ.get('HTTP_COOKIE',''))
             self._COOKIES = {}
             for cookie in raw_dict.itervalues():
                 self._COOKIES[cookie.key] = cookie.value
         return self._COOKIES
 
+    def get_cookie(self, *args):
+        value = self.COOKIES.get(*args)
+        sec = self.app.config['securecookie.key']
+        dec = cookie_decode(value, sec)
+        return dec or value
+
+    
 
 class Response(threading.local):
     """ Represents a single response using thread-local namespace. """
 
-    def bind(self):
+    def bind(self, app):
         """ Clears old data and creates a brand new Response object """
         self._COOKIES = None
         self.status = 200
@@ -458,6 +467,7 @@ class Response(threading.local):
         self.charset = 'UTF-8'
         self.content_type = 'text/html; charset=UTF-8'
         self.error = None
+        self.app = app
 
     def wsgiheaders(self):
         ''' Returns a wsgi conform list of header/value pairs '''
@@ -476,6 +486,9 @@ class Response(threading.local):
         Sets a Cookie. Optional settings:
         expires, path, comment, domain, max-age, secure, version, httponly
         """
+        if not isinstance(value, basestring):
+            sec = self.app.config['securecookie.key']
+            value = cookie_encode(value, sec)
         self.COOKIES[key] = value
         for k, v in kargs.iteritems():
             self.COOKIES[key][k] = v
@@ -560,6 +573,27 @@ def parse_date(ims):
                 return time.mktime(ts[:8] + (0,)) - ts[9] - time.timezone
     except (ValueError, IndexError):
         return None
+
+
+def cookie_encode(data, key):
+    ''' Encode and sign a pickle-able object. Return a string '''
+    msg = pickle.dumps(data, -1).encode('base64').strip()
+    sig = hmac.new(key, msg).digest().encode('base64').strip()
+    return '!%s?%s' % (sig, msg)
+
+
+def cookie_decode(data, key):
+  ''' Verify and decode an encoded string. Return an object or None'''
+  if cookie_is_encoded(data):
+    sig, msg = data[1:].split('?',1)
+    if sig == hmac.new(key, msg).digest().encode('base64').strip():
+      return cPickle.loads(msg.decode('base64'))
+  return None 
+
+
+def cookie_is_encoded(data):
+  ''' Verify and decode an encoded string. Return an object or None'''
+  return bool(data.startswith('!') and '?' in data)
 
 
 
