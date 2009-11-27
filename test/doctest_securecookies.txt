@@ -1,0 +1,14 @@
+Secure cookies are signed, but not encrypted. They support pickle-able objects as values.
+
+	>>> import bottle
+	>>> test = dict(a=5, b=u'unicode', c=[1,2,3,4,'5'])
+	>>> key = 'secret'
+	>>> cookie = bottle.cookie_encode(test, key)
+	>>> cookie
+	'!RidFXtwOzjhv4wGg/P2gTA==?gAJ9cQEoVQFhSwVVAWNdcQIoSwFLAksDSwRVATVlVQFiWAcAAAB1bmljb2RlcQN1Lg=='
+	>>> test == bottle.cookie_decode(cookie, key)
+	True
+	>>> bottle.cookie_is_encoded(cookie)
+	True
+	>>> bottle.cookie_is_encoded('some cookie')
+	False

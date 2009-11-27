@@ -3,20 +3,32 @@ This is a test file for Router docstring tests.
 	>>> import bottle
 	>>> r = bottle.Router()
 	>>> r.add('/static', 'static')
-	>>> r.add('/:#.+#/:test/:name#[a-z]+#/', 'handler')
+	>>> r.add('/\\:its/:#.+#/:test/:name#[a-z]+#/', 'handler')
 	>>> r.add('/:test', 'notail')
 	>>> r.add(':test/', 'nohead')
 	>>> r.add(':test', 'fullmatch')
+	>>> r.add('/:#anon#/match', 'anon')
 	>>> r.match('/static')
 	('static', None)
-	>>> r.match('/test/hello/world/')
-	('handler', {'test': 'hello', 'name': 'world'})
+	>>> r.match('/:its/a/cruel/world/')
+	('handler', {'test': 'cruel', 'name': 'world'})
 	>>> r.match('/test')
 	('notail', {'test': 'test'})
 	>>> r.match('test/')
 	('nohead', {'test': 'test'})
 	>>> r.match('test')
 	('fullmatch', {'test': 'test'})
+	>>> r.match('/anon/match')
+	('anon', None)
+	>>> r.match('//no/m/at/ch/')
+	(None, None)
+
+Buggy regular expressions should produce useful error messages
+
+	>>> r = bottle.Router()
+	>>> r.add('/:bug#(#/', 'buggy')
+	Traceback (most recent call last):
+	RouteSyntaxError: Syntax error in '/:bug#(#/' offset 6: error('unbalanced parenthesis',)
 
 Tests for the route builder and named routes.
 
