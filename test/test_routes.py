@@ -64,9 +64,9 @@ class TestRouter(unittest.TestCase):
 
     def test_stress(self):
         """ RegexpRouter: Stress test """
-        for i in xrange(1):
+        for i in xrange(101):
             self.r.add('/get%d/:param'%i,str(i))
-        for i in xrange(1):
+        for i in xrange(101):
             self.assertTrue((str(i), dict(param=str(i))), self.r.match('/get%d/%d'%(i, i+1)))
 
 
