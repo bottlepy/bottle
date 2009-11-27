@@ -285,19 +285,20 @@ class Bottle(object):
             out = [out.encode(response.charset)]
         elif isinstance(out, list) and isinstance(out[0], unicode):
             out = map(lambda x: x.encode(response.charset), out)
-        elif self.autojson and json_dumps and isinstance(out, dict):
-            out = [json_dumps(out)]
-            response.content_type = 'application/json'
         elif hasattr(out, 'read'):
             out = request.environ.get('wsgi.file_wrapper',
                   lambda x: iter(lambda: x.read(8192), ''))(out)
+        elif self.autojson and json_dumps:
+            if isinstance(out, dict)\
+            or isinstance(out, list) and isinstance(out[0], dict):
+                out = [json_dumps(out)]
+                response.content_type = 'application/json'
         if isinstance(out, list) and len(out) == 1:
             response.header['Content-Length'] = str(len(out[0]))
         if not hasattr(out, '__iter__'):
             raise TypeError('Request handler for route "%s" returned [%s] '
             'which is not iterable.' % (request.path, type(out).__name__))
         return out
-
 
     def __call__(self, environ, start_response):
         """ The bottle WSGI-interface. """
