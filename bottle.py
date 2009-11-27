@@ -55,6 +55,15 @@ Example
 
     run(host='localhost', port=8080)
 
+Code Comments
+-------------
+
+#BC:   Backward compatibility. This piece of code makes no sense but is here to
+       maintain compatibility to previous releases.
+#TODO: Please help to improve this piece of code. There is something ugly
+       or missing here.
+#REF:  A reference to a bug report, article, api doc or howto. Follow the link
+       to read more.
 """
 
 __author__ = 'Marcel Hellkamp'
@@ -82,6 +91,7 @@ import tempfile
 import hmac
 
 if sys.version_info >= (3,0,0):
+    # See Request.POST
     from io import BytesIO
     from io import TextIOWrapper
 else:
@@ -155,20 +165,6 @@ class BreakTheBottle(BottleException):
 
 # WSGI abstraction: Request and response management
 
-_default_app = None
-def default_app(newapp = None):
-    """
-    Returns the current default app or sets a new one.
-    Defaults to an instance of Bottle
-    """
-    global _default_app
-    if newapp:
-        _default_app = newapp
-    if not _default_app:
-        _default_app = Bottle()
-    return _default_app
-
-
 class Bottle(object):
 
     def __init__(self, catchall=True, optimize=False, autojson=True):
@@ -177,7 +173,8 @@ class Bottle(object):
         self.default_route = None
         self.error_handler = {}
         self.optimize = optimize
-        self.autojson = autojson
+        if autojson and json_dumps:
+            self.jsondump = json_dumps
         self.catchall = catchall
         self.config = dict()
         self.serve = True
@@ -269,12 +266,12 @@ class Bottle(object):
             return handler
         return wrapper
 
-    def cast(self, out):
+    def cast(self, out, jsondump = None):
         """
         Cast the output to an iterable of strings or something WSGI can handle.
         Set Content-Type and Content-Length when possible. Then clear output
         on HEAD requests.
-        Supports: False, str, unicode, list(unicode), dict(), open()
+        Supports: False, str, unicode, list(unicode), file, dict, list(dict)
         """
         if not out:
             out = []
@@ -288,10 +285,9 @@ class Bottle(object):
         elif hasattr(out, 'read'):
             out = request.environ.get('wsgi.file_wrapper',
                   lambda x: iter(lambda: x.read(8192), ''))(out)
-        elif self.autojson and json_dumps:
-            if isinstance(out, dict)\
-            or isinstance(out, list) and isinstance(out[0], dict):
-                out = [json_dumps(out)]
+        elif jsondump and isinstance(out, dict)\
+          or jsondump and isinstance(out, list) and isinstance(out[0], dict):
+                out = [jsondump(out)]
                 response.content_type = 'application/json'
         if isinstance(out, list) and len(out) == 1:
             response.header['Content-Length'] = str(len(out[0]))
@@ -317,7 +313,7 @@ class Bottle(object):
             except HTTPError, e:
                 response.status = e.http_status
                 output = self.error_handler.get(response.status, str)(e)
-            output = self.cast(output)
+            output = self.cast(output, jsondump=self.jsondump)
             if response.status in (100, 101, 204, 304) or request.method == 'HEAD':
                 output = [] # rfc2616 section 4.3
         except (KeyboardInterrupt, SystemExit, MemoryError):
@@ -513,6 +509,19 @@ class BaseController(object):
         if not cls._singleton:
             cls._singleton = object.__new__(cls, *a, **k)
         return cls._singleton
+
+
+_default_app = Bottle()
+def app(newapp = None):
+    """
+    Returns the current default app or sets a new one.
+    Defaults to an instance of Bottle
+    """
+    global _default_app
+    if newapp:
+        _default_app = newapp
+    return _default_app
+default_app = app # BC: 0.6.4
 
 
 def abort(code=500, text='Unknown Error: Appliction stopped.'):
