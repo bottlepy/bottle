@@ -480,14 +480,13 @@ class Request(threading.local):
         """
         Binds the enviroment of the current request to this request handler
         """
-        self._environ = environ
-        self.environ = self._environ
+        self.environ = environ
         self._GET = None
         self._POST = None
         self._GETPOST = None
         self._COOKIES = None
         self._body = None
-        self.path = self._environ.get('PATH_INFO', '/').strip()
+        self.path = self.environ.get('PATH_INFO', '/').strip()
         self.app = app
         if not self.path.startswith('/'):
             self.path = '/' + self.path
@@ -495,18 +494,18 @@ class Request(threading.local):
     @property
     def method(self):
         """ Get the request method (GET,POST,PUT,DELETE,...) """
-        return self._environ.get('REQUEST_METHOD', 'GET').upper()
+        return self.environ.get('REQUEST_METHOD', 'GET').upper()
 
     @property
     def query_string(self):
         """ Get content of QUERY_STRING """
-        return self._environ.get('QUERY_STRING', '')
+        return self.environ.get('QUERY_STRING', '')
 
     @property
     def input_length(self):
         """ Get content of CONTENT_LENGTH """
         try:
-            return max(0,int(self._environ.get('CONTENT_LENGTH', '0')))
+            return max(0,int(self.environ.get('CONTENT_LENGTH', '0')))
         except ValueError:
             return 0
 
@@ -1167,6 +1166,7 @@ class SimpleTemplate(BaseTemplate):
             del stdout[:] # clear stdout
             return subtpl.execute(stdout, **args)
         return args
+
     def render(self, **args):
         """ Render the template using keyword arguments as local variables. """
         stdout = []
