@@ -2,7 +2,6 @@
 ._*
 *.*~
 dist/
-docs/
 *.db
 MANIFEST
 bottle.egg-info/

@@ -1,5 +1,5 @@
 import unittest
-from bottle import send_file, BreakTheBottle, HTTPError, request, response, parse_date, Bottle
+from bottle import send_file, static_file, HTTPError, request, response, parse_date, Bottle
 import wsgiref.util
 import os
 import os.path
@@ -40,10 +40,8 @@ class TestSendFile(unittest.TestCase):
 
     def test_valid(self):
         """ SendFile: Valid requests"""
-        try:
-            send_file(os.path.basename(__file__), root='./')
-        except BreakTheBottle, e:
-            self.assertEqual(open(__file__,'rb').read(), e.output.read())
+        out = static_file(os.path.basename(__file__), root='./')
+        self.assertEqual(open(__file__,'rb').read(), out.output.read())
 
     def test_invalid(self):
         """ SendFile: Invalid requests"""
@@ -68,18 +66,12 @@ class TestSendFile(unittest.TestCase):
             
     def test_mime(self):
         """ SendFile: Mime Guessing"""
-        try:
-            send_file(os.path.basename(__file__), root='./')
-        except BreakTheBottle, e:
-            self.assertTrue(response.content_type in ('application/x-python-code', 'text/x-python'))
-        try:
-            send_file(os.path.basename(__file__), root='./', mimetype='some/type')
-        except BreakTheBottle, e:
-            self.assertEqual('some/type', response.content_type)
-        try:
-            send_file(os.path.basename(__file__), root='./', guessmime=False)
-        except BreakTheBottle, e:
-            self.assertEqual('text/plain', response.content_type)
+        static_file(os.path.basename(__file__), root='./')
+        self.assertTrue(response.content_type in ('application/x-python-code', 'text/x-python'))
+        static_file(os.path.basename(__file__), root='./', mimetype='some/type')
+        self.assertEqual('some/type', response.content_type)
+        static_file(os.path.basename(__file__), root='./', guessmime=False)
+        self.assertEqual('text/plain', response.content_type)
 
     def test_ims(self):
         """ SendFile: If-Modified-Since"""
@@ -92,7 +84,7 @@ class TestSendFile(unittest.TestCase):
         request.environ['HTTP_IF_MODIFIED_SINCE'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(100))
         try:
             send_file(os.path.basename(__file__), root='./')
-        except BreakTheBottle, e:
+        except HTTPError, e:
             self.assertEqual(open(__file__,'rb').read(), e.output.read())
 
 

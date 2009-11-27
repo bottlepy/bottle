@@ -149,16 +149,6 @@ class HTTPError(BottleException):
         }
 
 
-class BreakTheBottle(BottleException):
-    """
-    Not an exception, but a straight jump out of the controller code.
-    Causes the Bottle to instantly call start_response() and return the
-    content of output
-    """
-    def __init__(self, output):
-        self.output = output
-
-
 
 
 
@@ -274,9 +264,12 @@ class Bottle(object):
         Supports: False, str, unicode, list(unicode), file, dict, list(dict)
         """
         if not out:
-            out = []
             response.header['Content-Length'] = '0'
-        elif isinstance(out, types.StringType):
+            return []
+        if isinstance(out, HTTPError):
+            response.status = out.http_status
+            out = self.error_handler.get(response.status, str)(out)
+        if isinstance(out, types.StringType):
             out = [out]
         elif isinstance(out, unicode):
             out = [out.encode(response.charset)]
@@ -308,13 +301,11 @@ class Bottle(object):
                 if not handler:
                     raise HTTPError(404, "Not found")
                 output = handler(**args)
-            except BreakTheBottle, e:
-                output = e.output
             except HTTPError, e:
-                response.status = e.http_status
-                output = self.error_handler.get(response.status, str)(e)
+                output = e
             output = self.cast(output, jsondump=self.jsondump)
-            if response.status in (100, 101, 204, 304) or request.method == 'HEAD':
+            if response.status in (100, 101, 204, 304)\
+            or request.method == 'HEAD':
                 output = [] # rfc2616 section 4.3
         except (KeyboardInterrupt, SystemExit, MemoryError):
             raise
@@ -531,22 +522,29 @@ def abort(code=500, text='Unknown Error: Appliction stopped.'):
 
 def redirect(url, code=307):
     """ Aborts execution and causes a 307 redirect """
-    response.status = code
     response.header['Location'] = url
-    raise BreakTheBottle("")
+    raise HTTPError(code, "")
 
 
-def send_file(filename, root, guessmime = True, mimetype = None):
-    """ Aborts execution and sends a static files as response. """
+def send_file(*a, **k): #BC 0.6.4
+    """ Raises the output of static_file() """
+    raise static_file(*a, **k)
+
+
+def static_file(filename, root, guessmime = True, mimetype = None):
+    """ Opens a file in a save way and returns a HTTPError object with status
+        code 200, 305, 401 or 404. Sets Content-Type, Content-Length and
+        Last-Modified header. Obeys If-Modified-Since header and HEAD requests.
+    """
     root = os.path.abspath(root) + os.sep
     filename = os.path.abspath(os.path.join(root, filename.strip('/\\')))
 
     if not filename.startswith(root):
-        abort(401, "Access denied.")
+        return HTTPError(401, "Access denied.")
     if not os.path.exists(filename) or not os.path.isfile(filename):
-        abort(404, "File does not exist.")
+        return HTTPError(404, "File does not exist.")
     if not os.access(filename, os.R_OK):
-        abort(401, "You do not have permission to access this file.")
+        return HTTPError(401, "You do not have permission to access this file.")
 
     if guessmime and not mimetype:
         mimetype = mimetypes.guess_type(filename)[0]
@@ -563,10 +561,13 @@ def send_file(filename, root, guessmime = True, mimetype = None):
         ims = ims.split(";")[0].strip()
         ims = parse_date(ims)
         if ims is not None and ims >= stats.st_mtime:
-           abort(304, "Not modified")
+           return HTTPError(304, "Not modified")
     if 'Content-Length' not in response.header:
         response.header['Content-Length'] = str(stats.st_size)
-    raise BreakTheBottle(open(filename, 'rb'))
+    if request.method == 'HEAD':
+        return HTTPError(200, '')
+    else:
+        return HTTPError(200, open(filename, 'rb'))
 
 
 def parse_date(ims):
