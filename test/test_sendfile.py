@@ -1,5 +1,5 @@
 import unittest
-from bottle import send_file, static_file, HTTPError, request, response, parse_date, Bottle
+from bottle import send_file, static_file, HTTPError, HTTPResponse, request, response, parse_date, Bottle
 import wsgiref.util
 import os
 import os.path
@@ -48,18 +48,18 @@ class TestSendFile(unittest.TestCase):
         try:
             send_file('not/a/file', root='./')
         except HTTPError, e:
-            self.assertEqual(404, e.http_status)
+            self.assertEqual(404, e.status)
         try:
             send_file(os.path.join('./../', os.path.basename(__file__)), root='./views/')
         except HTTPError, e:
-            self.assertEqual(401, e.http_status)
+            self.assertEqual(401, e.status)
         try:
             fp, fn = tempfile.mkstemp()
             os.chmod(fn, 0)
             try:
                 send_file(fn, root='/')
             except HTTPError, e:
-                self.assertEqual(401, e.http_status)
+                self.assertEqual(401, e.status)
         finally:
             os.close(fp)
             os.unlink(fn)
@@ -79,12 +79,12 @@ class TestSendFile(unittest.TestCase):
         try:
             send_file(os.path.basename(__file__), root='./')
         except HTTPError, e:
-            self.assertEqual(304 ,e.http_status)
+            self.assertEqual(304 ,e.status)
 
         request.environ['HTTP_IF_MODIFIED_SINCE'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(100))
         try:
             send_file(os.path.basename(__file__), root='./')
-        except HTTPError, e:
+        except HTTPResponse, e:
             self.assertEqual(open(__file__,'rb').read(), e.output.read())
 
 

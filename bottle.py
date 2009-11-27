@@ -128,24 +128,26 @@ class BottleException(Exception):
     pass
 
 
-class HTTPError(BottleException):
-    """
-    A way to break the execution and instantly jump to an error handler.
-    """
-    def __init__(self, status, text):
-        self.output = text
-        self.http_status = int(status)
-        BottleException.__init__(self, status, text)
+class HTTPResponse(BottleException):
+    """ Used to break execution and imediately finish the response """
+    def __init__(self, status=200, output=''):
+        super(BottleException, self).__init__(status, output)
+        self.status = int(status)
+        self.output = output
 
-    def __repr__(self):
-        return 'HTTPError(%d,%s)' % (self.http_status, repr(self.output))
+
+class HTTPError(HTTPResponse):
+    """ Used to generate an error page """
+    def __init__(self, code=500, message='Unknown Error', exception=None):
+        super(HTTPError, self).__init__(code, message)
+        self.exception = exception
 
     def __str__(self):
-        return HTTP_ERROR_TEMPLATE % {
-            'status' : self.http_status,
+        return ERROR_PAGE_TEMPLATE % {
+            'status' : self.status,
             'url' : request.path,
-            'error_name' : HTTP_CODES.get(self.http_status, 'Unknown').title(),
-            'error_message' : ''.join(self.output)
+            'error_name' : HTTP_CODES.get(self.status, 'Unknown').title(),
+            'error_message' : repr(self.output)
         }
 
 
@@ -256,19 +258,52 @@ class Bottle(object):
             return handler
         return wrapper
 
+    def handle(self, url, method, catchall=True):
+        """ Run the matching handler. Return handler output, HTTPResponse or
+        HTTPError. If catchall is true, all exceptions thrown within a
+        handler function are converted to HTTPError(500). """
+
+        if not self.serve:
+            return HTTPError(503, "Server stopped")
+
+        handler, args = self.match_url(request.path, request.method)
+        if not handler:
+            return HTTPError(404, "Not found")
+
+        try:
+            return handler(**args)
+        except HTTPResponse, e:
+            return e
+        except (KeyboardInterrupt, SystemExit, MemoryError):
+            raise
+        except Exception, e:
+            if not self.catchall:
+                raise
+            err = "Unhandled Exception: %s\n" % (repr(e))
+            if DEBUG:
+                err += '\n\nTraceback:\n' + traceback.format_exc(10)
+            request.environ['wsgi.errors'].write(err)
+            return HTTPError(500, err, e)
+
     def cast(self, out, jsondump = None):
+        """ Try to cast the input into something WSGI compatible. Correct
+        HTTP headers and status codes when possible. Empty output on HEAD
+        requests.
+        Support: False, str, unicode, list(unicode), file, dict, list(dict),
+                 HTTPResponse and HTTPError
         """
-        Cast the output to an iterable of strings or something WSGI can handle.
-        Set Content-Type and Content-Length when possible. Then clear output
-        on HEAD requests.
-        Supports: False, str, unicode, list(unicode), file, dict, list(dict)
-        """
+
+        if isinstance(out, HTTPResponse):
+            response.status = out.status
+            if isinstance(out, HTTPError):
+                out = self.error_handler.get(out.status, str)(out)
+            else:
+                out = out.output
+
         if not out:
             response.header['Content-Length'] = '0'
             return []
-        if isinstance(out, HTTPError):
-            response.status = out.http_status
-            out = self.error_handler.get(response.status, str)(out)
+
         if isinstance(out, types.StringType):
             out = [out]
         elif isinstance(out, unicode):
@@ -282,47 +317,43 @@ class Bottle(object):
           or jsondump and isinstance(out, list) and isinstance(out[0], dict):
                 out = [jsondump(out)]
                 response.content_type = 'application/json'
+
         if isinstance(out, list) and len(out) == 1:
             response.header['Content-Length'] = str(len(out[0]))
+
+        if response.status in (100, 101, 204, 304) or request.method == 'HEAD':
+            out = [] # rfc2616 section 4.3
+
         if not hasattr(out, '__iter__'):
             raise TypeError('Request handler for route "%s" returned [%s] '
-            'which is not iterable.' % (request.path, type(out).__name__))
+                'which is not iterable.' % (request.path, type(out).__name__))
+
         return out
 
     def __call__(self, environ, start_response):
         """ The bottle WSGI-interface. """
-        request.bind(environ, self)
-        response.bind(self)
-        try: # Unhandled Exceptions
-            try: # Bottle Error Handling
-                if not self.serve:
-                    abort(503, "Server stopped")
-                handler, args = self.match_url(request.path, request.method)
-                if not handler:
-                    raise HTTPError(404, "Not found")
-                output = handler(**args)
-            except HTTPError, e:
-                output = e
-            output = self.cast(output, jsondump=self.jsondump)
-            if response.status in (100, 101, 204, 304)\
-            or request.method == 'HEAD':
-                output = [] # rfc2616 section 4.3
+        try:
+            request.bind(environ, self)
+            response.bind(self)
+            out = self.handle(request.path, request.method)
+            out = self.cast(out, self.jsondump)
+            status = '%d %s' % (response.status, HTTP_CODES[response.status])
+            start_response(status, response.wsgiheaders())
+            return out
         except (KeyboardInterrupt, SystemExit, MemoryError):
             raise
         except Exception, e:
-            response.status = 500
-            if self.catchall:
-                err = "Unhandled Exception: %s\n" % (repr(e))
-                if DEBUG:
-                    err += TRACEBACK_TEMPLATE % traceback.format_exc(10)
-                output = [str(HTTPError(500, err))]
-                request._environ['wsgi.errors'].write(err)
-            else:
+            if not self.catchall:
                 raise
-        status = '%d %s' % (response.status, HTTP_CODES[response.status])
-        start_response(status, response.wsgiheaders())
-        return output
-
+            err = "<h1>Critial error while processing request: %s</h1>" %\
+                  environ.get('PATH_INFO', '/')
+            if DEBUG:
+                err += '<h2>Error:</h2>\n<pre>%s</pre>\n'\
+                       '<h2>Traceback:</h2>\n<pre>%s</pre>\n' %\
+                       (repr(e), traceback.format_exc(10))
+            environ['wsgi.errors'].write(err)
+            start_response('500 INTERNAL SERVER ERROR', [])
+            return [err]
 
 
 class Request(threading.local):
@@ -441,7 +472,6 @@ class Request(threading.local):
         dec = cookie_decode(value, sec)
         return dec or value
 
-    
 
 class Response(threading.local):
     """ Represents a single response using thread-local namespace. """
@@ -565,9 +595,9 @@ def static_file(filename, root, guessmime = True, mimetype = None):
     if 'Content-Length' not in response.header:
         response.header['Content-Length'] = str(stats.st_size)
     if request.method == 'HEAD':
-        return HTTPError(200, '')
+        return HTTPResponse(200, '')
     else:
-        return HTTPError(200, open(filename, 'rb'))
+        return HTTPResponse(200, open(filename, 'rb'))
 
 
 def parse_date(ims):
@@ -1124,8 +1154,7 @@ HTTP_CODES = {
     505: 'HTTP VERSION NOT SUPPORTED',
 }
 
-HTTP_ERROR_TEMPLATE = """
-<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
+ERROR_PAGE_TEMPLATE = """<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
 <html>
     <head>
         <title>Error %(status)d: %(error_name)s</title>
@@ -1138,13 +1167,6 @@ HTTP_ERROR_TEMPLATE = """
         </pre>
     </body>
 </html>
-"""
-
-TRACEBACK_TEMPLATE = """
-<h2>Traceback:</h2>
-<pre>
-%s
-</pre>
 """
 
 request = Request()
