@@ -586,8 +586,8 @@ def cookie_encode(data, key):
 def cookie_decode(data, key):
   ''' Verify and decode an encoded string. Return an object or None'''
   if cookie_is_encoded(data):
-    sig, msg = data[1:].split('?',1)
-    if sig == hmac.new(key, msg).digest().encode('base64').strip():
+    sig, msg = data.split('?',1)
+    if sig[1:] == hmac.new(key, msg).digest().encode('base64').strip():
       return cPickle.loads(msg.decode('base64'))
   return None 
 
