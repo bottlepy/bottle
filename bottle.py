@@ -487,11 +487,15 @@ class Response(threading.local):
         self.error = None
         self.app = app
 
+    def add_header(self, key, value):
+        self.header.add_header(key.title(), str(value))
+
     def wsgiheaders(self):
         ''' Returns a wsgi conform list of header/value pairs '''
-        for c in self.COOKIES.itervalues():
-            self.header.add_header('Set-Cookie', c.OutputString())
-        return [(h.title(), str(v)) for h, v in self.header.items()]
+        for key in self.COOKIES.keys():
+            self.add_header('Set-Cookie', self.COOKIES[key].OutputString())
+            del self.COOKIES[key]
+        return self.header_list
 
     @property
     def COOKIES(self):
