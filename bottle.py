@@ -323,6 +323,8 @@ class Bottle(object):
         self.error_handler = {}
         if autojson and json_dumps:
             self.jsondump = json_dumps
+        else:
+            self.jsondump = False
         self.catchall = catchall
         self.config = dict()
         self.serve = True
@@ -608,9 +610,8 @@ class Response(threading.local):
 
     def wsgiheaders(self):
         ''' Returns a wsgi conform list of header/value pairs '''
-        for key in self.COOKIES.keys():
-            self.add_header('Set-Cookie', self.COOKIES[key].OutputString())
-            del self.COOKIES[key]
+        for c in self.COOKIES.values():
+            self.add_header('Set-Cookie', c.OutputString())
         return self.header_list
 
     @property
