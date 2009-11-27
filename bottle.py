@@ -604,11 +604,15 @@ class Response(threading.local):
         self.error = None
         self.app = app
 
+    def add_header(self, key, value):
+        self.header.add_header(key.title(), str(value))
+
     def wsgiheaders(self):
         ''' Returns a wsgi conform list of header/value pairs '''
-        for c in self.COOKIES.itervalues():
-            self.header.add_header('Set-Cookie', c.OutputString())
-        return [(h.title(), str(v)) for h, v in self.header.items()]
+        for key in self.COOKIES.keys():
+            self.add_header('Set-Cookie', self.COOKIES[key].OutputString())
+            del self.COOKIES[key]
+        return self.header_list
 
     @property
     def COOKIES(self):
@@ -678,7 +682,7 @@ def send_file(*a, **k): #BC 0.6.4
     raise static_file(*a, **k)
 
 
-def static_file(filename, root, guessmime = True, mimetype = None):
+def static_file(filename, root, guessmime = True, mimetype = None, download = False):
     """ Opens a file in a save way and returns a HTTPError object with status
         code 200, 305, 401 or 404. Sets Content-Type, Content-Length and
         Last-Modified header. Obeys If-Modified-Since header and HEAD requests.
@@ -697,6 +701,13 @@ def static_file(filename, root, guessmime = True, mimetype = None):
         mimetype = mimetypes.guess_type(filename)[0]
     if not mimetype: mimetype = 'text/plain'
     response.content_type = mimetype
+    
+    if download == True:
+        request.header['Content-Disposition'] = 'attachment; filename=%s' %\
+        os.path.basename(filename)
+    elif download:
+        request.header['Content-Disposition'] = 'attachment; filename=%s' %\
+        download
 
     stats = os.stat(filename)
     if 'Last-Modified' not in response.header:
