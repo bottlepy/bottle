@@ -176,7 +176,7 @@ class Router(object):
                         r'(?P<escape>\\)?'
                         r':(?P<name>[a-zA-Z_]+)?'
                         r'(#(?P<rex>.*?)#)?')
-        
+
     def __init__(self):
         self.static = dict()
         self.dynamic = []
@@ -296,11 +296,11 @@ class Router(object):
                 raise RouteBuildError("Missing parameter '%s' in route '%s'"
                     % (key, route_name))
             if rex and not key:
-                raise RouteBuildError("Anonymous pattern found. Can't generate"
-                    "the route '%s'." % route_name)
+                raise RouteBuildError("Anonymous pattern found. Can't "
+                    "generate the route '%s'." % route_name)
             #TODO: Do this in add()
             if rex and not re.match('^%s$' % rex.pattern, args[key]):
-                raise RouteBuildError("Parameter '%s' does not match pattern"
+                raise RouteBuildError("Parameter '%s' does not match pattern "
                     "for route '%s': '%s'" % (key, route_name, rex.pattern))
             if key:
                 out.append(args[key])
