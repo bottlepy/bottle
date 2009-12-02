@@ -880,7 +880,7 @@ class PasteServer(ServerAdapter):
         from paste import httpserver
         from paste.translogger import TransLogger
         app = TransLogger(handler)
-        httpserver.serve(app, host=self.host, port=str(self.port))
+        httpserver.serve(app, host=self.host, port=str(self.port), **self.options)
 
 
 class FapwsServer(ServerAdapter):
