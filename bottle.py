@@ -89,6 +89,7 @@ import subprocess
 import thread
 import tempfile
 import hmac
+import base64
 
 if sys.version_info >= (3,0,0):
     # See Request.POST
@@ -746,8 +747,8 @@ def parse_date(ims):
 
 def cookie_encode(data, key):
     ''' Encode and sign a pickle-able object. Return a string '''
-    msg = pickle.dumps(data, -1).encode('base64').strip()
-    sig = hmac.new(key, msg).digest().encode('base64').strip()
+    msg = base64.b64encode(pickle.dumps(data, -1))
+    sig = base64.b64encode(hmac.new(key, msg).digest())
     return '!%s?%s' % (sig, msg)
 
 
@@ -755,8 +756,8 @@ def cookie_decode(data, key):
   ''' Verify and decode an encoded string. Return an object or None'''
   if cookie_is_encoded(data):
     sig, msg = data.split('?',1)
-    if sig[1:] == hmac.new(key, msg).digest().encode('base64').strip():
-      return pickle.loads(msg.decode('base64'))
+    if sig[1:] == base64.b64encode(hmac.new(key, msg).digest()):
+      return pickle.loads(base64.b64decode(msg))
   return None 
 
 

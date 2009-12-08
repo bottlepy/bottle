@@ -2,6 +2,7 @@ import unittest
 from bottle import Jinja2Template
 
 class TestJinja2Template(unittest.TestCase):
+
     def test_string(self):
         """ Templates: Jinja2 string"""
         t = Jinja2Template('start {{var}} end').render(var='var')
@@ -30,13 +31,11 @@ class TestJinja2Template(unittest.TestCase):
         t = Jinja2Template(name='jinja2_inherit', lookup=['./views/']).render()
         self.assertEqual('begin abc end', ''.join(t))
 
-suite = unittest.TestSuite()
 try:
-  import jinja2; del jinja2
-  suite.addTest(unittest.makeSuite(TestJinja2Template))
+  import jinja2
 except ImportError:
   print "WARNING: No Jinja2 template support. Skipping tests."
-
+  del TestJinja2Template
 
 if __name__ == '__main__':
     unittest.main()

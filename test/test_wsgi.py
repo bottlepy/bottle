@@ -181,9 +181,5 @@ class TestDecorators(ServerTestBase):
         self.assertEqual(u'xxx'.encode('utf8'), self.urlopen('/3').read())
 
 
-suite = unittest.TestSuite()
-suite.addTest(unittest.makeSuite(TestWsgi))
-suite.addTest(unittest.makeSuite(TestDecorators))
-
 if __name__ == '__main__':
     unittest.main()

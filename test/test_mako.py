@@ -34,13 +34,11 @@ class TestMakoTemplate(unittest.TestCase):
         t = MakoTemplate('<%inherit file="views/mako_base.tpl"/>\nc${var}c\n', lookup=['./']).render(var='v')
         self.assertEqual('o\ncvc\no\n', ''.join(t))
 
-suite = unittest.TestSuite()
 try:
   import mako
-  suite.addTest(unittest.makeSuite(TestMakoTemplate))
 except ImportError:
   print "WARNING: No Mako template support. Skipping tests."
-
+  del TestMakoTemplate
 
 if __name__ == '__main__':
     unittest.main()

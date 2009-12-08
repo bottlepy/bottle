@@ -67,10 +67,13 @@ class TestSimpleTemplate(unittest.TestCase):
         """ Templates: Exceptions"""
         self.assertRaises(SyntaxError, SimpleTemplate, '%for badsyntax')
         self.assertRaises(IndexError, SimpleTemplate('{{i[5]}}').render, i=[0])
+    
+    def test_winbreaks(self):
+        """ Templates: Test windows line breaks """
+        t = SimpleTemplate('%var+=1\r\n{{var}}\n\r').render(var=5)
+        self.assertEqual('6', ''.join(t))
 
-
-suite = unittest.TestSuite()
-suite.addTest(unittest.makeSuite(TestSimpleTemplate))
+       
 
 if __name__ == '__main__':
     unittest.main()

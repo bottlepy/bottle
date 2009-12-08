@@ -5,7 +5,6 @@ from bottle import request, response
 import tools
 import wsgiref.util
 
-
 class TestEnviron(unittest.TestCase):
     def test_path(self):
         """ Environ: PATH_INFO """ 
@@ -155,11 +154,6 @@ class TestMultipart(unittest.TestCase):
         self.assertEqual(2, len(request.POST['field2']))
         self.assertTrue('value2' in request.POST['field2'])
         self.assertTrue('value3' in request.POST['field2'])
-
- 
-suite = unittest.TestSuite()
-suite.addTest(unittest.makeSuite(TestEnviron))
-suite.addTest(unittest.makeSuite(TestMultipart))
 
 if __name__ == '__main__':
     unittest.main()

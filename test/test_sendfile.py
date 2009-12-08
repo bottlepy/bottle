@@ -89,10 +89,6 @@ class TestSendFile(unittest.TestCase):
 
 
 
-suite = unittest.TestSuite()
-suite.addTest(unittest.makeSuite(TestSendFile))
-suite.addTest(unittest.makeSuite(TestDateParser))
-
 if __name__ == '__main__':
     unittest.main()
 
