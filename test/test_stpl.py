@@ -70,8 +70,8 @@ class TestSimpleTemplate(unittest.TestCase):
     
     def test_winbreaks(self):
         """ Templates: Test windows line breaks """
-        t = SimpleTemplate('%var+=1\r\n{{var}}\n\r').render(var=5)
-        self.assertEqual('6', ''.join(t))
+        t = SimpleTemplate('%var+=1\r\n{{var}}\r\n').render(var=5)
+        self.assertEqual('6\r\n', ''.join(t))
 
        
 

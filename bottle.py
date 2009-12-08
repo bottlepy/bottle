@@ -1112,6 +1112,7 @@ class SimpleTemplate(BaseTemplate):
                 code.append(' ' * indent + "_stdout.append(%s)" % repr(''.join(strbuffer)))
                 code.append((' ' * indent + '\n') * len(strbuffer)) # to preserve line numbers 
                 del strbuffer[:]
+        def cadd(line): code.append(" " * indent + line.strip() + '\n')
         for line in template.splitlines(True):
             m = self.re_python.match(line)
             if m:
@@ -1120,30 +1121,28 @@ class SimpleTemplate(BaseTemplate):
                 if keyword:
                     if keyword in self.dedent_keywords:
                         indent -= 1
-                    code.append(" " * indent + line[m.start(1):])
+                    cadd(line[m.start(1):])
                     indent += 1
                 elif subtpl:
                     tmp = line[m.end(2):].strip().split(None, 1)
                     if not tmp:
-                      code.append(' ' * indent + "_stdout.extend(_base)\n")
+                      cadd("_stdout.extend(_base)")
                     else:
                       name = tmp[0]
                       args = tmp[1:] and tmp[1] or ''
                       if name not in self.includes:
                         self.includes[name] = SimpleTemplate(name=name, lookup=self.lookup)
                       if subtpl == 'include':
-                        code.append(' ' * indent + 
-                                    "_ = _includes[%s].execute(_stdout, %s)\n"
-                                    % (repr(name), args))
+                        cadd("_ = _includes[%s].execute(_stdout, %s)"
+                             % (repr(name), args))
                       else:
-                        code.append(' ' * indent + 
-                                    "_tpl['_rebase'] = (_includes[%s], dict(%s))\n"
-                                    % (repr(name), args))
+                        cadd("_tpl['_rebase'] = (_includes[%s], dict(%s))"
+                             % (repr(name), args))
                 elif end:
                     indent -= 1
-                    code.append(' ' * indent + '#' + line[m.start(3):])
+                    cadd('#' + line[m.start(3):])
                 elif statement:
-                    code.append(' ' * indent + line[m.start(4):])
+                    cadd(line[m.start(4):])
             else:
                 splits = self.re_inline.split(line) # text, (expr, text)*
                 if len(splits) == 1:
@@ -1153,7 +1152,7 @@ class SimpleTemplate(BaseTemplate):
                     for i in range(1, len(splits), 2):
                         splits[i] = PyStmt(splits[i])
                     splits = [x for x in splits if bool(x)]
-                    code.append(' ' * indent + "_stdout.extend(%s)\n" % repr(splits))
+                    cadd("_stdout.extend(%s)" % repr(splits))
         flush()
         return ''.join(code)
 
