@@ -105,7 +105,7 @@ As easy as using a `dict()`
 Bottle includes a simple and lightning fast template engine
 
     #!Python
-    @get('/hello/template/:names')
+    @route('/hello/template/:names')
     def pretty_hello(names):
        names = names.split(',')
        return template('hello', title='Hello World', names=names)

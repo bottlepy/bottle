@@ -17,11 +17,17 @@ class Page(object):
 
     def __init__(self, name):
         self.name = name
-        self.title = name.replace('_',' ').title()
         self._text = ''
         self._html = ''
         self.filename  = os.path.join(self.pagedir,  self.name+'.md')
         self.cachename = os.path.join(self.cachedir, self.name+'.html')
+
+    @property
+    def title(self):
+        m = re.search(r'^#\s+(.+)$|^(.+)\n=+', self.raw, re.MULTILINE)
+        if not m:
+            return 'No Title'
+        return filter(None, m.groups())[0].strip()
 
     @property
     def rawfile(self):
@@ -46,28 +52,41 @@ class Page(object):
         return self.cachefile.read()
 
     @property
-    def mtime(self):
-        return datetime.datetime.utcfromtimestamp(os.path.getmtime(self.filename))
-
-    @property
-    def ctime(self):
-        return datetime.datetime.utcfromtimestamp(os.path.getctime(self.filename))
-
-    @property
     def preview(self):
-        buffer = []
+        out = []
         for line in self.raw.splitlines():
              if len(line) > 32 and not line.startswith('#') \
              and not line.startswith(' '):
-                 buffer.append(line.strip())
+                 out.append(line.strip())
              elif buffer:
                  break
-        return ' '.join(buffer)
+        return ' '.join(out)
 
     def exists(self):
         return os.path.exists(self.filename)
 
+    @classmethod
+    def yield_blogposts(cls):
+        for post in glob.glob(os.path.join(cls.pagedir, '*.md')):
+            name = os.path.basename(post)[:-3]
+            if re.match(r'20[0-9]{2}-[0-9]{2}-[0-9]{2}_', name):
+                yield Page(name)
 
+    @property
+    def blogtime(self):
+        try:
+            date, name = self.name.split('_', 1)
+            year, month, day = map(int, date.split('-'))
+            return datetime.date(year, month, day)
+        except ValueError:
+            raise AttributeError("This page is not a blogpost")
+
+    def has_blogtime(self):
+        try:
+            self.blogtime
+            return True
+        except AttributeError:
+            return False
 
 # Static files
 
@@ -78,7 +97,7 @@ def static(filename):
 # Bottle Pages
 
 @route('/')
-@route('/page/:name#[a-zA-Z0-9_]{3,128}#')
+@route('/page/:name')
 @view('pagemask')
 def page(name='start'):
     p = Page(name)
@@ -92,22 +111,16 @@ def page(name='start'):
 @view('rss')
 def blogrss():
     response.content_type = 'xml/rss'
-    posts = []
-    for post in glob.glob(os.path.join(Page.pagedir, 'blog_*.md')):
-        name = os.path.basename(post).split('.',1)[0]
-        posts.append(Page(name))
-    posts.sort(key=lambda x: x.mtime, reverse=True)
+    posts = [post for post in Page.yield_blogposts()]
+    posts.sort(key=lambda x: x.blogtime, reverse=True)
     return dict(posts=posts, escape=cgi.escape)
 
 
 @route('/blog')
 @view('blogposts')
 def bloglist():
-    posts = []
-    for post in glob.glob(os.path.join(Page.pagedir, 'blog_*.md')):
-        name = os.path.basename(post).split('.',1)[0]
-        posts.append(Page(name))
-    posts.sort(key=lambda x: x.mtime, reverse=True)
+    posts = [post for post in Page.yield_blogposts()]
+    posts.sort(key=lambda x: x.blogtime, reverse=True)
     return dict(posts=posts, escape=cgi.escape)
 
 

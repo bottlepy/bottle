@@ -10,7 +10,7 @@
         <title>{{post.title}}</title>
         <link>{{link}}</link>
         <guid isPermaLink="true">{{link}}</guid>
-        <pubDate>{{post.ctime.strftime('%a, %d %b %Y %H:%M:%S +0000')}}</pubDate>
+        <pubDate>{{post.blogtime.strftime('%a, %d %b %Y %H:%M:%S +0000')}}</pubDate>
         <description>{{escape(post.preview.encode('utf8'))}}</description>
       </item>
     %end
