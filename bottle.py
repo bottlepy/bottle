@@ -576,6 +576,10 @@ class Request(threading.local):
         return self._body
 
     @property
+    def auth(self): #TODO: Tests and docs. Add support for digest. namedtuple?
+        return parse_auth(self.environ.get('HTTP_AUTHORIZATION'))
+
+    @property
     def COOKIES(self):
         """ Returns a dict with COOKIES. """
         if self._COOKIES is None:
@@ -744,6 +748,14 @@ def parse_date(ims):
     except (ValueError, IndexError):
         return None
 
+def parse_auth(header):
+    try:
+        method, data = header.split(None, 1)
+        if method.lower() == 'basic':
+            name, pwd = base64.b64decode(data).split(':', 1)
+            return name, pwd
+    except (KeyError, ValueError, TypeError), a:
+        return None
 
 def cookie_encode(data, key):
     ''' Encode and sign a pickle-able object. Return a string '''
