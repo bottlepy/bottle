@@ -6,7 +6,7 @@ import urllib2
 from StringIO import StringIO
 import thread
 import time
-from tools import ServerTestBase
+from tools import ServerTestBase, tob
 
 
 class TestWsgi(ServerTestBase):
@@ -18,7 +18,7 @@ class TestWsgi(ServerTestBase):
         def test(): return 'test'
         self.assertEqual(404, self.urlopen('/not/found').code)
         self.assertEqual(404, self.urlopen('/', post="var=value").code)
-        self.assertEqual(u'test'.encode('utf8'), self.urlopen('/').read())
+        self.assertEqual(tob('test'), self.urlopen('/').read())
 
     def test_post(self):
         """ WSGI: POST routes"""
@@ -26,7 +26,7 @@ class TestWsgi(ServerTestBase):
         def test(): return 'test'
         self.assertEqual(404, self.urlopen('/not/found').code)
         self.assertEqual(404, self.urlopen('/').code)
-        self.assertEqual(u'test'.encode('utf8'), self.urlopen('/', post="var=value").read())
+        self.assertEqual(tob('test'), self.urlopen('/', post="var=value").read())
 
     def test_headget(self):
         """ WSGI: HEAD routes and GET fallback"""
@@ -38,10 +38,10 @@ class TestWsgi(ServerTestBase):
         self.assertEqual(404, self.urlopen('/head').code)
         # HEAD -> HEAD
         self.assertEqual(200, self.urlopen('/head', method='HEAD').code)
-        self.assertEqual(u''.encode('utf8'), self.urlopen('/head', method='HEAD').read())
+        self.assertEqual(tob(''), self.urlopen('/head', method='HEAD').read())
         # HEAD -> GET
         self.assertEqual(200, self.urlopen('/get', method='HEAD').code)
-        self.assertEqual(u''.encode('utf8'), self.urlopen('/get', method='HEAD').read())
+        self.assertEqual(tob(''), self.urlopen('/get', method='HEAD').read())
 
     def test_500(self):
         """ WSGI: Exceptions within handler code (HTTP 500) """
@@ -63,13 +63,13 @@ class TestWsgi(ServerTestBase):
         def test2(): return 'test'
         self.assertEqual(404, self.urlopen('/not/found').code)
         self.assertEqual(200, self.urlopen('/').code)
-        self.assertEqual(u'test'.encode('utf8'), self.urlopen('/').read())
+        self.assertEqual(tob('test'), self.urlopen('/').read())
         @bottle.default()
         def test(): return 'default'
         self.assertEqual(200, self.urlopen('/not/found').code)
-        self.assertEqual(u'default'.encode('utf8'), self.urlopen('/not/found').read())
+        self.assertEqual(tob('default'), self.urlopen('/not/found').read())
         self.assertEqual(200, self.urlopen('/').code)
-        self.assertEqual(u'test'.encode('utf8'), self.urlopen('/').read())
+        self.assertEqual(tob('test'), self.urlopen('/').read())
 
     def test_401(self):
         """ WSGI: abort(401, '') (HTTP 401) """
@@ -81,7 +81,7 @@ class TestWsgi(ServerTestBase):
             bottle.response.status = 200
             return str(type(e))
         self.assertEqual(200, self.urlopen('/').code)
-        self.assertEqual(u"<class 'bottle.HTTPError'>".encode('utf8'), self.urlopen('/').read())
+        self.assertEqual(tob("<class 'bottle.HTTPError'>"), self.urlopen('/').read())
 
     def test_307(self):
         """ WSGI: redirect (HTTP 307) """
@@ -90,22 +90,22 @@ class TestWsgi(ServerTestBase):
         @bottle.route('/yes')
         def test2(): return 'yes'
         self.assertEqual(200, self.urlopen('/').code)
-        self.assertEqual(u'yes'.encode('utf8'), self.urlopen('/').read())
+        self.assertEqual(tob('yes'), self.urlopen('/').read())
 
     def test_casting(self):
         """ WSGI: Output Casting (strings an lists) """
         @bottle.route('/str')
         def test(): return 'test'
-        self.assertEqual(u'test'.encode('utf8'), self.urlopen('/str').read())
+        self.assertEqual(tob('test'), self.urlopen('/str').read())
         @bottle.route('/list')
         def test2(): return ['t','e','st']
-        self.assertEqual(u'test'.encode('utf8'), self.urlopen('/list').read())
+        self.assertEqual(tob('test'), self.urlopen('/list').read())
         @bottle.route('/empty')
         def test3(): return []
-        self.assertEqual(u''.encode('utf8'), self.urlopen('/empty').read())
+        self.assertEqual(tob(''), self.urlopen('/empty').read())
         @bottle.route('/none')
         def test4(): return None
-        self.assertEqual(u''.encode('utf8'), self.urlopen('/none').read())
+        self.assertEqual(tob(''), self.urlopen('/none').read())
         @bottle.route('/bad')
         def test5(): return 12345
         self.assertEqual(500, self.urlopen('/bad').code)
@@ -114,7 +114,7 @@ class TestWsgi(ServerTestBase):
         """ WSGI: Output Casting (files) """
         @bottle.route('/file')
         def test(): return StringIO('test')
-        self.assertEqual(u'test'.encode('utf8'), self.urlopen('/file').read())
+        self.assertEqual(tob('test'), self.urlopen('/file').read())
 
 
     def test_unicode(self):
@@ -135,7 +135,7 @@ class TestWsgi(ServerTestBase):
         """ WSGI: Autojson feature """
         @bottle.route('/json')
         def test(): return {'a': 1}
-        self.assertEqual(ur'{"a":1}'.encode('utf8'), u''.encode('utf8').join(self.urlopen('/json').read().split()))
+        self.assertEqual(tob(r'{"a":1}'), tob('').join(self.urlopen('/json').read().split()))
         self.assertEqual('application/json', self.urlopen('/json').info().get('Content-Type',''))
 
     def test_cookie(self):
@@ -165,7 +165,7 @@ class TestDecorators(ServerTestBase):
         @bottle.view('stpl_t2main')
         def test():
             return dict(content='1234')
-        result=u'+base+\n+main+\n!1234!\n+include+\n-main-\n+include+\n-base-\n'.encode('utf8')
+        result = tob('+base+\n+main+\n!1234!\n+include+\n-main-\n+include+\n-base-\n')
         self.assertEqual('text/html; charset=UTF-8', self.urlopen('/tpl').info().get('Content-Type',''))
         self.assertEqual(result, self.urlopen('/tpl').read())
     
@@ -178,7 +178,7 @@ class TestDecorators(ServerTestBase):
         self.assertEqual(403, self.urlopen('/noint').code)
         self.assertEqual(403, self.urlopen('/').code)
         self.assertEqual(200, self.urlopen('/5').code)
-        self.assertEqual(u'xxx'.encode('utf8'), self.urlopen('/3').read())
+        self.assertEqual(tob('xxx'), self.urlopen('/3').read())
 
 
 if __name__ == '__main__':

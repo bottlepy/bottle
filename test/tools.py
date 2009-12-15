@@ -17,6 +17,12 @@ except:
 import mimetypes
 import uuid
 
+def tob(data):
+  if isinstance(data, unicode):
+    return data.encode('utf8')
+  else:
+    return data
+
 class MethodRequest(urllib2.Request):
     ''' Used to create HEAD/PUT/DELETE/... requests with urllib2 '''
     def set_method(self, method):
