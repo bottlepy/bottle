@@ -813,10 +813,28 @@ def validate(**vkargs):
 
 
 def route(url, **kargs):
-    """
-    Decorator for request handler. Same as add_route(url, handler, **kargs).
-    """
+    ''' Decorator for requests routes '''
     return default_app().route(url, **kargs)
+
+
+def get(url, **kargs):
+    ''' Decorator for GET requests routes '''
+    return default_app().route(url, method='GET', **kargs)
+
+
+def post(url, **kargs):
+    ''' Decorator for POST requests routes '''
+    return default_app().route(url, method='POST', **kargs)
+
+
+def put(url, **kargs):
+    ''' Decorator for PUT requests routes '''
+    return default_app().route(url, method='PUT', **kargs)
+
+
+def delete(url, **kargs):
+    ''' Decorator for DELETE requests routes '''
+    return default_app().route(url, method='DELETE', **kargs)
 
 
 def default():
@@ -824,7 +842,6 @@ def default():
     Decorator for request handler. Same as set_default(handler).
     """
     return default_app().default()
-
 
 def error(code=500):
     """
