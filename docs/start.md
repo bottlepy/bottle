@@ -1,38 +1,35 @@
-Bottle Web Framework
+Bottle: Python Web Framework
 ====================
 
 <div style="float: right; padding: 0px 0px 2em 2em"><img src="/bottle-logo.png" alt="Botle Logo" /></div>
 
-Bottle is a fast and simple [WSGI][wsgi]-framework for the [Python Programming Language][py]. It
-offers request dispatching with url parameter support ([routes](/page/docs#basic_routes)), [templates](/page/docs#templates), a build-in HTTP server and adapters for many third party
-WSGI/HTTP-server and template engines. All in a single file and with no dependencies other than the Python standard library.
+Bottle is a fast and simple [WSGI][] web-framework for [Python][py] packed into a single file with no external dependencies.
 
-  [wsgi]: http://www.wsgi.org/wsgi/
+### Core Features
+
+  * **Routes:** Mapping URLs to code with a simple but powerful pattern syntax.
+  * **Templates:** Fast build-in template engine and support for [mako][], [jinja2][] and [cheetah][] templates.
+  * **Server:** Build-in HTTP development server and support for [paste][], [fapws3][], [flup][], [cherrypy][] or any other [WSGI][] capable server.
+  * **No dependencies:** All in a single file and no dependencies other than the Python standard library.
+
+  [mako]: http://www.makotemplates.org/
+  [cheetah]: http://www.cheetahtemplate.org/
+  [jinja2]: http://jinja.pocoo.org/2/
+  [paste]: http://pythonpaste.org/
+  [fapws3]: http://github.com/william-os4y/fapws3
+  [flup]: http://trac.saddi.com/flup
+  [cherrypy]: http://www.cherrypy.org/
+  [WSGI]: http://www.wsgi.org/wsgi/
   [py]: http://python.org/
   [bottle-dl]: http://github.com/defnull/bottle/raw/master/bottle.py
 
-### Installation and Dependencies
+### Download / Install
 
 You can install the latest stable release with `easy_install -U bottle` or just download the newest [bottle.py][bottle-dl] and place it in your project directory. There are no (hard) dependencies other than the Python standard library. Bottle runs with **Python 2.5+ and 3.x** (using 2to3)
 
-<!--
-
-## News
-
-<ul id='newshere'><li><i>Loading...</i></li><li>&nbsp;</li><li>&nbsp;</li><li>&nbsp;</li><li>&nbsp;</li></ul>
-<script type="text/javascript">
-  $('#newshere').load('http://bottle.paws.de/news.html')
-</script>
-
--->
-
 ## Features and Examples
 
-### Small and Lightweight
-
-No installation or configuration required. No dependencies other than 
-the Python standard library. Just get a copy of bottle.py and start 
-coding! A basic "Hello World" application in Bottle looks like this:
+No installation or configuration required. No dependencies other than the Python standard library. Just get a copy of [bottle.py][bottle-dl], place it into your project directory and start coding.
 
     #!Python
     from bottle import route, run
@@ -43,23 +40,46 @@ coding! A basic "Hello World" application in Bottle looks like this:
     
     run(host='localhost', port=8080)
 
-That's it. Start it up and go to <http://localhost:8080/>.
+That's all. Run your code and visit [http://localhost:8080/](/localhost.png)
 
-### Nice looking URLs
+### Routes
 
-Extract data out of dynamic URLs with a simple route syntax.
+Use the `@route()` decorator to bind URLs to your handler functions. Named parameters may be used to produce nice looking URLs.
 
     #!Python
     @route('/hello/:name')
     def hello(name):
         return 'Hello, %s' % name
 
-Or use full featured regular expressions to do so.
+### Templates
+
+Bottle includes a simple and lightning fast template engine called *SimpleTemplate*. Just return a dictionary filled with template variables and pass a template name to the `@view` decorator.
 
     #!Python
-    @route('/friends/(?<name>(Alice|Bob))')
-    def friends(name):
-        return 'Hello, %s! Good to see you :)' % name
+    @route('/hello/template/:names')
+    @view('hello')
+    def template_hello(names):
+       names = names.split(',')
+       return dict(title='Hello World', names=names)
+
+And here is the template in "./views/hello.tpl":
+
+    #!html
+    <html>
+     <head>
+      <title>{{title}}</title>
+     </head>
+     <body>
+      %for name in names:
+        <p>Hello, <strong>{{name}}</strong></p>
+      %end
+     </body>
+    </html>
+
+Bottle makes it easy to switch to other template engines. [mako][], [jinja2][] and [cheetah][] are supported.
+
+    #!Python
+    from bottle import mako_view as view
 
 ### Static Files, Redirects and HTTP Errors
 
@@ -100,34 +120,6 @@ As easy as using a `dict()`
             response.COOKIES['name'] = name
         return 'OK'
 
-### Templates
-
-Bottle includes a simple and lightning fast template engine
-
-    #!Python
-    @route('/hello/template/:names')
-    def pretty_hello(names):
-       names = names.split(',')
-       return template('hello', title='Hello World', names=names)
-
-And here is the template:
-
-    #!html
-    <html>
-     <head>
-      <title>{{title}}</title>
-     </head>
-     <body>
-      %for name in names:
-        <p>Hello, <strong>{{name}}</strong></p>
-      %end
-     </body>
-    </html>
-
-Use [mako][] it you need more features
-
-    #!Python
-    from bottle import mako_template as template
 
 ### HTTP Server
 
@@ -137,8 +129,9 @@ Bottle has a HTTP Server build in but also supports [cherrypy][],
     #!Python
     from bottle import PasteServer
     run(server=PasteServer)
-
-
+    
+    
+   
 ### Non-Features and Known Bugs
 
 Bottle does **not** include (yet):
@@ -146,19 +139,6 @@ Bottle does **not** include (yet):
   * Models and ORMs: Choose your own (SQLAlchemy, Elixir)
   * HTML-Helper, Session, Identification and Authentication: Do it yourself
   * Scaffolding: No, sorry
-
-Some things don't work (yet):
-
-  * Multipart File Uploads do not work with Python 3.x because the cgi.FileStorage is broken.
-  
-[mako]: http://www.makotemplates.org/
-[cherrypy]: http://www.cherrypy.org/
-[flup]: http://trac.saddi.com/flup
-[paste]: http://pythonpaste.org/
-[fapws3]: http://github.com/william-os4y/fapws3
-
-
-
 
 
 ## Voices
