@@ -131,7 +131,7 @@ class BottleException(Exception):
 
 class HTTPResponse(BottleException):
     """ Used to break execution and imediately finish the response """
-    def __init__(self, status=200, output=''):
+    def __init__(self, output='', status=200):
         super(BottleException, self).__init__(status, output)
         self.status = int(status)
         self.output = output
@@ -140,7 +140,7 @@ class HTTPResponse(BottleException):
 class HTTPError(HTTPResponse):
     """ Used to generate an error page """
     def __init__(self, code=500, message='Unknown Error', exception=None):
-        super(HTTPError, self).__init__(code, message)
+        super(HTTPError, self).__init__(message, code)
         self.exception = exception
 
     def __str__(self):
@@ -349,6 +349,9 @@ class Bottle(object):
             handler, param = self.default_route, None
         return handler, param
 
+    def get_url(self, routename, **kargs):
+        pass
+
     def route(self, url, method='GET', **kargs):
         """
         Decorator for request handler.
@@ -511,7 +514,7 @@ class Request(threading.local):
             return max(0,int(self.environ.get('CONTENT_LENGTH', '0')))
         except ValueError:
             return 0
-
+            
     @property
     def GET(self):
         """ Get a dict with GET parameters. """
@@ -728,9 +731,9 @@ def static_file(filename, root, guessmime = True, mimetype = None, download = Fa
     if 'Content-Length' not in response.header:
         response.header['Content-Length'] = str(stats.st_size)
     if request.method == 'HEAD':
-        return HTTPResponse(200, '')
+        return HTTPResponse('')
     else:
-        return HTTPResponse(200, open(filename, 'rb'))
+        return HTTPResponse(open(filename, 'rb'))
 
 
 def parse_date(ims):
@@ -777,12 +780,18 @@ def cookie_is_encoded(data):
   ''' Verify and decode an encoded string. Return an object or None'''
   return bool(data.startswith('!') and '?' in data)
 
+def url(routename, **kargs):
+    """
+    Helper generates URLs out of anmed routes
+    """
+    return app().get_url(routename, **kargs)
 
 
 
 
 
 # Decorators
+#TODO: Replace default_app() with app()
 
 def validate(**vkargs):
     """
