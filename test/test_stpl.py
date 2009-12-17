@@ -19,9 +19,15 @@ class TestSimpleTemplate(unittest.TestCase):
         self.assertEqual('start var end\n', ''.join(t))
 
     def test_unicode(self):
-        """ Templates: Lookup by name """
+        """ Templates: Unicode variables """
         t = SimpleTemplate('start {{var}} end').render(var=u'äöü')
         self.assertEqual('start äöü end', ''.join(t))
+
+    def test_import(self):
+        """ Templates: import statement"""
+        t = '%from base64 import b64encode\nstart {{b64encode(var)}} end'
+        t = SimpleTemplate(t).render(var='var')
+        self.assertEqual('start dmFy end', ''.join(t))
 
     def test_data(self):
         """ Templates: Data representation """
