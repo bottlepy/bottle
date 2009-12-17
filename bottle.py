@@ -1100,7 +1100,7 @@ class TemplateError(HTTPError):
 
 
 class BaseTemplate(object):
-    def __init__(self, template='', name=None, filename=None, lookup=[]):
+    def __init__(self, template='', name=None, filename=None, lookup=[], encoding='utf-8'):
         """
         Create a new template.
         If a name is provided, but no filename and no template string, the
@@ -1112,6 +1112,7 @@ class BaseTemplate(object):
         self.filename = filename
         self.template = template
         self.lookup = lookup
+        self.encoding = encoding
         if self.name and not self.filename:
             for path in self.lookup:
                 fpath = os.path.join(path, self.name+'.tpl')
@@ -1232,7 +1233,7 @@ class SimpleTemplate(BaseTemplate):
         code = []
         self.includes = dict()
         class PyStmt(str):
-            def __repr__(self): return 'str(' + self + ')'
+            def __repr__(self): return '_str(' + self + ')'
         def flush(allow_nobreak=False):
             if len(strbuffer):
                 if allow_nobreak and strbuffer[-1].endswith("\\\\\n"):
@@ -1284,10 +1285,16 @@ class SimpleTemplate(BaseTemplate):
         flush()
         return ''.join(code)
 
+    def strencode(self, x):
+        if isinstance(x, unicode):
+            return x.encode(self.encoding)
+        return str(x)
+
     def execute(self, stdout, **args):
         args['_stdout'] = stdout
         args['_includes'] = self.includes
         args['_tpl'] = args
+        args['_str'] = self.strencode
         eval(self.co, args)
         if '_rebase' in args:
             subtpl, args = args['_rebase']
@@ -1413,6 +1420,9 @@ ERROR_PAGE_TEMPLATE = """<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
     </body>
 </html>
 """
+
+TRACEBACK_TEMPLATE = '<h2>Error:</h2>\n<pre>%s</pre>\n' \
+                     '<h2>Traceback:</h2>\n<pre>%s</pre>\n'
 
 request = Request()
 response = Response()

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import unittest
 from bottle import SimpleTemplate, TemplateError
 
@@ -16,6 +17,11 @@ class TestSimpleTemplate(unittest.TestCase):
         """ Templates: Lookup by name """
         t = SimpleTemplate(name='stpl_simple', lookup=['./views/']).render(var='var')
         self.assertEqual('start var end\n', ''.join(t))
+
+    def test_unicode(self):
+        """ Templates: Lookup by name """
+        t = SimpleTemplate('start {{var}} end').render(var=u'äöü')
+        self.assertEqual('start äöü end', ''.join(t))
 
     def test_data(self):
         """ Templates: Data representation """
@@ -70,7 +76,8 @@ class TestSimpleTemplate(unittest.TestCase):
     
     def test_winbreaks(self):
         """ Templates: Test windows line breaks """
-        t = SimpleTemplate('%var+=1\r\n{{var}}\r\n').render(var=5)
+        t = SimpleTemplate('%var+=1\r\n{{var}}\r\n')
+        t = t.render(var=5)
         self.assertEqual('6\r\n', ''.join(t))
 
        
