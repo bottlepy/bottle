@@ -50,6 +50,12 @@ class TestSimpleTemplate(unittest.TestCase):
         self.assertEqual('start\nTrue \nend', ''.join(t.render(i=True)))
         self.assertEqual('start\nend', ''.join(t.render(i=False)))
 
+    def test_onelineblocks(self):
+        """ Templates: one line code blocks """
+        t = SimpleTemplate("start\n%a=''\n%for i in l: a += str(i)\n{{a}}\nend")
+        self.assertEqual('start\n123\nend', ''.join(t.render(l=[1,2,3])))
+        self.assertEqual('start\n\nend', ''.join(t.render(l=[])))
+
     def test_nobreak(self):
         """ Templates: Nobreak statements"""
         t = SimpleTemplate("start\\\\\n%pass\nend")

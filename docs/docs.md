@@ -351,9 +351,17 @@ the result.
     def hello(name):
         return template('hello_template', username=name)
 
-This will load the template `hello_template.tpl` with the `username` variable set to the URL `:name` part and return the result as a string.
+The `@view` decorator does is another option:
 
-The `hello_template.tpl` file could look like this:
+    #!Python
+    @route('/hello/:name')
+    @view('hello_template')
+    def hello(name):
+        return dict(username=name)
+
+Both examples would load the template `hello_template.tpl` with the `username` variable set to the URL `:name` part and return the result as a string.
+
+The `hello_template.tpl` file looks this:
 
     #!html
     <h1>Hello {{username}}</h1>
@@ -365,7 +373,7 @@ The `hello_template.tpl` file could look like this:
 ## Template search path
 
 The list `bottle.TEMPLATE_PATH` is used to map template names to actual 
-file names. By default, this list contains `['./%s.tpl', './views/%s.tpl']`.
+file names. By default, this list contains `['./', './views/']`.
 
 
 
@@ -381,101 +389,71 @@ cache. Call `bottle.TEMPLATES.clear()` to do so.
 
 ## Template Syntax
 
-The template syntax is a very thin layer around the Python language. 
-It's main purpose is to ensure correct indention of blocks, so you 
-can format your template without worrying about indentions. Here is the 
-complete syntax description:
+The template syntax is a very thin layer around the Python language. It's main purpose is to ensure correct indention of blocks, so you can format your template without worrying about indentions. It does not prevent your template code from doing bad stuff, so **never ever** execute template code from untrusted sources. 
 
-  * `%...` starts a line of python code. You don't have to worry about indentions. Bottle handles that for you.
-  * `%end` closes a Python block opened by `%if ...`, `%for ...` or other block statements. Explicitly closing of blocks is required.
-  * `{{...}}` prints the result of the included python statement.
-  * `%include template_name optional_arguments` allows you to include other templates.
-  * Every other line is returned as text.
+Here is how it works:
 
-Example:
+  * Lines starting with `%` are interpreted as python code. You can intend these lines but you don't have to. The template engine handles the correct indention of python blocks.
+  * A line starting with `%end` closes a python block opened by `%if ...`, `%for ...` or other block statements. Explicitly closing of blocks is required.
+  * Every other line is just returned as text.
+  * `{{...}}` within a text line is replaced by the result of the included python statement. This is useful to include template variables.
+  * The two statements `%include` and `%rebase` have special meanings
+
+Here is a simple example, printing a HTML-list of names.
 
     #!html
-    %header = 'Test Template'
-    %items = [1,2,3,'fly']
-    %include http_header title=header, use_js=['jquery.js', 'default.js']
-    <h1>{{header.title()}}</h1>
     <ul>
-    %for item in items:
-      <li>
-        %if isinstance(item, int):
-          Zahl: {{item}}
-        %else:
-          %try:
-            Other type: ({{type(item).__name__}}) {{repr(item)}}
-          %except:
-            Error: Item has no string representation.
-          %end try-block (yes, you may add comments here)
-        %end
-        </li>
-      %end
+    % for name in names:
+      <li>{{name}}</li>
+    % end
     </ul>
-    %include http_footer
+
+    #!python
+    import template
+    print template('mylist', names=['Marc','Susan','Alice','Bob'])
+
+You can include other template using the `%include` statement followed by a template name and an optional parameter list. The include-line is replaced by the rendered result of the named sub-template.
+
+    #!html
+    <h1>{{title}}</h1>
+
+    #!html
+    %include header_template title='Hello World'
+    <p>
+      Hello World!
+    </p>
+
+The `%rebase` statement is the inverse of `%include` and is used to render a template into a surrounding base-template. This is similar to the 'Inheritance' feature found in most other template engines. The base-template can access all the parameters specified by the `%rebase` statement and use an empty `%include` statement to include the text returned by the rebased template.
+
+    #!html
+    <h1>{{title}}</h1>
+    <p>
+      %include
+    </p>
+
+    #!html
+    %rebase paragraph_template title='Hello World'
+    hello world!
+
+Ad a last thing: You can add `\\` to the end of a text line preceding a line of python code to suppress the line break.
+
+    #!html
+    List: \\
+    %for i in range(5):
+    {{i}} 
+    <br />
+
+    #!html
+    List: 1 2 3 4 5 <br />
+
+Thats all. 
 
 
 
 
 # Key/Value Databases
 
-<div style="color:darkred">Warning: The included key/value database is depreciated.</div> Please switch to a [real](http://code.google.com/p/redis/) [key](http://couchdb.apache.org/) [value](http://www.mongodb.org/) [database](http://docs.python.org/library/anydbm.html).
-
-Bottle (>0.4.6) offers a persistent key/value database accessible through the
-`bottle.db` module variable. You can use key or attribute syntax to store or
-fetch any pickle-able object to the database. Both 
-`bottle.db.bucket_name.key_name` and `bottle.db[bucket_name][key_name]` 
-will work.
-
-Missing buckets are created on demand. You don't have to check for 
-their existence before using them. Just be sure to use alphanumeric 
-bucket-names.
-
-The bucket objects behave like mappings (dictionaries), except that 
-only strings are allowed for keys and values must be pickle-able. 
-Printing a bucket object doesn't print the keys and values, and the 
-`items()` and `values()` methods are not supported. Missing keys will raise 
-`KeyError` as expected.
-
-
-
-
-## Persistence
-During a request live-cycle, all changes are cached in thread-local memory. At
-the end of the request, the changes are saved automatically so the next request
-will have access to the updated values. Each bucket is stored in a separate file
-in `bottle.DB_PATH`. Be sure to allow write-access to this path and use bucket
-names that are allowed in filenames.
-
-
-
-
-## Race conditions
-You don't have do worry about file corruption but race conditions are still a
-problem in multi-threaded or forked environments. You can call
-`bottle.db.save()` or `botle.db.bucket_name.save()` to flush the thread-local
-memory cache to disk, but there is no way to detect database changes made in
-other threads until these threads call `bottle.db.save()` or leave the current
-request cycle.
-
-
-
-
-## Example
-
-    #!Python
-    from bottle import route, db
-    @route('/db/counter')
-    def db_counter():
-        if 'hits' not in db.counter:
-            db.counter.hits = 0
-        db['counter']['hits'] += 1
-        return "Total hits: %d!" % db.counter.hits
-
-
-
+<div style="color:darkred">Warning: The included key/value database is depreciated since 0.6.4.</div> Please switch to a [real](http://code.google.com/p/redis/) [key](http://couchdb.apache.org/) [value](http://www.mongodb.org/) [database](http://docs.python.org/library/anydbm.html).
 
 # Using WSGI and Middleware
 

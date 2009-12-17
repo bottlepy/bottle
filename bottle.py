@@ -1215,9 +1215,9 @@ class Jinja2Template(BaseTemplate):
 
 class SimpleTemplate(BaseTemplate):
     re_python = re.compile(r'^\s*%\s*(?:(if|elif|else|try|except|finally|for|'
-                            'while|with|def|class)|(include|rebase)|(end)|(.*))')
+                            'while|with|def|class)|(end)|(include|rebase)|(.*))')
     re_inline = re.compile(r'\{\{(.*?)\}\}')
-    dedent_keywords = ('elif', 'else', 'except', 'finally')
+    dedent_blocks = ('elif', 'else', 'except', 'finally')
 
     def prepare(self):
         if self.template:
@@ -1226,64 +1226,64 @@ class SimpleTemplate(BaseTemplate):
         else:
             code = self.translate(open(self.filename).read())
             self.co = compile(code, self.filename, 'exec')
-
-    def translate(self, template):
-        indent = 0
-        strbuffer = []
-        code = []
-        self.includes = dict()
-        class PyStmt(str):
+        
+    @classmethod
+    def translate(cls, template):
+        indent = 0 # Code indentation
+        strbuffer = [] # Buffer for multiple lines of raw strings
+        codebuffer = [] # Buffer for generated code
+        class PyStmt(str): # Python statement with unknown return type
             def __repr__(self): return '_str(' + self + ')'
-        def flush(allow_nobreak=False):
-            if len(strbuffer):
-                if allow_nobreak and strbuffer[-1].endswith("\\\\\n"):
-                    strbuffer[-1]=strbuffer[-1][:-3]
-                code.append(' ' * indent + "_stdout.append(%s)" % repr(''.join(strbuffer)))
-                code.append((' ' * indent + '\n') * len(strbuffer)) # to preserve line numbers 
-                del strbuffer[:]
-        def cadd(line): code.append(" " * indent + line.strip() + '\n')
+        def addline(line):
+            if strbuffer:
+                if strbuffer[-1].rstrip('\n\r').endswith('\\\\'):
+                    strbuffer[-1] = strbuffer[-1].rstrip('\n\r')[:-2]
+                codeline = "_stdout.append(%s)" % repr(''.join(strbuffer))
+                bufferlen = len(strbuffer)
+                del strbuffer[:] # clear before calling addline again
+                addline(codeline)
+                for i in range(bufferlen):
+                    addline('# to preserve line numbers')
+            codebuffer.append(' ' * indent + line.strip())
         for line in template.splitlines(True):
-            m = self.re_python.match(line)
-            if m:
-                flush(allow_nobreak=True)
-                keyword, subtpl, end, statement = m.groups()
-                if keyword:
-                    if keyword in self.dedent_keywords:
+            m = cls.re_python.match(line)
+            if m: # Line starting with '%'
+                block, end, subtpl, other = m.groups()
+                if block:
+                    if block in cls.dedent_blocks:
                         indent -= 1
-                    cadd(line[m.start(1):])
-                    indent += 1
+                    addline(line[m.start(1):])
+                    if line[m.start(1):].split('#')[0].strip().endswith(':'):
+                        indent += 1
+                elif end:
+                    indent -= 1
+                    addline('#' + line[m.start(2):])
                 elif subtpl:
-                    tmp = line[m.end(2):].strip().split(None, 1)
+                    tmp = line[m.end(3):].strip().split(None, 1)
                     if not tmp:
-                      cadd("_stdout.extend(_base)")
+                      addline("_stdout.extend(_base)")
                     else:
                       name = tmp[0]
                       args = tmp[1:] and tmp[1] or ''
-                      if name not in self.includes:
-                        self.includes[name] = SimpleTemplate(name=name, lookup=self.lookup)
                       if subtpl == 'include':
-                        cadd("_ = _includes[%s].execute(_stdout, %s)"
-                             % (repr(name), args))
+                        addline("_ = _include(%s).execute(_stdout, %s)"
+                                    % (repr(name), args))
                       else:
-                        cadd("_tpl['_rebase'] = (_includes[%s], dict(%s))"
-                             % (repr(name), args))
-                elif end:
-                    indent -= 1
-                    cadd('#' + line[m.start(3):])
-                elif statement:
-                    cadd(line[m.start(4):])
-            else:
-                splits = self.re_inline.split(line) # text, (expr, text)*
+                        addline("_tpl['_rebase'] = (%s, dict(%s))"
+                                    % (repr(name), args))
+                elif other:
+                    addline(line[m.start(4):])
+            else: # Line starting with text (not '%')
+                splits = cls.re_inline.split(line) # text, (expr, text)*
                 if len(splits) == 1:
                     strbuffer.append(line)
                 else:
-                    flush()
                     for i in range(1, len(splits), 2):
                         splits[i] = PyStmt(splits[i])
-                    splits = [x for x in splits if bool(x)]
-                    cadd("_stdout.extend(%s)" % repr(splits))
-        flush()
-        return ''.join(code)
+                    splits = filter(bool, splits)
+                    addline("_stdout.extend(%s)" % repr(splits))
+        if strbuffer: addline('') # flush strbuffer
+        return '\n'.join(codebuffer) + '\n'
 
     def strencode(self, x):
         if isinstance(x, unicode):
@@ -1292,12 +1292,13 @@ class SimpleTemplate(BaseTemplate):
 
     def execute(self, stdout, **args):
         args['_stdout'] = stdout
-        args['_includes'] = self.includes
+        args['_include'] = lambda name: self.__class__(name=name, lookup=self.lookup)
         args['_tpl'] = args
         args['_str'] = self.strencode
         eval(self.co, args)
         if '_rebase' in args:
             subtpl, args = args['_rebase']
+            subtpl = self.__class__(name=subtpl, lookup=self.lookup)
             args['_base'] = stdout[:] #copy stdout
             del stdout[:] # clear stdout
             return subtpl.execute(stdout, **args)
