@@ -90,6 +90,8 @@ import thread
 import tempfile
 import hmac
 import base64
+from urllib import quote as urlquote
+from urlparse import urlunsplit, urljoin
 
 if sys.version_info >= (3,0,0):
     # See Request.POST
@@ -492,7 +494,7 @@ class Request(threading.local):
         self._GETPOST = None
         self._COOKIES = None
         self._body = None
-        self.path = self.environ.get('PATH_INFO', '/').strip()
+        self.path = environ.get('PATH_INFO', '/').strip()
         self.app = app
         if not self.path.startswith('/'):
             self.path = '/' + self.path
@@ -506,6 +508,24 @@ class Request(threading.local):
     def query_string(self):
         """ Get content of QUERY_STRING """
         return self.environ.get('QUERY_STRING', '')
+
+    @property
+    def fullpath(self):
+        """ Get the request path including SCRIPT_NAME """
+        return self.environ.get('SCRIPT_NAME', '').rstrip('/') + self.path
+
+    @property
+    def url(self):
+        """ Get the request URL (scheme://host:port/scriptname/path?query) """
+        scheme = self.environ.get('wsgi.url_scheme', 'http')
+        host   = self.environ.get('HTTP_HOST', None)
+        if not host:
+            host = self.environ.get('SERVER_NAME')
+            port = self.environ.get('SERVER_PORT', '80')
+            if scheme + port not in ('https443', 'http80'):
+                host += ':' + port
+        parts = (scheme, host, urlquote(self.fullpath), self.query_string, '')
+        return urlunsplit(parts)
 
     @property
     def input_length(self):
@@ -681,8 +701,8 @@ def abort(code=500, text='Unknown Error: Appliction stopped.'):
 
 def redirect(url, code=303):
     """ Aborts execution and causes a 303 redirect """
-    #TODO: Auto-complete relative urls and add missing http://host 
-    response.header['Location'] = url
+    scriptname = request.environ.get('SCRIPT_NAME', '').rstrip('/') + '/'
+    response.header['Location'] = urljoin(request.url, urljoin(scriptname, url))
     raise HTTPError(code, "")
 
 
