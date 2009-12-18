@@ -679,8 +679,9 @@ def abort(code=500, text='Unknown Error: Appliction stopped.'):
     raise HTTPError(code, text)
 
 
-def redirect(url, code=307):
-    """ Aborts execution and causes a 307 redirect """
+def redirect(url, code=303):
+    """ Aborts execution and causes a 303 redirect """
+    #TODO: Auto-complete relative urls and add missing http://host 
     response.header['Location'] = url
     raise HTTPError(code, "")
 
