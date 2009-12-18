@@ -292,14 +292,7 @@ Bottle stores cookies sent by the client in a dictionary called `request.COOKIES
     from bottle import response
     response.set_cookie('key','value', path='/', domain='example.com', secure=True, expires=+500, ...)
 
-To set the `max-age` attribute (which is not a valid Python parameter name) you can directly access an instance of [cookie.SimpleCookie](http://docs.python.org/library/cookie.html#Cookie.SimpleCookie) in `response.COOKIES`. 
-
-    #!Python
-    from bottle import response
-    response.COOKIES['key'] = 'value'
-    response.COOKIES['key']['max-age'] = 500
-
-
+To set the `max-age` attribute use the `max_age` name.
 
 
 

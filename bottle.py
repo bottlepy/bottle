@@ -658,7 +658,7 @@ class Response(threading.local):
             value = cookie_encode(value, sec)
         self.COOKIES[key] = value
         for k, v in kargs.iteritems():
-            self.COOKIES[key][k] = v
+            self.COOKIES[key][k.replace('_', '-')] = v
 
     def get_content_type(self):
         """ Get the current 'Content-Type' header. """
