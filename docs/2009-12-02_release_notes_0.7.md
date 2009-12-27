@@ -14,4 +14,5 @@ This is a randomly ordered list of changes that affect the API or behaviour of B
     * The `BreakTheBottle` exception is gone. Use `HTTPResponse(text[, status=200])` instead.
     * It is now possible (and recommended) to return `HTTPError` and `HTTPResponse` instances instead of raising them.
     * The new function `static_file()` equals `send_file()` but returns a `HTTPResponse` or `HTTPError` instance instead of raising it. Please use `return static_file()` instead of `send_file()` whenever possible.
+  * SimpleTemplate now encodes unicode variables
   * **More notes to come. This page is a work in progress...**

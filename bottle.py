@@ -148,9 +148,9 @@ class HTTPError(HTTPResponse):
     def __str__(self):
         return ERROR_PAGE_TEMPLATE % {
             'status' : self.status,
-            'url' : request.path,
+            'url' : str(request.path),
             'error_name' : HTTP_CODES.get(self.status, 'Unknown').title(),
-            'error_message' : repr(self.output)
+            'error_message' : str(self.output)
         }
 
 
@@ -336,7 +336,7 @@ class Bottle(object):
     def match_url(self, path, method='GET'):
         """ Find a callback bound to a path and a specific method.
             Return (callback, param) tuple or (None, None).
-            method=HEAD falls back to GET. method=GET fall back to ALL.
+            method=HEAD falls back to GET. method=GET falls back to ALL.
         """
         if not path.startswith(self.rootpath):
             return None, None
@@ -352,7 +352,7 @@ class Bottle(object):
         return handler, param
 
     def get_url(self, routename, **kargs):
-        pass
+        pass #TODO implement this
 
     def route(self, url, method='GET', **kargs):
         """
@@ -811,6 +811,7 @@ def url(routename, **kargs):
 
 
 
+
 # Decorators
 #TODO: Replace default_app() with app()
 
@@ -916,10 +917,10 @@ class CherryPyServer(ServerAdapter):
         server.start()
 
 
-class FlupServer(ServerAdapter):
+class FlupFCGIServer(ServerAdapter):
     def run(self, handler):
-       from flup.server.fcgi import WSGIServer
-       WSGIServer(handler, bindAddress=(self.host, self.port)).run()
+       import flup.server.fcgi
+       flup.server.fcgi.WSGIServer(handler, bindAddress=(self.host, self.port)).run()
 
 
 class PasteServer(ServerAdapter):
@@ -946,6 +947,19 @@ class FapwsServer(ServerAdapter):
             return handler(environ, start_response)
         evwsgi.wsgi_cb(('',app))
         evwsgi.run()
+
+
+class TornadoServer(ServerAdapter):
+    """ Untested. As described here:
+        http://github.com/facebook/tornado/blob/master/tornado/wsgi.py#L187 """
+    def run(self, handler):
+        import tornado.wsgi
+        import tornado.httpserver
+        import tornado.ioloop
+        container = tornado.wsgi.WSGIContainer(handler)
+        server = tornado.httpserver.HTTPServer(container)
+        server.listen(port=self.port)
+        tornado.ioloop.IOLoop.instance().start()
 
 
 def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080,
