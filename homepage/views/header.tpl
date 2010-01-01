@@ -1,7 +1,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-  <title>{{title or 'Homepage'}} - Bottle Web Framework</title>
+  <title>{{title or 'Homepage'}} - Bottle: Python Web Framework</title>
   <link type="text/css" rel="stylesheet" href="/main.css" />
   <link type="text/css" rel="stylesheet" href="/pygments.css" />
   <link rel="alternate" type="application/rss+xml"  href="/rss.xml" title="Changed Pages">
