@@ -153,10 +153,12 @@ Bottle does **not** include (yet):
 
 ## Projects using Bottle
 
+  * [whatismyencoding.com](http://whatismyencoding.com/) guesses the encoding of an URL or string.
+  * [nagios4iphone](http://damien.degois.info/projects/nagios4iphone/) A Nagios interface for iPhone without touching anything on your nagios servers.
   * [flugzeit-rechner.de](http://www.flugzeit-rechner.de/) runs on Bottle and Jinja2.
-  * [Cuttlefish](http://bitbucket.org/kaelin/cuttlefish/) is a browser-based search tool for quickly `grep`ing source code.
-  * [Torque](http://github.com/jreid42/torque) is a multiuser collaborative interface for torrenting.
-  * [Message in a Bottle](http://github.com/kennyshen/MIAB) - a simple community messaging app using Bottle and Cassandra.
+  * [Cuttlefish](http://bitbucket.org/kaelin/cuttlefish/) A browser-based search tool for quickly `grep`ing source code.
+  * [Torque](http://github.com/jreid42/torque) A multiuser collaborative interface for torrenting.
+  * [Message in a Bottle](http://github.com/kennyshen/MIAB) A simple community messaging app using Bottle and Cassandra.
 
 
 ## Thanks to
