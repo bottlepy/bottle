@@ -1,12 +1,10 @@
-%include header title="Blog Posts"
+%rebase basehtml title="Blog Posts"
+%from cgi import escape
 <h1>Blog Posts</h1>
-This is a complete list of all blog posts since {{posts[-1].blogtime}} in chronological order.
-<ul>
+This is a complete list of all blog posts since {{posts[-1].blogtime.strftime('%A, %d %B %Y')}} in chronological order.
 %for post in posts:
-  <li>
-    <a href="/page/{{post.name}}">{{post.title}}</a> - {{post.blogtime}}
-    <p>{{escape(post.preview.encode('utf-8'))}}</p>
-  </li>
+  <h3><a href="/page/{{post.name}}">{{post.title}}</a></h3>
+  <strong>{{post.blogtime.strftime('%A, %d %B %Y')}}</strong>
+  <p>{{post.preview.encode('utf-8')}} <a href="/page/{{post.name}}">...</a></p>
 %end
-</ul>
-%include footer
+

@@ -1,7 +1,6 @@
 # Selector: jQuery plugin
 
-I just wrote my first [jQuery](http://jquery.com/) plugin.
-It allows a user to visually select an area on the screen. Check out the demo:
+I just wrote my first [jQuery](http://jquery.com/) plugin. It allows a user to visually select an area on the screen. Check out the demo:
 
 <script src="http://github.com/defnull/Lucullus/raw/master/lucullus/data/static_files/js/jquery.selector.js" type="text/javascript"></script>
 <p>
