@@ -41,7 +41,7 @@
     %include
 
     <div id='footer'>
-      <div>Powered by <a href="/"><img src="/bottle-sig.png" /></a><small>({{version}})</small></div>
+      <div>Powered by <a href="/"><img src="/bottle-sig.png" /></a> <small>(Version {{version}})</small></div>
       <div>Browse sources at <a href="http://github.com/defnull/bottle">GitHub</a></div>
     </div>
   </body>
