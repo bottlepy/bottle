@@ -540,7 +540,7 @@ class Request(threading.local):
         """ Get a dict with GET parameters. """
         if self._GET is None:
             data = parse_qs(self.query_string, keep_blank_values=True)
-            self._GET = {}
+            self._GET = MultiDict()
             for key, value in data.iteritems():
                 if len(value) == 1:
                     self._GET[key] = value[0]
@@ -561,7 +561,7 @@ class Request(threading.local):
             data = cgi.FieldStorage(fp=fb,
                 environ=self.environ, keep_blank_values=True)
             self.environ['QUERY_STRING'] = qs_backup
-            self._POST  = {}
+            self._POST = MultiDict()
             for item in data.list:
                 name = item.name
                 if not item.filename:
@@ -576,7 +576,7 @@ class Request(threading.local):
     def params(self):
         """ Returns a mix of GET and POST data. POST overwrites GET """
         if self._GETPOST is None:
-            self._GETPOST = dict(self.GET)
+            self._GETPOST = MultiDict(self.GET)
             self._GETPOST.update(dict(self.POST))
         return self._GETPOST
 
@@ -680,6 +680,16 @@ class BaseController(object):
             cls._singleton = object.__new__(cls, *a, **k)
         return cls._singleton
 
+class MultiDict(dict):
+    def getone(self, key, default = KeyError):
+        try:
+            if isinstance(list, self[key]) and len(self[key]):
+                return self[key][-1]
+            return self[key]
+        except KeyError:
+            if default !== KeyError:
+                return default
+            raise
 
 _default_app = Bottle()
 def app(newapp = None):
