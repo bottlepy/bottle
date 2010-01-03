@@ -683,9 +683,7 @@ class BaseController(object):
 class MultiDict(dict):
     def getone(self, key, default = KeyError):
         try:
-            if isinstance(list, self[key]) and len(self[key]):
-                return self[key][-1]
-            return self[key]
+            return self[key][-1] if isinstance(list, self[key]) else self[key]
         except KeyError:
             if default !== KeyError:
                 return default

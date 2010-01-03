@@ -17,7 +17,7 @@
 __This document is a work in progress__ and intended to be a tutorial, howto and an api documentation at the same time. If you have questions not answered here,
 please check the [F.A.Q.](/page/faq) or file a ticket at bottles [issue tracker](http://github.com/defnull/bottle/issues).
 
-
+This documentation describes the features of the **0.7 Release**
 
 
 ## "Hello World" in a Bottle
@@ -44,7 +44,7 @@ Run this script, visit <http://localhost:8080/hello> and you will see "Hello Wor
 
 # Routing
 
-Routes are used to map URLs to __callbacks__ that generate the content for the specific URL. Bottle has a `route()` decorator to do that. You can add any number of routes to a callback.
+Routes are used to map URLs to callbacks that generate the content for the specific URL. Bottle has a `route()` decorator to do that. You can add any number of routes to a callback.
 
     #!Python
     from bottle import route
@@ -66,17 +66,21 @@ As you can see, URLs and routes have nothing to do with actual files on the web 
 ## Request Methods
 
 The `route()` decorator has an optional keyword argument `method` which defaults to `method='GET'`, so only GET requests get answered.
-Possible values are `POST`, `PUT`, `DELETE`, `HEAD` or any other [HTTP request method][http_method] you want to listen to.
+Possible values are `POST`, `PUT`, `DELETE`, `HEAD` or any other [HTTP request method][http_method] you want to listen to. As an alternative, you can use the `@get()`, `@post()`, `@put()` and `@delete()` aliases.
 
     #!Python
-    from bottle import route, request
-    @route('/form/submit', method='POST')
+    from bottle import post, request
+    @post('/form/submit')
     def form_submit():
-        form_data = request.POST
+        form_data = request.POST # (*)
         do_something_with(form_data)
         return "Done"
 
-In this example we used `request.POST` to access POST form data. This is described [here](#get-and-post-values)
+\* In this example we used [request.POST](#get-and-post-values) to access POST form data.
+
+Note that `HEAD` requests will fall back to `GET` routes and all requests will fall back to `ANY` routes, if there is no matching route for the original request method. You don't have to explicitly specify `HEAD` routes.
+
+
 
 
 
@@ -91,7 +95,7 @@ Static routes are fine, but URLs may carry information as well. Let's add a `:na
     def hello(name):
         return "Hello %s!" % name
 
-This dynamic route matches `/hello/alice` as well as `/hello/bob`. In fact, the `:name` part of the route matches everything but a slash (`/`), so any name is possible. `/hello/bob/and/alice` or `/hellobob` won't match.
+This dynamic route matches `/hello/alice` as well as `/hello/bob`. In fact, the `:name` part will match everything but a slash (`/`), so any name is possible. `/hello/bob/and/alice` or `/hellobob` won't match.
 
 Each part of the URL covered by a placeholder is provided as a keyword parameter to your handler callback.
 
@@ -100,7 +104,7 @@ Each part of the URL covered by a placeholder is provided as a keyword parameter
 
 ### Regular Expressions
 
-The default placeholder matches everything up to the next slash. To change that, you can add some regular expression:
+A normal placeholder matches everything up to the next slash. To change that, you can add some regular expression:
 
     #!Python
     from bottle import route
@@ -108,26 +112,14 @@ The default placeholder matches everything up to the next slash. To change that,
     def get(id):
         return "Object ID: %d" % int(id)
 
-or even use full featured regular expressions with named groups:
-
-    #!Python
-    from bottle import route
-    @route('/get_object/(?P<id>[0-9]+)')
-    def get(id):
-        return "Object ID: %d" % int(id)
-
-As you can see, URL parameters remain strings, even if they are 
-configured to only match digits. You have to explicitly cast them into 
-the type you need.
+As you can see, URL parameters remain strings, even if they are configured to only match digits. You have to explicitly cast them into the type you need.
 
 
 
 
 ## The @validate() decorator
 
-Bottle offers a handy decorator called `validate()` to check and manipulate URL parameters.
-It takes callables (function or class objects) as keyword arguments and filters every URL parameter 
-through the corresponding callable before they are passed to your request handler.
+Bottle offers a handy decorator called `validate()` to check and manipulate URL parameters. It takes callables (function or class objects) as keyword arguments and filters every URL parameter through the corresponding callable before they are passed to your request handler.
 
     #!Python
     from bottle import route, validate
@@ -137,24 +129,16 @@ through the corresponding callable before they are passed to your request handle
     def validate_test(i, f, csv):
         return "Int: %d, Float:%f, List:%s" % (i, f, repr(csv))
 
-You may raise `ValueError` in your custom callable if a parameter 
-does not validate.
+You may raise `ValueError` in your custom callable if a parameter does not validate.
 
 
 
 
 # Generating content
 
-TODO
-
-
-
-## Output Casting
-
 The [WSGI specification][wsgi] expects an iterable list of byte strings to be returned from your application and can't handle file objects, unicode, dictionaries or exceptions.
 
     #!Python
-    from bottle import route
     @route('/wsgi')
     def wsgi():
         return ['WSGI','wants a','list of','strings']
@@ -163,14 +147,13 @@ Bottle automatically tries to convert anything to a WSGI supported type, so you
 don't have to. The following examples will work with Bottle, but won't work with
 pure WSGI.
 
-### Strings and Unicode
+## Strings and Unicode
 
 Returning strings (bytes) is not a problem. Unicode however needs to be encoded into a byte stream before 
 the webserver can send it to the client. Ths default encoding is utf-8, so if that fits your needs, you can 
 simply return unicode or unicode iterables.
 
     #!Python
-    from bottle import route, response
     @route('/string')
     def get_string():
         return 'Bottle converts strings to iterables'
@@ -179,11 +162,10 @@ simply return unicode or unicode iterables.
     def get_unicode():
         return u'Unicode is encoded with UTF-8 by default'
 
-You can change Bottles default encoding by setting `response.content_type` to a value 
-containing a `charset=...` parameter or by changing `response.charset` directly.
+You can change Bottles default encoding by setting `response.content_type` to a value containing a `charset=...` parameter or by changing `response.charset` directly.
 
     #!Python
-    from bottle import route, response
+    from bottle import response
     @route('/iso')
     def get_iso():
         response.charset = 'ISO-8859-15'
@@ -194,64 +176,46 @@ containing a `charset=...` parameter or by changing `response.charset` directly.
         response.content_type = 'text/html; charset=latin9'
         return u'ISO-8859-15 is also known as latin9.'
 
-In some rare cases the Python encoding names differ from the names supported by the HTTP specification. 
-Then, you have to do both: First set the `response.content_type` header (which is sent to the client 
-unchanged) and then set the `response.charset` option (which is used to decode unicode).
+In some rare cases the Python encoding names differ from the names supported by the HTTP specification. Then, you have to do both: First set the `response.content_type` header (which is sent to the client unchanged) and then set the `response.charset` option (which is used to decode unicode).
 
+## File Objects and Streams
 
-### File Objects and Streams
-
-Bottle wrapps everything that has a `read()` method (file objects) with the `wsgi.file_wrapper` 
-provided by your WSGI server implementation. This wrapper should use highly optimised system calls for 
-your operating system (`sendfile` on UNIX) to transfer the file.
+Bottle passes everything that has a `read()` method (file objects) to the `wsgi.file_wrapper` provided by your WSGI server implementation. This wrapper should use highly optimised system calls for your operating system (`sendfile` on UNIX) to transfer the file contents.
 
     #!Python
     @route('/file')
     def get_file():
         return open('some/file.txt','r')
 
+## JSON
 
-
-### JSON
-
-Even dictionaries are allowed. They are converted to
-[json](http://de.wikipedia.org/wiki/JavaScript_Object_Notation) and returned
-with `Content-Type` header set to `application/json`. To disable this feature (and pass dicts to your 
-middleware) you can set `bottle.default_app().autojson` to `False`.
+Even dictionaries are allowed. They are converted to [json](http://de.wikipedia.org/wiki/JavaScript_Object_Notation) and returned with the `Content-Type` header set to `application/json`. To disable this feature (and pass dicts to your middleware) you can set `bottle.app().autojson` to `False`.
 
     #!Python
     @route('/api/status')
     def api_status():
         return {'status':'online', 'servertime':time.time()}
 
+## Static Files
 
-
-
-### Static Files
-
-You can directly return file objects, but `bottle.send_file()` is the recommended way to serve static files. 
-It automatically guesses a mime-type, adds a `Last-Modified` header, restricts paths to a `root` directory 
-for security reasons and generates appropriate error pages (401 on permission errors, 404 on missing files). It 
-even supports the `If-Modified-Since` header and eventually generates a `304 Not modified` response.
-You can pass a custom mimetype to disable mimetype guessing.
+You can directly return file objects, but `static_file()` is the recommended way to serve static files. It automatically guesses a mime-type, adds a `Last-Modified` header, restricts paths to a `root` directory for security reasons and generates appropriate error responses (401 on permission errors, 404 on missing files). It even supports the `If-Modified-Since` header and eventually generates a `304 Not modified` response. You can pass a custom mimetype to disable mimetype guessing.
 
     #!Python
-    from bottle import send_file
-    
-    @route('/static/:filename')
-    def static_file(filename):
-        send_file(filename, root='/path/to/static/files')
+    from bottle import static_file
 
     @route('/images/:filename#.*\.png#')
-    def static_image(filename):
-        send_file(filename, root='/path/to/image/files', mimetype='image/png')
+    def senf_image(filename):
+        return static_file(filename, root='/path/to/image/files', mimetype='image/png')
+    
+    @route('/static/:filename')
+    def send_file(filename):
+        return static_file(filename, root='/path/to/static/files')
 
+You can raise the return value of `static_file()` as an exception if you really need to. The raised `HTTPResponse` exception is handled by the Bottle framework. 
 
+## HTTPError, HTTPResponse and Redirects
 
-
-## HTTP Errors and Redirects
-
-The `bottle.abort(code[, message])` function is used to generate [HTTP error pages][http_code].
+The `abort(code[, message])` function is used to generate [HTTP error pages][http_code].
 
     #!Python
     from bottle import route, redirect, abort
@@ -259,23 +223,28 @@ The `bottle.abort(code[, message])` function is used to generate [HTTP error pag
     def restricted():
         abort(401, "Sorry, access denied.")
 
-To redirect a client to a different URL, you can send a `307 Temporary Redirect` response
-with the `Location` header set to the new URL. `bottle.redirect(url[, code])` does that for you.
-You may provide a different HTTP status code as a second parameter.
+To redirect a client to a different URL, you can send a `303 See Other` response with the `Location` header set to the new URL. `redirect(url[, code])` does that for you. You may provide a different HTTP status code as a second parameter.
 
     #!Python
-    from bottle import route, redirect, abort
+    from bottle import redirect
     @route('/wrong/url')
     def wrong():
         redirect("/right/url")
 
-Both functions interrupt your handler code (by throwing a `bottle.HTTPError` exception) so you don't 
-have to return anything.
+Both functions interrupt your handler code by raising a `HTTPError` exception.
 
-All unhandled exceptions other than `bottle.HTTPError` will result in a `500 Internal Server Error` 
-response, so they won't crash your WSGI server. 
+You can return `HTTPError` exceptions instead of raising them. This is faster than raising and capturing Exceptions, but does exactly the same.
 
+    #!Python
+    from bottle import HTTPError
 
+    @route('/denied')
+    def denied():
+        return HTTPError(401, 'Access denied!')
+
+## Exceptions
+
+All exceptions other than `HTTPResponse` or `HTTPError` will result in a `500 Internal Server Error` response, so they won't crash your WSGI server. You can turn off this behaviour to handle exceptions in your middleware by setting `bottle.app().catchall` to `False`.
 
 # HTTP Stuff
 
@@ -292,42 +261,31 @@ Bottle stores cookies sent by the client in a dictionary called `request.COOKIES
 
 To set the `max-age` attribute use the `max_age` name.
 
-
+TODO: It is possible to store python objects and lists in cookies. This produces signed cookies, which are pickled and unpickled automatically. 
 
 ## GET and POST values
 
 Query strings and/or POST form submissions are parsed into dictionaries and made
-available as `bottle.request.GET` and `bottle.request.POST`. Multiple values per
-key are possible, so each each value of these dictionaries may contain a string
+available as `request.GET` and `request.POST`. Multiple values per
+key are possible, so each value of these dictionaries may contain a string
 or a list of strings.
 
-
-    #!html
-    <form action="/search" method="post">
-      <input type="text" name="query" />
-      <input type="submit" />
-    </form>
-
+You can use `.getone(key[, default])` to get a single value only.
 
     #!Python
     from bottle import route, request
     @route('/search', method='POST')
     def do_search():
-        query = request.POST.get('query', '').strip()
+        query = request.POST.getone('query', '').strip()
         if not query:
             return "You didn't supply a search query."
         else:
             return 'You searched for %s.' % query
 
+
 ## File Uploads
 
-    Bottle handles file uploads similar to normal POST form data.
-    Instead of strings or list of strings, you will get file-like objects. 
-
-    #!html
-    <form action="/upload" method="post" enctype="multipart/form-data">
-      <input name="datafile" type="file" />
-    </form>
+Bottle handles file uploads similar to normal POST form data. Instead of strings, you will get file-like objects. 
 
     #!Python
     from bottle import route, request
@@ -336,7 +294,12 @@ or a list of strings.
         datafile = request.POST.get('datafile')
         return datafile.read()
 
+Here is an example HTML Form for file uploads
 
+    #!html
+    <form action="/upload" method="post" enctype="multipart/form-data">
+      <input name="datafile" type="file" />
+    </form>
 
 
 
