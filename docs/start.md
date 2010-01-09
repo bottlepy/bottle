@@ -165,6 +165,7 @@ Bottle does **not** include (yet):
 
 In chronological order of their last contribution (DESC).
 
+  * [Jochen Schnelle](http://github.com/noisefloor) for his great [bottle tutorial](/page/tutorial)
   * [Damien Degois](http://github.com/babs) for his `If-Modified-Since` support in `send_file()` and his excellent bug reports
   * [Stefan Matthias Aust](http://github.com/sma) for his contribution to `SimpleTemplate` and `Jinja2Template`
   * [DauerBaustelle](http://github.com/dauerbaustelle) for his ideas

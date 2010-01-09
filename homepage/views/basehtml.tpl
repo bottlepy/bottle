@@ -18,6 +18,7 @@
         <li><a href="/">Home</a></li>
         <li><a href="/blog">Blog Posts</a></li>
         <li><a href="/page/docs">Documentation</a></li>
+        <li><a href="/page/tutorial">Tutorial</a></li>
         <li><a href="/page/faq">F.A.Q.</a></li>
         <li><a href="/page/contact">Contact</a></li>
       </ul>
