@@ -342,14 +342,13 @@ class Bottle(object):
             return None, None
         path = path[len(self.rootpath):].strip().lstrip('/')
         method = method.upper()
-        handler, param = self.routes.setdefault(method, Router()).match(path)
-        if not handler and method == 'HEAD':
-            handler, param = self.routes.setdefault('GET', Router()).match(path)
-        if not handler:
-            handler, param = self.routes.setdefault('ALL', Router()).match(path)
-        if not handler:
-            handler, param = self.default_route, None
-        return handler, param
+        tests = (method, 'GET', 'ALL') if method == 'HEAD' else (method, 'ALL')
+        for method in tests:
+            if method in self.routes:
+                handler, param = self.routes[method].match(path)
+                if handler:
+                    return handler, param
+        return self.default_route, None
 
     def get_url(self, routename, **kargs):
         pass #TODO implement this
@@ -685,7 +684,7 @@ class MultiDict(dict):
         try:
             return self[key][-1] if isinstance(list, self[key]) else self[key]
         except KeyError:
-            if default !== KeyError:
+            if default != KeyError:
                 return default
             raise
 
