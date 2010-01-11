@@ -63,7 +63,7 @@ As you can see, URLs and routes have nothing to do with actual files on the web 
 
 
 
-## Request Methods
+## HTTP Request Methods
 
 The `route()` decorator has an optional keyword argument `method` which defaults to `method='GET'`, so only GET requests get answered.
 Possible values are `POST`, `PUT`, `DELETE`, `HEAD` or any other [HTTP request method][http_method] you want to listen to. As an alternative, you can use the `@get()`, `@post()`, `@put()` and `@delete()` aliases.
@@ -246,9 +246,27 @@ You can return `HTTPError` exceptions instead of raising them. This is faster th
 
 All exceptions other than `HTTPResponse` or `HTTPError` will result in a `500 Internal Server Error` response, so they won't crash your WSGI server. You can turn off this behaviour to handle exceptions in your middleware by setting `bottle.app().catchall` to `False`.
 
-# HTTP Stuff
+# Working with HTTP Requests
 
-TODO
+Bottle parses the HTTP request data into a thread-save `request` object and provides some useful tools and methods to access this data. Most of the parsing happens on demand, so you won't see any overhead if you don't need the result. Here is a short summary:
+
+  * `request[key]`: A shortcut for `request.environ[key]`
+  * `request.environ`: WSGI environment dictionary. Use this with care.
+  * `request.app`: Currently used Bottle instance (same as `bottle.app()`)
+  * `request.method`: HTTP request-method (GET,POST,PUT,DELETE,...).
+  * `request.query_string`: HTTP query-string (http://host/path?query_string)
+  * `request.path`: Path string that matched the current route.
+  * `request.fullpath`: Full path including the `SCRIPT_NAME` part.
+  * `request.url`: The full URL as requested by the client (including `http(s)://` and hostname)
+  * `request.input_length` The Content-Length header (if present) as an integer.
+  * `request.header`: HTTP header dictionary.
+  * `request.GET`: The parsed content of `request.query_string` as a dict. Each value may be a string or a list of strings.
+  * `request.POST`: A dict containing parsed form data. Supports URL- and multipart-encoded form data. Each value may be a string, a file or a list of strings or files.
+  * `request.COOKIES`: The cookie data as a dict.
+  * `request.params`: A dict containing both, `request.GET` and `request.POST` data.
+  * `request.body`: The HTTP body of the request as a buffer object.
+  * `request.auth`: HTTP authorisation data as a named tuple. (experimental)
+  * `request.get_cookie(key[, default])`: Returns a specific cookie and decodes secure cookies. (experimental)
 
 
 ## Cookies
