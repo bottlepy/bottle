@@ -476,7 +476,7 @@ class Bottle(object):
                 err += '<h2>Error:</h2>\n<pre>%s</pre>\n'\
                        '<h2>Traceback:</h2>\n<pre>%s</pre>\n' %\
                        (repr(e), traceback.format_exc(10))
-            environ['wsgi.errors'].write(err)
+            environ['wsgi.errors'].write(err) #TODO: wsgi.error should not get html
             start_response('500 INTERNAL SERVER ERROR', [])
             return [err]
 
@@ -493,29 +493,39 @@ class Request(threading.local):
         self._GETPOST = None
         self._COOKIES = None
         self._body = None
+        self._header = None
         self.path = environ.get('PATH_INFO', '/').strip()
         self.app = app
         if not self.path.startswith('/'):
             self.path = '/' + self.path
+    
+    def __getitem__(self, key):
+        return self.environ.get(key)
+    
+    def formdata(self, key, default=IndexError):
+        out = self.POST.get(key, default)
+        if issubclass(out, IndexError):
+            raise out("Key %s not found in POST form data" % key)
+        return out
 
     @property
     def method(self):
-        """ Get the request method (GET,POST,PUT,DELETE,...) """
+        """ HTTP request method (GET, POST, PUT, DELETE, ...) """
         return self.environ.get('REQUEST_METHOD', 'GET').upper()
 
     @property
     def query_string(self):
-        """ Get content of QUERY_STRING """
+        """ Query-string part of the request URL """
         return self.environ.get('QUERY_STRING', '')
 
     @property
     def fullpath(self):
-        """ Get the request path including SCRIPT_NAME """
-        return self.environ.get('SCRIPT_NAME', '').rstrip('/') + self.path
+        """ Request path including SCRIPT_NAME (if present) """
+        return self.environ.get('SCRIPT_NAME', '').rstrip('/') + self.path #TODO: What about self.app.rootpath?
 
     @property
     def url(self):
-        """ Get the request URL (scheme://host:port/scriptname/path?query) """
+        """ The full URL as requested by the client """
         scheme = self.environ.get('wsgi.url_scheme', 'http')
         host   = self.environ.get('HTTP_HOST', None)
         if not host:
@@ -528,15 +538,25 @@ class Request(threading.local):
 
     @property
     def input_length(self):
-        """ Get content of CONTENT_LENGTH """
+        """ The Content-Length header as an integer """
         try:
             return max(0,int(self.environ.get('CONTENT_LENGTH', '0')))
         except ValueError:
             return 0
-            
+
+    @property
+    def header(self):
+        ''' Dictionary containing HTTP headers'''
+        if self._header is None:
+            for key, value in self.environ.iteritems():
+                if key.startswith('HTTP_'):
+                    key = key[5:].replace('_','-').title()
+                    self._header[key] = value
+        return self._header
+
     @property
     def GET(self):
-        """ Get a dict with GET parameters. """
+        """ Dictionary with parsed query_string data. """
         if self._GET is None:
             data = parse_qs(self.query_string, keep_blank_values=True)
             self._GET = MultiDict()
@@ -549,7 +569,7 @@ class Request(threading.local):
 
     @property
     def POST(self):
-        """ Get a dict with parsed POST or PUT data. """
+        """ Dictionary with parsed form data. """
         if self._POST is None:
             qs_backup = self.environ.get('QUERY_STRING','')
             self.environ['QUERY_STRING'] = ''
@@ -573,7 +593,7 @@ class Request(threading.local):
 
     @property
     def params(self):
-        """ Returns a mix of GET and POST data. POST overwrites GET """
+        """ A mix of GET and POST data. POST overwrites GET """
         if self._GETPOST is None:
             self._GETPOST = MultiDict(self.GET)
             self._GETPOST.update(dict(self.POST))
@@ -581,7 +601,8 @@ class Request(threading.local):
 
     @property
     def body(self):
-        if not self._body:
+        """ The HTTP request body as a seekable file object """
+        if self._body is None:
             maxread = self.input_length
             if maxread < 1024*100: #TODO Should not be hard coded...
                 self._body = BytesIO()
@@ -599,11 +620,12 @@ class Request(threading.local):
 
     @property
     def auth(self): #TODO: Tests and docs. Add support for digest. namedtuple?
+        """ HTTP authorisation data as a named tuple. (experimental) """
         return parse_auth(self.environ.get('HTTP_AUTHORIZATION'))
 
     @property
     def COOKIES(self):
-        """ Returns a dict with COOKIES. """
+        """ Dictionary with parsed cookie data. """
         if self._COOKIES is None:
             raw_dict = SimpleCookie(self.environ.get('HTTP_COOKIE',''))
             self._COOKIES = {}
