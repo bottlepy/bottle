@@ -169,92 +169,103 @@ class RouteSyntaxError(RouteError):
 class RouteBuildError(RouteError):
     """ The route could not been build """
 
-class Router(object):
-    ''' A route associates a string (e.g. URL) with an object (e.g. function)
-        Dynamic routes use regular expressions to describe all matching strings.
-        Some dynamic routes may extract parts of the string and provide them as
-        data. This router matches a string against multiple routes and returns
-        the associated object along with the extracted data. 
-    '''
-
+class RouteParser(object):
+    ''' Parser class for routes '''
     syntax = re.compile(r'(.*?)(?<!\\):([a-zA-Z_]+)?(?:#(.*?)#)?')
     default = '[^/]+'
 
-    def __init__(self):
-        self.static = dict()
-        self.dynamic = []
-        self.named = dict()
-
-    def tokenise(self, route):
+    def __init__(self, route):
+        self.route = route
+    
+    def tokenise(self):
+        ''' Split a string into an iterator of (type, value) tokens. '''
         match = None
-        for match in self.syntax.finditer(route):
+        for match in self.syntax.finditer(self.route):
             pre, name, rex = match.groups()
             if pre: yield ('TXT', pre.replace('\\:',':'))
             if rex and name: yield ('VAR', (rex, name))
             elif name: yield ('VAR', (self.default, name))
             elif rex: yield ('ANON', rex)
         if not match:
-            yield ('TXT', route.replace('\\:',':'))
-        elif match.end() < len(route):
-            yield ('TXT', route[match.end():].replace('\\:',':'))
+            yield ('TXT', self.route.replace('\\:',':'))
+        elif match.end() < len(self.route):
+            yield ('TXT', self.route[match.end():].replace('\\:',':'))
 
-    def parse(self, route):
+    def group_re(self):
+        ''' Turn a route string into a regexp pattern with named groups '''
         out = ''
-        for token, data in self.tokenise(route):
+        for token, data in self.tokenise():
             if   token == 'TXT':  out += re.escape(data)
             elif token == 'VAR':  out += '(?P<%s>%s)' % (data[1], data[0])
             elif token == 'ANON': out += '(?:%s)' % data
         return out
 
-    def parse_flat(self, route):
-        return re.sub(r'\(\?P<[^>]*>|\((?!\?)', '(?:', self.parse(route))
+    def flat_re(self):
+        ''' Turn a route string into a regexp pattern without any groups '''
+        return re.sub(r'\(\?P<[^>]*>|\((?!\?)', '(?:', self.group_re())
 
-    def parse_format(self, route):
+    def format_str(self):
+        ''' Turn a route string into a format string named fields '''
         out, i = '', 0
-        for token, value in self.tokenise(route):
+        for token, value in self.tokenise():
             if token == 'TXT': out += value.replace('%','%%')
             elif token == 'ANON': out += '%%(anon%d)s' % i; i+=1
             elif token == 'VAR': out += '%%(%s)s' % value[1]
         return out
 
-    def is_dynamic(self, route):
-        for token, value in self.tokenise(route):
+    def is_dynamic(self):
+        ''' Test for dynalic parts in a route '''
+        for token, value in self.tokenise():
             if token != 'TXT':
                 return True
         return False
 
-    def add(self, route, data, static=False, name=None):
-        if name and static:
-            self.named[name] = route.replace('%','%%')
-        elif name:
-            self.named[name] = self.parse_format(route)
-        if static or not self.is_dynamic(route):
-            self.static[route] = data
-            return
 
-        regroup = self.parse(route)
-        reflat = self.parse_flat(route)
+
+
+
+
+class Router(object):
+    ''' A route associates a string (e.g. URL) with an object (e.g. function)
+        Some dynamic routes may extract parts of the string and provide them as
+        data. This router matches a string against multiple routes and returns
+        the associated object along with the extracted data. 
+    '''
+
+    def __init__(self):
+        self.static = dict()
+        self.dynamic = []
+        self.named = dict()
+
+    def add(self, route, target, static=False, name=None):
+        parsed = RouteParser(route)
+        static = bool(static or not parsed.is_dynamic())
+        if name:
+            self.named[name] = route.replace('%','%%') if static else parsed.format_str()
+        if static:
+            self.static[route] = target
+            return
+        gpatt = parsed.group_re()
+        fpatt = parsed.flat_re()
         try:
-            regroup = re.compile('^(%s)$' % regroup) if '(?P' in regroup else None
-            combined = '%s|(^%s$)' % (self.dynamic[-1][0].pattern, reflat)
+            gregexp = re.compile('^(%s)$' % gpatt) if '(?P' in gpatt else None
+            combined = '%s|(^%s$)' % (self.dynamic[-1][0].pattern, fpatt)
             self.dynamic[-1] = (re.compile(combined), self.dynamic[-1][1])
-            self.dynamic[-1][1].append((data, regroup))
+            self.dynamic[-1][1].append((target, gregexp))
         except (AssertionError, IndexError), e: # AssertionError: Too many groups
-            self.dynamic.append((re.compile('(^%s$)'%reflat),[(data, regroup)]))
+            self.dynamic.append((re.compile('(^%s$)'%fpatt),[(target, gregexp)]))
         except re.error, e:
             raise RouteSyntaxError("Could not add Route: %s (%s)" % (route, e))
 
     def match(self, uri):
-        ''' Matches an URL and returns a (handler, data) tuple '''
+        ''' Matches an URL and returns a (handler, target) tuple '''
         if uri in self.static:
             return self.static[uri], None
-        for prematch, subroutes in self.dynamic:
-            match = prematch.match(uri)
-            if not match:
-                continue
+        for combined, subroutes in self.dynamic:
+            match = combined.match(uri)
+            if not match: continue
             data, groups = subroutes[match.lastindex - 1]
-            if groups:
-                groups = groups.match(uri).groupdict()
+            if groups: groups = groups.match(uri).groupdict()
             return data, groups
         return None, None
 
@@ -1273,26 +1284,21 @@ def view(tpl_name, **defaults):
     '''
     def decorator(func):
         def wrapper(**kargs):
-            out = func(**kargs)
-            defaults.update(out)
-            return template(tpl_name, **defaults)
+            tplvars = dict(defaults)
+            tplvars.update(func(**kargs))
+            return template(tpl_name, **tplvars)
         return wrapper
     return decorator
 
 
 def mako_view(tpl_name, **kargs):
-    kargs['template_adapter'] = MakoTemplate
-    return view(tpl_name, **kargs)
-
+    return view(tpl_name, template_adapter=MakoTemplate, **kargs)
 
 def cheetah_view(tpl_name, **kargs):
-    kargs['template_adapter'] = CheetahTemplate
-    return view(tpl_name, **kargs)
-
+    return view(tpl_name, template_adapter=CheetahTemplate, **kargs)
 
 def jinja2_view(tpl_name, **kargs):
-    kargs['template_adapter'] = Jinja2Template
-    return view(tpl_name, **kargs)
+    return view(tpl_name, template_adapter=Jinja2Template, **kargs)
 
 
 
