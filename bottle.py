@@ -87,11 +87,12 @@ from wsgiref.headers import Headers as HeaderWrapper
 from Cookie import SimpleCookie
 import subprocess
 import thread
-import tempfile
+from tempfile import TemporaryFile
 import hmac
 import base64
 from urllib import quote as urlquote
 from urlparse import urlunsplit, urljoin
+from UserDict import DictMixin
 
 if sys.version_info >= (3,0,0):
     # See Request.POST
@@ -109,7 +110,7 @@ except ImportError: # pragma: no cover
 try:
     import cPickle as pickle
 except ImportError: # pragma: no cover
-    import pickle as pickle
+    import pickle
   
 try:
     try:
@@ -480,48 +481,42 @@ class Bottle(object):
             start_response('500 INTERNAL SERVER ERROR', [])
             return [err]
 
-class Request(threading.local):
-    """ Represents a single request using thread-local namespace. """
+class Request(threading.local, DictMixin):
+    """ Represents a single request using thread-local attributes.
+        This is a wrapper around a WSGI environment and can be used as such """
 
-    def bind(self, environ, app):
-        """
-        Binds the enviroment of the current request to this request handler
-        """
-        self.environ = environ
-        self._GET = None
-        self._POST = None
-        self._GETPOST = None
-        self._COOKIES = None
-        self._body = None
-        self._header = None
-        self.path = environ.get('PATH_INFO', '/').strip()
+    def __init__(self):
+        self.bind({}, None)
+
+    def bind(self, environ, app=None):
+        """ Bind a new WSGI enviroment """
         self.app = app
+        self.environ = environ
+        self._GET = self._POST = self._GETPOST = self._COOKIES = self._body = self._header = None
+        # These attributes are used anyway, so it is ok to compute them here
+        self.path = environ.get('PATH_INFO', '/')
         if not self.path.startswith('/'):
             self.path = '/' + self.path
-    
-    def __getitem__(self, key):
-        return self.environ.get(key)
-    
-    def formdata(self, key, default=IndexError):
-        out = self.POST.get(key, default)
-        if issubclass(out, IndexError):
-            raise out("Key %s not found in POST form data" % key)
-        return out
+        self.method = environ.get('REQUEST_METHOD', 'GET').upper()
 
-    @property
-    def method(self):
-        """ HTTP request method (GET, POST, PUT, DELETE, ...) """
-        return self.environ.get('REQUEST_METHOD', 'GET').upper()
+    def __getitem__(self, key):
+        return self.environ[key]
+
+    def __setitem__(self, key, value):
+        self.environ[key] = value
+    
+    def keys(self):
+        return self.environ.keys()
+    
 
     @property
     def query_string(self):
-        """ Query-string part of the request URL """
         return self.environ.get('QUERY_STRING', '')
 
     @property
     def fullpath(self):
         """ Request path including SCRIPT_NAME (if present) """
-        return self.environ.get('SCRIPT_NAME', '').rstrip('/') + self.path #TODO: What about self.app.rootpath?
+        return self.environ.get('SCRIPT_NAME', '').rstrip('/') + self.path
 
     @property
     def url(self):
@@ -537,12 +532,9 @@ class Request(threading.local):
         return urlunsplit(parts)
 
     @property
-    def input_length(self):
-        """ The Content-Length header as an integer """
-        try:
-            return max(0,int(self.environ.get('CONTENT_LENGTH', '0')))
-        except ValueError:
-            return 0
+    def body_length(self):
+        """ The Content-Length header as an integer, -1 if not specified """
+        return int(self.environ.get('CONTENT_LENGTH', -1))
 
     @property
     def header(self):
@@ -560,10 +552,8 @@ class Request(threading.local):
         if self._GET is None:
             data = parse_qs(self.query_string, keep_blank_values=True)
             self._GET = MultiDict()
-            for key, value in data.iteritems():
-                if len(value) == 1:
-                    self._GET[key] = value[0]
-                else:
+            for key, values in data.iteritems():
+                for value in values:
                     self._GET[key] = value
         return self._GET
 
@@ -571,24 +561,19 @@ class Request(threading.local):
     def POST(self):
         """ Dictionary with parsed form data. """
         if self._POST is None:
-            qs_backup = self.environ.get('QUERY_STRING','')
-            self.environ['QUERY_STRING'] = ''
+            save_env = dict() # Build a save environment for cgi
+            for key in ('REQUEST_METHOD', 'CONTENT_TYPE', 'CONTENT_LENGTH'):
+                if key in self.environ:
+                    save_env[key] = self.environ[key]
+            save_env['QUERY_STRING'] = '' # Without this, sys.argv is called!
             if TextIOWrapper:
                 fb = TextIOWrapper(self.body, encoding='ISO-8859-1')
             else:
                 fb = self.body
-            data = cgi.FieldStorage(fp=fb,
-                environ=self.environ, keep_blank_values=True)
-            self.environ['QUERY_STRING'] = qs_backup
+            data = cgi.FieldStorage(fp=fb, environ=save_env)
             self._POST = MultiDict()
             for item in data.list:
-                name = item.name
-                if not item.filename:
-                    item = item.value
-                self._POST.setdefault(name, []).append(item)
-            for key in self._POST:
-                if len(self._POST[key]) == 1:
-                    self._POST[key] = self._POST[key][0]
+                self._POST[item.name] = item if item.filename else item.value
         return self._POST
 
     @property
@@ -603,13 +588,11 @@ class Request(threading.local):
     def body(self):
         """ The HTTP request body as a seekable file object """
         if self._body is None:
-            maxread = self.input_length
-            if maxread < 1024*100: #TODO Should not be hard coded...
-                self._body = BytesIO()
-            else:
-                self._body = tempfile.TemporaryFile(mode='w+b')
+            maxread = max(0, int(self['CONTENT_LENGTH']))
+            stream = self.environ['wsgi.input']
+            self._body = BytesIO() if maxread < MEMFILE_MAX else TemporaryFile(mode='w+b')
             while maxread > 0:
-                part = self.environ['wsgi.input'].read(min(maxread, 8192))
+                part = stream.read(min(maxread, MEMFILE_MAX))
                 if not part: #TODO: Wrong content_length. Error? Do nothing?
                     break
                 self._body.write(part)
@@ -701,14 +684,38 @@ class BaseController(object):
             cls._singleton = object.__new__(cls, *a, **k)
         return cls._singleton
 
-class MultiDict(dict):
-    def getone(self, key, default = KeyError):
-        try:
-            return self[key][-1] if isinstance(list, self[key]) else self[key]
-        except KeyError:
-            if default != KeyError:
-                return default
-            raise
+class MultiDict(DictMixin):
+    """ A dict that remembers old values for each key """
+    # collections.MutableMapping would be better for Python >= 2.6
+    def __init__(self, *a, **k):
+        self.dict = dict()
+        for k, v in dict(*a, **k).iteritems():
+            self[k] = v
+        self.keys = self.dict.keys
+
+    def __getitem__(self, key):
+        return self.dict[key][-1]
+
+    def __setitem__(self, key, value):
+        self.dict.setdefault(key, []).append(value)
+
+    def getall(self, *a):
+        """ Get all values for this key, not just the last one """
+        return self.dict.get(*a)
+
+    def iterallitems(self):
+        for key, values in self.dict.iteritems():
+            for value in values:
+                yield key, value
+
+class HeaderDict(MultiDict):
+    def __getitem__(self, key):
+        return MultiDict.__getitem__(self, key.title())
+
+    def __setitem__(self, key, value):
+        return MultiDict.__setitem__(self, key.title(), str(value))
+
+
 
 _default_app = Bottle()
 def app(newapp = None):
@@ -1350,6 +1357,7 @@ def jinja2_view(tpl_name, **kargs):
 TEMPLATE_PATH = ['./', './views/']
 TEMPLATES = {}
 DEBUG = False
+MEMFILE_MAX = 1024*100
 HTTP_CODES = {
     100: 'CONTINUE',
     101: 'SWITCHING PROTOCOLS',

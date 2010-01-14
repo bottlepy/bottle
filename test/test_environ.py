@@ -20,20 +20,6 @@ class TestEnviron(unittest.TestCase):
         request.bind({}, None)
         self.assertEqual('/', request.path)
 
-    def test_ilength(self):
-        """ Environ: CONTENT_LENGTH """
-        t = dict()
-        t[''] = 0
-        t['0815'] = 815
-        t['-666'] = 0
-        t['0'] = 0
-        t['a'] = 0
-        for k, v in t.iteritems():
-            request.bind({'CONTENT_LENGTH': k}, None)
-            self.assertEqual(v, request.input_length)
-        request.bind({}, None)
-        self.assertEqual(0, request.input_length)
-
     def test_cookie(self):
         """ Environ: COOKIES """ 
         t = dict()
@@ -51,10 +37,9 @@ class TestEnviron(unittest.TestCase):
         request.bind(e, None)
         self.assertTrue('a' in request.GET)
         self.assertTrue('b' in request.GET)
-        self.assertTrue(isinstance(request.GET['a'], list))
-        self.assertEqual(2, len(request.GET['a']))
-        self.assertTrue('a' in request.GET['a'])
-        self.assertTrue('1' in request.GET['a'])
+        self.assertEqual(['a','1'], request.GET.getall('a'))
+        self.assertEqual(['b'], request.GET.getall('b'))
+        self.assertEqual('1', request.GET['a'])
         self.assertEqual('b', request.GET['b'])
         
     def test_post(self):
@@ -69,10 +54,9 @@ class TestEnviron(unittest.TestCase):
         request.bind(e, None)
         self.assertTrue('a' in request.POST)
         self.assertTrue('b' in request.POST)
-        self.assertTrue(isinstance(request.POST['a'], list))
-        self.assertEqual(2, len(request.POST['a']))
-        self.assertTrue('a' in request.POST['a'])
-        self.assertTrue('1' in request.POST['a'])
+        self.assertEqual(['a','1'], request.POST.getall('a'))
+        self.assertEqual(['b'], request.POST.getall('b'))
+        self.assertEqual('1', request.POST['a'])
         self.assertEqual('b', request.POST['b'])
 
     def test_getpostleak(self):
@@ -134,7 +118,6 @@ class TestMultipart(unittest.TestCase):
         files = [('file1','filename1.txt','content1'), ('file2','filename2.py',u'äöü')]
         e = tools.multipart_environ(fields=fields, files=files)
         request.bind(e, None)
-        self.assertTrue(e['CONTENT_LENGTH'], request.input_length)
         # File content
         self.assertTrue('file1' in request.POST)
         self.assertEqual('content1', request.POST['file1'].file.read())
@@ -151,9 +134,8 @@ class TestMultipart(unittest.TestCase):
         # Field (single)
         self.assertEqual('value1', request.POST['field1'])
         # Field (multi)
-        self.assertEqual(2, len(request.POST['field2']))
-        self.assertTrue('value2' in request.POST['field2'])
-        self.assertTrue('value3' in request.POST['field2'])
+        self.assertEqual(2, len(request.POST.getall('field2')))
+        self.assertEqual(['value2', 'value3'], request.POST.getall('field2'))
 
 if __name__ == '__main__':
     unittest.main()
