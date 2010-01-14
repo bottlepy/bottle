@@ -630,21 +630,18 @@ class Response(threading.local):
         """ Clears old data and creates a brand new Response object """
         self._COOKIES = None
         self.status = 200
-        self.header_list = []
-        self.header = HeaderWrapper(self.header_list)
+        self.header = HeaderDict()
         self.charset = 'UTF-8'
         self.content_type = 'text/html; charset=UTF-8'
         self.error = None
         self.app = app
 
-    def add_header(self, key, value):
-        self.header.add_header(key.title(), str(value))
-
     def wsgiheaders(self):
         ''' Returns a wsgi conform list of header/value pairs '''
         for c in self.COOKIES.values():
-            self.add_header('Set-Cookie', c.OutputString())
-        return self.header_list
+            if c.OutputString() not in self.header.getall('Set-Cookie'):
+                self.header.append('Set-Cookie', c.OutputString())
+        return list(self.header.iterallitems())
 
     @property
     def COOKIES(self):
@@ -699,9 +696,12 @@ class MultiDict(DictMixin):
     def __setitem__(self, key, value):
         self.dict.setdefault(key, []).append(value)
 
+    def __delitem__(self, key):
+        del self.dict[key]
+
     def getall(self, *a):
         """ Get all values for this key, not just the last one """
-        return self.dict.get(*a)
+        return self.dict.get(*a) or []
 
     def iterallitems(self):
         for key, values in self.dict.iteritems():
@@ -709,12 +709,17 @@ class MultiDict(DictMixin):
                 yield key, value
 
 class HeaderDict(MultiDict):
+    """ Same as MultiDict, but title() the key overwrite keys by default. """
     def __getitem__(self, key):
         return MultiDict.__getitem__(self, key.title())
 
     def __setitem__(self, key, value):
-        return MultiDict.__setitem__(self, key.title(), str(value))
+        if key in self: # Overwrite by default
+            del self[key]
+        MultiDict.__setitem__(self, key.title(), str(value))
 
+    def append(self, key, value):
+        MultiDict.__setitem__(self, key.title(), str(value))
 
 
 _default_app = Bottle()
