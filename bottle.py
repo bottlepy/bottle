@@ -55,8 +55,21 @@ Example
 
     run(host='localhost', port=8080)
 
-Code Comments
+Code Overview
 -------------
+
+ - Imports
+ - Exceptions and events
+ - Routing
+ - WSGI app and abstraction
+ - Usefull data structures
+ - Module level functions
+ - Utilities
+ - Decorators
+ - Server Adapter
+ - run()
+ - Templates and template decorators
+ - Constants and default settings
 
 #BC:   Backward compatibility. This piece of code makes no sense but is here to
        maintain compatibility to previous releases.
@@ -83,7 +96,6 @@ import threading
 import time
 import warnings
 import email.utils
-from wsgiref.headers import Headers as HeaderWrapper
 from Cookie import SimpleCookie
 import subprocess
 import thread
@@ -158,17 +170,20 @@ class HTTPError(HTTPResponse):
 
 
 
+
 # Routing
-# Bottle uses routes to map URLs to handler callbacks.
 
 class RouteError(BottleException):
     """ This is a base class for all routing related exceptions """
 
+
 class RouteSyntaxError(RouteError):
     """ The route parser found something not supported by this router """
 
+
 class RouteBuildError(RouteError):
     """ The route could not been build """
+
 
 class Router(object):
     ''' A route associates a string (e.g. URL) with an object (e.g. function)
@@ -320,6 +335,7 @@ class Router(object):
 # WSGI abstraction: Request and response management
 
 class Bottle(object):
+    """ WSGI application """
 
     def __init__(self, catchall=True, autojson=True, path = ''):
         self.routes = dict()
@@ -385,8 +401,8 @@ class Bottle(object):
     def handle(self, url, method, catchall=True):
         """ Run the matching handler. Return handler output, HTTPResponse or
         HTTPError. If catchall is true, all exceptions thrown within a
-        handler function are converted to HTTPError(500). """
-
+        handler function are converted to HTTPError(500).
+        """
         if not self.serve:
             return HTTPError(503, "Server stopped")
 
@@ -418,7 +434,6 @@ class Bottle(object):
         Support: False, str, unicode, list(unicode), file, dict, list(dict),
                  HTTPResponse and HTTPError
         """
-
         if isinstance(out, HTTPResponse):
             response.status = out.status
             if isinstance(out, HTTPError):
@@ -483,8 +498,8 @@ class Bottle(object):
 
 class Request(threading.local, DictMixin):
     """ Represents a single request using thread-local attributes.
-        This is a wrapper around a WSGI environment and can be used as such """
-
+        This is a wrapper around a WSGI environment and can be used as such
+    """
     def __init__(self):
         self.bind({}, None)
 
@@ -504,10 +519,9 @@ class Request(threading.local, DictMixin):
 
     def __setitem__(self, key, value):
         self.environ[key] = value
-    
+
     def keys(self):
         return self.environ.keys()
-    
 
     @property
     def query_string(self):
@@ -674,12 +688,19 @@ class Response(threading.local):
                             get_content_type.__doc__)
 
 
+
+
+
+
+# Data Structures
+
 class BaseController(object):
     _singleton = None
     def __new__(cls, *a, **k):
         if not cls._singleton:
             cls._singleton = object.__new__(cls, *a, **k)
         return cls._singleton
+
 
 class MultiDict(DictMixin):
     """ A dict that remembers old values for each key """
@@ -708,6 +729,7 @@ class MultiDict(DictMixin):
             for value in values:
                 yield key, value
 
+
 class HeaderDict(MultiDict):
     """ Same as MultiDict, but title() the key overwrite keys by default. """
     def __getitem__(self, key):
@@ -721,6 +743,12 @@ class HeaderDict(MultiDict):
     def append(self, key, value):
         MultiDict.__setitem__(self, key.title(), str(value))
 
+
+
+
+
+
+# Module level functions
 
 _default_app = Bottle()
 def app(newapp = None):
@@ -771,7 +799,7 @@ def static_file(filename, root, guessmime = True, mimetype = None, download = Fa
         mimetype = mimetypes.guess_type(filename)[0]
     if not mimetype: mimetype = 'text/plain'
     response.content_type = mimetype
-    
+
     if download == True:
         request.header['Content-Disposition'] = 'attachment; filename=%s' %\
         os.path.basename(filename)
@@ -798,6 +826,12 @@ def static_file(filename, root, guessmime = True, mimetype = None, download = Fa
         return HTTPResponse(open(filename, 'rb'))
 
 
+
+
+
+
+# Utilities
+
 def parse_date(ims):
     """
     Parses date strings usually found in HTTP header and returns UTC epoch.
@@ -813,6 +847,7 @@ def parse_date(ims):
     except (ValueError, IndexError):
         return None
 
+
 def parse_auth(header):
     try:
         method, data = header.split(None, 1)
@@ -821,6 +856,7 @@ def parse_auth(header):
             return name, pwd
     except (KeyError, ValueError, TypeError), a:
         return None
+
 
 def cookie_encode(data, key):
     ''' Encode and sign a pickle-able object. Return a string '''
@@ -841,6 +877,7 @@ def cookie_decode(data, key):
 def cookie_is_encoded(data):
   ''' Verify and decode an encoded string. Return an object or None'''
   return bool(data.startswith('!') and '?' in data)
+
 
 def url(routename, **kargs):
     """
@@ -905,6 +942,7 @@ def default():
     Decorator for request handler. Same as set_default(handler).
     """
     return default_app().default()
+
 
 def error(code=500):
     """
@@ -1008,19 +1046,15 @@ def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080,
     """ Runs bottle as a web server. """
     if not app:
         app = default_app()
-    
     quiet = bool(kargs.get('quiet', False))
-
     # Instantiate server, if it is a class instead of an instance
     if isinstance(server, type):
         if issubclass(server, CGIServer):
             server = server()
         elif issubclass(server, ServerAdapter):
             server = server(host=host, port=port, **kargs)
-
     if not isinstance(server, WSGIAdapter):
         raise RuntimeError("Server must be a subclass of WSGIAdapter")
- 
     if not quiet and isinstance(server, ServerAdapter): # pragma: no cover
         if not reloader or os.environ.get('BOTTLE_CHILD') == 'true':
             print "Bottle server starting up (using %s)..." % repr(server)
@@ -1029,7 +1063,6 @@ def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080,
             print
         else:
             print "Bottle auto reloader starting up..."
-
     try:
         if reloader and interval:
             reloader_run(server, app, interval)
@@ -1147,7 +1180,7 @@ class MakoTemplate(BaseTemplate):
                                 input_encoding=MakoTemplate.input_encoding,
                                 default_filters=MakoTemplate.default_filters
                                 )
- 
+
     def render(self, **args):
         _defaults = MakoTemplate.global_variables.copy()
         _defaults.update(args)
@@ -1163,7 +1196,7 @@ class CheetahTemplate(BaseTemplate):
             self.tpl = Template(source=self.template, searchList=[self.context.vars])
         else:
             self.tpl = Template(file=self.filename, searchList=[self.context.vars])
- 
+
     def render(self, **args):
         self.context.vars.update(args)
         out = str(self.tpl)
@@ -1185,7 +1218,7 @@ class Jinja2Template(BaseTemplate):
 
     def render(self, **args):
         return self.tpl.render(**args).encode("utf-8")
-        
+
     def loader(self, name):
         if not name.endswith(".tpl"):
             for path in self.lookup:
