@@ -44,7 +44,7 @@ Run this script, visit <http://localhost:8080/hello> and you will see "Hello Wor
 
 # Routing
 
-Routes are used to map URLs to callbacks that generate the content for the specific URL. Bottle has a `route()` decorator to do that. You can add any number of routes to a callback.
+Routes are used to map an URL to a callback function that generate the content for that specific URL. Bottle has a `route()` decorator to do that. You can add any number of routes to a callback.
 
     #!Python
     from bottle import route
@@ -57,7 +57,7 @@ Routes are used to map URLs to callbacks that generate the content for the speci
     def hello():
         return "Hello World!"
 
-As you can see, URLs and routes have nothing to do with actual files on the web server. Routes are unique names for your callbacks, nothing more and nothing less. Requests to URLs not matching any routes are answered with a 404 HTTP error. Exceptions within your handler callbacks will cause a 500 error. 
+As you can see, URLs and routes have nothing to do with actual files on the web server. Routes are unique names for your callbacks, nothing more and nothing less. Requests to URLs not matching any routes are answered with a 404 HTTP error page. Exceptions within your handler callbacks will cause a 500 error. 
 
 
 
@@ -65,8 +65,8 @@ As you can see, URLs and routes have nothing to do with actual files on the web 
 
 ## HTTP Request Methods
 
-The `route()` decorator has an optional keyword argument `method` which defaults to `method='GET'`, so only GET requests get answered.
-Possible values are `POST`, `PUT`, `DELETE`, `HEAD` or any other [HTTP request method][http_method] you want to listen to. As an alternative, you can use the `@get()`, `@post()`, `@put()` and `@delete()` aliases.
+The `route()` decorator has an optional keyword argument `method` which defaults to `method='GET'`, so only GET requests get answered by that route.
+Possible values are `POST`, `PUT`, `DELETE`, `HEAD`, `ANY` or any other [HTTP request method][http_method] you want to listen to. As an alternative, you can use the `@get()`, `@post()`, `@put()` and `@delete()` aliases.
 
     #!Python
     from bottle import post, request
@@ -76,9 +76,9 @@ Possible values are `POST`, `PUT`, `DELETE`, `HEAD` or any other [HTTP request m
         do_something_with(form_data)
         return "Done"
 
-\* In this example we used [request.POST](#get-and-post-values) to access POST form data.
+\* In this example we used [request.POST](#working-with-http-requests) to access POST form data.
 
-Note that `HEAD` requests will fall back to `GET` routes and all requests will fall back to `ANY` routes, if there is no matching route for the original request method. You don't have to explicitly specify `HEAD` routes.
+Note that `HEAD` requests will fall back to `GET` routes and all requests will fall back to `ANY` routes, if there is no matching route for the original request method.
 
 
 
@@ -95,16 +95,9 @@ Static routes are fine, but URLs may carry information as well. Let's add a `:na
     def hello(name):
         return "Hello %s!" % name
 
-This dynamic route matches `/hello/alice` as well as `/hello/bob`. In fact, the `:name` part will match everything but a slash (`/`), so any name is possible. `/hello/bob/and/alice` or `/hellobob` won't match.
+This dynamic route matches `/hello/alice` as well as `/hello/bob`. In fact, the `:name` part will match everything but a slash (`/`), so any name is possible. `/hello/bob/and/alice` or `/hellobob` won't match. Each part of the URL covered by a placeholder is provided as a keyword parameter to your handler callback.
 
-Each part of the URL covered by a placeholder is provided as a keyword parameter to your handler callback.
-
-
-
-
-### Regular Expressions
-
-A normal placeholder matches everything up to the next slash. To change that, you can add some regular expression:
+A normal placeholder matches everything up to the next slash. To change that, you can add a regular expression pattern:
 
     #!Python
     from bottle import route

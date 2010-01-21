@@ -34,8 +34,42 @@ Here is an example for beaker sessions with a file-based backend.
 
 
 
+## How to use a debugging middleware?
+
+Bottle catches all Exceptions raised in your app code, so your WSGI server won't crash. If you need exceptions to propagate to a debugging middleware, you can turn off this behaviour.
+
+    #!Python
+    import bottle
+    app = bottle.default_app() # or bottle.app() since 0.7
+    app.catchall = False
+    myapp = DebuggingMiddleware(app, evalex=True)
+    bottle.run(app=myapp)
+
+Now, bottle only catches its own exceptions (`HTTPError`, `HTTPResponse` and `BottleException`) and your middleware can handle the rest.
 
 
+
+
+## How to call a WSGI app from within bottle
+
+This is not the recommend way (you should use a middleware in front of bottle to do this) but you can call other WSGI applications from within your bottle app and let bottle act as a pseudo-middleware. Here is an example:
+
+    #!Python
+    from bottle import request, response, route
+    subproject = SomeWSGIApplication()
+
+    @route('/subproject/:subpath#.*#', method='ALL')
+    def call_wsgi(subpath):
+        new_environ = request.environ.copy()
+        new_environ['SCRIPT_NAME'] = new_environ.get('SCRIPT_NAME','') + '/subproject'
+        new_environ['PATH_INFO'] = '/' + subpath
+        def start_response(status, headerlist):
+            response.status = int(status.split()[0])
+            for key, value in headerlist:
+                response.header.append(key, value) # or .add_header() with bottle < 0.7
+      return app(new_environ, start_response)
+
+Again, this is not the recommend way to implement subprojects. It is only here because many people asked for this and to show how bottle maps to WSGI.
 
 ## How to ignore tailing slashes?
 
