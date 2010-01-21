@@ -104,7 +104,11 @@ import hmac
 import base64
 from urllib import quote as urlquote
 from urlparse import urlunsplit, urljoin
-from UserDict import DictMixin
+
+try:
+  from collections import MutableMapping as DictMixin
+except ImportError: # pragma: no cover
+  from UserDict import DictMixin
 
 if sys.version_info >= (3,0,0):
     # See Request.POST
@@ -368,7 +372,7 @@ class Bottle(object):
         return self.default_route, None
 
     def get_url(self, routename, **kargs):
-        pass #TODO implement this
+        pass #TODO implement this (and don't forget to add self.rootpath)
 
     def route(self, url, method='GET', **kargs):
         """
@@ -709,20 +713,33 @@ class MultiDict(DictMixin):
         self.dict = dict()
         for k, v in dict(*a, **k).iteritems():
             self[k] = v
-        self.keys = self.dict.keys
 
-    def __getitem__(self, key):
-        return self.dict[key][-1]
+    def __len__(self): return len(self.dict)
+    def __iter__(self): return iter(self.dict)
+    def __contains__(self, key): return key in self.dict
+    def __delitem__(self, key): del self.dict[key]
 
-    def __setitem__(self, key, value):
+    def __getitem__(self, key): return self.getlast(key)
+    def __setitem__(self, key, value): self.append(key, value)
+
+    def append(self, key, value):
         self.dict.setdefault(key, []).append(value)
+        
+    def replace(self, key, value):
+        self.dict[key] = [value]
 
-    def __delitem__(self, key):
-        del self.dict[key]
+    def getall(self, key):
+        return self.dict.get(key) or []
 
-    def getall(self, *a):
-        """ Get all values for this key, not just the last one """
-        return self.dict.get(*a) or []
+    def getfirst(self, key, default=KeyError):
+        if key not in self.dict and default != KeyError:
+            return default
+        return self.dict[key][0]
+
+    def getlast(self, key, default=None):
+        if key not in self.dict and default != KeyError:
+            return default
+        return self.dict[key][-1]
 
     def iterallitems(self):
         for key, values in self.dict.iteritems():
@@ -732,16 +749,10 @@ class MultiDict(DictMixin):
 
 class HeaderDict(MultiDict):
     """ Same as MultiDict, but title() the key overwrite keys by default. """
-    def __getitem__(self, key):
-        return MultiDict.__getitem__(self, key.title())
-
-    def __setitem__(self, key, value):
-        if key in self: # Overwrite by default
-            del self[key]
-        MultiDict.__setitem__(self, key.title(), str(value))
-
-    def append(self, key, value):
-        MultiDict.__setitem__(self, key.title(), str(value))
+    def __contains__(self, key): return MultiDict.__contains__(self, key.title())
+    def __getitem__(self, key): return MultiDict.__getitem__(self, key.title())
+    def __delitem__(self, key): return MultiDict.__delitem__(self, key.title())
+    def __setitem__(self, key, value): self.replace(key.title(), value)
 
 
 
@@ -862,27 +873,25 @@ def cookie_encode(data, key):
     ''' Encode and sign a pickle-able object. Return a string '''
     msg = base64.b64encode(pickle.dumps(data, -1))
     sig = base64.b64encode(hmac.new(key, msg).digest())
-    return '!%s?%s' % (sig, msg)
+    return u'!'.encode('ascii') + sig + u'?'.encode('ascii') + msg #2to3 hack
 
 
 def cookie_decode(data, key):
-  ''' Verify and decode an encoded string. Return an object or None'''
-  if cookie_is_encoded(data):
-    sig, msg = data.split('?',1)
-    if sig[1:] == base64.b64encode(hmac.new(key, msg).digest()):
-      return pickle.loads(base64.b64decode(msg))
-  return None 
+    ''' Verify and decode an encoded string. Return an object or None'''
+    if cookie_is_encoded(data):
+        sig, msg = data.split(u'?'.encode('ascii'),1) #2to3 hack
+        if sig[1:] == base64.b64encode(hmac.new(key, msg).digest()):
+           return pickle.loads(base64.b64decode(msg))
+    return None 
 
 
 def cookie_is_encoded(data):
-  ''' Verify and decode an encoded string. Return an object or None'''
-  return bool(data.startswith('!') and '?' in data)
+    ''' Verify and decode an encoded string. Return an object or None'''
+    return bool(data.startswith(u'!'.encode('ascii')) and u'?'.encode('ascii') in data) #2to3 hack
 
 
 def url(routename, **kargs):
-    """
-    Helper generates URLs out of anmed routes
-    """
+    """ Helper generates URLs out of named routes """
     return app().get_url(routename, **kargs)
 
 
