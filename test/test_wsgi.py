@@ -54,7 +54,7 @@ class TestWsgi(ServerTestBase):
         @bottle.route('/')
         def test(): return 'bla'
         self.assertEqual(200, self.urlopen('/').code)
-        bottle.default_app().serve = False
+        bottle.app().serve = False
         self.assertEqual(503, self.urlopen('/').code)
 
     def test_default(self):
@@ -83,8 +83,8 @@ class TestWsgi(ServerTestBase):
         self.assertEqual(200, self.urlopen('/').code)
         self.assertEqual(tob("<class 'bottle.HTTPError'>"), self.urlopen('/').read())
 
-    def test_307(self):
-        """ WSGI: redirect (HTTP 307) """
+    def test_303(self):
+        """ WSGI: redirect (HTTP 303) """
         @bottle.route('/')
         def test(): bottle.redirect('/yes')
         @bottle.route('/yes')
@@ -115,7 +115,6 @@ class TestWsgi(ServerTestBase):
         @bottle.route('/file')
         def test(): return StringIO('test')
         self.assertEqual(tob('test'), self.urlopen('/file').read())
-
 
     def test_unicode(self):
         """ WSGI: Test Unicode support """
@@ -154,7 +153,6 @@ class TestWsgi(ServerTestBase):
         self.assertTrue('a=a' in c)
         self.assertTrue('b=b' in c)
         self.assertTrue('c=c; Path=/' in c)
-
 
 class TestDecorators(ServerTestBase):
     ''' Tests Decorators '''

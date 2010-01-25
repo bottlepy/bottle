@@ -74,8 +74,8 @@ class ServerTestBase(unittest.TestCase):
         self.port = 61382
         self.host = 'localhost'
         self.app = bottle.Bottle()
-        self.oldapp = bottle.default_app()
-        bottle.default_app(self.app)
+        self.oldapp = bottle.app()
+        bottle.app_push(self.app)
         self.server = TestServer(host=self.host, port=self.port)
         self.urlopen = self.server.urlopen
         self.thread = threading.Thread(target=bottle.run, args=(), kwargs=dict(app=self.app, server=self.server, quiet=True))
@@ -86,7 +86,7 @@ class ServerTestBase(unittest.TestCase):
         ''' Recover the olt default_app and remove wsgi_intercept from urllib2 '''
         self.server.shutdown()
         self.thread.join()
-        bottle.default_app(self.oldapp)
+        bottle.app_pop()
     
     def same(self, data, url):
         if isinstance(data, unicode):

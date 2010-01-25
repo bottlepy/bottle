@@ -10,9 +10,9 @@ import sys
 if __name__ == '__main__':
     bottle.debug(True)
     unittests = [name[2:-3] for name in glob.glob('./test_*.py')]
-    doctests = glob.glob('./doctest_*.txt')
     suite = unittest.defaultTestLoader.loadTestsFromNames(unittests)
-    suite.addTest(doctest.DocFileSuite(*doctests))
+    #doctests = glob.glob('./doctest_*.txt')
+    #suite.addTest(doctest.DocFileSuite(*doctests))
     result = unittest.TextTestRunner(verbosity=0).run(suite)
     sys.exit((result.errors or result.failures) and 1 or 0)
 

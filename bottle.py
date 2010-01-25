@@ -89,7 +89,7 @@ import cgi
 import mimetypes
 import os
 import os.path
-import traceback
+from traceback import format_exc
 import re
 import random
 import threading
@@ -150,16 +150,23 @@ class BottleException(Exception):
 
 class HTTPResponse(BottleException):
     """ Used to break execution and imediately finish the response """
-    def __init__(self, output='', status=200):
-        super(BottleException, self).__init__(status, output)
+    def __init__(self, output='', status=200, header=None):
+        super(BottleException, self).__init__("HTTP Response %d" % status)
         self.status = int(status)
         self.output = output
+        self.header = HeaderDict(header) if header else None
+
+    def apply(self, response):
+        if self.header:
+            for key, value in self.header.iterallitems():
+                response.header[key] = value
+        response.status = self.status
 
 
 class HTTPError(HTTPResponse):
     """ Used to generate an error page """
-    def __init__(self, code=500, message='Unknown Error', exception=None):
-        super(HTTPError, self).__init__(message, code)
+    def __init__(self, code=500, message='Unknown Error', exception=None, header=None):
+        super(HTTPError, self).__init__(message, code, header)
         self.exception = exception
 
     def __str__(self):
@@ -392,19 +399,19 @@ class Bottle(object):
                 raise
             err = "Unhandled Exception: %s\n" % (repr(e))
             if DEBUG:
-                err += '\n\nTraceback:\n' + traceback.format_exc(10)
+                err += '\n\nTraceback:\n' + format_exc(10)
             request.environ['wsgi.errors'].write(err)
             return HTTPError(500, err, e)
 
     def cast(self, out):
         """ Try to cast the input into something WSGI compatible. Correct
-        HTTP headers and status codes when possible. Empty output on HEAD
+        HTTP header and status codes when possible. Empty output on HEAD
         requests.
         Support: False, str, unicode, list(unicode), file, dict, list(dict),
                  HTTPResponse and HTTPError
         """
         if isinstance(out, HTTPResponse):
-            response.status = out.status
+            out.apply(response)
             if isinstance(out, HTTPError):
                 out = self.error_handler.get(out.status, str)(out)
             else:
@@ -448,19 +455,18 @@ class Bottle(object):
             out = self.handle(request.path, request.method)
             out = self.cast(out)
             status = '%d %s' % (response.status, HTTP_CODES[response.status])
-            start_response(status, response.wsgiheaders())
+            start_response(status, response.wsgiheader())
             return out
         except (KeyboardInterrupt, SystemExit, MemoryError):
             raise
         except Exception, e:
             if not self.catchall:
                 raise
-            err = "<h1>Critial error while processing request: %s</h1>" %\
-                  environ.get('PATH_INFO', '/')
+            err = '<h1>Critial error while processing request: %s</h1>' \
+                  % environ.get('PATH_INFO', '/')
             if DEBUG:
-                err += '<h2>Error:</h2>\n<pre>%s</pre>\n'\
-                       '<h2>Traceback:</h2>\n<pre>%s</pre>\n' %\
-                       (repr(e), traceback.format_exc(10))
+                err += '<h2>Error:</h2>\n<pre>%s</pre>\n' % repr(e)
+                err += '<h2>Traceback:</h2>\n<pre>%s</pre>\n' % format_exc(10)
             environ['wsgi.errors'].write(err) #TODO: wsgi.error should not get html
             start_response('500 INTERNAL SERVER ERROR', [])
             return [err]
@@ -515,14 +521,15 @@ class Request(threading.local, DictMixin):
         return urlunsplit(parts)
 
     @property
-    def body_length(self):
+    def content_length(self):
         """ The Content-Length header as an integer, -1 if not specified """
-        return int(self.environ.get('CONTENT_LENGTH', -1))
+        return int(self.environ.get('CONTENT_LENGTH','') or -1)
 
     @property
     def header(self):
-        ''' Dictionary containing HTTP headers'''
+        ''' Dictionary containing HTTP header'''
         if self._header is None:
+            self._header = HeaderDict()
             for key, value in self.environ.iteritems():
                 if key.startswith('HTTP_'):
                     key = key[5:].replace('_','-').title()
@@ -571,7 +578,7 @@ class Request(threading.local, DictMixin):
     def body(self):
         """ The HTTP request body as a seekable file object """
         if self._body is None:
-            maxread = max(0, int(self['CONTENT_LENGTH']))
+            maxread = max(0, self.content_length)
             stream = self.environ['wsgi.input']
             self._body = BytesIO() if maxread < MEMFILE_MAX else TemporaryFile(mode='w+b')
             while maxread > 0:
@@ -614,17 +621,22 @@ class Response(threading.local):
         self._COOKIES = None
         self.status = 200
         self.header = HeaderDict()
-        self.charset = 'UTF-8'
         self.content_type = 'text/html; charset=UTF-8'
         self.error = None
         self.app = app
 
-    def wsgiheaders(self):
+    def wsgiheader(self):
         ''' Returns a wsgi conform list of header/value pairs '''
         for c in self.COOKIES.values():
             if c.OutputString() not in self.header.getall('Set-Cookie'):
                 self.header.append('Set-Cookie', c.OutputString())
         return list(self.header.iterallitems())
+
+    @property
+    def charset(self):
+        if 'charset=' in self.content_type:
+            return self.content_type.split('charset=')[-1].split(';')[0].strip()
+        return 'UTF-8'
 
     @property
     def COOKIES(self):
@@ -639,7 +651,7 @@ class Response(threading.local):
         """
         if not isinstance(value, basestring):
             sec = self.app.config['securecookie.key']
-            value = cookie_encode(value, sec)
+            value = cookie_encode(value, sec).decode('ascii') #2to3 hack
         self.COOKIES[key] = value
         for k, v in kargs.iteritems():
             self.COOKIES[key][k.replace('_', '-')] = v
@@ -649,8 +661,6 @@ class Response(threading.local):
         return self.header['Content-Type']
         
     def set_content_type(self, value):
-        if 'charset=' in value:
-            self.charset = value.split('charset=')[-1].split(';')[0].strip()
         self.header['Content-Type'] = value
 
     content_type = property(get_content_type, set_content_type, None,
@@ -683,8 +693,8 @@ class MultiDict(DictMixin):
     def __iter__(self): return iter(self.dict)
     def __contains__(self, key): return key in self.dict
     def __delitem__(self, key): del self.dict[key]
-
-    def __getitem__(self, key): return self.getlast(key)
+    def keys(self): return self.dict.keys()
+    def __getitem__(self, key): return self.get(key, KeyError, -1)
     def __setitem__(self, key, value): self.append(key, value)
 
     def append(self, key, value):
@@ -696,15 +706,10 @@ class MultiDict(DictMixin):
     def getall(self, key):
         return self.dict.get(key) or []
 
-    def getfirst(self, key, default=KeyError):
+    def get(self, key, default=None, index=-1):
         if key not in self.dict and default != KeyError:
-            return default
-        return self.dict[key][0]
-
-    def getlast(self, key, default=None):
-        if key not in self.dict and default != KeyError:
-            return default
-        return self.dict[key][-1]
+            return [default][index]
+        return self.dict[key][index]
 
     def iterallitems(self):
         for key, values in self.dict.iteritems():
@@ -717,8 +722,10 @@ class HeaderDict(MultiDict):
     def __contains__(self, key): return MultiDict.__contains__(self, key.title())
     def __getitem__(self, key): return MultiDict.__getitem__(self, key.title())
     def __delitem__(self, key): return MultiDict.__delitem__(self, key.title())
-    def __setitem__(self, key, value): self.replace(key.title(), value)
-
+    def __setitem__(self, key, value): self.replace(key, value)
+    def getall(self, key): return MultiDict.getall(self, key.title())
+    def append(self, key, value): return MultiDict.append(self, key.title(), str(value))
+    def replace(self, key, value): return MultiDict.replace(self, key.title(), str(value))
 
 
 
@@ -726,17 +733,22 @@ class HeaderDict(MultiDict):
 
 # Module level functions
 
-_default_app = Bottle()
-def app(newapp = None):
-    """
-    Returns the current default app or sets a new one.
-    Defaults to an instance of Bottle
-    """
-    global _default_app
-    if newapp:
-        _default_app = newapp
-    return _default_app
+_default_app = [Bottle()]
+def app():
+    """ Return the current default app. """
+    return _default_app[-1]
 default_app = app # BC: 0.6.4
+
+def app_push(newapp = True):
+    """ Add a new app to the stack, making it default """
+    if newapp == True:
+        newapp = Bottle()
+    _default_app.append(newapp)
+
+def app_pop():
+    """ Remove the current default app from the stack, returning it """
+    return _default_app.pop()
+    
 
 
 def abort(code=500, text='Unknown Error: Appliction stopped.'):
@@ -747,8 +759,8 @@ def abort(code=500, text='Unknown Error: Appliction stopped.'):
 def redirect(url, code=303):
     """ Aborts execution and causes a 303 redirect """
     scriptname = request.environ.get('SCRIPT_NAME', '').rstrip('/') + '/'
-    response.header['Location'] = urljoin(request.url, urljoin(scriptname, url))
-    raise HTTPError(code, "")
+    location = urljoin(request.url, urljoin(scriptname, url))
+    raise HTTPResponse("", status=code, header=dict(Location=location))
 
 
 def send_file(*a, **k): #BC 0.6.4
@@ -756,14 +768,15 @@ def send_file(*a, **k): #BC 0.6.4
     raise static_file(*a, **k)
 
 
-def static_file(filename, root, guessmime = True, mimetype = None, download = False):
+def static_file(filename, root, guessmime=True, mimetype=None, download=False):
     """ Opens a file in a save way and returns a HTTPError object with status
         code 200, 305, 401 or 404. Sets Content-Type, Content-Length and
         Last-Modified header. Obeys If-Modified-Since header and HEAD requests.
     """
     root = os.path.abspath(root) + os.sep
     filename = os.path.abspath(os.path.join(root, filename.strip('/\\')))
-
+    header = dict()
+    
     if not filename.startswith(root):
         return HTTPError(401, "Access denied.")
     if not os.path.exists(filename) or not os.path.isfile(filename):
@@ -771,35 +784,30 @@ def static_file(filename, root, guessmime = True, mimetype = None, download = Fa
     if not os.access(filename, os.R_OK):
         return HTTPError(401, "You do not have permission to access this file.")
 
-    if guessmime and not mimetype:
-        mimetype = mimetypes.guess_type(filename)[0]
-    if not mimetype: mimetype = 'text/plain'
-    response.content_type = mimetype
+    if not mimetype and guessmime:
+        header['Content-Type'] = mimetypes.guess_type(filename)[0]
+    else:
+        header['Content-Type'] = mimetype if mimetype else 'text/plain'
 
     if download == True:
-        request.header['Content-Disposition'] = 'attachment; filename=%s' %\
-        os.path.basename(filename)
-    elif download:
-        request.header['Content-Disposition'] = 'attachment; filename=%s' %\
-        download
+        download = os.path.basename(filename)
+    if download:
+        header['Content-Disposition'] = 'attachment; filename=%s' % download
 
     stats = os.stat(filename)
-    if 'Last-Modified' not in response.header:
-        lm = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(stats.st_mtime))
-        response.header['Last-Modified'] = lm
-    if 'HTTP_IF_MODIFIED_SINCE' in request.environ:
-        ims = request.environ['HTTP_IF_MODIFIED_SINCE']
-        # IE sends "<date>; length=146"
-        ims = ims.split(";")[0].strip()
+    lm = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(stats.st_mtime))
+    header['Last-Modified'] = lm
+    ims = request.environ.get('HTTP_IF_MODIFIED_SINCE')
+    if ims:
+        ims = ims.split(";")[0].strip() # IE sends "<date>; length=146"
         ims = parse_date(ims)
         if ims is not None and ims >= stats.st_mtime:
-           return HTTPError(304, "Not modified")
-    if 'Content-Length' not in response.header:
-        response.header['Content-Length'] = str(stats.st_size)
+           return HTTPResponse("Not modified", status=304, header=header)
+    header['Content-Length'] = stats.st_size
     if request.method == 'HEAD':
-        return HTTPResponse('')
+        return HTTPResponse('', header=header)
     else:
-        return HTTPResponse(open(filename, 'rb'))
+        return HTTPResponse(open(filename, 'rb'), header=header)
 
 
 
@@ -843,6 +851,7 @@ def cookie_encode(data, key):
 
 def cookie_decode(data, key):
     ''' Verify and decode an encoded string. Return an object or None'''
+    if isinstance(data, unicode): data = data.encode('ascii') #2to3 hack
     if cookie_is_encoded(data):
         sig, msg = data.split(u'?'.encode('ascii'),1) #2to3 hack
         if sig[1:] == base64.b64encode(hmac.new(key, msg).digest()):

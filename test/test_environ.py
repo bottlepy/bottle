@@ -3,6 +3,7 @@ import unittest
 import sys, os.path
 from bottle import request, response
 import tools
+from tools import tob
 import wsgiref.util
 
 class TestEnviron(unittest.TestCase):
@@ -19,6 +20,40 @@ class TestEnviron(unittest.TestCase):
             self.assertEqual(v, request.path)
         request.bind({}, None)
         self.assertEqual('/', request.path)
+
+    def test_url(self):
+        """ Environ: URL building """
+        request.bind({'HTTP_HOST':'example.com'}, None)
+        self.assertEqual('http://example.com/', request.url)
+        request.bind({'SERVER_NAME':'example.com'}, None)
+        self.assertEqual('http://example.com/', request.url)
+        request.bind({'SERVER_NAME':'example.com', 'SERVER_PORT':'81'}, None)
+        self.assertEqual('http://example.com:81/', request.url)
+        request.bind({'wsgi.url_scheme':'https', 'SERVER_NAME':'example.com'}, None)
+        self.assertEqual('https://example.com:80/', request.url)
+        request.bind({'HTTP_HOST':'example.com', 'PATH_INFO':'/path', 'QUERY_STRING':'1=b&c=d', 'SCRIPT_NAME':'/sp'}, None)
+        self.assertEqual('http://example.com/sp/path?1=b&c=d', request.url)
+
+    def test_dict_access(self):
+        """ Environ: request objects are environment dicts """
+        e = {}
+        wsgiref.util.setup_testing_defaults(e)
+        request.bind(e, None)
+        for k, v in e.iteritems():
+            self.assertTrue(k in request)
+            self.assertTrue(request[k] == v)
+
+    def test_header_access(self):
+        """ Environ: Request objects decode headers """
+        e = {}
+        wsgiref.util.setup_testing_defaults(e)
+        e['HTTP_SOME_HEADER'] = 'some value'
+        request.bind(e, None)
+        request['HTTP_SOME_OTHER_HEADER'] = 'some other value'
+        self.assertTrue('Some-Header' in request.header)
+        self.assertTrue(request.header['Some-Header'] == 'some value')
+        self.assertTrue(request.header['Some-Other-Header'] == 'some other value')
+
 
     def test_cookie(self):
         """ Environ: COOKIES """ 
@@ -59,17 +94,31 @@ class TestEnviron(unittest.TestCase):
         self.assertEqual('1', request.POST['a'])
         self.assertEqual('b', request.POST['b'])
 
+    def test_params(self):
+        """ Environ: GET and POST are combined in request.param """ 
+        e = {}
+        wsgiref.util.setup_testing_defaults(e)
+        e['wsgi.input'].write(tob('b=b&c=p'))
+        e['wsgi.input'].seek(0)
+        e['CONTENT_LENGTH'] = '7'
+        e['QUERY_STRING'] = 'a=a&c=g'
+        e['REQUEST_METHOD'] = "POST"
+        request.bind(e, None)
+        self.assertEqual(['a','b','c'], sorted(request.params.keys()))
+        self.assertEqual('p', request.params['c'])
+
     def test_getpostleak(self):
-        """ Environ: GET and POST shuld not leak into each other """ 
+        """ Environ: GET and POST sh0uld not leak into each other """ 
         e = {}
         wsgiref.util.setup_testing_defaults(e)
         e['wsgi.input'].write(u'b=b'.encode('utf8'))
         e['wsgi.input'].seek(0)
         e['CONTENT_LENGTH'] = '3'
         e['QUERY_STRING'] = 'a=a'
+        e['REQUEST_METHOD'] = "POST"
         request.bind(e, None)
-        self.assertTrue('b' not in request.GET)
-        self.assertTrue('a' not in request.POST)
+        self.assertEqual(['a'], request.GET.keys())
+        self.assertEqual(['b'], request.POST.keys())
 
     def test_body(self):
         """ Environ: Request.body should behave like a file object factory """ 

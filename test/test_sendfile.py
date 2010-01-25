@@ -45,48 +45,41 @@ class TestSendFile(unittest.TestCase):
 
     def test_invalid(self):
         """ SendFile: Invalid requests"""
-        try:
-            send_file('not/a/file', root='./')
-        except HTTPError, e:
-            self.assertEqual(404, e.status)
-        try:
-            send_file(os.path.join('./../', os.path.basename(__file__)), root='./views/')
-        except HTTPError, e:
-            self.assertEqual(401, e.status)
+        self.assertEqual(404, static_file('not/a/file', root='./').status)
+        f = static_file(os.path.join('./../', os.path.basename(__file__)), root='./views/')
+        self.assertEqual(401, f.status)
         try:
             fp, fn = tempfile.mkstemp()
             os.chmod(fn, 0)
-            try:
-                send_file(fn, root='/')
-            except HTTPError, e:
-                self.assertEqual(401, e.status)
+            self.assertEqual(401, static_file(fn, root='/').status)
         finally:
             os.close(fp)
             os.unlink(fn)
             
     def test_mime(self):
         """ SendFile: Mime Guessing"""
-        static_file(os.path.basename(__file__), root='./')
-        self.assertTrue(response.content_type in ('application/x-python-code', 'text/x-python'))
-        static_file(os.path.basename(__file__), root='./', mimetype='some/type')
-        self.assertEqual('some/type', response.content_type)
-        static_file(os.path.basename(__file__), root='./', guessmime=False)
-        self.assertEqual('text/plain', response.content_type)
+        f = static_file(os.path.basename(__file__), root='./')
+        self.assertTrue(f.header['Content-Type'] in ('application/x-python-code', 'text/x-python'))
+        f = static_file(os.path.basename(__file__), root='./', mimetype='some/type')
+        self.assertEqual('some/type', f.header['Content-Type'])
+        f = static_file(os.path.basename(__file__), root='./', guessmime=False)
+        self.assertEqual('text/plain', f.header['Content-Type'])
 
     def test_ims(self):
         """ SendFile: If-Modified-Since"""
         request.environ['HTTP_IF_MODIFIED_SINCE'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime())
-        try:
-            send_file(os.path.basename(__file__), root='./')
-        except HTTPError, e:
-            self.assertEqual(304 ,e.status)
-
+        self.assertEqual(304, static_file(os.path.basename(__file__), root='./').status)
         request.environ['HTTP_IF_MODIFIED_SINCE'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(100))
-        try:
-            send_file(os.path.basename(__file__), root='./')
-        except HTTPResponse, e:
-            self.assertEqual(open(__file__,'rb').read(), e.output.read())
+        self.assertEqual(open(__file__,'rb').read(), static_file(os.path.basename(__file__), root='./').output.read())
 
+    def test_download(self):
+        """ SendFile: Download as attachment """
+        basename = os.path.basename(__file__)
+        f = static_file(basename, root='./', download=True)
+        self.assertEqual('attachment; filename=%s' % basename, f.header['Content-Disposition'])
+        request.environ['HTTP_IF_MODIFIED_SINCE'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(100))
+        f = static_file(os.path.basename(__file__), root='./')
+        self.assertEqual(open(__file__,'rb').read(), f.output.read())
 
 
 if __name__ == '__main__':
