@@ -1210,7 +1210,7 @@ class Jinja2Template(BaseTemplate):
                     name = fpath
                     break
         f = open(name)
-        try: return f.read()
+        try: return f.read().decode('utf-8')
         finally: f.close()
 
 
