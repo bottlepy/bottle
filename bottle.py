@@ -104,6 +104,7 @@ import hmac
 import base64
 from urllib import quote as urlquote
 from urlparse import urlunsplit, urljoin
+import functools
 
 try:
   from collections import MutableMapping as DictMixin
@@ -1325,43 +1326,26 @@ def template(tpl, template_adapter=SimpleTemplate, **args):
     args['response'] = response
     return TEMPLATES[tpl].render(**args)
 
-
-def mako_template(tpl_name, **kargs):
-    kargs['template_adapter'] = MakoTemplate
-    return template(tpl_name, **kargs)
-
-
-def cheetah_template(tpl_name, **kargs):
-    kargs['template_adapter'] = CheetahTemplate
-    return template(tpl_name, **kargs)
-
-
-def jinja2_template(tpl_name, **kargs):
-    kargs['template_adapter'] = Jinja2Template
-    return template(tpl_name, **kargs)
-
+mako_template = functools.partial(template, template_adapter=MakoTemplate)
+cheetah_template = functools.partial(template, template_adapter=CheetahTemplate)
+jinja2_template = functools.partial(template, template_adapter=Jinja2Template)
 
 def view(tpl_name, **defaults):
     ''' Decorator: Rendes a template for a handler.
         Return a dict of template vars to fill out the template.
     '''
     def decorator(func):
-        def wrapper(**kargs):
+        functools.wraps(func)
+        def wrapper(*args, **kargs):
             tplvars = dict(defaults)
-            tplvars.update(func(**kargs))
+            tplvars.update(func(*args, **kargs))
             return template(tpl_name, **tplvars)
         return wrapper
     return decorator
 
-
-def mako_view(tpl_name, **kargs):
-    return view(tpl_name, template_adapter=MakoTemplate, **kargs)
-
-def cheetah_view(tpl_name, **kargs):
-    return view(tpl_name, template_adapter=CheetahTemplate, **kargs)
-
-def jinja2_view(tpl_name, **kargs):
-    return view(tpl_name, template_adapter=Jinja2Template, **kargs)
+mako_view = functools.partial(view, template_adapter=MakoTemplate)
+cheetah_view = functools.partial(view, template_adapter=CheetahTemplate)
+jinja2_view = functools.partial(view, template_adapter=Jinja2Template)
 
 
 
