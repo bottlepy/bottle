@@ -1333,7 +1333,7 @@ def view(tpl_name, **defaults):
         Return a dict of template vars to fill out the template.
     '''
     def decorator(func):
-        functools.wraps(func)
+        @functools.wraps(func)
         def wrapper(*args, **kargs):
             tplvars = dict(defaults)
             tplvars.update(func(*args, **kargs))
