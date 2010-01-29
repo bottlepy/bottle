@@ -9,7 +9,7 @@ class TestRouter(unittest.TestCase):
         add = self.r.add
         match = self.r.match
         add('/static', 'static')
-        self.assertEqual(('static', None), match('/static'))
+        self.assertEqual(('static', {}), match('/static'))
         add('/\\:its/:#.+#/:test/:name#[a-z]+#/', 'handler')
         self.assertEqual(('handler', {'test': 'cruel', 'name': 'world'}), match('/:its/a/cruel/world/'))
         add('/:test', 'notail')
@@ -19,8 +19,8 @@ class TestRouter(unittest.TestCase):
         add(':test', 'fullmatch')
         self.assertEqual(('fullmatch', {'test': 'test'}), match('test'))
         add('/:#anon#/match', 'anon')
-        self.assertEqual(('anon', None), match('/anon/match'))
-        self.assertEqual((None, None), match('//no/m/at/ch/'))
+        self.assertEqual(('anon', {}), match('/anon/match'))
+        self.assertEqual((None, {}), match('//no/m/at/ch/'))
 
     def testErrorInPattern(self):
         self.assertRaises(bottle.RouteSyntaxError, self.r.add, '/:bug#(#/', 'buggy')

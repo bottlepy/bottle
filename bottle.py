@@ -288,14 +288,14 @@ class Router(object):
     def match(self, uri):
         ''' Matches an URL and returns a (handler, target) tuple '''
         if uri in self.static:
-            return self.static[uri], None
+            return self.static[uri], {}
         for combined, subroutes in self.dynamic:
             match = combined.match(uri)
             if not match: continue
             data, groups = subroutes[match.lastindex - 1]
-            if groups: groups = groups.match(uri).groupdict()
+            groups = groups.match(uri).groupdict() if groups else {}
             return data, groups
-        return None, None
+        return None, {}
 
     def build(self, route_name, **args):
         ''' Builds an URL out of a named route and some parameters.'''
@@ -329,11 +329,11 @@ class Bottle(object):
 
     def match_url(self, path, method='GET'):
         """ Find a callback bound to a path and a specific method.
-            Return (callback, param) tuple or (None, None).
+            Return (callback, param) tuple or (None, {}).
             method=HEAD falls back to GET. method=GET falls back to ALL.
         """
         if not path.startswith(self.rootpath):
-            return None, None
+            return None, {}
         path = path[len(self.rootpath):].strip().lstrip('/')
         method = method.upper()
         tests = (method, 'GET', 'ALL') if method == 'HEAD' else (method, 'ALL')
@@ -342,7 +342,7 @@ class Bottle(object):
                 handler, param = self.routes[method].match(path)
                 if handler:
                     return handler, param
-        return self.default_route, None
+        return self.default_route, {}
 
     def get_url(self, routename, **kargs):
         pass #TODO implement this (and don't forget to add self.rootpath)
@@ -386,8 +386,6 @@ class Bottle(object):
         handler, args = self.match_url(request.path, request.method)
         if not handler:
             return HTTPError(404, "Not found")
-        if not args:
-            args = dict()
 
         try:
             return handler(**args)
