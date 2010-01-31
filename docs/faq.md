@@ -20,7 +20,8 @@ Here is an example for beaker sessions with a file-based backend.
     session_opts = {
         'session.type': 'file',
         'session.cookie_expires': 300,
-        'session.data_dir': './data'
+        'session.data_dir': './data',
+        'session.auto': True
     }
     app = SessionMiddleware(app, session_opts)
 
@@ -28,6 +29,7 @@ Here is an example for beaker sessions with a file-based backend.
     def test():
       s = bottle.request.environ.get('beaker.session')
       s['test'] = s.get('test',0) + 1
+      s.save()
       return 'Test counter: %d' % s['test']
 
     bottle.run(app=app)
@@ -42,7 +44,7 @@ Bottle catches all Exceptions raised in your app code, so your WSGI server won't
     import bottle
     app = bottle.default_app() # or bottle.app() since 0.7
     app.catchall = False
-    myapp = DebuggingMiddleware(app, evalex=True)
+    myapp = DebuggingMiddleware(app)
     bottle.run(app=myapp)
 
 Now, bottle only catches its own exceptions (`HTTPError`, `HTTPResponse` and `BottleException`) and your middleware can handle the rest.
