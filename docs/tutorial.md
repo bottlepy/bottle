@@ -62,7 +62,7 @@ Furthermore, you need [pysqlite](Pysqlite), the Python modules to access SQLite 
 First, we need to create the database we use later on. To do so, run SQLite with the command `sqlite3 todo.db`. This will create an empty data base called "todo.sql" and you will see the SQLite prompt, which may look like this: `sqlite>`. Right here, input the following commands:
 
     #!sql
-    CREATE TABLE todo (id int PRIMARY KEY, task char(100) NOT NULL, status bool NOT NULL)
+    CREATE TABLE todo (id int PRIMARY KEY, task char(100) NOT NULL, status bool NOT NULL);
     INSERT INTO todo (task,status) VALUES ('Read A-byte-of-python to get a good introduction into Python',0);
     INSERT INTO todo (task,status) VALUES ('Visit the Python website',1);
     INSERT INTO todo (task,status) VALUES ('Test various editors for and check the syntax highlighting',1);
@@ -86,14 +86,10 @@ So, after understanding the concept of routes, let's create the first one. The g
     
     @route('/todo')
     def todo_list():
-    
         conn = sqlite3.connect('todo.db')
         c = conn.cursor()
-        
-        c.execute("SELECT id, task FROM to WHERE status LIKE '1'")
-        
+        c.execute("SELECT id, task FROM todo WHERE status LIKE '1'")
         result = c.fetchall()
-        
         return str(result)
         
     run()
@@ -132,7 +128,6 @@ Maybe you already experienced the Bottle sends a short error message to the brow
     #!Python
     from bottle import run, route, debug
     ...
-    
     #add this at the very end:
     debug(True)
     run()
@@ -181,11 +176,11 @@ Now it is time to write the corresponding template, which looks like this:
     <p>The open items are as follows:</p>
     <table border="1">
     %for row in rows:
-    <tr>
-    %for r in row:
-    <td>{{r}}</td>
-    %end
-    </tr>
+      <tr>
+      %for r in row:
+        <td>{{r}}</td>
+      %end
+      </tr>
     %end
     </table>
 
