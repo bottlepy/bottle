@@ -1220,21 +1220,15 @@ class SimpleTemplate(BaseTemplate):
     def prepare(self):
         if self.template:
             self.code = self.translate(self.template)
-            print '#'*75
-            print self.code
-            print '#'*75
             self.co = compile(self.code, '<string>', 'exec')
         else:
             self.code = self.translate(open(self.filename).read())
-            print '#'*75
-            print self.code
-            print '#'*75
             self.co = compile(self.code, self.filename, 'exec')
-        if not DEBUG:
-            del self.code
+        for line in self.code.splitlines()[:2]:
+            m = re.search(r"coding[:=]\s*([-\w\.]+)", line)
+            if m: self.encoding = m.group(1)
 
-    @classmethod
-    def translate(cls, template):
+    def translate(self, template):
         indent = 0 # Current Code indentation
         lineno = 0 # Current line of code
         ptrbuffer = [] # Buffer for printable strings and PyStmt instances
@@ -1255,7 +1249,7 @@ class SimpleTemplate(BaseTemplate):
             if ptrbuffer:
                 # Remove escaped newline in last string
                 if isinstance(ptrbuffer[-1], str):
-                    if ptrbuffer[-1].rstrip('\n\r').endswith('\\\\\n'):
+                    if ptrbuffer[-1].rstrip('\n\r').endswith('\\\\'):
                         ptrbuffer[-1] = ptrbuffer[-1].rstrip('\n\r')[:-2]
                 # Add linebreaks to output code, if strings contains newlines
                 out = []
@@ -1280,9 +1274,9 @@ class SimpleTemplate(BaseTemplate):
                 cline = line.split('#')[0].strip() # Strip comments
                 cmd = line.split()[0] # Command word
                 if cline:
-                    flush()
-                if cmd in cls.blocks:
-                    if cmd in cls.dedent_blocks: indent -= 1 #last block ended
+                    flush() ##encodig
+                if cmd in self.blocks:
+                    if cmd in self.dedent_blocks: indent -= 1 #last block ended
                     code(line)
                     if cline.endswith(':'): indent += 1 # false: one line blocks
                 elif cmd == 'end':
@@ -1313,9 +1307,7 @@ class SimpleTemplate(BaseTemplate):
         return '\n'.join(codebuffer) + '\n'
 
     def strencode(self, x):
-        if isinstance(x, unicode):
-            return x.encode(self.encoding)
-        return str(x)
+        return x.encode(self.encoding) if isinstance(x, unicode) else str(x)
 
     def subtemplate(self, name, stdout, **args):
         return self.__class__(name=name, lookup=self.lookup).execute(stdout, **args)
