@@ -896,41 +896,41 @@ def validate(**vkargs):
 
 def route(url, **kargs):
     ''' Decorator for requests routes '''
-    return default_app().route(url, **kargs)
+    return app().route(url, **kargs)
 
 
 def get(url, **kargs):
     ''' Decorator for GET requests routes '''
-    return default_app().route(url, method='GET', **kargs)
+    return app().route(url, method='GET', **kargs)
 
 
 def post(url, **kargs):
     ''' Decorator for POST requests routes '''
-    return default_app().route(url, method='POST', **kargs)
+    return app().route(url, method='POST', **kargs)
 
 
 def put(url, **kargs):
     ''' Decorator for PUT requests routes '''
-    return default_app().route(url, method='PUT', **kargs)
+    return app().route(url, method='PUT', **kargs)
 
 
 def delete(url, **kargs):
     ''' Decorator for DELETE requests routes '''
-    return default_app().route(url, method='DELETE', **kargs)
+    return app().route(url, method='DELETE', **kargs)
 
 
 def default():
     """
     Decorator for request handler. Same as set_default(handler).
     """
-    return default_app().default()
+    return app().default()
 
 
 def error(code=500):
     """
     Decorator for error handler. Same as set_error_handler(code, handler).
     """
-    return default_app().error(code)
+    return app().error(code)
 
 
 
@@ -1023,11 +1023,10 @@ class TornadoServer(ServerAdapter):
         tornado.ioloop.IOLoop.instance().start()
 
 
-def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080,
+def run(wsgi=None, server=WSGIRefServer, host='127.0.0.1', port=8080,
         interval=1, reloader=False, **kargs):
     """ Runs bottle as a web server. """
-    if not app:
-        app = default_app()
+    wsgi = wsgi if wsgi else app()
     quiet = bool(kargs.get('quiet', False))
     # Instantiate server, if it is a class instead of an instance
     if isinstance(server, type):
@@ -1047,9 +1046,9 @@ def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080,
             print "Bottle auto reloader starting up..."
     try:
         if reloader and interval:
-            reloader_run(server, app, interval)
+            reloader_run(server, wsgi, interval)
         else:
-            server.run(app)
+            server.run(wsgi)
     except KeyboardInterrupt:
         if not quiet: # pragma: no cover
             print "Shutting Down..."
