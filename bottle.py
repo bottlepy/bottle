@@ -1214,94 +1214,122 @@ class Jinja2Template(BaseTemplate):
 
 
 class SimpleTemplate(BaseTemplate):
-    re_python = re.compile(r'^\s*%\s*(?:(if|elif|else|try|except|finally|for|'
-                            'while|with|def|class)|(end)|(include|rebase)|(.*))')
-    re_inline = re.compile(r'\{\{(.*?)\}\}')
+    blocks = ('if','elif','else','except','finally','for','while','with','def','class')
     dedent_blocks = ('elif', 'else', 'except', 'finally')
 
     def prepare(self):
         if self.template:
-            code = self.translate(self.template)
-            self.co = compile(code, '<string>', 'exec')
+            self.code = self.translate(self.template)
+            print '#'*75
+            print self.code
+            print '#'*75
+            self.co = compile(self.code, '<string>', 'exec')
         else:
-            code = self.translate(open(self.filename).read())
-            self.co = compile(code, self.filename, 'exec')
-        
+            self.code = self.translate(open(self.filename).read())
+            print '#'*75
+            print self.code
+            print '#'*75
+            self.co = compile(self.code, self.filename, 'exec')
+        if not DEBUG:
+            del self.code
+
     @classmethod
     def translate(cls, template):
-        indent = 0 # Code indentation
-        strbuffer = [] # Buffer for multiple lines of raw strings
-        codebuffer = [] # Buffer for generated code
-        class PyStmt(str): # Python statement with unknown return type
-            def __repr__(self): return '_str(' + self + ')'
-        def addline(line):
-            if strbuffer:
-                if strbuffer[-1].rstrip('\n\r').endswith('\\\\'):
-                    strbuffer[-1] = strbuffer[-1].rstrip('\n\r')[:-2]
-                codeline = "_stdout.append(%s)" % repr(''.join(strbuffer))
-                bufferlen = len(strbuffer)
-                del strbuffer[:] # clear before calling addline again
-                addline(codeline)
-                for i in range(bufferlen):
-                    addline('# to preserve line numbers')
-            codebuffer.append(' ' * indent + line.strip())
+        indent = 0 # Current Code indentation
+        lineno = 0 # Current line of code
+        ptrbuffer = [] # Buffer for printable strings and PyStmt instances
+        codebuffer = [] # Buffer for generated python code
+
+        class PyStmt(object): # Python statement with filter function
+            def __init__(self, s, f='_str'): self.s, self.f = s, f
+            def __repr__(self): return '%s(%s)' % (self.f, self.s)
+            def __str__(self): return self.s
+
+        def prt(txt): # Add a string or a PyStmt object to ptrbuffer
+            if ptrbuffer and isinstance(txt, str) \
+            and isinstance(ptrbuffer[-1], str): # Requied for line preserving 
+                ptrbuffer[-1] += txt
+            else: ptrbuffer.append(txt)
+
+        def flush(): # Flush the ptrbuffer
+            if ptrbuffer:
+                # Remove escaped newline in last string
+                if isinstance(ptrbuffer[-1], str):
+                    if ptrbuffer[-1].rstrip('\n\r').endswith('\\\\\n'):
+                        ptrbuffer[-1] = ptrbuffer[-1].rstrip('\n\r')[:-2]
+                # Add linebreaks to output code, if strings contains newlines
+                out = []
+                for s in ptrbuffer:
+                    out.append(repr(s))
+                    if '\n' in str(s): out.append('\n'*str(s).count('\n'))
+                codeline = ', '.join(out)
+                if codeline.endswith('\n'): codeline = codeline[:-1] #Remove last newline
+                codeline = codeline.replace('\n, ','\n')
+                codeline = "_printlist([%s])" % codeline
+                del ptrbuffer[:] # Do this before calling code() again
+                code(codeline)
+
+        def code(stmt):
+            for line in stmt.splitlines():
+                codebuffer.append('\t' * indent + line.strip())
+
         for line in template.splitlines(True):
-            m = cls.re_python.match(line)
-            if m: # Line starting with '%'
-                block, end, subtpl, other = m.groups()
-                if block:
-                    if block in cls.dedent_blocks:
-                        indent -= 1
-                    addline(line[m.start(1):])
-                    if line[m.start(1):].split('#')[0].strip().endswith(':'):
-                        indent += 1
-                elif end:
+            lineno += 1
+            if line.strip().startswith('%') and not line.strip().startswith('%%'):
+                line = line.strip().lstrip('%') # Full line
+                cline = line.split('#')[0].strip() # Strip comments
+                cmd = line.split()[0] # Command word
+                if cline:
+                    flush()
+                if cmd in cls.blocks:
+                    if cmd in cls.dedent_blocks: indent -= 1 #last block ended
+                    code(line)
+                    if cline.endswith(':'): indent += 1 # false: one line blocks
+                elif cmd == 'end':
                     indent -= 1
-                    addline('#' + line[m.start(2):])
-                elif subtpl:
-                    tmp = line[m.end(3):].strip().split(None, 1)
-                    if not tmp:
-                      addline("_stdout.extend(_base)")
-                    else:
-                      name = tmp[0]
-                      args = tmp[1:] and tmp[1] or ''
-                      if subtpl == 'include':
-                        addline("_ = _include(%s).execute(_stdout, %s)"
-                                    % (repr(name), args))
-                      else:
-                        addline("_tpl['_rebase'] = (%s, dict(%s))"
-                                    % (repr(name), args))
-                elif other:
-                    addline(line[m.start(4):])
-            else: # Line starting with text (not '%')
-                splits = cls.re_inline.split(line) # text, (expr, text)*
-                if len(splits) == 1:
-                    strbuffer.append(line)
+                    code('#' + line)
+                elif cmd == 'include':
+                    p = cline.split(None, 2)[1:]
+                    if len(p) == 2:
+                        code("_=_include(%s, _stdout, %s)" % (repr(p[0]), p[1]))
+                    elif p:
+                        code("_=_include(%s, _stdout)" % repr(p[0]))
+                    else: # Empty %include -> reverse of %rebase
+                        code("_printlist(_base)")                        
+                elif cmd == 'rebase':
+                    p = cline.split(None, 2)[1:]
+                    if len(p) == 2:
+                        code("_tpl['_rebase']=(%s, dict(%s))" % (repr(p[0]), p[1]))
+                    elif p:
+                        code("_tpl['_rebase']=(%s, {})" % repr(p[0]))
                 else:
-                    for i in range(1, len(splits), 2):
-                        splits[i] = PyStmt(splits[i])
-                    splits = filter(bool, splits)
-                    addline("_stdout.extend(%s)" % repr(splits))
-        if strbuffer: addline('') # flush strbuffer
+                    code(line)
+            else: # Line starting with text (not '%') or '%%' (escaped)
+                if line.strip().startswith('%%'):
+                    line = line.replace('%%', '%', 1)
+                for i, part in enumerate(re.split(r'\{\{(.*?)\}\}', line)):
+                    if part: prt(PyStmt(part) if i%2 else part)
+        flush()
         return '\n'.join(codebuffer) + '\n'
 
     def strencode(self, x):
         if isinstance(x, unicode):
             return x.encode(self.encoding)
         return str(x)
+    
+    def subtemplate(self, name, stdout, **args):
+        return self.__class__(name=name, lookup=self.lookup).execute(stdout, **args)
 
     def execute(self, stdout, **args):
-        args['_stdout'] = stdout
-        args['_include'] = lambda name: self.__class__(name=name, lookup=self.lookup)
-        args['_tpl'] = args
-        args['_str'] = self.strencode
+        args.update({'_stdout': stdout, '_printlist': stdout.extend,
+            '_include': self.subtemplate, '_tpl': args, '_str': self.strencode})
         eval(self.co, args)
         if '_rebase' in args:
-            subtpl, args = args['_rebase']
+            subtpl, rargs = args['_rebase']
             subtpl = self.__class__(name=subtpl, lookup=self.lookup)
-            args['_base'] = stdout[:] #copy stdout
+            rargs['_base'] = stdout[:] #copy stdout
             del stdout[:] # clear stdout
-            return subtpl.execute(stdout, **args)
+            return subtpl.execute(stdout, **rargs)
         return args
 
     def render(self, **args):
