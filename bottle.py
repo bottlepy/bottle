@@ -128,12 +128,12 @@ try:
     import cPickle as pickle
 except ImportError: # pragma: no cover
     import pickle
-  
+
 try:
     try:
         from json import dumps as json_dumps
     except ImportError: # pragma: no cover
-        from simplejson import dumps as json_dumps 
+        from simplejson import dumps as json_dumps
 except ImportError: # pragma: no cover
     json_dumps = None
 
@@ -204,7 +204,7 @@ class RouteParser(object):
 
     def __init__(self, route):
         self.route = route
-    
+
     def tokenise(self):
         ''' Split a string into an iterator of (type, value) tokens. '''
         match = None
@@ -257,7 +257,7 @@ class Router(object):
     ''' A route associates a string (e.g. URL) with an object (e.g. function)
         Some dynamic routes may extract parts of the string and provide them as
         data. This router matches a string against multiple routes and returns
-        the associated object along with the extracted data. 
+        the associated object along with the extracted data.
     '''
 
     def __init__(self):
@@ -658,7 +658,7 @@ class Response(threading.local):
     def get_content_type(self):
         """ Get the current 'Content-Type' header. """
         return self.header['Content-Type']
-        
+
     def set_content_type(self, value):
         self.header['Content-Type'] = value
 
@@ -698,7 +698,7 @@ class MultiDict(DictMixin):
 
     def append(self, key, value):
         self.dict.setdefault(key, []).append(value)
-        
+
     def replace(self, key, value):
         self.dict[key] = [value]
 
@@ -747,7 +747,7 @@ def app_push(newapp = True):
 def app_pop():
     """ Remove the current default app from the stack, returning it """
     return _default_app.pop()
-    
+
 
 
 def abort(code=500, text='Unknown Error: Appliction stopped.'):
@@ -775,7 +775,7 @@ def static_file(filename, root, guessmime=True, mimetype=None, download=False):
     root = os.path.abspath(root) + os.sep
     filename = os.path.abspath(os.path.join(root, filename.strip('/\\')))
     header = dict()
-    
+
     if not filename.startswith(root):
         return HTTPError(401, "Access denied.")
     if not os.path.exists(filename) or not os.path.isfile(filename):
@@ -855,7 +855,7 @@ def cookie_decode(data, key):
         sig, msg = data.split(u'?'.encode('ascii'),1) #2to3 hack
         if sig[1:] == base64.b64encode(hmac.new(key, msg).digest()):
            return pickle.loads(base64.b64decode(msg))
-    return None 
+    return None
 
 
 def cookie_is_encoded(data):
@@ -877,7 +877,7 @@ def url(routename, **kargs):
 
 def validate(**vkargs):
     """
-    Validates and manipulates keyword arguments by user defined callables. 
+    Validates and manipulates keyword arguments by user defined callables.
     Handles ValueError and missing arguments by raising HTTPError(403).
     """
     def decorator(func):
@@ -1247,7 +1247,7 @@ class SimpleTemplate(BaseTemplate):
 
         def prt(txt): # Add a string or a PyStmt object to ptrbuffer
             if ptrbuffer and isinstance(txt, str) \
-            and isinstance(ptrbuffer[-1], str): # Requied for line preserving 
+            and isinstance(ptrbuffer[-1], str): # Requied for line preserving
                 ptrbuffer[-1] += txt
             else: ptrbuffer.append(txt)
 
@@ -1295,7 +1295,7 @@ class SimpleTemplate(BaseTemplate):
                     elif p:
                         code("_=_include(%s, _stdout)" % repr(p[0]))
                     else: # Empty %include -> reverse of %rebase
-                        code("_printlist(_base)")                        
+                        code("_printlist(_base)")
                 elif cmd == 'rebase':
                     p = cline.split(None, 2)[1:]
                     if len(p) == 2:
@@ -1316,7 +1316,7 @@ class SimpleTemplate(BaseTemplate):
         if isinstance(x, unicode):
             return x.encode(self.encoding)
         return str(x)
-    
+
     def subtemplate(self, name, stdout, **args):
         return self.__class__(name=name, lookup=self.lookup).execute(stdout, **args)
 
