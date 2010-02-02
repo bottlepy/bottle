@@ -808,7 +808,9 @@ def static_file(filename, root, guessmime=True, mimetype=None, download=False):
     else:
         return HTTPResponse(open(filename, 'rb'), header=header)
 
-
+def url(routename, **kargs):
+    """ Helper generates URLs out of named routes """
+    return app().get_url(routename, **kargs)
 
 
 
@@ -862,10 +864,11 @@ def cookie_is_encoded(data):
     ''' Verify and decode an encoded string. Return an object or None'''
     return bool(data.startswith(u'!'.encode('ascii')) and u'?'.encode('ascii') in data) #2to3 hack
 
-
-def url(routename, **kargs):
-    """ Helper generates URLs out of named routes """
-    return app().get_url(routename, **kargs)
+def tonativefunc(enc='utf-8'):
+    ''' Returns a function that turns everything into 'native' strings using enc '''
+    if sys.version_info >= (3,0,0):
+        return lambda x: x.decode(enc) if isinstance(x, bytes) else str(x)
+    return lambda x: x.encode(enc) if isinstance(x, unicode) else str(x)
 
 
 
@@ -1218,18 +1221,16 @@ class SimpleTemplate(BaseTemplate):
     dedent_blocks = ('elif', 'else', 'except', 'finally')
 
     def prepare(self):
+        self.strencode = tonativefunc(self.encoding)
         if self.template:
             self.code = self.translate(self.template)
             self.co = compile(self.code, '<string>', 'exec')
         else:
             self.code = self.translate(open(self.filename).read())
             self.co = compile(self.code, self.filename, 'exec')
-        for line in self.code.splitlines()[:2]:
-            m = re.search(r"coding[:=]\s*([-\w\.]+)", line)
-            if m: self.encoding = m.group(1)
 
     def translate(self, template):
-        indent = 0 # Current Code indentation
+        stack = [] # Current Code indentation
         lineno = 0 # Current line of code
         ptrbuffer = [] # Buffer for printable strings and PyStmt instances
         codebuffer = [] # Buffer for generated python code
@@ -1265,10 +1266,15 @@ class SimpleTemplate(BaseTemplate):
 
         def code(stmt):
             for line in stmt.splitlines():
-                codebuffer.append('\t' * indent + line.strip())
+                codebuffer.append('  ' * len(stack) + line.strip())
 
         for line in template.splitlines(True):
             lineno += 1
+            line = self.strencode(line)
+            if lineno <= 2 and 'coding' in line:
+                m = re.search(r"coding[:=]\s*([-\w\.]+)", line)
+                if m: self.encoding = m.group(1)
+                if m: self.strencode = tonativefunc(self.encoding)
             if line.strip().startswith('%') and not line.strip().startswith('%%'):
                 line = line.strip().lstrip('%') # Full line
                 cline = line.split('#')[0].strip() # Strip comments
@@ -1276,12 +1282,11 @@ class SimpleTemplate(BaseTemplate):
                 if cline:
                     flush() ##encodig
                 if cmd in self.blocks:
-                    if cmd in self.dedent_blocks: indent -= 1 #last block ended
+                    if cmd in self.dedent_blocks: cmd = stack.pop() #last block ended
                     code(line)
-                    if cline.endswith(':'): indent += 1 # false: one line blocks
-                elif cmd == 'end':
-                    indent -= 1
-                    code('#' + line)
+                    if cline.endswith(':'): stack.append(cmd) # false: one line blocks
+                elif cmd == 'end' and stack:
+                    code('#end(%s) %s' % (stack.pop(), line[3:]))
                 elif cmd == 'include':
                     p = cline.split(None, 2)[1:]
                     if len(p) == 2:
@@ -1293,9 +1298,9 @@ class SimpleTemplate(BaseTemplate):
                 elif cmd == 'rebase':
                     p = cline.split(None, 2)[1:]
                     if len(p) == 2:
-                        code("_tpl['_rebase']=(%s, dict(%s))" % (repr(p[0]), p[1]))
+                        code("globals()['_rebase']=(%s, dict(%s))" % (repr(p[0]), p[1]))
                     elif p:
-                        code("_tpl['_rebase']=(%s, {})" % repr(p[0]))
+                        code("globals()['_rebase']=(%s, {})" % repr(p[0]))
                 else:
                     code(line)
             else: # Line starting with text (not '%') or '%%' (escaped)
@@ -1306,15 +1311,12 @@ class SimpleTemplate(BaseTemplate):
         flush()
         return '\n'.join(codebuffer) + '\n'
 
-    def strencode(self, x):
-        return x.encode(self.encoding) if isinstance(x, unicode) else str(x)
-
     def subtemplate(self, name, stdout, **args):
         return self.__class__(name=name, lookup=self.lookup).execute(stdout, **args)
 
     def execute(self, stdout, **args):
         args.update({'_stdout': stdout, '_printlist': stdout.extend,
-            '_include': self.subtemplate, '_tpl': args, '_str': self.strencode})
+            '_include': self.subtemplate, '_str': self.strencode})
         eval(self.co, args)
         if '_rebase' in args:
             subtpl, rargs = args['_rebase']

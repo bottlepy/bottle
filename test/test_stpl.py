@@ -25,7 +25,7 @@ class TestSimpleTemplate(unittest.TestCase):
 
     def test_import(self):
         """ Templates: import statement"""
-        t = '%from base64 import b64encode\nstart {{b64encode(var)}} end'
+        t = '%from base64 import b64encode\nstart {{b64encode(var.encode("ascii") if hasattr(var, "encode") else var)}} end'
         t = SimpleTemplate(t).render(var='var')
         self.assertEqual('start dmFy end', ''.join(t))
 
