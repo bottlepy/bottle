@@ -736,7 +736,7 @@ _default_app = [Bottle()]
 def app():
     """ Return the current default app. """
     return _default_app[-1]
-default_app = app # BC: 0.6.4
+default_app = app # BC: 0.6.4 and needed for run()
 
 def app_push(newapp = True):
     """ Add a new app to the stack, making it default """
@@ -1023,10 +1023,10 @@ class TornadoServer(ServerAdapter):
         tornado.ioloop.IOLoop.instance().start()
 
 
-def run(wsgi=None, server=WSGIRefServer, host='127.0.0.1', port=8080,
+def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080,
         interval=1, reloader=False, **kargs):
     """ Runs bottle as a web server. """
-    wsgi = wsgi if wsgi else app()
+    app = app if app else default_app()
     quiet = bool(kargs.get('quiet', False))
     # Instantiate server, if it is a class instead of an instance
     if isinstance(server, type):
@@ -1046,9 +1046,9 @@ def run(wsgi=None, server=WSGIRefServer, host='127.0.0.1', port=8080,
             print "Bottle auto reloader starting up..."
     try:
         if reloader and interval:
-            reloader_run(server, wsgi, interval)
+            reloader_run(server, app, interval)
         else:
-            server.run(wsgi)
+            server.run(app)
     except KeyboardInterrupt:
         if not quiet: # pragma: no cover
             print "Shutting Down..."
