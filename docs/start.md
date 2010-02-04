@@ -159,7 +159,7 @@ Bottle does **not** include (yet):
   * [Cuttlefish](http://bitbucket.org/kaelin/cuttlefish/) A browser-based search tool for quickly `grep`ing source code.
   * [Torque](http://github.com/jreid42/torque) A multiuser collaborative interface for torrenting.
   * [Message in a Bottle](http://github.com/kennyshen/MIAB) A simple community messaging app using Bottle and Cassandra.
-
+  * [ResBottle](http://github.com/tnm/redweb) A [Redis](http://code.google.com/p/redis/) web interface.
 
 ## Thanks to
 
