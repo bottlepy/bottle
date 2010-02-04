@@ -1221,7 +1221,6 @@ class SimpleTemplate(BaseTemplate):
     dedent_blocks = ('elif', 'else', 'except', 'finally')
 
     def prepare(self):
-        self.strencode = tonativefunc(self.encoding)
         if self.template:
             self.code = self.translate(self.template)
             self.co = compile(self.code, '<string>', 'exec')
@@ -1234,7 +1233,8 @@ class SimpleTemplate(BaseTemplate):
         lineno = 0 # Current line of code
         ptrbuffer = [] # Buffer for printable strings and PyStmt instances
         codebuffer = [] # Buffer for generated python code
-
+        touni = functools.partial(unicode, encoding=self.encoding)
+        
         class PyStmt(object): # Python statement with filter function
             def __init__(self, s, f='_str'): self.s, self.f = s, f
             def __repr__(self): return '%s(%s)' % (self.f, self.s)
@@ -1270,11 +1270,11 @@ class SimpleTemplate(BaseTemplate):
 
         for line in template.splitlines(True):
             lineno += 1
-            line = self.strencode(line)
+            line = unicode(line, encoding=self.encoding) if not isinstance(line, unicode) else line
             if lineno <= 2 and 'coding' in line:
                 m = re.search(r"coding[:=]\s*([-\w\.]+)", line)
                 if m: self.encoding = m.group(1)
-                if m: self.strencode = tonativefunc(self.encoding)
+                if m: line = u'# encoding removed: ' + self.encoding
             if line.strip().startswith('%') and not line.strip().startswith('%%'):
                 line = line.strip().lstrip('%') # Full line
                 cline = line.split('#')[0].strip() # Strip comments
@@ -1315,8 +1315,11 @@ class SimpleTemplate(BaseTemplate):
         return self.__class__(name=name, lookup=self.lookup).execute(stdout, **args)
 
     def execute(self, stdout, **args):
+        enc = self.encoding
+        def touni(x):
+            return unicode(str(x), encoding=enc) if not isinstance(x, unicode) else x
         args.update({'_stdout': stdout, '_printlist': stdout.extend,
-            '_include': self.subtemplate, '_str': self.strencode})
+            '_include': self.subtemplate, '_str': touni})
         eval(self.co, args)
         if '_rebase' in args:
             subtpl, rargs = args['_rebase']
