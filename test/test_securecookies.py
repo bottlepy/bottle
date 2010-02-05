@@ -20,14 +20,14 @@ class TestSecureCookies(unittest.TestCase):
         self.assertFalse(bottle.cookie_is_encoded(tob('some string')))
 
     def testWithBottle(self):
-        bottle.app_push()
+        bottle.app.push()
         bottle.app().config['securecookie.key'] = tob('1234')
         bottle.response.bind(bottle.app())
         bottle.response.set_cookie('key', dict(value=5))
         cheader = [v for k, v in bottle.response.wsgiheader() if k == 'Set-Cookie'][0]
         bottle.request.bind({'HTTP_COOKIE': cheader.split(';')[0]}, bottle.app())
         self.assertEqual(repr(dict(value=5)), repr(bottle.request.get_cookie('key')))
-        bottle.app_pop()
+        bottle.app.pop()
 
 if __name__ == '__main__':
     unittest.main()

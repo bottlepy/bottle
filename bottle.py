@@ -731,23 +731,21 @@ class HeaderDict(MultiDict):
 
 
 # Module level functions
+class AppStack(list):
+    """ A stack implementation. """
+    def __call__(self):
+        """ Return the current default app. """
+        return self[-1]
+    def push(self, value=None):
+        """ Add a new Bottle instance to the stack """
+        if not isinstance(value, Bottle):
+            value = Bottle()
+        self.append(value)
+        return value
 
-_default_app = [Bottle()]
-def app():
-    """ Return the current default app. """
-    return _default_app[-1]
-default_app = app # BC: 0.6.4 and needed for run()
-
-def app_push(newapp = True):
-    """ Add a new app to the stack, making it default """
-    if newapp == True:
-        newapp = Bottle()
-    _default_app.append(newapp)
-
-def app_pop():
-    """ Remove the current default app from the stack, returning it """
-    return _default_app.pop()
-    
+# BC: 0.6.4 and needed for run()
+app = default_app = AppStack([Bottle()])
+   
 
 
 def abort(code=500, text='Unknown Error: Appliction stopped.'):
@@ -816,18 +814,11 @@ def static_file(filename, root, guessmime=True, mimetype=None, download=False):
 # Utilities
 
 def parse_date(ims):
-    """
-    Parses date strings usually found in HTTP header and returns UTC epoch.
-    Understands rfc1123, rfc850 and asctime.
-    """
+    """ Parses rfc1123, rfc850 and asctime timestamps and returns UTC epoch. """
     try:
         ts = email.utils.parsedate_tz(ims)
-        if ts is not None:
-            if ts[9] is None:
-                return time.mktime(ts[:8] + (0,)) - time.timezone
-            else:
-                return time.mktime(ts[:8] + (0,)) - ts[9] - time.timezone
-    except (ValueError, IndexError):
+        return time.mktime(ts[:8] + (0,)) - (ts[9] or 0) - time.timezone
+    except (TypeError, ValueError, IndexError):
         return None
 
 
@@ -894,41 +885,41 @@ def validate(**vkargs):
     return decorator
 
 
-def route(url, **kargs):
+def route(route, **ka):
     ''' Decorator for requests routes '''
-    return app().route(url, **kargs)
+    return app().route(route, **ka)
 
 
-def get(url, **kargs):
+def get(route, **ka):
     ''' Decorator for GET requests routes '''
-    return app().route(url, method='GET', **kargs)
+    return app().route(url, method='GET', **ka)
 
 
-def post(url, **kargs):
+def post(route, **ka):
     ''' Decorator for POST requests routes '''
-    return app().route(url, method='POST', **kargs)
+    return app().route(route, method='POST', **ka)
 
 
-def put(url, **kargs):
+def put(route, **ka):
     ''' Decorator for PUT requests routes '''
-    return app().route(url, method='PUT', **kargs)
+    return app().route(route, method='PUT', **ka)
 
 
-def delete(url, **kargs):
+def delete(route, **ka):
     ''' Decorator for DELETE requests routes '''
-    return app().route(url, method='DELETE', **kargs)
+    return app().route(route, method='DELETE', **ka)
 
 
 def default():
     """
-    Decorator for request handler. Same as set_default(handler).
+    Decorator for request handler. Same as app().default(handler).
     """
     return app().default()
 
 
 def error(code=500):
     """
-    Decorator for error handler. Same as set_error_handler(code, handler).
+    Decorator for error handler. Same as app().error(code, handler).
     """
     return app().error(code)
 
@@ -939,29 +930,36 @@ def error(code=500):
 
 # Server adapter
 
-class WSGIAdapter(object):
-    def run(self, handler): # pragma: no cover
-        pass
-
-    def __repr__(self):
-        return "%s()" % (self.__class__.__name__)
-
-
-class CGIServer(WSGIAdapter):
-    def run(self, handler):
-        from wsgiref.handlers import CGIHandler
-        CGIHandler().run(handler)
-
-
-class ServerAdapter(WSGIAdapter):
-    def __init__(self, host='127.0.0.1', port=8080, **kargs):
-        WSGIAdapter.__init__(self)
-        self.host = host
-        self.port = int(port)
+class ServerAdapter(object):
+    def __init__(self, **kargs):
         self.options = kargs
 
+    @property
+    def host(self):
+        return self.options.get('host', '127.0.0.1')
+
+    @property
+    def port(self):
+        return int(self.options.get('port', 8080))
+
+    def run(self, handler): # pragma: no cover
+        pass
+        
     def __repr__(self):
-        return "%s (%s:%d)" % (self.__class__.__name__, self.host, self.port)
+        args = ', '.join(['%s=%s'%(k,repr(v)) for k, v in self.options.items()])
+        return "%s(%s)" % (self.__class__.__name__, args)
+
+
+class CGIServer(ServerAdapter):
+    def run(self, handler):
+        from wsgiref.handlers import CGIHandler
+        CGIHandler().run(handler) # Just ignore host and port here
+
+
+class FlupFCGIServer(ServerAdapter):
+    def run(self, handler):
+       import flup.server.fcgi
+       flup.server.fcgi.WSGIServer(handler, bindAddress=(self.host, self.port)).run()
 
 
 class WSGIRefServer(ServerAdapter):
@@ -976,12 +974,6 @@ class CherryPyServer(ServerAdapter):
         from cherrypy import wsgiserver
         server = wsgiserver.CherryPyWSGIServer((self.host, self.port), handler)
         server.start()
-
-
-class FlupFCGIServer(ServerAdapter):
-    def run(self, handler):
-       import flup.server.fcgi
-       flup.server.fcgi.WSGIServer(handler, bindAddress=(self.host, self.port)).run()
 
 
 class PasteServer(ServerAdapter):
@@ -1030,11 +1022,8 @@ def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080,
     quiet = bool(kargs.get('quiet', False))
     # Instantiate server, if it is a class instead of an instance
     if isinstance(server, type):
-        if issubclass(server, CGIServer):
-            server = server()
-        elif issubclass(server, ServerAdapter):
-            server = server(host=host, port=port, **kargs)
-    if not isinstance(server, WSGIAdapter):
+        server = server(host=host, port=port, **kargs)
+    if not isinstance(server, ServerAdapter):
         raise RuntimeError("Server must be a subclass of WSGIAdapter")
     if not quiet and isinstance(server, ServerAdapter): # pragma: no cover
         if not reloader or os.environ.get('BOTTLE_CHILD') == 'true':
