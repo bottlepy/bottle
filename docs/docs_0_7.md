@@ -65,7 +65,7 @@ As you can see, URLs and routes have nothing to do with actual files on the web 
 
 ## HTTP Request Methods
 
-The `route()` decorator has an optional keyword argument `method` which defaults to `method='GET'`, so only GET requests get answered by that route.
+The `route()` decorator has an optional keyword argument `method` which defaults to `method='GET'`; only GET requests get answered by that route.
 Possible values are `POST`, `PUT`, `DELETE`, `HEAD`, `ANY` or any other [HTTP request method][http_method] you want to listen to. As an alternative, you can use the `@get()`, `@post()`, `@put()` and `@delete()` aliases.
 
     #!Python
@@ -95,7 +95,7 @@ Static routes are fine, but URLs may carry information as well. Let's add a `:na
     def hello(name):
         return "Hello %s!" % name
 
-This dynamic route matches `/hello/alice` as well as `/hello/bob`. In fact, the `:name` part will match everything but a slash (`/`), so any name is possible. `/hello/bob/and/alice` or `/hellobob` won't match. Each part of the URL covered by a placeholder is provided as a keyword parameter to your handler callback.
+This dynamic route matches `/hello/alice` as well as `/hello/bob`. In fact, the `:name` part will match everything but a slash (`/`), so any name is possible. `/hello/bob/and/alice` or `/hellobob` won't match. Each part of the URL covered by a placeholder is provided as a keyword argument to your handler callback.
 
 A normal placeholder matches everything up to the next slash. To change that, you can add a regular expression pattern:
 
@@ -143,7 +143,7 @@ pure WSGI.
 ## Strings and Unicode
 
 Returning strings (bytes) is not a problem. Unicode however needs to be encoded into a byte stream before 
-the webserver can send it to the client. Ths default encoding is utf-8, so if that fits your needs, you can 
+the webserver can send it to the client. Ths default encoding is utf-8. If that fits your needs, you can 
 simply return unicode or unicode iterables.
 
     #!Python
@@ -173,7 +173,7 @@ In some rare cases the Python encoding names differ from the names supported by 
 
 ## File Objects and Streams
 
-Bottle passes everything that has a `read()` method (file objects) to the `wsgi.file_wrapper` provided by your WSGI server implementation. This wrapper should use highly optimised system calls for your operating system (`sendfile` on UNIX) to transfer the file contents.
+Bottle passes everything that has a `read()` method (file objects) to the `wsgi.file_wrapper` provided by your WSGI server implementation. This wrapper should use optimised system calls (`sendfile` on UNIX) to transfer the file contents.
 
     #!Python
     @route('/file')
@@ -396,57 +396,6 @@ Example:
 # Key/Value Databases
 
 <div style="color:darkred">Warning: The included key/value database is depreciated.</div> Please switch to a [real](http://code.google.com/p/redis/) [key](http://couchdb.apache.org/) [value](http://www.mongodb.org/) [database](http://docs.python.org/library/anydbm.html).
-
-Bottle (>0.4.6) offers a persistent key/value database accessible through the
-`bottle.db` module variable. You can use key or attribute syntax to store or
-fetch any pickle-able object to the database. Both 
-`bottle.db.bucket_name.key_name` and `bottle.db[bucket_name][key_name]` 
-will work.
-
-Missing buckets are created on demand. You don't have to check for 
-their existence before using them. Just be sure to use alphanumeric 
-bucket-names.
-
-The bucket objects behave like mappings (dictionaries), except that 
-only strings are allowed for keys and values must be pickle-able. 
-Printing a bucket object doesn't print the keys and values, and the 
-`items()` and `values()` methods are not supported. Missing keys will raise 
-`KeyError` as expected.
-
-
-
-
-## Persistence
-During a request live-cycle, all changes are cached in thread-local memory. At
-the end of the request, the changes are saved automatically so the next request
-will have access to the updated values. Each bucket is stored in a separate file
-in `bottle.DB_PATH`. Be sure to allow write-access to this path and use bucket
-names that are allowed in filenames.
-
-
-
-
-## Race conditions
-You don't have do worry about file corruption but race conditions are still a
-problem in multi-threaded or forked environments. You can call
-`bottle.db.save()` or `botle.db.bucket_name.save()` to flush the thread-local
-memory cache to disk, but there is no way to detect database changes made in
-other threads until these threads call `bottle.db.save()` or leave the current
-request cycle.
-
-
-
-
-## Example
-
-    #!Python
-    from bottle import route, db
-    @route('/db/counter')
-    def db_counter():
-        if 'hits' not in db.counter:
-            db.counter.hits = 0
-        db['counter']['hits'] += 1
-        return "Total hits: %d!" % db.counter.hits
 
 
 
