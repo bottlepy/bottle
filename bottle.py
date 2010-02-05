@@ -129,12 +129,12 @@ try:
     import cPickle as pickle
 except ImportError: # pragma: no cover
     import pickle
-  
+
 try:
     try:
         from json import dumps as json_dumps
     except ImportError: # pragma: no cover
-        from simplejson import dumps as json_dumps 
+        from simplejson import dumps as json_dumps
 except ImportError: # pragma: no cover
     json_dumps = None
 
@@ -205,7 +205,7 @@ class RouteParser(object):
 
     def __init__(self, route):
         self.route = route
-    
+
     def tokenise(self):
         ''' Split a string into an iterator of (type, value) tokens. '''
         match = None
@@ -258,7 +258,7 @@ class Router(object):
     ''' A route associates a string (e.g. URL) with an object (e.g. function)
         Some dynamic routes may extract parts of the string and provide them as
         data. This router matches a string against multiple routes and returns
-        the associated object along with the extracted data. 
+        the associated object along with the extracted data.
     '''
 
     def __init__(self):
@@ -656,7 +656,7 @@ class Response(threading.local):
     def get_content_type(self):
         """ Get the current 'Content-Type' header. """
         return self.header['Content-Type']
-        
+
     def set_content_type(self, value):
         self.header['Content-Type'] = value
 
@@ -696,7 +696,7 @@ class MultiDict(DictMixin):
 
     def append(self, key, value):
         self.dict.setdefault(key, []).append(value)
-        
+
     def replace(self, key, value):
         self.dict[key] = [value]
 
@@ -745,7 +745,7 @@ def app_push(newapp = True):
 def app_pop():
     """ Remove the current default app from the stack, returning it """
     return _default_app.pop()
-    
+
 
 
 def abort(code=500, text='Unknown Error: Appliction stopped.'):
@@ -773,7 +773,7 @@ def static_file(filename, root, guessmime=True, mimetype=None, download=False):
     root = os.path.abspath(root) + os.sep
     filename = os.path.abspath(os.path.join(root, filename.strip('/\\')))
     header = dict()
-    
+
     if not filename.startswith(root):
         return HTTPError(401, "Access denied.")
     if not os.path.exists(filename) or not os.path.isfile(filename):
@@ -853,7 +853,7 @@ def cookie_decode(data, key):
         sig, msg = data.split(u'?'.encode('ascii'),1) #2to3 hack
         if sig[1:] == base64.b64encode(hmac.new(key, msg).digest()):
            return pickle.loads(base64.b64decode(msg))
-    return None 
+    return None
 
 
 def cookie_is_encoded(data):
@@ -875,7 +875,7 @@ def url(routename, **kargs):
 
 def validate(**vkargs):
     """
-    Validates and manipulates keyword arguments by user defined callables. 
+    Validates and manipulates keyword arguments by user defined callables.
     Handles ValueError and missing arguments by raising HTTPError(403).
     """
     def decorator(func):
@@ -1099,7 +1099,7 @@ class TemplateError(HTTPError):
 
 class BaseTemplate(object):
     extentions = ['tpl','html','thtml','stpl']
-    
+
     def __init__(self, source=None, name=None, lookup=[], encoding='utf8'):
         """ Create a new template.
         If the source parameter (str or buffer) is missing, the name argument
@@ -1237,7 +1237,7 @@ class SimpleTemplate(BaseTemplate):
                 if allow_nobreak and strbuffer[-1].endswith("\\\\\n"):
                     strbuffer[-1]=strbuffer[-1][:-3]
                 code.append(' ' * indent + "_stdout.append(%s)" % repr(''.join(strbuffer)))
-                code.append((' ' * indent + '\n') * len(strbuffer)) # to preserve line numbers 
+                code.append((' ' * indent + '\n') * len(strbuffer)) # to preserve line numbers
                 del strbuffer[:]
         def cadd(line): code.append(" " * indent + line.strip() + '\n')
         for line in template.splitlines(True):
