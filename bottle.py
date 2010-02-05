@@ -83,6 +83,7 @@ __author__ = 'Marcel Hellkamp'
 __version__ = '0.7.0a'
 __license__ = 'MIT'
 
+from __future__ import with_statement
 import types
 import sys
 import cgi
@@ -318,10 +319,7 @@ class Bottle(object):
         self.routes = dict()
         self.default_route = None
         self.error_handler = {}
-        if autojson and json_dumps:
-            self.jsondump = json_dumps
-        else:
-            self.jsondump = False
+        self.jsondump = json_dumps if autojson and json_dumps else False
         self.catchall = catchall
         self.config = dict()
         self.serve = True
@@ -1100,45 +1098,56 @@ class TemplateError(HTTPError):
 
 
 class BaseTemplate(object):
-    def __init__(self, template='', name=None, filename=None, lookup=[]):
-        """
-        Create a new template.
-        If a name is provided, but no filename and no template string, the
-        filename is guessed using the lookup path list.
-        Subclasses can assume that either self.template or self.filename is set.
-        If both are present, self.template should be used.
+    extentions = ['tpl','html','thtml','stpl']
+    
+    def __init__(self, source=None, name=None, lookup=[], encoding='utf8'):
+        """ Create a new template.
+        If the source parameter (str or buffer) is missing, the name argument
+        is used to guess a template filename. Subclasses can assume that
+        either self.source or self.filename is set. Both are strings.
+        The lookup-argument works similar to sys.path for templates.
+        The encoding parameter is used to decode byte strings or files.
         """
         self.name = name
-        self.filename = filename
-        self.template = template
-        self.lookup = lookup
-        if self.name and not self.filename:
-            for path in self.lookup:
-                fpath = os.path.join(path, self.name+'.tpl')
-                if os.path.isfile(fpath):
-                    self.filename = fpath
-        if not self.template and not self.filename:
-            raise TemplateError('Template (%s) not found.' % self.name)
+        self.source = source.read() if hasattr(source, 'read') else source
+        self.filename = None
+        self.lookup = map(os.path.abspath, self.lookup)
+        self.encoding = encoding
+        if not self.source and self.name:
+            self.filename = self.search(self.lookup, self.name)
+            if not self.filename:
+                raise TemplateError('Template %s not found.' % repr(name))
+        if not self.source and not self.filename:
+            raise TemplateError('No template specified.')
         self.prepare()
 
+    @classmethod
+    def search(cls, name, lookup):
+        """ Search name in all directiries specified in lookup.
+        First without, then with common extentions. Return first hit. """
+        for spath in lookup:
+            fname = os.path.join(spath, name)
+            if os.path.isfile(fname):
+                return fname
+            for ext in cls.extentions:
+                if os.path.isfile('%s.%s' % (fname, ext)):
+                    return '%s.%s' % (fname, ext)
+
     def prepare(self):
-        """
-        Run preparatios (parsing, caching, ...).
-        It should be possible to call this multible times to refresh a template.
+        """ Run preparatios (parsing, caching, ...).
+        It should be possible to call this again to refresh a template.
         """
         raise NotImplementedError
 
     def render(self, **args):
-        """
-        Render the template with the specified local variables and return an
-        iterator of strings (bytes). This must be thread save!
+        """ Render the template with the specified local variables and return
+        a single byte or unicode string. If it is a byte string, the encoding
+        must match self.encoding. This method must be thread save!
         """
         raise NotImplementedError
 
 
 class MakoTemplate(BaseTemplate):
-    output_encoding=None
-    input_encoding=None
     default_filters=None
     global_variables={}
 
@@ -1146,21 +1155,16 @@ class MakoTemplate(BaseTemplate):
         from mako.template import Template
         from mako.lookup import TemplateLookup
         #TODO: This is a hack... http://github.com/defnull/bottle/issues#issue/8
-        mylookup = TemplateLookup(directories=map(os.path.abspath, self.lookup)+['./'])
-        if self.template:
-            self.tpl = Template(self.template,
-                                lookup=mylookup,
-                                output_encoding=MakoTemplate.output_encoding,
-                                input_encoding=MakoTemplate.input_encoding,
-                                default_filters=MakoTemplate.default_filters
-                                )
-        else:
-            self.tpl = Template(filename=self.filename,
-                                lookup=mylookup,
-                                output_encoding=MakoTemplate.output_encoding,
-                                input_encoding=MakoTemplate.input_encoding,
-                                default_filters=MakoTemplate.default_filters
-                                )
+        mylookup = TemplateLookup(directories=self.lookup)
+        options = dict(lookup=mylookup, input_encoding=self.encoding,
+                       default_filters=MakoTemplate.default_filters)
+        if self.source:
+            self.tpl = Template(self.source, **options)
+        else: #mako cannot guess extentions. We can, but only at top level...
+            name = self.name
+            if not os.path.splitext(name)[1]:
+                name += os.path.splitext(self.filename)
+            self.tpl = mylookup.get_template(name, uri**options)
 
     def render(self, **args):
         _defaults = MakoTemplate.global_variables.copy()
@@ -1201,15 +1205,10 @@ class Jinja2Template(BaseTemplate):
         return self.tpl.render(**args).encode("utf-8")
 
     def loader(self, name):
-        if not name.endswith(".tpl"):
-            for path in self.lookup:
-                fpath = os.path.join(path, name+'.tpl')
-                if os.path.isfile(fpath):
-                    name = fpath
-                    break
-        f = open(name)
-        try: return f.read().decode('utf-8')
-        finally: f.close()
+        fname = self.search(name)
+        if fname:
+            with open(fname) as f:
+                return f.read().decode(self.encoding)
 
 
 class SimpleTemplate(BaseTemplate):
