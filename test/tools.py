@@ -18,10 +18,7 @@ import mimetypes
 import uuid
 
 def tob(data):
-  if isinstance(data, unicode):
-    return data.encode('utf8')
-  else:
-    return data
+    return data.encode('utf8') if isinstance(data, unicode) else str(data)
 
 class MethodRequest(urllib2.Request):
     ''' Used to create HEAD/PUT/DELETE/... requests with urllib2 '''
@@ -35,13 +32,13 @@ class NonLoggingRequestHandler(wsgiref.simple_server.WSGIRequestHandler):
         pass
     def get_stderr(self):
         return StringIO()
-        
+
 class TestServer(bottle.ServerAdapter):
     ''' Bottle compatible ServerAdapter with no logging and a shutdown() routine '''
     def __init__(self, *a, **k):
         bottle.ServerAdapter.__init__(self, *a, **k)
         self.event_running = threading.Event()
-    
+
     def run(self, handler):
         from wsgiref.simple_server import make_server
         try:
@@ -54,7 +51,7 @@ class TestServer(bottle.ServerAdapter):
             srv.handle_request()
 
     def urlopen(self, path, post=None, method=None):
-        ''' Open a path using urllip2.urlopen and the wsgi_intercept domain '''
+        ''' Open a path using urllip2.urlopen and the test domain and port '''
         url = 'http://%s:%d/%s' % (self.host, self.port, path.lstrip('/'))
         r = MethodRequest(url, post)
         if method:
@@ -63,11 +60,13 @@ class TestServer(bottle.ServerAdapter):
             return urllib2.urlopen(r)
         except urllib2.HTTPError, e:
             return e
-        
+
     def shutdown(self):
       self.alive = False
       self.urlopen('/shutdown/now', method='SHUTDOWN')
-      
+
+
+
 class ServerTestBase(unittest.TestCase):
     def setUp(self):
         ''' Create a new Bottle app set it as default_app and register it to urllib2 '''
@@ -87,11 +86,21 @@ class ServerTestBase(unittest.TestCase):
         self.server.shutdown()
         self.thread.join()
         bottle.app_pop()
-    
-    def same(self, data, url):
-        if isinstance(data, unicode):
-            data = data.encode('utf-8')
-        self.assertEqual(data, self.urlopen(url).read())
+
+    def assertStatus(self, code, route, **kargs):
+        self.assertEqual(code, self.urlopen(route, **kargs).code)
+
+    def assertBody(self, body, route, **kargs):
+        self.assertEqual(tob(body), self.urlopen(route, **kargs).read())
+
+    def assertInBody(self, body, route, **kargs):
+        self.assertTrue(tob(body) in self.urlopen(route, **kargs).read())
+
+    def assertHeader(self, name, value, route, **kargs):
+        self.assertEqual(tob(value), self.urlopen(route, **kargs).info().get(tob(name)))
+
+    def assertHeaderAny(self, name, route, **kargs):
+        self.assertTrue(self.urlopen(route, **kargs).info().get(tob(name), None))
 
 
 
@@ -125,5 +134,5 @@ def multipart_environ(fields, files):
     e['wsgi.input'].write(body)
     e['wsgi.input'].seek(0)
     return e
-        
-        
+
+
