@@ -9,7 +9,7 @@ class TestSimpleTemplate(unittest.TestCase):
 
     def test_file(self):
         """ Templates: Parse file"""
-        t = SimpleTemplate(filename='./views/stpl_simple.tpl').render(var='var')
+        t = SimpleTemplate(name='./views/stpl_simple.tpl').render(var='var')
         self.assertEqual('start var end\n', ''.join(t))
 
     def test_name(self):

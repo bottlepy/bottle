@@ -18,7 +18,7 @@ import mimetypes
 import uuid
 
 def tob(data):
-    return data.encode('utf8') if isinstance(data, unicode) else str(data)
+    return data.encode('utf8') if isinstance(data, unicode) else data
 
 class MethodRequest(urllib2.Request):
     ''' Used to create HEAD/PUT/DELETE/... requests with urllib2 '''
@@ -97,10 +97,10 @@ class ServerTestBase(unittest.TestCase):
         self.assertTrue(tob(body) in self.urlopen(route, **kargs).read())
 
     def assertHeader(self, name, value, route, **kargs):
-        self.assertEqual(tob(value), self.urlopen(route, **kargs).info().get(tob(name)))
+        self.assertEqual(value, self.urlopen(route, **kargs).info().get(name))
 
     def assertHeaderAny(self, name, route, **kargs):
-        self.assertTrue(self.urlopen(route, **kargs).info().get(tob(name), None))
+        self.assertTrue(self.urlopen(route, **kargs).info().get(name, None))
 
 
 

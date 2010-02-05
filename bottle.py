@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import with_statement
+
 """
 Bottle is a fast and simple micro-framework for small web applications. It
 offers request dispatching (Routes) with url parameter support, templates,
@@ -83,7 +85,6 @@ __author__ = 'Marcel Hellkamp'
 __version__ = '0.7.0a'
 __license__ = 'MIT'
 
-from __future__ import with_statement
 import types
 import sys
 import cgi
@@ -1111,10 +1112,10 @@ class BaseTemplate(object):
         self.name = name
         self.source = source.read() if hasattr(source, 'read') else source
         self.filename = None
-        self.lookup = map(os.path.abspath, self.lookup)
+        self.lookup = map(os.path.abspath, lookup)
         self.encoding = encoding
         if not self.source and self.name:
-            self.filename = self.search(self.lookup, self.name)
+            self.filename = self.search(self.name, self.lookup)
             if not self.filename:
                 raise TemplateError('Template %s not found.' % repr(name))
         if not self.source and not self.filename:
@@ -1122,9 +1123,10 @@ class BaseTemplate(object):
         self.prepare()
 
     @classmethod
-    def search(cls, name, lookup):
+    def search(cls, name, lookup=[]):
         """ Search name in all directiries specified in lookup.
         First without, then with common extentions. Return first hit. """
+        if os.path.isfile(name): return name
         for spath in lookup:
             fname = os.path.join(spath, name)
             if os.path.isfile(fname):
@@ -1155,16 +1157,15 @@ class MakoTemplate(BaseTemplate):
         from mako.template import Template
         from mako.lookup import TemplateLookup
         #TODO: This is a hack... http://github.com/defnull/bottle/issues#issue/8
-        mylookup = TemplateLookup(directories=self.lookup)
-        options = dict(lookup=mylookup, input_encoding=self.encoding,
-                       default_filters=MakoTemplate.default_filters)
+        options = dict(input_encoding=self.encoding, default_filters=MakoTemplate.default_filters)
+        mylookup = TemplateLookup(directories=['.']+self.lookup, **options)
         if self.source:
-            self.tpl = Template(self.source, **options)
+            self.tpl = Template(self.source, lookup=mylookup)
         else: #mako cannot guess extentions. We can, but only at top level...
             name = self.name
             if not os.path.splitext(name)[1]:
-                name += os.path.splitext(self.filename)
-            self.tpl = mylookup.get_template(name, uri**options)
+                name += os.path.splitext(self.filename)[1]
+            self.tpl = mylookup.get_template(name)
 
     def render(self, **args):
         _defaults = MakoTemplate.global_variables.copy()
@@ -1177,8 +1178,8 @@ class CheetahTemplate(BaseTemplate):
         from Cheetah.Template import Template
         self.context = threading.local()
         self.context.vars = {}
-        if self.template:
-            self.tpl = Template(source=self.template, searchList=[self.context.vars])
+        if self.source:
+            self.tpl = Template(source=self.source, searchList=[self.context.vars])
         else:
             self.tpl = Template(file=self.filename, searchList=[self.context.vars])
 
@@ -1196,8 +1197,8 @@ class Jinja2Template(BaseTemplate):
         if not self.env:
             from jinja2 import Environment, FunctionLoader
             self.env = Environment(line_statement_prefix="#", loader=FunctionLoader(self.loader))
-        if self.template:
-            self.tpl = self.env.from_string(self.template)
+        if self.source:
+            self.tpl = self.env.from_string(self.source)
         else:
             self.tpl = self.env.get_template(self.filename)
 
@@ -1205,7 +1206,7 @@ class Jinja2Template(BaseTemplate):
         return self.tpl.render(**args).encode("utf-8")
 
     def loader(self, name):
-        fname = self.search(name)
+        fname = self.search(name, self.lookup)
         if fname:
             with open(fname) as f:
                 return f.read().decode(self.encoding)
@@ -1218,8 +1219,8 @@ class SimpleTemplate(BaseTemplate):
     dedent_keywords = ('elif', 'else', 'except', 'finally')
 
     def prepare(self):
-        if self.template:
-            code = self.translate(self.template)
+        if self.source:
+            code = self.translate(self.source)
             self.co = compile(code, '<string>', 'exec')
         else:
             code = self.translate(open(self.filename).read())
