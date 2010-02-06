@@ -892,7 +892,7 @@ def route(route, **ka):
 
 def get(route, **ka):
     ''' Decorator for GET requests routes '''
-    return app().route(url, method='GET', **ka)
+    return app().route(route, method='GET', **ka)
 
 
 def post(route, **ka):
