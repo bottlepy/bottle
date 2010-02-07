@@ -931,16 +931,10 @@ def error(code=500):
 # Server adapter
 
 class ServerAdapter(object):
-    def __init__(self, **kargs):
+    def __init__(self, host='127.0.0.1', port=8080, **kargs):
         self.options = kargs
-
-    @property
-    def host(self):
-        return self.options.get('host', '127.0.0.1')
-
-    @property
-    def port(self):
-        return int(self.options.get('port', 8080))
+        self.host = host
+        self.port = int(port)
 
     def run(self, handler): # pragma: no cover
         pass
