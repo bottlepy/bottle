@@ -34,7 +34,7 @@ class NonLoggingRequestHandler(wsgiref.simple_server.WSGIRequestHandler):
         return StringIO()
 
 class TestServer(bottle.ServerAdapter):
-    ''' Bottle compatible ServerAdapter with no logging and a shutdown() routine '''
+    ''' Bottle compatible testing ServerAdapter '''
     def __init__(self, *a, **k):
         bottle.ServerAdapter.__init__(self, *a, **k)
         self.event_running = threading.Event()
@@ -42,7 +42,8 @@ class TestServer(bottle.ServerAdapter):
     def run(self, handler):
         from wsgiref.simple_server import make_server
         try:
-            srv = make_server(self.host, self.port, handler, handler_class=NonLoggingRequestHandler)
+            srv = make_server(self.host, self.port, handler,
+                              handler_class=NonLoggingRequestHandler)
             self.alive = True
         except:
             pass
@@ -75,12 +76,12 @@ class ServerTestBase(unittest.TestCase):
         self.app = bottle.app.push()
         self.server = TestServer(host=self.host, port=self.port)
         self.urlopen = self.server.urlopen
-        self.thread = threading.Thread(target=bottle.run, args=(), kwargs=dict(app=self.app, server=self.server, quiet=True))
+        self.thread = threading.Thread(target=bottle.run, args=(),
+                      kwargs=dict(app=self.app, server=self.server, quiet=True))
         self.thread.start()
         self.server.event_running.wait()
 
     def tearDown(self):
-        ''' Recover the olt default_app and remove wsgi_intercept from urllib2 '''
         self.server.shutdown()
         self.thread.join()
         bottle.app.pop()

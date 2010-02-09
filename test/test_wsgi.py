@@ -45,7 +45,7 @@ class TestWsgi(ServerTestBase):
 
     def test_anymethod(self):
         self.assertStatus(404, '/any')
-        @bottle.route('/any', method='ALL')
+        @bottle.route('/any', method='ANY')
         def test2(): return 'test'
         self.assertStatus(200, '/any', method='HEAD')
         self.assertBody('test', '/any', method='GET')
@@ -194,6 +194,12 @@ class TestDecorators(ServerTestBase):
         self.assertStatus(200,'/5')
         self.assertBody('xxx', '/3')
 
+    def test_routebuild(self):
+        """ WSGI: Test validate-decorator"""
+        @bottle.route('/a/:b/c', name='named')
+        def test(var): pass
+        self.assertEqual('/a/xxx/c', bottle.url('named', b='xxx'))
+        self.assertEqual('/a/xxx/c', bottle.app().get_url('named', b='xxx'))
 
 if __name__ == '__main__':
     unittest.main()

@@ -317,44 +317,38 @@ class Bottle(object):
     """ WSGI application """
 
     def __init__(self, catchall=True, autojson=True, path = ''):
-        self.routes = dict()
+        self.routes = Router()
         self.default_route = None
         self.error_handler = {}
         self.jsondump = json_dumps if autojson and json_dumps else False
         self.catchall = catchall
         self.config = dict()
         self.serve = True
-        self.rootpath = path
 
     def match_url(self, path, method='GET'):
         """ Find a callback bound to a path and a specific method.
             Return (callback, param) tuple or (None, {}).
             method=HEAD falls back to GET. method=GET falls back to ALL.
         """
-        if not path.startswith(self.rootpath):
-            return None, {}
-        path = path[len(self.rootpath):].strip().lstrip('/')
-        method = method.upper()
-        tests = (method, 'GET', 'ALL') if method == 'HEAD' else (method, 'ALL')
-        for method in tests:
-            if method in self.routes:
-                handler, param = self.routes[method].match(path)
-                if handler:
-                    return handler, param
+        path = path.strip().lstrip('/')
+        handler, param = self.routes.match(method + ';' + path)
+        if handler: return handler, param
+        if method == 'HEAD':
+            handler, param = self.routes.match('GET;' + path)
+            if handler: return handler, param
+        handler, param = self.routes.match('ANY;' + path)
+        if handler: return handler, param
         return self.default_route, {}
 
     def get_url(self, routename, **kargs):
-        pass #TODO implement this (and don't forget to add self.rootpath)
+        return '/'+self.routes.build(routename, **kargs).split(';',1)[1]
 
     def route(self, url, method='GET', **kargs):
-        """
-        Decorator for request handler.
-        """
+        """ Decorator for request handler. """
         path = url.strip().lstrip('/')
         method = method.upper()
         def wrapper(handler):
-            self.routes.setdefault(method, Router())\
-                .add(path, handler, **kargs)
+            self.routes.add(method+';'+path, handler, **kargs)
             return handler
         return wrapper
 
@@ -366,9 +360,7 @@ class Bottle(object):
         return wrapper
 
     def error(self, code=500):
-        """
-        Decorator for error handler.
-        """
+        """ Decorator for error handler. """
         def wrapper(handler):
             self.error_handler[int(code)] = handler
             return handler
