@@ -10,7 +10,7 @@ class TestJinja2Template(unittest.TestCase):
 
     def test_file(self):
         """ Templates: Jinja2 file"""
-        t = Jinja2Template(filename='./views/jinja2_simple.tpl').render(var='var')
+        t = Jinja2Template(name='./views/jinja2_simple.tpl').render(var='var')
         self.assertEqual('start var end', ''.join(t))
 
     def test_name(self):
