@@ -201,5 +201,19 @@ class TestDecorators(ServerTestBase):
         self.assertEqual('/a/xxx/c', bottle.url('named', b='xxx'))
         self.assertEqual('/a/xxx/c', bottle.app().get_url('named', b='xxx'))
 
+    def test_decorators(self):
+        app = bottle.Bottle()
+        app.route('/g')('foo')
+        bottle.route('/g')('foo')
+        app.route('/g2', method='GET')('foo')
+        bottle.get('/g2')('foo')
+        app.route('/p', method='POST')('foo')
+        bottle.post('/p')('foo')
+        app.route('/p2', method='PUT')('foo')
+        bottle.put('/p2')('foo')
+        app.route('/d', method='DELETE')('foo')
+        bottle.delete('/d')('foo')
+        self.assertEqual(app.routes, bottle.app().routes)
+
 if __name__ == '__main__':
     unittest.main()

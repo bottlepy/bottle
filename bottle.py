@@ -113,7 +113,7 @@ try:
 except ImportError: # pragma: no cover
   from UserDict import DictMixin
 
-if sys.version_info >= (3,0,0):
+if sys.version_info >= (3,0,0): # pragma: no cover
     # See Request.POST
     from io import BytesIO
     from io import TextIOWrapper
@@ -266,8 +266,10 @@ class Router(object):
         self.static = dict()
         self.dynamic = []
         self.named = dict()
+        self.rawlist = []
 
     def add(self, route, target, static=False, name=None):
+        self.rawlist.append((route, target, static, name))
         parsed = RouteParser(route)
         static = bool(static or not parsed.is_dynamic())
         if name:
@@ -306,7 +308,8 @@ class Router(object):
         except KeyError:
             raise RouteBuildError("No route found with name '%s'." % route_name)
 
-
+    def __eq__(self, other):
+        return self.rawlist == other.rawlist
 
 
 
@@ -935,33 +938,33 @@ class ServerAdapter(object):
 
 
 class CGIServer(ServerAdapter):
-    def run(self, handler):
+    def run(self, handler): # pragma: no cover
         from wsgiref.handlers import CGIHandler
         CGIHandler().run(handler) # Just ignore host and port here
 
 
 class FlupFCGIServer(ServerAdapter):
-    def run(self, handler):
+    def run(self, handler): # pragma: no cover
        import flup.server.fcgi
        flup.server.fcgi.WSGIServer(handler, bindAddress=(self.host, self.port)).run()
 
 
 class WSGIRefServer(ServerAdapter):
-    def run(self, handler):
+    def run(self, handler): # pragma: no cover
         from wsgiref.simple_server import make_server
         srv = make_server(self.host, self.port, handler)
         srv.serve_forever()
 
 
 class CherryPyServer(ServerAdapter):
-    def run(self, handler):
+    def run(self, handler): # pragma: no cover
         from cherrypy import wsgiserver
         server = wsgiserver.CherryPyWSGIServer((self.host, self.port), handler)
         server.start()
 
 
 class PasteServer(ServerAdapter):
-    def run(self, handler):
+    def run(self, handler): # pragma: no cover
         from paste import httpserver
         from paste.translogger import TransLogger
         app = TransLogger(handler)
@@ -974,7 +977,7 @@ class FapwsServer(ServerAdapter):
     See http://william-os4y.livejournal.com/
     Experimental ...
     """
-    def run(self, handler):
+    def run(self, handler): # pragma: no cover
         import fapws._evwsgi as evwsgi
         from fapws import base
         evwsgi.start(self.host, self.port)
@@ -989,7 +992,7 @@ class FapwsServer(ServerAdapter):
 class TornadoServer(ServerAdapter):
     """ Untested. As described here:
         http://github.com/facebook/tornado/blob/master/tornado/wsgi.py#L187 """
-    def run(self, handler):
+    def run(self, handler): # pragma: no cover
         import tornado.wsgi
         import tornado.httpserver
         import tornado.ioloop
