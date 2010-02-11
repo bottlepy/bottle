@@ -19,9 +19,9 @@
 
 
 # Tutorial
-This tutorial should give a brief introduction into the [bottle](Bottle WSGI Framework). The main goal is to be able, after reading through this tutorial, to create a project using Bottle. Within this document, not all abilities will be shown, but at least the main and important ones like routing, utilizing the Bottle template abilities to format output and handling GET / POST parameters.
+This tutorial should give a brief introduction into the [Bottle WSGI Framework][bottle]. The main goal is to be able, after reading through this tutorial, to create a project using Bottle. Within this document, not all abilities will be shown, but at least the main and important ones like routing, utilizing the Bottle template abilities to format output and handling GET / POST parameters.
 
-To understand the content here, it is not necessary to have a basic knowledge of WSGI, as Bottle tries to keep WSGI away from the user anyway. You should have a fair understanding of the [python](Python) programming language. Furthermore, the example used in the tutorial retrieves and stores data in a SQL databse, so a basic idea about SQL helps, but is not a must to understand the concepts of Bottle. Right here, [sqlite](SQLite) is used. The output of Bottle send to the browser is formated in some examples by the help of HTML. Thus, a basic idea about the common HTML tags does help as well.
+To understand the content here, it is not necessary to have a basic knowledge of WSGI, as Bottle tries to keep WSGI away from the user anyway. You should have a fair understanding of the [Python][python] programming language. Furthermore, the example used in the tutorial retrieves and stores data in a SQL databse, so a basic idea about SQL helps, but is not a must to understand the concepts of Bottle. Right here, [SQLite][sqlite] is used. The output of Bottle send to the browser is formated in some examples by the help of HTML. Thus, a basic idea about the common HTML tags does help as well.
 
 For the sake of introducing Bottle, the Python code "in between" is kept short, in order to keep the focus. Also all code within the tutorial is working fine, but you may not necessarily use it "in the wild", e.g. on a public web server. In order to do so, you may add e.g. more error handling, protect the database with a password, test and escape the input etc.
 
@@ -50,9 +50,9 @@ You can either manually install Bottle or use Python's easy_install: `easy_insta
 
 ### Further Software Necessities
 
-As we use SQLite3 as a database, make sure it is installed. On Linux systems, most distributions have SQLite3 installed by default. SQLite is available for [sqlite_win](Windows and MacOS X) as well.
+As we use SQLite3 as a database, make sure it is installed. On Linux systems, most distributions have SQLite3 installed by default. SQLite is available for [Windows and MacOS X][sqlite_win] as well.
 
-Furthermore, you need [pysqlite](Pysqlite), the Python modules to access SQLite databases. Again, many Linux distributions have the module (often called "python-sqlite3") pre-installed, otherwise just install manually or via `easy_install pysqlite`.
+Furthermore, you need [Pysqlite][pysqlite], the Python modules to access SQLite databases. Again, many Linux distributions have the module (often called "python-sqlite3") pre-installed, otherwise just install manually or via `easy_install pysqlite`.
 
 *Note*: Many older systems have SQLite2 pre-installed. All examples will work fine with this version, too. You just need to import the corresponding Python module named "sqlite" instead of "sqlite3", as used in the examples below.
 
@@ -96,7 +96,7 @@ So, after understanding the concept of routes, let's create the first one. The g
     
 Save the code a "todo.py", preferable in the same directory as the file "todo.db". Otherwise, you need to add the path to "todo.db" in the `sqlite3.connect()` statement.
 
-Let's have a look what we just did: We imported the necessary module "sqlite3" to access to SQLite database and from Bottle we imported "route" and "run". The `run()` statement simply starts the web server included in Bottle. By default, the web server serves the pages on localhost and port 8080. Furthermore, we imported "route", which is the function responsible for Bottle's routing. As you can see, we defined one function, "todo_list()", with a few lines of code reading from the database. The important point is the [decorator](decorator statement) `@route('/todo')` right before the `def todo_list()` statement. By doing this, we bind this function to the route "/todo", so every time the browsers calls `http://localhost:8080/todo`, Bottle returns the result of the function "todo_list()". That is how routing within bottle works.
+Let's have a look what we just did: We imported the necessary module "sqlite3" to access to SQLite database and from Bottle we imported "route" and "run". The `run()` statement simply starts the web server included in Bottle. By default, the web server serves the pages on localhost and port 8080. Furthermore, we imported "route", which is the function responsible for Bottle's routing. As you can see, we defined one function, "todo_list()", with a few lines of code reading from the database. The important point is the [decorator statement][decorator] `@route('/todo')` right before the `def todo_list()` statement. By doing this, we bind this function to the route "/todo", so every time the browsers calls `http://localhost:8080/todo`, Bottle returns the result of the function "todo_list()". That is how routing within bottle works.
 
 Actually you can bind more than one route to a function. So the following code
 
@@ -109,7 +109,7 @@ Actually you can bind more than one route to a function. So the following code
         
 will work fine, too. What will not work is to bind one route to more than one function.
 
-What you will see in the browser is what is returned, thus the value given by the `return` statement. In this example, we need to convert "result" in to a string by `str()`, as Bottle expects a string or a list of strings from the return statement. But here, the result of the database query is a list of tuples, which is the standard defined by the [py_db_api](Python DB API).
+What you will see in the browser is what is returned, thus the value given by the `return` statement. In this example, we need to convert "result" in to a string by `str()`, as Bottle expects a string or a list of strings from the return statement. But here, the result of the database query is a list of tuples, which is the standard defined by the [Python DB API][py_db_api].
 
 Now, after understanding the little script above, it is time to execute it and watch the result yourself. Remember that on Linux- / Unix-based systems the file "todo.py" need to be executable first. Then, just run `python todo.py` and call the page `http://localhost:8080/todo` in your browser. In case you made no mistake writing the script, the output should look like this:
 
@@ -400,7 +400,7 @@ After going through all the sections above, you should have a brief understandin
 The following chapter give a short introduction how to adapt Bottle for larger projects. Furthermore, we will show how to operate Bottle with web servers which performs better on a higher load / more web traffic than the one we used so far.
 
 ## Server Setup
-So far, we used the standard server used by Bottle, which is the [wsgiref](WSGI reference Server) shipped along with Python. Although this server is perfectly suitable for development purposes, it is not really suitable for larger applications. But before we have a look at the alternatives, let's have a look how to tweak the setting of the standard server first
+So far, we used the standard server used by Bottle, which is the [WSGI reference Server][wsgiref] shipped along with Python. Although this server is perfectly suitable for development purposes, it is not really suitable for larger applications. But before we have a look at the alternatives, let's have a look how to tweak the setting of the standard server first
 
 ### Running Bottle on a different port and IP
 As a standard, Bottle does serve the pages on the IP-adress 127.0.0.1, also known as "localhost", and on port "8080". To modify there setting is pretty simple, as additional parameters can be passed to Bottle's `run()` function to change the port and the address.
@@ -427,7 +427,7 @@ The `port` and `host` parameter can also be applied when Bottle is running with 
 ### Running Bottle with a different server
 As said above, the standard server is perfectly suitable for development, personal use or a small group of people only using your application based on Bottle. For larger task, the standard server may become a Bottle neck, as it is single-threaded, thus it can only serve on request at a time.
 
-But Bottle has already various adapters to multi-threaded server on board, which perform better on higher load. Bottle supports [cherrypy](cherryPy), [fapws3](fapws3), [flup](flup) and [paste](Paste).
+But Bottle has already various adapters to multi-threaded server on board, which perform better on higher load. Bottle supports [cherryPy][cherrypy], [fapws3][fapws3], [flup][flup] and [Paste][paste].
 
 If you want to run for example Bottle with the past server, use the following code:
 
@@ -439,7 +439,7 @@ If you want to run for example Bottle with the past server, use the following co
 This works exactly the same way with `FlupServer`, `CherryPyServer` and `FapwsServer`.
 
 ### Running Bottle on Apache with mod_wsgi
-Maybe you already have an [apache](Apache web server) or you want to run a Bottle-based application large scale - than it is time to think about Apache with [mod_wsgi](mod_wsgi).
+Maybe you already have an [Apache web server][apache] or you want to run a Bottle-based application large scale - than it is time to think about Apache with [mod_wsgi][mod_wsgi].
 
 We assume that your Apache server is up and running and mod_wsgi is working fine as well. On a lot of Linux distributions, mod_wsgi can be installed via the package management easily.
 
@@ -491,7 +491,7 @@ After restarting the server, your the ToDo list should be accessible at "http://
 ## Final words
 Now we are at the end of this introduction and tutorial to Bottle. We learned about the basic concepts of Bottle and wrote a first application using the Bottle framework. In addition to that, we saw how to adapt Bottle for large task and server Bottle through a Apache web server with mod_wsgi.
 
-As said in the introduction, this tutorial is not showing all shades and possibilities of Bottle. What we skipped here is e.g. using regular expressions on dynamic routes, returning [json](JSON data), how to serve static files and receive File Objects and Streams. Furthermore, we did not show how templates can be called from within another template. For an introduction into those points, please refer to the full [bottle_doc](Bottle documentation).
+As said in the introduction, this tutorial is not showing all shades and possibilities of Bottle. What we skipped here is e.g. using regular expressions on dynamic routes, returning [JSON data][json], how to serve static files and receive File Objects and Streams. Furthermore, we did not show how templates can be called from within another template. For an introduction into those points, please refer to the full [Bottle documentation][bottle_doc].
 
 ## Complete example listing
 As above the ToDo list example was developed piece by piece, here is the complete listing:
