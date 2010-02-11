@@ -394,7 +394,7 @@ works fine, the following one as well:
     def mistake404(code):
         return 'Sorry, this page does not exist!'
 
-### Summery
+### Summary
 After going through all the sections above, you should have a brief understanding how the Bottle WSGI framework works. Furthermore you have all the knowledge necessary to use Bottle for you applications.
 
 The following chapter give a short introduction how to adapt Bottle for larger projects. Furthermore, we will show how to operate Bottle with web servers which performs better on a higher load / more web traffic than the one we used so far.
