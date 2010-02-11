@@ -975,7 +975,6 @@ class FapwsServer(ServerAdapter):
     """
     Extremly fast webserver using libev.
     See http://william-os4y.livejournal.com/
-    Experimental ...
     """
     def run(self, handler): # pragma: no cover
         import fapws._evwsgi as evwsgi
@@ -1000,6 +999,52 @@ class TornadoServer(ServerAdapter):
         server = tornado.httpserver.HTTPServer(container)
         server.listen(port=self.port)
         tornado.ioloop.IOLoop.instance().start()
+
+
+class AppEngineServer(ServerAdapter):
+    """ Untested. """
+    def run(self, handler):
+        from google.appengine.ext.webapp import util
+        util.run_wsgi_app(handler)
+
+
+class TwistedServer(ServerAdapter):
+    """ Untested. """
+    def run(self, handler):
+        import twisted.web.wsgi
+        import twisted.internet
+        resource = twisted.web.wsgi.WSGIResource(twisted.internet.reactor,
+                   twisted.internet.reactor.getThreadPool(), handler)
+        site = server.Site(resource)
+        twisted.internet.reactor.listenTCP(self.port, se.fhost)
+        twisted.internet.reactor.run()
+
+
+class DieselServer(ServerAdapter):
+    """ Untested. """
+    def run(self, handler):
+        from diesel.protocols.wsgi import WSGIApplication
+        app = WSGIApplication(handler, port=self.port)
+        app.run()
+
+
+class GunicornServer(ServerAdapter):
+    """ Untested. """
+    def run(self, handler):
+        import gunicorn.arbiter
+        gunicorn.arbiter.Arbiter((self.host, self.port), 4, handler).run()
+
+
+class AutoServer(ServerAdapter):
+    """ Untested. """
+    adapters = [FapwsServer, TornadoServer, CherryPyServer, PasteServer,
+                TwistedServer, GunicornServer, WSGIRefServer]
+    def run(self, handler):
+        for sa in adapters:
+            try:
+                return sa(self.host, self.port, **self.options).run()
+            except ImportError:
+                pass
 
 
 def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080,
