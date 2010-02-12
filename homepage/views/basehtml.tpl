@@ -1,4 +1,4 @@
-%title = _tpl.get('title', 'Homepage')
+%title = globals().get('title', 'Homepage')
 %import bottle
 %version = bottle.__version__
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
