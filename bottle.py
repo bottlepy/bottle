@@ -465,14 +465,31 @@ class Bottle(object):
             return [err]
 
 class Request(threading.local, DictMixin):
-    """ Represents a single request using thread-local attributes.
-        This is a wrapper around a WSGI environment and can be used as such
+    """ Represents a single HTTP request using thread-local attributes.
+
+        You usually don't instantiate this class, but use the global instance
+        stored at module level in `bottle.request`. It holds the request
+        environment and context for the current client request and is reused
+        and refilled on every request. All attributs are thread-local, so it
+        is save to use the global instance in multithread environments.
+
+        The Resquest object wrapps a WSGI environment and can be used as such.
     """
-    def __init__(self):
-        self.bind({}, None)
+    def __init__(self, environ=None, app=None):
+        """ Create a new Request instance.
+        
+            You usually don't do this but use the global `bottle.request`
+            instance instead.
+         """
+        self.bind(environ or {}, app)
 
     def bind(self, environ, app=None):
-        """ Bind a new WSGI enviroment """
+        """ Bind a new WSGI enviroment and clear out all previously computed
+            attributes.
+            
+            This is done automatically for the global `bottle.request`
+            instance on every request.
+        """
         self.app = app
         self.environ = environ
         self._GET = self._POST = self._GETPOST = self._COOKIES = self._body = self._header = None
@@ -483,16 +500,20 @@ class Request(threading.local, DictMixin):
         self.method = environ.get('REQUEST_METHOD', 'GET').upper()
 
     def __getitem__(self, key):
+        """ Shortcut for Request.environ.__getitem__ """
         return self.environ[key]
 
     def __setitem__(self, key, value):
+        """ Shortcut for Request.environ.__setitem__ """
         self.environ[key] = value
 
     def keys(self):
+        """ Shortcut for Request.environ.keys() """
         return self.environ.keys()
 
     @property
     def query_string(self):
+        """ The content of the QUERY_STRING environment variable. """
         return self.environ.get('QUERY_STRING', '')
 
     @property
@@ -502,7 +523,11 @@ class Request(threading.local, DictMixin):
 
     @property
     def url(self):
-        """ The full URL as requested by the client """
+        """ Full URL as requested by the client (computed).
+
+            This value is constructed out of different environment variables
+            and includes scheme, host, port, scriptname, path and query string. 
+        """
         scheme = self.environ.get('wsgi.url_scheme', 'http')
         host   = self.environ.get('HTTP_HOST', None)
         if not host:
@@ -515,12 +540,15 @@ class Request(threading.local, DictMixin):
 
     @property
     def content_length(self):
-        """ The Content-Length header as an integer, -1 if not specified """
+        """ Content-Length header as an integer, -1 if not specified """
         return int(self.environ.get('CONTENT_LENGTH','') or -1)
 
     @property
     def header(self):
-        ''' Dictionary containing HTTP header'''
+        ''' HeaderDict filled with request headers.
+
+            HeaderDict keys are case insensitive str.title()d 
+        '''
         if self._header is None:
             self._header = HeaderDict()
             for key, value in self.environ.iteritems():
@@ -531,7 +559,11 @@ class Request(threading.local, DictMixin):
 
     @property
     def GET(self):
-        """ Dictionary with parsed query_string data. """
+        """ The QUERY_STRING parsed into a MultiDict.
+
+            Keys and values are strings. Multiple values per key are possible.
+            See MultiDict for details.
+        """
         if self._GET is None:
             data = parse_qs(self.query_string, keep_blank_values=True)
             self._GET = MultiDict()
@@ -542,7 +574,14 @@ class Request(threading.local, DictMixin):
 
     @property
     def POST(self):
-        """ Dictionary with parsed form data. """
+        """ The HTTP POST body parsed into a MultiDict.
+
+            This supports urlencoded and multipart POST requests. Multipart
+            is commonly used for file uploads and may result in some of the
+            values beeing cgi.FieldStorage objects instead of strings.
+
+            Multiple values per key are possible. See MultiDict for details.
+        """
         if self._POST is None:
             save_env = dict() # Build a save environment for cgi
             for key in ('REQUEST_METHOD', 'CONTENT_TYPE', 'CONTENT_LENGTH'):
@@ -561,7 +600,7 @@ class Request(threading.local, DictMixin):
 
     @property
     def params(self):
-        """ A mix of GET and POST data. POST overwrites GET """
+        """ A combined MultiDict with POST and GET parameters. """
         if self._GETPOST is None:
             self._GETPOST = MultiDict(self.GET)
             self._GETPOST.update(dict(self.POST))
@@ -569,7 +608,11 @@ class Request(threading.local, DictMixin):
 
     @property
     def body(self):
-        """ The HTTP request body as a seekable file object """
+        """ The HTTP request body as a seekable buffer object.
+        
+            This property returns a copy of the `wsgi.input` stream and should
+            be used instead of `environ['wsgi.input']`.
+         """
         if self._body is None:
             maxread = max(0, self.content_length)
             stream = self.environ['wsgi.input']
@@ -586,12 +629,20 @@ class Request(threading.local, DictMixin):
 
     @property
     def auth(self): #TODO: Tests and docs. Add support for digest. namedtuple?
-        """ HTTP authorisation data as a named tuple. (experimental) """
+        """ HTTP authorisation data as a (user, passwd) tuple. (experimental)
+        
+            This implementation currently only supports basic auth and returns
+            None on errors.
+        """
         return parse_auth(self.environ.get('HTTP_AUTHORIZATION'))
 
     @property
     def COOKIES(self):
-        """ Dictionary with parsed cookie data. """
+        """ Cookie information parsed into a dictionary.
+        
+            Secure cookies are NOT decoded automatically. See
+            Request.get_cookie() for details.
+        """
         if self._COOKIES is None:
             raw_dict = SimpleCookie(self.environ.get('HTTP_COOKIE',''))
             self._COOKIES = {}
@@ -600,6 +651,7 @@ class Request(threading.local, DictMixin):
         return self._COOKIES
 
     def get_cookie(self, *args):
+        """ Return the (decoded) value of a cookie. """
         value = self.COOKIES.get(*args)
         sec = self.app.config['securecookie.key']
         dec = cookie_decode(value, sec)
@@ -607,10 +659,17 @@ class Request(threading.local, DictMixin):
 
 
 class Response(threading.local):
-    """ Represents a single response using thread-local namespace. """
+    """ Represents a single HTTP response using thread-local attributes.
+
+        You usually don't instantiate this class, but use the global instance
+        stored at module level in `bottle.response`. It holds the response
+        context for the current client request and is reused and cleared on
+        every request. All attributs are thread-local, so it is save to use
+        the global instance in multithread environments.
+    """
 
     def bind(self, app):
-        """ Clears old data and creates a brand new Response object """
+        """ Resets the Response object to its factory defaults. """
         self._COOKIES = None
         self.status = 200
         self.header = HeaderDict()
@@ -619,7 +678,7 @@ class Response(threading.local):
         self.app = app
 
     def wsgiheader(self):
-        ''' Returns a wsgi conform list of header/value pairs '''
+        ''' Returns a wsgi conform list of header/value pairs. '''
         for c in self.COOKIES.values():
             if c.OutputString() not in self.header.getall('Set-Cookie'):
                 self.header.append('Set-Cookie', c.OutputString())
@@ -627,20 +686,29 @@ class Response(threading.local):
 
     @property
     def charset(self):
+        """ Return the charset specified tin the content-type header.
+        
+            This defaults to `UTF-8`.
+        """
         if 'charset=' in self.content_type:
             return self.content_type.split('charset=')[-1].split(';')[0].strip()
         return 'UTF-8'
 
     @property
     def COOKIES(self):
+        """ A dict-like SimpleCookie instance. Use Response.set_cookie() instead. """
         if not self._COOKIES:
             self._COOKIES = SimpleCookie()
         return self._COOKIES
 
     def set_cookie(self, key, value, **kargs):
-        """
-        Sets a Cookie. Optional settings:
-        expires, path, comment, domain, max-age, secure, version, httponly
+        """ Add a new cookie with various options.
+        
+        If the cookie value is not a string, a secure cookie is created.
+        
+        Possible options are:
+            expires, path, comment, domain, max_age, secure, version, httponly
+            See http://de.wikipedia.org/wiki/HTTP-Cookie#Aufbau for details
         """
         if not isinstance(value, basestring):
             sec = self.app.config['securecookie.key']
@@ -650,7 +718,7 @@ class Response(threading.local):
             self.COOKIES[key][k.replace('_', '-')] = v
 
     def get_content_type(self):
-        """ Get the current 'Content-Type' header. """
+        """ Current 'Content-Type' header. """
         return self.header['Content-Type']
 
     def set_content_type(self, value):
