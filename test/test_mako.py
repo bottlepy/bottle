@@ -9,7 +9,7 @@ class TestMakoTemplate(unittest.TestCase):
 
     def test_file(self):
         """ Templates: Mako file"""
-        t = MakoTemplate(filename='./views/mako_simple.tpl').render(var='var')
+        t = MakoTemplate(name='./views/mako_simple.tpl').render(var='var')
         self.assertEqual('start var end\n', ''.join(t))
 
     def test_name(self):
