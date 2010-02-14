@@ -1401,9 +1401,7 @@ def template(tpl, template_adapter=SimpleTemplate, **args):
     lookup = args.get('template_lookup', TEMPLATE_PATH)
     if tpl not in TEMPLATES or DEBUG:
         if "\n" in tpl or "{" in tpl or "%" in tpl or '$' in tpl:
-            TEMPLATES[tpl] = template_adapter(template=tpl, lookup=lookup)
-        elif '.' in tpl:
-            TEMPLATES[tpl] = template_adapter(filename=tpl, lookup=lookup)
+            TEMPLATES[tpl] = template_adapter(source=tpl, lookup=lookup)
         else:
             TEMPLATES[tpl] = template_adapter(name=tpl, lookup=lookup)
     if not TEMPLATES[tpl]:
