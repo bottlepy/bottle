@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import with_statement
-
 """
 Bottle is a fast and simple micro-framework for small web applications. It
 offers request dispatching (Routes) with url parameter support, templates,
@@ -12,6 +10,7 @@ Homepage and documentation: http://wiki.github.com/defnull/bottle
 
 Licence (MIT)
 -------------
+
     Copyright (c) 2009, Marcel Hellkamp.
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -36,51 +35,30 @@ Licence (MIT)
 Example
 -------
 
-    from bottle import route, run, request, response, send_file, abort
+This is an example::
 
+    from bottle import route, run, request, response, send_file, abort
+    
     @route('/')
     def hello_world():
         return 'Hello World!'
-
+    
     @route('/hello/:name')
     def hello_name(name):
         return 'Hello %s!' % name
-
+    
     @route('/hello', method='POST')
     def hello_post():
         name = request.POST['name']
         return 'Hello %s!' % name
-
+    
     @route('/static/:filename#.*#')
     def static_file(filename):
         send_file(filename, root='/path/to/static/files/')
-
+    
     run(host='localhost', port=8080)
-
-Code Overview
--------------
-
- - Imports
- - Exceptions and events
- - Routing
- - WSGI app and abstraction
- - Usefull data structures
- - Module level functions
- - Utilities
- - Decorators
- - Server Adapter
- - run()
- - Templates and template decorators
- - Constants and default settings
-
-#BC:   Backward compatibility. This piece of code makes no sense but is here to
-       maintain compatibility to previous releases.
-#TODO: Please help to improve this piece of code. There is something ugly
-       or missing here.
-#REF:  A reference to a bug report, article, api doc or howto. Follow the link
-       to read more.
 """
-
+from __future__ import with_statement
 __author__ = 'Marcel Hellkamp'
 __version__ = '0.7.0a'
 __license__ = 'MIT'
@@ -446,12 +424,12 @@ class Bottle(object):
             request.environ['wsgi.errors'].write(err)
             return HTTPError(500, err, e)
 
-    def cast(self, out):
+    def _cast(self, out):
         """ Try to cast the input into something WSGI compatible. Correct
         HTTP header and status codes when possible. Clear output on HEAD
         requests.
         Support: False, str, unicode, list(unicode), file, dict, list(dict),
-                 HTTPResponse and HTTPError
+        HTTPResponse and HTTPError
         """
         if isinstance(out, HTTPResponse):
             out.apply(response)
@@ -490,7 +468,7 @@ class Bottle(object):
             request.bind(environ, self)
             response.bind(self)
             out = self.handle(request.path, request.method)
-            out = self.cast(out)
+            out = self._cast(out)
             status = '%d %s' % (response.status, HTTP_CODES[response.status])
             start_response(status, response.wsgiheader())
             return out
@@ -511,13 +489,6 @@ class Bottle(object):
 
 class Request(threading.local, DictMixin):
     """ Represents a single HTTP request using thread-local attributes.
-
-        You usually don't instantiate this class, but use the global instance
-        stored at module level in :data:`bottle.request`. It holds the request
-        environment and context for the current client request and is reused
-        and refilled on every request. All attributs are thread-local, so it
-        is save to use the global instance in multithread environments.
-
         The Resquest object wrapps a WSGI environment and can be used as such.
     """
     def __init__(self, environ=None, app=None):
@@ -711,12 +682,6 @@ class Request(threading.local, DictMixin):
 
 class Response(threading.local):
     """ Represents a single HTTP response using thread-local attributes.
-
-        You usually don't instantiate this class, but use the global instance
-        stored at module level in `bottle.response`. It holds the response
-        context for the current client request and is reused and cleared on
-        every request. All attributs are thread-local, so it is save to use
-        the global instance in multithread environments.
     """
 
     def bind(self, app):
@@ -825,7 +790,7 @@ class MultiDict(DictMixin):
 
 
 class HeaderDict(MultiDict):
-    """ Same as MultiDict, but title() the key overwrite keys by default. """
+    """ Same as :class:`MultiDict`, but title()s the keys and overwrites by default. """
     def __contains__(self, key): return MultiDict.__contains__(self, key.title())
     def __getitem__(self, key): return MultiDict.__getitem__(self, key.title())
     def __delitem__(self, key): return MultiDict.__delitem__(self, key.title())
@@ -1246,6 +1211,7 @@ class TemplateError(HTTPError):
 
 
 class BaseTemplate(object):
+    """ Base class and minimal API for template adapters """
     extentions = ['tpl','html','thtml','stpl']
 
     def __init__(self, source=None, name=None, lookup=[], encoding='utf8'):

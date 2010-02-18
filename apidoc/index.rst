@@ -12,6 +12,7 @@ Contents:
    :maxdepth: 2
 
    api
+   stpl
    tutorial
 
 Indices and tables
