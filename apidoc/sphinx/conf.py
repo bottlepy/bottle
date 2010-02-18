@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # Bottle documentation build configuration file, created by
-# sphinx-quickstart on Thu Feb 18 13:47:50 2010.
+# sphinx-quickstart on Thu Feb 18 18:09:50 2010.
 #
 # This file is execfile()d with the current directory set to its containing dir.
 #
@@ -16,13 +16,15 @@ import sys, os
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
+#sys.path.append(os.path.abspath('.'))
 sys.path.append(os.path.abspath('../../'))
+import bottle
 
 # -- General configuration -----------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.todo', 'sphinx.ext.coverage']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.intersphinx']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -35,8 +37,6 @@ source_suffix = '.rst'
 
 # The master toctree document.
 master_doc = 'index'
-
-import bottle
 
 # General information about the project.
 project = u'Bottle'
@@ -66,17 +66,17 @@ release = bottle.__version__
 
 # List of directories, relative to source directory, that shouldn't be searched
 # for source files.
-exclude_trees = []
+exclude_trees = ['sphinx','html']
 
 # The reST default role (used for this markup: `text`) to use for all documents.
 #default_role = None
 
 # If true, '()' will be appended to :func: etc. cross-reference text.
-add_function_parentheses = True
+#add_function_parentheses = True
 
 # If true, the current module name will be prepended to all description
 # unit titles (such as .. function::).
-add_module_names = True
+#add_module_names = True
 
 # If true, sectionauthor and moduleauthor directives will be shown in the
 # output. They are ignored by default.
@@ -166,7 +166,7 @@ htmlhelp_basename = 'Bottledoc'
 # -- Options for LaTeX output --------------------------------------------------
 
 # The paper size ('letter' or 'a4').
-latex_paper_size = 'a4'
+#latex_paper_size = 'letter'
 
 # The font size ('10pt', '11pt' or '12pt').
 #latex_font_size = '10pt'
@@ -194,3 +194,7 @@ latex_documents = [
 
 # If false, no module index is generated.
 #latex_use_modindex = True
+
+
+# Example configuration for intersphinx: refer to the Python standard library.
+intersphinx_mapping = {'http://docs.python.org/': None}
