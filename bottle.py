@@ -107,6 +107,7 @@ import base64
 from urllib import quote as urlquote
 from urlparse import urlunsplit, urljoin
 import functools
+import inspect
 
 try:
   from collections import MutableMapping as DictMixin
@@ -250,7 +251,8 @@ class RouteParser(object):
                 return True
         return False
 
-
+    def __repr__(self):
+        return self.route
 
 
 
@@ -314,6 +316,8 @@ class Router(object):
 
 
 
+
+
 # WSGI abstraction: Request and response management
 
 class Bottle(object):
@@ -346,26 +350,35 @@ class Bottle(object):
     def get_url(self, routename, **kargs):
         return '/'+self.routes.build(routename, **kargs).split(';',1)[1]
 
-    def route(self, url=None, method='GET', **kargs):
-        """ Decorator for request handler. """
-        path = url.strip().lstrip('/') if url !== None else None
+    def route(self, path=None, method='GET', **kargs):
+        """ Decorator: Bind a function to a GET request path.
+
+            If the path parameter is None, the signature (name, args) of the
+            decorated function is used to generate the path. See yieldroutes()
+            for details.
+
+            The method parameter (default: GET) specifies the HTTP request
+            method to listen to. 
+        """
         method = method.upper()
         def wrapper(handler):
-            if path === None:
-              path = handler.__name__.replace('__','/').lstrip('/')
-            self.routes.add(method+';'+path, handler, **kargs)
+            paths = [] if path is None else [path.strip().lstrip('/')]
+            if not paths: # Lets generate the path automatically 
+                paths = yieldroutes(handler)
+            for p in paths:
+                self.routes.add(method+';'+p, handler, **kargs)
             return handler
         return wrapper
 
     def default(self):
-        """ Decorator for request handler. Same as add_defroute( handler )."""
+        """ Decorator: Registrer a default handler for undefined routes """
         def wrapper(handler):
             self.default_route = handler
             return handler
         return wrapper
 
     def error(self, code=500):
-        """ Decorator for error handler. """
+        """ Decorator: Registrer an output handler for a HTTP error code"""
         def wrapper(handler):
             self.error_handler[int(code)] = handler
             return handler
@@ -411,11 +424,9 @@ class Bottle(object):
                 out = self.error_handler.get(out.status, str)(out)
             else:
                 out = out.output
-
         if not out:
             response.header['Content-Length'] = '0'
             return []
-
         if isinstance(out, types.StringType):
             out = [out]
         elif isinstance(out, unicode):
@@ -429,17 +440,13 @@ class Bottle(object):
           or self.jsondump and isinstance(out, list) and isinstance(out[0], dict):
                 out = [self.jsondump(out)]
                 response.content_type = 'application/json'
-
         if isinstance(out, list) and len(out) == 1:
             response.header['Content-Length'] = str(len(out[0]))
-
         if response.status in (100, 101, 204, 304) or request.method == 'HEAD':
             out = [] # rfc2616 section 4.3
-
         if not hasattr(out, '__iter__'):
             raise TypeError('Request handler for route "%s" returned [%s] '
                 'which is not iterable.' % (request.path, type(out).__name__))
-
         return out
 
     def __call__(self, environ, start_response):
@@ -465,6 +472,7 @@ class Bottle(object):
             environ['wsgi.errors'].write(err) #TODO: wsgi.error should not get html
             start_response('500 INTERNAL SERVER ERROR', [])
             return [err]
+
 
 class Request(threading.local, DictMixin):
     """ Represents a single HTTP request using thread-local attributes.
@@ -760,14 +768,9 @@ class MultiDict(DictMixin):
     def __getitem__(self, key): return self.get(key, KeyError, -1)
     def __setitem__(self, key, value): self.append(key, value)
 
-    def append(self, key, value):
-        self.dict.setdefault(key, []).append(value)
-
-    def replace(self, key, value):
-        self.dict[key] = [value]
-
-    def getall(self, key):
-        return self.dict.get(key) or []
+    def append(self, key, value): self.dict.setdefault(key, []).append(value)
+    def replace(self, key, value): self.dict[key] = [value]
+    def getall(self, key): return self.dict.get(key) or []
 
     def get(self, key, default=None, index=-1):
         if key not in self.dict and default != KeyError:
@@ -786,20 +789,17 @@ class HeaderDict(MultiDict):
     def __getitem__(self, key): return MultiDict.__getitem__(self, key.title())
     def __delitem__(self, key): return MultiDict.__delitem__(self, key.title())
     def __setitem__(self, key, value): self.replace(key, value)
-    def getall(self, key): return MultiDict.getall(self, key.title())
     def append(self, key, value): return MultiDict.append(self, key.title(), str(value))
     def replace(self, key, value): return MultiDict.replace(self, key.title(), str(value))
+    def getall(self, key): return MultiDict.getall(self, key.title())
 
-
-
-
-
-# Module level functions
 class AppStack(list):
     """ A stack implementation. """
+
     def __call__(self):
         """ Return the current default app. """
         return self[-1]
+
     def push(self, value=None):
         """ Add a new Bottle instance to the stack """
         if not isinstance(value, Bottle):
@@ -807,9 +807,14 @@ class AppStack(list):
         self.append(value)
         return value
 
+
+
+
+# Module level functions
+
 # BC: 0.6.4 and needed for run()
 app = default_app = AppStack([Bottle()])
-   
+
 
 def abort(code=500, text='Unknown Error: Appliction stopped.'):
     """ Aborts execution and causes a HTTP error. """
@@ -876,6 +881,11 @@ def static_file(filename, root, guessmime=True, mimetype=None, download=False):
 
 # Utilities
 
+def url(routename, **kargs):
+    """ Return a named route filled with arguments """
+    return app().get_url(routename, **kargs)
+
+
 def parse_date(ims):
     """ Parses rfc1123, rfc850 and asctime timestamps and returns UTC epoch. """
     try:
@@ -917,12 +927,23 @@ def cookie_is_encoded(data):
     return bool(data.startswith(u'!'.encode('ascii')) and u'?'.encode('ascii') in data) #2to3 hack
 
 
-def url(routename, **kargs):
-    """ Helper generates URLs out of named routes """
-    return app().get_url(routename, **kargs)
-
-
-
+def yieldroutes(func):
+    """ Return a generator for routes that match the signature (name, args) 
+    of the func parameter. This may yield more than one route if the function
+    takes optional keyword arguments. The output is best described by example:
+      a()         -> '/a'
+      b(x, y)     -> '/b/:x/:y'
+      c(x, y=5)   -> '/c/:x' and '/c/:x/:y'
+      d(x=5, y=6) -> '/d' and '/d/:x' and '/d/:x/:y'
+    """
+    path = func.__name__.replace('__','/').lstrip('/')
+    spec = inspect.getargspec(func)
+    argc = len(spec[0]) - len(spec[3] or [])
+    path += ('/:%s' * argc) % tuple(spec[0][:argc])
+    yield path
+    for arg in spec[0][argc:]:
+        path += '/:%s' % arg
+        yield path
 
 
 
@@ -949,20 +970,22 @@ def validate(**vkargs):
 
 
 def route(*a, **ka):
-    ''' Decorator for request routes '''
+    """ Decorator: Bind a route to a callback.
+        The method parameter (default: GET) specifies the HTTP request
+        method to listen to """
     return app().route(*a, **ka)
 
 get = functools.partial(route, method='GET')
-get.__doc__ = route.__doc__.replace('request','GET')
+get.__doc__ = route.__doc__
 
 post = functools.partial(route, method='POST')
-post.__doc__ = route.__doc__.replace('request','POST')
+post.__doc__ = route.__doc__.replace('GET','POST')
 
 put = functools.partial(route, method='PUT')
-put.__doc__ = route.__doc__.replace('request','PUT')
+put.__doc__ = route.__doc__.replace('GET','PUT')
 
 delete = functools.partial(route, method='DELETE')
-delete.__doc__ = route.__doc__.replace('request','DELETE')
+delete.__doc__ = route.__doc__.replace('GET','DELETE')
 
 def default():
     """
