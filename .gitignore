@@ -9,3 +9,4 @@ bottle.egg-info/
 release.sh
 test.sh
 homepage/cache/*.html
+apidoc/build
