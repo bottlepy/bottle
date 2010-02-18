@@ -478,7 +478,7 @@ class Request(threading.local, DictMixin):
     """ Represents a single HTTP request using thread-local attributes.
 
         You usually don't instantiate this class, but use the global instance
-        stored at module level in `bottle.request`. It holds the request
+        stored at module level in :data:`bottle.request`. It holds the request
         environment and context for the current client request and is reused
         and refilled on every request. All attributs are thread-local, so it
         is save to use the global instance in multithread environments.
@@ -555,7 +555,7 @@ class Request(threading.local, DictMixin):
 
     @property
     def header(self):
-        ''' HeaderDict filled with request headers.
+        ''' :class:`HeaderDict` filled with request headers.
 
             HeaderDict keys are case insensitive str.title()d 
         '''
@@ -1502,6 +1502,8 @@ HTTP_CODES = {
     504: 'GATEWAY TIMEOUT',
     505: 'HTTP VERSION NOT SUPPORTED',
 }
+""" A dict of known HTTP error and status codes """
+
 
 ERROR_PAGE_TEMPLATE = """<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
 <html>
@@ -1517,13 +1519,23 @@ ERROR_PAGE_TEMPLATE = """<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
     </body>
 </html>
 """
+""" The HTML template used for error messages """
 
 request = Request()
+""" Whenever a page is requested, the :class:`Bottle` WSGI handler stores
+metadata about the current request into this instance of :class:`Request`.
+It is thread-save and can be accessed from within handler functions. """
+
 response = Response()
+""" The :class:`Bottle` WSGI handler uses metasata assigned to this instance
+of :class:`Response` to generate the WSGI response. """
+
 local = threading.local()
 
 #TODO: Global and app local configuration (debug, defaults, ...) is a mess
 
 def debug(mode=True):
+    """ Change the debug level.
+    There is only one debug level supported at the moment."""
     global DEBUG
     DEBUG = bool(mode)
