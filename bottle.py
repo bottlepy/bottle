@@ -199,87 +199,57 @@ class RouteBuildError(RouteError):
     """ The route could not been build """
 
 
-class Route(object):
-    ''' Represents a single route and can parse the dynamic route syntax '''
+class RouteParser(object):
+    ''' Parser class for routes '''
     syntax = re.compile(r'(.*?)(?<!\\):([a-zA-Z_]+)?(?:#(.*?)#)?')
     default = '[^/]+'
 
-    def __init__(self, route, target, name=None, static=False):
-        """ Create a Route. The route string may contain `:key`,
-            `:key#regexp#` or `:#regexp#` tokens for each dynamic part of the
-            route. These can be escaped with a backslash infront of the `:`
-            and are compleately ignored if static is true. A name may be used
-            to refer to this route later (depends on Router)
-        """
+    def __init__(self, route):
         self.route = route
-        self.target = target
-        self.name = name
-        self._static = static
-        self._tokens = None
 
-    def tokens(self):
-        """ Return a list of (type, value) tokens. """
-        if not self._tokens:
-            self._tokens = list(self.tokenise(self.route))
-        return self._tokens
-
-    @classmethod
-    def tokenise(cls, route):
+    def tokenise(self):
         ''' Split a string into an iterator of (type, value) tokens. '''
         match = None
-        for match in cls.syntax.finditer(route):
+        for match in self.syntax.finditer(self.route):
             pre, name, rex = match.groups()
             if pre: yield ('TXT', pre.replace('\\:',':'))
             if rex and name: yield ('VAR', (rex, name))
-            elif name: yield ('VAR', (cls.default, name))
+            elif name: yield ('VAR', (self.default, name))
             elif rex: yield ('ANON', rex)
         if not match:
-            yield ('TXT', route.replace('\\:',':'))
-        elif match.end() < len(route):
-            yield ('TXT', route[match.end():].replace('\\:',':'))
+            yield ('TXT', self.route.replace('\\:',':'))
+        elif match.end() < len(self.route):
+            yield ('TXT', self.route[match.end():].replace('\\:',':'))
 
     def group_re(self):
-        ''' Return a regexp pattern with named groups '''
+        ''' Turn a route string into a regexp pattern with named groups '''
         out = ''
-        for token, data in self.tokens():
+        for token, data in self.tokenise():
             if   token == 'TXT':  out += re.escape(data)
             elif token == 'VAR':  out += '(?P<%s>%s)' % (data[1], data[0])
             elif token == 'ANON': out += '(?:%s)' % data
         return out
 
     def flat_re(self):
-        ''' Return a regexp pattern with non-grouping parentheses '''
+        ''' Turn a route string into a regexp pattern without any groups '''
         return re.sub(r'\(\?P<[^>]*>|\((?!\?)', '(?:', self.group_re())
 
     def format_str(self):
-        ''' Return a format string with named fields. '''
-        if self.static:
-            return self.route.replace('%','%%')
+        ''' Turn a route string into a format string named fields '''
         out, i = '', 0
-        for token, value in self.tokens():
+        for token, value in self.tokenise():
             if token == 'TXT': out += value.replace('%','%%')
             elif token == 'ANON': out += '%%(anon%d)s' % i; i+=1
             elif token == 'VAR': out += '%%(%s)s' % value[1]
         return out
 
-    @property
-    def static(self):
-        return not self.is_dynamic()
-
     def is_dynamic(self):
-        ''' Return true if the route contains dynamic parts '''
-        if not self._static:
-            for token, value in self.tokens():
-                if token != 'TXT':
-                    return True
-        self._static = True
+        ''' Test for dynalic parts in a route '''
+        for token, value in self.tokenise():
+            if token != 'TXT':
+                return True
         return False
 
-    def __eq__(self, other):
-        return self.route == other.route\
-           and self.static == other.static\
-           and self.name == other.name\
-           and self.target == other.target
 
 
 
@@ -288,36 +258,34 @@ class Route(object):
 class Router(object):
     ''' A route associates a string (e.g. URL) with an object (e.g. function)
         Some dynamic routes may extract parts of the string and provide them as
-        a dictionary. This router matches a string against multiple routes and
-        returns the associated object along with the extracted data.
+        data. This router matches a string against multiple routes and returns
+        the associated object along with the extracted data.
     '''
 
     def __init__(self):
-        self.routes = []     # List of all installed routes
-        self.static = dict() # Cache for static routes
-        self.dynamic = []    # Cache structure for dynamic routes
-        self.named = dict()  # Cache for named routes and their format strings
+        self.static = dict()
+        self.dynamic = []
+        self.named = dict()
+        self.rawlist = []
 
-    def add(self, *a, **ka):
-        """ Adds a route->target pair or a Route object to the Router.
-            See Route() for details.
-        """
-        route = a[0] if a and isinstance(a[0], Route) else Route(*a, **ka)
-        self.routes.append(route)
-        if route.name:
-            self.named[route.name] = route.format_str()
-        if route.static:
-            self.static[route.route] = route.target
+    def add(self, route, target, static=False, name=None):
+        self.rawlist.append((route, target, static, name))
+        parsed = RouteParser(route)
+        static = bool(static or not parsed.is_dynamic())
+        if name:
+            self.named[name] = route.replace('%','%%') if static else parsed.format_str()
+        if static:
+            self.static[route] = target
             return
-        gpatt = route.group_re()
-        fpatt = route.flat_re()
+        gpatt = parsed.group_re()
+        fpatt = parsed.flat_re()
         try:
             gregexp = re.compile('^(%s)$' % gpatt) if '(?P' in gpatt else None
             combined = '%s|(^%s$)' % (self.dynamic[-1][0].pattern, fpatt)
             self.dynamic[-1] = (re.compile(combined), self.dynamic[-1][1])
-            self.dynamic[-1][1].append((route.target, gregexp))
+            self.dynamic[-1][1].append((target, gregexp))
         except (AssertionError, IndexError), e: # AssertionError: Too many groups
-            self.dynamic.append((re.compile('(^%s$)'%fpatt),[(route.target, gregexp)]))
+            self.dynamic.append((re.compile('(^%s$)'%fpatt),[(target, gregexp)]))
         except re.error, e:
             raise RouteSyntaxError("Could not add Route: %s (%s)" % (route, e))
 
@@ -328,9 +296,9 @@ class Router(object):
         for combined, subroutes in self.dynamic:
             match = combined.match(uri)
             if not match: continue
-            target, groups = subroutes[match.lastindex - 1]
+            data, groups = subroutes[match.lastindex - 1]
             groups = groups.match(uri).groupdict() if groups else {}
-            return target, groups
+            return data, groups
         return None, {}
 
     def build(self, route_name, **args):
@@ -341,7 +309,7 @@ class Router(object):
             raise RouteBuildError("No route found with name '%s'." % route_name)
 
     def __eq__(self, other):
-        return self.routes == other.routes
+        return self.rawlist == other.rawlist
 
 
 
@@ -352,9 +320,6 @@ class Bottle(object):
     """ WSGI application """
 
     def __init__(self, catchall=True, autojson=True, path = ''):
-        """ Create a new bottle instance.
-            You usually don't have to do that. Use `bottle.app.push()` instead
-        """
         self.routes = Router()
         self.default_route = None
         self.error_handler = {}
@@ -364,9 +329,9 @@ class Bottle(object):
         self.serve = True
 
     def match_url(self, path, method='GET'):
-        """ Find a callback bound to a path and a specific HTTP method.
+        """ Find a callback bound to a path and a specific method.
             Return (callback, param) tuple or (None, {}).
-            method: HEAD falls back to GET. HEAD and GET fall back to ALL.
+            method=HEAD falls back to GET. method=GET falls back to ALL.
         """
         path = path.strip().lstrip('/')
         handler, param = self.routes.match(method + ';' + path)
@@ -379,36 +344,37 @@ class Bottle(object):
         return self.default_route, {}
 
     def get_url(self, routename, **kargs):
-        """ Return a string that matches a named route """
-        return '/' + self.routes.build(routename, **kargs).split(';', 1)[1]
+        return '/'+self.routes.build(routename, **kargs).split(';',1)[1]
 
-    def route(self, url, method='GET', **kargs):
-        """ Return a decorator that binds a route to a callable. """
-        path = url.strip().lstrip('/')
+    def route(self, url=None, method='GET', **kargs):
+        """ Decorator for request handler. """
+        path = url.strip().lstrip('/') if url !== None else None
         method = method.upper()
         def wrapper(handler):
+            if path === None:
+              path = handler.__name__.replace('__','/').lstrip('/')
             self.routes.add(method+';'+path, handler, **kargs)
             return handler
         return wrapper
 
     def default(self):
-        """ Return a decorator that binbds a new default route."""
+        """ Decorator for request handler. Same as add_defroute( handler )."""
         def wrapper(handler):
             self.default_route = handler
             return handler
         return wrapper
 
     def error(self, code=500):
-        """ return a decorator for error handler bindings. """
+        """ Decorator for error handler. """
         def wrapper(handler):
             self.error_handler[int(code)] = handler
             return handler
         return wrapper
 
     def handle(self, url, method, catchall=True):
-        """ Handle a single request. Return handler output, HTTPResponse or
+        """ Run the matching handler. Return handler output, HTTPResponse or
         HTTPError. If catchall is true, all exceptions thrown within a
-        handler function are catched and returned as HTTPError(500).
+        handler function are converted to HTTPError(500).
         """
         if not self.serve:
             return HTTPError(503, "Server stopped")
@@ -434,7 +400,7 @@ class Bottle(object):
 
     def cast(self, out):
         """ Try to cast the input into something WSGI compatible. Correct
-        HTTP header and status codes when possible. Clear output on HEAD
+        HTTP header and status codes when possible. Empty output on HEAD
         requests.
         Support: False, str, unicode, list(unicode), file, dict, list(dict),
                  HTTPResponse and HTTPError
@@ -500,7 +466,6 @@ class Bottle(object):
             start_response('500 INTERNAL SERVER ERROR', [])
             return [err]
 
-
 class Request(threading.local, DictMixin):
     """ Represents a single HTTP request using thread-local attributes.
 
@@ -527,15 +492,9 @@ class Request(threading.local, DictMixin):
             This is done automatically for the global `bottle.request`
             instance on every request.
         """
-        if isinstance(environ, Request): # Recycle already parsed content
-            for key in self.__dict__: #TODO: Test this
-                setattr(self, key, getattr(environ, key))
-            self.app = app
-            return
-        self._GET = self._POST = self._GETPOST = self._COOKIES = None
-        self._body = self._header = None
-        self.environ = environ
         self.app = app
+        self.environ = environ
+        self._GET = self._POST = self._GETPOST = self._COOKIES = self._body = self._header = None
         # These attributes are used anyway, so it is ok to compute them here
         self.path = environ.get('PATH_INFO', '/')
         if not self.path.startswith('/'):
@@ -989,30 +948,21 @@ def validate(**vkargs):
     return decorator
 
 
-def route(route, **ka):
-    ''' Decorator for requests routes '''
-    return app().route(route, **ka)
+def route(*a, **ka):
+    ''' Decorator for request routes '''
+    return app().route(*a, **ka)
 
+get = functools.partial(route, method='GET')
+get.__doc__ = route.__doc__.replace('request','GET')
 
-def get(route, **ka):
-    ''' Decorator for GET requests routes '''
-    return app().route(route, method='GET', **ka)
+post = functools.partial(route, method='POST')
+post.__doc__ = route.__doc__.replace('request','POST')
 
+put = functools.partial(route, method='PUT')
+put.__doc__ = route.__doc__.replace('request','PUT')
 
-def post(route, **ka):
-    ''' Decorator for POST requests routes '''
-    return app().route(route, method='POST', **ka)
-
-
-def put(route, **ka):
-    ''' Decorator for PUT requests routes '''
-    return app().route(route, method='PUT', **ka)
-
-
-def delete(route, **ka):
-    ''' Decorator for DELETE requests routes '''
-    return app().route(route, method='DELETE', **ka)
-
+delete = functools.partial(route, method='DELETE')
+delete.__doc__ = route.__doc__.replace('request','DELETE')
 
 def default():
     """
