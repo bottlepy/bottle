@@ -90,6 +90,8 @@ All template engines supported by :mod:`bottle` implement the :class:`BaseTempla
 
 .. autoclass:: BaseTemplate
    :members:
+   
+   .. automethod:: __init__
 
 .. autofunction:: view
 
@@ -100,7 +102,7 @@ You can write your own adapter for your favourite template engine or use one of 
 ========================   ===============================   ====================   ========================
 Class                      URL                               Decorator              Render function
 ========================   ===============================   ====================   ========================
-:class:`SimpleTemplate`    ..                                :func:`view`           :func:`template`
+:class:`SimpleTemplate`    :doc:`stpl`                       :func:`view`           :func:`template`
 :class:`MakoTemplate`      http://www.makotemplates.org      :func:`mako_view`      :func:`mako_template`
 :class:`CheetahTemplate`   http://www.cheetahtemplate.org/   :func:`cheetah_view`   :func:`cheetah_template`
 :class:`Jinja2Template`    http://jinja.pocoo.org/           :func:`jinja2_view`    :func:`jinja2_template`
