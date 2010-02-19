@@ -88,14 +88,19 @@ def iter_blogposts():
 
 
 
+# API docs
 
+@route('/api/:filename#.*#')
+def static(filename):
+    if not filename:
+        filename = 'index.html'
+    return bottle.static_file(filename, root='../apidoc/html/')
 
 # Static files
 
 @route('/:filename#.+\.(css|js|ico|png|txt|html)#')
 def static(filename):
     return bottle.static_file(filename, root='./static/')
-
 
 # Bottle Pages
 
