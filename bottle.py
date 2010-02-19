@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import with_statement
-
 """
 Bottle is a fast and simple micro-framework for small web applications. It
 offers request dispatching (Routes) with url parameter support, templates,
@@ -12,6 +10,7 @@ Homepage and documentation: http://wiki.github.com/defnull/bottle
 
 Licence (MIT)
 -------------
+
     Copyright (c) 2009, Marcel Hellkamp.
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -36,51 +35,30 @@ Licence (MIT)
 Example
 -------
 
-    from bottle import route, run, request, response, send_file, abort
+This is an example::
 
+    from bottle import route, run, request, response, send_file, abort
+    
     @route('/')
     def hello_world():
         return 'Hello World!'
-
+    
     @route('/hello/:name')
     def hello_name(name):
         return 'Hello %s!' % name
-
+    
     @route('/hello', method='POST')
     def hello_post():
         name = request.POST['name']
         return 'Hello %s!' % name
-
+    
     @route('/static/:filename#.*#')
     def static_file(filename):
         send_file(filename, root='/path/to/static/files/')
-
+    
     run(host='localhost', port=8080)
-
-Code Overview
--------------
-
- - Imports
- - Exceptions and events
- - Routing
- - WSGI app and abstraction
- - Usefull data structures
- - Module level functions
- - Utilities
- - Decorators
- - Server Adapter
- - run()
- - Templates and template decorators
- - Constants and default settings
-
-#BC:   Backward compatibility. This piece of code makes no sense but is here to
-       maintain compatibility to previous releases.
-#TODO: Please help to improve this piece of code. There is something ugly
-       or missing here.
-#REF:  A reference to a bug report, article, api doc or howto. Follow the link
-       to read more.
 """
-
+from __future__ import with_statement
 __author__ = 'Marcel Hellkamp'
 __version__ = '0.7.0a'
 __license__ = 'MIT'
@@ -107,6 +85,7 @@ import base64
 from urllib import quote as urlquote
 from urlparse import urlunsplit, urljoin
 import functools
+import inspect
 
 try:
   from collections import MutableMapping as DictMixin
@@ -199,93 +178,125 @@ class RouteBuildError(RouteError):
     """ The route could not been build """
 
 
-class RouteParser(object):
-    ''' Parser class for routes '''
+class Route(object):
+    ''' Represents a single route and can parse the dynamic route syntax '''
     syntax = re.compile(r'(.*?)(?<!\\):([a-zA-Z_]+)?(?:#(.*?)#)?')
     default = '[^/]+'
 
-    def __init__(self, route):
+    def __init__(self, route, target, name=None, static=False):
+        """ Create a Route. The route string may contain `:key`,
+            `:key#regexp#` or `:#regexp#` tokens for each dynamic part of the
+            route. These can be escaped with a backslash infront of the `:`
+            and are compleately ignored if static is true. A name may be used
+            to refer to this route later (depends on Router)
+        """
         self.route = route
+        self.target = target
+        self.name = name
+        self._static = static
+        self._tokens = None
 
-    def tokenise(self):
+    def tokens(self):
+        """ Return a list of (type, value) tokens. """
+        if not self._tokens:
+            self._tokens = list(self.tokenise(self.route))
+        return self._tokens
+
+    @classmethod
+    def tokenise(cls, route):
         ''' Split a string into an iterator of (type, value) tokens. '''
         match = None
-        for match in self.syntax.finditer(self.route):
+        for match in cls.syntax.finditer(route):
             pre, name, rex = match.groups()
             if pre: yield ('TXT', pre.replace('\\:',':'))
             if rex and name: yield ('VAR', (rex, name))
-            elif name: yield ('VAR', (self.default, name))
+            elif name: yield ('VAR', (cls.default, name))
             elif rex: yield ('ANON', rex)
         if not match:
-            yield ('TXT', self.route.replace('\\:',':'))
-        elif match.end() < len(self.route):
-            yield ('TXT', self.route[match.end():].replace('\\:',':'))
+            yield ('TXT', route.replace('\\:',':'))
+        elif match.end() < len(route):
+            yield ('TXT', route[match.end():].replace('\\:',':'))
 
     def group_re(self):
-        ''' Turn a route string into a regexp pattern with named groups '''
+        ''' Return a regexp pattern with named groups '''
         out = ''
-        for token, data in self.tokenise():
+        for token, data in self.tokens():
             if   token == 'TXT':  out += re.escape(data)
             elif token == 'VAR':  out += '(?P<%s>%s)' % (data[1], data[0])
             elif token == 'ANON': out += '(?:%s)' % data
         return out
 
     def flat_re(self):
-        ''' Turn a route string into a regexp pattern without any groups '''
+        ''' Return a regexp pattern with non-grouping parentheses '''
         return re.sub(r'\(\?P<[^>]*>|\((?!\?)', '(?:', self.group_re())
 
     def format_str(self):
-        ''' Turn a route string into a format string named fields '''
+        ''' Return a format string with named fields. '''
+        if self.static:
+            return self.route.replace('%','%%')
         out, i = '', 0
-        for token, value in self.tokenise():
+        for token, value in self.tokens():
             if token == 'TXT': out += value.replace('%','%%')
             elif token == 'ANON': out += '%%(anon%d)s' % i; i+=1
             elif token == 'VAR': out += '%%(%s)s' % value[1]
         return out
 
+    @property
+    def static(self):
+        return not self.is_dynamic()
+
     def is_dynamic(self):
-        ''' Test for dynalic parts in a route '''
-        for token, value in self.tokenise():
-            if token != 'TXT':
-                return True
+        ''' Return true if the route contains dynamic parts '''
+        if not self._static:
+            for token, value in self.tokens():
+                if token != 'TXT':
+                    return True
+        self._static = True
         return False
 
+    def __repr__(self):
+        return self.route
 
-
-
+    def __eq__(self, other):
+        return self.route == other.route\
+           and self.static == other.static\
+           and self.name == other.name\
+           and self.target == other.target
 
 
 class Router(object):
     ''' A route associates a string (e.g. URL) with an object (e.g. function)
         Some dynamic routes may extract parts of the string and provide them as
-        data. This router matches a string against multiple routes and returns
-        the associated object along with the extracted data.
+        a dictionary. This router matches a string against multiple routes and
+        returns the associated object along with the extracted data.
     '''
 
     def __init__(self):
-        self.static = dict()
-        self.dynamic = []
-        self.named = dict()
-        self.rawlist = []
+        self.routes = []     # List of all installed routes
+        self.static = dict() # Cache for static routes
+        self.dynamic = []    # Cache structure for dynamic routes
+        self.named = dict()  # Cache for named routes and their format strings
 
-    def add(self, route, target, static=False, name=None):
-        self.rawlist.append((route, target, static, name))
-        parsed = RouteParser(route)
-        static = bool(static or not parsed.is_dynamic())
-        if name:
-            self.named[name] = route.replace('%','%%') if static else parsed.format_str()
-        if static:
-            self.static[route] = target
+    def add(self, *a, **ka):
+        """ Adds a route->target pair or a Route object to the Router.
+            See Route() for details.
+        """
+        route = a[0] if a and isinstance(a[0], Route) else Route(*a, **ka)
+        self.routes.append(route)
+        if route.name:
+            self.named[route.name] = route.format_str()
+        if route.static:
+            self.static[route.route] = route.target
             return
-        gpatt = parsed.group_re()
-        fpatt = parsed.flat_re()
+        gpatt = route.group_re()
+        fpatt = route.flat_re()
         try:
             gregexp = re.compile('^(%s)$' % gpatt) if '(?P' in gpatt else None
             combined = '%s|(^%s$)' % (self.dynamic[-1][0].pattern, fpatt)
             self.dynamic[-1] = (re.compile(combined), self.dynamic[-1][1])
-            self.dynamic[-1][1].append((target, gregexp))
+            self.dynamic[-1][1].append((route.target, gregexp))
         except (AssertionError, IndexError), e: # AssertionError: Too many groups
-            self.dynamic.append((re.compile('(^%s$)'%fpatt),[(target, gregexp)]))
+            self.dynamic.append((re.compile('(^%s$)'%fpatt),[(route.target, gregexp)]))
         except re.error, e:
             raise RouteSyntaxError("Could not add Route: %s (%s)" % (route, e))
 
@@ -296,9 +307,9 @@ class Router(object):
         for combined, subroutes in self.dynamic:
             match = combined.match(uri)
             if not match: continue
-            data, groups = subroutes[match.lastindex - 1]
+            target, groups = subroutes[match.lastindex - 1]
             groups = groups.match(uri).groupdict() if groups else {}
-            return data, groups
+            return target, groups
         return None, {}
 
     def build(self, route_name, **args):
@@ -309,7 +320,9 @@ class Router(object):
             raise RouteBuildError("No route found with name '%s'." % route_name)
 
     def __eq__(self, other):
-        return self.rawlist == other.rawlist
+        return self.routes == other.routes
+
+
 
 
 
@@ -320,6 +333,9 @@ class Bottle(object):
     """ WSGI application """
 
     def __init__(self, catchall=True, autojson=True, path = ''):
+        """ Create a new bottle instance.
+            You usually don't have to do that. Use `bottle.app.push()` instead
+        """
         self.routes = Router()
         self.default_route = None
         self.error_handler = {}
@@ -329,9 +345,9 @@ class Bottle(object):
         self.serve = True
 
     def match_url(self, path, method='GET'):
-        """ Find a callback bound to a path and a specific method.
+        """ Find a callback bound to a path and a specific HTTP method.
             Return (callback, param) tuple or (None, {}).
-            method=HEAD falls back to GET. method=GET falls back to ALL.
+            method: HEAD falls back to GET. HEAD and GET fall back to ALL.
         """
         path = path.strip().lstrip('/')
         handler, param = self.routes.match(method + ';' + path)
@@ -344,35 +360,47 @@ class Bottle(object):
         return self.default_route, {}
 
     def get_url(self, routename, **kargs):
-        return '/'+self.routes.build(routename, **kargs).split(';',1)[1]
+        """ Return a string that matches a named route """
+        return '/' + self.routes.build(routename, **kargs).split(';', 1)[1]
 
-    def route(self, url, method='GET', **kargs):
-        """ Decorator for request handler. """
-        path = url.strip().lstrip('/')
+    def route(self, path=None, method='GET', **kargs):
+        """ Decorator: Bind a function to a GET request path.
+
+            If the path parameter is None, the signature (name, args) of the
+            decorated function is used to generate the path. See yieldroutes()
+            for details.
+
+            The method parameter (default: GET) specifies the HTTP request
+            method to listen to. 
+        """
         method = method.upper()
         def wrapper(handler):
-            self.routes.add(method+';'+path, handler, **kargs)
+            paths = [] if path is None else [path.strip().lstrip('/')]
+            if not paths: # Lets generate the path automatically 
+                paths = yieldroutes(handler)
+            for p in paths:
+                self.routes.add(method+';'+p, handler, **kargs)
             return handler
         return wrapper
 
     def default(self):
-        """ Decorator for request handler. Same as add_defroute( handler )."""
+        """ Decorator: Add a default handler for undefined routes """
         def wrapper(handler):
             self.default_route = handler
             return handler
         return wrapper
 
     def error(self, code=500):
-        """ Decorator for error handler. """
+        """ Decorator: Registrer an output handler for a HTTP error code"""
         def wrapper(handler):
             self.error_handler[int(code)] = handler
             return handler
         return wrapper
 
     def handle(self, url, method, catchall=True):
-        """ Run the matching handler. Return handler output, HTTPResponse or
+        """ Handle a single request. Return handler output, HTTPResponse or
         HTTPError. If catchall is true, all exceptions thrown within a
-        handler function are converted to HTTPError(500).
+        handler function are catched and returned as HTTPError(500).
         """
         if not self.serve:
             return HTTPError(503, "Server stopped")
@@ -396,12 +424,12 @@ class Bottle(object):
             request.environ['wsgi.errors'].write(err)
             return HTTPError(500, err, e)
 
-    def cast(self, out):
+    def _cast(self, out):
         """ Try to cast the input into something WSGI compatible. Correct
-        HTTP header and status codes when possible. Empty output on HEAD
+        HTTP header and status codes when possible. Clear output on HEAD
         requests.
         Support: False, str, unicode, list(unicode), file, dict, list(dict),
-                 HTTPResponse and HTTPError
+        HTTPResponse and HTTPError
         """
         if isinstance(out, HTTPResponse):
             out.apply(response)
@@ -409,11 +437,9 @@ class Bottle(object):
                 out = self.error_handler.get(out.status, str)(out)
             else:
                 out = out.output
-
         if not out:
             response.header['Content-Length'] = '0'
             return []
-
         if isinstance(out, types.StringType):
             out = [out]
         elif isinstance(out, unicode):
@@ -427,17 +453,13 @@ class Bottle(object):
           or self.jsondump and isinstance(out, list) and isinstance(out[0], dict):
                 out = [self.jsondump(out)]
                 response.content_type = 'application/json'
-
         if isinstance(out, list) and len(out) == 1:
             response.header['Content-Length'] = str(len(out[0]))
-
         if response.status in (100, 101, 204, 304) or request.method == 'HEAD':
             out = [] # rfc2616 section 4.3
-
         if not hasattr(out, '__iter__'):
             raise TypeError('Request handler for route "%s" returned [%s] '
                 'which is not iterable.' % (request.path, type(out).__name__))
-
         return out
 
     def __call__(self, environ, start_response):
@@ -446,7 +468,7 @@ class Bottle(object):
             request.bind(environ, self)
             response.bind(self)
             out = self.handle(request.path, request.method)
-            out = self.cast(out)
+            out = self._cast(out)
             status = '%d %s' % (response.status, HTTP_CODES[response.status])
             start_response(status, response.wsgiheader())
             return out
@@ -464,15 +486,9 @@ class Bottle(object):
             start_response('500 INTERNAL SERVER ERROR', [])
             return [err]
 
+
 class Request(threading.local, DictMixin):
     """ Represents a single HTTP request using thread-local attributes.
-
-        You usually don't instantiate this class, but use the global instance
-        stored at module level in `bottle.request`. It holds the request
-        environment and context for the current client request and is reused
-        and refilled on every request. All attributs are thread-local, so it
-        is save to use the global instance in multithread environments.
-
         The Resquest object wrapps a WSGI environment and can be used as such.
     """
     def __init__(self, environ=None, app=None):
@@ -490,9 +506,15 @@ class Request(threading.local, DictMixin):
             This is done automatically for the global `bottle.request`
             instance on every request.
         """
-        self.app = app
+        if isinstance(environ, Request): # Recycle already parsed content
+            for key in self.__dict__: #TODO: Test this
+                setattr(self, key, getattr(environ, key))
+            self.app = app
+            return
+        self._GET = self._POST = self._GETPOST = self._COOKIES = None
+        self._body = self._header = None
         self.environ = environ
-        self._GET = self._POST = self._GETPOST = self._COOKIES = self._body = self._header = None
+        self.app = app
         # These attributes are used anyway, so it is ok to compute them here
         self.path = environ.get('PATH_INFO', '/')
         if not self.path.startswith('/'):
@@ -545,7 +567,7 @@ class Request(threading.local, DictMixin):
 
     @property
     def header(self):
-        ''' HeaderDict filled with request headers.
+        ''' :class:`HeaderDict` filled with request headers.
 
             HeaderDict keys are case insensitive str.title()d 
         '''
@@ -660,12 +682,6 @@ class Request(threading.local, DictMixin):
 
 class Response(threading.local):
     """ Represents a single HTTP response using thread-local attributes.
-
-        You usually don't instantiate this class, but use the global instance
-        stored at module level in `bottle.response`. It holds the response
-        context for the current client request and is reused and cleared on
-        every request. All attributs are thread-local, so it is save to use
-        the global instance in multithread environments.
     """
 
     def bind(self, app):
@@ -758,14 +774,9 @@ class MultiDict(DictMixin):
     def __getitem__(self, key): return self.get(key, KeyError, -1)
     def __setitem__(self, key, value): self.append(key, value)
 
-    def append(self, key, value):
-        self.dict.setdefault(key, []).append(value)
-
-    def replace(self, key, value):
-        self.dict[key] = [value]
-
-    def getall(self, key):
-        return self.dict.get(key) or []
+    def append(self, key, value): self.dict.setdefault(key, []).append(value)
+    def replace(self, key, value): self.dict[key] = [value]
+    def getall(self, key): return self.dict.get(key) or []
 
     def get(self, key, default=None, index=-1):
         if key not in self.dict and default != KeyError:
@@ -779,25 +790,22 @@ class MultiDict(DictMixin):
 
 
 class HeaderDict(MultiDict):
-    """ Same as MultiDict, but title() the key overwrite keys by default. """
+    """ Same as :class:`MultiDict`, but title()s the keys and overwrites by default. """
     def __contains__(self, key): return MultiDict.__contains__(self, key.title())
     def __getitem__(self, key): return MultiDict.__getitem__(self, key.title())
     def __delitem__(self, key): return MultiDict.__delitem__(self, key.title())
     def __setitem__(self, key, value): self.replace(key, value)
-    def getall(self, key): return MultiDict.getall(self, key.title())
     def append(self, key, value): return MultiDict.append(self, key.title(), str(value))
     def replace(self, key, value): return MultiDict.replace(self, key.title(), str(value))
+    def getall(self, key): return MultiDict.getall(self, key.title())
 
-
-
-
-
-# Module level functions
 class AppStack(list):
     """ A stack implementation. """
+
     def __call__(self):
         """ Return the current default app. """
         return self[-1]
+
     def push(self, value=None):
         """ Add a new Bottle instance to the stack """
         if not isinstance(value, Bottle):
@@ -805,9 +813,14 @@ class AppStack(list):
         self.append(value)
         return value
 
+
+
+
+# Module level functions
+
 # BC: 0.6.4 and needed for run()
 app = default_app = AppStack([Bottle()])
-   
+
 
 def abort(code=500, text='Unknown Error: Appliction stopped.'):
     """ Aborts execution and causes a HTTP error. """
@@ -876,6 +889,11 @@ def url(routename, **kargs):
 
 # Utilities
 
+def url(routename, **kargs):
+    """ Return a named route filled with arguments """
+    return app().get_url(routename, **kargs)
+
+
 def parse_date(ims):
     """ Parses rfc1123, rfc850 and asctime timestamps and returns UTC epoch. """
     try:
@@ -916,11 +934,31 @@ def cookie_is_encoded(data):
     ''' Verify and decode an encoded string. Return an object or None'''
     return bool(data.startswith(u'!'.encode('ascii')) and u'?'.encode('ascii') in data) #2to3 hack
 
+
 def tonativefunc(enc='utf-8'):
     ''' Returns a function that turns everything into 'native' strings using enc '''
     if sys.version_info >= (3,0,0):
         return lambda x: x.decode(enc) if isinstance(x, bytes) else str(x)
     return lambda x: x.encode(enc) if isinstance(x, unicode) else str(x)
+
+
+def yieldroutes(func):
+    """ Return a generator for routes that match the signature (name, args) 
+    of the func parameter. This may yield more than one route if the function
+    takes optional keyword arguments. The output is best described by example:
+      a()         -> '/a'
+      b(x, y)     -> '/b/:x/:y'
+      c(x, y=5)   -> '/c/:x' and '/c/:x/:y'
+      d(x=5, y=6) -> '/d' and '/d/:x' and '/d/:x/:y'
+    """
+    path = func.__name__.replace('__','/').lstrip('/')
+    spec = inspect.getargspec(func)
+    argc = len(spec[0]) - len(spec[3] or [])
+    path += ('/:%s' * argc) % tuple(spec[0][:argc])
+    yield path
+    for arg in spec[0][argc:]:
+        path += '/:%s' % arg
+        yield path
 
 
 
@@ -949,30 +987,23 @@ def validate(**vkargs):
     return decorator
 
 
-def route(route, **ka):
-    ''' Decorator for requests routes '''
-    return app().route(route, **ka)
+def route(*a, **ka):
+    """ Decorator: Bind a route to a callback.
+        The method parameter (default: GET) specifies the HTTP request
+        method to listen to """
+    return app().route(*a, **ka)
 
+get = functools.partial(route, method='GET')
+get.__doc__ = route.__doc__
 
-def get(route, **ka):
-    ''' Decorator for GET requests routes '''
-    return app().route(route, method='GET', **ka)
+post = functools.partial(route, method='POST')
+post.__doc__ = route.__doc__.replace('GET','POST')
 
+put = functools.partial(route, method='PUT')
+put.__doc__ = route.__doc__.replace('GET','PUT')
 
-def post(route, **ka):
-    ''' Decorator for POST requests routes '''
-    return app().route(route, method='POST', **ka)
-
-
-def put(route, **ka):
-    ''' Decorator for PUT requests routes '''
-    return app().route(route, method='PUT', **ka)
-
-
-def delete(route, **ka):
-    ''' Decorator for DELETE requests routes '''
-    return app().route(route, method='DELETE', **ka)
-
+delete = functools.partial(route, method='DELETE')
+delete.__doc__ = route.__doc__.replace('GET','DELETE')
 
 def default():
     """
@@ -1192,6 +1223,7 @@ class TemplateError(HTTPError):
 
 
 class BaseTemplate(object):
+    """ Base class and minimal API for template adapters """
     extentions = ['tpl','html','thtml','stpl']
 
     def __init__(self, source=None, name=None, lookup=[], encoding='utf8'):
@@ -1433,9 +1465,7 @@ def template(tpl, template_adapter=SimpleTemplate, **args):
     lookup = args.get('template_lookup', TEMPLATE_PATH)
     if tpl not in TEMPLATES or DEBUG:
         if "\n" in tpl or "{" in tpl or "%" in tpl or '$' in tpl:
-            TEMPLATES[tpl] = template_adapter(template=tpl, lookup=lookup)
-        elif '.' in tpl:
-            TEMPLATES[tpl] = template_adapter(filename=tpl, lookup=lookup)
+            TEMPLATES[tpl] = template_adapter(source=tpl, lookup=lookup)
         else:
             TEMPLATES[tpl] = template_adapter(name=tpl, lookup=lookup)
     if not TEMPLATES[tpl]:
@@ -1520,6 +1550,8 @@ HTTP_CODES = {
     504: 'GATEWAY TIMEOUT',
     505: 'HTTP VERSION NOT SUPPORTED',
 }
+""" A dict of known HTTP error and status codes """
+
 
 ERROR_PAGE_TEMPLATE = """<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
 <html>
@@ -1535,16 +1567,26 @@ ERROR_PAGE_TEMPLATE = """<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
     </body>
 </html>
 """
+""" The HTML template used for error messages """
 
 TRACEBACK_TEMPLATE = '<h2>Error:</h2>\n<pre>%s</pre>\n' \
                      '<h2>Traceback:</h2>\n<pre>%s</pre>\n'
 
 request = Request()
+""" Whenever a page is requested, the :class:`Bottle` WSGI handler stores
+metadata about the current request into this instance of :class:`Request`.
+It is thread-save and can be accessed from within handler functions. """
+
 response = Response()
+""" The :class:`Bottle` WSGI handler uses metasata assigned to this instance
+of :class:`Response` to generate the WSGI response. """
+
 local = threading.local()
 
 #TODO: Global and app local configuration (debug, defaults, ...) is a mess
 
 def debug(mode=True):
+    """ Change the debug level.
+    There is only one debug level supported at the moment."""
     global DEBUG
     DEBUG = bool(mode)

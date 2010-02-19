@@ -215,5 +215,18 @@ class TestDecorators(ServerTestBase):
         bottle.delete('/d')('foo')
         self.assertEqual(app.routes, bottle.app().routes)
 
+    def test_autoroute(self):
+        app = bottle.Bottle()
+        def a(): pass
+        def b(x): pass
+        def c(x, y): pass
+        def d(x, y=5): pass
+        def e(x=5, y=6): pass
+        self.assertEqual(['a'],list(bottle.yieldroutes(a)))
+        self.assertEqual(['b/:x'],list(bottle.yieldroutes(b)))
+        self.assertEqual(['c/:x/:y'],list(bottle.yieldroutes(c)))
+        self.assertEqual(['d/:x','d/:x/:y'],list(bottle.yieldroutes(d)))
+        self.assertEqual(['e','e/:x','e/:x/:y'],list(bottle.yieldroutes(e)))
+
 if __name__ == '__main__':
     unittest.main()
