@@ -563,7 +563,7 @@ class Bottle(object):
 
 class Request(threading.local, DictMixin):
     """ Represents a single HTTP request using thread-local attributes.
-        The Resquest object wrapps a WSGI environment and can be used as such.
+        The Request object wrapps a WSGI environment and can be used as such.
     """
     def __init__(self, environ=None, config=None):
         """ Create a new Request instance.
