@@ -123,7 +123,7 @@ Actually, the output is not really exciting nor nice to read. It is the raw resu
 So, in the next step we format the output in a nicer way. But before we do that, we make our life easier.
 
 ### Debugging and Auto-Reload
-Maybe you already experienced the Bottle sends a short error message to the browser in case something within the script is wrong, e.g. the connection to the database is not working. For debugging purposes it is quiet helpful to get more details. This can be easily achieved by adding the following statement to the script:
+Maybe you already experienced the Bottle sends a short error message to the browser in case something within the script is wrong, e.g. the connection to the database is not working. For debugging purposes it is quite helpful to get more details. This can be easily achieved by adding the following statement to the script:
 
     #!Python
     from bottle import run, route, debug
@@ -136,7 +136,7 @@ By enabling "debug", you will get a full stacktrace of the Python interpreter, w
 
 **Note** that `debug(True)` is supposed to be used for development only, it should *not* be used in productive environments.
 
-A further quiet nice feature is auto-reloading, which is enabled by modifying the `run()` statement to
+A further quite nice feature is auto-reloading, which is enabled by modifying the `run()` statement to
 
     #!Python
     run(reloader=True)
@@ -274,7 +274,7 @@ By the way, if you prefer to use POST-data: This works exactly the same why, jus
 ### Editing Existing Items
 The last point to do is to enable editing of existing items.
 
-By using the routes we know so far only it is possible, but may be quiet tricky. But Bottle knows something called "dynamic routes", which makes this task quiet easy.
+By using the routes we know so far only it is possible, but may be quite tricky. But Bottle knows something called "dynamic routes", which makes this task quite easy.
 
 The basic statement for a dynamic route looks like this:
 
