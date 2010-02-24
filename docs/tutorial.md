@@ -342,7 +342,7 @@ A last word on dynamic routes: you can even use a regular expression for a dynam
 ### Validating dynamic routes
 Using dynamic routes is fine, but for many cases it makes sense to validate the dynamic part of the route. For example, we expect a integer number in our route for editing above. But if a float, characters or so are received, the Python interpreter throws an exception, which is not what we want.
 
-For those cases, Bottle offers the `@valdiate` decorator, which validates the "input" prior to passing it to the function. In order to apply the validator, extend the code as follows:
+For those cases, Bottle offers the `@validate` decorator, which validates the "input" prior to passing it to the function. In order to apply the validator, extend the code as follows:
 
     #!Python
     from bottle import route, run, debug, template, request, validate
