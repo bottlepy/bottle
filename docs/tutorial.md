@@ -59,7 +59,7 @@ Furthermore, you need [Pysqlite][pysqlite], the Python modules to access SQLite 
 
 ### Create An SQL Database
 
-First, we need to create the database we use later on. To do so, run SQLite with the command `sqlite3 todo.db`. This will create an empty data base called "todo.sql" and you will see the SQLite prompt, which may look like this: `sqlite>`. Right here, input the following commands:
+First, we need to create the database we use later on. To do so, run SQLite with the command `sqlite3 todo.db`. This will create an empty data base called "todo.db" and you will see the SQLite prompt, which may look like this: `sqlite>`. Right here, input the following commands:
 
     #!sql
     CREATE TABLE todo (id INTEGER PRIMARY KEY, task char(100) NOT NULL, status bool NOT NULL);
