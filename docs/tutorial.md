@@ -429,7 +429,7 @@ As said above, the standard server is perfectly suitable for development, person
 
 But Bottle has already various adapters to multi-threaded server on board, which perform better on higher load. Bottle supports [cherryPy][cherrypy], [fapws3][fapws3], [flup][flup] and [Paste][paste].
 
-If you want to run for example Bottle with the past server, use the following code:
+If you want to run for example Bottle with the Paste server, use the following code:
 
     #!Python
     from bottle import PasteServer
