@@ -863,7 +863,7 @@ def static_file(filename, root, guessmime=True, mimetype=None, download=False):
     if download == True:
         download = os.path.basename(filename)
     if download:
-        header['Content-Disposition'] = 'attachment; filename=%s' % download
+        header['Content-Disposition'] = 'attachment; filename="%s"' % download
 
     stats = os.stat(filename)
     lm = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(stats.st_mtime))
