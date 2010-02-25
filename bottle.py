@@ -960,7 +960,7 @@ def send_file(*a, **k): #BC 0.6.4
 
 
 def static_file(filename, root, guessmime=True, mimetype=None, download=False):
-    """ Opens a file in a save way and returns a HTTPError object with status
+    """ Opens a file in a safe way and returns a HTTPError object with status
         code 200, 305, 401 or 404. Sets Content-Type, Content-Length and
         Last-Modified header. Obeys If-Modified-Since header and HEAD requests.
     """
