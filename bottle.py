@@ -1106,7 +1106,7 @@ class TwistedServer(ServerAdapter):
         resource = twisted.web.wsgi.WSGIResource(twisted.internet.reactor,
                    twisted.internet.reactor.getThreadPool(), handler)
         site = server.Site(resource)
-        twisted.internet.reactor.listenTCP(self.port, se.fhost)
+        twisted.internet.reactor.listenTCP(self.port, self.host)
         twisted.internet.reactor.run()
 
 
@@ -1127,7 +1127,7 @@ class GunicornServer(ServerAdapter):
 
 class AutoServer(ServerAdapter):
     """ Untested. """
-    adapters = [FapwsServer, TornadoServer, CherryPyServer, PasteServer,
+    adapters = [FapwsServer, CherryPyServer, PasteServer,
                 TwistedServer, GunicornServer, WSGIRefServer]
     def run(self, handler):
         for sa in self.adapters:
@@ -1137,7 +1137,7 @@ class AutoServer(ServerAdapter):
                 pass
 
 
-def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080,
+def run(app=None, server=AutoServer, host='127.0.0.1', port=8080,
         interval=1, reloader=False, **kargs):
     """ Runs bottle as a web server. """
     app = app if app else default_app()
