@@ -1130,7 +1130,7 @@ class AutoServer(ServerAdapter):
     adapters = [FapwsServer, TornadoServer, CherryPyServer, PasteServer,
                 TwistedServer, GunicornServer, WSGIRefServer]
     def run(self, handler):
-        for sa in adapters:
+        for sa in self.adapters:
             try:
                 return sa(self.host, self.port, **self.options).run()
             except ImportError:
