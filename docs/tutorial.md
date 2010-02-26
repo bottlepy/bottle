@@ -306,13 +306,13 @@ The code looks like this:
             c.execute(query)
             conn.commit()
             
-            return '<p>The item number %d was successfully updated</p>' %no
+            return '<p>The item number %s was successfully updated</p>' %no
             
         else:
             conn = sqlite3.connect('todo.db')
             c = conn.cursor()
-            query = "SELECT task, status FROM todo WHERE id LIKE '%d'" %no
-            c.execute(query)
+            query = "SELECT task, status FROM todo WHERE id LIKE ?"
+            c.execute(query, (no,))
             cur_data = c.fetchone()
             
             return template('edit_task', old = cur_data, no = no)
@@ -563,8 +563,8 @@ Main code for the application `todo.py`:
         else:
             conn = sqlite3.connect('todo.db')
             c = conn.cursor()
-            query = "SELECT task FROM todo WHERE id LIKE '%s'" %no
-            c.execute(query)
+            query = "SELECT task FROM todo WHERE id LIKE ?"
+            c.execute(query, (no,))
             cur_data = c.fetchone()
             print cur_data
             
