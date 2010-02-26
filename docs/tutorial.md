@@ -70,6 +70,21 @@ First, we need to create the database we use later on. To do so, run SQLite with
 
 The first line generates a tables called "todo" with the three columns "id", "task", and "status". "id" is a unique id for each row, which is used later on to reference the rows. The column "task" holds the text which describes the task, it can be max 100 characters long. Finally, the column "status" is used to mark a task as open (value 1) or closed (value 0).
 
+Alternatively, we can create the database using the sqlite version embedded in python since version 2.5. In this way there is no need to install the full sqlite package. Just execute `python` and enter:
+
+    #!Python
+    >>> import sqlite3
+    >>> con=sqlite3.connect("todo.db")
+    >>> sql = """
+    ... CREATE TABLE todo (id integer PRIMARY KEY, task char(100) NOT NULL, status boolean NOT NULL);
+    ... INSERT INTO "todo" VALUES(1,'Read A-byte-of-python to get a good introduction into  Python',0);
+    ... INSERT INTO "todo" VALUES(2,'Visit the Python website',1);
+    ... INSERT INTO "todo" VALUES(3,'Test various editors for and check the syntax highlighting',1);
+    ... INSERT INTO "todo" VALUES(4,'Choose your favorite WSGI-Framework',0);
+    ... """
+    >>> [con.execute(line) for line in sql.split("\n") if line]
+
+
 ## Using Bottle for a web-based ToDo list
 
 Now it is time to introduce Bottle in order to create a web-based application. But first, we need to look into a basic concept of Bottle: routes.
