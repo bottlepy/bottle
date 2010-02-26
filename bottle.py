@@ -1132,7 +1132,7 @@ class AutoServer(ServerAdapter):
     def run(self, handler):
         for sa in self.adapters:
             try:
-                return sa(self.host, self.port, **self.options).run()
+                return sa(self.host, self.port, **self.options).run(handler)
             except ImportError:
                 pass
 
