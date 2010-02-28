@@ -96,9 +96,13 @@ if sys.version_info >= (3,0,0): # pragma: no cover
     # See Request.POST
     from io import BytesIO
     from io import TextIOWrapper
+    def touni(x, enc='utf8'):
+        return str(x, encoding=enc) if isinstance(x, bytes) else str(x)
 else:
     from StringIO import StringIO as BytesIO
     TextIOWrapper = None
+    def touni(x, enc='utf8'):
+        return x if isinstance(x, unicode) else unicode(str(x), encoding=enc)
 
 try:
     from urlparse import parse_qs
@@ -1358,7 +1362,7 @@ class SimpleTemplate(BaseTemplate):
         
         class PyStmt(object): # Python statement with filter function
             def __init__(self, s, f='_str'): self.s, self.f = s, f
-            def __repr__(self): return '%s(%s)' % (self.f, self.s)
+            def __repr__(self): return '%s(%s)' % (self.f, self.s.strip())
             def __str__(self): return self.s
 
         def prt(txt): # Add a string or a PyStmt object to ptrbuffer
@@ -1370,7 +1374,7 @@ class SimpleTemplate(BaseTemplate):
         def flush(): # Flush the ptrbuffer
             if ptrbuffer:
                 # Remove escaped newline in last string
-                if isinstance(ptrbuffer[-1], str):
+                if isinstance(ptrbuffer[-1], unicode):
                     if ptrbuffer[-1].rstrip('\n\r').endswith('\\\\'):
                         ptrbuffer[-1] = ptrbuffer[-1].rstrip('\n\r')[:-2]
                 # Add linebreaks to output code, if strings contains newlines
@@ -1428,7 +1432,13 @@ class SimpleTemplate(BaseTemplate):
                 if line.strip().startswith('%%'):
                     line = line.replace('%%', '%', 1)
                 for i, part in enumerate(re.split(r'\{\{(.*?)\}\}', line)):
-                    if part: prt(PyStmt(part) if i%2 else part)
+                    if part and i%2:
+                        if part.startswith('!'):
+                            prt(PyStmt(part[1:], f='_escape'))
+                        else:
+                            prt(PyStmt(part))
+                    elif part:
+                        prt(part)
         flush()
         return '\n'.join(codebuffer) + '\n'
 
@@ -1437,18 +1447,19 @@ class SimpleTemplate(BaseTemplate):
 
     def execute(self, stdout, **args):
         enc = self.encoding
-        def touni(x):
-            return unicode(str(x), encoding=enc) if not isinstance(x, unicode) else x
-        args.update({'_stdout': stdout, '_printlist': stdout.extend,
-            '_include': self.subtemplate, '_str': touni})
-        eval(self.co, args)
-        if '_rebase' in args:
-            subtpl, rargs = args['_rebase']
+        def _str(x): return touni(x, enc)
+        def _escape(x): return cgi.escape(touni(x, enc))
+        env = {'_stdout': stdout, '_printlist': stdout.extend,
+               '_include': self.subtemplate, '_str': _str, '_escape': _escape}
+        env.update(args)
+        eval(self.co, env)
+        if '_rebase' in env:
+            subtpl, rargs = env['_rebase']
             subtpl = self.__class__(name=subtpl, lookup=self.lookup)
             rargs['_base'] = stdout[:] #copy stdout
             del stdout[:] # clear stdout
             return subtpl.execute(stdout, **rargs)
-        return args
+        return env
 
     def render(self, **args):
         """ Render the template using keyword arguments as local variables. """
