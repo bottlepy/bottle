@@ -85,20 +85,13 @@ import base64
 from urllib import quote as urlquote
 from urlparse import urlunsplit, urljoin
 import functools
+import itertools
 import inspect
 
 try:
   from collections import MutableMapping as DictMixin
 except ImportError: # pragma: no cover
   from UserDict import DictMixin
-
-if sys.version_info >= (3,0,0): # pragma: no cover
-    # See Request.POST
-    from io import BytesIO
-    from io import TextIOWrapper
-else:
-    from StringIO import StringIO as BytesIO
-    TextIOWrapper = None
 
 try:
     from urlparse import parse_qs
@@ -117,6 +110,21 @@ try:
         from simplejson import dumps as json_dumps
 except ImportError: # pragma: no cover
     json_dumps = None
+
+if sys.version_info >= (3,0,0): # pragma: no cover
+    # See Request.POST
+    from io import BytesIO
+    from io import TextIOWrapper
+    def touni(x, enc='utf8'): # Convert anything to unicode (py3)
+        return str(x, encoding=enc) if isinstance(x, bytes) else str(x)
+else:
+    from StringIO import StringIO as BytesIO
+    TextIOWrapper = None
+    def touni(x, enc='utf8'): # Convert anything to unicode (py2)
+        return x if isinstance(x, unicode) else unicode(str(x), encoding=enc)
+
+def tob(data, enc='utf8'): # Convert strings to bytes (py2 and py3)
+    return data.encode(enc) if isinstance(data, unicode) else data
 
 
 
@@ -327,14 +335,14 @@ class Router(object):
 
 
 
-# WSGI abstraction: Request and response management
+# WSGI abstraction: Application, Request and Response objects
 
 class Bottle(object):
     """ WSGI application """
 
     def __init__(self, catchall=True, autojson=True, path = ''):
         """ Create a new bottle instance.
-            You usually don't have to do that. Use `bottle.app.push()` instead
+            You usually don't do that. Use `bottle.app.push()` instead.
         """
         self.routes = Router()
         self.default_route = None
@@ -425,42 +433,61 @@ class Bottle(object):
             return HTTPError(500, err, e)
 
     def _cast(self, out):
-        """ Try to cast the input into something WSGI compatible. Correct
-        HTTP header and status codes when possible. Clear output on HEAD
-        requests.
-        Support: False, str, unicode, list(unicode), file, dict, list(dict),
-        HTTPResponse and HTTPError
+        """ Try to convert the parameter into something WSGI compatible and set
+        correct HTTP headers when possible.
+        Support: False, str, unicode, dict, HTTPResponse, HTTPError, file-like,
+        iterable of strings and iterable of unicodes
         """
+        # Empty output is done here
+        if not out:
+            response.header['Content-Length'] = 0
+            return []
+        # Join lists of byte or unicode strings (TODO: benchmark this against map)
+        if isinstance(out, list) and isinstance(out[0], (types.StringType, unicode)):
+            out = out[0][0:0].join(out) # b'abc'[0:0] -> b''
+        # Convert dictionaries to JSON
+        if isinstance(out, dict) and self.jsondump:
+            response.content_type = 'application/json'
+            out = self.jsondump(out)
+        # Encode unicode strings
+        if isinstance(out, unicode):
+            out = out.encode(response.charset)
+        # Byte Strings
+        if isinstance(out, types.StringType):
+            response.header['Content-Length'] = str(len(out))
+            return [out]
+
+        # HTTPError or HTTPException (recursive, because they may wrap anything)
+        if isinstance(out, HTTPError):
+            out.apply(response)
+            return self._cast(self.error_handler.get(out.status, str)(out))
         if isinstance(out, HTTPResponse):
             out.apply(response)
-            if isinstance(out, HTTPError):
-                out = self.error_handler.get(out.status, str)(out)
-            else:
-                out = out.output
-        if not out:
-            response.header['Content-Length'] = '0'
-            return []
-        if isinstance(out, types.StringType):
-            out = [out]
-        elif isinstance(out, unicode):
-            out = [out.encode(response.charset)]
-        elif isinstance(out, list) and isinstance(out[0], unicode):
-            out = map(lambda x: x.encode(response.charset), out)
-        elif hasattr(out, 'read'):
+            return self._cast(out.output)
+
+        # Handle Files and other more complex iterables here...
+        if hasattr(out, 'read') and 'wsgi.file_wrapper' in request.environ:
             out = request.environ.get('wsgi.file_wrapper',
-                  lambda x: iter(lambda: x.read(8192), ''))(out)
-        elif self.jsondump and isinstance(out, dict)\
-          or self.jsondump and isinstance(out, list) and isinstance(out[0], dict):
-                out = [self.jsondump(out)]
-                response.content_type = 'application/json'
-        if isinstance(out, list) and len(out) == 1:
-            response.header['Content-Length'] = str(len(out[0]))
-        if response.status in (100, 101, 204, 304) or request.method == 'HEAD':
-            out = [] # rfc2616 section 4.3
-        if not hasattr(out, '__iter__'):
-            raise TypeError('Request handler for route "%s" returned [%s] '
-                'which is not iterable.' % (request.path, type(out).__name__))
-        return out
+            lambda x, y: iter(lambda: x.read(y), ''))(out, 1024*64)
+        else:
+            out = iter(out)
+        # We peek into iterables to detect their inner type and to support
+        # generators as callbacks. They should not try to set any headers after
+        # their first yield statement.
+        try:
+            while 1:
+                first = out.next()
+                if first: break
+        except StopIteration:
+            response.header['Content-Length'] = 0
+            return []
+
+        if isinstance(first, types.StringType):
+            return itertools.chain([first], out)
+        elif isinstance(first, unicode):
+            return itertools.imap(lambda x: x.encode(response.charset),
+                                  itertools.chain([first], out))
+        raise TypeError('Unsupported response type: %s' % type(first))
 
     def __call__(self, environ, start_response):
         """ The bottle WSGI-interface. """
@@ -469,8 +496,13 @@ class Bottle(object):
             response.bind(self)
             out = self.handle(request.path, request.method)
             out = self._cast(out)
+            if response.status in (100, 101, 204, 304) or request.method == 'HEAD':
+                out = [] # rfc2616 section 4.3
+            if isinstance(out, list) and len(out) == 1:
+                response.header['Content-Length'] = str(len(out[0]))
             status = '%d %s' % (response.status, HTTP_CODES[response.status])
             start_response(status, response.wsgiheader())
+            # TODO: Yield here to catch errors in generator callbacks.
             return out
         except (KeyboardInterrupt, SystemExit, MemoryError):
             raise
@@ -484,7 +516,7 @@ class Bottle(object):
                 err += '<h2>Traceback:</h2>\n<pre>%s</pre>\n' % format_exc(10)
             environ['wsgi.errors'].write(err) #TODO: wsgi.error should not get html
             start_response('500 INTERNAL SERVER ERROR', [])
-            return [err]
+            return [tob(err)]
 
 
 class Request(threading.local, DictMixin):

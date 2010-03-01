@@ -103,10 +103,8 @@ class TestWsgi(ServerTestBase):
         """ WSGI: redirect (HTTP 303) """
         @bottle.route('/')
         def test(): bottle.redirect('/yes')
-        @bottle.route('/yes')
-        def test2(): return 'yes'
-        self.assertStatus(200,'/')
-        self.assertBody('yes', '/')
+        self.assertStatus(303, '/')
+        self.assertHeader('Location', 'http://127.0.0.1/yes', '/')
 
     def test_casting(self):
         """ WSGI: Output Casting (strings an lists) """
@@ -162,9 +160,9 @@ class TestWsgi(ServerTestBase):
             bottle.response.set_cookie('c', 'c', path='/')
             return 'hello'
         try:
-            c = self.urlopen('/cookie').info().get_all('Set-Cookie', '')
+            c = self.urlopen('/cookie')['header'].get_all('Set-Cookie', '')
         except:
-            c = self.urlopen('/cookie').info().getheader('Set-Cookie', '').split(',')
+            c = self.urlopen('/cookie')['header'].get('Set-Cookie', '').split(',')
             c = [x.strip() for x in c]
         self.assertTrue('a=a' in c)
         self.assertTrue('b=b' in c)
