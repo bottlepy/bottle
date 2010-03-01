@@ -509,7 +509,7 @@ class Bottle(object):
         except Exception, e:
             if not self.catchall:
                 raise
-            err = '<h1>Critial error while processing request: %s</h1>' \
+            err = '<h1>Critical error while processing request: %s</h1>' \
                   % environ.get('PATH_INFO', '/')
             if DEBUG:
                 err += '<h2>Error:</h2>\n<pre>%s</pre>\n' % repr(e)
