@@ -151,6 +151,20 @@ class TestWsgi(ServerTestBase):
         self.assertBody(self.app.jsondump({'a': 1}), '/json')
         self.assertHeader('Content-Type','application/json', '/json')
 
+    def test_generator_callback(self):
+        @bottle.route('/yield')
+        def test():
+            bottle.response.header['Test-Header'] = 'test'
+            yield 'foo'
+        @bottle.route('/yield_nothing')
+        def test2():
+            yield
+            bottle.response.header['Test-Header'] = 'test'
+        self.assertBody('foo', '/yield')
+        self.assertHeader('Test-Header', 'test', '/yield')
+        self.assertBody('', '/yield_nothing')
+        self.assertHeader('Test-Header', 'test', '/yield_nothing')
+
     def test_cookie(self):
         """ WSGI: Cookies """
         @bottle.route('/cookie')
