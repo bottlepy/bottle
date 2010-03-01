@@ -76,7 +76,7 @@ class TestSendFile(unittest.TestCase):
         """ SendFile: Download as attachment """
         basename = os.path.basename(__file__)
         f = static_file(basename, root='./', download=True)
-        self.assertEqual('attachment; filename=%s' % basename, f.header['Content-Disposition'])
+        self.assertEqual('attachment; filename="%s"' % basename, f.header['Content-Disposition'])
         request.environ['HTTP_IF_MODIFIED_SINCE'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(100))
         f = static_file(os.path.basename(__file__), root='./')
         self.assertEqual(open(__file__,'rb').read(), f.output.read())
