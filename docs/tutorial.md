@@ -228,15 +228,15 @@ To do so, we first add a new route to our script and tell the route that it shou
         conn = sqlite3.connect('todo.db')
         c = conn.cursor()
         
-        query = "INSERT INTO todo (task,status) VALUES ('%s',1)" %new
-        c.execute(query)
+        query = "INSERT INTO todo (task,status) VALUES (?,1)"
+        c.execute(query, (new,))
         conn.commit()
         
         c.execute("SELECT last_insert_rowid()")
         new_id = c.fetchone()[0]
         c.close()
         
-        return '<p>The new task was inserted into the database, the ID is %s</p>
+        return '<p>The new task was inserted into the database, the ID is %s</p>' % new_id
        
 To access GET (or POST) data, we need to import "request" from Bottle. To assign the actual data to a variable, we use the statement `request.GET.get('task','').strip()` statement, where "task" is the name of the GET-data we want to access. That's all. If your GET-data has more than one variable, multiple `request.GET.get()` statements can be used and assigned to other variables.
 
@@ -257,8 +257,8 @@ The code need to be extended to:
         conn = sqlite3.connect('todo.db')
         c = conn.cursor()
         
-        query = "INSERT INTO todo (task,status) VALUES ('%s',1)" %new
-        c.execute(query)
+        query = "INSERT INTO todo (task,status) VALUES (?,1)"
+        c.execute(query, (new,))
         conn.commit()
         
         c.execute("SELECT last_insert_rowid()")
@@ -317,8 +317,8 @@ The code looks like this:
                 
             conn = sqlite3.connect('todo.db')
             c = conn.cursor()
-            query = "UPDATE todo SET task = '%s', status = '%s' WHERE id LIKE '%s'" % (edit,status,no)
-            c.execute(query)
+            query = "UPDATE todo SET task = ?, status = ? WHERE id LIKE ?"
+            c.execute(query, (edit,status,no))
             conn.commit()
             
             return '<p>The item number %s was successfully updated</p>' %no
@@ -541,8 +541,8 @@ Main code for the application `todo.py`:
             conn = sqlite3.connect('todo.db')
             c = conn.cursor()
             
-            query = "INSERT INTO todo (task,status) VALUES ('%s',1)" %new
-            c.execute(query)
+            query = "INSERT INTO todo (task,status) VALUES (?,1)"
+            c.execute(query, (new,))
             conn.commit()
             
             c.execute("SELECT last_insert_rowid()")
@@ -569,8 +569,8 @@ Main code for the application `todo.py`:
                 
             conn = sqlite3.connect('todo.db')
             c = conn.cursor()
-            query = "UPDATE todo SET task = '%s', status = '%s' WHERE id LIKE '%s'" % (edit,status,no)
-            c.execute(query)
+            query = "UPDATE todo SET task = ?, status = ? WHERE id LIKE ?"
+            c.execute(query, (edit,status,no))
             conn.commit()
             
             return '<p>The item number %s was successfully updated</p>' %no
