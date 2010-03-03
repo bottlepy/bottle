@@ -66,7 +66,7 @@ As you can see, URLs and routes have nothing to do with actual files on the web 
 ## HTTP Request Methods
 
 The `route()` decorator has an optional keyword argument `method` which defaults to `method='GET'`; only GET requests get answered by that route.
-Possible values are `POST`, `PUT`, `DELETE`, `HEAD`, `ANY` or any other [HTTP request method][http_method] you want to listen to. As an alternative, you can use the `@get()`, `@post()`, `@put()` and `@delete()` aliases.
+Possible values are `POST`, `PUT`, `DELETE`, `HEAD`, or any other [HTTP request method][http_method] you want to listen to. Also `ANY` which will be used as fallback for any method. As an alternative, you can use the `@get()`, `@post()`, `@put()` and `@delete()` aliases.
 
     #!Python
     from bottle import post, request

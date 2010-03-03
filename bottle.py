@@ -382,7 +382,7 @@ class Bottle(object):
     def match_url(self, path, method='GET'):
         """ Find a callback bound to a path and a specific HTTP method.
             Return (callback, param) tuple or (None, {}).
-            method: HEAD falls back to GET. HEAD and GET fall back to ALL.
+            method: HEAD falls back to GET. All methods fall back to ANY.
         """
         path = path.strip().lstrip('/')
         handler, param = self.routes.match(method + ';' + path)
