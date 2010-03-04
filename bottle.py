@@ -1055,7 +1055,7 @@ def cookie_decode(data, key):
 
 
 def cookie_is_encoded(data):
-    ''' Verify and decode an encoded string. Return an object or None'''
+    ''' Return True if the argument looks like a encoded cookie.'''
     return bool(data.startswith(u'!'.encode('ascii')) and u'?'.encode('ascii') in data) #2to3 hack
 
 
