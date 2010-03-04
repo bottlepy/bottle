@@ -112,7 +112,7 @@ def page(name='start'):
     if p.exists:
         return dict(page=p)
     else:
-        return bottle.HTTPError(404, 'Page not found')
+        raise bottle.HTTPError(404, 'Page not found') # raise to escape the view...
 
 
 @route('/rss.xml')

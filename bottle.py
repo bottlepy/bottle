@@ -1581,9 +1581,12 @@ def view(tpl_name, **defaults):
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            tplvars = dict(defaults)
-            tplvars.update(func(*args, **kwargs))
-            return template(tpl_name, **tplvars)
+            result = func(*args, **kwargs)
+            if isinstance(result, dict):
+                tplvars = defaults.copy()
+                tplvars.update(result)
+                return template(tpl_name, **tplvars)
+            return result
         return wrapper
     return decorator
 
