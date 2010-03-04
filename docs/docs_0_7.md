@@ -197,7 +197,7 @@ You can directly return file objects, but `static_file()` is the recommended way
     from bottle import static_file
 
     @route('/images/:filename#.*\.png#')
-    def senf_image(filename):
+    def send_image(filename):
         return static_file(filename, root='/path/to/image/files', mimetype='image/png')
     
     @route('/static/:filename')
