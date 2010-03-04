@@ -34,7 +34,7 @@ Lets start with a very basic example: Hello World
 Run this script, visit <http://localhost:8080/hello> and you will see "Hello World!" in your Browser. So, what happened here?
 
   1. First we imported some bottle components. The `route()` decorator and the `run()` function. 
-  2. The `route()` [decorator][] is used do bind a piece of code to an URL. In this example we want to answer requests to the `/hello` URL.
+  2. The `route()` [decorator][] is used to bind a piece of code to an URL. In this example we want to answer requests to the `/hello` URL.
   3. This function will be called every time someone hits the `/hello` URL on the web server. It is called a __handler function__ or __callback__.
   4. The return value of a handler function will be sent back to the Browser.
   5. Now it is time to start the actual HTTP server. The default is a development server running on *localhost* port *8080* and serving requests until you hit __Ctrl-C__
