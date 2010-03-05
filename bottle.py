@@ -58,6 +58,7 @@ This is an example::
     
     run(host='localhost', port=8080)
 """
+
 from __future__ import with_statement
 __author__ = 'Marcel Hellkamp'
 __version__ = '0.7.0a'
@@ -164,7 +165,8 @@ class HTTPError(HTTPResponse):
             'status' : self.status,
             'url' : str(request.path),
             'error_name' : HTTP_CODES.get(self.status, 'Unknown').title(),
-            'error_message' : str(self.output)
+            'error_message' : str(self.output),
+            'error_traceback' : str(self.traceback) if DEBUG else ''
         }
 
 
@@ -1552,9 +1554,7 @@ ERROR_PAGE_TEMPLATE = """<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
     <body>
         <h1>Error %(status)d: %(error_name)s</h1>
         <p>Sorry, the requested URL <tt>%(url)s</tt> caused an error:</p>
-        <pre>
-            %(error_message)s
-        </pre>
+        <pre>%(error_message)s\n%(error_traceback)s</pre>
     </body>
 </html>
 """
