@@ -63,31 +63,27 @@ __author__ = 'Marcel Hellkamp'
 __version__ = '0.7.0a'
 __license__ = 'MIT'
 
-import types
-from types import GeneratorType
-import sys
+import base64
 import cgi
+import email.utils
+import functools
+import hmac
+import inspect
+import itertools
 import mimetypes
 import os
-import os.path
-from traceback import format_exc
 import re
-import random
+import subprocess
+import sys
+import thread
 import threading
 import time
-import warnings
-import email.utils
+
 from Cookie import SimpleCookie
-import subprocess
-import thread
 from tempfile import TemporaryFile
-import hmac
-import base64
+from traceback import format_exc
 from urllib import quote as urlquote
 from urlparse import urlunsplit, urljoin
-import functools
-import itertools
-import inspect
 
 try:
   from collections import MutableMapping as DictMixin
@@ -116,10 +112,12 @@ if sys.version_info >= (3,0,0): # pragma: no cover
     # See Request.POST
     from io import BytesIO
     from io import TextIOWrapper
+    StringType = bytes
     def touni(x, enc='utf8'): # Convert anything to unicode (py3)
         return str(x, encoding=enc) if isinstance(x, bytes) else str(x)
 else:
     from StringIO import StringIO as BytesIO
+    from types import StringType
     TextIOWrapper = None
     def touni(x, enc='utf8'): # Convert anything to unicode (py2)
         return x if isinstance(x, unicode) else unicode(str(x), encoding=enc)
@@ -440,7 +438,7 @@ class Bottle(object):
             return []
 
         # Join lists of byte or unicode strings (TODO: benchmark this against map)
-        if isinstance(out, list) and isinstance(out[0], (types.StringType, unicode)):
+        if isinstance(out, list) and isinstance(out[0], (StringType, unicode)):
             out = out[0][0:0].join(out) # b'abc'[0:0] -> b''
         # Convert dictionaries to JSON
         if isinstance(out, dict) and self.jsondump:
@@ -450,7 +448,7 @@ class Bottle(object):
         if isinstance(out, unicode):
             out = out.encode(response.charset)
         # Byte Strings
-        if isinstance(out, types.StringType):
+        if isinstance(out, StringType):
             response.header['Content-Length'] = str(len(out))
             return [out]
 
@@ -485,7 +483,7 @@ class Bottle(object):
 
         if isinstance(first, HTTPResponse):
             return self._cast(first)
-        if isinstance(first, types.StringType):
+        if isinstance(first, StringType):
             return itertools.chain([first], out)
         if isinstance(first, unicode):
             return itertools.imap(lambda x: x.encode(response.charset),
@@ -939,7 +937,7 @@ def parse_auth(header):
         if method.lower() == 'basic':
             name, pwd = base64.b64decode(data).split(':', 1)
             return name, pwd
-    except (KeyError, ValueError, TypeError), a:
+    except (KeyError, ValueError, TypeError):
         return None
 
 
@@ -1000,7 +998,7 @@ def validate(**vkargs):
                     abort(403, 'Missing parameter: %s' % key)
                 try:
                     kargs[key] = value(kargs[key])
-                except ValueError, e:
+                except ValueError:
                     abort(403, 'Wrong parameter format for: %s' % key)
             return func(**kargs)
         return wrapper
@@ -1133,13 +1131,15 @@ class AppEngineServer(ServerAdapter):
 class TwistedServer(ServerAdapter):
     """ Untested. """
     def run(self, handler):
-        import twisted.web.wsgi
-        import twisted.internet
-        resource = twisted.web.wsgi.WSGIResource(twisted.internet.reactor,
-                   twisted.internet.reactor.getThreadPool(), handler)
-        site = server.Site(resource)
-        twisted.internet.reactor.listenTCP(self.port, self.host)
-        twisted.internet.reactor.run()
+        from twisted.web import server, wsgi
+        from twisted.python.threadpool import ThreadPool
+        from twisted.internet import reactor
+        thread_pool = ThreadPool()
+        thread_pool.start()
+        reactor.addSystemEventTrigger('after', 'shutdown', thread_pool.stop)
+        server.Site(wsgi.WSGIResource(reactor, thread_pool, handler))
+        reactor.listenTCP(self.port, self.host)
+        reactor.run()
 
 
 class DieselServer(ServerAdapter):
