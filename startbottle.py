@@ -17,6 +17,8 @@ log = logging.getLogger('bottle.starter')
 
 servernames = ['AutoServer']
 servernames.extend(x.__name__ for x in bottle.AutoServer.adapters)
+reloading_servernames = ['WSGIRefServer']
+
 
 parser = OptionParser(usage="usage: %prog [options] module1 [module2 ...]")
 parser.add_option("-s", "--server",
@@ -171,7 +173,7 @@ def main(argv):
             return 1
     # Arguments for bottle.run()
     runargs = {}
-    runargs['server'] = getattr(bottle, opt.server)
+    runargs['server'] = getattr(bottle, opt.server if not opt.reload else 'WSGIRefServer') 
     runargs['port'] = int(opt.port)
     runargs['host'] = opt.host
 
