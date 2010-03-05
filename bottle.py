@@ -155,19 +155,13 @@ class HTTPResponse(BottleException):
 
 class HTTPError(HTTPResponse):
     """ Used to generate an error page """
-    def __init__(self, code=500, message='Unknown Error', exception=None, traceback=None, header=None):
-        super(HTTPError, self).__init__(message, code, header)
+    def __init__(self, code=500, output='Unknown Error', exception=None, traceback=None, header=None):
+        super(HTTPError, self).__init__(output, code, header)
         self.exception = exception
         self.traceback = traceback
 
-    def __str__(self):
-        return ERROR_PAGE_TEMPLATE % {
-            'status' : self.status,
-            'url' : str(request.path),
-            'error_name' : HTTP_CODES.get(self.status, 'Unknown').title(),
-            'error_message' : str(self.output),
-            'error_traceback' : str(self.traceback) if DEBUG else ''
-        }
+    def __repr__(self):
+        return ''.join(ERROR_PAGE_TEMPLATE.render(e=self))
 
 
 
@@ -457,7 +451,7 @@ class Bottle(object):
         # HTTPError or HTTPException (recursive, because they may wrap anything)
         if isinstance(out, HTTPError):
             out.apply(response)
-            return self._cast(self.error_handler.get(out.status, str)(out))
+            return self._cast(self.error_handler.get(out.status, repr)(out))
         if isinstance(out, HTTPResponse):
             out.apply(response)
             return self._cast(out.output)
@@ -1546,18 +1540,31 @@ HTTP_CODES = {
 """ A dict of known HTTP error and status codes """
 
 
-ERROR_PAGE_TEMPLATE = """<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
+
+ERROR_PAGE_TEMPLATE = SimpleTemplate("""
+%import cgi
+%from bottle import DEBUG, HTTP_CODES, request
+%status_name = HTTP_CODES.get(e.status, 'Unknown').title()
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
 <html>
     <head>
-        <title>Error %(status)d: %(error_name)s</title>
+        <title>Error {{e.status}}: {{status_name}}</title>
     </head>
     <body>
-        <h1>Error %(status)d: %(error_name)s</h1>
-        <p>Sorry, the requested URL <tt>%(url)s</tt> caused an error:</p>
-        <pre>%(error_message)s\n%(error_traceback)s</pre>
+        <h1>Error {{e.status}}: {{status_name}}</h1>
+        <p>Sorry, the requested URL <tt>{{cgi.escape(request.url)}}</tt> caused an error:</p>
+        <pre>{{cgi.escape(str(e.output))}}</pre>
+        %if DEBUG and e.exception:
+          <h2>Exception:</h2>
+          <pre>{{cgi.escape(repr(e.exception))}}</pre>
+        %end
+        %if DEBUG and e.traceback:
+          <h2>Traceback:</h2>
+          <pre>{{cgi.escape(e.traceback)}}</pre>
+        %end
     </body>
 </html>
-"""
+""") #TODO: use {{!bla}} instead of cgi.escape as soon as strlunicode is merged
 """ The HTML template used for error messages """
 
 request = Request()
