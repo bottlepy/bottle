@@ -64,6 +64,7 @@ __version__ = '0.7.0a'
 __license__ = 'MIT'
 
 import types
+from types import GeneratorType
 import sys
 import cgi
 import mimetypes
@@ -155,9 +156,10 @@ class HTTPResponse(BottleException):
 
 class HTTPError(HTTPResponse):
     """ Used to generate an error page """
-    def __init__(self, code=500, message='Unknown Error', exception=None, header=None):
+    def __init__(self, code=500, message='Unknown Error', exception=None, traceback=None, header=None):
         super(HTTPError, self).__init__(message, code, header)
         self.exception = exception
+        self.traceback = traceback
 
     def __str__(self):
         return ERROR_PAGE_TEMPLATE % {
@@ -406,10 +408,9 @@ class Bottle(object):
         return wrapper
 
     def handle(self, url, method, catchall=True):
-        """ Handle a single request. Return handler output, HTTPResponse or
-        HTTPError. If catchall is true, all exceptions thrown within a
-        handler function are catched and returned as HTTPError(500).
-        """
+        """ Execute the handler bound to the specified url and method and return
+        its output. If catchall is true, exceptions are catched and returned as
+        HTTPError(500) objects. """
         if not self.serve:
             return HTTPError(503, "Server stopped")
 
@@ -421,18 +422,13 @@ class Bottle(object):
             return handler(**args)
         except HTTPResponse, e:
             return e
-        except (KeyboardInterrupt, SystemExit, MemoryError):
-            raise
         except Exception, e:
-            if not self.catchall:
+            if isinstance(e, (KeyboardInterrupt, SystemExit, MemoryError))\
+            or not self.catchall:
                 raise
-            err = "Unhandled Exception: %s\n" % (repr(e))
-            if DEBUG:
-                err += '\n\nTraceback:\n' + format_exc(10)
-            request.environ['wsgi.errors'].write(err)
-            return HTTPError(500, err, e)
+            return HTTPError(500, 'Unhandled exception', e, format_exc(10))
 
-    def _cast(self, out):
+    def _cast(self, out, peek=None):
         """ Try to convert the parameter into something WSGI compatible and set
         correct HTTP headers when possible.
         Support: False, str, unicode, dict, HTTPResponse, HTTPError, file-like,
@@ -442,6 +438,7 @@ class Bottle(object):
         if not out:
             response.header['Content-Length'] = 0
             return []
+
         # Join lists of byte or unicode strings (TODO: benchmark this against map)
         if isinstance(out, list) and isinstance(out[0], (types.StringType, unicode)):
             out = out[0][0:0].join(out) # b'abc'[0:0] -> b''
@@ -471,23 +468,29 @@ class Bottle(object):
             lambda x, y: iter(lambda: x.read(y), ''))(out, 1024*64)
         else:
             out = iter(out)
-        # We peek into iterables to detect their inner type and to support
-        # generators as callbacks. They should not try to set any headers after
-        # their first yield statement.
+        # We peek into iterables to detect their inner type.
         try:
-            while 1:
+            first = out.next()
+            while not first:
                 first = out.next()
-                if first: break
         except StopIteration:
-            response.header['Content-Length'] = 0
-            return []
+            return self._cast('')
+        except HTTPResponse, e:
+            first = e
+        except Exception, e:
+            first = HTTPError(500, 'Unhandled exception', e, format_exc(10))
+            if isinstance(e, (KeyboardInterrupt, SystemExit, MemoryError))\
+            or not self.catchall:
+                raise
 
+        if isinstance(first, HTTPResponse):
+            return self._cast(first)
         if isinstance(first, types.StringType):
             return itertools.chain([first], out)
-        elif isinstance(first, unicode):
+        if isinstance(first, unicode):
             return itertools.imap(lambda x: x.encode(response.charset),
                                   itertools.chain([first], out))
-        raise TypeError('Unsupported response type: %s' % type(first))
+        return self._cast(HTTPError(500, 'Unsupported response type: %s' % type(first)))
 
     def __call__(self, environ, start_response):
         """ The bottle WSGI-interface. """
@@ -498,11 +501,8 @@ class Bottle(object):
             out = self._cast(out)
             if response.status in (100, 101, 204, 304) or request.method == 'HEAD':
                 out = [] # rfc2616 section 4.3
-            if isinstance(out, list) and len(out) == 1:
-                response.header['Content-Length'] = str(len(out[0]))
             status = '%d %s' % (response.status, HTTP_CODES[response.status])
             start_response(status, response.wsgiheader())
-            # TODO: Yield here to catch errors in generator callbacks.
             return out
         except (KeyboardInterrupt, SystemExit, MemoryError):
             raise
