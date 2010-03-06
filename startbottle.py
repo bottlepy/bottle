@@ -11,6 +11,7 @@ import subprocess
 import time
 import thread
 import tempfile
+import inspect
 
 logging.basicConfig()
 log = logging.getLogger('bottle.starter')
@@ -52,10 +53,10 @@ def terminate(process):
     """ Kills a subprocess. """
     if hasattr(process, 'terminate'):
         return process.terminate()
-    if sys.platform == 'win32':
+    try:
         import win32process
         return win32process.TerminateProcess(process._handle, -1)
-    else:
+    except ImportError:
         import os
         import signal
         return os.kill(process.pid, signal.SIGTERM)
@@ -70,38 +71,50 @@ def set_exit_handler(func):
         signal.signal(signal.SIGTERM, func)
 
 
-def get_modulefiles():
-    """ Return all module files currently loaded"""
-    files = set()
-    for module in sys.modules.values():
-        file_path = getattr(module, '__file__', None)
-        if file_path and os.path.isfile(file_path):
-            file_split = os.path.splitext(file_path)
-            if file_split[1] in ('.py', '.pyc', '.pyo'):
-                files.add(file_split[0] + '.py')
-    return list(files)
+class ModuleChecker(object):
+    def __init__(self):
+        self.files = {}
+        self.changed = []
+        for module in sys.modules.values():
+            try:
+                path = inspect.getsourcefile(module)
+                self.add(path)
+            except TypeError:
+                continue
+
+    def add(self, path):
+        self.files[path] = self.mtime(path)
+
+    def mtime(self, path):
+        return os.path.getmtime(path) if os.path.exists(path) else 0
+
+    def check(self):
+        for path, mtime in self.files.iteritems():
+            newtime = self.mtime(path)
+            if mtime != newtime:
+                self.changed.append(path)
+                self.files[path] = newtime
+        return self.changed
+
+    def reset(self):
+        self.changed = []
+
+    def loop(self, interval, callback):
+        while not self.check():
+            print 'foo'
+            time.sleep(interval)
+        callback()
 
 
 def run_child(**runargs):
     """ Run as a child process and check for changed files in a separate thread.
         As soon as a file change is detected, KeyboardInterrupt is thrown in
         the main thread to exit the server loop. """
-    watchlist = dict((name, os.stat(name).st_mtime) for name in get_modulefiles())
-    lockfile = os.environ.get('BOTTLE_CHILD')
-    watchlist[lockfile] = os.stat(lockfile).st_mtime
-    changed = set()
-    def checker():
-        while 1:
-            time.sleep(1)
-            for path, mtime in watchlist.iteritems():
-                if not os.path.exists(path) or mtime != os.stat(path).st_mtime:
-                    changed.add(path)
-            if changed:
-                thread.interrupt_main()
-    thread.start_new_thread(checker, tuple(), dict())
+    checker = ModuleChecker()
+    thread.start_new_thread(checker.loop, (1, thread.interrupt_main), {})
     bottle.run(**runargs) # This blocks until KeyboardInterrupt
-    if changed:
-        log.info("Changed files: %s; Reloading...", ', '.join(changed))
+    if checker.changed:
+        log.info("Changed files: %s; Reloading...", ', '.join(checker.changed))
         return 3
     return 0
 
@@ -111,10 +124,9 @@ def run_observer():
         If the return code equals 3, restart it. Exit otherwise.
         On an exception or SIGTERM, kill the child the hard way. """
     global child
-    lockfile = tempfile.NamedTemporaryFile()
     child_argv = [sys.executable] + sys.argv
     child_environ = os.environ.copy()
-    child_environ['BOTTLE_CHILD'] = lockfile.name
+    child_environ['BOTTLE_CHILD'] = 'true'
 
     def onexit(*argv):
         if child.poll() == None:
@@ -130,7 +142,6 @@ def run_observer():
                 log.info("Child terminated with exit code %d. We do the same", code)
                 return code
         except KeyboardInterrupt:
-            os.utime(lockfile.name, None) # Not needed at all? wtf?
             log.info("User exit. Waiting for Child to terminate...")
             return child.wait()
         except OSError, e:
@@ -144,13 +155,11 @@ def run_observer():
 
 
 def main(argv):
-    log.debug("Starting with command line options: %s", ' '.join(argv))
     opt, args = parser.parse_args(argv)
 
     # Logging
     if opt.log:
         log.addHandler(logging.handlers.FileHandler(opt.log))
-        log.debug("Opening logfile %s", opt.logfile)
     else:
         logging.basicConfig()
 
@@ -158,7 +167,6 @@ def main(argv):
     if opt.verbose or opt.debug:
         bottle.debug(True)
         log.setLevel(logging.DEBUG)
-        log.debug("Startng in debug mode")
 
     # Importing modules
     sys.path.append('./')
@@ -171,23 +179,29 @@ def main(argv):
         except ImportError:
             log.exception("Failed to import module '%s' (ImportError)", mod)
             return 1
+    
+    # First case: We are a reloading observer process
+    if opt.reload and not os.environ.get('BOTTLE_CHILD'):
+        return run_observer()
+
     # Arguments for bottle.run()
     runargs = {}
-    runargs['server'] = getattr(bottle, opt.server if not opt.reload else 'WSGIRefServer') 
+    runargs['server'] = getattr(bottle, opt.server) 
     runargs['port'] = int(opt.port)
     runargs['host'] = opt.host
 
-    # First case: We are not reloading a all
-    if not opt.reload:
-        bottle.run(**runargs)
-        return 0
-
     # Second case: We are a reloading child process
     if os.environ.get('BOTTLE_CHILD'):
+        if runargs['server'] != bottle.WSGIRefServer:
+            log.warning("Currently only WSGIRefServer is known to support reloading")
+            runargs['server'] = bottle.WSGIRefServer
         return run_child(**runargs)
 
-    # Third case: We are a reloading observer process
-    return run_observer()
+    # Third case: We are not reloading a all
+    bottle.run(**runargs)
+    return 0
+
+
 
 
 if __name__ == '__main__':
