@@ -281,13 +281,13 @@ available as `request.GET` and `request.POST`. Multiple values per
 key are possible, so each value of these dictionaries may contain a string
 or a list of strings.
 
-You can use `.getone(key[, default])` to get a single value only.
+You can use `.getall(key)` to get all values, or `.get(key[, default])` if you expect only one value. `getall` returns a list, `get` returns a string.
 
     #!Python
     from bottle import route, request
     @route('/search', method='POST')
     def do_search():
-        query = request.POST.getone('query', '').strip()
+        query = request.POST.get('query', '').strip()
         if not query:
             return "You didn't supply a search query."
         else:
