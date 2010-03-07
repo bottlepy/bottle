@@ -343,10 +343,21 @@ class Bottle(object):
         self.routes = Router()
         self.default_route = None
         self.error_handler = {}
-        self.jsondump = json_dumps if autojson and json_dumps else False
         self.catchall = catchall
         self.config = dict()
         self.serve = True
+        self.castfilter = []
+        if autojson and json_dumps:
+            self.add_filter(dict, dict2json)
+
+    def add_filter(self, ftype, func):
+        ''' Register a new output filter. Whenever bottle hits a handler output
+            matching `ftype`, `func` is applyed to it. '''
+        if not isinstance(ftype, type):
+            raise TypeError("Expected type object, got %s" % type(ftype))
+        self.castfilter = [(t, f) for (t, f) in self.castfilter if t != ftype]
+        self.castfilter.append((ftype, func))
+        self.castfilter.sort()
 
     def match_url(self, path, method='GET'):
         """ Find a callback bound to a path and a specific HTTP method.
@@ -432,22 +443,16 @@ class Bottle(object):
         if not out:
             response.header['Content-Length'] = 0
             return []
-
-        # Join lists of byte or unicode strings (TODO: benchmark this against map)
+        # Join lists of byte or unicode strings. Mixed lists are NOT supported
         if isinstance(out, list) and isinstance(out[0], (StringType, unicode)):
             out = out[0][0:0].join(out) # b'abc'[0:0] -> b''
-        # Convert dictionaries to JSON
-        if isinstance(out, dict) and self.jsondump:
-            response.content_type = 'application/json'
-            out = self.jsondump(out)
         # Encode unicode strings
         if isinstance(out, unicode):
             out = out.encode(response.charset)
-        # Byte Strings
+        # Byte Strings are just returned
         if isinstance(out, StringType):
             response.header['Content-Length'] = str(len(out))
             return [out]
-
         # HTTPError or HTTPException (recursive, because they may wrap anything)
         if isinstance(out, HTTPError):
             out.apply(response)
@@ -456,14 +461,19 @@ class Bottle(object):
             out.apply(response)
             return self._cast(out.output)
 
-        # Handle Files and other more complex iterables here...
+        # Filtered types (recursive, because they may return anything)
+        for testtype, filterfunc in self.castfilter:
+            if isinstance(out, testtype):
+                return self._cast(filterfunc(out))
+
+        # Cast Files into iterables
         if hasattr(out, 'read') and 'wsgi.file_wrapper' in request.environ:
             out = request.environ.get('wsgi.file_wrapper',
             lambda x, y: iter(lambda: x.read(y), ''))(out, 1024*64)
-        else:
-            out = iter(out)
-        # We peek into iterables to detect their inner type.
+
+        # Handle Iterables. We peek into them to detect their inner type.
         try:
+            out = iter(out)
             first = out.next()
             while not first:
                 first = out.next()
@@ -476,7 +486,7 @@ class Bottle(object):
             if isinstance(e, (KeyboardInterrupt, SystemExit, MemoryError))\
             or not self.catchall:
                 raise
-
+        # These are the inner types allowed in iterator or generator objects.
         if isinstance(first, HTTPResponse):
             return self._cast(first)
         if isinstance(first, StringType):
@@ -484,7 +494,8 @@ class Bottle(object):
         if isinstance(first, unicode):
             return itertools.imap(lambda x: x.encode(response.charset),
                                   itertools.chain([first], out))
-        return self._cast(HTTPError(500, 'Unsupported response type: %s' % type(first)))
+        return self._cast(HTTPError(500, 'Unsupported response type: %s'\
+                                         % type(first)))
 
     def __call__(self, environ, start_response):
         """ The bottle WSGI-interface. """
@@ -509,7 +520,7 @@ class Bottle(object):
                 err += '<h2>Error:</h2>\n<pre>%s</pre>\n' % repr(e)
                 err += '<h2>Traceback:</h2>\n<pre>%s</pre>\n' % format_exc(10)
             environ['wsgi.errors'].write(err) #TODO: wsgi.error should not get html
-            start_response('500 INTERNAL SERVER ERROR', [])
+            start_response('500 INTERNAL SERVER ERROR', [('Content-Type', 'text/html')])
             return [tob(err)]
 
 
@@ -844,6 +855,12 @@ class AppStack(list):
 
 # Module level functions
 
+# Output filter
+
+def dict2json(d):
+    response.content_type = 'application/json'
+    return json_dumps(d)
+
 # BC: 0.6.4 and needed for run()
 app = default_app = AppStack([Bottle()])
 
@@ -919,7 +936,7 @@ def url(routename, **kargs):
 
 
 def parse_date(ims):
-    """ Parses rfc1123, rfc850 and asctime timestamps and returns UTC epoch. """
+    """ Parse rfc1123, rfc850 and asctime timestamps and return UTC epoch. """
     try:
         ts = email.utils.parsedate_tz(ims)
         return time.mktime(ts[:8] + (0,)) - (ts[9] or 0) - time.timezone
@@ -928,6 +945,7 @@ def parse_date(ims):
 
 
 def parse_auth(header):
+    """ Parse rfc2617 HTTP authentication header string (basic) and return (user,pass) tuple or None"""
     try:
         method, data = header.split(None, 1)
         if method.lower() == 'basic':
