@@ -9,6 +9,8 @@ import unittest
 import wsgiref
 import wsgiref.simple_server
 import wsgiref.util
+import wsgiref.validate
+
 from StringIO import StringIO
 try:
     from io import BytesIO
@@ -26,6 +28,7 @@ class ServerTestBase(unittest.TestCase):
         self.port = 8080
         self.host = 'localhost'
         self.app = bottle.app.push()
+        self.wsgiapp = wsgiref.validate.validator(self.app)
 
     def urlopen(self, path, method='GET', post='', env=None):
         result = {'code':0, 'status':'error', 'header':{}, 'body':tob('')}
@@ -42,16 +45,21 @@ class ServerTestBase(unittest.TestCase):
         wsgiref.util.setup_testing_defaults(env)
         env['REQUEST_METHOD'] = method.upper().strip()
         env['PATH_INFO'] = path
+        env['QUERY_STRING'] = ''
         if post:
             env['REQUEST_METHOD'] = 'POST'
-            env['CONTENT_LENGTH'] = len(tob(post))
+            env['CONTENT_LENGTH'] = str(len(tob(post)))
             env['wsgi.input'].write(tob(post))
             env['wsgi.input'].seek(0)
-        for part in self.app(env, start_response):
+        response = self.wsgiapp(env, start_response)
+        for part in response:
             try:
                 result['body'] += part
             except TypeError:
                 raise TypeError('WSGI app yielded non-byte object %s', type(part))
+        if hasattr(response, 'close'):
+            response.close()
+            del response
         return result
         
     def postmultipart(self, path, fields, files):
@@ -60,21 +68,29 @@ class ServerTestBase(unittest.TestCase):
     def tearDown(self):
         bottle.app.pop()
 
-    def assertStatus(self, code, route, **kargs):
+    def assertStatus(self, code, route='/', **kargs):
         self.assertEqual(code, self.urlopen(route, **kargs)['code'])
 
-    def assertBody(self, body, route, **kargs):
+    def assertBody(self, body, route='/', **kargs):
         self.assertEqual(tob(body), self.urlopen(route, **kargs)['body'])
 
-    def assertInBody(self, body, route, **kargs):
-        self.assertTrue(tob(body) in self.urlopen(route, **kargs)['body'])
+    def assertInBody(self, body, route='/', **kargs):
+        body = self.urlopen(route, **kargs)['body']
+        if tob(body) not in body:
+            self.fail('The search pattern "%s" is not included in body:\n%s' % (body, body))
 
-    def assertHeader(self, name, value, route, **kargs):
+    def assertHeader(self, name, value, route='/', **kargs):
         self.assertEqual(value, self.urlopen(route, **kargs)['header'].get(name))
 
-    def assertHeaderAny(self, name, route, **kargs):
+    def assertHeaderAny(self, name, route='/', **kargs):
         self.assertTrue(self.urlopen(route, **kargs)['header'].get(name, None))
 
+    def assertInError(self, search, route='/', **kargs):
+        bottle.request.environ['wsgi.errors'].errors.seek(0)
+        err = bottle.request.environ['wsgi.errors'].errors.read()
+        if search not in err:
+            self.fail('The search pattern "%s" is not included in wsgi.error: %s' % (search, err))
+        
 def multipart_environ(fields, files):
     boundary = str(uuid.uuid1())
     env = {'REQUEST_METHOD':'POST',
