@@ -1435,15 +1435,15 @@ class SimpleTemplate(BaseTemplate):
             lineno += 1
             line = unicode(line, encoding=self.encoding) if not isinstance(line, unicode) else line
             if lineno <= 2 and 'coding' in line:
-                m = re.search(r"coding[:=]\s*([-\w\.]+)", line)
+                m = re.search(r"%.*coding[:=]\s*([-\w\.]+)", line)
                 if m: self.encoding = m.group(1)
-                if m: line = u'# encoding removed: %s\n' % self.encoding
+                if m: line = line.replace('coding','coding (removed)')
             if line.strip().startswith('%') and not line.strip().startswith('%%'):
                 line = line.strip().lstrip('%') # Full line
-                cline = line.split('#')[0].strip() # Strip comments
+                cline = line.split('#')[0]
+                cline = cline.strip()
                 cmd = line.split()[0] # Command word
-                if cline:
-                    flush() ##encodig
+                flush() ##encodig
                 if cmd in self.blocks:
                     if cmd in self.dedent_blocks: cmd = stack.pop() #last block ended
                     code(line)

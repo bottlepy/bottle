@@ -97,12 +97,35 @@ class TestSimpleTemplate(unittest.TestCase):
         t = t.render(var=5)
         self.assertEqual(u'6\r\n', ''.join(t))
 
-    def test_detect_encodung(self):
-        t = SimpleTemplate(u'#coding: iso8859_15\nöäü?@€'.encode('utf8'))
-        self.failIfEqual(u'# encoding removed: iso8859_15\nöäü?@€', ''.join(t.render()))
-        t = SimpleTemplate(u'#coding: iso8859_15\nöäü?@€'.encode('iso8859_15'))
-        self.assertEqual(u'# encoding removed: iso8859_15\nöäü?@€', ''.join(t.render()))
+    def test_commentonly(self):
+        """ Templates: Commentd should behave like code-lines (e.g. flush text-lines) """
+        t = SimpleTemplate('...\n%#test\n...')
+        self.failIfEqual('#test', t.code.splitlines()[0])
 
+    def test_detect_pep263(self):
+        ''' PEP263 strings in code-lines change the template encoding on the fly '''
+        t = SimpleTemplate(u'%#coding: iso8859_15\nöäü?@€'.encode('utf8'))
+        self.failIfEqual(u'öäü?@€', ''.join(t.render()))
+        self.assertEqual(t.encoding, 'iso8859_15')
+        t = SimpleTemplate(u'%#coding: iso8859_15\nöäü?@€'.encode('iso8859_15'))
+        self.assertEqual(u'öäü?@€', ''.join(t.render()))
+        self.assertEqual(t.encoding, 'iso8859_15')
+        self.assertEqual(2, len(t.code.splitlines()))
+
+    def test_ignore_pep263_in_textline(self):
+        ''' PEP263 strings in text-lines have no effect '''
+        self.assertRaises(UnicodeError, SimpleTemplate, u'#coding: iso8859_15\nöäü?@€'.encode('iso8859_15'))
+        t = SimpleTemplate(u'#coding: iso8859_15\nöäü?@€'.encode('utf8'))
+        self.assertEqual(u'#coding: iso8859_15\nöäü?@€', ''.join(t.render()))
+        self.assertEqual(t.encoding, 'utf8')
+
+    def test_ignore_late_pep263(self):
+        ''' PEP263 strings must appear within the first two lines '''
+        self.assertRaises(UnicodeError, SimpleTemplate, u'\n\n%#coding: iso8859_15\nöäü?@€'.encode('iso8859_15'))
+        t = SimpleTemplate(u'\n\n%#coding: iso8859_15\nöäü?@€'.encode('utf8'))
+        self.assertEqual(u'\n\nöäü?@€', ''.join(t.render()))
+        self.assertEqual(t.encoding, 'utf8')
+        
 if __name__ == '__main__':
     unittest.main()
 
