@@ -1,0 +1,39 @@
+@import url("default.css");
+/*
+body {
+background: #eee url("http://bottle.paws.de/logo_bg.png") no-repeat scroll 0 0;
+}
+
+div.body {
+border: 1px solid #ccc;
+margin-right: 20px;
+}
+
+div.body h1, div.body h2, div.body h3, div.body h4, div.body h5, div.body h6 {
+border-bottom: 3px solid #003333;
+border: 0px;
+font-weight: bold;
+margin: 20px -20px 10px;
+padding: 3px 0 3px 10px;
+}*/
+
+div.body {
+  background: #fff url("logo_bg.png") no-repeat scroll right 3em;
+}
+
+div.sphinxsidebar ul, div.sphinxsidebar ul ul, div.sphinxsidebar ul.want-points {
+  list-style-image:none;
+  list-style-position:inside;
+  list-style-type:disc;
+}
+
+div.body dt {
+  font-weight: bold;
+}
+
+pre {
+  background-color: #eee;
+  border: 1px solid #ddd;
+  border-width: 0 0 0 5px;
+  padding: 5px 10px;
+}
