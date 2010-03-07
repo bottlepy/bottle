@@ -853,9 +853,6 @@ def dict2json(d):
     response.content_type = 'application/json'
     return json_dumps(d)
 
-# BC: 0.6.4 and needed for run()
-app = default_app = AppStack([Bottle()])
-
 
 def abort(code=500, text='Unknown Error: Appliction stopped.'):
     """ Aborts execution and causes a HTTP error. """
@@ -921,6 +918,13 @@ def static_file(filename, root, guessmime=True, mimetype=None, download=False):
 
 
 # Utilities
+
+def debug(mode=True):
+    """ Change the debug level.
+    There is only one debug level supported at the moment."""
+    global DEBUG
+    DEBUG = bool(mode)
+
 
 def url(routename, **kargs):
     """ Return a named route filled with arguments """
@@ -1587,11 +1591,9 @@ response = Response()
 of :class:`Response` to generate the WSGI response. """
 
 local = threading.local()
+""" Thread-local namespace. Not used by Bottle, but could get handy """
 
-#TODO: Global and app local configuration (debug, defaults, ...) is a mess
-
-def debug(mode=True):
-    """ Change the debug level.
-    There is only one debug level supported at the moment."""
-    global DEBUG
-    DEBUG = bool(mode)
+# Initialize app stack (create first empty Bottle app)
+# BC: 0.6.4 and needed for run()
+app = default_app = AppStack()
+app.push()
