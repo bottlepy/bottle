@@ -57,6 +57,12 @@ class TestOutputFilter(ServerTestBase):
             return u'äöüß'
         self.assertBody(u'äöüß'.encode('iso-8859-15'))
 
+        @self.app.route('/')
+        def test5():
+            bottle.response.content_type='text/html'
+            return u'äöüß'
+        self.assertBody(u'äöüß'.encode('utf8'))
+
     def test_json(self):
         self.app.route('/')(lambda: {'a': 1})
         self.assertBody(bottle.json_dumps({'a': 1}))
