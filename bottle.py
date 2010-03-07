@@ -787,14 +787,6 @@ class Response(threading.local):
 
 # Data Structures
 
-class BaseController(object):
-    _singleton = None
-    def __new__(cls, *a, **k):
-        if not cls._singleton:
-            cls._singleton = object.__new__(cls, *a, **k)
-        return cls._singleton
-
-
 class MultiDict(DictMixin):
     """ A dict that remembers old values for each key """
     # collections.MutableMapping would be better for Python >= 2.6
