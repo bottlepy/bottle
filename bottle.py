@@ -1401,7 +1401,6 @@ class SimpleTemplate(BaseTemplate):
         class PyStmt(object): # Python statement with filter function
             def __init__(self, s, f='_str'): self.s, self.f = s, f
             def __repr__(self): return '%s(%s)' % (self.f, self.s.strip())
-            def __str__(self): return self.s
 
         def prt(txt): # Add a string or a PyStmt object to ptrbuffer
             if ptrbuffer and isinstance(txt, str) \
@@ -1419,7 +1418,8 @@ class SimpleTemplate(BaseTemplate):
                 out = []
                 for s in ptrbuffer:
                     out.append(repr(s))
-                    if '\n' in str(s): out.append('\n'*str(s).count('\n'))
+                    if isinstance(s, PyStmt): s = s.s
+                    if '\n' in s: out.append('\n'*s.count('\n'))
                 codeline = ', '.join(out)
                 if codeline.endswith('\n'): codeline = codeline[:-1] #Remove last newline
                 codeline = codeline.replace('\n, ','\n')
@@ -1437,7 +1437,7 @@ class SimpleTemplate(BaseTemplate):
             if lineno <= 2 and 'coding' in line:
                 m = re.search(r"coding[:=]\s*([-\w\.]+)", line)
                 if m: self.encoding = m.group(1)
-                if m: line = u'# encoding removed: ' + self.encoding
+                if m: line = u'# encoding removed: %s\n' % self.encoding
             if line.strip().startswith('%') and not line.strip().startswith('%%'):
                 line = line.strip().lstrip('%') # Full line
                 cline = line.split('#')[0].strip() # Strip comments

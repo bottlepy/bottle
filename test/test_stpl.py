@@ -97,7 +97,11 @@ class TestSimpleTemplate(unittest.TestCase):
         t = t.render(var=5)
         self.assertEqual(u'6\r\n', ''.join(t))
 
-       
+    def test_detect_encodung(self):
+        t = SimpleTemplate(u'#coding: iso8859_15\nöäü?@€'.encode('utf8'))
+        self.failIfEqual(u'# encoding removed: iso8859_15\nöäü?@€', ''.join(t.render()))
+        t = SimpleTemplate(u'#coding: iso8859_15\nöäü?@€'.encode('iso8859_15'))
+        self.assertEqual(u'# encoding removed: iso8859_15\nöäü?@€', ''.join(t.render()))
 
 if __name__ == '__main__':
     unittest.main()
