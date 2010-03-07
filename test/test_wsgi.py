@@ -50,14 +50,14 @@ class TestWsgi(ServerTestBase):
         self.assertStatus(200, '/any', method='HEAD')
         self.assertBody('test', '/any', method='GET')
         self.assertBody('test', '/any', method='POST')
-        self.assertBody('test', '/any', method='1337')
+        self.assertBody('test', '/any', method='DELETE')
         @bottle.route('/any', method='GET')
         def test2(): return 'test2'
         self.assertBody('test2', '/any', method='GET')
         @bottle.route('/any', method='POST')
         def test2(): return 'test3'
         self.assertBody('test3', '/any', method='POST')
-        self.assertBody('test', '/any', method='1337')
+        self.assertBody('test', '/any', method='DELETE')
 
     def test_500(self):
         """ WSGI: Exceptions within handler code (HTTP 500) """
@@ -106,50 +106,19 @@ class TestWsgi(ServerTestBase):
         self.assertStatus(303, '/')
         self.assertHeader('Location', 'http://127.0.0.1/yes', '/')
 
-    def test_casting(self):
-        """ WSGI: Output Casting (strings an lists) """
-        @bottle.route('/str')
-        def test(): return 'test'
-        self.assertBody('test', '/str')
-        @bottle.route('/list')
-        def test2(): return ['t', 'e', 'st']
-        self.assertBody('test', '/list')
-        @bottle.route('/empty')
-        def test3(): return []
-        self.assertBody('', '/empty')
-        @bottle.route('/none')
-        def test4(): return None
-        self.assertBody('', '/none')
-        @bottle.route('/bad')
-        def test5(): return 12345
-        self.assertStatus(500,'/bad')
-
-    def test_file(self):
-        """ WSGI: Output Casting (files) """
-        @bottle.route('/file')
-        def test(): return StringIO('test')
-        self.assertBody('test', '/file')
-
-    def test_unicode(self):
-        """ WSGI: Test Unicode support """
-        @bottle.route('/unicode')
-        def test3(): return u'äöüß'
-        @bottle.route('/unicode2')
-        def test4(): return [u'äöüß']
-        @bottle.route('/unicode3')
-        def test5():
-            bottle.response.content_type='text/html; charset=iso-8859-15'
-            return u'äöüß'
-        self.assertBody(u'äöüß'.encode('utf8'), '/unicode')
-        self.assertBody(u'äöüß'.encode('utf8'), '/unicode2')
-        self.assertBody(u'äöüß'.encode('iso-8859-15'), '/unicode3')
-
-    def test_json(self):
-        """ WSGI: Autojson feature """
-        @bottle.route('/json')
-        def test(): return {'a': 1}
-        self.assertBody(self.app.jsondump({'a': 1}), '/json')
-        self.assertHeader('Content-Type','application/json', '/json')
+    def test_generator_callback(self):
+        @bottle.route('/yield')
+        def test():
+            bottle.response.header['Test-Header'] = 'test'
+            yield 'foo'
+        @bottle.route('/yield_nothing')
+        def test2():
+            yield
+            bottle.response.header['Test-Header'] = 'test'
+        self.assertBody('foo', '/yield')
+        self.assertHeader('Test-Header', 'test', '/yield')
+        self.assertBody('', '/yield_nothing')
+        self.assertHeader('Test-Header', 'test', '/yield_nothing')
 
     def test_cookie(self):
         """ WSGI: Cookies """
