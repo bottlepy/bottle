@@ -76,7 +76,7 @@ class TestOutputFilter(ServerTestBase):
     def test_generator_callback(self):
         @self.app.route('/')
         def test():
-            bottle.response.header['Test-Header'] = 'test'
+            bottle.response.headers['Test-Header'] = 'test'
             yield 'foo'
         self.assertBody('foo')
         self.assertHeader('Test-Header', 'test')
@@ -85,7 +85,7 @@ class TestOutputFilter(ServerTestBase):
         @self.app.route('/')
         def test():
             yield
-            bottle.response.header['Test-Header'] = 'test'
+            bottle.response.headers['Test-Header'] = 'test'
         self.assertBody('')
         self.assertHeader('Test-Header', 'test')
         

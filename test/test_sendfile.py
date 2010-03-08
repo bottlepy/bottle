@@ -59,11 +59,11 @@ class TestSendFile(unittest.TestCase):
     def test_mime(self):
         """ SendFile: Mime Guessing"""
         f = static_file(os.path.basename(__file__), root='./')
-        self.assertTrue(f.header['Content-Type'] in ('application/x-python-code', 'text/x-python'))
+        self.assertTrue(f.headers['Content-Type'] in ('application/x-python-code', 'text/x-python'))
         f = static_file(os.path.basename(__file__), root='./', mimetype='some/type')
-        self.assertEqual('some/type', f.header['Content-Type'])
+        self.assertEqual('some/type', f.headers['Content-Type'])
         f = static_file(os.path.basename(__file__), root='./', guessmime=False)
-        self.assertEqual('text/plain', f.header['Content-Type'])
+        self.assertEqual('text/plain', f.headers['Content-Type'])
 
     def test_ims(self):
         """ SendFile: If-Modified-Since"""
@@ -76,7 +76,7 @@ class TestSendFile(unittest.TestCase):
         """ SendFile: Download as attachment """
         basename = os.path.basename(__file__)
         f = static_file(basename, root='./', download=True)
-        self.assertEqual('attachment; filename="%s"' % basename, f.header['Content-Disposition'])
+        self.assertEqual('attachment; filename="%s"' % basename, f.headers['Content-Disposition'])
         request.environ['HTTP_IF_MODIFIED_SINCE'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(100))
         f = static_file(os.path.basename(__file__), root='./')
         self.assertEqual(open(__file__,'rb').read(), f.output.read())

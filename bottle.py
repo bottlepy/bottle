@@ -144,12 +144,12 @@ class HTTPResponse(BottleException):
         super(BottleException, self).__init__("HTTP Response %d" % status)
         self.status = int(status)
         self.output = output
-        self.header = HeaderDict(header) if header else None
+        self.headers = HeaderDict(header) if header else None
 
     def apply(self, response):
-        if self.header:
-            for key, value in self.header.iterallitems():
-                response.header[key] = value
+        if self.headers:
+            for key, value in self.headers.iterallitems():
+                response.headers[key] = value
         response.status = self.status
 
 
@@ -441,7 +441,7 @@ class Bottle(object):
         """
         # Empty output is done here
         if not out:
-            response.header['Content-Length'] = 0
+            response.headers['Content-Length'] = 0
             return []
         # Join lists of byte or unicode strings. Mixed lists are NOT supported
         if isinstance(out, list) and isinstance(out[0], (StringType, unicode)):
@@ -451,7 +451,7 @@ class Bottle(object):
             out = out.encode(response.charset)
         # Byte Strings are just returned
         if isinstance(out, StringType):
-            response.header['Content-Length'] = str(len(out))
+            response.headers['Content-Length'] = str(len(out))
             return [out]
         # HTTPError or HTTPException (recursive, because they may wrap anything)
         if isinstance(out, HTTPError):
@@ -725,7 +725,7 @@ class Response(threading.local):
         """ Resets the Response object to its factory defaults. """
         self._COOKIES = None
         self.status = 200
-        self.header = HeaderDict()
+        self.headers = HeaderDict()
         self.content_type = 'text/html; charset=UTF-8'
         self.error = None
         self.app = app
@@ -733,9 +733,11 @@ class Response(threading.local):
     def wsgiheader(self):
         ''' Returns a wsgi conform list of header/value pairs. '''
         for c in self.COOKIES.values():
-            if c.OutputString() not in self.header.getall('Set-Cookie'):
-                self.header.append('Set-Cookie', c.OutputString())
-        return list(self.header.iterallitems())
+            if c.OutputString() not in self.headers.getall('Set-Cookie'):
+                self.headers.append('Set-Cookie', c.OutputString())
+        return list(self.headers.iterallitems())
+        
+    headerlist = property(wsgiheader)
 
     @property
     def charset(self):
@@ -772,10 +774,10 @@ class Response(threading.local):
 
     def get_content_type(self):
         """ Current 'Content-Type' header. """
-        return self.header['Content-Type']
+        return self.headers['Content-Type']
 
     def set_content_type(self, value):
-        self.header['Content-Type'] = value
+        self.headers['Content-Type'] = value
 
     content_type = property(get_content_type, set_content_type, None,
                             get_content_type.__doc__)

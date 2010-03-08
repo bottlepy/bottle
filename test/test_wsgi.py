@@ -109,12 +109,12 @@ class TestWsgi(ServerTestBase):
     def test_generator_callback(self):
         @bottle.route('/yield')
         def test():
-            bottle.response.header['Test-Header'] = 'test'
+            bottle.response.headers['Test-Header'] = 'test'
             yield 'foo'
         @bottle.route('/yield_nothing')
         def test2():
             yield
-            bottle.response.header['Test-Header'] = 'test'
+            bottle.response.headers['Test-Header'] = 'test'
         self.assertBody('foo', '/yield')
         self.assertHeader('Test-Header', 'test', '/yield')
         self.assertBody('', '/yield_nothing')
