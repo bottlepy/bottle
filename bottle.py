@@ -1472,9 +1472,9 @@ class SimpleTemplate(BaseTemplate):
                 for i, part in enumerate(re.split(r'\{\{(.*?)\}\}', line)):
                     if part and i%2:
                         if part.startswith('!'):
-                            prt(PyStmt(part[1:], f='_escape'))
+                            prt(PyStmt(part[1:], f='_str'))
                         else:
-                            prt(PyStmt(part))
+                            prt(PyStmt(part, f='_escape'))
                     elif part:
                         prt(part)
         flush()

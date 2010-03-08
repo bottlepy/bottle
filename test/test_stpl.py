@@ -42,9 +42,14 @@ class TestSimpleTemplate(unittest.TestCase):
         self.assertEqual(u'<[1, 2]>', ''.join(t.render(var=[1,2])))
 
     def test_escape(self):
-        t = SimpleTemplate('<{{!var}}>')
+        t = SimpleTemplate('<{{var}}>')
         self.assertEqual(u'<b>', ''.join(t.render(var='b')))
         self.assertEqual(u'<&lt;&amp;&gt;>', ''.join(t.render(var='<&>')))
+
+    def test_noescape(self):
+        t = SimpleTemplate('<{{!var}}>')
+        self.assertEqual(u'<b>', ''.join(t.render(var='b')))
+        self.assertEqual(u'<<&>>', ''.join(t.render(var='<&>')))
 
     def test_blocks(self):
         """ Templates: Code blocks and loops """
