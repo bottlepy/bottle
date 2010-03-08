@@ -17,7 +17,7 @@ The template syntax is a very thin layer around the Python language. It's main p
 
 .. rubric:: Code lines
 
-Lines starting with ``%`` are interpreted as python code. The only difference between this and normal python code is that you have to explicitly close blocks with an ``%end`` statement. This way it is possible to align the code to the rest of the template without worrying about correct indentions. Whitespace in front of the code line is compleately ignored.
+Lines starting with ``%`` are interpreted as python code. The only difference between this and normal python code is that you have to explicitly close blocks with an ``%end`` statement. This way it is possible to align the code to the surrounding template without worrying about correct indentions. Whitespace in front of a code line is compleately ignored.
 
 Here is an example::
 
@@ -29,7 +29,7 @@ Here is an example::
 
 .. rubric:: Inline Statements
 
-Any occurrence of ``{{stmt}}`` in text-lines is replaced by the return value of the included python statement. In most cases this is just the name of a local variable, but any python statement returning a string is allowed.
+Lines *not* starting with ``%`` are printed as text. Any occurrence of ``{{stmt}}`` in text-lines is replaced by the return value of the included python statement. In most cases this is just the name of a local variable, but any python statement returning a string is allowed.
 
 ::
 
@@ -42,11 +42,13 @@ Any occurrence of ``{{stmt}}`` in text-lines is replaced by the return value of 
 
 .. rubric:: The ``%include`` Statement
 
-You can include other templates using the ``%include name [options]`` statement. The *name* parameter specifies the name or path of the template to be included. The rest of the line is interpreted as a comma-separated list of ``key=stmt`` pairs similar to the keyword arguments of a function call. These are passed to the :func:`render` method of the included template.
+You can include other templates using the ``%include sub_template [kwargs]`` statement. The ``sub_template`` parameter specifies the name or path of the template to be included. The rest of the line is interpreted as a comma-separated list of ``key=statement`` pairs similar to keyword arguments in function calls. They are passed to the sub-template analogous to a :func:`render` call. The ``**kwargs`` syntax for passing a dict is allowed too.
 
 .. rubric:: The ``%rebase`` Statement
 
-Base-templates are templates that contain an empty ``%include`` statement. Any other template can use the ``%rebase basename [options]`` statement to include itself into the base-template at the position of the empty ``%include`` statement. This feature simulates the inheritance support of most other template engines and can be seen as a *reverse include*. It is best described by a small example:
+Base-templates are templates that contain an empty ``%include`` statement. Any other template can use the ``%rebase base_template [kwargs]`` statement to inject itself into  a base-template. The ``%include`` statement of the base-template is then replaced by the rendered result of the rebasing template. The arguments specified in ``kwargs`` are accessible from within the base-template as normal template variables. This feature simulates the inheritance support of most other template engines and can be seen as a *reverse include*. It is best described by example:
+
+.. highlight:: html
 
 A base template named ``html.tpl``::
 

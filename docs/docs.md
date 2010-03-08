@@ -351,7 +351,7 @@ the result.
     def hello(name):
         return template('hello_template', username=name)
 
-The `@view` decorator does is another option:
+The `@view` decorator is another option:
 
     #!Python
     @route('/hello/:name')
@@ -359,9 +359,9 @@ The `@view` decorator does is another option:
     def hello(name):
         return dict(username=name)
 
-Both examples would load the template `hello_template.tpl` with the `username` variable set to the URL `:name` part and return the result as a string.
+Both examples load the template `hello_template.tpl` with the `username` variable set to the URL `:name` part and return the result as a string.
 
-The `hello_template.tpl` file looks this:
+A simple `hello_template.tpl` file looks this:
 
     #!html
     <h1>Hello {{username}}</h1>
@@ -389,14 +389,16 @@ cache. Call `bottle.TEMPLATES.clear()` to do so.
 
 ## Template Syntax
 
+An updated and more detailed documentation is available [here](/api/html/stpl.html).
+
 The template syntax is a very thin layer around the Python language. It's main purpose is to ensure correct indention of blocks, so you can format your template without worrying about indentions. It does not prevent your template code from doing bad stuff, so **never ever** execute template code from untrusted sources. 
 
 Here is how it works:
 
-  * Lines starting with `%` are interpreted as python code. You can intend these lines but you don't have to. The template engine handles the correct indention of python blocks.
+  * Lines starting with `%` are interpreted as python code. You can indent these lines but you don't have to. The template engine handles the correct indention of python blocks.
   * A line starting with `%end` closes a python block opened by `%if ...`, `%for ...` or other block statements. Explicitly closing of blocks is required.
   * Every other line is just returned as text.
-  * `{{...}}` within a text line is replaced by the result of the included python statement. This is useful to include template variables.
+  * `{{...}}` within a text line is replaced by the result of the included python statement. This is used to include template variables.
   * The two statements `%include` and `%rebase` have special meanings
 
 Here is a simple example, printing a HTML-list of names.
@@ -412,7 +414,7 @@ Here is a simple example, printing a HTML-list of names.
     import template
     print template('mylist', names=['Marc','Susan','Alice','Bob'])
 
-You can include other template using the `%include` statement followed by a template name and an optional parameter list. The include-line is replaced by the rendered result of the named sub-template.
+You can include other template using the `%include` statement followed by a template name and an optional argument list. The include-line is replaced by the rendered result of the named sub-template.
 
     #!html
     <h1>{{title}}</h1>
@@ -435,7 +437,7 @@ The `%rebase` statement is the inverse of `%include` and is used to render a tem
     %rebase paragraph_template title='Hello World'
     hello world!
 
-Ad a last thing: You can add `\\` to the end of a text line preceding a line of python code to suppress the line break.
+And a last thing: You can add `\\` to the end of a text line preceding a line of python code to suppress the line break.
 
     #!html
     List: \\
