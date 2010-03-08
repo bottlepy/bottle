@@ -101,7 +101,6 @@ class ModuleChecker(object):
 
     def loop(self, interval, callback):
         while not self.check():
-            print 'foo'
             time.sleep(interval)
         callback()
 
