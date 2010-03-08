@@ -912,7 +912,9 @@ def static_file(filename, root, guessmime=True, mimetype=None, download=False):
     else:
         return HTTPResponse(open(filename, 'rb'), header=header)
 
-
+def url(routename, **kargs):
+    """ Helper generates URLs out of named routes """
+    return app().get_url(routename, **kargs)
 
 
 
@@ -973,6 +975,13 @@ def cookie_is_encoded(data):
     return bool(data.startswith(u'!'.encode('ascii')) and u'?'.encode('ascii') in data) #2to3 hack
 
 
+def tonativefunc(enc='utf-8'):
+    ''' Returns a function that turns everything into 'native' strings using enc '''
+    if sys.version_info >= (3,0,0):
+        return lambda x: x.decode(enc) if isinstance(x, bytes) else str(x)
+    return lambda x: x.encode(enc) if isinstance(x, unicode) else str(x)
+
+
 def yieldroutes(func):
     """ Return a generator for routes that match the signature (name, args) 
     of the func parameter. This may yield more than one route if the function
@@ -990,6 +999,9 @@ def yieldroutes(func):
     for arg in spec[0][argc:]:
         path += '/:%s' % arg
         yield path
+
+
+
 
 
 
@@ -1368,88 +1380,124 @@ class Jinja2Template(BaseTemplate):
 
 
 class SimpleTemplate(BaseTemplate):
-    re_python = re.compile(r'^\s*%\s*(?:(if|elif|else|try|except|finally|for|'
-                            'while|with|def|class)|(include|rebase)|(end)|(.*))')
-    re_inline = re.compile(r'\{\{(.*?)\}\}')
-    dedent_keywords = ('elif', 'else', 'except', 'finally')
+    blocks = ('if','elif','else','except','finally','for','while','with','def','class')
+    dedent_blocks = ('elif', 'else', 'except', 'finally')
 
     def prepare(self):
         if self.source:
-            code = self.translate(self.source)
-            self.co = compile(code, '<string>', 'exec')
+            self.code = self.translate(self.source)
+            self.co = compile(self.code, '<string>', 'exec')
         else:
-            code = self.translate(open(self.filename).read())
-            self.co = compile(code, self.filename, 'exec')
+            self.code = self.translate(open(self.filename).read())
+            self.co = compile(self.code, self.filename, 'exec')
 
     def translate(self, template):
-        indent = 0
-        strbuffer = []
-        code = []
-        self.includes = dict()
-        class PyStmt(str):
-            def __repr__(self): return 'str(' + self + ')'
-        def flush(allow_nobreak=False):
-            if len(strbuffer):
-                if allow_nobreak and strbuffer[-1].endswith("\\\\\n"):
-                    strbuffer[-1]=strbuffer[-1][:-3]
-                code.append(' ' * indent + "_stdout.append(%s)" % repr(''.join(strbuffer)))
-                code.append((' ' * indent + '\n') * len(strbuffer)) # to preserve line numbers
-                del strbuffer[:]
-        def cadd(line): code.append(" " * indent + line.strip() + '\n')
+        stack = [] # Current Code indentation
+        lineno = 0 # Current line of code
+        ptrbuffer = [] # Buffer for printable strings and PyStmt instances
+        codebuffer = [] # Buffer for generated python code
+        touni = functools.partial(unicode, encoding=self.encoding)
+        
+        class PyStmt(object): # Python statement with filter function
+            def __init__(self, s, f='_str'): self.s, self.f = s, f
+            def __repr__(self): return '%s(%s)' % (self.f, self.s.strip())
+
+        def prt(txt): # Add a string or a PyStmt object to ptrbuffer
+            if ptrbuffer and isinstance(txt, str) \
+            and isinstance(ptrbuffer[-1], str): # Requied for line preserving
+                ptrbuffer[-1] += txt
+            else: ptrbuffer.append(txt)
+
+        def flush(): # Flush the ptrbuffer
+            if ptrbuffer:
+                # Remove escaped newline in last string
+                if isinstance(ptrbuffer[-1], unicode):
+                    if ptrbuffer[-1].rstrip('\n\r').endswith('\\\\'):
+                        ptrbuffer[-1] = ptrbuffer[-1].rstrip('\n\r')[:-2]
+                # Add linebreaks to output code, if strings contains newlines
+                out = []
+                for s in ptrbuffer:
+                    out.append(repr(s))
+                    if isinstance(s, PyStmt): s = s.s
+                    if '\n' in s: out.append('\n'*s.count('\n'))
+                codeline = ', '.join(out)
+                if codeline.endswith('\n'): codeline = codeline[:-1] #Remove last newline
+                codeline = codeline.replace('\n, ','\n')
+                codeline = "_printlist([%s])" % codeline
+                del ptrbuffer[:] # Do this before calling code() again
+                code(codeline)
+
+        def code(stmt):
+            for line in stmt.splitlines():
+                codebuffer.append('  ' * len(stack) + line.strip())
+
         for line in template.splitlines(True):
-            m = self.re_python.match(line)
-            if m:
-                flush(allow_nobreak=True)
-                keyword, subtpl, end, statement = m.groups()
-                if keyword:
-                    if keyword in self.dedent_keywords:
-                        indent -= 1
-                    cadd(line[m.start(1):])
-                    indent += 1
-                elif subtpl:
-                    tmp = line[m.end(2):].strip().split(None, 1)
-                    if not tmp:
-                      cadd("_stdout.extend(_base)")
-                    else:
-                      name = tmp[0]
-                      args = tmp[1:] and tmp[1] or ''
-                      if name not in self.includes:
-                        self.includes[name] = SimpleTemplate(name=name, lookup=self.lookup)
-                      if subtpl == 'include':
-                        cadd("_ = _includes[%s].execute(_stdout, %s)"
-                             % (repr(name), args))
-                      else:
-                        cadd("_tpl['_rebase'] = (_includes[%s], dict(%s))"
-                             % (repr(name), args))
-                elif end:
-                    indent -= 1
-                    cadd('#' + line[m.start(3):])
-                elif statement:
-                    cadd(line[m.start(4):])
-            else:
-                splits = self.re_inline.split(line) # text, (expr, text)*
-                if len(splits) == 1:
-                    strbuffer.append(line)
+            lineno += 1
+            line = unicode(line, encoding=self.encoding) if not isinstance(line, unicode) else line
+            if lineno <= 2 and 'coding' in line:
+                m = re.search(r"%.*coding[:=]\s*([-\w\.]+)", line)
+                if m: self.encoding = m.group(1)
+                if m: line = line.replace('coding','coding (removed)')
+            if line.strip().startswith('%') and not line.strip().startswith('%%'):
+                line = line.strip().lstrip('%') # Full line
+                cline = line.split('#')[0]
+                cline = cline.strip()
+                cmd = line.split()[0] # Command word
+                flush() ##encodig
+                if cmd in self.blocks:
+                    if cmd in self.dedent_blocks: cmd = stack.pop() #last block ended
+                    code(line)
+                    if cline.endswith(':'): stack.append(cmd) # false: one line blocks
+                elif cmd == 'end' and stack:
+                    code('#end(%s) %s' % (stack.pop(), line[3:]))
+                elif cmd == 'include':
+                    p = cline.split(None, 2)[1:]
+                    if len(p) == 2:
+                        code("_=_include(%s, _stdout, %s)" % (repr(p[0]), p[1]))
+                    elif p:
+                        code("_=_include(%s, _stdout)" % repr(p[0]))
+                    else: # Empty %include -> reverse of %rebase
+                        code("_printlist(_base)")
+                elif cmd == 'rebase':
+                    p = cline.split(None, 2)[1:]
+                    if len(p) == 2:
+                        code("globals()['_rebase']=(%s, dict(%s))" % (repr(p[0]), p[1]))
+                    elif p:
+                        code("globals()['_rebase']=(%s, {})" % repr(p[0]))
                 else:
-                    flush()
-                    for i in range(1, len(splits), 2):
-                        splits[i] = PyStmt(splits[i])
-                    splits = [x for x in splits if bool(x)]
-                    cadd("_stdout.extend(%s)" % repr(splits))
+                    code(line)
+            else: # Line starting with text (not '%') or '%%' (escaped)
+                if line.strip().startswith('%%'):
+                    line = line.replace('%%', '%', 1)
+                for i, part in enumerate(re.split(r'\{\{(.*?)\}\}', line)):
+                    if part and i%2:
+                        if part.startswith('!'):
+                            prt(PyStmt(part[1:], f='_escape'))
+                        else:
+                            prt(PyStmt(part))
+                    elif part:
+                        prt(part)
         flush()
-        return ''.join(code)
+        return '\n'.join(codebuffer) + '\n'
+
+    def subtemplate(self, name, stdout, **args):
+        return self.__class__(name=name, lookup=self.lookup).execute(stdout, **args)
 
     def execute(self, stdout, **args):
-        args['_stdout'] = stdout
-        args['_includes'] = self.includes
-        args['_tpl'] = args
-        eval(self.co, args)
-        if '_rebase' in args:
-            subtpl, args = args['_rebase']
-            args['_base'] = stdout[:] #copy stdout
+        enc = self.encoding
+        def _str(x): return touni(x, enc)
+        def _escape(x): return cgi.escape(touni(x, enc))
+        env = {'_stdout': stdout, '_printlist': stdout.extend,
+               '_include': self.subtemplate, '_str': _str, '_escape': _escape}
+        env.update(args)
+        eval(self.co, env)
+        if '_rebase' in env:
+            subtpl, rargs = env['_rebase']
+            subtpl = self.__class__(name=subtpl, lookup=self.lookup)
+            rargs['_base'] = stdout[:] #copy stdout
             del stdout[:] # clear stdout
-            return subtpl.execute(stdout, **args)
-        return args
+            return subtpl.execute(stdout, **rargs)
+        return env
 
     def render(self, **args):
         """ Render the template using keyword arguments as local variables. """
@@ -1580,6 +1628,9 @@ ERROR_PAGE_TEMPLATE = SimpleTemplate("""
 </html>
 """) #TODO: use {{!bla}} instead of cgi.escape as soon as strlunicode is merged
 """ The HTML template used for error messages """
+
+TRACEBACK_TEMPLATE = '<h2>Error:</h2>\n<pre>%s</pre>\n' \
+                     '<h2>Traceback:</h2>\n<pre>%s</pre>\n'
 
 request = Request()
 """ Whenever a page is requested, the :class:`Bottle` WSGI handler stores
