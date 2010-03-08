@@ -507,7 +507,7 @@ class Bottle(object):
             if response.status in (100, 101, 204, 304) or request.method == 'HEAD':
                 out = [] # rfc2616 section 4.3
             status = '%d %s' % (response.status, HTTP_CODES[response.status])
-            start_response(status, response.wsgiheader())
+            start_response(status, response.headerlist)
             return out
         except (KeyboardInterrupt, SystemExit, MemoryError):
             raise
@@ -736,12 +736,12 @@ class Response(threading.local):
             if c.OutputString() not in self.headers.getall('Set-Cookie'):
                 self.headers.append('Set-Cookie', c.OutputString())
         return list(self.headers.iterallitems())
-        
     headerlist = property(wsgiheader)
+
 
     @property
     def charset(self):
-        """ Return the charset specified tin the content-type header.
+        """ Return the charset specified in the content-type header.
         
             This defaults to `UTF-8`.
         """
@@ -822,13 +822,15 @@ class MultiDict(DictMixin):
 
 class HeaderDict(MultiDict):
     """ Same as :class:`MultiDict`, but title()s the keys and overwrites by default. """
-    def __contains__(self, key): return MultiDict.__contains__(self, key.title())
-    def __getitem__(self, key): return MultiDict.__getitem__(self, key.title())
-    def __delitem__(self, key): return MultiDict.__delitem__(self, key.title())
+    def __contains__(self, key): return MultiDict.__contains__(self, self.httpkey(key))
+    def __getitem__(self, key): return MultiDict.__getitem__(self, self.httpkey(key))
+    def __delitem__(self, key): return MultiDict.__delitem__(self, self.httpkey(key))
     def __setitem__(self, key, value): self.replace(key, value)
-    def append(self, key, value): return MultiDict.append(self, key.title(), str(value))
-    def replace(self, key, value): return MultiDict.replace(self, key.title(), str(value))
-    def getall(self, key): return MultiDict.getall(self, key.title())
+    def append(self, key, value): return MultiDict.append(self, self.httpkey(key), str(value))
+    def replace(self, key, value): return MultiDict.replace(self, self.httpkey(key), str(value))
+    def getall(self, key): return MultiDict.getall(self, self.httpkey(key))
+    def httpkey(self, key): return str(key).replace('_','-').title()
+
 
 class AppStack(list):
     """ A stack implementation. """

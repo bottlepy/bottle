@@ -34,7 +34,7 @@ class TestMultiDict(unittest.TestCase):
         self.assertEqual(['6'], m.getall('abc_def'))
         m.append('abc_def', 7)
         self.assertEqual(['6', '7'], m.getall('abc_def'))
-        self.assertEqual([('Abc_Def', '6'), ('Abc_Def', '7')], list(m.iterallitems()))
+        self.assertEqual([('Abc-Def', '6'), ('Abc-Def', '7')], list(m.iterallitems()))
    
 if __name__ == '__main__':
     unittest.main()
