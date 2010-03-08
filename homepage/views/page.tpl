@@ -1,6 +1,6 @@
 %rebase basehtml title=page.title.encode('utf-8')
 <div id='mdpage'>
-{{page.html.encode('utf-8')}}
+{{!page.html.encode('utf-8')}}
 </div>
 <div style="text-align: left; color:grey;">Edit this page at <a href="http://github.com/defnull/bottle/blob/master/docs/{{page.name}}.md">GitHub</a></div>
 %if page.is_blogpost:

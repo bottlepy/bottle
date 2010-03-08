@@ -389,7 +389,7 @@ cache. Call `bottle.TEMPLATES.clear()` to do so.
 
 ## Template Syntax
 
-An updated and more detailed documentation is available [here](/api/html/stpl.html).
+An updated and more detailed documentation is available [here](/api/stpl.html).
 
 The template syntax is a very thin layer around the Python language. It's main purpose is to ensure correct indention of blocks, so you can format your template without worrying about indentions. It does not prevent your template code from doing bad stuff, so **never ever** execute template code from untrusted sources. 
 

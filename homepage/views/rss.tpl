@@ -1,4 +1,3 @@
-%from cgi import escape
 <?xml version="1.0" encoding="utf-8" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
@@ -12,7 +11,7 @@
         <link>{{link}}</link>
         <guid isPermaLink="true">{{link}}</guid>
         <pubDate>{{post.blogtime.strftime('%a, %d %b %Y %H:%M:%S +0000')}}</pubDate>
-        <description>{{escape(post.preview.encode('utf8'))}}</description>
+        <description>{{post.preview.encode('utf8')}}</description>
       </item>
     %end
   </channel>
