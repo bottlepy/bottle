@@ -1347,11 +1347,11 @@ class CheetahTemplate(BaseTemplate):
 
 class Jinja2Template(BaseTemplate):
     env = None # hopefully, a Jinja environment is actually thread-safe
-
+    prefix = "#"
     def prepare(self):
         if not self.env:
             from jinja2 import Environment, FunctionLoader
-            self.env = Environment(line_statement_prefix="#", loader=FunctionLoader(self.loader))
+            self.env = Environment(line_statement_prefix=self.prefix, loader=FunctionLoader(self.loader))
         if self.source:
             self.tpl = self.env.from_string(self.source)
         else:
