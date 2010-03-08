@@ -40,6 +40,8 @@ Lines *not* starting with ``%`` are printed as text. Any occurrence of ``{{stmt}
     Please login.
   %end
 
+HTML special characters are escaped by default to prevent `XSS <http://en.wikipedia.org/wiki/Cross-Site_Scripting>`_ attacks. Use the ``{{!stmt}}`` syntax to suppress escaping for that statement.
+
 .. rubric:: The ``%include`` Statement
 
 You can include other templates using the ``%include sub_template [kwargs]`` statement. The ``sub_template`` parameter specifies the name or path of the template to be included. The rest of the line is interpreted as a comma-separated list of ``key=statement`` pairs similar to keyword arguments in function calls. They are passed to the sub-template analogous to a :func:`render` call. The ``**kwargs`` syntax for passing a dict is allowed too.
