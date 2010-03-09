@@ -195,5 +195,30 @@ class TestDecorators(ServerTestBase):
         self.assertEqual(['d/:x','d/:x/:y'],list(bottle.yieldroutes(d)))
         self.assertEqual(['e','e/:x','e/:x/:y'],list(bottle.yieldroutes(e)))
 
+
+class TestAppMounting(ServerTestBase):
+    def setUp(self):
+        ServerTestBase.setUp(self)
+        self.subapp = bottle.Bottle()
+    
+    def test_basicmounting(self):
+        bottle.app().mount(self.subapp, '/test')
+        self.assertStatus(404, '/')
+        self.assertStatus(404, '/test')
+        self.assertStatus(404, '/test/')
+        self.assertStatus(404, '/test/test/bar')
+        @self.subapp.route('/')
+        @self.subapp.route('/test/:test')
+        def test(test='foo'):
+            return test
+        self.assertStatus(404, '/')
+        self.assertStatus(404, '/test')
+        self.assertStatus(200, '/test/')
+        self.assertBody('foo', '/test/')
+        self.assertStatus(200, '/test/test/bar')
+        self.assertBody('bar', '/test/test/bar')
+
+
+    
 if __name__ == '__main__':
     unittest.main()

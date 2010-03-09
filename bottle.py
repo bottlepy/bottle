@@ -87,9 +87,9 @@ from urllib import quote as urlquote
 from urlparse import urlunsplit, urljoin
 
 try:
-  from collections import MutableMapping as DictMixin
+    from collections import MutableMapping as DictMixin
 except ImportError: # pragma: no cover
-  from UserDict import DictMixin
+    from UserDict import DictMixin
 
 try:
     from urlparse import parse_qs
@@ -341,6 +341,7 @@ class Bottle(object):
             You usually don't do that. Use `bottle.app.push()` instead.
         """
         self.routes = Router()
+        self.mounts = {}
         self.default_route = None
         self.error_handler = {}
         self.catchall = catchall
@@ -349,6 +350,23 @@ class Bottle(object):
         self.castfilter = []
         if autojson and json_dumps:
             self.add_filter(dict, dict2json)
+
+    def mount(self, app, script_path):
+        ''' Mount a Bottle application to a specific URL prefix '''
+        if not isinstance(app, Bottle):
+            raise TypeError('Only Bottle instances are supported for now.')
+        script_path = '/'.join(filter(None, script_path.split('/')))
+        path_depth = script_path.count('/') + 1
+        if not script_path:
+            raise TypeError('Empty script_path. Perhaps you want a merge()?')
+        for other in self.mounts:
+            if other.startswith(script_path):
+                raise TypeError('Conflict with existing mount: %s' % other)
+        @self.route('/%s/:#.*#' % script_path, method="ANY")
+        def mountpoint():
+            request.path_shift(path_depth)
+            return app.handle(request.path, request.method)
+        self.mounts[script_path] = app
 
     def add_filter(self, ftype, func):
         ''' Register a new output filter. Whenever bottle hits a handler output
@@ -421,7 +439,7 @@ class Bottle(object):
 
         handler, args = self.match_url(request.path, request.method)
         if not handler:
-            return HTTPError(404, "Not found")
+            return HTTPError(404, "Not found:" + request.path)
 
         try:
             return handler(**args)
@@ -553,10 +571,32 @@ class Request(threading.local, DictMixin):
         self.environ = environ
         self.app = app
         # These attributes are used anyway, so it is ok to compute them here
-        self.path = environ.get('PATH_INFO', '/')
-        if not self.path.startswith('/'):
-            self.path = '/' + self.path
+        self.path = '/' + environ.get('PATH_INFO', '/').lstrip('/')
         self.method = environ.get('REQUEST_METHOD', 'GET').upper()
+
+    def path_shift(self, count=1):
+        ''' Shift some levels of PATH_INFO into SCRIPT_NAME and return the
+            moved part. count defaults to 1'''
+        #/a/b/  /c/d  --> 'a','b'  'c','d'
+        pathlist = self.path.strip('/').split('/')
+        scriptlist = self.environ.get('SCRIPT_NAME','/').strip('/').split('/')
+        if pathlist and pathlist[0] == '': pathlist = []
+        if scriptlist and scriptlist[0] == '': scriptlist = []
+        if count > 0 and count <= len(pathlist):
+            moved = pathlist[:count]
+            scriptlist = scriptlist + moved
+            pathlist = pathlist[count:]
+        elif count < 0 and count >= -len(scriptlist):
+            moved = scriptlist[count:]
+            pathlist = moved + pathlist
+            scriptlist = scriptlist[:count]
+        else:
+            empty = 'SCRIPT_NAME' if count < 0 else 'PATH_INFO'
+            raise AssertionError("Cannot shift. Nothing left from %s" % empty)
+        self['PATH_INFO'] = self.path =  '/' + '/'.join(pathlist) \
+                          + ('/' if self.path.endswith('/') and pathlist else '')
+        self['SCRIPT_NAME'] = '/' + '/'.join(scriptlist)
+        return '/'.join(moved)
 
     def __getitem__(self, key):
         """ Shortcut for Request.environ.__getitem__ """
@@ -737,7 +777,6 @@ class Response(threading.local):
                 self.headers.append('Set-Cookie', c.OutputString())
         return list(self.headers.iterallitems())
     headerlist = property(wsgiheader)
-
 
     @property
     def charset(self):
@@ -930,11 +969,6 @@ def debug(mode=True):
     There is only one debug level supported at the moment."""
     global DEBUG
     DEBUG = bool(mode)
-
-
-def url(routename, **kargs):
-    """ Return a named route filled with arguments """
-    return app().get_url(routename, **kargs)
 
 
 def parse_date(ims):
@@ -1652,4 +1686,3 @@ local = threading.local()
 # BC: 0.6.4 and needed for run()
 app = default_app = AppStack()
 app.push()
-
