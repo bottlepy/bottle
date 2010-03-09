@@ -23,6 +23,11 @@ class TestSimpleTemplate(unittest.TestCase):
         t = SimpleTemplate('start {{var}} end').render(var=u'äöü')
         self.assertEqual(u'start äöü end', ''.join(t))
 
+    def test_unicode_code(self):
+        """ Templates: Unicode code in file"""
+        t = SimpleTemplate(name='./views/stpl_unicode.tpl').render(var='äöü')
+       self.assertEqual(u'start ñç äöü end\n', ''.join(t))
+
     def test_import(self):
         """ Templates: import statement"""
         t = '%from base64 import b64encode\nstart {{b64encode(var.encode("ascii") if hasattr(var, "encode") else var)}} end'

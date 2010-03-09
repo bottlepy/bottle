@@ -1430,7 +1430,9 @@ class SimpleTemplate(BaseTemplate):
         
         class PyStmt(object): # Python statement with filter function
             def __init__(self, s, f='_str'): self.s, self.f = s, f
-            def __repr__(self): return '%s(%s)' % (self.f, self.s.strip())
+            def __repr__(self):
+                # __repr__() must return string, not unicode
+                return '%s(%s)' % (self.f, self.s.strip().encode('utf8'))
 
         def prt(txt): # Add a string or a PyStmt object to ptrbuffer
             if ptrbuffer and isinstance(txt, str) \
@@ -1447,7 +1449,10 @@ class SimpleTemplate(BaseTemplate):
                 # Add linebreaks to output code, if strings contains newlines
                 out = []
                 for s in ptrbuffer:
-                    out.append(repr(s))
+                    if isinstance(s, PyStmt):
+                        out.append(repr(s).decode('utf8'))
+                    else:
+                        out.append(repr(s))
                     if isinstance(s, PyStmt): s = s.s
                     if '\n' in s: out.append('\n'*s.count('\n'))
                 codeline = ', '.join(out)
