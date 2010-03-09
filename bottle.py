@@ -1272,13 +1272,17 @@ class BaseTemplate(object):
     """ Base class and minimal API for template adapters """
     extentions = ['tpl','html','thtml','stpl']
 
-    def __init__(self, source=None, name=None, lookup=[], encoding='utf8'):
+    def __init__(self, source=None, name=None, lookup=[], encoding='utf8',
+                 filters=None, tests=None):
         """ Create a new template.
         If the source parameter (str or buffer) is missing, the name argument
         is used to guess a template filename. Subclasses can assume that
         either self.source or self.filename is set. Both are strings.
         The lookup-argument works similar to sys.path for templates.
         The encoding parameter is used to decode byte strings or files.
+        The parameters filters and tests are both jinja2 specific. The both
+        contains dicts of the form {'name': function, ...} in order to pass them
+        to jinja2.environment.filters or jinja2.environment..tests.
         """
         self.name = name
         self.source = source.read() if hasattr(source, 'read') else source
@@ -1291,7 +1295,7 @@ class BaseTemplate(object):
                 raise TemplateError('Template %s not found.' % repr(name))
         if not self.source and not self.filename:
             raise TemplateError('No template specified.')
-        self.prepare()
+        self.prepare(filters=filters, tests=tests)
 
     @classmethod
     def search(cls, name, lookup=[]):
@@ -1324,7 +1328,7 @@ class MakoTemplate(BaseTemplate):
     default_filters=None
     global_variables={}
 
-    def prepare(self):
+    def prepare(self, **kwargs):
         from mako.template import Template
         from mako.lookup import TemplateLookup
         #TODO: This is a hack... http://github.com/defnull/bottle/issues#issue/8
@@ -1345,7 +1349,7 @@ class MakoTemplate(BaseTemplate):
 
 
 class CheetahTemplate(BaseTemplate):
-    def prepare(self):
+    def prepare(self, **kwargs):
         from Cheetah.Template import Template
         self.context = threading.local()
         self.context.vars = {}
@@ -1364,10 +1368,21 @@ class CheetahTemplate(BaseTemplate):
 class Jinja2Template(BaseTemplate):
     env = None # hopefully, a Jinja environment is actually thread-safe
     prefix = "#"
-    def prepare(self):
+    def prepare(self, filters=None, tests=None):
+        """
+        Both parameters are passed through the template function.
+        :param filters: dict with custom filters {"name": function}
+        :param tests: dict with custom tests {"name": function}
+        """
         if not self.env:
             from jinja2 import Environment, FunctionLoader
-            self.env = Environment(line_statement_prefix=self.prefix, loader=FunctionLoader(self.loader))
+            self.env = Environment(line_statement_prefix=self.prefix,
+                        loader=FunctionLoader(self.loader)
+                       )
+            if filters:
+                self.env.filters.update(filters)
+            if tests:
+                self.env.tests.update(tests)
         if self.source:
             self.tpl = self.env.from_string(self.source)
         else:
@@ -1387,7 +1402,7 @@ class SimpleTemplate(BaseTemplate):
     blocks = ('if','elif','else','except','finally','for','while','with','def','class')
     dedent_blocks = ('elif', 'else', 'except', 'finally')
 
-    def prepare(self):
+    def prepare(self, **kwargs):
         if self.source:
             self.code = self.translate(self.source)
             self.co = compile(self.code, '<string>', 'exec')
@@ -1518,9 +1533,15 @@ def template(tpl, template_adapter=SimpleTemplate, **args):
     lookup = args.get('template_lookup', TEMPLATE_PATH)
     if tpl not in TEMPLATES or DEBUG:
         if "\n" in tpl or "{" in tpl or "%" in tpl or '$' in tpl:
-            TEMPLATES[tpl] = template_adapter(source=tpl, lookup=lookup)
+            TEMPLATES[tpl] = template_adapter(source=tpl, lookup=lookup,
+                                filters=args.get('filters'),
+                                tests=args.get('tests')
+                             )
         else:
-            TEMPLATES[tpl] = template_adapter(name=tpl, lookup=lookup)
+            TEMPLATES[tpl] = template_adapter(name=tpl, lookup=lookup,
+                                filters=args.get('filters'),
+                                tests=args.get('tests')
+                             )
     if not TEMPLATES[tpl]:
         abort(500, 'Template (%s) not found' % tpl)
     args['abort'] = abort

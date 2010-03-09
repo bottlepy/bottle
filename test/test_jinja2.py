@@ -1,5 +1,7 @@
+# -*- coding: utf-8 -*-
 import unittest
 from bottle import Jinja2Template
+
 
 class TestJinja2Template(unittest.TestCase):
 
@@ -30,6 +32,24 @@ class TestJinja2Template(unittest.TestCase):
         """ Templates: Jinja2 lookup and inherience """
         t = Jinja2Template(name='jinja2_inherit', lookup=['./views/']).render()
         self.assertEqual('begin abc end', ''.join(t))
+
+    def test_custom_filters(self):
+        """Templates: jinja2 custom filters """
+        from bottle import jinja2_template as template
+        filters = {"star": lambda var: u"".join((u'*', var, u'*'))}
+        res = template("start {{var|star}} end", var="var", filters=filters)
+        self.assertEqual("start *var* end", res)
+
+    def test_custom_tests(self):
+        """Templates: jinja2 custom tests """
+        from bottle import jinja2_template as template
+        TEMPL = u"""{% if var is even %}gerade{% else %}ungerade{% endif %}"""
+        tests={"even": lambda x: False if x % 2 else True}
+        res = template(TEMPL, var=2, tests=tests)
+        self.assertEqual("gerade", res)
+        res = template(TEMPL, var=1, tests=tests)
+        self.assertEqual("ungerade", res)
+
 
 try:
   import jinja2
