@@ -36,19 +36,18 @@ class TestJinja2Template(unittest.TestCase):
     def test_custom_filters(self):
         """Templates: jinja2 custom filters """
         from bottle import jinja2_template as template
-        filters = {"star": lambda var: u"".join((u'*', var, u'*'))}
-        res = template("start {{var|star}} end", var="var", filters=filters)
-        self.assertEqual("start *var* end", res)
+        settings = dict(filters = {"star": lambda var: u"".join((u'*', var, u'*'))})
+        t = Jinja2Template("start {{var|star}} end", settings=settings)
+        self.assertEqual("start *var* end", t.render(var="var"))
 
     def test_custom_tests(self):
         """Templates: jinja2 custom tests """
         from bottle import jinja2_template as template
         TEMPL = u"""{% if var is even %}gerade{% else %}ungerade{% endif %}"""
-        tests={"even": lambda x: False if x % 2 else True}
-        res = template(TEMPL, var=2, tests=tests)
-        self.assertEqual("gerade", res)
-        res = template(TEMPL, var=1, tests=tests)
-        self.assertEqual("ungerade", res)
+        settings = dict(tests={"even": lambda x: False if x % 2 else True})
+        t = Jinja2Template(TEMPL, settings=settings)
+        self.assertEqual("gerade", t.render(var=2))
+        self.assertEqual("ungerade", t.render(var=1))
 
 
 try:
