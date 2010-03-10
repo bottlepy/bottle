@@ -54,6 +54,8 @@ This is a minimal bottle application serving a single URL::
    tutorial
    api
    stpl
+   download
+   development
 
 
 Indices and tables
