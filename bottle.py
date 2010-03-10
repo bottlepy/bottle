@@ -1424,37 +1424,33 @@ class SimpleTemplate(BaseTemplate):
     def translate(self, template):
         stack = [] # Current Code indentation
         lineno = 0 # Current line of code
-        ptrbuffer = [] # Buffer for printable strings and PyStmt instances
+        ptrbuffer = [] # Buffer for printable strings and token tuple instances
         codebuffer = [] # Buffer for generated python code
         touni = functools.partial(unicode, encoding=self.encoding)
-        
-        def prt(txt): # Add a string or a PyStmt object to ptrbuffer
-            if ptrbuffer and isinstance(txt, unicode) \
-            and isinstance(ptrbuffer[-1], unicode): # Requied for line preserving
-                ptrbuffer[-1] += txt
-            else: ptrbuffer.append(txt)
+
+        def tokenize(line):
+            for i, part in enumerate(re.split(r'\{\{(.*?)\}\}', line)):
+                if i % 2:
+                    if part.startswith('!'): yield 'RAW', part[1:]
+                    else: yield 'CMD', part
+                else: yield 'TXT', part
 
         def flush(): # Flush the ptrbuffer
-            if ptrbuffer:
-                # Remove escaped newline in last string
-                if isinstance(ptrbuffer[-1], unicode) \
-                and ptrbuffer[-1].rstrip('\n\r').endswith('\\\\'):
-                    ptrbuffer[-1] = ptrbuffer[-1].rstrip('\n\r')[:-2]
-                # Add linebreaks to output code, if strings contains newlines
-                out = []
-                for s in ptrbuffer:
-                    if isinstance(s, unicode):
-                        if '\n' in s: out.append('\n'*s.count('\n'))
-                        s = repr(s)
-                    else:
-                        s = s[0] % s[1]
-                    out.append(s)
-                codeline = ', '.join(out)
-                if codeline.endswith('\n'): codeline = codeline[:-1] #Remove last newline
-                codeline = codeline.replace('\n, ','\n')
-                codeline = "_printlist([%s])" % codeline
-                del ptrbuffer[:] # Do this before calling code() again
-                code(codeline)
+            if not ptrbuffer: return
+            cline = ''
+            for line in ptrbuffer:
+                for token, value in line:
+                    if token == 'TXT': cline += repr(value)
+                    elif token == 'RAW': cline += '_str(%s)' % value
+                    elif token == 'CMD': cline += '_escape(%s)' % value
+                    cline +=  ', '
+                cline = cline[:-2] + '\\\n'
+            cline = cline[:-2]
+            if cline[:-1].endswith('\\\\\\\\\\n'):
+                cline = cline[:-7] + cline[-1] # 'nobr\\\\\n' --> 'nobr'
+            cline = '_printlist((' + cline + '))'
+            del ptrbuffer[:] # Do this before calling code() again
+            code(cline)
 
         def code(stmt):
             for line in stmt.splitlines():
@@ -1462,23 +1458,23 @@ class SimpleTemplate(BaseTemplate):
 
         for line in template.splitlines(True):
             lineno += 1
-            line = unicode(line, encoding=self.encoding) if not isinstance(line, unicode) else line
-            if lineno <= 2 and 'coding' in line:
+            line = line if isinstance(line, unicode)\
+                        else unicode(line, encoding=self.encoding)
+            if lineno <= 2:
                 m = re.search(r"%.*coding[:=]\s*([-\w\.]+)", line)
                 if m: self.encoding = m.group(1)
                 if m: line = line.replace('coding','coding (removed)')
-            if line.strip().startswith('%') and not line.strip().startswith('%%'):
-                line = line.strip().lstrip('%') # Full line
-                cline = line.split('#')[0]
-                cline = cline.strip()
-                cmd = line.split()[0] # Command word
+            if line.strip()[:2].count('%') == 1:
+                line = line.split('%',1)[1] # Full line
+                cline = line.split('#')[0].strip() # Line without commends
+                cmd = line.split()[0] if line.split() else '' # Command word
                 flush() ##encodig
                 if cmd in self.blocks:
-                    if cmd in self.dedent_blocks: cmd = stack.pop() #last block ended
+                    if cmd in self.dedent_blocks: cmd = stack.pop()
                     code(line)
-                    if cline.endswith(':'): stack.append(cmd) # false: one line blocks
+                    if cline.endswith(':'): stack.append(cmd)
                 elif cmd == 'end' and stack:
-                    code('#end(%s) %s' % (stack.pop(), line[3:]))
+                    code('#end(%s) %s' % (stack.pop(), line.strip()[3:]))
                 elif cmd == 'include':
                     p = cline.split(None, 2)[1:]
                     if len(p) == 2:
@@ -1498,14 +1494,7 @@ class SimpleTemplate(BaseTemplate):
             else: # Line starting with text (not '%') or '%%' (escaped)
                 if line.strip().startswith('%%'):
                     line = line.replace('%%', '%', 1)
-                for i, part in enumerate(re.split(r'\{\{(.*?)\}\}', line)):
-                    if part and i%2:
-                        if part.startswith('!'):
-                            prt(('_str(%s)', part[1:])) # Tuples mark a stmt
-                        else:
-                            prt(('_escape(%s)', part))
-                    elif part:
-                        prt(part)
+                ptrbuffer.append(tokenize(line))
         flush()
         return '\n'.join(codebuffer) + '\n'
 
