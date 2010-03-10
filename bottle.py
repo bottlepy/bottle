@@ -342,7 +342,6 @@ class Bottle(object):
         """
         self.routes = Router()
         self.mounts = {}
-        self.default_route = None
         self.error_handler = {}
         self.catchall = catchall
         self.config = dict()
@@ -390,7 +389,7 @@ class Bottle(object):
             if handler: return handler, param
         handler, param = self.routes.match('ANY;' + path)
         if handler: return handler, param
-        return self.default_route, {}
+        return None, {}
 
     def get_url(self, routename, **kargs):
         """ Return a string that matches a named route """
@@ -417,13 +416,6 @@ class Bottle(object):
                     route = m.upper() + ';' + p
                     self.routes.add(route, callback, **kargs)
             return callback
-        return wrapper
-
-    def default(self):
-        """ Decorator: Add a default handler for undefined routes """
-        def wrapper(handler):
-            self.default_route = handler
-            return handler
         return wrapper
 
     def error(self, code=500):
@@ -1088,11 +1080,7 @@ delete = functools.partial(route, method='DELETE')
 delete.__doc__ = route.__doc__.replace('GET','DELETE')
 
 def default():
-    """
-    Decorator for request handler. Same as app().default(handler).
-    """
-    return app().default()
-
+    raise DeprecationWarning("Use @error(404) instead.")
 
 def error(code=500):
     """
