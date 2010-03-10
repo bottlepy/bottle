@@ -956,11 +956,12 @@ def static_file(filename, root, guessmime=True, mimetype=None, download=False):
         return HTTPResponse(open(filename, 'rb'), header=header)
 
 def url(routename, **kargs):
-    """ Helper generates URLs out of named routes """
     return app().get_url(routename, **kargs)
+url.__doc__ = Bottle.get_url.__doc__
 
-
-
+def mount(app, script_path):
+    return app().mount(app, script_path)
+mount.__doc__ = Bottle.mount.__doc__
 
 # Utilities
 
