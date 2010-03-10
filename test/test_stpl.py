@@ -24,9 +24,9 @@ class TestSimpleTemplate(unittest.TestCase):
         self.assertEqual(u'start äöü end', ''.join(t))
 
     def test_unicode_code(self):
-        """ Templates: Unicode code in file"""
+        """ Templates: utf8 code in file"""
         t = SimpleTemplate(name='./views/stpl_unicode.tpl').render(var='äöü')
-       self.assertEqual(u'start ñç äöü end\n', ''.join(t))
+        self.assertEqual(u'start ñç äöü end\n', ''.join(t))
 
     def test_import(self):
         """ Templates: import statement"""

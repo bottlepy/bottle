@@ -1428,33 +1428,27 @@ class SimpleTemplate(BaseTemplate):
         codebuffer = [] # Buffer for generated python code
         touni = functools.partial(unicode, encoding=self.encoding)
         
-        class PyStmt(object): # Python statement with filter function
-            def __init__(self, s, f='_str'): self.s, self.f = s, f
-            def __repr__(self):
-                # __repr__() must return string, not unicode
-                return '%s(%s)' % (self.f, self.s.strip().encode('utf8'))
-
         def prt(txt): # Add a string or a PyStmt object to ptrbuffer
-            if ptrbuffer and isinstance(txt, str) \
-            and isinstance(ptrbuffer[-1], str): # Requied for line preserving
+            if ptrbuffer and isinstance(txt, unicode) \
+            and isinstance(ptrbuffer[-1], unicode): # Requied for line preserving
                 ptrbuffer[-1] += txt
             else: ptrbuffer.append(txt)
 
         def flush(): # Flush the ptrbuffer
             if ptrbuffer:
                 # Remove escaped newline in last string
-                if isinstance(ptrbuffer[-1], unicode):
-                    if ptrbuffer[-1].rstrip('\n\r').endswith('\\\\'):
-                        ptrbuffer[-1] = ptrbuffer[-1].rstrip('\n\r')[:-2]
+                if isinstance(ptrbuffer[-1], unicode) \
+                and ptrbuffer[-1].rstrip('\n\r').endswith('\\\\'):
+                    ptrbuffer[-1] = ptrbuffer[-1].rstrip('\n\r')[:-2]
                 # Add linebreaks to output code, if strings contains newlines
                 out = []
                 for s in ptrbuffer:
-                    if isinstance(s, PyStmt):
-                        out.append(repr(s).decode('utf8'))
+                    if isinstance(s, unicode):
+                        if '\n' in s: out.append('\n'*s.count('\n'))
+                        s = repr(s)
                     else:
-                        out.append(repr(s))
-                    if isinstance(s, PyStmt): s = s.s
-                    if '\n' in s: out.append('\n'*s.count('\n'))
+                        s = s[0] % s[1]
+                    out.append(s)
                 codeline = ', '.join(out)
                 if codeline.endswith('\n'): codeline = codeline[:-1] #Remove last newline
                 codeline = codeline.replace('\n, ','\n')
@@ -1507,9 +1501,9 @@ class SimpleTemplate(BaseTemplate):
                 for i, part in enumerate(re.split(r'\{\{(.*?)\}\}', line)):
                     if part and i%2:
                         if part.startswith('!'):
-                            prt(PyStmt(part[1:], f='_str'))
+                            prt(('_str(%s)', part[1:])) # Tuples mark a stmt
                         else:
-                            prt(PyStmt(part, f='_escape'))
+                            prt(('_escape(%s)', part))
                     elif part:
                         prt(part)
         flush()
