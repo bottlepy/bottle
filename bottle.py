@@ -399,21 +399,24 @@ class Bottle(object):
     def route(self, path=None, method='GET', **kargs):
         """ Decorator: Bind a function to a GET request path.
 
-            If the path parameter is None, the signature (name, args) of the
-            decorated function is used to generate the path. See yieldroutes()
+            If the path parameter is None, the signature of the decorated
+            function is used to generate the path. See yieldroutes()
             for details.
 
             The method parameter (default: GET) specifies the HTTP request
-            method to listen to. 
+            method to listen to. You can specify a list of methods. 
         """
-        method = method.upper()
-        def wrapper(handler):
+        if isinstance(method, str): #TODO: Test this
+            method = method.split(';')
+        def wrapper(callback):
             paths = [] if path is None else [path.strip().lstrip('/')]
             if not paths: # Lets generate the path automatically 
-                paths = yieldroutes(handler)
+                paths = yieldroutes(callback)
             for p in paths:
-                self.routes.add(method+';'+p, handler, **kargs)
-            return handler
+                for m in method:
+                    route = m.upper() + ';' + p
+                    self.routes.add(route, callback, **kargs)
+            return callback
         return wrapper
 
     def default(self):
