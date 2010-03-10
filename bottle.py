@@ -37,7 +37,7 @@ Example
 
 This is an example::
 
-    from bottle import route, run, request, response, send_file, abort
+    from bottle import route, run, request, response, static_file, abort
     
     @route('/')
     def hello_world():
@@ -53,7 +53,6 @@ This is an example::
         return 'Hello %s!' % name
     
     @route('/static/:filename#.*#')
-
     def static(filename):
         return static_file(filename, root='/path/to/static/files/')
     
