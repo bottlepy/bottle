@@ -1297,27 +1297,34 @@ class TemplateError(HTTPError):
 class BaseTemplate(object):
     """ Base class and minimal API for template adapters """
     extentions = ['tpl','html','thtml','stpl']
+    settings = {} #used in prepare()
+    defaults = {} #used in render()
 
-    def __init__(self, source=None, name=None, lookup=[], encoding='utf8'):
+    def __init__(self, source=None, name=None, lookup=[], encoding='utf8', settings={}):
         """ Create a new template.
         If the source parameter (str or buffer) is missing, the name argument
         is used to guess a template filename. Subclasses can assume that
-        either self.source or self.filename is set. Both are strings.
-        The lookup-argument works similar to sys.path for templates.
-        The encoding parameter is used to decode byte strings or files.
+        self.source and/or self.filename are set. Both are strings.
+        The lookup, encoding and settings parameters are stored as instance
+        variables.
+        The lookup parameter stores a list containing directory paths.
+        The encoding parameter should be used to decode byte strings or files.
+        The settings parameter contains a dict for engine-specific settings.
         """
         self.name = name
         self.source = source.read() if hasattr(source, 'read') else source
-        self.filename = None
+        self.filename = source.filename if hasattr(source, 'filename') else None
         self.lookup = map(os.path.abspath, lookup)
         self.encoding = encoding
+        self.settings = self.settings.copy() # Copy from class variable
+        self.settings.update(settings) # Apply 
         if not self.source and self.name:
             self.filename = self.search(self.name, self.lookup)
             if not self.filename:
                 raise TemplateError('Template %s not found.' % repr(name))
         if not self.source and not self.filename:
             raise TemplateError('No template specified.')
-        self.prepare()
+        self.prepare(**self.settings)
 
     @classmethod
     def search(cls, name, lookup=[]):
@@ -1332,9 +1339,18 @@ class BaseTemplate(object):
                 if os.path.isfile('%s.%s' % (fname, ext)):
                     return '%s.%s' % (fname, ext)
 
-    def prepare(self):
+    @classmethod
+    def global_config(cls, key, *args):
+        ''' This reads or sets the global settings stored in class.settings. '''
+        if args:
+            cls.settings[key] = args[0]
+        else:
+            return cls.settings[key]
+
+    def prepare(self, **options):
         """ Run preparatios (parsing, caching, ...).
-        It should be possible to call this again to refresh a template.
+        It should be possible to call this again to refresh a template or to
+        update settings.
         """
         raise NotImplementedError
 
@@ -1347,14 +1363,11 @@ class BaseTemplate(object):
 
 
 class MakoTemplate(BaseTemplate):
-    default_filters=None
-    global_variables={}
-
-    def prepare(self):
+    def prepare(self, **options):
         from mako.template import Template
         from mako.lookup import TemplateLookup
+        options.update({'input_encoding':self.encoding})
         #TODO: This is a hack... http://github.com/defnull/bottle/issues#issue/8
-        options = dict(input_encoding=self.encoding, default_filters=MakoTemplate.default_filters)
         mylookup = TemplateLookup(directories=['.']+self.lookup, **options)
         if self.source:
             self.tpl = Template(self.source, lookup=mylookup)
@@ -1365,22 +1378,24 @@ class MakoTemplate(BaseTemplate):
             self.tpl = mylookup.get_template(name)
 
     def render(self, **args):
-        _defaults = MakoTemplate.global_variables.copy()
+        _defaults = self.defaults.copy()
         _defaults.update(args)
         return self.tpl.render(**_defaults)
 
 
 class CheetahTemplate(BaseTemplate):
-    def prepare(self):
+    def prepare(self, **options):
         from Cheetah.Template import Template
         self.context = threading.local()
         self.context.vars = {}
+        options['searchList'] = [self.context.vars]
         if self.source:
-            self.tpl = Template(source=self.source, searchList=[self.context.vars])
+            self.tpl = Template(source=self.source, **options)
         else:
-            self.tpl = Template(file=self.filename, searchList=[self.context.vars])
+            self.tpl = Template(file=self.filename, **options)
 
     def render(self, **args):
+        self.context.vars.update(self.defaults)
         self.context.vars.update(args)
         out = str(self.tpl)
         self.context.vars.clear()
@@ -1388,19 +1403,21 @@ class CheetahTemplate(BaseTemplate):
 
 
 class Jinja2Template(BaseTemplate):
-    env = None # hopefully, a Jinja environment is actually thread-safe
-    prefix = "#"
-    def prepare(self):
-        if not self.env:
-            from jinja2 import Environment, FunctionLoader
-            self.env = Environment(line_statement_prefix=self.prefix, loader=FunctionLoader(self.loader))
+    def prepare(self, prefix='#', filters=None, tests=None):
+        from jinja2 import Environment, FunctionLoader
+        self.env = Environment(line_statement_prefix=prefix,
+                               loader=FunctionLoader(self.loader))
+        if filters: self.env.filters.update(filters)
+        if tests: self.env.tests.update(tests)
         if self.source:
             self.tpl = self.env.from_string(self.source)
         else:
             self.tpl = self.env.get_template(self.filename)
 
     def render(self, **args):
-        return self.tpl.render(**args).encode("utf-8")
+        _defaults = self.defaults.copy()
+        _defaults.update(args)
+        return self.tpl.render(**_defaults).encode("utf-8")
 
     def loader(self, name):
         fname = self.search(name, self.lookup)
@@ -1413,7 +1430,7 @@ class SimpleTemplate(BaseTemplate):
     blocks = ('if','elif','else','except','finally','for','while','with','def','class')
     dedent_blocks = ('elif', 'else', 'except', 'finally')
 
-    def prepare(self):
+    def prepare(self, escape_func=cgi.escape, noescape=False):
         self.cache = {}
         if self.source:
             self.code = self.translate(self.source)
@@ -1421,6 +1438,11 @@ class SimpleTemplate(BaseTemplate):
         else:
             self.code = self.translate(open(self.filename).read())
             self.co = compile(self.code, self.filename, 'exec')
+        enc = self.encoding
+        self._str = lambda x: touni(x, enc)
+        self._escape = lambda x: escape_func(touni(x, enc))
+        if noescape:
+            self._str, self._escape = self._escape, self._str
 
     def translate(self, template):
         stack = [] # Current Code indentation
@@ -1504,20 +1526,19 @@ class SimpleTemplate(BaseTemplate):
             self.cache[name] = self.__class__(name=name, lookup=self.lookup)
         return self.cache[name].execute(stdout, **args)
 
-    def execute(self, stdout, **args):
-        enc = self.encoding
-        def _str(x): return touni(x, enc)
-        def _escape(x): return cgi.escape(touni(x, enc))
-        env = {'_stdout': stdout, '_printlist': stdout.extend,
-               '_include': self.subtemplate, '_str': _str, '_escape': _escape}
+    def execute(self, _stdout, **args):
+        env = self.defaults.copy()
+        env.update({'_stdout': _stdout, '_printlist': _stdout.extend,
+               '_include': self.subtemplate, '_str': self._str,
+               '_escape': self._escape})
         env.update(args)
         eval(self.co, env)
         if '_rebase' in env:
             subtpl, rargs = env['_rebase']
             subtpl = self.__class__(name=subtpl, lookup=self.lookup)
-            rargs['_base'] = stdout[:] #copy stdout
-            del stdout[:] # clear stdout
-            return subtpl.execute(stdout, **rargs)
+            rargs['_base'] = _stdout[:] #copy stdout
+            del _stdout[:] # clear stdout
+            return subtpl.execute(_stdout, **rargs)
         return env
 
     def render(self, **args):
@@ -1527,23 +1548,27 @@ class SimpleTemplate(BaseTemplate):
         return stdout
 
 
-def template(tpl, template_adapter=SimpleTemplate, **args):
+def template(tpl, template_adapter=SimpleTemplate, **kwargs):
     '''
     Get a rendered template as a string iterator.
     You can use a name, a filename or a template string as first parameter.
     '''
-    lookup = args.get('template_lookup', TEMPLATE_PATH)
     if tpl not in TEMPLATES or DEBUG:
-        if "\n" in tpl or "{" in tpl or "%" in tpl or '$' in tpl:
-            TEMPLATES[tpl] = template_adapter(source=tpl, lookup=lookup)
+        settings = kwargs.get('template_settings',{})
+        lookup = kwargs.get('template_lookup', TEMPLATE_PATH)
+        if isinstance(tpl, template_adapter):
+            TEMPLATES[tpl] = tpl
+            if settings: TEMPLATES[tpl].prepare(settings)
+        elif "\n" in tpl or "{" in tpl or "%" in tpl or '$' in tpl:
+            TEMPLATES[tpl] = template_adapter(source=tpl, lookup=lookup, settings=settings)
         else:
-            TEMPLATES[tpl] = template_adapter(name=tpl, lookup=lookup)
+            TEMPLATES[tpl] = template_adapter(name=tpl, lookup=lookup, settings=settings)
     if not TEMPLATES[tpl]:
         abort(500, 'Template (%s) not found' % tpl)
-    args['abort'] = abort
-    args['request'] = request
-    args['response'] = response
-    return TEMPLATES[tpl].render(**args)
+    kwargs['abort'] = abort
+    kwargs['request'] = request
+    kwargs['response'] = response
+    return TEMPLATES[tpl].render(**kwargs)
 
 mako_template = functools.partial(template, template_adapter=MakoTemplate)
 cheetah_template = functools.partial(template, template_adapter=CheetahTemplate)
@@ -1555,9 +1580,9 @@ def view(tpl_name, **defaults):
     '''
     def decorator(func):
         @functools.wraps(func)
-        def wrapper(*args, **kargs):
+        def wrapper(*args, **kwargs):
             tplvars = dict(defaults)
-            tplvars.update(func(*args, **kargs))
+            tplvars.update(func(*args, **kwargs))
             return template(tpl_name, **tplvars)
         return wrapper
     return decorator
