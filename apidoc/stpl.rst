@@ -1,4 +1,5 @@
-Simple Template Engine
+======================
+SimpleTemplate Engine
 ======================
 
 .. currentmodule:: bottle
@@ -11,7 +12,7 @@ Bottle implements its own little template engine. The :func:`view` decorator and
 
 
 :class:`SimpleTemplate` Syntax
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+==============================
 
 The template syntax is a very thin layer around the Python language. It's main purpose is to ensure correct indention of blocks, so you can format your template without worrying about indentions.
 

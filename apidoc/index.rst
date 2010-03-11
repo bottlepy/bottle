@@ -18,9 +18,9 @@
 .. _testing: http://github.com/defnull/bottle/raw/master/bottle.py
 
 
-
+============================
 Bottle: Python Web Framework
-==================================
+============================
 
 Bottle is a fast, simple and lightweight WSGI_ micro web-framework for Python_ with no external dependencies and packed into a single file.
 
@@ -50,8 +50,8 @@ This is a minimal bottle application serving a single URL::
 .. toctree::
    :maxdepth: 2
 
-   intro
    tutorial
+   faq
    api
    stpl
    download

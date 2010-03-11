@@ -23,7 +23,7 @@ div.body {
 
 div.sphinxsidebar ul, div.sphinxsidebar ul ul, div.sphinxsidebar ul.want-points {
   list-style-image:none;
-  list-style-position:inside;
+  //list-style-position:inside;
   list-style-type:disc;
 }
 

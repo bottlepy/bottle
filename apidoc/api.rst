@@ -1,4 +1,5 @@
-:mod:`bottle` -- API Reference
+==============================
+API Reference
 ==============================
 
 .. module:: bottle
@@ -36,13 +37,13 @@ These decorators are shortcuts for their counterparts in :class:`Bottle`
 
 
 The :class:`Bottle` Class
--------------------------
+=========================
 
 .. autoclass:: Bottle
    :members:
 
 HTTP :class:`Request` and :class:`Response` objects
----------------------------------------------------
+===================================================
 
 The :class:`Request` class wraps a WSGI environment and provides helpful methods to parse and access form data, cookies, file uploads and other metadata. Most of the attributes are read-only.
 
@@ -60,7 +61,7 @@ The :class:`Response` class on the other hand stores header and cookie data that
 
 
 Data Structures
----------------
+===============
 
 .. autoclass:: MultiDict
    :members:
@@ -72,7 +73,7 @@ Data Structures
    :members:
 
 Exceptions
-----------
+==========
 
 .. autoexception:: BottleException
    :members:
@@ -84,7 +85,7 @@ Exceptions
    :members:
 
 Templates
----------
+=========
 
 All template engines supported by :mod:`bottle` implement the :class:`BaseTemplate` API. This way it is possible to switch and mix template engines without changing the application code at all. 
 
