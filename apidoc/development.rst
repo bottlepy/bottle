@@ -1,4 +1,4 @@
-Development Notes
+Developer Notes
 =================
 
 This document is intended for bottle developers or people interested in bottles release strategy. If you just want to use bottle as a library, use the latest stable release from the :doc:`download` page.
