@@ -1414,6 +1414,7 @@ class SimpleTemplate(BaseTemplate):
     dedent_blocks = ('elif', 'else', 'except', 'finally')
 
     def prepare(self):
+        self.cache = {}
         if self.source:
             self.code = self.translate(self.source)
             self.co = compile(self.code, '<string>', 'exec')
@@ -1499,7 +1500,9 @@ class SimpleTemplate(BaseTemplate):
         return '\n'.join(codebuffer) + '\n'
 
     def subtemplate(self, name, stdout, **args):
-        return self.__class__(name=name, lookup=self.lookup).execute(stdout, **args)
+        if name not in self.cache:
+            self.cache[name] = self.__class__(name=name, lookup=self.lookup)
+        return self.cache[name].execute(stdout, **args)
 
     def execute(self, stdout, **args):
         enc = self.encoding
