@@ -136,6 +136,16 @@ class TestDecorators(ServerTestBase):
         self.assertHeader('Content-Type', 'text/html; charset=UTF-8', '/tpl')
         self.assertBody(result, '/tpl')
 
+    def test_view_error(self):
+        """ WSGI: Test if view-decorator reacts on non-dict return values correctly."""
+        @bottle.route('/tpl')
+        @bottle.view('stpl_t2main')
+        def test():
+            return bottle.HTTPError(401, 'The cake is a lie!')
+        self.assertInBody('The cake is a lie!', '/tpl')
+        self.assertInBody('401: Unauthorized', '/tpl')
+        self.assertStatus(401, '/tpl')
+
     def test_validate(self):
         """ WSGI: Test validate-decorator"""
         @bottle.route('/:var')
