@@ -11,49 +11,68 @@
 .. _mod_wsgi: http://code.google.com/p/modwsgi/
 .. _paste: http://pythonpaste.org/
 .. _wsgi: http://www.wsgi.org/wsgi/
-.. _issue_tracker: http://github.com/defnull/bottle/issues
+.. _issue: http://github.com/defnull/bottle/issues
+.. _Python: http://python.org/
+.. _testing: http://github.com/defnull/bottle/raw/master/bottle.py
 
 ========
 Tutorial
 ========
 
+This tutorial introduces you to the concepts and features of the Bottle web framework. If you have questions not answered here, please check the :doc:`faq` page, then file a ticket at the issue_ tracker or send an e-mail to the `mailing list <mailto:bottlepy@googlegroups.com>`_.
+
 .. note::
 
-    This is a popy&paste from the old docs and a work in progress. Handle with care :) If you have questions not answered here, please check the :doc:`faq` or file a ticket at bottles issue_tracker_.
+    This is a popy&paste from the old docs and a work in progress. Handle with care :)
+
+.. rubric:: A quick overview:
+
+* :ref:`tutorial-routing`: Web development starts with binding URLs to code. This section tells you how to do it.
+* :ref:`tutorial-output`: You have to return something to the Browser. Bottle makes it easy for you, supporting more than just plain strings.
+* :ref:`tutorial-request`: Each client request carries a lot of information. HTTP-headers, form data and cookies to name just three. Here is how to use them.
+* :ref:`tutorial-templates`: You don't want to write HTML within your python code, do you? Template separate code from presentation.
+* :ref:`tutorial-debugging`: These tools and features will help you during development.
+* :ref:`tutorial-deployment`: Get it up and running.
 
 
-"Hello World" in a Bottle
-================================================================================
 
-Lets start with a very basic "Hello World" example::
+
+
+
+Getting started
+===================
+
+Bottle has no dependencies, so all you need is Python_ (2.5 up to 3.x should work fine) and the :ref:`bottle module <download>`. Lets start with a very basic "Hello World" example::
 
     from bottle import route, run
     @route('/hello')
     def hello():
         return "Hello World!"
-    run() # This starts the HTTP server
+    run(host='localhost', port=8080)
 
-Run this script, visit <http://localhost:8080/hello> and you will see "Hello World!" in your Browser. So, what happened here?
+Run this script, visit http://localhost:8080/hello and you will see "Hello World!" in your Browser. So, what happened here?
 
-1. First we imported some bottle components. The `route()` decorator and the `run()` function. 
-2. The `route()` [decorator][] is used do bind a piece of code to an URL. In this example we want to answer requests to the `/hello` URL.
-3. This function will be called every time someone hits the `/hello` URL on the web server. It is called a __handler function__ or __callback__.
+1. First we imported some bottle components. The :func:`route` decorator and the :func:`run` function. 
+2. The :func:`route` :term:`decorator` is used do bind a piece of code to an URL. In this example we want to answer requests to the ``/hello`` URL.
+3. This function will be called every time someone hits the `/hello` URL on the web server. It is called a :term:`handler function` or :term:`callback`.
 4. The return value of a handler function will be sent back to the Browser.
-5. Now it is time to start the actual HTTP server. The default is a development server running on *localhost* port *8080* and serving requests until you hit __Ctrl-C__
+5. Now it is time to start the actual HTTP server. The default is a development server running on 'localhost' port 8080 and serving requests until you hit :kbd:`Control-c`.
 
 
 
 
 
+.. _tutorial-routing:
 
 Routing
 ================================================================================
 
-Routes are used to map an URL to a callback function that generate the content for that specific URL. Bottle has a `route()` decorator to do that. You can add any number of routes to a callback.
+Routes are used to map URLs to a callback functions that generate the content for that URLs. Bottle has a :func:`route` decorator to do that. You can add any number of routes to a callback.
 
 ::
 
     from bottle import route
+    
     @route('/')
     @route('/index.html')
     def index():
@@ -63,32 +82,35 @@ Routes are used to map an URL to a callback function that generate the content f
     def hello():
         return "Hello World!"
 
-As you can see, URLs and routes have nothing to do with actual files on the web server. Routes are unique names for your callbacks, nothing more and nothing less. Requests to URLs not matching any routes are answered with a 404 HTTP error page. Exceptions within your handler callbacks will cause a 500 error. 
+As you can see, URLs and routes have nothing to do with actual files on the web server. Routes are unique names for your callbacks, nothing more and nothing less. Requests to URLs not matching any of the defined routes will result in a 404 HTTP error page.
 
 
 
-HTTP Request Methods
---------------------------------------------------------------------------------
+.. rubric:: HTTP Request Methods
 
-The `route()` decorator has an optional keyword argument `method` which defaults to `method='GET'`; only GET requests get answered by that route.
-Possible values are `POST`, `PUT`, `DELETE`, `HEAD`, `ANY` or any other [HTTP request method][http_method] you want to listen to. As an alternative, you can use the `@get()`, `@post()`, `@put()` and `@delete()` aliases.
+  The :func:`route` decorator has an optional keyword argument called ``method`` which defaults to ``method='GET'``; only GET requests get answered by that routes. Possible values are `POST`, `PUT`, `DELETE`, `HEAD` or any other [HTTP request method][http_method] you want to listen to. As an alternative, you can use the :func:`get()`, :func:`post()`, :func:`put()` and :func:`delete()` aliases.
 
-::
+The special ``ANY`` method works as a low priority fallback. It matches requests regardless of their HTTP method but only if no other more specific route can handle that same request.
+
+Also note that `HEAD` requests fall back to `GET` routes automatically, so you don't have to specify them explicitly.
+
+To sum it up: ``HEAD`` requests fall back to ``GET`` routes and all requests fall back to ``ANY`` routes, if there are any. 
+
+Here is an example for a route handling ``POST`` requests::
 
     from bottle import post, request
     @post('/form/submit')
     def form_submit():
-        form_data = request.POST # (*)
+        form_data = request.POST
         do_something_with(form_data)
         return "Done"
 
-\* In this example we used [request.POST](#working-with-http-requests) to access POST form data.
-
-Note that `HEAD` requests will fall back to `GET` routes and all requests will fall back to `ANY` routes, if there is no matching route for the original request method.
+In this example we used :meth:`request.POST` to access POST form data as described in the :ref:`tutorial-request` section.
 
 
 
 .. _tutorial-dynamic-routes:
+
 Dynamic Routes
 --------------------------------------------------------------------------------
 
@@ -134,6 +156,7 @@ You may raise `ValueError` in your custom callable if a parameter does not valid
 
 
 
+.. _tutorial-output:
 
 Generating content
 ================================================================================
@@ -277,6 +300,7 @@ All exceptions other than `HTTPResponse` or `HTTPError` will result in a `500 In
 
 
 
+.. _tutorial-request:
 
 Working with HTTP Requests
 ================================================================================
@@ -365,6 +389,7 @@ Here is an example HTML Form for file uploads::
 
 
 
+.. _tutorial-templates:
 
 Templates
 ================================================================================
@@ -446,41 +471,7 @@ Example::
 
 
 
-
-Using WSGI and Middleware
-================================================================================
-
-A call to `bottle.default_app()` returns your WSGI application. After applying as many WSGI middleware modules as you like, you can tell 
-`bottle.run()` to use your wrapped application, instead of the default one.
-
-::
-
-    from bottle import default_app, run
-    app = default_app()
-    newapp = YourMiddleware(app)
-    run(app=newapp)
-
-
-
-How default_app() works
---------------------------------------------------------------------------------
-
-Bottle creates a single instance of `bottle.Bottle()` and uses it as a default for most of the modul-level decorators and the `bottle.run()` routine. 
-`bottle.default_app()` returns (or changes) this default. You may, however, create your own instances of `bottle.Bottle()`.
-
-::
-
-    from bottle import Bottle, run
-    mybottle = Bottle()
-    @mybottle.route('/')
-    def index():
-      return 'default_app'
-    run(app=mybottle)
-
-
-
-
-
+.. _tutorial-debugging:
 
 Development
 ================================================================================
@@ -539,6 +530,7 @@ running on Windows or any other operating system not supporting
 finally clauses, etc., are not executed after a `SIGTERM`.
 
 
+.. _tutorial-deployment:
 
 Deployment
 ================================================================================
@@ -606,7 +598,32 @@ One of the fastest load balancer available is [pound](http://www.apsis.ch/pound/
 I'll add examples for [lighttpd](http://www.lighttpd.net/) and 
 [Apache](http://www.apache.org/) web servers soon.
 
+Using WSGI and Middleware
+--------------------------------------------------------------------------------
 
+A call to `bottle.default_app()` returns your WSGI application. After applying as many WSGI middleware modules as you like, you can tell 
+`bottle.run()` to use your wrapped application, instead of the default one.
+
+::
+
+    from bottle import default_app, run
+    app = default_app()
+    newapp = YourMiddleware(app)
+    run(app=newapp)
+
+.. rubric: How default_app() works
+
+Bottle creates a single instance of `bottle.Bottle()` and uses it as a default for most of the modul-level decorators and the `bottle.run()` routine. 
+`bottle.default_app()` returns (or changes) this default. You may, however, create your own instances of `bottle.Bottle()`.
+
+::
+
+    from bottle import Bottle, run
+    mybottle = Bottle()
+    @mybottle.route('/')
+    def index():
+      return 'default_app'
+    run(app=mybottle)
 
 Apache mod_wsgi
 --------------------------------------------------------------------------------
@@ -675,11 +692,15 @@ CGI is slow as hell, but it works::
 
 
 
+.. _tutorial-glossary:
 
 Glossary
 ========
 
 .. glossary::
+
+   decorator
+      A function returning another function, usually applied as a function transformation using the ``@decorator`` syntax. See `python documentation for function definition  <http://docs.python.org/reference/compound_stmts.html#function>`_ for more about decorators.
 
    environ
       A structure where information about all documents under the root is

@@ -34,6 +34,8 @@ Bottle is a fast, simple and lightweight WSGI_ micro web-framework for Python_ w
 
 .. rubric:: Download
 
+.. _download:
+
 You can install the latest stable release with ``easy_install -U bottle`` or just download the newest testing_ version into your project directory. There are no hard [1]_ dependencies other than the Python standard library. Bottle runs with **Python 2.5+ and 3.x** (using 2to3)
 
 .. rubric:: "Hello World" in a bottle
