@@ -1631,8 +1631,14 @@ cheetah_template = functools.partial(template, template_adapter=CheetahTemplate)
 jinja2_template = functools.partial(template, template_adapter=Jinja2Template)
 
 def view(tpl_name, **defaults):
-    ''' Decorator: Rendes a template for a handler.
-        Return a dict of template vars to fill out the template.
+    ''' Decorator: Renders a template for a handler.
+        The handler can control its behavior like that:
+
+          - return a dict of template vars to fill out the template
+          - return other than a dict and the view decorator will not
+            process the template, but return the handler result as is.
+            This includes returning a HTTPResponse(dict) to get,
+            for instance, JSON with autojson or other castfilters
     '''
     def decorator(func):
         @functools.wraps(func)
