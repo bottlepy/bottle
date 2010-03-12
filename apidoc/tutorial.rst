@@ -26,7 +26,7 @@ This tutorial introduces you to the concepts and features of the Bottle web fram
 
 .. note::
 
-    This is a popy&paste from the old docs and a work in progress. Handle with care :)
+    This is a copy&paste from the old docs and a work in progress. Handle with care :)
 
 .. rubric:: A quick overview:
 
