@@ -21,6 +21,25 @@ class TestEnviron(unittest.TestCase):
         request.bind({}, None)
         self.assertEqual('/', request.path)
 
+    def test_pathshift(self):
+        """ Environ: Request.path_shift() """
+        def test_shift(s, p, c):
+            request.bind({'SCRIPT_NAME': s, 'PATH_INFO': p})
+            m = request.path_shift(c)
+            return [request['SCRIPT_NAME'], request.path, m]
+        self.assertEqual(['/a/b', '/c/d',''], test_shift('/a/b', '/c/d', 0))
+        self.assertEqual(['/a/b', '/c/d/',''], test_shift('/a/b', '/c/d/', 0))
+        self.assertEqual(['/a/b/c', '/d','c'], test_shift('/a/b', '/c/d', 1))
+        self.assertEqual(['/a', '/b/c/d','b'], test_shift('/a/b', '/c/d', -1))
+        self.assertEqual(['/a/b/c', '/d/','c'], test_shift('/a/b', '/c/d/', 1))
+        self.assertEqual(['/a', '/b/c/d/','b'], test_shift('/a/b', '/c/d/', -1))
+        self.assertEqual(['/a/b/c', '/d/','c'], test_shift('/a/b/', '/c/d/', 1))
+        self.assertEqual(['/a', '/b/c/d/','b'], test_shift('/a/b/', '/c/d/', -1))
+        self.assertEqual(['/a/b/c/d', '/','a/b/c/d'], test_shift('/', '/a/b/c/d', 4))
+        self.assertEqual(['/', '/a/b/c/d/','a/b/c/d'], test_shift('/a/b/c/d', '/', -4))
+        self.assertRaises(AssertionError, test_shift, '/a/b', '/c/d', 3)
+        self.assertRaises(AssertionError, test_shift, '/a/b', '/c/d', -3)
+        
     def test_url(self):
         """ Environ: URL building """
         request.bind({'HTTP_HOST':'example.com'}, None)
@@ -53,7 +72,6 @@ class TestEnviron(unittest.TestCase):
         self.assertTrue('Some-Header' in request.header)
         self.assertTrue(request.header['Some-Header'] == 'some value')
         self.assertTrue(request.header['Some-Other-Header'] == 'some other value')
-
 
     def test_cookie(self):
         """ Environ: COOKIES """ 
