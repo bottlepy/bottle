@@ -1,15 +1,18 @@
 .. module:: bottle
 
-.. _apache: http://www.apache.org/
+.. _Apache Server:
+.. _Apache: http://www.apache.org/
 .. _cherrypy: http://www.cherrypy.org/
 .. _decorator: http://docs.python.org/glossary.html#term-decorator
 .. _fapws3: http://github.com/william-os4y/fapws3
 .. _flup: http://trac.saddi.com/flup
 .. _http_code: http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
 .. _http_method: http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html
+.. _lighttpd: http://www.lighttpd.net/
 .. _mako: http://www.makotemplates.org/
 .. _mod_wsgi: http://code.google.com/p/modwsgi/
 .. _paste: http://pythonpaste.org/
+.. _Pound: http://www.apsis.ch/pound/
 .. _wsgi: http://www.wsgi.org/wsgi/
 .. _issue: http://github.com/defnull/bottle/issues
 .. _Python: http://python.org/
@@ -593,10 +596,10 @@ But there are a few drawbacks:
 * You can't easily share data between multiple Python processes.
 * It takes a lot of memory to run several copies of Python and Bottle at the same time.
 
-One of the fastest load balancer available is [pound](http://www.apsis.ch/pound/) but most common web servers have a proxy-module that can do the work just fine.
+One of the fastest load balancer available is Pound_ but most common web servers have a proxy-module that can do the work just fine.
 
-I'll add examples for [lighttpd](http://www.lighttpd.net/) and 
-[Apache](http://www.apache.org/) web servers soon.
+I'll add examples for lighttpd_ and 
+Apache_ web servers soon.
 
 Using WSGI and Middleware
 --------------------------------------------------------------------------------
@@ -629,11 +632,11 @@ Apache mod_wsgi
 --------------------------------------------------------------------------------
 
 Instead of running your own HTTP server from within Bottle, you can 
-attach Bottle applications to an [Apache server][apache] using 
-[mod_wsgi][] and Bottles WSGI interface.
+attach Bottle applications to an `Apache server`_ using 
+mod_wsgi_ and Bottle's WSGI interface.
 
-All you need is an `app.wsgi` file that provides an 
-`application` object. This object is used by mod_wsgi to start your 
+All you need is an ``app.wsgi`` file that provides an 
+``application`` object. This object is used by mod_wsgi to start your 
 application and should be a WSGI conform Python callable.
 
 File ``/var/www/yourapp/app.wsgi``::
