@@ -556,13 +556,6 @@ class Request(threading.local, DictMixin):
             This is done automatically for the global `bottle.request`
             instance on every request.
         """
-        if isinstance(environ, Request): # Recycle already parsed content
-            for key in self.__dict__: #TODO: Test this
-                setattr(self, key, getattr(environ, key))
-            self.app = app
-            return
-        self._GET = self._POST = self._GETPOST = self._COOKIES = None
-        self._body = self._header = None
         self.environ = environ
         self.app = app
         # These attributes are used anyway, so it is ok to compute them here
@@ -570,22 +563,24 @@ class Request(threading.local, DictMixin):
         self.method = environ.get('REQUEST_METHOD', 'GET').upper()
 
     def path_shift(self, count=1):
-        ''' Shift some levels of PATH_INFO into SCRIPT_NAME and return the
-            moved part. count defaults to 1'''
-        #/a/b/  /c/d  --> 'a','b'  'c','d'
+        ''' Shift a path segment from ``PATH_INFO`` to ``SCRIPT_NAME`` and
+            return the moved segment.
+            
+            :param count: Number of path segments to shift. May be negative and
+                          defaults to 1.
+            :raises AssertionError: When we run out of path segments. '''
+        if not count: return ''
         pathlist = self.path.strip('/').split('/')
         scriptlist = self.environ.get('SCRIPT_NAME','/').strip('/').split('/')
         if pathlist and pathlist[0] == '': pathlist = []
         if scriptlist and scriptlist[0] == '': scriptlist = []
         if count > 0 and count <= len(pathlist):
             moved = pathlist[:count]
-            scriptlist = scriptlist + moved
-            pathlist = pathlist[count:]
+            scriptlist, pathlist = scriptlist + moved, pathlist[count:]
         elif count < 0 and count >= -len(scriptlist):
             moved = scriptlist[count:]
-            pathlist = moved + pathlist
-            scriptlist = scriptlist[:count]
-        else:
+            scriptlist, pathlist = scriptlist[:count], moved + pathlist
+        elif count:
             empty = 'SCRIPT_NAME' if count < 0 else 'PATH_INFO'
             raise AssertionError("Cannot shift. Nothing left from %s" % empty)
         self['PATH_INFO'] = self.path =  '/' + '/'.join(pathlist) \
@@ -643,13 +638,13 @@ class Request(threading.local, DictMixin):
 
             HeaderDict keys are case insensitive str.title()d 
         '''
-        if self._header is None:
-            self._header = HeaderDict()
+        if 'bottle.header' not in self.environ:
+            header = self.environ['bottle.header'] = HeaderDict()
             for key, value in self.environ.iteritems():
                 if key.startswith('HTTP_'):
                     key = key[5:].replace('_','-').title()
-                    self._header[key] = value
-        return self._header
+                    header[key] = value
+        return self.environ['bottle.header']
 
     @property
     def GET(self):
@@ -658,13 +653,13 @@ class Request(threading.local, DictMixin):
             Keys and values are strings. Multiple values per key are possible.
             See MultiDict for details.
         """
-        if self._GET is None:
+        if 'bottle.get' not in self.environ:
             data = parse_qs(self.query_string, keep_blank_values=True)
-            self._GET = MultiDict()
+            get = self.environ['bottle.get'] = MultiDict()
             for key, values in data.iteritems():
                 for value in values:
-                    self._GET[key] = value
-        return self._GET
+                    get[key] = value
+        return self.environ['bottle.get']
 
     @property
     def POST(self):
@@ -676,7 +671,7 @@ class Request(threading.local, DictMixin):
 
             Multiple values per key are possible. See MultiDict for details.
         """
-        if self._POST is None:
+        if 'bottle.post' not in self.environ:
             save_env = dict() # Build a save environment for cgi
             for key in ('REQUEST_METHOD', 'CONTENT_TYPE', 'CONTENT_LENGTH'):
                 if key in self.environ:
@@ -687,18 +682,18 @@ class Request(threading.local, DictMixin):
             else:
                 fb = self.body
             data = cgi.FieldStorage(fp=fb, environ=save_env)
-            self._POST = MultiDict()
+            self.environ['bottle.post'] = post = MultiDict()
             for item in data.list:
-                self._POST[item.name] = item if item.filename else item.value
-        return self._POST
+                post[item.name] = item if item.filename else item.value
+        return self.environ['bottle.post']
 
     @property
     def params(self):
         """ A combined MultiDict with POST and GET parameters. """
-        if self._GETPOST is None:
-            self._GETPOST = MultiDict(self.GET)
-            self._GETPOST.update(dict(self.POST))
-        return self._GETPOST
+        if 'bottle.getpost' not in self.environ:
+            self.environ['bottle.getpost'] = MultiDict(self.GET)
+            self.environ['bottle.getpost'].update(dict(self.POST))
+        return self.environ['bottle.getpost']
 
     @property
     def body(self):
@@ -707,19 +702,20 @@ class Request(threading.local, DictMixin):
             This property returns a copy of the `wsgi.input` stream and should
             be used instead of `environ['wsgi.input']`.
          """
-        if self._body is None:
+        if 'bottle.body' not in self.environ:
             maxread = max(0, self.content_length)
             stream = self.environ['wsgi.input']
-            self._body = BytesIO() if maxread < MEMFILE_MAX else TemporaryFile(mode='w+b')
+            body = BytesIO() if maxread < MEMFILE_MAX else TemporaryFile(mode='w+b')
             while maxread > 0:
                 part = stream.read(min(maxread, MEMFILE_MAX))
                 if not part: #TODO: Wrong content_length. Error? Do nothing?
                     break
-                self._body.write(part)
+                body.write(part)
                 maxread -= len(part)
-            self.environ['wsgi.input'] = self._body
-        self._body.seek(0)
-        return self._body
+            self.environ['wsgi.input'] = body
+            self.environ['bottle.body'] = body
+        self.environ['bottle.body'].seek(0)
+        return self.environ['bottle.body']
 
     @property
     def auth(self): #TODO: Tests and docs. Add support for digest. namedtuple?
@@ -737,12 +733,12 @@ class Request(threading.local, DictMixin):
             Secure cookies are NOT decoded automatically. See
             Request.get_cookie() for details.
         """
-        if self._COOKIES is None:
+        if 'bottle.cookies' not in self.environ:
             raw_dict = SimpleCookie(self.environ.get('HTTP_COOKIE',''))
-            self._COOKIES = {}
+            self.environ['bottle.cookies'] = {}
             for cookie in raw_dict.itervalues():
-                self._COOKIES[cookie.key] = cookie.value
-        return self._COOKIES
+                self.environ['bottle.cookies'][cookie.key] = cookie.value
+        return self.environ['bottle.cookies']
 
     def get_cookie(self, *args):
         """ Return the (decoded) value of a cookie. """
