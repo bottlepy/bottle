@@ -452,6 +452,11 @@ class Bottle(object):
         Support: False, str, unicode, dict, HTTPResponse, HTTPError, file-like,
         iterable of strings and iterable of unicodes
         """
+        # Filtered types (recursive, because they may return anything)
+        for testtype, filterfunc in self.castfilter:
+            if isinstance(out, testtype):
+                return self._cast(filterfunc(out))
+
         # Empty output is done here
         if not out:
             response.headers['Content-Length'] = 0
@@ -473,11 +478,6 @@ class Bottle(object):
         if isinstance(out, HTTPResponse):
             out.apply(response)
             return self._cast(out.output)
-
-        # Filtered types (recursive, because they may return anything)
-        for testtype, filterfunc in self.castfilter:
-            if isinstance(out, testtype):
-                return self._cast(filterfunc(out))
 
         # Cast Files into iterables
         if hasattr(out, 'read') and 'wsgi.file_wrapper' in request.environ:
