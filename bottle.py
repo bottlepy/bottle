@@ -1189,8 +1189,8 @@ class TwistedServer(ServerAdapter):
         thread_pool = ThreadPool()
         thread_pool.start()
         reactor.addSystemEventTrigger('after', 'shutdown', thread_pool.stop)
-        server.Site(wsgi.WSGIResource(reactor, thread_pool, handler))
-        reactor.listenTCP(self.port, self.host)
+        factory = server.Site(wsgi.WSGIResource(reactor, thread_pool, handler))
+        reactor.listenTCP(self.port, factory, interface=self.host)
         reactor.run()
 
 
