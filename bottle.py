@@ -623,7 +623,7 @@ class Request(threading.local, DictMixin):
             and includes scheme, host, port, scriptname, path and query string. 
         """
         scheme = self.environ.get('wsgi.url_scheme', 'http')
-        host   = self.environ.get('HTTP_HOST', None)
+        host   = self.environ.get('HTTP_X_FORWARDED_HOST', self.environ.get('HTTP_HOST', None))
         if not host:
             host = self.environ.get('SERVER_NAME')
             port = self.environ.get('SERVER_PORT', '80')
