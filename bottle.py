@@ -546,12 +546,11 @@ class Request(threading.local, DictMixin):
         
             You usually don't do this but use the global `bottle.request`
             instance instead.
-         """
+        """
         self.bind(environ or {}, app)
 
     def bind(self, environ, app=None):
-        """ Bind a new WSGI enviroment and clear out all previously computed
-            attributes.
+        """ Bind a new WSGI enviroment.
             
             This is done automatically for the global `bottle.request`
             instance on every request.
@@ -583,7 +582,7 @@ class Request(threading.local, DictMixin):
         elif count:
             empty = 'SCRIPT_NAME' if count < 0 else 'PATH_INFO'
             raise AssertionError("Cannot shift. Nothing left from %s" % empty)
-        self['PATH_INFO'] = self.path =  '/' + '/'.join(pathlist) \
+        self['PATH_INFO'] =  '/' + '/'.join(pathlist) \
                           + ('/' if self.path.endswith('/') and pathlist else '')
         self['SCRIPT_NAME'] = '/' + '/'.join(scriptlist)
         return '/'.join(moved)
@@ -595,6 +594,15 @@ class Request(threading.local, DictMixin):
     def __setitem__(self, key, value):
         """ Shortcut for Request.environ.__setitem__ """
         self.environ[key] = value
+        todelete = []
+        if key in ('PATH_INFO','REQUEST_METHOD'):
+            self.bind(self.environ, self.app)
+        elif key == 'wsgi.input': todelete = ('body','forms','files','params')
+        elif key == 'QUERY_STRING': todelete = ('get','params')
+        elif key.startswith('HTTP_'): todelete = ('headers', 'cookies')
+        for key in todelete:
+            if 'bottle.' + key in self.environ:
+                del self.environ['bottle.' + key]
 
     def keys(self):
         """ Shortcut for Request.environ.keys() """
@@ -638,13 +646,13 @@ class Request(threading.local, DictMixin):
 
             HeaderDict keys are case insensitive str.title()d 
         '''
-        if 'bottle.header' not in self.environ:
-            header = self.environ['bottle.header'] = HeaderDict()
+        if 'bottle.headers' not in self.environ:
+            header = self.environ['bottle.headers'] = HeaderDict()
             for key, value in self.environ.iteritems():
                 if key.startswith('HTTP_'):
                     key = key[5:].replace('_','-').title()
                     header[key] = value
-        return self.environ['bottle.header']
+        return self.environ['bottle.headers']
 
     @property
     def GET(self):
@@ -663,7 +671,7 @@ class Request(threading.local, DictMixin):
 
     @property
     def POST(self):
-        """ The HTTP POST body parsed into a MultiDict.
+        """ Property: The HTTP POST body parsed into a MultiDict.
 
             This supports urlencoded and multipart POST requests. Multipart
             is commonly used for file uploads and may result in some of the
@@ -672,28 +680,45 @@ class Request(threading.local, DictMixin):
             Multiple values per key are possible. See MultiDict for details.
         """
         if 'bottle.post' not in self.environ:
-            save_env = dict() # Build a save environment for cgi
+            self.environ['bottle.post'] = MultiDict()
+            self.environ['bottle.forms'] = MultiDict()
+            self.environ['bottle.files'] = MultiDict()
+            save_env = {'QUERY_STRING':''} # Build a save environment for cgi
             for key in ('REQUEST_METHOD', 'CONTENT_TYPE', 'CONTENT_LENGTH'):
-                if key in self.environ:
-                    save_env[key] = self.environ[key]
-            save_env['QUERY_STRING'] = '' # Without this, sys.argv is called!
+                if key in self.environ: save_env[key] = self.environ[key]
             if TextIOWrapper:
                 fb = TextIOWrapper(self.body, encoding='ISO-8859-1')
             else:
                 fb = self.body
             data = cgi.FieldStorage(fp=fb, environ=save_env)
-            self.environ['bottle.post'] = post = MultiDict()
             for item in data.list:
-                post[item.name] = item if item.filename else item.value
+                if item.filename:
+                    self.environ['bottle.post'][item.name] = item
+                    self.environ['bottle.files'][item.name] = item
+                else:
+                    self.environ['bottle.post'][item.name] = item.value
+                    self.environ['bottle.forms'][item.name] = item.value
         return self.environ['bottle.post']
 
     @property
+    def forms(self):
+        """ Property: HTTP POST form data parsed into a MultiDict. """
+        if 'bottle.forms' not in self.environ: self.POST
+        return self.environ['bottle.forms']
+
+    @property
+    def files(self):
+        """ Property: HTTP POST file uploads parsed into a MultiDict. """
+        if 'bottle.files' not in self.environ: self.POST
+        return self.environ['bottle.files']
+        
+    @property
     def params(self):
         """ A combined MultiDict with POST and GET parameters. """
-        if 'bottle.getpost' not in self.environ:
-            self.environ['bottle.getpost'] = MultiDict(self.GET)
-            self.environ['bottle.getpost'].update(dict(self.POST))
-        return self.environ['bottle.getpost']
+        if 'bottle.params' not in self.environ:
+            self.environ['bottle.params'] = MultiDict(self.GET)
+            self.environ['bottle.params'].update(dict(self.forms))
+        return self.environ['bottle.params']
 
     @property
     def body(self):
