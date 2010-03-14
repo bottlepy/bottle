@@ -703,6 +703,12 @@ Glossary
 
 .. glossary::
 
+   callback
+      Programmer code that is to be called when some external action happens.
+      In the context of web frameworks, the mapping between URL paths and 
+      application code is often achieved by specifying a callback function
+      for each URL.
+
    decorator
       A function returning another function, usually applied as a function transformation using the ``@decorator`` syntax. See `python documentation for function definition  <http://docs.python.org/reference/compound_stmts.html#function>`_ for more about decorators.
 
@@ -711,6 +717,11 @@ Glossary
       saved, and used for cross-referencing.  The environment is pickled
       after the parsing stage, so that successive runs only need to read
       and parse new and changed documents.
+
+   handler function
+      A function to handle some specific event or situation. In a web
+      framework, the application is developed by attaching a handler function
+      as callback for each specific URL composing the application.
 
    source directory
       The directory which, including its subdirectories, contains all
