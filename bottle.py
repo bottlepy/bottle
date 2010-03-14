@@ -573,6 +573,7 @@ class Request(threading.local, DictMixin):
         ''' Shift some levels of PATH_INFO into SCRIPT_NAME and return the
             moved part. count defaults to 1'''
         #/a/b/  /c/d  --> 'a','b'  'c','d'
+        if count == 0: return ''
         pathlist = self.path.strip('/').split('/')
         scriptlist = self.environ.get('SCRIPT_NAME','/').strip('/').split('/')
         if pathlist and pathlist[0] == '': pathlist = []
