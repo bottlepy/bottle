@@ -18,19 +18,19 @@ The template syntax is a very thin layer around the Python language. It's main p
 
 .. rubric:: Code lines
 
-Lines starting with ``%`` are interpreted as python code. The only difference between this and normal python code is that you have to explicitly close blocks with an ``%end`` statement. This way it is possible to align the code to the surrounding template without worrying about correct indentions. Whitespace in front of a code line is compleately ignored.
+The ``%`` character marks a line of python code. The only difference between this and real python code is that you have to explicitly close blocks with an ``%end`` statement. In return you can align the code with the surrounding template and don't have to worry about correct indention of blocks. Lines *not* starting with ``%`` are rendered as text.
 
 Here is an example::
 
   %if name == 'Marc':
-    Hi Marc!
+    Hi <b>Marc</b>!
   %else:
-    Hello stranger!
+    <i>Hello stranger</i>!
   %end
 
 .. rubric:: Inline Statements
 
-Lines *not* starting with ``%`` are printed as text. Any occurrence of ``{{stmt}}`` in text-lines is replaced by the return value of the included python statement. In most cases this is just the name of a local variable, but any python statement returning a string is allowed.
+Any occurrence of ``{{stmt}}`` in a text line is replaced by the return value of the included python statement. In most cases this is just the name of a local variable, but any python statement returning a string is allowed.
 
 ::
 
