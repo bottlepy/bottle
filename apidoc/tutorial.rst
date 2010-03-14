@@ -8,10 +8,11 @@
 .. _flup: http://trac.saddi.com/flup
 .. _http_code: http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
 .. _http_method: http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html
+.. _json: http://de.wikipedia.org/wiki/JavaScript_Object_Notation
 .. _lighttpd: http://www.lighttpd.net/
 .. _mako: http://www.makotemplates.org/
 .. _mod_wsgi: http://code.google.com/p/modwsgi/
-.. _paste: http://pythonpaste.org/
+.. _Paste: http://pythonpaste.org/
 .. _Pound: http://www.apsis.ch/pound/
 .. _wsgi: http://www.wsgi.org/wsgi/
 .. _issue: http://github.com/defnull/bottle/issues
@@ -230,7 +231,7 @@ Bottle passes everything that has a ``read()`` method (file objects) to the ``ws
 JSON
 --------------------------------------------------------------------------------
 
-Even dictionaries are allowed. They are converted to [json](http://de.wikipedia.org/wiki/JavaScript_Object_Notation) and returned with the ``Content-Type`` header set to ``application/json``. To disable this feature (and pass dicts to your middleware) you can set ``bottle.app().autojson`` to ``False``.
+Even dictionaries are allowed. They are converted to json_ and returned with the ``Content-Type`` header set to ``application/json``. To disable this feature (and pass dicts to your middleware) you can set ``bottle.app().autojson`` to ``False``.
 
 ::
 
@@ -554,8 +555,8 @@ Multi-Threaded Server
 --------------------------------------------------------------------------------
 
 The easiest way to increase performance is to install a multi-threaded and
-WSGI-capable HTTP server like [Paste][paste], [flup][flup], [cherrypy][cherrypy]
-or [fapws3][fapws3] and use the corresponding bottle server-adapter.
+WSGI-capable HTTP server like Paste_, flup_, cherrypy_
+or fapws3_ and use the corresponding bottle server-adapter.
 
 ::
 
