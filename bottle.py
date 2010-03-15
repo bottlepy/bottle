@@ -425,16 +425,16 @@ class Bottle(object):
             return handler
         return wrapper
 
-    def handle(self, url, method, catchall=True):
+    def handle(self, url, method):
         """ Execute the handler bound to the specified url and method and return
         its output. If catchall is true, exceptions are catched and returned as
         HTTPError(500) objects. """
         if not self.serve:
             return HTTPError(503, "Server stopped")
 
-        handler, args = self.match_url(request.path, request.method)
+        handler, args = self.match_url(url, method)
         if not handler:
-            return HTTPError(404, "Not found:" + request.path)
+            return HTTPError(404, "Not found:" + url)
 
         try:
             return handler(**args)
@@ -446,7 +446,7 @@ class Bottle(object):
                 raise
             return HTTPError(500, 'Unhandled exception', e, format_exc(10))
 
-    def _cast(self, out, peek=None):
+    def _cast(self, out, request, response, peek=None):
         """ Try to convert the parameter into something WSGI compatible and set
         correct HTTP headers when possible.
         Support: False, str, unicode, dict, HTTPResponse, HTTPError, file-like,
@@ -516,7 +516,7 @@ class Bottle(object):
             request.bind(environ, self)
             response.bind(self)
             out = self.handle(request.path, request.method)
-            out = self._cast(out)
+            out = self._cast(out, request, response)
             if response.status in (100, 101, 204, 304) or request.method == 'HEAD':
                 out = [] # rfc2616 section 4.3
             status = '%d %s' % (response.status, HTTP_CODES[response.status])
