@@ -569,6 +569,10 @@ class Request(threading.local, DictMixin):
         self.path = '/' + environ.get('PATH_INFO', '/').lstrip('/')
         self.method = environ.get('REQUEST_METHOD', 'GET').upper()
 
+    def copy(self):
+        ''' Returns a copy of self '''
+        return Request(self.environ.copy(), self.app)
+        
     def path_shift(self, count=1):
         ''' Shift some levels of PATH_INFO into SCRIPT_NAME and return the
             moved part. count defaults to 1'''
@@ -757,14 +761,24 @@ class Response(threading.local):
     """ Represents a single HTTP response using thread-local attributes.
     """
 
+    def __init__(self, app):
+        self.bind(app)
+
     def bind(self, app):
         """ Resets the Response object to its factory defaults. """
         self._COOKIES = None
         self.status = 200
         self.headers = HeaderDict()
         self.content_type = 'text/html; charset=UTF-8'
-        self.error = None
         self.app = app
+
+    def copy(self):
+        ''' Returns a copy of self '''
+        copy = Response(self.app)
+        copy.status = self.status
+        copy.headers = self.headers.copy()
+        copy.content_type = self.content_type
+        return copy
 
     def wsgiheader(self):
         ''' Returns a wsgi conform list of header/value pairs. '''
