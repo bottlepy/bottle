@@ -957,7 +957,7 @@ def static_file(filename, root, guessmime=True, mimetype=None, download=False):
     if ims:
         ims = ims.split(";")[0].strip() # IE sends "<date>; length=146"
         ims = parse_date(ims)
-        if ims is not None and ims >= stats.st_mtime:
+        if ims is not None and ims >= int(stats.st_mtime):
            return HTTPResponse("Not modified", status=304, header=header)
     header['Content-Length'] = stats.st_size
     if request.method == 'HEAD':
