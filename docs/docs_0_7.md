@@ -129,7 +129,7 @@ You may raise `ValueError` in your custom callable if a parameter does not valid
 
 # Generating content
 
-The [WSGI specification][wsgi] expects an iterable list of byte strings to be returned from your application and can't handle file objects, unicode, dictionaries or exceptions.
+The [WSGI specification][wsgi] expects an iterable list of byte strings to be returned from your application and can't handle unicode, dictionaries or exceptions. File objects will be handled as iterables in *pure* WSGI, with no conditional caching or `Content-Length` calculation.
 
     #!Python
     @route('/wsgi')
