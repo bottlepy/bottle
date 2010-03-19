@@ -1226,8 +1226,7 @@ class GunicornServer(ServerAdapter):
 
 class AutoServer(ServerAdapter):
     """ Untested. """
-    adapters = [FapwsServer, CherryPyServer, PasteServer,
-                TwistedServer, GunicornServer, WSGIRefServer]
+    adapters = [CherryPyServer, PasteServer, TwistedServer, WSGIRefServer]
     def run(self, handler):
         for sa in self.adapters:
             try:
@@ -1236,7 +1235,7 @@ class AutoServer(ServerAdapter):
                 pass
 
 
-def run(app=None, server=AutoServer, host='127.0.0.1', port=8080,
+def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080,
         interval=1, reloader=False, **kargs):
     """ Runs bottle as a web server. """
     app = app if app else default_app()
