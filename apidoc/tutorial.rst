@@ -23,7 +23,7 @@
 Tutorial
 ========
 
-This tutorial introduces you to the concepts and features of the Bottle web framework. If you have questions not answered here, please check the :doc:`faq` page, then file a ticket at the issue_ tracker or send an e-mail to the `mailing list <mailto:bottlepy@googlegroups.com>`_.
+This tutorial introduces you to the concepts and features of the Bottle web framework. It is intended to be useful as tutorial and a reference at the same time. If you have questions not answered here, please check the :doc:`faq` page, then file a ticket at the issue_ tracker or send an e-mail to the `mailing list <mailto:bottlepy@googlegroups.com>`_.
 
 .. note::
 
@@ -54,12 +54,12 @@ Bottle has no dependencies, so all you need is Python_ (2.5 up to 3.x should wor
         return "Hello World!"
     run(host='localhost', port=8080)
 
-Run this script, visit http://localhost:8080/hello and you will see "Hello World!" in your Browser. So, what happened here?
+Run this script and visit http://localhost:8080/hello . You will see "Hello World!" in your Browser. So, what happened here?
 
-1. First we imported some bottle components. The :func:`route` decorator and the :func:`run` function. 
-2. The :func:`route` :term:`decorator` is used do bind a piece of code to an URL. In this example we want to answer requests to the ``/hello`` URL.
+1. First we imported some bottle components. The :func:`route` :term:`decorator` and the :func:`run` function. 
+2. The :func:`route` decorator is used do bind a piece of code to an URL. In this example we want to answer requests to the ``/hello`` URL.
 3. This function will be called every time someone hits the ``/hello`` URL on the web server. It is called a :term:`handler function` or :term:`callback`.
-4. The return value of a handler function will be sent back to the Browser.
+4. The return value of our callback will be sent back to the browser.
 5. Now it is time to start the actual HTTP server. The default is a development server running on 'localhost' port 8080 and serving requests until you hit :kbd:`Control-c`.
 
 
@@ -71,7 +71,7 @@ Run this script, visit http://localhost:8080/hello and you will see "Hello World
 Routing
 ================================================================================
 
-Routes are used to map URLs to a callback functions that generate the content for that URLs. Bottle has a :func:`route` decorator to do that. You can add any number of routes to a callback.
+Routes are used to map URLs to a :term:`callback` functions that generate the content for that URLs. Bottle has a :func:`route` decorator to do that. You can add any number of routes to a callback.
 
 ::
 
@@ -86,24 +86,23 @@ Routes are used to map URLs to a callback functions that generate the content fo
     def hello():
         return "Hello World!"
 
-As you can see, URLs and routes have nothing to do with actual files on the web server. Routes are unique names for your callbacks, nothing more and nothing less. Requests to URLs not matching any of the defined routes will result in a 404 HTTP error page.
-
+As you can see, URLs and routes have nothing to do with actual files on the web server. Routes are unique names for your callbacks, nothing more and nothing less. Requests to URLs not matching any of the defined routes will result in a "404 File not found" error page.
 
 
 .. rubric:: HTTP Request Methods
 
-  The :func:`route` decorator has an optional keyword argument called ``method`` which defaults to ``method='GET'``; only GET requests get answered by that routes. Possible values are `POST`, `PUT`, `DELETE`, `HEAD` or any other [HTTP request method][http_method] you want to listen to. As an alternative, you can use the :func:`get()`, :func:`post()`, :func:`put()` and :func:`delete()` aliases.
+__ http_method_
 
-The special ``ANY`` method works as a low priority fallback. It matches requests regardless of their HTTP method but only if no other more specific route can handle that same request.
+The :func:`route` decorator has an optional keyword argument called ``method`` which defaults to ``method='GET'``; only ``GET`` requests get answered by that route. Possible values are ``POST``, ``PUT``, ``DELETE``, ``HEAD`` or any other `HTTP request method`__ you want to listen to. For the most common request methods there are short-cuts: :func:`get()`, :func:`post()`, :func:`put()` and :func:`delete()`.
 
-Also note that `HEAD` requests fall back to `GET` routes automatically, so you don't have to specify them explicitly.
+The ``ANY`` method has a special meaning and works as a low priority fallback for all other methods. It matches requests regardless of their HTTP method but only if no more specific route matched that same request. Also note that ``HEAD`` requests fall back to ``GET`` routes automatically, so you don't have to handle them explicitly.
 
 To sum it up: ``HEAD`` requests fall back to ``GET`` routes and all requests fall back to ``ANY`` routes, if there are any. 
 
 Here is an example for a route handling ``POST`` requests::
 
     from bottle import post, request
-    @post('/form/submit')
+    @post('/form/submit') #same as: @route('/form/submit', method='POST')
     def form_submit():
         form_data = request.POST
         do_something_with(form_data)
@@ -127,9 +126,9 @@ Static routes are fine, but URLs may carry information as well. Let's add a ``:n
     def hello(name):
         return "Hello %s!" % name
 
-This dynamic route matches ``/hello/alice`` as well as ``/hello/bob``. In fact, the ``:name`` part will match everything but a slash (``/``), so any name is possible. ``/hello/bob/and/alice`` or ``/hellobob`` won't match. Each part of the URL covered by a placeholder is provided as a keyword argument to your handler callback.
+This dynamic route matches ``/hello/alice`` as well as ``/hello/bob``. In fact, the ``:name`` part will match everything but a slash (``/``), so any name is possible. Each part of the URL covered by a placeholder is provided as a keyword argument to your callback function.
 
-A normal placeholder matches everything up to the next slash. To change that, you can add a regular expression pattern::
+A normal placeholder matches everything up to the next slash. To change that, you can add a regular expression to that placeholder::
 
     from bottle import route
     @route('/get_object/:id#[0-9]+#')
@@ -140,23 +139,6 @@ As you can see, URL parameters remain strings, even if they are configured to on
 
 
 
-The @validate() decorator
---------------------------------------------------------------------------------
-
-Bottle offers a handy decorator called ``validate()`` to check and manipulate URL parameters. It takes callables (function or class objects) as keyword arguments and filters every URL parameter through the corresponding callable before they are passed to your request handler.
-
-::
-
-    from bottle import route, validate
-    # /test/validate/1/2.3/4,5,6,7
-    @route('/test/validate/:i/:f/:csv')
-    @validate(i=int, f=float, csv=lambda x: map(int, x.split(',')))
-    def validate_test(i, f, csv):
-        return "Int: %d, Float:%f, List:%s" % (i, f, repr(csv))
-
-You may raise ``ValueError`` in your custom callable if a parameter does not validate.
-
-
 
 
 
@@ -165,7 +147,9 @@ You may raise ``ValueError`` in your custom callable if a parameter does not val
 Generating content
 ================================================================================
 
-The [WSGI specification][wsgi] expects an iterable list of byte strings to be returned from your application and can't handle file objects, unicode, dictionaries or exceptions.
+__ wsgi_
+
+The `WSGI specification`__ expects an iterable list of byte strings to be returned from your application and can't handle unicode, dictionaries or exceptions.
 
 ::
 
@@ -183,8 +167,7 @@ Strings and Unicode
 --------------------------------------------------------------------------------
 
 Returning strings (bytes) is not a problem. Unicode however needs to be encoded into a byte stream before 
-the webserver can send it to the client. Ths default encoding is utf-8. If that fits your needs, you can 
-simply return unicode or unicode iterables.
+the webserver can send it to the client. The default encoding is utf-8. If that fits your needs, you can simply return unicode or unicode iterables.
 
 ::
 
@@ -196,7 +179,7 @@ simply return unicode or unicode iterables.
     def get_unicode():
         return u'Unicode is encoded with UTF-8 by default'
 
-You can change Bottles default encoding by setting ``response.content_type`` to a value containing a ``charset=...`` parameter or by changing ``response.charset`` directly.
+You can change Bottles default encoding by setting :attr:`Response.content_type` to a value containing a ``charset=...`` parameter or by changing :attr:`Response.charset` directly.
 
 ::
 
@@ -211,7 +194,7 @@ You can change Bottles default encoding by setting ``response.content_type`` to 
         response.content_type = 'text/html; charset=latin9'
         return u'ISO-8859-15 is also known as latin9.'
 
-In some rare cases the Python encoding names differ from the names supported by the HTTP specification. Then, you have to do both: First set the ``response.content_type`` header (which is sent to the client unchanged) and then set the ``response.charset`` option (which is used to decode unicode).
+In some rare cases the Python encoding names differ from the names supported by the HTTP specification. Then, you have to do both: First set the :attr:`Response.content_type` header (which is sent to the client unchanged) and then set the :attr:`Response.charset` option (which is used to decode unicode).
 
 
 
@@ -244,7 +227,7 @@ Even dictionaries are allowed. They are converted to json_ and returned with the
 Static Files
 --------------------------------------------------------------------------------
 
-You can directly return file objects, but ``static_file()`` is the recommended way to serve static files. It automatically guesses a mime-type, adds a ``Last-Modified`` header, restricts paths to a ``root`` directory for security reasons and generates appropriate error responses (401 on permission errors, 404 on missing files). It even supports the ``If-Modified-Since`` header and eventually generates a ``304 Not modified`` response. You can pass a custom mimetype to disable mimetype guessing.
+You can directly return file objects, but :func:`static_file` is the recommended way to serve static files. It automatically guesses the mime-type, adds a ``Last-Modified`` header, restricts paths to a ``root`` directory for security reasons and generates appropriate error responses (401 on permission errors, 404 on missing files). It even supports the ``If-Modified-Since`` header and eventually generates a ``304 Not modified`` response to save bandwidth. You can pass a custom mimetype to disable mimetype guessing.
 
 ::
 
@@ -257,14 +240,17 @@ You can directly return file objects, but ``static_file()`` is the recommended w
     def send_file(filename):
         return static_file(filename, root='/path/to/static/files')
 
-You can raise the return value of ``static_file()`` as an exception if you really need to. The raised ``HTTPResponse`` exception is handled by the Bottle framework. 
+
+
 
 
 
 HTTPError, HTTPResponse and Redirects
 --------------------------------------------------------------------------------
 
-The ``abort(code[, message])`` function is used to generate [HTTP error pages][http_code].
+__ http_code_
+
+The :func:`abort` function is used to generate `HTTP error pages`__.
 
 ::
 
@@ -272,8 +258,9 @@ The ``abort(code[, message])`` function is used to generate [HTTP error pages][h
     @route('/restricted')
     def restricted():
         abort(401, "Sorry, access denied.")
+        #same as: raise HTTPError(401, "Sorry, access denied.")
 
-To redirect a client to a different URL, you can send a ``303 See Other`` response with the ``Location`` header set to the new URL. ``redirect(url[, code])`` does that for you. You may provide a different HTTP status code as a second parameter.
+To redirect a client to a different URL, you can send a ``303 See Other`` response with the ``Location`` header set to the new URL. :func:`redirect` does that for you. You may provide a different HTTP status code as a second parameter.
 
 ::
 
@@ -282,9 +269,7 @@ To redirect a client to a different URL, you can send a ``303 See Other`` respon
     def wrong():
         redirect("/right/url")
 
-Both functions interrupt your handler code by raising a ``HTTPError`` exception.
-
-You can return ``HTTPError`` exceptions instead of raising them. This is faster than raising and capturing Exceptions, but does exactly the same.
+Both functions interrupt your code by raising a :class:`HTTPError` exception. You can return these exceptions instead of raising them, too. Bottle makes no difference between returned or raised exceptions.
 
 ::
 
@@ -298,7 +283,7 @@ You can return ``HTTPError`` exceptions instead of raising them. This is faster 
 Exceptions
 --------------------------------------------------------------------------------
 
-All exceptions other than ``HTTPResponse`` or ``HTTPError`` will result in a ``500 Internal Server Error`` response, so they won't crash your WSGI server. You can turn off this behaviour to handle exceptions in your middleware by setting ``bottle.app().catchall`` to ``False``.
+All exceptions other than :class:`HTTPResponse` or :class:`HTTPError` will result in a ``500 Internal Server Error`` response, so they won't crash your WSGI server. You can turn off this behaviour and handle exceptions in your middleware by setting ``bottle.app().catchall`` to ``False``.
 
 
 
@@ -309,7 +294,7 @@ All exceptions other than ``HTTPResponse`` or ``HTTPError`` will result in a ``5
 Working with HTTP Requests
 ================================================================================
 
-Bottle parses the HTTP request data into a thread-save ``request`` object and provides some useful tools and methods to access this data. Most of the parsing happens on demand, so you won't see any overhead if you don't need the result. Here is a short summary:
+Bottle parses the HTTP request data into a thread-save :class:`Request` object and provides some useful tools and methods to access this data. Most of the parsing happens on demand, so you won't see any overhead if you don't need the result. Here is a short summary:
 
 * ``request[key]``: A shortcut for ``request.environ[key]``
 * ``request.environ``: WSGI environment dictionary. Use this with care.
