@@ -230,10 +230,8 @@ To do so, we first add a new route to our script and tell the route that it shou
         
         query = "INSERT INTO todo (task,status) VALUES (?,1)"
         c.execute(query, (new,))
+        new_id = c.lastrowid
         conn.commit()
-        
-        c.execute("SELECT last_insert_rowid()")
-        new_id = c.fetchone()[0]
         c.close()
         
         return '<p>The new task was inserted into the database, the ID is %s</p>' % new_id
@@ -259,10 +257,8 @@ The code need to be extended to:
         
         query = "INSERT INTO todo (task,status) VALUES (?,1)"
         c.execute(query, (new,))
+        new_id = c.lastrowid
         conn.commit()
-        
-        c.execute("SELECT last_insert_rowid()")
-        new_id = c.fetchone()[0]
         c.close()
   
         return '<p>The new task was inserted into the database, the ID is %s</p>' %new_id
@@ -543,10 +539,8 @@ Main code for the application `todo.py`:
             
             query = "INSERT INTO todo (task,status) VALUES (?,1)"
             c.execute(query, (new,))
+            new_id = c.lastrowid
             conn.commit()
-            
-            c.execute("SELECT last_insert_rowid()")
-            new_id = c.fetchone()[0]
             c.close()
       
             return '<p>The new task was inserted into the database, the ID is %s</p>' %new_id
