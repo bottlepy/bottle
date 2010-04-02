@@ -22,6 +22,18 @@ class TestRouter(unittest.TestCase):
         self.assertEqual(('anon', {}), match('/anon/match'))
         self.assertEqual((None, {}), match('//no/m/at/ch/'))
 
+    def testParentheses(self):
+        add = self.r.add
+        match = self.r.match
+        add('/func(:param)', 'func')
+        self.assertEqual(('func', {'param':'foo'}), match('/func(foo)'))
+        add('/func2(:param#(foo|bar)#)', 'func2')
+        self.assertEqual(('func2', {'param':'foo'}), match('/func2(foo)'))
+        self.assertEqual(('func2', {'param':'bar'}), match('/func2(bar)'))
+        self.assertEqual((None, {}),                match('/func2(baz)'))        
+        add('/groups/:param#(foo|bar)#', 'groups')
+        self.assertEqual(('groups', {'param':'foo'}), match('/groups/foo'))
+
     def testErrorInPattern(self):
         self.assertRaises(bottle.RouteSyntaxError, self.r.add, '/:bug#(#/', 'buggy')
 

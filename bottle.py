@@ -233,7 +233,8 @@ class Route(object):
 
     def flat_re(self):
         ''' Return a regexp pattern with non-grouping parentheses '''
-        return re.sub(r'\(\?P<[^>]*>|\((?!\?)', '(?:', self.group_re())
+        rf = lambda m: m.group(0) if len(m.group(1)) % 2 else m.group(1) + '(?:'
+        return re.sub(r'(\\*)(\(\?P<[^>]*>|\((?!\?))', rf, self.group_re())
 
     def format_str(self):
         ''' Return a format string with named fields. '''
