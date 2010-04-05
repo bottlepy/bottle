@@ -693,7 +693,7 @@ class Request(threading.local, DictMixin):
                 fb = TextIOWrapper(self.body, encoding='ISO-8859-1')
             else:
                 fb = self.body
-            data = cgi.FieldStorage(fp=fb, environ=save_env)
+            data = cgi.FieldStorage(fp=fb, environ=save_env, keep_blank_values=True)
             self._POST = MultiDict()
             for item in data.list:
                 self._POST[item.name] = item if item.filename else item.value
