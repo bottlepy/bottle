@@ -695,7 +695,7 @@ class Request(threading.local, DictMixin):
                 fb = self.body
             data = cgi.FieldStorage(fp=fb, environ=save_env, keep_blank_values=True)
             self._POST = MultiDict()
-            for item in data.list:
+            for item in data.list or []:
                 self._POST[item.name] = item if item.filename else item.value
         return self._POST
 

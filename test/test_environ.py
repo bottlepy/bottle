@@ -97,7 +97,7 @@ class TestEnviron(unittest.TestCase):
         
     def test_post(self):
         """ Environ: POST data """ 
-        sq = u'a=a&a=1&b=b&c=c'.encode('utf8')
+        sq = u'a=a&a=1&b=b&c=&d'.encode('utf8')
         e = {}
         wsgiref.util.setup_testing_defaults(e)
         e['wsgi.input'].write(sq)
@@ -111,6 +111,19 @@ class TestEnviron(unittest.TestCase):
         self.assertEqual(['b'], request.POST.getall('b'))
         self.assertEqual('1', request.POST['a'])
         self.assertEqual('b', request.POST['b'])
+        self.assertEqual('', request.POST['c'])
+        self.assertEqual('', request.POST['d'])
+
+    def test_bodypost(self):
+        sq = u'foobar'.encode('utf8')
+        e = {}
+        wsgiref.util.setup_testing_defaults(e)
+        e['wsgi.input'].write(sq)
+        e['wsgi.input'].seek(0)
+        e['CONTENT_LENGTH'] = str(len(sq))
+        e['REQUEST_METHOD'] = "POST"
+        request.bind(e, None)
+        self.assertEqual('', request.POST['foobar'])
 
     def test_params(self):
         """ Environ: GET and POST are combined in request.param """ 
