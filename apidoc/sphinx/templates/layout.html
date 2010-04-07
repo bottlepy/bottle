@@ -1,0 +1,14 @@
+{% extends "!layout.html" %}
+{% block extrahead %}
+    <link rel="shortcut icon" type="image/png" href="{{ pathto('_static/py.png', 1) }}" />
+{{ super() }}
+{% endblock %}
+{% block footer %}
+    <div class="footer">
+    &copy; <a href="{{ pathto('index') }}#licence">Copyright</a> {{ copyright|e }} - <a href="{{ pathto('contact') }}">Contact</a><br />
+    Last updated on {{ last_updated|e }}. Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> {{ sphinx_version|e }}.<br />
+    Powered by Bottle {{version|e}}
+    </div>
+{% endblock %}
+
+

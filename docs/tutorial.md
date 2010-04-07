@@ -62,7 +62,7 @@ Furthermore, you need [Pysqlite][pysqlite], the Python modules to access SQLite 
 First, we need to create the database we use later on. To do so, run SQLite with the command `sqlite3 todo.db`. This will create an empty data base called "todo.sql" and you will see the SQLite prompt, which may look like this: `sqlite>`. Right here, input the following commands:
 
     #!sql
-    CREATE TABLE todo (id int PRIMARY KEY, task char(100) NOT NULL, status bool NOT NULL);
+    CREATE TABLE todo (id INTEGER PRIMARY KEY, task char(100) NOT NULL, status bool NOT NULL);
     INSERT INTO todo (task,status) VALUES ('Read A-byte-of-python to get a good introduction into Python',0);
     INSERT INTO todo (task,status) VALUES ('Visit the Python website',1);
     INSERT INTO todo (task,status) VALUES ('Test various editors for and check the syntax highlighting',1);
@@ -499,7 +499,7 @@ As above the ToDo list example was developed piece by piece, here is the complet
 Main code for the application `todo.py`:
 
     #!Python
-    import sqlite3
+    import os, sqlite3
     from bottle import route, run, debug, template, request, validate, error
 
     # only needed when you run Bottle on mod_wsgi
@@ -580,8 +580,19 @@ Main code for the application `todo.py`:
         return 'Sorry, this page does not exist!'
 
 
-    debug(True)      
-    run(reloader=True)
+    debug(True)
+
+    def main():
+        run(reloader=True)
+
+    if __name__ == "__main__":
+        # Interactive mode
+        main()
+    else:
+        # Mod WSGI launch
+        os.chdir(os.path.dirname(__file__))
+        application = default_app()
+
     #remember to remove reloader=True and debug(True) when you move your application from development to a productive environment.
 
 Template `edit_task.tpl`:

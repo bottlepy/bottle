@@ -90,7 +90,7 @@ def iter_blogposts():
 
 # API docs
 
-@route('/api/:filename#.*#')
+@route('/docs/:filename#.*#')
 def static(filename):
     if not filename:
         filename = 'index.html'
@@ -131,7 +131,5 @@ def bloglist():
     posts.sort(key=lambda x: x.blogtime, reverse=True)
     return dict(posts=posts)
 
-
 # Start server
-#bottle.debug(True)
-bottle.run(host='0.0.0.0', reloader=False, port=int(sys.argv[1]), server=bottle.PasteServer)
+bottle.run(host='0.0.0.0', port=int(sys.argv[1] if len(sys.argv) > 1 else 8080), server=bottle.AutoServer)

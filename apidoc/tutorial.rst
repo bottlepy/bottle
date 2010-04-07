@@ -33,8 +33,8 @@ This tutorial introduces you to the concepts and features of the Bottle web fram
 .. rubric:: A quick overview:
 
 * :ref:`tutorial-routing`: Web development starts with binding URLs to code. This section tells you how to do it.
-* :ref:`tutorial-output`: You have to return something to the Browser. Bottle makes it easy for you, supporting more than just plain strings.
 * :ref:`tutorial-request`: Each client request carries a lot of information. HTTP-headers, form data and cookies to name just three. Here is how to use them.
+* :ref:`tutorial-output`: You have to return something to the Browser. Bottle makes it easy for you, supporting more than just plain strings.
 * :ref:`tutorial-templates`: You don't want to write HTML within your python code, do you? Template separate code from presentation.
 * :ref:`tutorial-debugging`: These tools and features will help you during development.
 * :ref:`tutorial-deployment`: Get it up and running.
@@ -69,9 +69,9 @@ Run this script, visit http://localhost:8080/hello and you will see "Hello World
 .. _tutorial-routing:
 
 Routing
-================================================================================
+==============================================================================
 
-Routes are used to map URLs to a callback functions that generate the content for that URLs. Bottle has a :func:`route` decorator to do that. You can add any number of routes to a callback.
+Routes are used to map URLs to callback functions that generate the content for that URLs. Bottle has a :func:`route` decorator to do that. You can add any number of routes to a callback.
 
 ::
 
@@ -92,33 +92,31 @@ As you can see, URLs and routes have nothing to do with actual files on the web 
 
 .. rubric:: HTTP Request Methods
 
-The :func:`route` decorator has an optional keyword argument called ``method`` which defaults to ``method='GET'``; only GET requests get answered by that routes. Possible values are `POST`, `PUT`, `DELETE`, `HEAD` or any other [HTTP request method][http_method] you want to listen to. As an alternative, you can use the :func:`get()`, :func:`post()`, :func:`put()` and :func:`delete()` aliases.
+.. __: http_method_
 
-The special ``ANY`` method works as a low priority fallback. It matches requests regardless of their HTTP method but only if no other more specific route can handle that same request.
-
-Also note that `HEAD` requests fall back to `GET` routes automatically, so you don't have to specify them explicitly.
-
-To sum it up: ``HEAD`` requests fall back to ``GET`` routes and all requests fall back to ``ANY`` routes, if there are any. 
+The HTTP protocol defines several `request methods`__ for different tasks. With no method specified, routes will listen to ``GET`` requests only. To handle other methods such as ``POST``, ``PUT`` or ``DELETE``, you have to add a ``method`` keyword argument to the :func:`route` decorator or use one of the alternative decorators: :func:`get()`, :func:`post()`, :func:`put()` or :func:`delete()`.
 
 Here is an example for a route handling ``POST`` requests::
 
     from bottle import post, request
-    @post('/form/submit')
+    @post('/form/submit') # or @route('/form/submit', method='POST')
     def form_submit():
         form_data = request.POST
         do_something_with(form_data)
         return "Done"
 
-In this example we used :meth:`request.POST` to access POST form data as described in the :ref:`tutorial-request` section.
+In this example we used :attr:`Request.POST` to access form data as described in the :ref:`tutorial-request` section.
 
-Note that ``HEAD`` requests will fall back to ``GET`` routes and all requests will fall back to ``ANY`` routes, if there is no matching route for the original request method.
+The special ``ANY`` method works as a low priority fallback. It matches requests regardless of their HTTP method but only if no other more specific route is installed. Also note that ``HEAD`` requests fall back to ``GET`` routes automatically, so you don't have to specify them explicitly.
+
+To sum it up: ``HEAD`` requests fall back to ``GET`` routes and all requests fall back to ``ANY`` routes, if there is no matching route for the original request method.
 
 
 
 .. _tutorial-dynamic-routes:
 
 Dynamic Routes
---------------------------------------------------------------------------------
+------------------------------------------------------------------------------
 
 Static routes are fine, but URLs may carry information as well. Let's add a ``:name`` placeholder to our route.
 
@@ -142,21 +140,95 @@ As you can see, URL parameters remain strings, even if they are configured to on
 
 
 
-The @validate() decorator
---------------------------------------------------------------------------------
 
-Bottle offers a handy decorator called ``validate()`` to check and manipulate URL parameters. It takes callables (function or class objects) as keyword arguments and filters every URL parameter through the corresponding callable before they are passed to your request handler.
+
+
+.. _tutorial-request:
+
+The Request Object
+==============================================================================
+
+Bottle parses the HTTP request data into a thread-save ``request`` object and provides some useful tools and methods to access this data. Most of the parsing happens on demand, so you won't see any overhead if you don't need the result. Here is a short summary:
+
+* ``request[key]``: A shortcut for ``request.environ[key]``
+* ``request.environ``: WSGI environment dictionary. Use this with care.
+* ``request.app``: Currently used Bottle instance (same as ``bottle.app()``)
+* ``request.method``: HTTP request-method (GET,POST,PUT,DELETE,...).
+* ``request.query_string``: HTTP query-string (http://host/path?query_string)
+* ``request.path``: Path string that matched the current route.
+* ``request.fullpath``: Full path including the ``SCRIPT_NAME`` part.
+* ``request.url``: The full URL as requested by the client (including ``http(s)://`` and hostname)
+* ``request.input_length`` The Content-Length header (if present) as an integer.
+* ``request.header``: HTTP header dictionary.
+* ``request.GET``: The parsed content of ``request.query_string`` as a dict. Each value may be a string or a list of strings.
+* ``request.POST``: A dict containing parsed form data. Supports URL- and multipart-encoded form data. Each value may be a string, a file or a list of strings or files.
+* ``request.COOKIES``: The cookie data as a dict.
+* ``request.params``: A dict containing both, ``request.GET`` and ``request.POST`` data.
+* ``request.body``: The HTTP body of the request as a buffer object.
+* ``request.auth``: HTTP authorisation data as a named tuple. (experimental)
+* ``request.get_cookie(key[, default])``: Returns a specific cookie. If it is a :term:`secure cookie` it is decoded. (experimental)
+
+
+
+Cookies
+------------------------------------------------------------------------------
+
+Bottle stores cookies sent by the client in a dictionary called ``request.COOKIES``. To create new cookies, the method ``response.set_cookie(name, value[, **params])`` is used. It accepts additional parameters as long as they are valid cookie attributes supported by `SimpleCookie`_.
 
 ::
 
-    from bottle import route, validate
-    # /test/validate/1/2.3/4,5,6,7
-    @route('/test/validate/:i/:f/:csv')
-    @validate(i=int, f=float, csv=lambda x: map(int, x.split(',')))
-    def validate_test(i, f, csv):
-        return "Int: %d, Float:%f, List:%s" % (i, f, repr(csv))
+    from bottle import response
+    response.set_cookie('key','value', path='/', domain='example.com', secure=True, expires=+500, ...)
 
-You may raise ``ValueError`` in your custom callable if a parameter does not validate.
+To set the ``max-age`` attribute use the ``max_age`` name.
+
+TODO: It is possible to store python objects and lists in cookies. This produces signed cookies, which are pickled and unpickled automatically. 
+
+
+
+GET and POST values
+------------------------------------------------------------------------------
+
+Query strings and/or POST form submissions are parsed into dictionaries and made
+available as ``request.GET`` and ``request.POST``. Multiple values per
+key are possible, so these dictionaries actually are instances of :class:`MultiDict`
+which returns the newest value by default. You can use ``.getall(key)`` to get a
+list of all available values for that key.
+
+
+::
+
+    from bottle import route, request
+    @route('/search', method='POST')
+    def do_search():
+        if 'query' in request.POST:
+            return 'You searched for %s.' % request.POST['query'].strip()
+        else:
+            return "You didn't supply a search query."
+
+
+
+
+File Uploads
+------------------------------------------------------------------------------
+
+Bottle handles file uploads similar to normal POST form data. Instead of strings, you will get file-like objects. 
+
+::
+
+    from bottle import route, request
+    @route('/upload', method='POST')
+    def do_upload():
+        datafile = request.POST.get('datafile')
+        return datafile.read()
+
+Here is an example HTML Form for file uploads:
+
+.. code-block:: html
+
+    <form action="/upload" method="post" enctype="multipart/form-data">
+      <input name="datafile" type="file" />
+    </form>
 
 
 
@@ -165,28 +237,22 @@ You may raise ``ValueError`` in your custom callable if a parameter does not val
 .. _tutorial-output:
 
 Generating content
-================================================================================
+==============================================================================
 
-The `WSGI specification`_ expects an iterable list of byte strings to be returned from your application and can't handle unicode, dictionaries or exceptions. File objects will be handled as iterables in *pure* WSGI, with no conditional caching or ``Content-Length`` calculation. 
-
-::
-
-    @route('/wsgi')
-    def wsgi():
-        return ['WSGI','wants a','list of','strings']
-
-Bottle automatically tries to convert anything to a WSGI supported type, so you
-don't have to. The following examples will work with Bottle, but won't work with
-pure WSGI.
+The `WSGI specification`_ expects an iterable list of byte strings to be returned by your application and can't handle unicode, dictionaries or exceptions. Bottle automatically tries to convert anything to a WSGI supported type, so you don't have to. The following examples will work with Bottle, but won't work with pure WSGI.
 
 
+
+
+The Response Object
+------------------------------------------------------------------------------
+
+TODO
 
 Strings and Unicode
---------------------------------------------------------------------------------
+------------------------------------------------------------------------------
 
-Returning strings (bytes) is not a problem. Unicode however needs to be encoded into a byte stream before 
-the webserver can send it to the client. Ths default encoding is utf-8. If that fits your needs, you can 
-simply return unicode or unicode iterables.
+Returning strings (bytes) is not a problem. Unicode however needs to be encoded before the webserver can send it to the client. The default encoding is utf-8. If that fits your needs, you can simply return unicode or iterables yielding unicode.
 
 ::
 
@@ -198,7 +264,7 @@ simply return unicode or unicode iterables.
     def get_unicode():
         return u'Unicode is encoded with UTF-8 by default'
 
-You can change Bottles default encoding by setting ``response.content_type`` to a value containing a ``charset=...`` parameter or by changing ``response.charset`` directly.
+You can change the encoding by setting :attr:`Response.content_type` to a value containing a ``charset=...`` parameter or by changing :attr:`Response.charset` directly. (The :class:`Response` object is described in the section: :ref:`tutorial-request`)
 
 ::
 
@@ -213,7 +279,7 @@ You can change Bottles default encoding by setting ``response.content_type`` to 
         response.content_type = 'text/html; charset=latin9'
         return u'ISO-8859-15 is also known as latin9.'
 
-In some rare cases the Python encoding names differ from the names supported by the HTTP specification. Then, you have to do both: First set the ``response.content_type`` header (which is sent to the client unchanged) and then set the ``response.charset`` option (which is used to decode unicode).
+In some rare cases the Python encoding names differ from the names supported by the HTTP specification. Then, you have to do both: First set the :attr:`Response.content_type` header (which is sent to the client unchanged) and then set the :attr:`Response.charset` attribute (which is used to decode unicode).
 
 
 
@@ -252,11 +318,11 @@ You can directly return file objects, but ``static_file()`` is the recommended w
 
     from bottle import static_file
     @route('/images/:filename#.*\.png#')
-    def senf_image(filename):
+    def send_image(filename):
         return static_file(filename, root='/path/to/image/files', mimetype='image/png')
     
     @route('/static/:filename')
-    def send_file(filename):
+    def send_static(filename):
         return static_file(filename, root='/path/to/static/files')
 
 You can raise the return value of ``static_file()`` as an exception if you really need to. The raised ``HTTPResponse`` exception is handled by the Bottle framework. 
@@ -306,94 +372,6 @@ All exceptions other than ``HTTPResponse`` or ``HTTPError`` will result in a ``5
 
 
 
-.. _tutorial-request:
-
-Working with HTTP Requests
-================================================================================
-
-Bottle parses the HTTP request data into a thread-save ``request`` object and provides some useful tools and methods to access this data. Most of the parsing happens on demand, so you won't see any overhead if you don't need the result. Here is a short summary:
-
-* ``request[key]``: A shortcut for ``request.environ[key]``
-* ``request.environ``: WSGI environment dictionary. Use this with care.
-* ``request.app``: Currently used Bottle instance (same as ``bottle.app()``)
-* ``request.method``: HTTP request-method (GET,POST,PUT,DELETE,...).
-* ``request.query_string``: HTTP query-string (http://host/path?query_string)
-* ``request.path``: Path string that matched the current route.
-* ``request.fullpath``: Full path including the ``SCRIPT_NAME`` part.
-* ``request.url``: The full URL as requested by the client (including ``http(s)://`` and hostname)
-* ``request.input_length`` The Content-Length header (if present) as an integer.
-* ``request.header``: HTTP header dictionary.
-* ``request.GET``: The parsed content of ``request.query_string`` as a dict. Each value may be a string or a list of strings.
-* ``request.POST``: A dict containing parsed form data. Supports URL- and multipart-encoded form data. Each value may be a string, a file or a list of strings or files.
-* ``request.COOKIES``: The cookie data as a dict.
-* ``request.params``: A dict containing both, ``request.GET`` and ``request.POST`` data.
-* ``request.body``: The HTTP body of the request as a buffer object.
-* ``request.auth``: HTTP authorisation data as a named tuple. (experimental)
-* ``request.get_cookie(key[, default])``: Returns a specific cookie. If it is a :term:`secure cookie` it is decoded. (experimental)
-
-
-
-Cookies
---------------------------------------------------------------------------------
-
-Bottle stores cookies sent by the client in a dictionary called ``request.COOKIES``. To create new cookies, the method ``response.set_cookie(name, value[, **params])`` is used. It accepts additional parameters as long as they are valid cookie attributes supported by `SimpleCookie`_.
-
-::
-
-    from bottle import response
-    response.set_cookie('key','value', path='/', domain='example.com', secure=True, expires=+500, ...)
-
-To set the ``max-age`` attribute use the ``max_age`` name.
-
-TODO: It is possible to store python objects and lists in cookies. This produces signed cookies, which are pickled and unpickled automatically. 
-
-
-
-GET and POST values
---------------------------------------------------------------------------------
-
-Query strings and/or POST form submissions are parsed into dictionaries and made
-available as ``request.GET`` and ``request.POST``. Multiple values per
-key are possible, so each value of these dictionaries may contain a string
-or a list of strings.
-
-You can use ``.getall(key[, default])`` to get all values, or ``.get(key[, default])`` to get a single value only.
-
-::
-
-    from bottle import route, request
-    @route('/search', method='POST')
-    def do_search():
-        query = request.POST.get('query', '').strip()
-        if not query:
-            return "You didn't supply a search query."
-        else:
-            return 'You searched for %s.' % query
-
-
-
-File Uploads
---------------------------------------------------------------------------------
-
-Bottle handles file uploads similar to normal POST form data. Instead of strings, you will get file-like objects. 
-
-::
-
-    from bottle import route, request
-    @route('/upload', method='POST')
-    def do_upload():
-        datafile = request.POST.get('datafile')
-        return datafile.read()
-
-Here is an example HTML Form for file uploads::
-
-    <form action="/upload" method="post" enctype="multipart/form-data">
-      <input name="datafile" type="file" />
-    </form>
-
-
-
-
 
 .. _tutorial-templates:
 
@@ -411,6 +389,8 @@ the result.
         return template('hello_template', username=name)
 
 This will load the template ``hello_template.tpl`` with the ``username`` variable set to the URL ``:name`` part and return the result as a string.
+
+.. highlight:: html+django
 
 The ``hello_template.tpl`` file could look like this::
 
@@ -491,6 +471,8 @@ Debug Mode
 
 In debug mode, bottle is much more verbose and tries to help you finding 
 bugs. You should never use debug mode in production environments.
+
+.. highlight:: python
 
 ::
 
