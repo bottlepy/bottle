@@ -6,7 +6,7 @@ a built-in HTTP Server and adapters for many third party WSGI/HTTP-server and
 template engines - all in a single file and with no dependencies other than the
 Python Standard Library.
 
-Homepage and documentation: http://wiki.github.com/defnull/bottle
+Homepage and documentation: http://bottle.paws.de/
 
 Licence (MIT)
 -------------
@@ -61,6 +61,7 @@ This is an example::
 """
 
 from __future__ import with_statement
+
 __author__ = 'Marcel Hellkamp'
 __version__ = '0.8.0'
 __license__ = 'MIT'
