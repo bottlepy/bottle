@@ -41,8 +41,6 @@ This tutorial introduces you to the concepts and features of the Bottle web fram
 
 
 
-
-
 Getting started
 ===================
 
@@ -54,15 +52,15 @@ Bottle has no dependencies, so all you need is Python_ (2.5 up to 3.x should wor
         return "Hello World!"
     run(host='localhost', port=8080)
 
-Run this script, visit http://localhost:8080/hello and you will see "Hello World!" in your Browser. So, what happened here?
+So, whats happening here?
 
-1. First we imported some bottle components. The :func:`route` decorator and the :func:`run` function. 
+1. First we import some bottle components. The :func:`route` decorator and the :func:`run` function. 
 2. The :func:`route` :term:`decorator` is used do bind a piece of code to an URL. In this example we want to answer requests to the ``/hello`` URL.
-3. This function will be called every time someone hits the ``/hello`` URL on the web server. It is called a :term:`handler function` or :term:`callback`.
-4. The return value of a handler function will be sent back to the Browser.
+3. This function is the :term:`handler function` or :term:`callback` for the ``/hello`` route. It is called every time someone requests the ``/hello`` URL and is responsable for generating the page content.
+4. In this exmaple we simply return a string to the browser.
 5. Now it is time to start the actual HTTP server. The default is a development server running on 'localhost' port 8080 and serving requests until you hit :kbd:`Control-c`.
 
-
+This is it. Run this script, visit http://localhost:8080/hello and you will see "Hello World!" in your Browser. Of cause this is a very simple example, but it shows the basic concept of how applications are build with bottle. Continue reading and you'll see what else is possible.
 
 
 
@@ -71,7 +69,7 @@ Run this script, visit http://localhost:8080/hello and you will see "Hello World
 Routing
 ==============================================================================
 
-Routes are used to map URLs to callback functions that generate the content for that URLs. Bottle has a :func:`route` decorator to do that. You can add any number of routes to a callback.
+As you have learned before, *routes* are used to map URLs to callback functions. These functions are executed on every request that matches the route and their return value is returned to the browser. You can add any number of routes to a callback using the :func:`route` decorator.
 
 ::
 
@@ -86,7 +84,30 @@ Routes are used to map URLs to callback functions that generate the content for 
     def hello():
         return "Hello World!"
 
-As you can see, URLs and routes have nothing to do with actual files on the web server. Routes are unique names for your callbacks, nothing more and nothing less. Requests to URLs not matching any of the defined routes will result in a 404 HTTP error page.
+As you can see, URLs and routes have nothing to do with actual files on the web server. Routes are unique names for your callbacks, nothing more and nothing less. All URLs not covered by a route are answered with a "404 Page not found" error page.
+
+
+
+.. _tutorial-dynamic-routes:
+
+Dynamic Routes
+------------------------------------------------------------------------------
+
+Bottle has a special syntax to add wildcards to a route and allow a single route to match a wide range of URLs. These *dynamic routes* are often used by blogs or wikis to create nice looking and meaningful URLs such as ``/blog/2010/04/21`` or ``/wiki/Page_Title``. Let's add a ``:name`` wildcard to the route in the last example::
+
+    @route('/hello/:name')
+    def hello(name):
+        return "Hello %s!" % name
+
+This dynamic route matches ``/hello/alice`` as well as ``/hello/bob``. Each URL fragment covered by a wildcard is passed to the callback function as a keyword argument so you can use the information in your application.
+
+Normal wildcards match everything up to the next slash. You can add a regular expression to change that::
+
+    @route('/object/:id#[0-9]+#')
+    def view_object(id):
+        return "Object ID: %d" % int(id)
+
+As you can see, the keyword argument contains a string even if the wildcard is configured to only match digits. You have to explicitly cast it into an integer if you need to.
 
 
 
@@ -94,7 +115,7 @@ As you can see, URLs and routes have nothing to do with actual files on the web 
 
 .. __: http_method_
 
-The HTTP protocol defines several `request methods`__ for different tasks. With no method specified, routes will listen to ``GET`` requests only. To handle other methods such as ``POST``, ``PUT`` or ``DELETE``, you have to add a ``method`` keyword argument to the :func:`route` decorator or use one of the alternative decorators: :func:`get()`, :func:`post()`, :func:`put()` or :func:`delete()`.
+The HTTP protocol defines several `request methods`__ for different tasks. With no method specified, routes will listen to ``GET`` requests only. To handle other methods such as ``POST``, ``PUT`` or ``DELETE``, you can add a ``method`` keyword argument to the :func:`route` decorator or use one of the alternative decorators: :func:`get()`, :func:`post()`, :func:`put()` or :func:`delete()`.
 
 Here is an example for a route handling ``POST`` requests::
 
@@ -105,40 +126,11 @@ Here is an example for a route handling ``POST`` requests::
         do_something_with(form_data)
         return "Done"
 
-In this example we used :attr:`Request.POST` to access form data as described in the :ref:`tutorial-request` section.
+In this example we use :attr:`Request.POST` to access form data as described in the :ref:`tutorial-request` section.
 
 The special ``ANY`` method works as a low priority fallback. It matches requests regardless of their HTTP method but only if no other more specific route is installed. Also note that ``HEAD`` requests fall back to ``GET`` routes automatically, so you don't have to specify them explicitly.
 
 To sum it up: ``HEAD`` requests fall back to ``GET`` routes and all requests fall back to ``ANY`` routes, if there is no matching route for the original request method.
-
-
-
-.. _tutorial-dynamic-routes:
-
-Dynamic Routes
-------------------------------------------------------------------------------
-
-Static routes are fine, but URLs may carry information as well. Let's add a ``:name`` placeholder to our route.
-
-::
-
-    from bottle import route
-    @route('/hello/:name')
-    def hello(name):
-        return "Hello %s!" % name
-
-This dynamic route matches ``/hello/alice`` as well as ``/hello/bob``. In fact, the ``:name`` part will match everything but a slash (``/``), so any name is possible. ``/hello/bob/and/alice`` or ``/hellobob`` won't match. Each part of the URL covered by a placeholder is provided as a keyword argument to your handler callback.
-
-A normal placeholder matches everything up to the next slash. To change that, you can add a regular expression pattern::
-
-    from bottle import route
-    @route('/get_object/:id#[0-9]+#')
-    def get(id):
-        return "Object ID: %d" % int(id)
-
-As you can see, URL parameters remain strings, even if they are configured to only match digits. You have to explicitly cast them into the type you need.
-
-
 
 
 
