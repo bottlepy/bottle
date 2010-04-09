@@ -1331,7 +1331,6 @@ def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080,
             print "Shutting Down..."
 
 
-#TODO: If the parent process is killed (with SIGTERM) the childs survive...
 def reloader_run(server, app, interval):
     if os.environ.get('BOTTLE_CHILD') == 'true':
         # We are a child process
@@ -1344,6 +1343,7 @@ def reloader_run(server, app, interval):
                     file_path = file_split[0] + '.py'
                     files[file_path] = os.stat(file_path).st_mtime
         thread.start_new_thread(server.run, (app,))
+        parent_pid = int(os.environ.get('BOTTLE_PID'))
         while True:
             time.sleep(interval)
             for file_path, file_mtime in files.iteritems():
@@ -1351,8 +1351,17 @@ def reloader_run(server, app, interval):
                     print "File changed: %s (deleted)" % file_path
                 elif os.stat(file_path).st_mtime > file_mtime:
                     print "File changed: %s (modified)" % file_path
-                else: continue
-                print "Restarting..."
+                else:
+                    # check wether parent process is still alive
+                    try:
+                        os.kill(parent_pid, 0)
+                    except OSError:
+                        print
+                        print 'Parent Bottle process killed'
+                        print 'Use Ctrl-C to exit.'
+                    else:
+                        continue
+                        print "Restarting..."
                 app.serve = False
                 time.sleep(interval) # be nice and wait for running requests
                 sys.exit(3)
@@ -1360,6 +1369,7 @@ def reloader_run(server, app, interval):
         args = [sys.executable] + sys.argv
         environ = os.environ.copy()
         environ['BOTTLE_CHILD'] = 'true'
+        environ['BOTTLE_PID'] = str(os.getpid())
         exit_status = subprocess.call(args, env=environ)
         if exit_status != 3:
             sys.exit(exit_status)
