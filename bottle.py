@@ -1582,9 +1582,6 @@ def template(tpl, template_adapter=SimpleTemplate, **kwargs):
             TEMPLATES[tpl] = template_adapter(name=tpl, lookup=lookup, settings=settings)
     if not TEMPLATES[tpl]:
         abort(500, 'Template (%s) not found' % tpl)
-    kwargs['abort'] = abort
-    kwargs['request'] = request
-    kwargs['response'] = response
     return TEMPLATES[tpl].render(**kwargs)
 
 mako_template = functools.partial(template, template_adapter=MakoTemplate)
