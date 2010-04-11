@@ -694,14 +694,14 @@ class Request(threading.local, DictMixin):
             self.environ['bottle.post'] = MultiDict()
             self.environ['bottle.forms'] = MultiDict()
             self.environ['bottle.files'] = MultiDict()
-            save_env = {'QUERY_STRING':''} # Build a save environment for cgi
+            safe_env = {'QUERY_STRING':''} # Build a safe environment for cgi
             for key in ('REQUEST_METHOD', 'CONTENT_TYPE', 'CONTENT_LENGTH'):
-                if key in self.environ: save_env[key] = self.environ[key]
+                if key in self.environ: safe_env[key] = self.environ[key]
             if TextIOWrapper:
                 fb = TextIOWrapper(self.body, encoding='ISO-8859-1')
             else:
                 fb = self.body
-            data = cgi.FieldStorage(fp=fb, environ=save_env, keep_blank_values=True)
+            data = cgi.FieldStorage(fp=fb, environ=safe_env, keep_blank_values=True)
             for item in data.list or []:
                 if item.filename:
                     self.environ['bottle.post'][item.name] = item
