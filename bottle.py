@@ -576,30 +576,15 @@ class Request(threading.local, DictMixin):
         ''' Returns a copy of self '''
         return Request(self.environ.copy(), self.app)
         
-    def path_shift(self, count=1):
-        ''' Shift some levels of PATH_INFO into SCRIPT_NAME and return the
-            moved part. count defaults to 1'''
-        #/a/b/  /c/d  --> 'a','b'  'c','d'
-        if count == 0: return ''
-        pathlist = self.path.strip('/').split('/')
-        scriptlist = self.environ.get('SCRIPT_NAME','/').strip('/').split('/')
-        if pathlist and pathlist[0] == '': pathlist = []
-        if scriptlist and scriptlist[0] == '': scriptlist = []
-        if count > 0 and count <= len(pathlist):
-            moved = pathlist[:count]
-            scriptlist = scriptlist + moved
-            pathlist = pathlist[count:]
-        elif count < 0 and count >= -len(scriptlist):
-            moved = scriptlist[count:]
-            pathlist = moved + pathlist
-            scriptlist = scriptlist[:count]
-        else:
-            empty = 'SCRIPT_NAME' if count < 0 else 'PATH_INFO'
-            raise AssertionError("Cannot shift. Nothing left from %s" % empty)
-        self['PATH_INFO'] = self.path =  '/' + '/'.join(pathlist) \
-                          + ('/' if self.path.endswith('/') and pathlist else '')
-        self['SCRIPT_NAME'] = '/' + '/'.join(scriptlist)
-        return '/'.join(moved)
+    def path_shift(self, shift=1):
+        ''' Shift path fragments from PATH_INFO to SCRIPT_NAME and vice versa.
+
+          :param shift: The number of path fragemts to shift. May be negative to
+            change ths shift direction. (default: 1)
+        '''
+        script_name = self.environ.get('SCRIPT_NAME','/')
+        self['SCRIPT_NAME'], self.path = path_shift(script_name, self.path, shift)
+        self['PATH_INFO'] = self.path
 
     def __getitem__(self, key):
         """ Shortcut for Request.environ.__getitem__ """
@@ -758,6 +743,13 @@ class Request(threading.local, DictMixin):
         sec = self.app.config['securecookie.key']
         dec = cookie_decode(value, sec)
         return dec or value
+
+    @property
+    def is_ajax(self):
+        ''' True if the request was generated using XMLHttpRequest '''
+        #TODO: write tests
+        return self.header.get('X-Requested-With') == 'XMLHttpRequest'
+
 
 
 class Response(threading.local):
@@ -1052,7 +1044,35 @@ def yieldroutes(func):
         path += '/:%s' % arg
         yield path
 
+def path_shift(script_name, path_info, shift=1):
+    ''' Shift path fragments from PATH_INFO to SCRIPT_NAME and vice versa.
 
+        :return: The modified paths.
+        :param script_name: The SCRIPT_NAME path.
+        :param script_name: The PATH_INFO path.
+        :param shift: The number of path fragemts to shift. May be negative to
+          change ths shift direction. (default: 1)
+    '''
+    if shift == 0: return script_name, path_info
+    pathlist = path_info.strip('/').split('/')
+    scriptlist = script_name.strip('/').split('/')
+    if pathlist and pathlist[0] == '': pathlist = []
+    if scriptlist and scriptlist[0] == '': scriptlist = []
+    if shift > 0 and shift <= len(pathlist):
+        moved = pathlist[:shift]
+        scriptlist = scriptlist + moved
+        pathlist = pathlist[shift:]
+    elif shift < 0 and shift >= -len(scriptlist):
+        moved = scriptlist[shift:]
+        pathlist = moved + pathlist
+        scriptlist = scriptlist[:shift]
+    else:
+        empty = 'SCRIPT_NAME' if shift < 0 else 'PATH_INFO'
+        raise AssertionError("Cannot shift. Nothing left from %s" % empty)
+    new_script_name = '/' + '/'.join(scriptlist)
+    new_path_info = '/' + '/'.join(pathlist)
+    if path_info.endswith('/') and pathlist: new_path_info += '/'
+    return new_script_name, new_path_info
 
 
 

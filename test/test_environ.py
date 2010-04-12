@@ -25,18 +25,18 @@ class TestEnviron(unittest.TestCase):
         """ Environ: Request.path_shift() """
         def test_shift(s, p, c):
             request.bind({'SCRIPT_NAME': s, 'PATH_INFO': p})
-            m = request.path_shift(c)
-            return [request['SCRIPT_NAME'], request.path, m]
-        self.assertEqual(['/a/b', '/c/d',''], test_shift('/a/b', '/c/d', 0))
-        self.assertEqual(['/a/b', '/c/d/',''], test_shift('/a/b', '/c/d/', 0))
-        self.assertEqual(['/a/b/c', '/d','c'], test_shift('/a/b', '/c/d', 1))
-        self.assertEqual(['/a', '/b/c/d','b'], test_shift('/a/b', '/c/d', -1))
-        self.assertEqual(['/a/b/c', '/d/','c'], test_shift('/a/b', '/c/d/', 1))
-        self.assertEqual(['/a', '/b/c/d/','b'], test_shift('/a/b', '/c/d/', -1))
-        self.assertEqual(['/a/b/c', '/d/','c'], test_shift('/a/b/', '/c/d/', 1))
-        self.assertEqual(['/a', '/b/c/d/','b'], test_shift('/a/b/', '/c/d/', -1))
-        self.assertEqual(['/a/b/c/d', '/','a/b/c/d'], test_shift('/', '/a/b/c/d', 4))
-        self.assertEqual(['/', '/a/b/c/d/','a/b/c/d'], test_shift('/a/b/c/d', '/', -4))
+            request.path_shift(c)
+            return [request['SCRIPT_NAME'], request.path]
+        self.assertEqual(['/a/b', '/c/d'], test_shift('/a/b', '/c/d', 0))
+        self.assertEqual(['/a/b', '/c/d/'], test_shift('/a/b', '/c/d/', 0))
+        self.assertEqual(['/a/b/c', '/d'], test_shift('/a/b', '/c/d', 1))
+        self.assertEqual(['/a', '/b/c/d'], test_shift('/a/b', '/c/d', -1))
+        self.assertEqual(['/a/b/c', '/d/'], test_shift('/a/b', '/c/d/', 1))
+        self.assertEqual(['/a', '/b/c/d/'], test_shift('/a/b', '/c/d/', -1))
+        self.assertEqual(['/a/b/c', '/d/'], test_shift('/a/b/', '/c/d/', 1))
+        self.assertEqual(['/a', '/b/c/d/'], test_shift('/a/b/', '/c/d/', -1))
+        self.assertEqual(['/a/b/c/d', '/'], test_shift('/', '/a/b/c/d', 4))
+        self.assertEqual(['/', '/a/b/c/d/'], test_shift('/a/b/c/d', '/', -4))
         self.assertRaises(AssertionError, test_shift, '/a/b', '/c/d', 3)
         self.assertRaises(AssertionError, test_shift, '/a/b', '/c/d', -3)
         
