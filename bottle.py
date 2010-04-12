@@ -6,7 +6,7 @@ a built-in HTTP Server and adapters for many third party WSGI/HTTP-server and
 template engines - all in a single file and with no dependencies other than the
 Python Standard Library.
 
-Homepage and documentation: http://wiki.github.com/defnull/bottle
+Homepage and documentation: http://bottle.paws.de/
 
 Licence (MIT)
 -------------
@@ -53,13 +53,15 @@ This is an example::
         return 'Hello %s!' % name
     
     @route('/static/:filename#.*#')
-    def static_file(filename):
-        send_file(filename, root='/path/to/static/files/')
+
+    def static(filename):
+        return static_file(filename, root='/path/to/static/files/')
     
     run(host='localhost', port=8080)
 """
 
 from __future__ import with_statement
+
 __author__ = 'Marcel Hellkamp'
 __version__ = '0.8.0'
 __license__ = 'MIT'
@@ -232,7 +234,8 @@ class Route(object):
 
     def flat_re(self):
         ''' Return a regexp pattern with non-grouping parentheses '''
-        return re.sub(r'\(\?P<[^>]*>|\((?!\?)', '(?:', self.group_re())
+        rf = lambda m: m.group(0) if len(m.group(1)) % 2 else m.group(1) + '(?:'
+        return re.sub(r'(\\*)(\(\?P<[^>]*>|\((?!\?))', rf, self.group_re())
 
     def format_str(self):
         ''' Return a format string with named fields. '''
@@ -425,16 +428,16 @@ class Bottle(object):
             return handler
         return wrapper
 
-    def handle(self, url, method, catchall=True):
+    def handle(self, url, method):
         """ Execute the handler bound to the specified url and method and return
         its output. If catchall is true, exceptions are catched and returned as
         HTTPError(500) objects. """
         if not self.serve:
             return HTTPError(503, "Server stopped")
 
-        handler, args = self.match_url(request.path, request.method)
+        handler, args = self.match_url(url, method)
         if not handler:
-            return HTTPError(404, "Not found:" + request.path)
+            return HTTPError(404, "Not found:" + url)
 
         try:
             return handler(**args)
@@ -446,12 +449,17 @@ class Bottle(object):
                 raise
             return HTTPError(500, 'Unhandled exception', e, format_exc(10))
 
-    def _cast(self, out, peek=None):
+    def _cast(self, out, request, response, peek=None):
         """ Try to convert the parameter into something WSGI compatible and set
         correct HTTP headers when possible.
         Support: False, str, unicode, dict, HTTPResponse, HTTPError, file-like,
         iterable of strings and iterable of unicodes
         """
+        # Filtered types (recursive, because they may return anything)
+        for testtype, filterfunc in self.castfilter:
+            if isinstance(out, testtype):
+                return self._cast(filterfunc(out), request, response)
+
         # Empty output is done here
         if not out:
             response.headers['Content-Length'] = 0
@@ -469,15 +477,10 @@ class Bottle(object):
         # HTTPError or HTTPException (recursive, because they may wrap anything)
         if isinstance(out, HTTPError):
             out.apply(response)
-            return self._cast(self.error_handler.get(out.status, repr)(out))
+            return self._cast(self.error_handler.get(out.status, repr)(out), request, response)
         if isinstance(out, HTTPResponse):
             out.apply(response)
-            return self._cast(out.output)
-
-        # Filtered types (recursive, because they may return anything)
-        for testtype, filterfunc in self.castfilter:
-            if isinstance(out, testtype):
-                return self._cast(filterfunc(out))
+            return self._cast(out.output, request, response)
 
         # Cast Files into iterables
         if hasattr(out, 'read') and 'wsgi.file_wrapper' in request.environ:
@@ -491,7 +494,7 @@ class Bottle(object):
             while not first:
                 first = out.next()
         except StopIteration:
-            return self._cast('')
+            return self._cast('', request, response)
         except HTTPResponse, e:
             first = e
         except Exception, e:
@@ -501,14 +504,14 @@ class Bottle(object):
                 raise
         # These are the inner types allowed in iterator or generator objects.
         if isinstance(first, HTTPResponse):
-            return self._cast(first)
+            return self._cast(first, request, response)
         if isinstance(first, StringType):
             return itertools.chain([first], out)
         if isinstance(first, unicode):
             return itertools.imap(lambda x: x.encode(response.charset),
                                   itertools.chain([first], out))
         return self._cast(HTTPError(500, 'Unsupported response type: %s'\
-                                         % type(first)))
+                                         % type(first)), request, response)
 
     def __call__(self, environ, start_response):
         """ The bottle WSGI-interface. """
@@ -516,7 +519,7 @@ class Bottle(object):
             request.bind(environ, self)
             response.bind(self)
             out = self.handle(request.path, request.method)
-            out = self._cast(out)
+            out = self._cast(out, request, response)
             if response.status in (100, 101, 204, 304) or request.method == 'HEAD':
                 out = [] # rfc2616 section 4.3
             status = '%d %s' % (response.status, HTTP_CODES[response.status])
@@ -561,31 +564,19 @@ class Request(threading.local, DictMixin):
         self.path = '/' + environ.get('PATH_INFO', '/').lstrip('/')
         self.method = environ.get('REQUEST_METHOD', 'GET').upper()
 
-    def path_shift(self, count=1):
-        ''' Shift a path segment from ``PATH_INFO`` to ``SCRIPT_NAME`` and
-            return the moved segment.
-            
-            :param count: Number of path segments to shift. May be negative and
-                          defaults to 1.
-            :raises AssertionError: When we run out of path segments. '''
-        if not count: return ''
-        pathlist = self.path.strip('/').split('/')
-        scriptlist = self.environ.get('SCRIPT_NAME','/').strip('/').split('/')
-        if pathlist and pathlist[0] == '': pathlist = []
-        if scriptlist and scriptlist[0] == '': scriptlist = []
-        if count > 0 and count <= len(pathlist):
-            moved = pathlist[:count]
-            scriptlist, pathlist = scriptlist + moved, pathlist[count:]
-        elif count < 0 and count >= -len(scriptlist):
-            moved = scriptlist[count:]
-            scriptlist, pathlist = scriptlist[:count], moved + pathlist
-        elif count:
-            empty = 'SCRIPT_NAME' if count < 0 else 'PATH_INFO'
-            raise AssertionError("Cannot shift. Nothing left from %s" % empty)
-        self['PATH_INFO'] =  '/' + '/'.join(pathlist) \
-                          + ('/' if self.path.endswith('/') and pathlist else '')
-        self['SCRIPT_NAME'] = '/' + '/'.join(scriptlist)
-        return '/'.join(moved)
+    def copy(self):
+        ''' Returns a copy of self '''
+        return Request(self.environ.copy(), self.app)
+        
+    def path_shift(self, shift=1):
+        ''' Shift path fragments from PATH_INFO to SCRIPT_NAME and vice versa.
+
+          :param shift: The number of path fragemts to shift. May be negative to
+            change ths shift direction. (default: 1)
+        '''
+        script_name = self.environ.get('SCRIPT_NAME','/')
+        self['SCRIPT_NAME'], self.path = path_shift(script_name, self.path, shift)
+        self['PATH_INFO'] = self.path
 
     def __getitem__(self, key):
         """ Shortcut for Request.environ.__getitem__ """
@@ -626,7 +617,7 @@ class Request(threading.local, DictMixin):
             and includes scheme, host, port, scriptname, path and query string. 
         """
         scheme = self.environ.get('wsgi.url_scheme', 'http')
-        host   = self.environ.get('HTTP_HOST', None)
+        host   = self.environ.get('HTTP_X_FORWARDED_HOST', self.environ.get('HTTP_HOST', None))
         if not host:
             host = self.environ.get('SERVER_NAME')
             port = self.environ.get('SERVER_PORT', '80')
@@ -690,8 +681,8 @@ class Request(threading.local, DictMixin):
                 fb = TextIOWrapper(self.body, encoding='ISO-8859-1')
             else:
                 fb = self.body
-            data = cgi.FieldStorage(fp=fb, environ=save_env)
-            for item in data.list:
+            data = cgi.FieldStorage(fp=fb, environ=save_env, keep_blank_values=True)
+            for item in data.list or []:
                 if item.filename:
                     self.environ['bottle.post'][item.name] = item
                     self.environ['bottle.files'][item.name] = item
@@ -749,7 +740,7 @@ class Request(threading.local, DictMixin):
             This implementation currently only supports basic auth and returns
             None on errors.
         """
-        return parse_auth(self.environ.get('HTTP_AUTHORIZATION'))
+        return parse_auth(self.environ.get('HTTP_AUTHORIZATION',''))
 
     @property
     def COOKIES(self):
@@ -772,10 +763,20 @@ class Request(threading.local, DictMixin):
         dec = cookie_decode(value, sec)
         return dec or value
 
+    @property
+    def is_ajax(self):
+        ''' True if the request was generated using XMLHttpRequest '''
+        #TODO: write tests
+        return self.header.get('X-Requested-With') == 'XMLHttpRequest'
+
+
 
 class Response(threading.local):
     """ Represents a single HTTP response using thread-local attributes.
     """
+
+    def __init__(self, app=None):
+        self.bind(app)
 
     def bind(self, app):
         """ Resets the Response object to its factory defaults. """
@@ -783,8 +784,15 @@ class Response(threading.local):
         self.status = 200
         self.headers = HeaderDict()
         self.content_type = 'text/html; charset=UTF-8'
-        self.error = None
         self.app = app
+
+    def copy(self):
+        ''' Returns a copy of self '''
+        copy = Response(self.app)
+        copy.status = self.status
+        copy.headers = self.headers.copy()
+        copy.content_type = self.content_type
+        return copy
 
     def wsgiheader(self):
         ''' Returns a wsgi conform list of header/value pairs. '''
@@ -963,8 +971,8 @@ def static_file(filename, root, guessmime=True, mimetype=None, download=False):
     if ims:
         ims = ims.split(";")[0].strip() # IE sends "<date>; length=146"
         ims = parse_date(ims)
-        if ims is not None and ims >= stats.st_mtime:
-           return HTTPResponse("Not modified", status=304, header=header)
+        if ims is not None and ims >= int(stats.st_mtime):
+           return HTTPResponse(status=304, header=header)
     header['Content-Length'] = stats.st_size
     if request.method == 'HEAD':
         return HTTPResponse('', header=header)
@@ -1055,7 +1063,35 @@ def yieldroutes(func):
         path += '/:%s' % arg
         yield path
 
+def path_shift(script_name, path_info, shift=1):
+    ''' Shift path fragments from PATH_INFO to SCRIPT_NAME and vice versa.
 
+        :return: The modified paths.
+        :param script_name: The SCRIPT_NAME path.
+        :param script_name: The PATH_INFO path.
+        :param shift: The number of path fragemts to shift. May be negative to
+          change ths shift direction. (default: 1)
+    '''
+    if shift == 0: return script_name, path_info
+    pathlist = path_info.strip('/').split('/')
+    scriptlist = script_name.strip('/').split('/')
+    if pathlist and pathlist[0] == '': pathlist = []
+    if scriptlist and scriptlist[0] == '': scriptlist = []
+    if shift > 0 and shift <= len(pathlist):
+        moved = pathlist[:shift]
+        scriptlist = scriptlist + moved
+        pathlist = pathlist[shift:]
+    elif shift < 0 and shift >= -len(scriptlist):
+        moved = scriptlist[shift:]
+        pathlist = moved + pathlist
+        scriptlist = scriptlist[:shift]
+    else:
+        empty = 'SCRIPT_NAME' if shift < 0 else 'PATH_INFO'
+        raise AssertionError("Cannot shift. Nothing left from %s" % empty)
+    new_script_name = '/' + '/'.join(scriptlist)
+    new_path_info = '/' + '/'.join(pathlist)
+    if path_info.endswith('/') and pathlist: new_path_info += '/'
+    return new_script_name, new_path_info
 
 
 
@@ -1210,8 +1246,8 @@ class TwistedServer(ServerAdapter):
         thread_pool = ThreadPool()
         thread_pool.start()
         reactor.addSystemEventTrigger('after', 'shutdown', thread_pool.stop)
-        server.Site(wsgi.WSGIResource(reactor, thread_pool, handler))
-        reactor.listenTCP(self.port, self.host)
+        factory = server.Site(wsgi.WSGIResource(reactor, thread_pool, handler))
+        reactor.listenTCP(self.port, factory, interface=self.host)
         reactor.run()
 
 
@@ -1232,8 +1268,7 @@ class GunicornServer(ServerAdapter):
 
 class AutoServer(ServerAdapter):
     """ Untested. """
-    adapters = [FapwsServer, CherryPyServer, PasteServer,
-                TwistedServer, GunicornServer, WSGIRefServer]
+    adapters = [CherryPyServer, PasteServer, TwistedServer, WSGIRefServer]
     def run(self, handler):
         for sa in self.adapters:
             try:
@@ -1242,7 +1277,7 @@ class AutoServer(ServerAdapter):
                 pass
 
 
-def run(app=None, server=AutoServer, host='127.0.0.1', port=8080,
+def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080,
         interval=1, reloader=False, **kargs):
     """ Runs bottle as a web server. """
     app = app if app else default_app()
@@ -1509,10 +1544,10 @@ class SimpleTemplate(BaseTemplate):
                 if m: self.encoding = m.group(1)
                 if m: line = line.replace('coding','coding (removed)')
             if line.strip()[:2].count('%') == 1:
-                line = line.split('%',1)[1] # Full line
-                cline = line.split('#')[0].strip() # Line without commends
-                cmd = line.split()[0] if line.split() else '' # Command word
-                flush() ##encodig
+                line = line.split('%',1)[1].lstrip() # Full line following the %
+                cline = line.split('#')[0].strip() # Line without commends (TODO: fails for 'a="#"')
+                cmd = re.split(r'[^a-zA-Z0-9_]', line)[0]
+                flush() ##encodig (TODO: why?)
                 if cmd in self.blocks:
                     if cmd in self.dedent_blocks: cmd = stack.pop()
                     code(line)
@@ -1586,9 +1621,6 @@ def template(tpl, template_adapter=SimpleTemplate, **kwargs):
             TEMPLATES[tpl] = template_adapter(name=tpl, lookup=lookup, settings=settings)
     if not TEMPLATES[tpl]:
         abort(500, 'Template (%s) not found' % tpl)
-    kwargs['abort'] = abort
-    kwargs['request'] = request
-    kwargs['response'] = response
     return TEMPLATES[tpl].render(**kwargs)
 
 mako_template = functools.partial(template, template_adapter=MakoTemplate)

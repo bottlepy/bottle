@@ -17,7 +17,7 @@
 __This document is a work in progress__ and intended to be a tutorial, howto and an api documentation at the same time. If you have questions not answered here,
 please check the [F.A.Q.](/page/faq) or file a ticket at bottles [issue tracker](http://github.com/defnull/bottle/issues).
 
-This documentation describes the features of the **0.6.4 Release** and is not updated anymore. The 0.7 docs can be found [here](/page/docs_0_7)
+This documentation describes the features of the **0.6.4 Release** and is not updated anymore. The 0.7 docs can be found [here](/docs/)
 
 
 ## "Hello World" in a Bottle

@@ -25,18 +25,18 @@ class TestEnviron(unittest.TestCase):
         """ Environ: Request.path_shift() """
         def test_shift(s, p, c):
             request.bind({'SCRIPT_NAME': s, 'PATH_INFO': p})
-            m = request.path_shift(c)
-            return [request['SCRIPT_NAME'], request.path, m]
-        self.assertEqual(['/a/b', '/c/d',''], test_shift('/a/b', '/c/d', 0))
-        self.assertEqual(['/a/b', '/c/d/',''], test_shift('/a/b', '/c/d/', 0))
-        self.assertEqual(['/a/b/c', '/d','c'], test_shift('/a/b', '/c/d', 1))
-        self.assertEqual(['/a', '/b/c/d','b'], test_shift('/a/b', '/c/d', -1))
-        self.assertEqual(['/a/b/c', '/d/','c'], test_shift('/a/b', '/c/d/', 1))
-        self.assertEqual(['/a', '/b/c/d/','b'], test_shift('/a/b', '/c/d/', -1))
-        self.assertEqual(['/a/b/c', '/d/','c'], test_shift('/a/b/', '/c/d/', 1))
-        self.assertEqual(['/a', '/b/c/d/','b'], test_shift('/a/b/', '/c/d/', -1))
-        self.assertEqual(['/a/b/c/d', '/','a/b/c/d'], test_shift('/', '/a/b/c/d', 4))
-        self.assertEqual(['/', '/a/b/c/d/','a/b/c/d'], test_shift('/a/b/c/d', '/', -4))
+            request.path_shift(c)
+            return [request['SCRIPT_NAME'], request.path]
+        self.assertEqual(['/a/b', '/c/d'], test_shift('/a/b', '/c/d', 0))
+        self.assertEqual(['/a/b', '/c/d/'], test_shift('/a/b', '/c/d/', 0))
+        self.assertEqual(['/a/b/c', '/d'], test_shift('/a/b', '/c/d', 1))
+        self.assertEqual(['/a', '/b/c/d'], test_shift('/a/b', '/c/d', -1))
+        self.assertEqual(['/a/b/c', '/d/'], test_shift('/a/b', '/c/d/', 1))
+        self.assertEqual(['/a', '/b/c/d/'], test_shift('/a/b', '/c/d/', -1))
+        self.assertEqual(['/a/b/c', '/d/'], test_shift('/a/b/', '/c/d/', 1))
+        self.assertEqual(['/a', '/b/c/d/'], test_shift('/a/b/', '/c/d/', -1))
+        self.assertEqual(['/a/b/c/d', '/'], test_shift('/', '/a/b/c/d', 4))
+        self.assertEqual(['/', '/a/b/c/d/'], test_shift('/a/b/c/d', '/', -4))
         self.assertRaises(AssertionError, test_shift, '/a/b', '/c/d', 3)
         self.assertRaises(AssertionError, test_shift, '/a/b', '/c/d', -3)
         
@@ -97,7 +97,7 @@ class TestEnviron(unittest.TestCase):
         
     def test_post(self):
         """ Environ: POST data """ 
-        sq = u'a=a&a=1&b=b&c=c'.encode('utf8')
+        sq = u'a=a&a=1&b=b&c=&d'.encode('utf8')
         e = {}
         wsgiref.util.setup_testing_defaults(e)
         e['wsgi.input'].write(sq)
@@ -111,6 +111,19 @@ class TestEnviron(unittest.TestCase):
         self.assertEqual(['b'], request.POST.getall('b'))
         self.assertEqual('1', request.POST['a'])
         self.assertEqual('b', request.POST['b'])
+        self.assertEqual('', request.POST['c'])
+        self.assertEqual('', request.POST['d'])
+
+    def test_bodypost(self):
+        sq = u'foobar'.encode('utf8')
+        e = {}
+        wsgiref.util.setup_testing_defaults(e)
+        e['wsgi.input'].write(sq)
+        e['wsgi.input'].seek(0)
+        e['CONTENT_LENGTH'] = str(len(sq))
+        e['REQUEST_METHOD'] = "POST"
+        request.bind(e, None)
+        self.assertEqual('', request.POST['foobar'])
 
     def test_params(self):
         """ Environ: GET and POST are combined in request.param """ 

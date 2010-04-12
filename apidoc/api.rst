@@ -112,3 +112,4 @@ Class                      URL                               Decorator          
 To use :class:`MakoTemplate` as your default template engine, just import its specialised decorator and render function::
 
   from bottle import mako_view as view, mako_template as template
+

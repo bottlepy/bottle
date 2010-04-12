@@ -5,14 +5,24 @@
 .. _mod_wsgi: http://code.google.com/p/modwsgi/
 .. _werkzeug: http://werkzeug.pocoo.org/documentation/dev/debug.html
 .. _paste: http://pythonpaste.org/modules/evalexception.html
+.. _pylons: http://pylonshq.com/
 
 ==========================
 Frequently Asked Questions
 ==========================
 
+About Bottle
+============
+
+Is bottle suitable for complex applications?
+---------------------------------------------
+
+Bottle is a *micro* framework designed for prototyping and building small web applications and services. It stays out of your way and allows you to get things done fast, but misses some advanced features and ready-to-use solutions found in other frameworks (MVC, ORM, Form validation, scaffolding, XML-RPC). Although it *is* possible to add these features and build complex applications with Bottle, you should consider using a full-stack Web Framework like pylons_ or paste_ instead.
+
+
 
 How do I ...?
-============
+=============
 
 
 
@@ -114,6 +124,8 @@ or add a WSGI middleware that strips tailing slashes from all URLs::
 
 Common Problems and Pitfalls
 ============================
+
+
 
 
 

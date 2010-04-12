@@ -1,4 +1,0 @@
-Download and Install
-====================
-
-TODO

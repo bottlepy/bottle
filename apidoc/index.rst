@@ -1,9 +1,5 @@
-.. Bottle documentation master file, created by
-   sphinx-quickstart on Thu Feb 18 13:47:50 2010.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 .. highlight:: python
+.. currentmodule:: bottle
 
 
 .. _mako: http://www.makotemplates.org/
@@ -17,40 +13,44 @@
 .. _Python: http://python.org/
 .. _testing: http://github.com/defnull/bottle/raw/master/bottle.py
 .. _issue_tracker: http://github.com/defnull/bottle/issues
-
+.. _PyPi: http://pypi.python.org/pypi/bottle
 
 ============================
 Bottle: Python Web Framework
 ============================
 
-Bottle is a fast, simple and lightweight WSGI_ micro web-framework for Python_ with no external dependencies and packed into a single file.
+Bottle is a fast, simple and lightweight WSGI_ micro web-framework for Python_. It is distributed as a single file module and has no dependencies other than the `Python Standard Library <http://docs.python.org/library/>`_. 
 
 .. rubric:: Core Features
 
-* **Routes:** Mapping URLs to code with a simple but powerful pattern syntax.
-* **Templates:** Fast build-in template engine and support for mako_, jinja2_ and cheetah_ templates.
-* **Server:** Build-in HTTP development server and support for paste_, fapws3_, flup_, cherrypy_ or any other WSGI_ capable server.
-* **Plug&Run:** All in a single file and no dependencies other than the Python standard library.
+* **Routing:** Requests to function-call mapping with support for clean and  dynamic URLs.
+* **Templates:** Fast and pythonic :ref:`build-in template engine <tutorial-templates>` and support for mako_, jinja2_ and cheetah_ templates.
+* **Utilities:** Convenient access to form data, file uploads, cookies, headers and other HTTP related metadata.
+* **Server:** Build-in HTTP development server and support for paste_, fapws3_, flup_, cherrypy_ or any other WSGI_ capable HTTP server.
 
-.. rubric:: Download
+.. rubric:: Download and Install
 
 .. _download:
 
-You can install the latest stable release with ``easy_install -U bottle`` or just download the newest testing_ version into your project directory. There are no hard [1]_ dependencies other than the Python standard library. Bottle runs with **Python 2.5+ and 3.x** (using 2to3)
+.. __: http://github.com/defnull/bottle/raw/master/bottle.py
 
-.. rubric:: "Hello World" in a bottle
+Install the latest stable release via PyPi_ (``easy_install -U bottle``) or download `bottle.py`__ (unstable) into your project directory. There are no hard [1]_ dependencies other than the Python standard library. Bottle runs with **Python 2.5+ and 3.x** (using 2to3)
 
-This is a minimal bottle application serving a single URL::
+.. rubric:: Example: "Hello World" in a bottle
+
+::
 
   from bottle import route, run
-  @route('/')
-  def index():
-      return 'Hello World!'
+
+  @route('/:name')
+  def index(name='World'):
+      return '<b>Hello %s!</b>' % name
+
   run(host='localhost', port=8080)
 
 Documentation
 ===============
-This documentation is a work in progress. If you have questions not answered here, please check the :doc:`faq`, then file a ticket at bottles issue_tracker_ or send an e-mail to the `mailing list <mailto:bottlepy@googlegroups.com>`_.
+The documentation is a work in progress. If you have questions not answered here, please check the :doc:`faq`, file a ticket at bottles issue_tracker_ or send an e-mail to the `mailing list <mailto:bottlepy@googlegroups.com>`_.
 
 .. toctree::
    :maxdepth: 2
@@ -59,19 +59,47 @@ This documentation is a work in progress. If you have questions not answered her
    faq
    api
    stpl
-   download
+   changelog
    development
+
+Tutorials and Resources
+=======================
+
+.. toctree::
+   :maxdepth: 2
+
+   tutorial_app
+
+
 
 Licence
 ==================
 
-Copyright (c) 2009, Marcel Hellkamp.
+Code and documentation are available according to the MIT Licence::
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+  Copyright (c) 2010, Marcel Hellkamp.
 
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+
+The Bottle logo however is *NOT* covered by that licence. It is allowed to
+use the logo as a link to the bottle homepage or in direct context with
+the unmodified library. In all other cases please ask first.
 
 .. rubric:: Footnotes
 

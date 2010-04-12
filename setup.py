@@ -20,7 +20,7 @@ for line in open(os.path.join(os.path.dirname(sys.argv[0]),'bottle.py')):
 setup(name='bottle',
       version=version,
       description='Fast and simple WSGI-framework for small web-applications.',
-      long_description='Bottle is a fast and simple micro-framework for small web-applications. It offers request dispatching (Routes) with url parameter support, Templates, key/value Databases, a build-in HTTP Server and adapters for many third party WSGI/HTTP-server and template engines. All in a single file and with no dependencies other than the Python Standard Library.',
+      long_description='Bottle is a fast and simple micro-framework for small web-applications. It offers request dispatching (Routes) with url parameter support, Templates, a build-in HTTP Server and adapters for many third party WSGI/HTTP-server and template engines. All in a single file and with no dependencies other than the Python Standard Library.',
       author='Marcel Hellkamp',
       author_email='marc@gsites.de',
       url='http://bottle.paws.de/',
