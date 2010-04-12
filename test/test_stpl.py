@@ -56,6 +56,14 @@ class TestSimpleTemplate(unittest.TestCase):
         self.assertEqual(u'<b>', ''.join(t.render(var='b')))
         self.assertEqual(u'<<&>>', ''.join(t.render(var='<&>')))
 
+    def test_noescape_setting(self):
+        t = SimpleTemplate('<{{var}}>', noescape=True)
+        self.assertEqual(u'<b>', ''.join(t.render(var='b')))
+        self.assertEqual(u'<<&>>', ''.join(t.render(var='<&>')))
+        t = SimpleTemplate('<{{!var}}>', noescape=True)
+        self.assertEqual(u'<b>', ''.join(t.render(var='b')))
+        self.assertEqual(u'<&lt;&amp;&gt;>', ''.join(t.render(var='<&>')))
+
     def test_blocks(self):
         """ Templates: Code blocks and loops """
         t = SimpleTemplate("start\n%for i in l:\n{{i}} \n%end\nend")
@@ -65,11 +73,23 @@ class TestSimpleTemplate(unittest.TestCase):
         self.assertEqual(u'start\nTrue \nend', ''.join(t.render(i=True)))
         self.assertEqual(u'start\nend', ''.join(t.render(i=False)))
 
+    def test_elsebug(self):
+        t = SimpleTemplate("%if 1:\nyes\n%else:\nno\n%end\n")
+        self.assertEqual(u"yes\n", ''.join(t.render()))
+        t = SimpleTemplate("%if 1:\nyes\n%else     :\nno\n%end\n")
+        self.assertEqual(u"yes\n", ''.join(t.render()))
+
     def test_onelineblocks(self):
         """ Templates: one line code blocks """
         t = SimpleTemplate("start\n%a=''\n%for i in l: a += str(i)\n{{a}}\nend")
         self.assertEqual(u'start\n123\nend', ''.join(t.render(l=[1,2,3])))
         self.assertEqual(u'start\n\nend', ''.join(t.render(l=[])))
+
+    def test_escaped_codelines(self):
+        t = SimpleTemplate('%% test')
+        self.assertEqual(u'% test', ''.join(t.render()))
+        t = SimpleTemplate('%%% test')
+        self.assertEqual(u'%% test', ''.join(t.render()))
 
     def test_nobreak(self):
         """ Templates: Nobreak statements"""

@@ -1357,7 +1357,7 @@ class BaseTemplate(object):
     settings = {} #used in prepare()
     defaults = {} #used in render()
 
-    def __init__(self, source=None, name=None, lookup=[], encoding='utf8', settings={}):
+    def __init__(self, source=None, name=None, lookup=[], encoding='utf8', **settings):
         """ Create a new template.
         If the source parameter (str or buffer) is missing, the name argument
         is used to guess a template filename. Subclasses can assume that
@@ -1615,11 +1615,11 @@ def template(tpl, template_adapter=SimpleTemplate, **kwargs):
         lookup = kwargs.get('template_lookup', TEMPLATE_PATH)
         if isinstance(tpl, template_adapter):
             TEMPLATES[tpl] = tpl
-            if settings: TEMPLATES[tpl].prepare(settings)
+            if settings: TEMPLATES[tpl].prepare(**settings)
         elif "\n" in tpl or "{" in tpl or "%" in tpl or '$' in tpl:
-            TEMPLATES[tpl] = template_adapter(source=tpl, lookup=lookup, settings=settings)
+            TEMPLATES[tpl] = template_adapter(source=tpl, lookup=lookup, **settings)
         else:
-            TEMPLATES[tpl] = template_adapter(name=tpl, lookup=lookup, settings=settings)
+            TEMPLATES[tpl] = template_adapter(name=tpl, lookup=lookup, **settings)
     if not TEMPLATES[tpl]:
         abort(500, 'Template (%s) not found' % tpl)
     return TEMPLATES[tpl].render(**kwargs)
