@@ -141,7 +141,7 @@ In this example the ``/login`` URL has two callbacks assigned to it: The ``login
 
 The special method ``HEAD`` is used by clients to request meta-information about a resource, but without having to download the entire document. Bottle handles these automatically by falling back to the corresponding ``GET`` route. You don't have to specify any ``HEAD`` routes yourself.
 
-The non-standard ``ANY`` method works as a low priority fallback in bottle. Routes that listen to ``ANY`` requests will matches requests regardless of their HTTP method but only if no other more specific route is installed. This is helpful for *proxy-routes* that redirect requests to more specific sub-applications.
+The non-standard ``ANY`` method works as a low priority fallback in bottle. Routes that listen to ``ANY`` requests will matches requests regardless of their HTTP method but only if no other more specific route is installed. This is helpful for *proxy-routes* that redirect requests to more specific sub-applications, but you should not use this in normal applications.
 
 To sum it up: ``HEAD`` requests fall back to ``GET`` routes and all requests fall back to ``ANY`` routes, if there is no matching route for the original request method.
 

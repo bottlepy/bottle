@@ -421,6 +421,26 @@ class Bottle(object):
             return callback
         return wrapper
 
+    def get(self, path=None, method='GET', **kargs):
+        """ Decorator: Bind a function to a GET request path.
+            See :meth:'route' for details. """
+        return self.route(path=path, method=method, **kargs)
+
+    def post(self, path=None, method='POST', **kargs):
+        """ Decorator: Bind a function to a POST request path.
+            See :meth:'route' for details. """
+        return self.route(path=path, method=method, **kargs)
+
+    def put(self, path=None, method='PUT', **kargs):
+        """ Decorator: Bind a function to a PUT request path.
+            See :meth:'route' for details. """
+        return self.route(path=path, method=method, **kargs)
+
+    def delete(self, path=None, method='DELETE', **kargs):
+        """ Decorator: Bind a function to a DELETE request path.
+            See :meth:'route' for details. """
+        return self.route(path=path, method=method, **kargs)
+
     def error(self, code=500):
         """ Decorator: Registrer an output handler for a HTTP error code"""
         def wrapper(handler):
@@ -1119,32 +1139,15 @@ def validate(**vkargs):
     return decorator
 
 
-def route(*a, **ka):
-    """ Decorator: Bind a route to a callback.
-        The method parameter (default: GET) specifies the HTTP request
-        method to listen to """
-    return app().route(*a, **ka)
-
-get = functools.partial(route, method='GET')
-get.__doc__ = route.__doc__
-
-post = functools.partial(route, method='POST')
-post.__doc__ = route.__doc__.replace('GET','POST')
-
-put = functools.partial(route, method='PUT')
-put.__doc__ = route.__doc__.replace('GET','PUT')
-
-delete = functools.partial(route, method='DELETE')
-delete.__doc__ = route.__doc__.replace('GET','DELETE')
+route  = functools.wraps(Bottle.route)(lambda *a, **ka: app().route(*a, **ka))
+get    = functools.wraps(Bottle.get)(lambda *a, **ka: app().get(*a, **ka))
+post   = functools.wraps(Bottle.post)(lambda *a, **ka: app().post(*a, **ka))
+put    = functools.wraps(Bottle.put)(lambda *a, **ka: app().put(*a, **ka))
+delete = functools.wraps(Bottle.delete)(lambda *a, **ka: app().delete(*a, **ka))
+error  = functools.wraps(Bottle.error)(lambda code: app().error(code))
 
 def default():
     raise DeprecationWarning("Use @error(404) instead.")
-
-def error(code=500):
-    """
-    Decorator for error handler. Same as app().error(code, handler).
-    """
-    return app().error(code)
 
 
 
