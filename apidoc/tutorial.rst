@@ -115,20 +115,33 @@ As you can see, the keyword argument contains a string even if the wildcard is c
 
 .. __: http_method_
 
-The HTTP protocol defines several `request methods`__ for different tasks. With no method specified, routes will listen to ``GET`` requests only. To handle other methods such as ``POST``, ``PUT`` or ``DELETE``, you can add a ``method`` keyword argument to the :func:`route` decorator or use one of the alternative decorators: :func:`get()`, :func:`post()`, :func:`put()` or :func:`delete()`.
+The HTTP protocol defines several `request methods`__ (sometimes referred to as "verbs") for different tasks. ``GET`` is the default for all routes with no other method specified. These routes will match ``GET`` requests only. To handle other methods such as ``POST``, ``PUT`` or ``DELETE``, you can add a ``method`` keyword argument to the :func:`route` decorator or use one of the four alternative decorators: :func:`get()`, :func:`post()`, :func:`put()` or :func:`delete()`.
 
-Here is an example for a route handling ``POST`` requests::
+The ``POST`` method is commonly used for HTML form submission. This example shows how to handle a login form using ``POST``::
 
-    from bottle import post, request
-    @post('/form/submit') # or @route('/form/submit', method='POST')
-    def form_submit():
-        form_data = request.POST
-        do_something_with(form_data)
-        return "Done"
+    from bottle import get, post, request
 
-In this example we use :attr:`Request.POST` to access form data as described in the :ref:`tutorial-request` section.
+    @get('/login') # or @route('/login')
+    def login_form():
+        return '''<form method="POST">
+                    <input name="name"     type="text" />
+                    <input name="password" type="password" />
+                  </from>'''
 
-The special ``ANY`` method works as a low priority fallback. It matches requests regardless of their HTTP method but only if no other more specific route is installed. Also note that ``HEAD`` requests fall back to ``GET`` routes automatically, so you don't have to specify them explicitly.
+    @post('/login') # or @route('/login', method='POST')
+    def login_submit():
+        name     = request.POST.get('name')
+        password = request.POST.get('password')
+        if name and password and check_login(name, password):
+            return "<p>Your login was correct</p>"
+        else:
+            return "<p>Login failed</p>" + login_form()
+
+In this example the ``/login`` URL has two callbacks assigned to it: The ``login_form()`` callback is invoked on ``GET`` requests (the user clicked on a link) and returns a HTTP form. When a user submits the form, he creates a ``POST`` request which is handled by the ``login_submit()`` callback. :attr:`Request.POST` and other ways to access request related data are described in the :ref:`tutorial-request` section. 
+
+The special method ``HEAD`` is used by clients to request meta-information about a resource, but without having to download the entire document. Bottle handles these automatically by falling back to the corresponding ``GET`` route. You don't have to specify any ``HEAD`` routes yourself.
+
+The non-standard ``ANY`` method works as a low priority fallback in bottle. Routes that listen to ``ANY`` requests will matches requests regardless of their HTTP method but only if no other more specific route is installed. This is helpful for *proxy-routes* that redirect requests to more specific sub-applications.
 
 To sum it up: ``HEAD`` requests fall back to ``GET`` routes and all requests fall back to ``ANY`` routes, if there is no matching route for the original request method.
 
@@ -137,56 +150,24 @@ To sum it up: ``HEAD`` requests fall back to ``GET`` routes and all requests fal
 
 .. _tutorial-request:
 
-The Request Object
+Accessing Request Data
 ==============================================================================
 
-Bottle parses the HTTP request data into a thread-save ``request`` object and provides some useful tools and methods to access this data. Most of the parsing happens on demand, so you won't see any overhead if you don't need the result. Here is a short summary:
+Bottle defines a :class:`Request` class to store HTTP-request related meta-data such as cookies, headers or POST form data. You usually don't instantiate this class yourself, but use the global ``bottle.request`` object. This instance is thread-save and always contains the data related to the *current* request. Most of the parsing happens on demand, so you won't see any overhead if you don't need the informations.
 
-* ``request[key]``: A shortcut for ``request.environ[key]``
-* ``request.environ``: WSGI environment dictionary. Use this with care.
-* ``request.app``: Currently used Bottle instance (same as ``bottle.app()``)
-* ``request.method``: HTTP request-method (GET,POST,PUT,DELETE,...).
-* ``request.query_string``: HTTP query-string (http://host/path?query_string)
-* ``request.path``: Path string that matched the current route.
-* ``request.fullpath``: Full path including the ``SCRIPT_NAME`` part.
-* ``request.url``: The full URL as requested by the client (including ``http(s)://`` and hostname)
-* ``request.input_length`` The Content-Length header (if present) as an integer.
-* ``request.header``: HTTP header dictionary.
-* ``request.GET``: The parsed content of ``request.query_string`` as a dict. Each value may be a string or a list of strings.
-* ``request.POST``: A dict containing parsed form data. Supports URL- and multipart-encoded form data. Each value may be a string, a file or a list of strings or files.
-* ``request.COOKIES``: The cookie data as a dict.
-* ``request.params``: A dict containing both, ``request.GET`` and ``request.POST`` data.
-* ``request.body``: The HTTP body of the request as a buffer object.
-* ``request.auth``: HTTP authorisation data as a named tuple. (experimental)
-* ``request.get_cookie(key[, default])``: Returns a specific cookie. If it is a :term:`secure cookie` it is decoded. (experimental)
+The request object is documented in the API section (see :class:`Request`), but the most common operations are covered here, too.
+
+.. note::
+
+  The :class:`Request` object often uses :class:`MultiDict` instead of normal dictionaries. These MultiDicts behave like normal dictionaries, but can store multiple values per key. Use the :meth:`MultiDict.getall` method to get a list of all values assigned to a key.
 
 
-
-Cookies
-------------------------------------------------------------------------------
-
-Bottle stores cookies sent by the client in a dictionary called ``request.COOKIES``. To create new cookies, the method ``response.set_cookie(name, value[, **params])`` is used. It accepts additional parameters as long as they are valid cookie attributes supported by `SimpleCookie`_.
-
-::
-
-    from bottle import response
-    response.set_cookie('key','value', path='/', domain='example.com', secure=True, expires=+500, ...)
-
-To set the ``max-age`` attribute use the ``max_age`` name.
-
-TODO: It is possible to store python objects and lists in cookies. This produces signed cookies, which are pickled and unpickled automatically. 
-
-
-
-GET and POST values
+GET and POST data
 ------------------------------------------------------------------------------
 
 Query strings and/or POST form submissions are parsed into dictionaries and made
 available as ``request.GET`` and ``request.POST``. Multiple values per
-key are possible, so these dictionaries actually are instances of :class:`MultiDict`
-which returns the newest value by default. You can use ``.getall(key)`` to get a
-list of all available values for that key.
-
+key are possible, so these dictionaries actually are instances of :class:`MultiDict`. 
 
 ::
 
@@ -223,6 +204,19 @@ Here is an example HTML Form for file uploads:
     </form>
 
 
+Cookies
+------------------------------------------------------------------------------
+
+Cookies are stored in ``request.COOKIES`` as a :class:`MultiDict`. To create new cookies, the method :meth:`Response.set_cookie` is used. It accepts additional parameters as long as they are valid cookie attributes supported by `SimpleCookie`_.
+
+::
+
+    from bottle import response
+    response.set_cookie('key','value', path='/', domain='example.com', secure=True, expires=+500, ...)
+
+To set the ``max-age`` attribute use the ``max_age`` name.
+
+TODO: It is possible to store python objects and lists in cookies. This produces signed cookies, which are pickled and unpickled automatically. 
 
 
 
