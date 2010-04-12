@@ -1710,7 +1710,6 @@ HTTP_CODES = {
 
 
 ERROR_PAGE_TEMPLATE = SimpleTemplate("""
-%import cgi
 %from bottle import DEBUG, HTTP_CODES, request
 %status_name = HTTP_CODES.get(e.status, 'Unknown').title()
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
@@ -1720,15 +1719,15 @@ ERROR_PAGE_TEMPLATE = SimpleTemplate("""
     </head>
     <body>
         <h1>Error {{e.status}}: {{status_name}}</h1>
-        <p>Sorry, the requested URL <tt>{{cgi.escape(request.url)}}</tt> caused an error:</p>
-        <pre>{{cgi.escape(str(e.output))}}</pre>
+        <p>Sorry, the requested URL <tt>{{request.url}}</tt> caused an error:</p>
+        <pre>{{str(e.output)}}</pre>
         %if DEBUG and e.exception:
           <h2>Exception:</h2>
-          <pre>{{cgi.escape(repr(e.exception))}}</pre>
+          <pre>{{repr(e.exception)}}</pre>
         %end
         %if DEBUG and e.traceback:
           <h2>Traceback:</h2>
-          <pre>{{cgi.escape(e.traceback)}}</pre>
+          <pre>{{e.traceback}}</pre>
         %end
     </body>
 </html>
