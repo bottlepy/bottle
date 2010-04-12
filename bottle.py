@@ -347,7 +347,7 @@ class Bottle(object):
         self.mounts = {}
         self.error_handler = {}
         self.catchall = catchall
-        self.config = dict()
+        self.config = {}
         self.serve = True
         self.castfilter = []
         if autojson and json_dumps:
@@ -516,7 +516,8 @@ class Bottle(object):
     def __call__(self, environ, start_response):
         """ The bottle WSGI-interface. """
         try:
-            request.bind(environ, self)
+            environ['bottle.app'] = self
+            request.bind(environ)
             response.bind(self)
             out = self.handle(request.path, request.method)
             out = self._cast(out, request, response)
@@ -544,29 +545,29 @@ class Request(threading.local, DictMixin):
     """ Represents a single HTTP request using thread-local attributes.
         The Resquest object wrapps a WSGI environment and can be used as such.
     """
-    def __init__(self, environ=None, app=None):
+    def __init__(self, environ=None, config=None):
         """ Create a new Request instance.
         
             You usually don't do this but use the global `bottle.request`
             instance instead.
         """
-        self.bind(environ or {}, app)
+        self.bind(environ or {}, config)
 
-    def bind(self, environ, app=None):
+    def bind(self, environ, config=None):
         """ Bind a new WSGI enviroment.
             
             This is done automatically for the global `bottle.request`
             instance on every request.
         """
         self.environ = environ
-        self.app = app
+        self.config = config or {}
         # These attributes are used anyway, so it is ok to compute them here
         self.path = '/' + environ.get('PATH_INFO', '/').lstrip('/')
         self.method = environ.get('REQUEST_METHOD', 'GET').upper()
 
     def copy(self):
         ''' Returns a copy of self '''
-        return Request(self.environ.copy(), self.app)
+        return Request(self.environ.copy(), self.config)
         
     def path_shift(self, shift=1):
         ''' Shift path fragments from PATH_INFO to SCRIPT_NAME and vice versa.
@@ -587,7 +588,7 @@ class Request(threading.local, DictMixin):
         self.environ[key] = value
         todelete = []
         if key in ('PATH_INFO','REQUEST_METHOD'):
-            self.bind(self.environ, self.app)
+            self.bind(self.environ, self.config)
         elif key == 'wsgi.input': todelete = ('body','forms','files','params')
         elif key == 'QUERY_STRING': todelete = ('get','params')
         elif key.startswith('HTTP_'): todelete = ('headers', 'cookies')
@@ -756,11 +757,10 @@ class Request(threading.local, DictMixin):
                 self.environ['bottle.cookies'][cookie.key] = cookie.value
         return self.environ['bottle.cookies']
 
-    def get_cookie(self, *args):
+    def get_cookie(self, name, secret=None):
         """ Return the (decoded) value of a cookie. """
-        value = self.COOKIES.get(*args)
-        sec = self.app.config['securecookie.key']
-        dec = cookie_decode(value, sec)
+        value = self.COOKIES.get(name)
+        dec = cookie_decode(value, secret) if secret else None
         return dec or value
 
     @property
@@ -775,20 +775,20 @@ class Response(threading.local):
     """ Represents a single HTTP response using thread-local attributes.
     """
 
-    def __init__(self, app=None):
-        self.bind(app)
+    def __init__(self, config=None):
+        self.bind(config)
 
-    def bind(self, app):
+    def bind(self, config=None):
         """ Resets the Response object to its factory defaults. """
         self._COOKIES = None
         self.status = 200
         self.headers = HeaderDict()
         self.content_type = 'text/html; charset=UTF-8'
-        self.app = app
+        self.config = config or {}
 
     def copy(self):
         ''' Returns a copy of self '''
-        copy = Response(self.app)
+        copy = Response(self.config)
         copy.status = self.status
         copy.headers = self.headers.copy()
         copy.content_type = self.content_type
@@ -819,7 +819,7 @@ class Response(threading.local):
             self._COOKIES = SimpleCookie()
         return self._COOKIES
 
-    def set_cookie(self, key, value, **kargs):
+    def set_cookie(self, key, value, secret=None, **kargs):
         """ Add a new cookie with various options.
         
         If the cookie value is not a string, a secure cookie is created.
@@ -829,8 +829,9 @@ class Response(threading.local):
             See http://de.wikipedia.org/wiki/HTTP-Cookie#Aufbau for details
         """
         if not isinstance(value, basestring):
-            sec = self.app.config['securecookie.key']
-            value = cookie_encode(value, sec).decode('ascii') #2to3 hack
+            if not secret:
+                raise TypeError('Cookies must be strings when secret is not set')
+            value = cookie_encode(value, secret).decode('ascii') #2to3 hack
         self.COOKIES[key] = value
         for k, v in kargs.iteritems():
             self.COOKIES[key][k.replace('_', '-')] = v
