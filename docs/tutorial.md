@@ -72,7 +72,7 @@ The first line generates a tables called "todo" with the three columns "id", "ta
 
 Alternatively, we can create the database using the sqlite version embedded in python since version 2.5. In this way there is no need to install the full sqlite package. Just execute `python` and enter:
 
-    #!Python
+    #!pycon
     >>> import sqlite3
     >>> con=sqlite3.connect("todo.db")
     >>> sql = """
@@ -82,7 +82,7 @@ Alternatively, we can create the database using the sqlite version embedded in p
     ... INSERT INTO "todo" VALUES(3,'Test various editors for and check the syntax highlighting',1);
     ... INSERT INTO "todo" VALUES(4,'Choose your favorite WSGI-Framework',0);
     ... """
-    >>> [con.execute(line) for line in sql.split("\n") if line]
+    >>> con.executescript(sql)
 
 
 ## Using Bottle for a web-based ToDo list
