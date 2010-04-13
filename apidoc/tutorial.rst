@@ -115,7 +115,7 @@ As you can see, the keyword argument contains a string even if the wildcard is c
 
 .. __: http_method_
 
-The HTTP protocol defines several `request methods`__ (sometimes referred to as "verbs") for different tasks. ``GET`` is the default for all routes with no other method specified. These routes will match ``GET`` requests only. To handle other methods such as ``POST``, ``PUT`` or ``DELETE``, you can add a ``method`` keyword argument to the :func:`route` decorator or use one of the four alternative decorators: :func:`get()`, :func:`post()`, :func:`put()` or :func:`delete()`.
+The HTTP protocol defines several `request methods`__ (sometimes referred to as "verbs") for different tasks. ``GET`` is the default for all routes with no other method specified. These routes will match ``GET`` requests only. To handle other methods such as ``POST``, ``PUT`` or ``DELETE``, you can add a ``method`` keyword argument to the :func:`route` decorator or use one of the four alternative decorators: :func:`get`, :func:`post`, :func:`put` or :func:`delete`.
 
 The ``POST`` method is commonly used for HTML form submission. This example shows how to handle a login form using ``POST``::
 
@@ -298,7 +298,7 @@ Even dictionaries are allowed. They are converted to json_ and returned with the
 Static Files
 --------------------------------------------------------------------------------
 
-You can directly return file objects, but ``static_file()`` is the recommended way to serve static files. It automatically guesses a mime-type, adds a ``Last-Modified`` header, restricts paths to a ``root`` directory for security reasons and generates appropriate error responses (401 on permission errors, 404 on missing files). It even supports the ``If-Modified-Since`` header and eventually generates a ``304 Not modified`` response. You can pass a custom mimetype to disable mimetype guessing.
+You can directly return file objects, but :func:`static_file` is the recommended way to serve static files. It automatically guesses a mime-type, adds a ``Last-Modified`` header, restricts paths to a ``root`` directory for security reasons and generates appropriate error responses (401 on permission errors, 404 on missing files). It even supports the ``If-Modified-Since`` header and eventually generates a ``304 Not modified`` response. You can pass a custom mimetype to disable mimetype guessing.
 
 ::
 
