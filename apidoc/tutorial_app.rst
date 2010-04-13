@@ -230,13 +230,12 @@ To do so, we first add a new route to our script and tell the route that it shou
         c = conn.cursor()
         
         c.execute("INSERT INTO todo (task,status) VALUES (?,?)", (new,1))
+        new_id = c.lastrowid
+
         conn.commit()
+        c.close()
         
-        c.execute("SELECT last_insert_rowid()")
-        new_id = c.fetchone()[0]
-        c.close
-        
-        return '<p>The new task was inserted into the database, the ID is %s</p>
+        return '<p>The new task was inserted into the database, the ID is %s</p>' % new_id
        
 To access GET (or POST) data, we need to import ``request`` from Bottle. To assign the actual data to a variable, we use the statement ``request.GET.get('task','').strip()`` statement, where ``task`` is the name of the GET-data we want to access. That's all. If your GET-data has more than one variable, multiple ``request.GET.get()`` statements can be used and assigned to other variables.
 
@@ -257,11 +256,10 @@ The code need to be extended to::
         c = conn.cursor()
         
         c.execute("INSERT INTO todo (task,status) VALUES (?,?)", (new,1))
+        new_id = c.lastrowid
+
         conn.commit()
-        
-        c.execute("SELECT last_insert_rowid()")
-        new_id = c.fetchone()[0]
-        c.close 
+        c.close()
         
         return '<p>The new task was inserted into the database, the ID is %s</p>' % new_id
     else:
@@ -588,13 +586,12 @@ Main code for the application ``todo.py``::
             c = conn.cursor()
 
             c.execute("INSERT INTO todo (task,status) VALUES (?,?)", (new,1))
-            conn.commit()
+            new_id = c.lastrowid
 
-            c.execute("SELECT last_insert_rowid()")
-            new_id = c.fetchone()[0]
-            c.close 
+            conn.commit()
+            c.close()
               
-            return '<p>The new task was inserted into the database, the ID is %s</p>' %new_id
+            return '<p>The new task was inserted into the database, the ID is %s</p>' % new_id
 
         else:
             return template('new_task.tpl')
