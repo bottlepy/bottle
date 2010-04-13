@@ -143,7 +143,7 @@ pure WSGI.
 ## Strings and Unicode
 
 Returning strings (bytes) is not a problem. Unicode however needs to be encoded into a byte stream before 
-the webserver can send it to the client. Ths default encoding is utf-8. If that fits your needs, you can 
+the webserver can send it to the client. The default encoding is utf-8. If that fits your needs, you can
 simply return unicode or unicode iterables.
 
     #!Python
