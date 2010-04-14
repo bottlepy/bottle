@@ -166,7 +166,7 @@ pure WSGI.
 ### Strings and Unicode
 
 Returning strings (bytes) is not a problem. Unicode however needs to be encoded into a byte stream before 
-the webserver can send it to the client. Ths default encoding is utf-8, so if that fits your needs, you can 
+the webserver can send it to the client. The default encoding is utf-8, so if that fits your needs, you can
 simply return unicode or unicode iterables.
 
     #!Python
@@ -473,7 +473,7 @@ A call to `bottle.default_app()` returns your WSGI application. After applying a
 
 ## How default_app() works
 
-Bottle creates a single instance of `bottle.Bottle()` and uses it as a default for most of the modul-level decorators and the `bottle.run()` routine. 
+Bottle creates a single instance of `bottle.Bottle()` and uses it as a default for most of the module-level decorators and the `bottle.run()` routine. 
 `bottle.default_app()` returns (or changes) this default. You may, however, create your own instances of `bottle.Bottle()`.
 
     #!Python
@@ -520,7 +520,7 @@ the newest version of your code.
     run(reloader=True)
 
 How it works: The main process will not start a server, but spawn a new 
-child process using the same command line agruments used to start the 
+child process using the same command line arguments used to start the 
 main process. All module level code is executed at least twice! Be 
 carefull.
 

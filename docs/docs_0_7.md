@@ -34,7 +34,7 @@ Lets start with a very basic example: Hello World
 Run this script, visit <http://localhost:8080/hello> and you will see "Hello World!" in your Browser. So, what happened here?
 
   1. First we imported some bottle components. The `route()` decorator and the `run()` function. 
-  2. The `route()` [decorator][] is used do bind a piece of code to an URL. In this example we want to answer requests to the `/hello` URL.
+  2. The `route()` [decorator][] is used to bind a piece of code to an URL. In this example we want to answer requests to the `/hello` URL.
   3. This function will be called every time someone hits the `/hello` URL on the web server. It is called a __handler function__ or __callback__.
   4. The return value of a handler function will be sent back to the Browser.
   5. Now it is time to start the actual HTTP server. The default is a development server running on *localhost* port *8080* and serving requests until you hit __Ctrl-C__
@@ -66,7 +66,7 @@ As you can see, URLs and routes have nothing to do with actual files on the web 
 ## HTTP Request Methods
 
 The `route()` decorator has an optional keyword argument `method` which defaults to `method='GET'`; only GET requests get answered by that route.
-Possible values are `POST`, `PUT`, `DELETE`, `HEAD`, `ANY` or any other [HTTP request method][http_method] you want to listen to. As an alternative, you can use the `@get()`, `@post()`, `@put()` and `@delete()` aliases.
+Possible values are `POST`, `PUT`, `DELETE`, `HEAD`, or any other [HTTP request method][http_method] you want to listen to. Also `ANY` which will be used as fallback for any method. As an alternative, you can use the `@get()`, `@post()`, `@put()` and `@delete()` aliases.
 
     #!Python
     from bottle import post, request
@@ -129,7 +129,7 @@ You may raise `ValueError` in your custom callable if a parameter does not valid
 
 # Generating content
 
-The [WSGI specification][wsgi] expects an iterable list of byte strings to be returned from your application and can't handle file objects, unicode, dictionaries or exceptions.
+The [WSGI specification][wsgi] expects an iterable list of byte strings to be returned from your application and can't handle unicode, dictionaries or exceptions. File objects will be handled as iterables in *pure* WSGI, with no conditional caching or `Content-Length` calculation.
 
     #!Python
     @route('/wsgi')
@@ -143,7 +143,7 @@ pure WSGI.
 ## Strings and Unicode
 
 Returning strings (bytes) is not a problem. Unicode however needs to be encoded into a byte stream before 
-the webserver can send it to the client. Ths default encoding is utf-8. If that fits your needs, you can 
+the webserver can send it to the client. The default encoding is utf-8. If that fits your needs, you can
 simply return unicode or unicode iterables.
 
     #!Python
@@ -197,7 +197,7 @@ You can directly return file objects, but `static_file()` is the recommended way
     from bottle import static_file
 
     @route('/images/:filename#.*\.png#')
-    def senf_image(filename):
+    def send_image(filename):
         return static_file(filename, root='/path/to/image/files', mimetype='image/png')
     
     @route('/static/:filename')
@@ -281,13 +281,13 @@ available as `request.GET` and `request.POST`. Multiple values per
 key are possible, so each value of these dictionaries may contain a string
 or a list of strings.
 
-You can use `.getone(key[, default])` to get a single value only.
+You can use `.getall(key)` to get all values, or `.get(key[, default])` if you expect only one value. `getall` returns a list, `get` returns a string.
 
     #!Python
     from bottle import route, request
     @route('/search', method='POST')
     def do_search():
-        query = request.POST.getone('query', '').strip()
+        query = request.POST.get('query', '').strip()
         if not query:
             return "You didn't supply a search query."
         else:
@@ -416,7 +416,7 @@ A call to `bottle.default_app()` returns your WSGI application. After applying a
 
 ## How default_app() works
 
-Bottle creates a single instance of `bottle.Bottle()` and uses it as a default for most of the modul-level decorators and the `bottle.run()` routine. 
+Bottle creates a single instance of `bottle.Bottle()` and uses it as a default for most of the module-level decorators and the `bottle.run()` routine. 
 `bottle.default_app()` returns (or changes) this default. You may, however, create your own instances of `bottle.Bottle()`.
 
     #!Python
@@ -463,7 +463,7 @@ the newest version of your code.
     run(reloader=True)
 
 How it works: The main process will not start a server, but spawn a new 
-child process using the same command line agruments used to start the 
+child process using the same command line arguments used to start the 
 main process. All module level code is executed at least twice! Be 
 carefull.
 

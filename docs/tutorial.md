@@ -59,7 +59,7 @@ Furthermore, you need [Pysqlite][pysqlite], the Python modules to access SQLite 
 
 ### Create An SQL Database
 
-First, we need to create the database we use later on. To do so, run SQLite with the command `sqlite3 todo.db`. This will create an empty data base called "todo.sql" and you will see the SQLite prompt, which may look like this: `sqlite>`. Right here, input the following commands:
+First, we need to create the database we use later on. To do so, run SQLite with the command `sqlite3 todo.db`. This will create an empty data base called "todo.db" and you will see the SQLite prompt, which may look like this: `sqlite>`. Right here, input the following commands:
 
     #!sql
     CREATE TABLE todo (id INTEGER PRIMARY KEY, task char(100) NOT NULL, status bool NOT NULL);
@@ -69,6 +69,21 @@ First, we need to create the database we use later on. To do so, run SQLite with
     INSERT INTO todo (task,status) VALUES ('Choose your favorite WSGI-Framework',0);
 
 The first line generates a tables called "todo" with the three columns "id", "task", and "status". "id" is a unique id for each row, which is used later on to reference the rows. The column "task" holds the text which describes the task, it can be max 100 characters long. Finally, the column "status" is used to mark a task as open (value 1) or closed (value 0).
+
+Alternatively, we can create the database using the sqlite version embedded in python since version 2.5. In this way there is no need to install the full sqlite package. Just execute `python` and enter:
+
+    #!pycon
+    >>> import sqlite3
+    >>> con=sqlite3.connect("todo.db")
+    >>> sql = """
+    ... CREATE TABLE todo (id integer PRIMARY KEY, task char(100) NOT NULL, status boolean NOT NULL);
+    ... INSERT INTO "todo" VALUES(1,'Read A-byte-of-python to get a good introduction into  Python',0);
+    ... INSERT INTO "todo" VALUES(2,'Visit the Python website',1);
+    ... INSERT INTO "todo" VALUES(3,'Test various editors for and check the syntax highlighting',1);
+    ... INSERT INTO "todo" VALUES(4,'Choose your favorite WSGI-Framework',0);
+    ... """
+    >>> con.executescript(sql)
+
 
 ## Using Bottle for a web-based ToDo list
 
@@ -123,7 +138,7 @@ Actually, the output is not really exciting nor nice to read. It is the raw resu
 So, in the next step we format the output in a nicer way. But before we do that, we make our life easier.
 
 ### Debugging and Auto-Reload
-Maybe you already experienced the Bottle sends a short error message to the browser in case something within the script is wrong, e.g. the connection to the database is not working. For debugging purposes it is quiet helpful to get more details. This can be easily achieved by adding the following statement to the script:
+Maybe you already experienced the Bottle sends a short error message to the browser in case something within the script is wrong, e.g. the connection to the database is not working. For debugging purposes it is quite helpful to get more details. This can be easily achieved by adding the following statement to the script:
 
     #!Python
     from bottle import run, route, debug
@@ -136,7 +151,7 @@ By enabling "debug", you will get a full stacktrace of the Python interpreter, w
 
 **Note** that `debug(True)` is supposed to be used for development only, it should *not* be used in productive environments.
 
-A further quiet nice feature is auto-reloading, which is enabled by modifying the `run()` statement to
+A further quite nice feature is auto-reloading, which is enabled by modifying the `run()` statement to
 
     #!Python
     run(reloader=True)
@@ -213,15 +228,13 @@ To do so, we first add a new route to our script and tell the route that it shou
         conn = sqlite3.connect('todo.db')
         c = conn.cursor()
         
-        query = "INSERT INTO todo (task,status) VALUES ('%s',1)" %new
-        c.execute(query)
+        query = "INSERT INTO todo (task,status) VALUES (?,1)"
+        c.execute(query, (new,))
+        new_id = c.lastrowid
         conn.commit()
+        c.close()
         
-        c.execute("SELECT last_insert_rowid()")
-        new_id = c.fetchone()[0]
-        c.close
-        
-        return '<p>The new task was inserted into the database, the ID is %s</p>
+        return '<p>The new task was inserted into the database, the ID is %s</p>' % new_id
        
 To access GET (or POST) data, we need to import "request" from Bottle. To assign the actual data to a variable, we use the statement `request.GET.get('task','').strip()` statement, where "task" is the name of the GET-data we want to access. That's all. If your GET-data has more than one variable, multiple `request.GET.get()` statements can be used and assigned to other variables.
 
@@ -242,13 +255,11 @@ The code need to be extended to:
         conn = sqlite3.connect('todo.db')
         c = conn.cursor()
         
-        query = "INSERT INTO todo (task,status) VALUES ('%s',1)" %new
-        c.execute(query)
+        query = "INSERT INTO todo (task,status) VALUES (?,1)"
+        c.execute(query, (new,))
+        new_id = c.lastrowid
         conn.commit()
-        
-        c.execute("SELECT last_insert_rowid()")
-        new_id = c.fetchone()[0]
-        c.close 
+        c.close()
   
         return '<p>The new task was inserted into the database, the ID is %s</p>' %new_id
     
@@ -274,7 +285,7 @@ By the way, if you prefer to use POST-data: This works exactly the same why, jus
 ### Editing Existing Items
 The last point to do is to enable editing of existing items.
 
-By using the routes we know so far only it is possible, but may be quiet tricky. But Bottle knows something called "dynamic routes", which makes this task quiet easy.
+By using the routes we know so far only it is possible, but may be quite tricky. But Bottle knows something called "dynamic routes", which makes this task quite easy.
 
 The basic statement for a dynamic route looks like this:
 
@@ -302,17 +313,17 @@ The code looks like this:
                 
             conn = sqlite3.connect('todo.db')
             c = conn.cursor()
-            query = "UPDATE todo SET task = '%s', status = '%s' WHERE id LIKE '%s'" % (edit,status,no)
-            c.execute(query)
+            query = "UPDATE todo SET task = ?, status = ? WHERE id LIKE ?"
+            c.execute(query, (edit,status,no))
             conn.commit()
             
-            return '<p>The item number %d was successfully updated</p>' %no
+            return '<p>The item number %s was successfully updated</p>' %no
             
         else:
             conn = sqlite3.connect('todo.db')
             c = conn.cursor()
-            query = "SELECT task, status FROM todo WHERE id LIKE '%d'" %no
-            c.execute(query)
+            query = "SELECT task, status FROM todo WHERE id LIKE ?"
+            c.execute(query, (no,))
             cur_data = c.fetchone()
             
             return template('edit_task', old = cur_data, no = no)
@@ -342,7 +353,7 @@ A last word on dynamic routes: you can even use a regular expression for a dynam
 ### Validating dynamic routes
 Using dynamic routes is fine, but for many cases it makes sense to validate the dynamic part of the route. For example, we expect a integer number in our route for editing above. But if a float, characters or so are received, the Python interpreter throws an exception, which is not what we want.
 
-For those cases, Bottle offers the `@valdiate` decorator, which validates the "input" prior to passing it to the function. In order to apply the validator, extend the code as follows:
+For those cases, Bottle offers the `@validate` decorator, which validates the "input" prior to passing it to the function. In order to apply the validator, extend the code as follows:
 
     #!Python
     from bottle import route, run, debug, template, request, validate
@@ -429,7 +440,7 @@ As said above, the standard server is perfectly suitable for development, person
 
 But Bottle has already various adapters to multi-threaded server on board, which perform better on higher load. Bottle supports [cherryPy][cherrypy], [fapws3][fapws3], [flup][flup] and [Paste][paste].
 
-If you want to run for example Bottle with the past server, use the following code:
+If you want to run for example Bottle with the Paste server, use the following code:
 
     #!Python
     from bottle import PasteServer
@@ -526,13 +537,11 @@ Main code for the application `todo.py`:
             conn = sqlite3.connect('todo.db')
             c = conn.cursor()
             
-            query = "INSERT INTO todo (task,status) VALUES ('%s',1)" %new
-            c.execute(query)
+            query = "INSERT INTO todo (task,status) VALUES (?,1)"
+            c.execute(query, (new,))
+            new_id = c.lastrowid
             conn.commit()
-            
-            c.execute("SELECT last_insert_rowid()")
-            new_id = c.fetchone()[0]
-            c.close 
+            c.close()
       
             return '<p>The new task was inserted into the database, the ID is %s</p>' %new_id
         
@@ -554,8 +563,8 @@ Main code for the application `todo.py`:
                 
             conn = sqlite3.connect('todo.db')
             c = conn.cursor()
-            query = "UPDATE todo SET task = '%s', status = '%s' WHERE id LIKE '%s'" % (edit,status,no)
-            c.execute(query)
+            query = "UPDATE todo SET task = ?, status = ? WHERE id LIKE ?"
+            c.execute(query, (edit,status,no))
             conn.commit()
             
             return '<p>The item number %s was successfully updated</p>' %no
@@ -563,8 +572,8 @@ Main code for the application `todo.py`:
         else:
             conn = sqlite3.connect('todo.db')
             c = conn.cursor()
-            query = "SELECT task FROM todo WHERE id LIKE '%s'" %no
-            c.execute(query)
+            query = "SELECT task FROM todo WHERE id LIKE ?"
+            c.execute(query, (no,))
             cur_data = c.fetchone()
             print cur_data
             

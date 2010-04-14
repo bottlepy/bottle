@@ -37,7 +37,7 @@ Example
 
 This is an example::
 
-    from bottle import route, run, request, response, send_file, abort
+    from bottle import route, run, request, response, static_file, abort
     
     @route('/')
     def hello_world():
@@ -53,7 +53,6 @@ This is an example::
         return 'Hello %s!' % name
     
     @route('/static/:filename#.*#')
-
     def static(filename):
         return static_file(filename, root='/path/to/static/files/')
     
@@ -382,7 +381,7 @@ class Bottle(object):
     def match_url(self, path, method='GET'):
         """ Find a callback bound to a path and a specific HTTP method.
             Return (callback, param) tuple or (None, {}).
-            method: HEAD falls back to GET. HEAD and GET fall back to ALL.
+            method: HEAD falls back to GET. All methods fall back to ANY.
         """
         path = path.strip().lstrip('/')
         handler, param = self.routes.match(method + ';' + path)
@@ -563,7 +562,7 @@ class Bottle(object):
 
 class Request(threading.local, DictMixin):
     """ Represents a single HTTP request using thread-local attributes.
-        The Resquest object wrapps a WSGI environment and can be used as such.
+        The Request object wrapps a WSGI environment and can be used as such.
     """
     def __init__(self, environ=None, config=None):
         """ Create a new Request instance.
@@ -695,14 +694,14 @@ class Request(threading.local, DictMixin):
             self.environ['bottle.post'] = MultiDict()
             self.environ['bottle.forms'] = MultiDict()
             self.environ['bottle.files'] = MultiDict()
-            save_env = {'QUERY_STRING':''} # Build a save environment for cgi
+            safe_env = {'QUERY_STRING':''} # Build a safe environment for cgi
             for key in ('REQUEST_METHOD', 'CONTENT_TYPE', 'CONTENT_LENGTH'):
-                if key in self.environ: save_env[key] = self.environ[key]
+                if key in self.environ: safe_env[key] = self.environ[key]
             if TextIOWrapper:
                 fb = TextIOWrapper(self.body, encoding='ISO-8859-1')
             else:
                 fb = self.body
-            data = cgi.FieldStorage(fp=fb, environ=save_env, keep_blank_values=True)
+            data = cgi.FieldStorage(fp=fb, environ=safe_env, keep_blank_values=True)
             for item in data.list or []:
                 if item.filename:
                     self.environ['bottle.post'][item.name] = item
@@ -960,7 +959,7 @@ def send_file(*a, **k): #BC 0.6.4
 
 
 def static_file(filename, root, guessmime=True, mimetype=None, download=False):
-    """ Opens a file in a save way and returns a HTTPError object with status
+    """ Opens a file in a safe way and returns a HTTPError object with status
         code 200, 305, 401 or 404. Sets Content-Type, Content-Length and
         Last-Modified header. Obeys If-Modified-Since header and HEAD requests.
     """
@@ -1055,7 +1054,7 @@ def cookie_decode(data, key):
 
 
 def cookie_is_encoded(data):
-    ''' Verify and decode an encoded string. Return an object or None'''
+    ''' Return True if the argument looks like a encoded cookie.'''
     return bool(data.startswith(u'!'.encode('ascii')) and u'?'.encode('ascii') in data) #2to3 hack
 
 
@@ -1632,8 +1631,14 @@ cheetah_template = functools.partial(template, template_adapter=CheetahTemplate)
 jinja2_template = functools.partial(template, template_adapter=Jinja2Template)
 
 def view(tpl_name, **defaults):
-    ''' Decorator: Rendes a template for a handler.
-        Return a dict of template vars to fill out the template.
+    ''' Decorator: Renders a template for a handler.
+        The handler can control its behavior like that:
+
+          - return a dict of template vars to fill out the template
+          - return other than a dict and the view decorator will not
+            process the template, but return the handler result as is.
+            This includes returning a HTTPResponse(dict) to get,
+            for instance, JSON with autojson or other castfilters
     '''
     def decorator(func):
         @functools.wraps(func)
@@ -1740,7 +1745,7 @@ TRACEBACK_TEMPLATE = '<h2>Error:</h2>\n<pre>%s</pre>\n' \
 request = Request()
 """ Whenever a page is requested, the :class:`Bottle` WSGI handler stores
 metadata about the current request into this instance of :class:`Request`.
-It is thread-save and can be accessed from within handler functions. """
+It is thread-safe and can be accessed from within handler functions. """
 
 response = Response()
 """ The :class:`Bottle` WSGI handler uses metasata assigned to this instance
