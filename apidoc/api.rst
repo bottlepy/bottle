@@ -7,13 +7,18 @@ API Reference
    :synopsis: WSGI micro framework
 .. moduleauthor:: Marcel Hellkamp <marc@paws.de>
 
-This is an API reference, NOT a documentation. 
+This is an API reference, NOT a documentation. If you are new to bottle, have a look at the :doc:`tutorial`.
 
-.. currentmodule:: bottle
+Module Contents
+=====================================
+The module defines several functions, constants, and an exception.
+
+.. function:: app()
+
+   Return the current *default application* (see :class:`Bottle`).
+   Actually, this is a callable instance of :class:`AppStack` and implements a stack-like API.
 
 .. autofunction:: debug
-
-.. autofunction:: url
 
 .. autodata:: request
 
@@ -21,19 +26,75 @@ This is an API reference, NOT a documentation.
 
 .. autodata:: HTTP_CODES
 
-.. function:: app()
+
+Routing 
+-------------------
+
+Bottle maintains a stack of :class:`Bottle` instances (see :func:`app' and :class:`AppStack`) and
+uses the top of the stack as a *default application* for some of the module-level functions
+and decorators.
+
+.. function:: route(path, method='GET', name=None)
+
+   Decorator to bind a function to a path. This equals :meth:`Bottle.route` using the current default application.
+
+.. function:: get(...)
+              post(...)
+              put(...)
+              delete(...)
+
+   These are equal to :func:`route` with the `method` parameter set to the corresponding verb.
+
+.. function:: error(...)
+
+   Calls :meth:`Bottle.error` using the default application.
+
+.. function:: url(...)
+
+   Calls :meth:`Bottle.url` using the default application.
+
+WSGI and HTTP Utilities
+----------------------------
+
+.. autofunction:: parse_date
+
+.. autofunction:: parse_auth
+
+.. autofunction:: cookie_encode
+
+.. autofunction:: cookie_decode
+
+.. autofunction:: cookie_is_encoded
+
+.. autofunction:: yieldroutes
+
+.. autofunction:: path_shift
+
+
+Data Structures
+----------------------
+
+.. autoclass:: MultiDict
+   :members:
+
+.. autoclass:: HeaderDict
+   :members:
    
-   Return the current default :class:`Bottle` instance. This is used by many
-   module level functions and decorators such as :func:`route` and :func:`debug`.
-   Actually, :data:`app` is a :class:`AppStack` instance and supports methods
-   like :meth:`AppStack.push` and :meth:`AppStack.pop`
-   
+.. autoclass:: AppStack
+   :members:
 
-These decorators are shortcuts for their counterparts in :class:`Bottle`
+Exceptions
+---------------
 
-.. autofunction:: route
+.. autoexception:: BottleException
+   :members:
 
-   The shortcuts :func:`get`, :func:`post`, :func:`put`, :func:`delete` have different defaults fot the *method* attribute.
+.. autoexception:: HTTPResponse
+   :members:
+
+.. autoexception:: HTTPError
+   :members:
+
 
 
 The :class:`Bottle` Class
@@ -60,29 +121,10 @@ The :class:`Response` class on the other hand stores header and cookie data that
    :members:
 
 
-Data Structures
-===============
 
-.. autoclass:: MultiDict
-   :members:
 
-.. autoclass:: HeaderDict
-   :members:
-   
-.. autoclass:: AppStack
-   :members:
 
-Exceptions
-==========
 
-.. autoexception:: BottleException
-   :members:
-
-.. autoexception:: HTTPResponse
-   :members:
-
-.. autoexception:: HTTPError
-   :members:
 
 Templates
 =========
