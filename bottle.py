@@ -1723,6 +1723,11 @@ ERROR_PAGE_TEMPLATE = SimpleTemplate("""
 <html>
     <head>
         <title>Error {{e.status}}: {{status_name}}</title>
+        <style type="text/css">
+          html {background-color: #eee; font-family: sans;}
+          body {background-color: #fff; border: 1px solid #ddd; padding: 15px; margin: 15px;}
+          pre {background-color: #eee; border: 1px solid #ddd; padding: 5px;}
+        </style>
     </head>
     <body>
         <h1>Error {{e.status}}: {{status_name}}</h1>
@@ -1738,11 +1743,8 @@ ERROR_PAGE_TEMPLATE = SimpleTemplate("""
         %end
     </body>
 </html>
-""") #TODO: use {{!bla}} instead of cgi.escape as soon as strlunicode is merged
+""")
 """ The HTML template used for error messages """
-
-TRACEBACK_TEMPLATE = '<h2>Error:</h2>\n<pre>%s</pre>\n' \
-                     '<h2>Traceback:</h2>\n<pre>%s</pre>\n'
 
 request = Request()
 """ Whenever a page is requested, the :class:`Bottle` WSGI handler stores
