@@ -74,10 +74,19 @@ class TestSimpleTemplate(unittest.TestCase):
         self.assertEqual(u'start\nend', ''.join(t.render(i=False)))
 
     def test_elsebug(self):
+        ''' Whirespace between block keyword and colon is allowed '''
         t = SimpleTemplate("%if 1:\nyes\n%else:\nno\n%end\n")
         self.assertEqual(u"yes\n", ''.join(t.render()))
         t = SimpleTemplate("%if 1:\nyes\n%else     :\nno\n%end\n")
         self.assertEqual(u"yes\n", ''.join(t.render()))
+
+    def test_dedentbug(self):
+        ''' One-Line dednet blocks should not change indention '''
+        t = SimpleTemplate('%if x: a="if"\n%else: a="else"\n{{a}}')
+        self.assertEqual(u"if", ''.join(t.render(x=True)))
+        self.assertEqual(u"else", ''.join(t.render(x=False)))
+        t = SimpleTemplate('%if x: a="if"\n%else: a="else"\n%end')
+        self.assertRaises(NameError, t.render)
 
     def test_onelineblocks(self):
         """ Templates: one line code blocks """

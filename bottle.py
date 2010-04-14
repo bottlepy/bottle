@@ -1552,9 +1552,11 @@ class SimpleTemplate(BaseTemplate):
                 cmd = re.split(r'[^a-zA-Z0-9_]', line)[0]
                 flush() ##encodig (TODO: why?)
                 if cmd in self.blocks:
-                    if cmd in self.dedent_blocks: cmd = stack.pop()
+                    dedent = cmd in self.dedent_blocks # "else:"
+                    oneline = not cline.endswith(':') # "if 1: pass"
+                    if dedent and not oneline: cmd = stack.pop()
                     code(line)
-                    if cline.endswith(':'): stack.append(cmd)
+                    if not oneline: stack.append(cmd)
                 elif cmd == 'end' and stack:
                     code('#end(%s) %s' % (stack.pop(), line.strip()[3:]))
                 elif cmd == 'include':
