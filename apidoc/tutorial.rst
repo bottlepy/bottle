@@ -185,7 +185,11 @@ key are possible, so these dictionaries actually are instances of :class:`MultiD
 File Uploads
 ------------------------------------------------------------------------------
 
-Bottle handles file uploads similar to normal POST form data. Instead of strings, you will get file-like objects. 
+Bottle handles file uploads similar to normal POST form data.
+Instead of strings, you will get file-like objects. These objects
+have two primary attributes: ``file`` is a file object that can be
+used to read it, and ``value``, which will read the file and return
+it as a string.
 
 ::
 
@@ -193,7 +197,7 @@ Bottle handles file uploads similar to normal POST form data. Instead of strings
     @route('/upload', method='POST')
     def do_upload():
         datafile = request.POST.get('datafile')
-        return datafile.read()
+        return datafile.file.read()
 
 Here is an example HTML Form for file uploads:
 
