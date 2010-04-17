@@ -1263,7 +1263,14 @@ class GunicornServer(ServerAdapter):
     def run(self, handler):
         import gunicorn.arbiter
         gunicorn.arbiter.Arbiter((self.host, self.port), 4, handler).run()
+    
 
+class EventletServer(ServerAdapter):
+    """ Untested """
+    def run(self, handler):
+        from eventlet import wsgi, listen
+        wsgi.server(listen((self.host, self.port)), handler)
+        
 
 class AutoServer(ServerAdapter):
     """ Untested. """
