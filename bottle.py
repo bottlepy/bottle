@@ -999,13 +999,10 @@ def static_file(filename, root, guessmime=True, mimetype=None, download=False):
     else:
         return HTTPResponse(open(filename, 'rb'), header=header)
 
-def url(routename, **kargs):
-    return app().get_url(routename, **kargs)
-url.__doc__ = Bottle.get_url.__doc__
 
-def mount(app, script_path):
-    return app().mount(app, script_path)
-mount.__doc__ = Bottle.mount.__doc__
+
+
+
 
 # Utilities
 
@@ -1143,7 +1140,9 @@ get    = functools.wraps(Bottle.get)(lambda *a, **ka: app().get(*a, **ka))
 post   = functools.wraps(Bottle.post)(lambda *a, **ka: app().post(*a, **ka))
 put    = functools.wraps(Bottle.put)(lambda *a, **ka: app().put(*a, **ka))
 delete = functools.wraps(Bottle.delete)(lambda *a, **ka: app().delete(*a, **ka))
-error  = functools.wraps(Bottle.error)(lambda code: app().error(code))
+error  = functools.wraps(Bottle.error)(lambda *a, **ka: app().error(*a, **ka))
+url    = functools.wraps(Bottle.get_url)(lambda *a, **ka: app().get_url(*a, **ka))
+mount  = functools.wraps(Bottle.get_url)(lambda *a, **ka: app().mount(*a, **ka))
 
 def default():
     raise DeprecationWarning("Use @error(404) instead.")
