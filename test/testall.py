@@ -2,7 +2,11 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-import sys, glob
+import sys, os, glob
+
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, '../')
+sys.path.insert(0, './')
 
 unittests = [name[2:-3] for name in glob.glob('./test_*.py')]
 suite = unittest.defaultTestLoader.loadTestsFromNames(unittests)
