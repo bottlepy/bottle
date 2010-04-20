@@ -598,10 +598,11 @@ class Request(threading.local, DictMixin):
         self['SCRIPT_NAME'], self.path = path_shift(script_name, self.path, shift)
         self['PATH_INFO'] = self.path
 
-    def __getitem__(self, key):
-        """ Shortcut for Request.environ.__getitem__ """
-        return self.environ[key]
-
+    def __getitem__(self, key): return self.environ[key]
+    def __delitem__(self, key): self[key] = ""; del(self.environ[key])
+    def __iter__(self): return iter(self.environ)
+    def __len__(self): return len(self.environ)
+    def keys(self): return self.environ.keys()
     def __setitem__(self, key, value):
         """ Shortcut for Request.environ.__setitem__ """
         self.environ[key] = value
@@ -614,10 +615,6 @@ class Request(threading.local, DictMixin):
         for key in todelete:
             if 'bottle.' + key in self.environ:
                 del self.environ['bottle.' + key]
-
-    def keys(self):
-        """ Shortcut for Request.environ.keys() """
-        return self.environ.keys()
 
     @property
     def query_string(self):

@@ -58,13 +58,13 @@ class TestEnviron(unittest.TestCase):
         e = {}
         wsgiref.util.setup_testing_defaults(e)
         request.bind(e, None)
-        self.assertTrue(list(request) == e.keys())
-        self.assertTrue(len(request) == len(e))
+        self.assertEqual(list(request), e.keys())
+        self.assertEqual(len(request), len(e))
         for k, v in e.iteritems():
             self.assertTrue(k in request)
-            self.assertTrue(request[k] == v)
+            self.assertEqual(request[k], v)
             request[k] = 'test'
-            self.assertTrue(request[k] == 'test')
+            self.assertEqual(request[k], 'test')
         del request['PATH_INFO']
         self.assertTrue('PATH_INFO' not in request)
 
