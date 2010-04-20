@@ -338,7 +338,7 @@ class Router(object):
 class Bottle(object):
     """ WSGI application """
 
-    def __init__(self, catchall=True, autojson=True, path = ''):
+    def __init__(self, catchall=True, autojson=True, config=None):
         """ Create a new bottle instance.
             You usually don't do that. Use `bottle.app.push()` instead.
         """
@@ -346,7 +346,7 @@ class Bottle(object):
         self.mounts = {}
         self.error_handler = {}
         self.catchall = catchall
-        self.config = {}
+        self.config = config or {}
         self.serve = True
         self.castfilter = []
         if autojson and json_dumps:
