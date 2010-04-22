@@ -1270,8 +1270,17 @@ class EventletServer(ServerAdapter):
     def run(self, handler):
         from eventlet import wsgi, listen
         wsgi.server(listen((self.host, self.port)), handler)
-        
 
+
+class RocketServer(ServerAdapter):
+    """ Untested. As requested in issue 63
+        http://github.com/defnull/bottle/issues/#issue/63 """
+    def run(self, handler):
+        from rocket import Rocket
+        server = Rocket((self.host, self.port), 'wsgi', { 'wsgi_app' : handler })
+        server.start()
+            
+        
 class AutoServer(ServerAdapter):
     """ Untested. """
     adapters = [CherryPyServer, PasteServer, TwistedServer, WSGIRefServer]
