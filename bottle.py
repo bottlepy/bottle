@@ -389,7 +389,7 @@ class Request(threading.local):
             data = cgi.FieldStorage(fp=self._environ['wsgi.input'],
                 environ=self._environ, keep_blank_values=True)
             self._POST  = {}
-            for item in data.list:
+            for item in data.list or []:
                 name = item.name
                 if not item.filename:
                     item = item.value
