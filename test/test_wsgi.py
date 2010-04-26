@@ -184,6 +184,13 @@ class TestWsgi(WsgiTestBase):
         self.assertEqual(r'{"a":1}', ''.join(self.urlopen('/json').read().split()))
         self.assertEqual('application/json', self.urlopen('/json').info().getheader('Content-Type',''))
 
+    def test_emptyjson(self):
+        """ WSGI: Autojson feature for empty dicts """
+        @bottle.route('/json')
+        def test(): return {}
+        self.assertEqual(r'{}', ''.join(self.urlopen('/json').read().split()))
+        self.assertEqual('application/json', self.urlopen('/json').info().getheader('Content-Type',''))
+
     def test_cookie(self):
         """ WSGI: Cookies """
         @bottle.route('/cookie')

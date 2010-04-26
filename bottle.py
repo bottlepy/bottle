@@ -272,7 +272,10 @@ class Bottle(object):
         on HEAD requests.
         Supports: False, str, unicode, list(unicode), dict(), open()
         """
-        if not out:
+        if self.autojson and json_dumps and isinstance(out, dict):
+            out = [json_dumps(out)]
+            response.content_type = 'application/json'
+        elif not out:
             out = []
             response.header['Content-Length'] = '0'
         elif isinstance(out, types.StringType):
@@ -281,9 +284,6 @@ class Bottle(object):
             out = [out.encode(response.charset)]
         elif isinstance(out, list) and isinstance(out[0], unicode):
             out = map(lambda x: x.encode(response.charset), out)
-        elif self.autojson and json_dumps and isinstance(out, dict):
-            out = [json_dumps(out)]
-            response.content_type = 'application/json'
         elif hasattr(out, 'read'):
             out = request.environ.get('wsgi.file_wrapper',
                   lambda x: iter(lambda: x.read(8192), ''))(out)
