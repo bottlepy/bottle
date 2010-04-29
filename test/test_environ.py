@@ -68,8 +68,6 @@ class TestEnviron(unittest.TestCase):
         del request['PATH_INFO']
         self.assertTrue('PATH_INFO' not in request)
 
-
-
     def test_header_access(self):
         """ Environ: Request objects decode headers """
         e = {}
@@ -132,6 +130,20 @@ class TestEnviron(unittest.TestCase):
         e['REQUEST_METHOD'] = "POST"
         request.bind(e, None)
         self.assertEqual('', request.POST['foobar'])
+
+    def test_body_noclose(self):
+        """ Test that the body file handler is not closed after request.POST """
+        sq = u'a=a&a=1&b=b&c=&d'.encode('utf8')
+        e = {}
+        wsgiref.util.setup_testing_defaults(e)
+        e['wsgi.input'].write(sq)
+        e['wsgi.input'].seek(0)
+        e['CONTENT_LENGTH'] = str(len(sq))
+        e['REQUEST_METHOD'] = "POST"
+        request.bind(e, None)
+        self.assertEqual(sq, request.body.read())
+        request.POST # This caused a body.close() with Python 3.x
+        self.assertEqual(sq, request.body.read())
 
     def test_params(self):
         """ Environ: GET and POST are combined in request.param """ 

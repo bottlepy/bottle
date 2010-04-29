@@ -114,13 +114,17 @@ if sys.version_info >= (3,0,0): # pragma: no cover
     # See Request.POST
     from io import BytesIO
     from io import TextIOWrapper
+    class NCTextIOWrapper(TextIOWrapper):
+        ''' Garbage collecting an io.TextIOWrapper(buffer) instance closes the
+            wrapped buffer. This subclass keeps it open. '''
+        def close(self): pass
     StringType = bytes
     def touni(x, enc='utf8'): # Convert anything to unicode (py3)
         return str(x, encoding=enc) if isinstance(x, bytes) else str(x)
 else:
     from StringIO import StringIO as BytesIO
     from types import StringType
-    TextIOWrapper = None
+    NCTextIOWrapper = None
     def touni(x, enc='utf8'): # Convert anything to unicode (py2)
         return x if isinstance(x, unicode) else unicode(str(x), encoding=enc)
 
@@ -694,8 +698,8 @@ class Request(threading.local, DictMixin):
             safe_env = {'QUERY_STRING':''} # Build a safe environment for cgi
             for key in ('REQUEST_METHOD', 'CONTENT_TYPE', 'CONTENT_LENGTH'):
                 if key in self.environ: safe_env[key] = self.environ[key]
-            if TextIOWrapper:
-                fb = TextIOWrapper(self.body, encoding='ISO-8859-1')
+            if NCTextIOWrapper:
+                fb = NCTextIOWrapper(self.body, encoding='ISO-8859-1')
             else:
                 fb = self.body
             data = cgi.FieldStorage(fp=fb, environ=safe_env, keep_blank_values=True)
