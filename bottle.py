@@ -1484,7 +1484,7 @@ class Jinja2Template(BaseTemplate):
     def loader(self, name):
         fname = self.search(name, self.lookup)
         if fname:
-            with open(fname) as f:
+            with open(fname, "rb") as f:
                 return f.read().decode(self.encoding)
 
 
