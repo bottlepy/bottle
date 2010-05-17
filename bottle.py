@@ -699,7 +699,9 @@ class Request(threading.local, DictMixin):
             for key in ('REQUEST_METHOD', 'CONTENT_TYPE', 'CONTENT_LENGTH'):
                 if key in self.environ: safe_env[key] = self.environ[key]
             if NCTextIOWrapper:
-                fb = NCTextIOWrapper(self.body, encoding='ISO-8859-1')
+                fb = NCTextIOWrapper(self.body, encoding='ISO-8859-1', newline='\n')
+                # TODO: Content-Length may be wrong now. Does cgi.FieldStorage
+                # use it at all? I think not, because all tests pass.
             else:
                 fb = self.body
             data = cgi.FieldStorage(fp=fb, environ=safe_env, keep_blank_values=True)
