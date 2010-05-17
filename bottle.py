@@ -1465,10 +1465,12 @@ class CheetahTemplate(BaseTemplate):
 
 
 class Jinja2Template(BaseTemplate):
-    def prepare(self, prefix='#', filters=None, tests=None):
+    def prepare(self, filters=None, tests=None, **kwargs):
         from jinja2 import Environment, FunctionLoader
-        self.env = Environment(line_statement_prefix=prefix,
-                               loader=FunctionLoader(self.loader))
+        if 'prefix' in kwargs: # TODO: to be removed after a while
+            raise RuntimeError('The keyword argument `prefix` has been removed. '
+                'Use the full jinja2 environment name line_statement_prefix instead.')
+        self.env = Environment(loader=FunctionLoader(self.loader), **kwargs)
         if filters: self.env.filters.update(filters)
         if tests: self.env.tests.update(tests)
         if self.source:
