@@ -110,9 +110,9 @@ def multipart_environ(fields, files):
         body += 'Content-Type: %s\n\n' % mimetype
         body += content + '\n'
     body += boundary + '--\n'
-    env['CONTENT_LENGTH'] = str(len(body))
     if hasattr(body, 'encode'):
         body = body.encode('utf8')
+    env['CONTENT_LENGTH'] = str(len(body))
     env['wsgi.input'].write(body)
     env['wsgi.input'].seek(0)
     return env
