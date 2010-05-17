@@ -203,7 +203,7 @@ class TestMultipart(unittest.TestCase):
     def test_multipart(self):
         """ Environ: POST (multipart files and multible values per key) """
         fields = [('field1','value1'), ('field2','value2'), ('field2','value3')]
-        files = [('file1','filename1.txt','content1'), ('file2','filename2.py',u'äöü')]
+        files = [('file1','filename1.txt','content1'), ('file2','filename2.py',u'ä\nö\rü')]
         e = tools.multipart_environ(fields=fields, files=files)
         request.bind(e, None)
         # File content
@@ -216,7 +216,7 @@ class TestMultipart(unittest.TestCase):
         x = request.POST['file2'].file.read()
         if sys.version_info >= (3,0,0):
             x = x.encode('ISO-8859-1')
-        self.assertEqual(u'äöü'.encode('utf8'), x)
+        self.assertEqual(u'ä\nö\rü'.encode('utf8'), x)
         # No file
         self.assertTrue('file3' not in request.POST)
         # Field (single)
