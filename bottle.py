@@ -1158,6 +1158,8 @@ def default():
 # Server adapter
 
 class ServerAdapter(object):
+    quiet = False
+
     def __init__(self, host='127.0.0.1', port=8080, **kargs):
         self.options = kargs
         self.host = host
@@ -1172,6 +1174,7 @@ class ServerAdapter(object):
 
 
 class CGIServer(ServerAdapter):
+    quiet = True
     def run(self, handler): # pragma: no cover
         from wsgiref.handlers import CGIHandler
         CGIHandler().run(handler) # Just ignore host and port here
@@ -1237,6 +1240,7 @@ class TornadoServer(ServerAdapter):
 
 class AppEngineServer(ServerAdapter):
     """ Untested. """
+    quiet = True
     def run(self, handler):
         from google.appengine.ext.webapp import util
         util.run_wsgi_app(handler)
@@ -1302,13 +1306,13 @@ def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080,
         interval=1, reloader=False, **kargs):
     """ Runs bottle as a web server. """
     app = app if app else default_app()
-    quiet = bool(kargs.get('quiet', False))
     # Instantiate server, if it is a class instead of an instance
     if isinstance(server, type):
         server = server(host=host, port=port, **kargs)
     if not isinstance(server, ServerAdapter):
         raise RuntimeError("Server must be a subclass of WSGIAdapter")
-    if not quiet and isinstance(server, ServerAdapter): # pragma: no cover
+    quiet = kargs.get('quiet', False) or server.quiet
+    if not quiet: # pragma: no cover
         if not reloader or os.environ.get('BOTTLE_CHILD') == 'true':
             print "Bottle server starting up (using %s)..." % repr(server)
             print "Listening on http://%s:%d/" % (server.host, server.port)
