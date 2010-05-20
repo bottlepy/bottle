@@ -877,6 +877,7 @@ class SimpleTemplate(BaseTemplate):
                 code.append((' ' * indent + '\n') * len(strbuffer)) # to preserve line numbers 
                 del strbuffer[:]
         for line in template.splitlines(True):
+            lineend = '\n' if not line.endswith('\n') else ''
             m = self.re_python.match(line)
             if m:
                 flush(allow_nobreak=True)
@@ -905,9 +906,9 @@ class SimpleTemplate(BaseTemplate):
                                     % (repr(name), args))
                 elif end:
                     indent -= 1
-                    code.append(' ' * indent + '#' + line[m.start(3):])
+                    code.append(' ' * indent + '#' + line[m.start(3):] + lineend)
                 elif statement:
-                    code.append(' ' * indent + line[m.start(4):])
+                    code.append(' ' * indent + line[m.start(4):] + lineend)
             else:
                 splits = self.re_inline.split(line) # text, (expr, text)*
                 if len(splits) == 1:

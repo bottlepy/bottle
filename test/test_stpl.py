@@ -38,6 +38,11 @@ class TestSimpleTemplate(unittest.TestCase):
         self.assertEqual('start\nTrue \nend', ''.join(t.render(i=True)))
         self.assertEqual('start\nend', ''.join(t.render(i=False)))
 
+    def test_eof_in_block(self):
+        """ Templates: compile() < 2.7/3.1 breaks on EOF in block """
+        t = SimpleTemplate("start\n%for i in l:\n{{i}} \n%end")
+        self.assertEqual('start\n1 \n2 \n3 \n', ''.join(t.render(l=[1,2,3])))
+
     def test_nobreak(self):
         """ Templates: Nobreak statements"""
         t = SimpleTemplate("start\\\\\n%pass\nend")
