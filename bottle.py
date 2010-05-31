@@ -80,6 +80,7 @@ import sys
 import thread
 import threading
 import time
+import tokenize
 
 from Cookie import SimpleCookie
 from tempfile import TemporaryFile
@@ -1576,12 +1577,22 @@ class SimpleTemplate(BaseTemplate):
         codebuffer = [] # Buffer for generated python code
         touni = functools.partial(unicode, encoding=self.encoding)
 
-        def tokenize(line):
+        def yield_tokens(line):
             for i, part in enumerate(re.split(r'\{\{(.*?)\}\}', line)):
                 if i % 2:
                     if part.startswith('!'): yield 'RAW', part[1:]
                     else: yield 'CMD', part
                 else: yield 'TXT', part
+
+        def split_comment(codeline):
+            """ Removes a comment from a line of code and returns
+                a (code, comment) tuple. """
+            line = codeline.splitlines()[0]
+            for token in tokenize.generate_tokens(iter(line).next):
+                if token[0] == tokenize.COMMENT:
+                    start, end = token[2][1], token[3][1]
+                    return codeline[:start] + codeline[end:], codeline[start:end]
+            return line, ''
 
         def flush(): # Flush the ptrbuffer
             if not ptrbuffer: return
@@ -1614,8 +1625,8 @@ class SimpleTemplate(BaseTemplate):
                 if m: line = line.replace('coding','coding (removed)')
             if line.strip()[:2].count('%') == 1:
                 line = line.split('%',1)[1].lstrip() # Full line following the %
-                cline = line.split('#')[0].strip() # Line without commends (TODO: fails for 'a="#"')
-                cmd = re.split(r'[^a-zA-Z0-9_]', line)[0]
+                cline = split_comment(line)[0].strip()
+                cmd = re.split(r'[^a-zA-Z0-9_]', cline)[0]
                 flush() ##encodig (TODO: why?)
                 if cmd in self.blocks:
                     dedent = cmd in self.dedent_blocks # "else:"
@@ -1644,7 +1655,7 @@ class SimpleTemplate(BaseTemplate):
             else: # Line starting with text (not '%') or '%%' (escaped)
                 if line.strip().startswith('%%'):
                     line = line.replace('%%', '%', 1)
-                ptrbuffer.append(tokenize(line))
+                ptrbuffer.append(yield_tokens(line))
         flush()
         return '\n'.join(codebuffer) + '\n'
 

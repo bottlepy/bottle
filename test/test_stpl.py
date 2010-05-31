@@ -80,6 +80,11 @@ class TestSimpleTemplate(unittest.TestCase):
         t = SimpleTemplate("%if 1:\nyes\n%else     :\nno\n%end\n")
         self.assertEqual(u"yes\n", ''.join(t.render()))
 
+    def test_commentbug(self):
+        ''' A "#" sign within an string is not a comment '''
+        t = SimpleTemplate("%if '#':\nyes\n%end\n")
+        self.assertEqual(u"yes\n", ''.join(t.render()))
+
     def test_dedentbug(self):
         ''' One-Line dednet blocks should not change indention '''
         t = SimpleTemplate('%if x: a="if"\n%else: a="else"\n{{a}}')
