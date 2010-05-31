@@ -1576,6 +1576,7 @@ class SimpleTemplate(BaseTemplate):
         ptrbuffer = [] # Buffer for printable strings and token tuple instances
         codebuffer = [] # Buffer for generated python code
         touni = functools.partial(unicode, encoding=self.encoding)
+        multiline = dedent = False
 
         def yield_tokens(line):
             for i, part in enumerate(re.split(r'\{\{(.*?)\}\}', line)):
@@ -1585,10 +1586,13 @@ class SimpleTemplate(BaseTemplate):
                 else: yield 'TXT', part
 
         def split_comment(codeline):
-            """ Removes a comment from a line of code and returns
-                a (code, comment) tuple. """
+            """ Removes comments from a line of code. """
             line = codeline.splitlines()[0]
-            for token in tokenize.generate_tokens(iter(line).next):
+            try:
+                tokens = list(tokenize.generate_tokens(iter(line).next))
+            except tokenize.TokenError:
+                return line.rsplit('#',1) if '#' in line else (line, '')
+            for token in tokens:
                 if token[0] == tokenize.COMMENT:
                     start, end = token[2][1], token[3][1]
                     return codeline[:start] + codeline[end:], codeline[start:end]
@@ -1628,12 +1632,16 @@ class SimpleTemplate(BaseTemplate):
                 cline = split_comment(line)[0].strip()
                 cmd = re.split(r'[^a-zA-Z0-9_]', cline)[0]
                 flush() ##encodig (TODO: why?)
-                if cmd in self.blocks:
+                if cmd in self.blocks or multiline:
+                    cmd = multiline or cmd
                     dedent = cmd in self.dedent_blocks # "else:"
-                    oneline = not cline.endswith(':') # "if 1: pass"
-                    if dedent and not oneline: cmd = stack.pop()
+                    if dedent and not oneline and not multiline:
+                        cmd = stack.pop()
                     code(line)
-                    if not oneline: stack.append(cmd)
+                    oneline = not cline.endswith(':') # "if 1: pass"
+                    multiline = cmd if cline.endswith('\\') else False
+                    if not oneline and not multiline:
+                        stack.append(cmd)
                 elif cmd == 'end' and stack:
                     code('#end(%s) %s' % (stack.pop(), line.strip()[3:]))
                 elif cmd == 'include':

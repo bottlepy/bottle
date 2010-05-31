@@ -179,3 +179,10 @@ Lets see how ``block_content.tpl`` renders:
 .. autoclass:: SimpleTemplate
    :members:
 
+Known bugs
+==============================
+
+Some syntax construcs allowed in python are problematic within a template. The following syntaxes won't work with SimpleTemplate:
+
+  * Multi-line statements must end with a backslash (``\``) and a comment, if presend, must not contain any additional ``#`` characters.
+  * Multi-line strings are not supported yet.
