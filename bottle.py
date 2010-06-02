@@ -912,6 +912,7 @@ class HeaderDict(MultiDict):
     def __getitem__(self, key): return MultiDict.__getitem__(self, self.httpkey(key))
     def __delitem__(self, key): return MultiDict.__delitem__(self, self.httpkey(key))
     def __setitem__(self, key, value): self.replace(key, value)
+    def get(self, key, default=None, index=-1): return MultiDict.get(self, self.httpkey(key), default, index)
     def append(self, key, value): return MultiDict.append(self, self.httpkey(key), str(value))
     def replace(self, key, value): return MultiDict.replace(self, self.httpkey(key), str(value))
     def getall(self, key): return MultiDict.getall(self, self.httpkey(key))
