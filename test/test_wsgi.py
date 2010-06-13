@@ -43,6 +43,18 @@ class TestWsgi(ServerTestBase):
         self.assertStatus(200, '/get', method='HEAD')
         self.assertBody('', '/get', method='HEAD')
 
+    def get304(self):
+        """ 304 responses must not return entity headers """
+        bad = ('allow', 'content-encoding', 'content-language',
+               'content-length', 'content-md5', 'content-range',
+               'content-type', 'last-modified') # + c-location, expires?
+        for h in bad:
+            bottle.response.set_header(h, 'foo')
+        bottle.status = 304
+        for h, v in bottle.response.headerlist:
+            self.assertFalse(h.lower() in bad, "Header %s not deleted" % h)
+            
+
     def test_anymethod(self):
         self.assertStatus(404, '/any')
         @bottle.route('/any', method='ANY')
@@ -166,8 +178,8 @@ class TestDecorators(ServerTestBase):
         self.assertBody('Some body content', '/test/200')
         self.assertBody('', '/test/100')
         self.assertBody('', '/test/101')
-        #self.assertBody('', '/test/204')
-        #self.assertBody('', '/test/304')
+        self.assertBody('', '/test/204')
+        self.assertBody('', '/test/304')
 
     def test_routebuild(self):
         """ WSGI: Test validate-decorator"""

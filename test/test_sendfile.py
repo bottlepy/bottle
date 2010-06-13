@@ -68,7 +68,10 @@ class TestSendFile(unittest.TestCase):
     def test_ims(self):
         """ SendFile: If-Modified-Since"""
         request.environ['HTTP_IF_MODIFIED_SINCE'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime())
-        self.assertEqual(304, static_file(os.path.basename(__file__), root='./').status)
+        res = static_file(os.path.basename(__file__), root='./')
+        self.assertEqual(304, res.status)
+        self.assertEqual(int(os.stat(__file__).st_mtime), parse_date(res.headers['Last-Modified']))
+        self.assertAlmostEqual(int(time.time()), parse_date(res.headers['Date']))
         request.environ['HTTP_IF_MODIFIED_SINCE'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(100))
         self.assertEqual(open(__file__,'rb').read(), static_file(os.path.basename(__file__), root='./').output.read())
 
