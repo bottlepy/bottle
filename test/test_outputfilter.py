@@ -16,6 +16,10 @@ class TestOutputFilter(ServerTestBase):
         self.app.route('/')(lambda: map(tob, ['t', 'e', 'st']))
         self.assertBody('test')
 
+    def test_tuple(self):
+        self.app.route('/')(lambda: ('t', 'e', 'st'))
+        self.assertBody('test')
+
     def test_emptylist(self):
         self.app.route('/')(lambda: [])
         self.assertBody('')

@@ -488,7 +488,8 @@ class Bottle(object):
             response.headers['Content-Length'] = 0
             return []
         # Join lists of byte or unicode strings. Mixed lists are NOT supported
-        if isinstance(out, list) and isinstance(out[0], (StringType, unicode)):
+        if isinstance(out, (tuple, list))\
+        and isinstance(out[0], (StringType, unicode)):
             out = out[0][0:0].join(out) # b'abc'[0:0] -> b''
         # Encode unicode strings
         if isinstance(out, unicode):
