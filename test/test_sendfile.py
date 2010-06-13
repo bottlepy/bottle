@@ -47,11 +47,11 @@ class TestSendFile(unittest.TestCase):
         """ SendFile: Invalid requests"""
         self.assertEqual(404, static_file('not/a/file', root='./').status)
         f = static_file(os.path.join('./../', os.path.basename(__file__)), root='./views/')
-        self.assertEqual(401, f.status)
+        self.assertEqual(403, f.status)
         try:
             fp, fn = tempfile.mkstemp()
             os.chmod(fn, 0)
-            self.assertEqual(401, static_file(fn, root='/').status)
+            self.assertEqual(403, static_file(fn, root='/').status)
         finally:
             os.close(fp)
             os.unlink(fn)
