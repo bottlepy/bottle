@@ -505,10 +505,10 @@ class Bottle(object):
             out.apply(response)
             return self._cast(out.output, request, response)
 
-        # Cast Files into iterables
-        if hasattr(out, 'read') and 'wsgi.file_wrapper' in request.environ:
+        # File-like objects. Wrap or transfer in chunks that fit into memory.
+        if hasattr(out, 'read'):
             out = request.environ.get('wsgi.file_wrapper',
-            lambda x, y: iter(lambda: x.read(y), ''))(out, 1024*64)
+                  lambda x, y: iter(lambda: x.read(y), tob('')))(out, 1024*64)
 
         # Handle Iterables. We peek into them to detect their inner type.
         try:

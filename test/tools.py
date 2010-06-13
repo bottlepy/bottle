@@ -15,12 +15,18 @@ from StringIO import StringIO
 try:
     from io import BytesIO
 except:
+    BytesIO = None
     pass
 import mimetypes
 import uuid
 
 def tob(data):
+    ''' Transforms bytes or unicode into bytes. '''
     return data.encode('utf8') if isinstance(data, unicode) else data
+
+def tobs(data):
+    ''' Transforms bytes or unicode into a byte stream. '''
+    return BytesIO(tob(data)) if BytesIO else StringIO(tob(data))
 
 class ServerTestBase(unittest.TestCase):
     def setUp(self):

@@ -3,8 +3,7 @@
 
 import unittest
 import bottle
-from tools import ServerTestBase, tob
-from StringIO import StringIO
+from tools import ServerTestBase, tob, tobs
 
 class TestOutputFilter(ServerTestBase):
     ''' Tests for WSGI functionality, routing and output casting (decorators) '''
@@ -41,7 +40,7 @@ class TestOutputFilter(ServerTestBase):
         self.assertRaises(KeyboardInterrupt, self.assertStatus, 500)
 
     def test_file(self):
-        self.app.route('/')(lambda: StringIO('test'))
+        self.app.route('/')(lambda: tobs('test'))
         self.assertBody('test')
 
     def test_unicode(self):
