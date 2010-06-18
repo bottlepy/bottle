@@ -1201,8 +1201,12 @@ class FlupFCGIServer(ServerAdapter):
 
 class WSGIRefServer(ServerAdapter):
     def run(self, handler): # pragma: no cover
-        from wsgiref.simple_server import make_server
-        srv = make_server(self.host, self.port, handler)
+        from wsgiref.simple_server import make_server, WSGIRequestHandler
+        if self.quiet:
+            class QuietHandler(WSGIRequestHandler):
+                def log_request(*args, **kw): pass
+            self.options['handler_class'] = QuietHandler
+        srv = make_server(self.host, self.port, handler, **self.options)
         srv.serve_forever()
 
 
@@ -1316,7 +1320,7 @@ class AutoServer(ServerAdapter):
 
 
 def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080,
-        interval=1, reloader=False, **kargs):
+        interval=1, reloader=False, quiet=False, **kargs):
     """ Runs bottle as a web server. """
     app = app if app else default_app()
     # Instantiate server, if it is a class instead of an instance
@@ -1324,8 +1328,8 @@ def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080,
         server = server(host=host, port=port, **kargs)
     if not isinstance(server, ServerAdapter):
         raise RuntimeError("Server must be a subclass of WSGIAdapter")
-    quiet = kargs.get('quiet', False) or server.quiet
-    if not quiet: # pragma: no cover
+    server.quiet = server.quiet or quiet
+    if not server.quiet: # pragma: no cover
         if not reloader or os.environ.get('BOTTLE_CHILD') == 'true':
             print "Bottle server starting up (using %s)..." % repr(server)
             print "Listening on http://%s:%d/" % (server.host, server.port)
@@ -1339,7 +1343,7 @@ def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080,
         else:
             server.run(app)
     except KeyboardInterrupt:
-        if not quiet: # pragma: no cover
+        if not server.quiet: # pragma: no cover
             print "Shutting Down..."
 
 
