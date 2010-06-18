@@ -508,8 +508,8 @@ class Bottle(object):
 
         # File-like objects. Wrap or transfer in chunks that fit into memory.
         if hasattr(out, 'read'):
-            out = request.environ.get('wsgi.file_wrapper',
-                  lambda x, y: iter(lambda: x.read(y), tob('')))(out, 1024*64)
+            return request.environ.get('wsgi.file_wrapper',
+                   lambda x: iter(lambda: x.read(1024*64), tob('')))(out)
 
         # Handle Iterables. We peek into them to detect their inner type.
         try:
