@@ -1611,7 +1611,7 @@ class SimpleTemplate(BaseTemplate):
             cline = cline[:-2]
             if cline[:-1].endswith('\\\\\\\\\\n'):
                 cline = cline[:-7] + cline[-1] # 'nobr\\\\\n' --> 'nobr'
-            cline = '_printlist((' + cline + '))'
+            cline = '_printlist([' + cline + '])'
             del ptrbuffer[:] # Do this before calling code() again
             code(cline)
 
