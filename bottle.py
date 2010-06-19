@@ -506,10 +506,12 @@ class Bottle(object):
             out.apply(response)
             return self._cast(out.output, request, response)
 
-        # File-like objects. Wrap or transfer in chunks that fit into memory.
+        # File-like objects.
         if hasattr(out, 'read'):
-            return request.environ.get('wsgi.file_wrapper',
-                   lambda x: iter(lambda: x.read(1024*64), tob('')))(out)
+            if 'wsgi.file_wrapper' in request.environ:
+                return request.environ['wsgi.file_wrapper'](out)
+            elif hasattr(out, 'close') or not hasattr(out, '__iter__'):
+                return WSGIFileWrapper(out)
 
         # Handle Iterables. We peek into them to detect their inner type.
         try:
@@ -944,6 +946,19 @@ class AppStack(list):
         self.append(value)
         return value
 
+class WSGIFileWrapper(object):
+
+   def __init__(self, fp, buffer_size=1024*64):
+       self.fp, self.buffer_size = fp, buffer_size
+       for attr in ('fileno', 'close', 'read', 'readlines'):
+           if hasattr(fp, attr): setattr(self, attr, getattr(fp, attr))
+
+   def __iter__(self):
+       read, buff = self.fp.read, self.buffer_size
+       while True:
+           part = read(buff)
+           if not part: break
+           yield part
 
 
 
