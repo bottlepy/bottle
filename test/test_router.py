@@ -4,63 +4,45 @@ import bottle
 class TestRouter(unittest.TestCase):
     def setUp(self):
         self.r = r = bottle.Router()
+    
+    def add(self, *a, **ka):
+        self.r.add(*a, **ka)
+        self.r.compile()
 
     def testBasic(self):
-        add = self.r.add
+        add = self.add
         match = self.r.match
         add('/static', 'static')
-        self.assertEqual({'GET': ('static', None)}, match('/static'))
+        self.assertEqual(('static', {}), match('/static'))
         add('/\\:its/:#.+#/:test/:name#[a-z]+#/', 'handler')
-        path = '/:its/a/cruel/world/'
-        matcher = match(path).get('GET')
-        self.assertEqual(('handler', {'test': 'cruel', 'name': 'world'}), (matcher[0], matcher[1].match(path).groupdict()))
+        self.assertEqual(('handler', {'test': 'cruel', 'name': 'world'}), match('/:its/a/cruel/world/'))
         add('/:test', 'notail')
-        path = '/test'
-        matcher = match(path).get('GET')
-        self.assertEqual(('notail', {'test': 'test'}), (matcher[0], matcher[1].match(path).groupdict()))
+        self.assertEqual(('notail', {'test': 'test'}), match('/test'))
         add(':test/', 'nohead')
-        path = 'test/'
-        matcher = match(path).get('GET')
-        self.assertEqual(('nohead', {'test': 'test'}), (matcher[0], matcher[1].match(path).groupdict()))
+        self.assertEqual(('nohead', {'test': 'test'}), match('test/'))
         add(':test', 'fullmatch')
-        path = 'test'
-        matcher = match(path).get('GET')
-        self.assertEqual(('fullmatch', {'test': 'test'}), (matcher[0], matcher[1].match(path).groupdict()))
+        self.assertEqual(('fullmatch', {'test': 'test'}), match('test'))
         add('/:#anon#/match', 'anon')
-        path = '/anon/match'
-        matcher = match(path).get('GET')
-        self.assertEqual(('anon', {}), (matcher[0], {}))
-        path = '//no/m/at/ch/'
-        matcher = match(path).get('GET')
-        self.assertEqual((None, {}), (None, {}))
+        self.assertEqual(('anon', {}), match('/anon/match'))
+        self.assertEqual((None, {}), match('//no/m/at/ch/'))
 
     def testParentheses(self):
-        add = self.r.add
+        add = self.add
         match = self.r.match
         add('/func(:param)', 'func')
-        path = '/func(foo)'
-        matcher = match(path).get('GET')
-        self.assertEqual(('func', {'param':'foo'}), (matcher[0], matcher[1].match(path).groupdict()))
+        self.assertEqual(('func', {'param':'foo'}), match('/func(foo)'))
         add('/func2(:param#(foo|bar)#)', 'func2')
-        path = '/func2(foo)'
-        matcher = match(path).get('GET')
-        self.assertEqual(('func2', {'param':'foo'}), (matcher[0], matcher[1].match(path).groupdict()))
-        path = '/func2(bar)'
-        matcher = match(path).get('GET')
-        self.assertEqual(('func2', {'param':'bar'}), (matcher[0], matcher[1].match(path).groupdict()))
-        path = '/func2(baz)'
-        matcher = match(path).get('GET')
-        self.assertEqual((None, {}), (None, {}))
+        self.assertEqual(('func2', {'param':'foo'}), match('/func2(foo)'))
+        self.assertEqual(('func2', {'param':'bar'}), match('/func2(bar)'))
+        self.assertEqual((None, {}),                match('/func2(baz)'))        
         add('/groups/:param#(foo|bar)#', 'groups')
-        path = '/groups/foo'
-        matcher = match(path).get('GET')
-        self.assertEqual(('groups', {'param':'foo'}), (matcher[0], matcher[1].match(path).groupdict()))
+        self.assertEqual(('groups', {'param':'foo'}), match('/groups/foo'))
 
     def testErrorInPattern(self):
-        self.assertRaises(bottle.RouteSyntaxError, self.r.add, '/:bug#(#/', 'buggy')
+        self.assertRaises(bottle.RouteSyntaxError, self.add, '/:bug#(#/', 'buggy')
 
     def testBuild(self):
-        add = self.r.add
+        add = self.add
         build = self.r.build
         add('/:test/:name#[a-z]+#/', 'handler', name='testroute')
         add('/anon/:#.#', 'handler', name='anonroute')
