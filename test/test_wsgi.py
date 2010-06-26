@@ -17,7 +17,7 @@ class TestWsgi(ServerTestBase):
         @bottle.route('/')
         def test(): return 'test'
         self.assertStatus(404, '/not/found')
-        self.assertStatus(404, '/', post="var=value")
+        self.assertStatus(405, '/', post="var=value")
         self.assertBody('test', '/')
 
     def test_post(self):
@@ -25,7 +25,7 @@ class TestWsgi(ServerTestBase):
         @bottle.route('/', method='POST')
         def test(): return 'test'
         self.assertStatus(404, '/not/found')
-        self.assertStatus(404, '/')
+        self.assertStatus(405, '/')
         self.assertBody('test', '/', post="var=value")
 
     def test_headget(self):
@@ -35,7 +35,7 @@ class TestWsgi(ServerTestBase):
         @bottle.route('/head', method='HEAD')
         def test2(): return 'test'
         # GET -> HEAD
-        self.assertStatus(404, '/head')
+        self.assertStatus(405, '/head')
         # HEAD -> HEAD
         self.assertStatus(200, '/head', method='HEAD')
         self.assertBody('', '/head', method='HEAD')

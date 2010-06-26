@@ -193,7 +193,7 @@ class Route(object):
     syntax = re.compile(r'(.*?)(?<!\\):([a-zA-Z_]+)?(?:#(.*?)#)?')
     default = '[^/]+'
 
-    def __init__(self, route, target, name=None, static=False):
+    def __init__(self, route, target=None, name=None, static=False):
         """ Create a Route. The route string may contain `:key`,
             `:key#regexp#` or `:#regexp#` tokens for each dynamic part of the
             route. These can be escaped with a backslash infront of the `:`
@@ -203,7 +203,8 @@ class Route(object):
         self.route = route
         self.target = target
         self.name = name
-        self._static = static
+        if static:
+            self.route = self.route.replace(':','\\:')
         self._tokens = None
 
     def tokens(self):
@@ -243,8 +244,6 @@ class Route(object):
 
     def format_str(self):
         ''' Return a format string with named fields. '''
-        if self.static:
-            return self.route.replace('%','%%')
         out, i = '', 0
         for token, value in self.tokens():
             if token == 'TXT': out += value.replace('%','%%')
@@ -258,22 +257,16 @@ class Route(object):
 
     def is_dynamic(self):
         ''' Return true if the route contains dynamic parts '''
-        if not self._static:
-            for token, value in self.tokens():
-                if token != 'TXT':
-                    return True
-        self._static = True
+        for token, value in self.tokens():
+            if token != 'TXT':
+                return True
         return False
 
     def __repr__(self):
-        return self.route
+        return "<Route(%s) />" % repr(self.route)
 
     def __eq__(self, other):
-        return self.route == other.route\
-           and self.static == other.static\
-           and self.name == other.name\
-           and self.target == other.target
-
+        return self.route == other.route
 
 class Router(object):
     ''' A route associates a string (e.g. URL) with an object (e.g. function)
@@ -283,56 +276,79 @@ class Router(object):
     '''
 
     def __init__(self):
-        self.routes = []     # List of all installed routes
-        self.static = dict() # Cache for static routes
-        self.dynamic = []    # Cache structure for dynamic routes
-        self.named = dict()  # Cache for named routes and their format strings
+        self.routes  = []  # List of all installed routes
+        self.named   = {}  # Cache for named routes and their format strings
+        self.static  = {}  # Cache for static routes
+        self.dynamic = []  # Search structure for dynamic routes
 
-    def add(self, *a, **ka):
-        """ Adds a route->target pair or a Route object to the Router.
-            See Route() for details.
+    def add(self, route, target=None, **ka):
+        """ Add a route->target pair or a :class:`Route` object to the Router.
+            Return the Route object. See :class:`Route` for details.
         """
-        route = a[0] if a and isinstance(a[0], Route) else Route(*a, **ka)
+        if not isinstance(route, Route):
+            route = Route(route, target, **ka)
+        if self.get_route(route):
+            return RouteError('Route %s is not uniqe.' % route)
         self.routes.append(route)
-        if route.name:
-            self.named[route.name] = route.format_str()
-        if route.static:
-            self.static[route.route] = route.target
-            return
-        gpatt = route.group_re()
-        fpatt = route.flat_re()
-        try:
-            gregexp = re.compile('^(%s)$' % gpatt) if '(?P' in gpatt else None
-            combined = '%s|(^%s$)' % (self.dynamic[-1][0].pattern, fpatt)
-            self.dynamic[-1] = (re.compile(combined), self.dynamic[-1][1])
-            self.dynamic[-1][1].append((route.target, gregexp))
-        except (AssertionError, IndexError), e: # AssertionError: Too many groups
-            self.dynamic.append((re.compile('(^%s$)'%fpatt),[(route.target, gregexp)]))
-        except re.error, e:
-            raise RouteSyntaxError("Could not add Route: %s (%s)" % (route, e))
+        return route
+
+    def get_route(self, route, target=None, **ka):
+        ''' Get a route from the router by specifying either the same
+            parameters as in :meth:`add` or comparing to an instance of
+            :class:`Route`. Note that not all parameters are considered by the
+            compare function. '''
+        if not isinstance(route, Route):
+            route = Route(route, **ka)
+        for known in self.routes:
+            if route == known:
+                return known
+        return None
 
     def match(self, uri):
-        ''' Matches an URL and returns a (handler, target) tuple '''
+        ''' Match an URI and return a (target, urlargs) tuple '''
         if uri in self.static:
             return self.static[uri], {}
         for combined, subroutes in self.dynamic:
             match = combined.match(uri)
             if not match: continue
-            target, groups = subroutes[match.lastindex - 1]
-            groups = groups.match(uri).groupdict() if groups else {}
-            return target, groups
+            target, args_re = subroutes[match.lastindex - 1]
+            args = args_re.match(uri).groupdict() if args_re else {}
+            return target, args
         return None, {}
 
-    def build(self, route_name, **args):
-        ''' Builds an URL out of a named route and some parameters.'''
+    def build(self, _name, **args):
+        ''' Build an URI out of a named route and values for te wildcards. '''
         try:
-            return self.named[route_name] % args
+            return self.named[_name] % args
         except KeyError:
-            raise RouteBuildError("No route found with name '%s'." % route_name)
+            raise RouteBuildError("No route found with name '%s'." % _name)
+
+    def compile(self):
+        ''' Build the search structures. Call this before actually using the
+            router.'''
+        self.named = {}
+        self.static = {}
+        self.dynamic = []
+        for route in self.routes:
+            if route.name:
+                self.named[route.name] = route.format_str()
+            if route.static:
+                self.static[route.route] = route.target
+                continue
+            gpatt = route.group_re()
+            fpatt = route.flat_re()
+            try:
+                gregexp = re.compile('^(%s)$' % gpatt) if '(?P' in gpatt else None
+                combined = '%s|(^%s$)' % (self.dynamic[-1][0].pattern, fpatt)
+                self.dynamic[-1] = (re.compile(combined), self.dynamic[-1][1])
+                self.dynamic[-1][1].append((route.target, gregexp))
+            except (AssertionError, IndexError), e: # AssertionError: Too many groups
+                self.dynamic.append((re.compile('(^%s$)'%fpatt),[(route.target, gregexp)]))
+            except re.error, e:
+                raise RouteSyntaxError("Could not add Route: %s (%s)" % (route, e))
 
     def __eq__(self, other):
         return self.routes == other.routes
-
 
 
 
@@ -385,65 +401,73 @@ class Bottle(object):
 
     def match_url(self, path, method='GET'):
         """ Find a callback bound to a path and a specific HTTP method.
-            Return (callback, param) tuple or (None, {}).
+            Return (callback, param) tuple or raise HTTPError.
             method: HEAD falls back to GET. All methods fall back to ANY.
         """
-        path = path.strip().lstrip('/')
-        handler, param = self.routes.match(method + ';' + path)
-        if handler: return handler, param
-        if method == 'HEAD':
-            handler, param = self.routes.match('GET;' + path)
-            if handler: return handler, param
-        handler, param = self.routes.match('ANY;' + path)
-        if handler: return handler, param
-        return None, {}
+        path, method = path.strip().lstrip('/'), method.upper()
+        callbacks, args = self.routes.match(path)
+        if not callbacks:
+            raise HTTPError(404, "Not found: " + path)
+        if method in callbacks:
+            return callbacks[method], args
+        if method == 'HEAD' and 'GET' in callbacks:
+            return callbacks['GET'], args
+        if 'ANY' in callbacks:
+            return callbacks['ANY'], args
+        allow = [m for m in callbacks if m != 'ANY']
+        if 'GET' in allow and 'HEAD' not in allow:
+            allow.append('HEAD')
+        raise HTTPError(405, "Method not allowed.",
+                        header=[('Allow',",".join(allow))])
 
     def get_url(self, routename, **kargs):
         """ Return a string that matches a named route """
-        return '/' + self.routes.build(routename, **kargs).split(';', 1)[1]
+        return '/' + self.routes.build(routename, **kargs)
 
     def route(self, path=None, method='GET', **kargs):
         """ Decorator: Bind a function to a GET request path.
 
             If the path parameter is None, the signature of the decorated
-            function is used to generate the path. See yieldroutes()
+            function is used to generate the paths. See yieldroutes()
             for details.
 
             The method parameter (default: GET) specifies the HTTP request
-            method to listen to. You can specify a list of methods. 
+            method to listen to. You can specify a list of methods, too. 
         """
-        if isinstance(method, str): #TODO: Test this
-            method = method.split(';')
         def wrapper(callback):
-            paths = [] if path is None else [path.strip().lstrip('/')]
-            if not paths: # Lets generate the path automatically 
-                paths = yieldroutes(callback)
-            for p in paths:
-                for m in method:
-                    route = m.upper() + ';' + p
-                    self.routes.add(route, callback, **kargs)
+            routes = [path] if path else yieldroutes(callback)
+            methods = method.split(';') if isinstance(method, str) else method
+            for r in routes:
+                for m in methods:
+                    r, m = r.strip().lstrip('/'), m.strip().upper()
+                    old = self.routes.get_route(r, **kargs)
+                    if old:
+                        old.target[m] = callback
+                    else:
+                        self.routes.add(r, {m: callback}, **kargs)
+                        self.routes.compile()
             return callback
         return wrapper
 
     def get(self, path=None, method='GET', **kargs):
         """ Decorator: Bind a function to a GET request path.
             See :meth:'route' for details. """
-        return self.route(path=path, method=method, **kargs)
+        return self.route(path, method, **kargs)
 
     def post(self, path=None, method='POST', **kargs):
         """ Decorator: Bind a function to a POST request path.
             See :meth:'route' for details. """
-        return self.route(path=path, method=method, **kargs)
+        return self.route(path, method, **kargs)
 
     def put(self, path=None, method='PUT', **kargs):
         """ Decorator: Bind a function to a PUT request path.
             See :meth:'route' for details. """
-        return self.route(path=path, method=method, **kargs)
+        return self.route(path, method, **kargs)
 
     def delete(self, path=None, method='DELETE', **kargs):
         """ Decorator: Bind a function to a DELETE request path.
             See :meth:'route' for details. """
-        return self.route(path=path, method=method, **kargs)
+        return self.route(path, method, **kargs)
 
     def error(self, code=500):
         """ Decorator: Registrer an output handler for a HTTP error code"""
@@ -458,12 +482,8 @@ class Bottle(object):
         HTTPError(500) objects. """
         if not self.serve:
             return HTTPError(503, "Server stopped")
-
-        handler, args = self.match_url(url, method)
-        if not handler:
-            return HTTPError(404, "Not found:" + url)
-
         try:
+            handler, args = self.match_url(url, method)
             return handler(**args)
         except HTTPResponse, e:
             return e
