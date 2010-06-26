@@ -80,6 +80,7 @@ import sys
 import thread
 import threading
 import time
+import tokenize
 
 from Cookie import SimpleCookie
 from tempfile import TemporaryFile
@@ -1575,13 +1576,27 @@ class SimpleTemplate(BaseTemplate):
         ptrbuffer = [] # Buffer for printable strings and token tuple instances
         codebuffer = [] # Buffer for generated python code
         touni = functools.partial(unicode, encoding=self.encoding)
+        multiline = dedent = False
 
-        def tokenize(line):
+        def yield_tokens(line):
             for i, part in enumerate(re.split(r'\{\{(.*?)\}\}', line)):
                 if i % 2:
                     if part.startswith('!'): yield 'RAW', part[1:]
                     else: yield 'CMD', part
                 else: yield 'TXT', part
+
+        def split_comment(codeline):
+            """ Removes comments from a line of code. """
+            line = codeline.splitlines()[0]
+            try:
+                tokens = list(tokenize.generate_tokens(iter(line).next))
+            except tokenize.TokenError:
+                return line.rsplit('#',1) if '#' in line else (line, '')
+            for token in tokens:
+                if token[0] == tokenize.COMMENT:
+                    start, end = token[2][1], token[3][1]
+                    return codeline[:start] + codeline[end:], codeline[start:end]
+            return line, ''
 
         def flush(): # Flush the ptrbuffer
             if not ptrbuffer: return
@@ -1596,7 +1611,7 @@ class SimpleTemplate(BaseTemplate):
             cline = cline[:-2]
             if cline[:-1].endswith('\\\\\\\\\\n'):
                 cline = cline[:-7] + cline[-1] # 'nobr\\\\\n' --> 'nobr'
-            cline = '_printlist((' + cline + '))'
+            cline = '_printlist([' + cline + '])'
             del ptrbuffer[:] # Do this before calling code() again
             code(cline)
 
@@ -1614,15 +1629,19 @@ class SimpleTemplate(BaseTemplate):
                 if m: line = line.replace('coding','coding (removed)')
             if line.strip()[:2].count('%') == 1:
                 line = line.split('%',1)[1].lstrip() # Full line following the %
-                cline = line.split('#')[0].strip() # Line without commends (TODO: fails for 'a="#"')
-                cmd = re.split(r'[^a-zA-Z0-9_]', line)[0]
+                cline = split_comment(line)[0].strip()
+                cmd = re.split(r'[^a-zA-Z0-9_]', cline)[0]
                 flush() ##encodig (TODO: why?)
-                if cmd in self.blocks:
+                if cmd in self.blocks or multiline:
+                    cmd = multiline or cmd
                     dedent = cmd in self.dedent_blocks # "else:"
-                    oneline = not cline.endswith(':') # "if 1: pass"
-                    if dedent and not oneline: cmd = stack.pop()
+                    if dedent and not oneline and not multiline:
+                        cmd = stack.pop()
                     code(line)
-                    if not oneline: stack.append(cmd)
+                    oneline = not cline.endswith(':') # "if 1: pass"
+                    multiline = cmd if cline.endswith('\\') else False
+                    if not oneline and not multiline:
+                        stack.append(cmd)
                 elif cmd == 'end' and stack:
                     code('#end(%s) %s' % (stack.pop(), line.strip()[3:]))
                 elif cmd == 'include':
@@ -1644,7 +1663,7 @@ class SimpleTemplate(BaseTemplate):
             else: # Line starting with text (not '%') or '%%' (escaped)
                 if line.strip().startswith('%%'):
                     line = line.replace('%%', '%', 1)
-                ptrbuffer.append(tokenize(line))
+                ptrbuffer.append(yield_tokens(line))
         flush()
         return '\n'.join(codebuffer) + '\n'
 

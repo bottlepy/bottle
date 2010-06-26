@@ -80,13 +80,50 @@ class TestSimpleTemplate(unittest.TestCase):
         t = SimpleTemplate("%if 1:\nyes\n%else     :\nno\n%end\n")
         self.assertEqual(u"yes\n", ''.join(t.render()))
 
+    def test_commentbug(self):
+        ''' A "#" sign within an string is not a comment '''
+        t = SimpleTemplate("%if '#':\nyes\n%end\n")
+        self.assertEqual(u"yes\n", ''.join(t.render()))
+
+    def test_multiline(self):
+        ''' Block statements with non-terminating newlines '''
+        t = SimpleTemplate("%if 1\\\n%and 1:\nyes\n%end\n")
+        self.assertEqual(u"yes\n", ''.join(t.render()))
+
+    def test_newline_in_parameterlist(self):
+        ''' Block statements with non-terminating newlines in list '''
+        t = SimpleTemplate("%a=[1,\n%2]\n{{len(a)}}")
+        self.assertEqual(u"2", ''.join(t.render()))
+
     def test_dedentbug(self):
         ''' One-Line dednet blocks should not change indention '''
         t = SimpleTemplate('%if x: a="if"\n%else: a="else"\n{{a}}')
         self.assertEqual(u"if", ''.join(t.render(x=True)))
         self.assertEqual(u"else", ''.join(t.render(x=False)))
+        t = SimpleTemplate('%if x:\n%a="if"\n%else: a="else"\n{{a}}')
+        self.assertEqual(u"if", ''.join(t.render(x=True)))
+        self.assertEqual(u"else", ''.join(t.render(x=False)))
         t = SimpleTemplate('%if x: a="if"\n%else: a="else"\n%end')
         self.assertRaises(NameError, t.render)
+
+    def test_onelinebugs(self):
+        ''' One-Line blocks should not change indention '''
+        t = SimpleTemplate('%if x:\n%a=1\n%end\n{{a}}')
+        self.assertEqual(u"1", ''.join(t.render(x=True)))
+        t = SimpleTemplate('%if x: a=1\n{{a}}')
+        self.assertEqual(u"1", ''.join(t.render(x=True)))
+        t = SimpleTemplate('%if x:\n%a=1\n%else:\n%a=2\n%end\n{{a}}')
+        self.assertEqual(u"1", ''.join(t.render(x=True)))
+        self.assertEqual(u"2", ''.join(t.render(x=False)))
+        t = SimpleTemplate('%if x:   a=1\n%else:\n%a=2\n%end\n{{a}}')
+        self.assertEqual(u"1", ''.join(t.render(x=True)))
+        self.assertEqual(u"2", ''.join(t.render(x=False)))
+        t = SimpleTemplate('%if x:\n%a=1\n%else:   a=2\n{{a}}')
+        self.assertEqual(u"1", ''.join(t.render(x=True)))
+        self.assertEqual(u"2", ''.join(t.render(x=False)))
+        t = SimpleTemplate('%if x:   a=1\n%else:   a=2\n{{a}}')
+        self.assertEqual(u"1", ''.join(t.render(x=True)))
+        self.assertEqual(u"2", ''.join(t.render(x=False)))
 
     def test_onelineblocks(self):
         """ Templates: one line code blocks """
