@@ -1,4 +1,2 @@
 include bottle.py
 include setup.py
-include homepage/
-imclude docs/

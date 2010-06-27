@@ -8,6 +8,5 @@ bottle.egg-info/
 .htmlcoverage/
 release.sh
 test.sh
-homepage/cache/*.html
 apidoc/sphinx/build/
 apidoc/html/
