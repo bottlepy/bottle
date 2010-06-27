@@ -30,7 +30,7 @@ The module defines several functions, constants, and an exception.
 Routing 
 -------------------
 
-Bottle maintains a stack of :class:`Bottle` instances (see :func:`app' and :class:`AppStack`) and
+Bottle maintains a stack of :class:`Bottle` instances (see :func:`app` and :class:`AppStack`) and
 uses the top of the stack as a *default application* for some of the module-level functions
 and decorators.
 

@@ -49,3 +49,10 @@ h1, h2, h3, h4, h5, h6, h7, p.rubric {
 div.sphinxsidebar ul {
   font-size: 0.9em;
 }
+
+p.rubric {
+  background: #eee;
+  border-left: 5px solid #1C4E63;
+  padding-left: 5px;
+}
+

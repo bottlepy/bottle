@@ -21,7 +21,7 @@ In this document we use the :func:`template` helper in examples for the sake of 
    >>> template('Hello {{name}}!', name='World')
    u'Hello World!'
 
-Just keep in mind that compiling and rendering templates are two different actions, even if the :func:`template` helper hides that fact. Templates are usually compiled only once and cached internally, but rendered many times with differend keyword arguments.
+Just keep in mind that compiling and rendering templates are two different actions, even if the :func:`template` helper hides this fact. Templates are usually compiled only once and cached internally, but rendered many times with differend keyword arguments.
 
 :class:`SimpleTemplate` Syntax
 ==============================

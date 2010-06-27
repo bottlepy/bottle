@@ -24,7 +24,7 @@
 Tutorial
 ========
 
-This tutorial introduces you to the concepts and features of the Bottle web framework. If you have questions not answered here, please check the :doc:`faq` page, then file a ticket at the issue_ tracker or send an e-mail to the `mailing list <mailto:bottlepy@googlegroups.com>`_.
+This tutorial introduces you to the concepts and features of the Bottle web framework. If you have questions not answered here, please check the :doc:`faq` page, file a ticket at the issue_ tracker or send an e-mail to the `mailing list <mailto:bottlepy@googlegroups.com>`_.
 
 .. note::
 
@@ -33,8 +33,8 @@ This tutorial introduces you to the concepts and features of the Bottle web fram
 .. rubric:: A quick overview:
 
 * :ref:`tutorial-routing`: Web development starts with binding URLs to code. This section tells you how to do it.
-* :ref:`tutorial-request`: Each client request carries a lot of information. HTTP-headers, form data and cookies to name just three. Here is how to use them.
 * :ref:`tutorial-output`: You have to return something to the Browser. Bottle makes it easy for you, supporting more than just plain strings.
+* :ref:`tutorial-request`: Each client request carries a lot of information. HTTP-headers, form data and cookies to name just three. Here is how to use them.
 * :ref:`tutorial-templates`: You don't want to write HTML within your python code, do you? Template separate code from presentation.
 * :ref:`tutorial-debugging`: These tools and features will help you during development.
 * :ref:`tutorial-deployment`: Get it up and running.
@@ -44,15 +44,17 @@ This tutorial introduces you to the concepts and features of the Bottle web fram
 Getting started
 ===================
 
-Bottle has no dependencies, so all you need is Python_ (2.5 up to 3.x should work fine) and the :ref:`bottle module <download>`. Lets start with a very basic "Hello World" example::
+Bottle has no dependencies, so all you need is Python_ (2.5 up to 3.x should work fine) and the :ref:`bottle module <download>` file. Lets start with a very basic "Hello World" example::
 
     from bottle import route, run
+    
     @route('/hello')
     def hello():
         return "Hello World!"
+    
     run(host='localhost', port=8080)
 
-So, whats happening here?
+Whats happening here?
 
 1. First we import some bottle components. The :func:`route` decorator and the :func:`run` function. 
 2. The :func:`route` :term:`decorator` is used do bind a piece of code to an URL. In this example we want to answer requests to the ``/hello`` URL.
@@ -61,6 +63,22 @@ So, whats happening here?
 5. Now it is time to start the actual HTTP server. The default is a development server running on 'localhost' port 8080 and serving requests until you hit :kbd:`Control-c`.
 
 This is it. Run this script, visit http://localhost:8080/hello and you will see "Hello World!" in your Browser. Of cause this is a very simple example, but it shows the basic concept of how applications are build with bottle. Continue reading and you'll see what else is possible.
+
+.. rubric:: The Application Object
+
+Several functions and decorators such as :func:`route` or :func:`run` rely on a global application object to store routes, callbacks and configuration. This makes writing small application easy, but can lead to problems in more complex scenarios. If you prefer a more explicit way to define your application and don't mind the extra typing, you can create your own concealed application object and use that instead of the global one::
+
+    from bottle import Bottle, run
+
+    myapp = Bottle()
+    
+    @myapp.route('/hello')
+    def hello():
+        return "Hello World!"
+    
+    run(app=myapp, host='localhost', port=8080)
+
+This tutorial uses the global-application syntax for the sake of simplicity. Just keep in mind that you have a choice. The object-oriented approach is further described in the :ref:`tutorial-appobject` section.
 
 
 
@@ -93,13 +111,13 @@ As you can see, URLs and routes have nothing to do with actual files on the web 
 Dynamic Routes
 ------------------------------------------------------------------------------
 
-Bottle has a special syntax to add wildcards to a route and allow a single route to match a wide range of URLs. These *dynamic routes* are often used by blogs or wikis to create nice looking and meaningful URLs such as ``/blog/2010/04/21`` or ``/wiki/Page_Title``. Let's add a ``:name`` wildcard to our last example::
+Bottle has a special syntax to add wildcards to a route and allow a single route to match a wide range of URLs. These *dynamic routes* are often used by blogs or wikis to create nice looking and meaningful URLs such as ``/archive/2010/04/21`` or ``/wiki/Page_Title``. Why? Because `cool URIs don't change <http://www.w3.org/Provider/Style/URI>`_. Let's add a ``:name`` wildcard to our last example::
 
     @route('/hello/:name')
     def hello(name):
         return "Hello %s!" % name
 
-This dynamic route matches ``/hello/alice`` as well as ``/hello/bob``. Each URL fragment covered by a wildcard is passed to the callback function as a keyword argument so you can use the information in your application.
+This dynamic route will match ``/hello/alice`` as well as ``/hello/bob``. Each URL fragment covered by a wildcard is passed to the callback function as a keyword argument so you can use the information in your application.
 
 Normal wildcards match everything up to the next slash. You can add a regular expression to change that::
 
@@ -109,44 +127,44 @@ Normal wildcards match everything up to the next slash. You can add a regular ex
 
 As you can see, the keyword argument contains a string even if the wildcard is configured to only match digits. You have to explicitly cast it into an integer if you need to.
 
-
-
 HTTP Request Methods
 ------------------------------------------------------------------------------
 
 .. __: http_method_
 
-The HTTP protocol defines several `request methods`__ (sometimes referred to as "verbs") for different tasks. ``GET`` is the default for all routes with no other method specified. These routes will match ``GET`` requests only. To handle other methods such as ``POST``, ``PUT`` or ``DELETE``, you can add a ``method`` keyword argument to the :func:`route` decorator or use one of the four alternative decorators: :func:`get`, :func:`post`, :func:`put` or :func:`delete`.
+The HTTP protocol defines several `request methods`__ (sometimes referred to as "verbs") for different tasks. GET is the default for all routes with no other method specified. These routes will match GET requests only. To handle other methods such as POST, PUT or DELETE, you may add a ``method`` keyword argument to the :func:`route` decorator or use one of the four alternative decorators: :func:`get`, :func:`post`, :func:`put` or :func:`delete`.
 
-The ``POST`` method is commonly used for HTML form submission. This example shows how to handle a login form using ``POST``::
+The POST method is commonly used for HTML form submission. This example shows how to handle a login form using POST::
 
     from bottle import get, post, request
 
-    @get('/login') # or @route('/login')
+    #@route('/login')
+    @get('/login')
     def login_form():
         return '''<form method="POST">
                     <input name="name"     type="text" />
                     <input name="password" type="password" />
                   </from>'''
 
-    @post('/login') # or @route('/login', method='POST')
+    #@route('/login', method='POST')
+    @post('/login')
     def login_submit():
-        name     = request.POST.get('name')
-        password = request.POST.get('password')
-        if name and password and check_login(name, password):
+        name     = request.forms.get('name')
+        password = request.forms.get('password')
+        if check_login(name, password):
             return "<p>Your login was correct</p>"
         else:
-            return "<p>Login failed</p>" + login_form()
+            return "<p>Login failed</p>"
 
-In this example the ``/login`` URL has two callbacks assigned to it: The ``login_form()`` callback is invoked on ``GET`` requests (the user clicked on a link) and returns a HTTP form. When a user submits the form, he creates a ``POST`` request which is handled by the ``login_submit()`` callback. :attr:`Request.POST` and other ways to access request related data are described in the :ref:`tutorial-request` section. 
+In this example the ``/login`` URL is bound to two distinct callbacks, one for GET requests and another for POST requests. The first one displays a HTML form to the user. The second callback is invoked on a form submission and checks the login credentials the user entered into the form. The use of :attr:`Request.forms` is further described in the :ref:`tutorial-request` section. 
 
-.. note::
+.. rubric:: Automatic Fallbacks
 
-  The ``HEAD`` method is used by clients to request meta-information about a resource, but without having to download the entire document. Bottle handles these requests automatically by falling back to the corresponding ``GET`` route. You don't have to specify any ``HEAD`` routes yourself.
+The special HEAD method is used to ask for the response identical to the one that would correspond to a GET request, but without the response body. This is useful for retrieving meta-information about a resource without having to download the entire document. Bottle handles these requests automatically by falling back to the corresponding GET route and cutting off the request body, if present. You don't have to specify any HEAD routes yourself.
 
-The non-standard ``ANY`` method works as a low priority fallback in bottle. Routes that listen to ``ANY`` requests will matches requests regardless of their HTTP method but only if no other more specific route is installed. This is helpful for *proxy-routes* that redirect requests to more specific sub-applications, but you should not need to use these in normal applications.
+Additionally, the non-standard ANY method works as a low priority fallback: Routes that listen to ANY will match requests regardless of their HTTP method but only if no other more specific route is defined. This is helpful for *proxy-routes* that redirect requests to more specific sub-applications.
 
-To sum it up: ``HEAD`` requests fall back to ``GET`` routes and all requests fall back to ``ANY`` routes, if there is no matching route for the original request method. It's as simple as that.
+To sum it up: HEAD requests fall back to GET routes and all requests fall back to ANY routes, but only if there is no matching route for the original request method. It's as simple as that.
 
 Routing Static Files
 ------------------------------------------------------------------------------
@@ -158,33 +176,193 @@ Static files such as images or css files are not served automatically. You have 
   def server_static(filename):
       return static_file(filename, root='/path/to/your/static/files')
 
-The :func:`static_file` function is a helper to serve files in a save and convenient way (see :ref:`tutorial-static-files`). This example is limited to files directly within the ``/path/to/your/static/files`` directory because the ``:filename`` wildcard won't match a filename with a slash in it. To serve files in subdirectories too, we can loosen the wildcard a bit::
+The :func:`static_file` function is a helper to serve files in a save and convenient way (see :ref:`tutorial-static-files`). This example is limited to files directly within the ``/path/to/your/static/files`` directory because the ``:filename`` wildcard won't match a path with a slash in it. To serve files in subdirectories too, we can loosen the wildcard a bit::
 
   @route('/static/:path#.+#')
   def server_static(path):
       return static_file(path, root='/path/to/your/static/files')
 
+Be carefull when specifying a relative root-path such as ``root='./static/files'``. The working directory (``./``) and the project directory are not always the same.
+
+Error Pages
+------------------------------------------------------------------------------
+
+If anything goes wrong, Bottle displays an informative but fairly booring error page. You can override the default error pages using the :func:`error` decorator. It works similar to the :func:`route` decorator, but expects an HTTP status code instead of a route::
+
+  @error(404)
+  def error404(error):
+      return 'Nothing here, sorry'
+
+The ``error`` parameter passed to the error handler is an instance of :exc:`HTTPError`.
+
+
+
+
+.. _tutorial-output:
+
+Generating content
+==============================================================================
+
+In pure WSGI, the range of types you may return from your application is very limited. Applications must return an iterable yielding byte strings. You may return a string (because strings are iterable) but this causes most servers to transmit your content char by char. Unicode strings are not allowed at all. This is not very practical.
+
+Bottle is much more flexible and supports a wide range of types. It even adds a ``Content-Length`` header if possible and encodes unicode automatically, so you don't have to. What follows is a list of data types you may return from your application callbacks and a short description of how these are handled by the framework:
+
+Dictionaries
+    As I have already mentioned above, Python dictionaries (or subclasses thereof) are automatically transformed into JSON strings and returned to the browser with the ``Content-Type`` header set to ``application/json``. This makes it easy to implement json-bases APIs. Data formats other than json are supported too. See the :ref:`tutorial-output-filter` to learn more.
+
+Empty Strings, ``False``, ``None`` or other non-true values:
+    These produce an empty output with ``Content-Length`` header set to 0. 
+
+Unicode strings
+    Unicode strings (or iterables yielding unicode strings) are automatically encoded with the codec specified in the ``Content-Type`` header (utf8 by default) and then treated as normal byte strings (see below).
+
+Byte strings
+    Bottle returns strings as a whole (instead of iterating over each char) and adds a ``Content-Length`` header based on the string length. Lists of byte strings are joined first. Other iterables yielding byte strings are not joined because they may grow to big to fit into memory. The ``Content-Length`` header is not set in this case.
+
+Instances of :exc:`HTTPError` or :exc:`HTTPResponse`
+    Returning these has the same effect than raising them as an exception. In case of an :exc:`HTTPError`, the error handler are applied. See :ref:`tutorial-errorhandling` for details.
+
+File objects
+    Everything that has a ``.read()`` method is treated as a file or file-like object and passed to the ``wsgi.file_wrapper`` callable defined by the WSGI server framework. Some WSGI server implementations can make use of optimized system calls (sendfile) to transmit files more efficiently. In other cases this just iterates over chuncks that fit into memory. Optional headers such as ``Content-Length`` or ``Content-Type`` are *not* set automatically. Use :func:`send_file` if possible. See :ref:`tutorial-static-files` for details.
+
+Iterables and generators
+    You are allowed to use ``yield`` within your callbacks or return an iterable, as long as the iterable yields byte strings, unicode strings, :exc:`HTTPError` or :exc:`HTTPResponse` instances. Nested iterables are not supported, sorry. Please note that the HTTP status code and the headers are sent to the browser as soon as the iterable yields its first non-empty value. Changing these later has no effect.
+  
+The ordering of this list is significant. You may for example return a subclass of :class:`str` with a ``read()`` method. It is still treated as a string instead of a file, because strings are handled first.
+
+.. rubric:: Changing the Default Encoding
+
+Bottle uses the `charset` parameter of the ``Content-Type`` header to decide how to encode unicode strings. This header defaults to ``text/html; charset=UTF8`` and can be changed using the :attr:`Response.content_type` attribute or by setting the :attr:`Response.charset` attribute directly. (The :class:`Response` object is described in the section: :ref:`tutorial-response`)::
+
+    from bottle import response
+    @route('/iso')
+    def get_iso():
+        response.charset = 'ISO-8859-15'
+        return u'This will be sent with ISO-8859-15 encoding.'
+
+    @route('/latin9')
+    def get_latin():
+        response.content_type = 'text/html; charset=latin9'
+        return u'ISO-8859-15 is also known as latin9.'
+
+In some rare cases the Python encoding names differ from the names supported by the HTTP specification. Then, you have to do both: First set the :attr:`Response.content_type` header (which is sent to the client unchanged) and then set the :attr:`Response.charset` attribute (which is used to decode unicode).
+
+.. _tutorial-static-files:
+
+Static Files
+--------------------------------------------------------------------------------
+
+You can directly return file objects, but :func:`static_file` is the recommended way to serve static files. It automatically guesses a mime-type, adds a ``Last-Modified`` header, restricts paths to a ``root`` directory for security reasons and generates appropriate error responses (401 on permission errors, 404 on missing files). It even supports the ``If-Modified-Since`` header and eventually generates a ``304 Not modified`` response. You can pass a custom mimetype to disable mimetype guessing.
+
+::
+
+    from bottle import static_file
+    @route('/images/:filename#.*\.png#')
+    def send_image(filename):
+        return static_file(filename, root='/path/to/image/files', mimetype='image/png')
+    
+    @route('/static/:filename')
+    def send_static(filename):
+        return static_file(filename, root='/path/to/static/files')
+
+You can raise the return value of :func:`static_file` as an exception if you really need to.
+
+.. rubric:: Forced Download
+
+Most browsers try to open downloaded files if the MIME type is known and assigned to an application (e.g. PDF files). If this is not what you want, you can force a download-dialog and even suggest a filename to the user::
+
+    @route('/download/:filename')
+    def download(filename):
+        return static_file(filename, root='/path/to/static/files', download=filename)
+
+If the ``download`` parameter is just ``True``, the original filename is used.
+
+.. _tutorial-error:
+
+HTTP Errors and Redirects
+--------------------------------------------------------------------------------
+
+The :func:`abort` function is a shortcut for generating HTTP error pages.
+
+::
+
+    from bottle import route, abort
+    @route('/restricted')
+    def restricted():
+        abort(401, "Sorry, access denied.")
+
+To redirect a client to a different URL, you can send a ``303 See Other`` response with the ``Location`` header set to the new URL. :func:`redirect` does that for you::
+
+    from bottle import redirect
+    @route('/wrong/url')
+    def wrong():
+        redirect("/right/url")
+
+You may provide a different HTTP status code as a second parameter.
+
+.. note::
+    Both functions will interrupt your callback code by raising an :exc:`HTTPError` exception.
+
+.. rubric:: Other Exceptions
+
+All exceptions other than :exc:`HTTPResponse` or :exc:`HTTPError` will result in a ``500 Internal Server Error`` response, so they won't crash your WSGI server. You can turn off this behaviour to handle exceptions in your middleware by setting ``bottle.app().catchall`` to ``False``.
+
+
+.. _tutorial-response:
+
+The :class:`Response` Object
+--------------------------------------------------------------------------------
+
+Response meta-data such as the HTTP status code, response header and cookies are stored in an object called :data:`response` up to the point where they are transmitted to the browser. You can manipulate these meta-data directly or use the predefined helper methods to do so. The full API and feature list is described in the API section (see :class:`Response`), but the most common use cases and features are covered here, too.
+
+.. rubric:: Status Code
+
+The `HTTP status code <http_code>`_ controls the behaviour of the browser and defaults to ``200 OK``. In most scenarios you won't need to set the :attr:`Response.status` attribute manually, but use the :func:`abort` helper or return an :exc:`HTTPResponse` instance with the appropriate status code. Any integer is allowed but only the codes defined by the `HTTP specification <http_code>`_ will have an effect other than confusing the browser and breaking standards.
+
+.. rubric:: Response Header
+
+Add values to the :attr:`Response.headers` dictionary to add or change response headers. Note that the keys are case-insensitive.
+
+::
+  
+  @route('/wiki/:page')
+  def wiki(page):
+      response.headers['Content-Language'] = 'en'
+      return get_wiki_page(page)
+
+.. _tutorial-secure-cookies:
+
+Cookies
+-------------------------------------------------------------------------------
+
+TODO
+
+.. rubric:: Secure Cookies
+
+TODO
+
+
+
+
+
+
+
 
 .. _tutorial-request:
 
-Request and Response Objects
+Accessing Request Data
 ==============================================================================
 
-Bottle defines a global ``request`` object to provide access to HTTP related meta-data such as cookies, headers and POST form data. This object is updated on each client request and always contains information about the *current* request (as long as you access it from within a callback function). It is thread-local and save to use multi-threaded environments, too.
+Bottle provides access to HTTP related meta-data such as cookies, headers and POST form data through a global ``request`` object. This object always contains information about the *current* request, as long as it is accessed from within a callback function. This works even in multi-threaded environments where multiple requests are handled at the same time. For details on how a global object can be thread-save, see :doc:`contextlocal`.
 
-The global ``response`` object follows the same principle. It is also bound to the current request circle and stores the meta-data you want to send back to the browser.
+.. note::
+  Bottle stores most of the parsed HTTP meta-data in :class:`MultiDict` instances. These behave like normal dictionaries but are able to store multiple values per key. The standard dictionary access methods will only return a single value. Use the :meth:`MultiDict.getall` method do receive a (possibly empty) list of all values for a specific key. The :class:`HeaderDict` class inherits from :class:`MultiDict` and  additionally uses case insensitive keys. 
 
-The full API and feature list of these objects is documented in the API section (see :class:`Request` and :class:`Response`), but the most common use cases and features are covered here.
-
-
-Accessing Request Data
-------------------------------------------------------------------------------
-
-HTTP defines many ways to transmit data to the server. The :class:`Request` object provides several attributes to access raw or parsed versions of these informations. Most of the parsing and data processing happens on demand, so you won't see any overhead if you don't use the attributes.
+The full API and feature list is described in the API section (see :class:`Request`), but the most common use cases and features are covered here, too.
 
 .. rubric:: HTTP Header
 
-Header are stored in :attr:`Request.header` using a :class:`HeaderDict` object. This is basically a dictionary with case-insensitive keys::
+Header are stored in :attr:`Request.header`. The attribute is an instance of :class:`HeaderDict` which is basically a dictionary with case-insensitive keys::
 
   from bottle import route, request
   @route('/is_ajax')
@@ -209,9 +387,7 @@ Cookies are stored in :attr:`Request.COOKIES` as a normal dictionary. The :meth:
 
 .. rubric:: Query Strings
 
-The query string (as in ``/forum?id=1&page=5``) is commonly used to transmit a small number of key/value pairs to the server. You can use the :attr:`Request.GET` attribute to access these values and the :attr:`Request.query_string` attribute to get the whole string.
-
-The :attr:`Request.GET` attribute uses a :class:`MultiDict` to store the query values. Multiple values per key are saved, but the standard dict access methods will only return a single value. Use the :meth:`MultiDict.getall` method do receive a (possibly empty) list of all values for a specific key.
+The query string (as in ``/forum?id=1&page=5``) is commonly used to transmit a small number of key/value pairs to the server. You can use the :attr:`Request.GET` dictionary to access these values and the :attr:`Request.query_string` attribute to get the whole string.
 
 ::
 
@@ -219,14 +395,13 @@ The :attr:`Request.GET` attribute uses a :class:`MultiDict` to store the query v
   @route('/forum')
   def display_forum():
       forum_id = request.GET.get('id')
-      page = request.GET.get('page', 1)
-      return 'Forum ID: %d (page %d)' % (forum_id, page)
+      page = request.GET.get('page', '1')
+      return 'Forum ID: %s (page %s)' % (forum_id, page)
+
 
 .. rubric:: POST Form Data and File Uploads
 
-The request body of POST requests may contain form data encoded in various formats. The :attr:`Request.body` attribute holds a file object with the raw body data, but you usually don't need to parse it yourself. Use the :attr:`Request.forms` attribute (a :class:`MultiDict`) to access normal POST form fields. File uploads are stored separately in :attr:`Request.files` as :class:`cgi.FieldStorage` objects. The :attr:`Request.POST` attribute combines both attributes in a single :class:`MultiDict`.
-
-As with the :attr:`Request.GET` attribute, multiple values per key are possible. Use the :meth:`MultiDict.getall` method do get all values for a specific key.
+The request body of POST and PUT requests may contain form data encoded in various formats. Use the :attr:`Request.forms` attribute (a :class:`MultiDict`) to access normal POST form fields. File uploads are stored separately in :attr:`Request.files` as :class:`cgi.FieldStorage` instances. The :attr:`Request.body` attribute holds a file object with the raw body data.
 
 Here is an example for a simple file upload form:
 
@@ -245,10 +420,11 @@ Here is an example for a simple file upload form:
         name = request.forms.get('name')
         data = request.files.get('data')
         if name and data:
-            raw = data.read() # This is dangerous for big files
+            raw = data.file.read() # This is dangerous for big files
             filename = data.filename
             return "Hello %s! Your uploaded %s (%d bytes)." % (name, filename, len(raw))
         return "You missed a field."
+
 
 .. rubric:: WSGI environment
 
@@ -267,149 +443,7 @@ The :class:`Request` object stores the WSGI environment dictionary in :attr:`Req
 
 
 
-The Response Object
--------------------------------------------------------------------------------
 
-TODO
-
-
-.. _tutorial-secure-cookies:
-
-
-Secure Cookies
--------------------------------------------------------------------------------
-
-TODO
-
-.. _tutorial-output:
-
-Generating content
-==============================================================================
-
-The `WSGI specification`_ expects an iterable list of byte strings to be returned by your application and can't handle unicode, dictionaries or exceptions. File objects will be handled as iterables in *pure* WSGI, with no conditional caching or ``Content-Length`` calculation. Bottle automatically tries to convert anything to a WSGI supported type, so you don't have to. The following examples will work with Bottle, but won't work with pure WSGI.
-
-
-
-
-Strings and Unicode
-------------------------------------------------------------------------------
-
-Returning strings (bytes) is not a problem. Unicode however needs to be encoded before the webserver can send it to the client. The default encoding is utf-8. If that fits your needs, you can simply return unicode or iterables yielding unicode.
-
-::
-
-    @route('/string')
-    def get_string():
-        return 'Bottle converts strings to iterables'
-    
-    @route('/unicode')
-    def get_unicode():
-        return u'Unicode is encoded with UTF-8 by default'
-
-You can change the encoding by setting :attr:`Response.content_type` to a value containing a ``charset=...`` parameter or by changing :attr:`Response.charset` directly. (The :class:`Response` object is described in the section: :ref:`tutorial-request`)
-
-::
-
-    from bottle import response
-    @route('/iso')
-    def get_iso():
-        response.charset = 'ISO-8859-15'
-        return u'This will be sent with ISO-8859-15 encoding.'
-
-    @route('/latin9')
-    def get_latin():
-        response.content_type = 'text/html; charset=latin9'
-        return u'ISO-8859-15 is also known as latin9.'
-
-In some rare cases the Python encoding names differ from the names supported by the HTTP specification. Then, you have to do both: First set the :attr:`Response.content_type` header (which is sent to the client unchanged) and then set the :attr:`Response.charset` attribute (which is used to decode unicode).
-
-
-
-File Objects and Streams
---------------------------------------------------------------------------------
-
-Bottle passes everything that has a ``read()`` method (file objects) to the ``wsgi.file_wrapper`` provided by your WSGI server implementation. This wrapper should use optimised system calls (``sendfile`` on UNIX) to transfer the file contents.
-
-::
-
-    @route('/file')
-    def get_file():
-        return open('some/file.txt','r')
-
-
-
-JSON
---------------------------------------------------------------------------------
-
-Even dictionaries are allowed. They are converted to json_ and returned with the ``Content-Type`` header set to ``application/json``. To disable this feature (and pass dicts to your middleware) you can set ``bottle.app().autojson`` to ``False``.
-
-::
-
-    @route('/api/status')
-    def api_status():
-        return {'status':'online', 'servertime':time.time()}
-
-
-.. _tutorial-static-files:
-
-Static Files
---------------------------------------------------------------------------------
-
-You can directly return file objects, but :func:`static_file` is the recommended way to serve static files. It automatically guesses a mime-type, adds a ``Last-Modified`` header, restricts paths to a ``root`` directory for security reasons and generates appropriate error responses (401 on permission errors, 404 on missing files). It even supports the ``If-Modified-Since`` header and eventually generates a ``304 Not modified`` response. You can pass a custom mimetype to disable mimetype guessing.
-
-::
-
-    from bottle import static_file
-    @route('/images/:filename#.*\.png#')
-    def send_image(filename):
-        return static_file(filename, root='/path/to/image/files', mimetype='image/png')
-    
-    @route('/static/:filename')
-    def send_static(filename):
-        return static_file(filename, root='/path/to/static/files')
-
-You can raise the return value of ``static_file()`` as an exception if you really need to. The raised ``HTTPResponse`` exception is handled by the Bottle framework. 
-
-
-
-HTTPError, HTTPResponse and Redirects
---------------------------------------------------------------------------------
-
-The ``abort(code[, message])`` function is used to generate [HTTP error pages][http_code].
-
-::
-
-    from bottle import route, redirect, abort
-    @route('/restricted')
-    def restricted():
-        abort(401, "Sorry, access denied.")
-
-To redirect a client to a different URL, you can send a ``303 See Other`` response with the ``Location`` header set to the new URL. ``redirect(url[, code])`` does that for you. You may provide a different HTTP status code as a second parameter.
-
-::
-
-    from bottle import redirect
-    @route('/wrong/url')
-    def wrong():
-        redirect("/right/url")
-
-Both functions interrupt your handler code by raising a ``HTTPError`` exception.
-
-You can return ``HTTPError`` exceptions instead of raising them. This is faster than raising and capturing Exceptions, but does exactly the same.
-
-::
-
-    from bottle import HTTPError
-    @route('/denied')
-    def denied():
-        return HTTPError(401, 'Access denied!')
-
-
-
-Exceptions
---------------------------------------------------------------------------------
-
-All exceptions other than ``HTTPResponse`` or ``HTTPError`` will result in a ``500 Internal Server Error`` response, so they won't crash your WSGI server. You can turn off this behaviour to handle exceptions in your middleware by setting ``bottle.app().catchall`` to ``False``.
 
 
 
@@ -421,84 +455,49 @@ All exceptions other than ``HTTPResponse`` or ``HTTPError`` will result in a ``5
 Templates
 ================================================================================
 
-Bottle uses its own little template engine by default. You can use a template by
-calling ``template(template_name, **template_arguments)`` and returning
-the result.
+Bottle comes with a fast and powerful build-in template engine called :doc:`stpl`. To render a template you can use the :func:`template` function or the :func:`view` decorator. All you have to do is to provide the name of the template and the variables you want to pass to the template as keyword arguments. Here’s a simple example of how to render a template::
 
-::
-
+    @route('/hello')
     @route('/hello/:name')
-    def hello(name):
-        return template('hello_template', username=name)
+    def hello(name='World'):
+        return template('hello_template', name=name)
 
-This will load the template ``hello_template.tpl`` with the ``username`` variable set to the URL ``:name`` part and return the result as a string.
+This will load the template file ``hello_template.tpl`` and render it with the ``name`` variable set. Bottle will look for templates in the ``./views/`` folder or any folder specified in the ``bottle.TEMPLATE_PATH`` list.
+
+The :func:`view` decorator allows you to return a dictionary with the template variables instead of calling :func:`template`::
+
+    @route('/hello')
+    @route('/hello/:name')
+    @view('hello_template')
+    def hello(name='World'):
+        return dict(name=name)
+
+.. rubric:: Syntax
 
 .. highlight:: html+django
 
-The ``hello_template.tpl`` file could look like this::
+The template syntax is a very thin layer around the Python language. It's main purpose is to ensure correct indention of blocks, so you can format your template without worrying about indentions. Follow the link for a full syntax description: :doc:`stpl`
 
-    <h1>Hello {{username}}</h1>
-    <p>How are you?</p>
+Here is an example template::
 
+    %if name == 'World':
+        <h1>Hello {{name}}!</h1>
+        <p>This is a test.</p>
+    %else:
+        <h1>Hello {{name.title()}}!</h1>
+        <p>How are you?</p>
+    %end
 
+.. rubric:: Caching
 
-Template search path
---------------------------------------------------------------------------------
-
-The list ``bottle.TEMPLATE_PATH`` is used to map template names to actual 
-file names. By default, this list contains ``['./%s.tpl', './views/%s.tpl']``.
-
-
-
-Template caching
---------------------------------------------------------------------------------
-
-Templates are cached in memory after compilation. Modifications made to 
-the template file will have no affect until you clear the template 
-cache. Call ``bottle.TEMPLATES.clear()`` to do so.
-
-
-
-Template Syntax
---------------------------------------------------------------------------------
-
-The template syntax is a very thin layer around the Python language. 
-It's main purpose is to ensure correct indention of blocks, so you 
-can format your template without worrying about indentions. Here is the 
-complete syntax description:
-
-* ``%...`` starts a line of python code. You don't have to worry about indentions. Bottle handles that for you.
-* ``%end`` closes a Python block opened by ``%if ...``, ``%for ...`` or other block statements. Explicitly closing of blocks is required.
-* ``{{...}}`` prints the result of the included python statement.
-* ``%include template_name optional_arguments`` allows you to include other templates.
-* Every other line is returned as text.
-
-Example::
-
-    %header = 'Test Template'
-    %items = [1,2,3,'fly']
-    %include http_header title=header, use_js=['jquery.js', 'default.js']
-    <h1>{{header.title()}}</h1>
-    <ul>
-    %for item in items:
-      <li>
-        %if isinstance(item, int):
-          Zahl: {{item}}
-        %else:
-          %try:
-            Other type: ({{type(item).__name__}}) {{repr(item)}}
-          %except:
-            Error: Item has no string representation.
-          %end try-block (yes, you may add comments here)
-        %end
-        </li>
-      %end
-    </ul>
-    %include http_footer
+Templates are cached in memory after compilation. Modifications made to the template files will have no affect until you clear the template cache. Call ``bottle.TEMPLATES.clear()`` to do so. Caching is disabled in debug mode.
 
 
 
 
+
+
+.. highlight:: python
 
 .. _tutorial-debugging:
 
