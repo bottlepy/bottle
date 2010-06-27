@@ -565,7 +565,7 @@ class Bottle(object):
         try:
             environ['bottle.app'] = self
             request.bind(environ)
-            response.bind(self)
+            response.bind()
             out = self.handle(request.path, request.method)
             out = self._cast(out, request, response)
             # rfc2616 section 4.3
@@ -593,29 +593,28 @@ class Request(threading.local, DictMixin):
     """ Represents a single HTTP request using thread-local attributes.
         The Request object wrapps a WSGI environment and can be used as such.
     """
-    def __init__(self, environ=None, config=None):
+    def __init__(self, environ=None):
         """ Create a new Request instance.
         
             You usually don't do this but use the global `bottle.request`
             instance instead.
         """
-        self.bind(environ or {}, config)
+        self.bind(environ or {},)
 
-    def bind(self, environ, config=None):
+    def bind(self, environ):
         """ Bind a new WSGI enviroment.
             
             This is done automatically for the global `bottle.request`
             instance on every request.
         """
         self.environ = environ
-        self.config = config or {}
         # These attributes are used anyway, so it is ok to compute them here
         self.path = '/' + environ.get('PATH_INFO', '/').lstrip('/')
         self.method = environ.get('REQUEST_METHOD', 'GET').upper()
 
     def copy(self):
         ''' Returns a copy of self '''
-        return Request(self.environ.copy(), self.config)
+        return Request(self.environ.copy())
         
     def path_shift(self, shift=1):
         ''' Shift path fragments from PATH_INFO to SCRIPT_NAME and vice versa.
@@ -637,7 +636,7 @@ class Request(threading.local, DictMixin):
         self.environ[key] = value
         todelete = []
         if key in ('PATH_INFO','REQUEST_METHOD'):
-            self.bind(self.environ, self.config)
+            self.bind(self.environ)
         elif key == 'wsgi.input': todelete = ('body','forms','files','params')
         elif key == 'QUERY_STRING': todelete = ('get','params')
         elif key.startswith('HTTP_'): todelete = ('headers', 'cookies')
@@ -822,20 +821,19 @@ class Response(threading.local):
     """ Represents a single HTTP response using thread-local attributes.
     """
 
-    def __init__(self, config=None):
-        self.bind(config)
+    def __init__(self):
+        self.bind()
 
-    def bind(self, config=None):
+    def bind(self):
         """ Resets the Response object to its factory defaults. """
         self._COOKIES = None
         self.status = 200
         self.headers = HeaderDict()
         self.content_type = 'text/html; charset=UTF-8'
-        self.config = config or {}
 
     def copy(self):
         ''' Returns a copy of self '''
-        copy = Response(self.config)
+        copy = Response()
         copy.status = self.status
         copy.headers = self.headers.copy()
         copy.content_type = self.content_type

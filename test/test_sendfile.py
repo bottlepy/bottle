@@ -35,8 +35,8 @@ class TestSendFile(unittest.TestCase):
         e = dict()
         wsgiref.util.setup_testing_defaults(e)
         b = Bottle()
-        request.bind(e, b)
-        response.bind(b)
+        request.bind(e)
+        response.bind()
 
     def test_valid(self):
         """ SendFile: Valid requests"""

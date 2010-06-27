@@ -16,9 +16,9 @@ class TestEnviron(unittest.TestCase):
         t['/bla'] = '/bla'
         t['/bla/'] = '/bla/'
         for k, v in t.iteritems():
-            request.bind({'PATH_INFO': k}, None)
+            request.bind({'PATH_INFO': k})
             self.assertEqual(v, request.path)
-        request.bind({}, None)
+        request.bind({})
         self.assertEqual('/', request.path)
 
     def test_pathshift(self):
@@ -42,22 +42,22 @@ class TestEnviron(unittest.TestCase):
         
     def test_url(self):
         """ Environ: URL building """
-        request.bind({'HTTP_HOST':'example.com'}, None)
+        request.bind({'HTTP_HOST':'example.com'})
         self.assertEqual('http://example.com/', request.url)
-        request.bind({'SERVER_NAME':'example.com'}, None)
+        request.bind({'SERVER_NAME':'example.com'})
         self.assertEqual('http://example.com/', request.url)
-        request.bind({'SERVER_NAME':'example.com', 'SERVER_PORT':'81'}, None)
+        request.bind({'SERVER_NAME':'example.com', 'SERVER_PORT':'81'})
         self.assertEqual('http://example.com:81/', request.url)
-        request.bind({'wsgi.url_scheme':'https', 'SERVER_NAME':'example.com'}, None)
+        request.bind({'wsgi.url_scheme':'https', 'SERVER_NAME':'example.com'})
         self.assertEqual('https://example.com:80/', request.url)
-        request.bind({'HTTP_HOST':'example.com', 'PATH_INFO':'/path', 'QUERY_STRING':'1=b&c=d', 'SCRIPT_NAME':'/sp'}, None)
+        request.bind({'HTTP_HOST':'example.com', 'PATH_INFO':'/path', 'QUERY_STRING':'1=b&c=d', 'SCRIPT_NAME':'/sp'})
         self.assertEqual('http://example.com/sp/path?1=b&c=d', request.url)
 
     def test_dict_access(self):
         """ Environ: request objects are environment dicts """
         e = {}
         wsgiref.util.setup_testing_defaults(e)
-        request.bind(e, None)
+        request.bind(e)
         self.assertEqual(list(request), e.keys())
         self.assertEqual(len(request), len(e))
         for k, v in e.iteritems():
@@ -73,7 +73,7 @@ class TestEnviron(unittest.TestCase):
         e = {}
         wsgiref.util.setup_testing_defaults(e)
         e['HTTP_SOME_HEADER'] = 'some value'
-        request.bind(e, None)
+        request.bind(e)
         request['HTTP_SOME_OTHER_HEADER'] = 'some other value'
         self.assertTrue('Some-Header' in request.header)
         self.assertTrue(request.header['Some-Header'] == 'some value')
@@ -86,14 +86,14 @@ class TestEnviron(unittest.TestCase):
         t['a=a; b=b'] = {'a': 'a', 'b':'b'}
         t['a=a; a=b'] = {'a': 'b'}
         for k, v in t.iteritems():
-            request.bind({'HTTP_COOKIE': k}, None)
+            request.bind({'HTTP_COOKIE': k})
             self.assertEqual(v, request.COOKIES)
 
     def test_get(self):
         """ Environ: GET data """ 
         e = {}
         e['QUERY_STRING'] = 'a=a&a=1&b=b&c=c'
-        request.bind(e, None)
+        request.bind(e)
         self.assertTrue('a' in request.GET)
         self.assertTrue('b' in request.GET)
         self.assertEqual(['a','1'], request.GET.getall('a'))
@@ -110,7 +110,7 @@ class TestEnviron(unittest.TestCase):
         e['wsgi.input'].seek(0)
         e['CONTENT_LENGTH'] = str(len(sq))
         e['REQUEST_METHOD'] = "POST"
-        request.bind(e, None)
+        request.bind(e)
         self.assertTrue('a' in request.POST)
         self.assertTrue('b' in request.POST)
         self.assertEqual(['a','1'], request.POST.getall('a'))
@@ -128,7 +128,7 @@ class TestEnviron(unittest.TestCase):
         e['wsgi.input'].seek(0)
         e['CONTENT_LENGTH'] = str(len(sq))
         e['REQUEST_METHOD'] = "POST"
-        request.bind(e, None)
+        request.bind(e)
         self.assertEqual('', request.POST['foobar'])
 
     def test_body_noclose(self):
@@ -140,7 +140,7 @@ class TestEnviron(unittest.TestCase):
         e['wsgi.input'].seek(0)
         e['CONTENT_LENGTH'] = str(len(sq))
         e['REQUEST_METHOD'] = "POST"
-        request.bind(e, None)
+        request.bind(e)
         self.assertEqual(sq, request.body.read())
         request.POST # This caused a body.close() with Python 3.x
         self.assertEqual(sq, request.body.read())
@@ -154,7 +154,7 @@ class TestEnviron(unittest.TestCase):
         e['CONTENT_LENGTH'] = '7'
         e['QUERY_STRING'] = 'a=a&c=g'
         e['REQUEST_METHOD'] = "POST"
-        request.bind(e, None)
+        request.bind(e)
         self.assertEqual(['a','b','c'], sorted(request.params.keys()))
         self.assertEqual('p', request.params['c'])
 
@@ -167,7 +167,7 @@ class TestEnviron(unittest.TestCase):
         e['CONTENT_LENGTH'] = '3'
         e['QUERY_STRING'] = 'a=a'
         e['REQUEST_METHOD'] = "POST"
-        request.bind(e, None)
+        request.bind(e)
         self.assertEqual(['a'], request.GET.keys())
         self.assertEqual(['b'], request.POST.keys())
 
@@ -178,7 +178,7 @@ class TestEnviron(unittest.TestCase):
         e['wsgi.input'].write(u'abc'.encode('utf8'))
         e['wsgi.input'].seek(0)
         e['CONTENT_LENGTH'] = str(3)
-        request.bind(e, None)
+        request.bind(e)
         self.assertEqual(u'abc'.encode('utf8'), request.body.read())
         self.assertEqual(u'abc'.encode('utf8'), request.body.read(3))
         self.assertEqual(u'abc'.encode('utf8'), request.body.readline())
@@ -191,7 +191,7 @@ class TestEnviron(unittest.TestCase):
         e['wsgi.input'].write((u'x'*1024*1000).encode('utf8'))
         e['wsgi.input'].seek(0)
         e['CONTENT_LENGTH'] = str(1024*1000)
-        request.bind(e, None)
+        request.bind(e)
         self.assertTrue(hasattr(request.body, 'fileno'))        
         self.assertEqual(1024*1000, len(request.body.read()))
         self.assertEqual(1024, len(request.body.read(1024)))
@@ -205,7 +205,7 @@ class TestEnviron(unittest.TestCase):
         e['wsgi.input'].write((u'x'*1024).encode('utf8'))
         e['wsgi.input'].seek(0)
         e['CONTENT_LENGTH'] = '42'
-        request.bind(e, None)
+        request.bind(e)
         self.assertEqual(42, len(request.body.read()))
         self.assertEqual(42, len(request.body.read(1024)))
         self.assertEqual(42, len(request.body.readline()))
@@ -217,7 +217,7 @@ class TestMultipart(unittest.TestCase):
         fields = [('field1','value1'), ('field2','value2'), ('field2','value3')]
         files = [('file1','filename1.txt','content1'), ('file2','filename2.py',u'ä\nö\rü')]
         e = tools.multipart_environ(fields=fields, files=files)
-        request.bind(e, None)
+        request.bind(e)
         # File content
         self.assertTrue('file1' in request.POST)
         self.assertEqual('content1', request.POST['file1'].file.read())
