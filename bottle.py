@@ -1709,7 +1709,7 @@ class SimpleTemplate(BaseTemplate):
         """ Render the template using keyword arguments as local variables. """
         stdout = []
         self.execute(stdout, **args)
-        return stdout
+        return ''.join(stdout)
 
 
 def template(tpl, template_adapter=SimpleTemplate, **kwargs):
