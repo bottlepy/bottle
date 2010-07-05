@@ -85,6 +85,6 @@ class TestSendFile(unittest.TestCase):
         self.assertEqual(open(__file__,'rb').read(), f.output.read())
 
 
-if __name__ == '__main__':
+if __name__ == '__main__': #pragma: no cover
     unittest.main()
 

@@ -202,6 +202,6 @@ class TestSimpleTemplate(unittest.TestCase):
         self.assertEqual(u'\n\nöäü?@€', t.render())
         self.assertEqual(t.encoding, 'utf8')
         
-if __name__ == '__main__':
+if __name__ == '__main__': #pragma: no cover
     unittest.main()
 

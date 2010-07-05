@@ -10,3 +10,4 @@ release.sh
 test.sh
 apidoc/sphinx/build/
 apidoc/html/
+*.log

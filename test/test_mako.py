@@ -40,6 +40,6 @@ except ImportError:
   print "WARNING: No Mako template support. Skipping tests."
   del TestMakoTemplate
 
-if __name__ == '__main__':
+if __name__ == '__main__': #pragma: no cover
     unittest.main()
 

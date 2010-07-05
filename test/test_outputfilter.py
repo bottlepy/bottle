@@ -151,5 +151,5 @@ class TestOutputFilter(ServerTestBase):
         self.assertTrue('b=b' in c)
         self.assertTrue('c=c; Path=/' in c)
 
-if __name__ == '__main__':
+if __name__ == '__main__': #pragma: no cover
     unittest.main()

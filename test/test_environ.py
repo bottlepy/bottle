@@ -237,5 +237,5 @@ class TestMultipart(unittest.TestCase):
         self.assertEqual(2, len(request.POST.getall('field2')))
         self.assertEqual(['value2', 'value3'], request.POST.getall('field2'))
 
-if __name__ == '__main__':
+if __name__ == '__main__': #pragma: no cover
     unittest.main()

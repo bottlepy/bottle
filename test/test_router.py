@@ -57,5 +57,5 @@ class TestRouter(unittest.TestCase):
         #self.assertRaises(bottle.RouteBuildError, build, 'anonroute')
         # RouteBuildError: Anonymous pattern found. Can't generate the route 'anonroute'.
 
-if __name__ == '__main__':
+if __name__ == '__main__': #pragma: no cover
     unittest.main()

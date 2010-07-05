@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import sys
-import os.path
+import os
 from distutils.core import setup
 
 if sys.version_info < (2,5):

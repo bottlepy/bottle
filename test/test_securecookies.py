@@ -28,5 +28,5 @@ class TestSecureCookies(unittest.TestCase):
         self.assertEqual(repr(dict(value=5)), repr(bottle.request.get_cookie('key', secret=tob('1234'))))
         bottle.app.pop()
 
-if __name__ == '__main__':
+if __name__ == '__main__': #pragma: no cover
     unittest.main()
