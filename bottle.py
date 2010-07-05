@@ -1319,6 +1319,15 @@ class DieselServer(ServerAdapter):
         app.run()
 
 
+class GeventServer(ServerAdapter):
+    """ Untested. """
+    def run(self, handler):
+        from gevent import wsgi
+        from gevent.hub import getcurrent
+        #self.set_context_ident(getcurrent, weakref=True) # see contextlocal
+        wsgi.WSGIServer((self.host, self.port), handler).serve_forever()
+
+
 class GunicornServer(ServerAdapter):
     """ Untested. """
     def run(self, handler):
@@ -1326,6 +1335,7 @@ class GunicornServer(ServerAdapter):
         from gunicorn.config import Config
         arbiter = Arbiter(Config({'bind': "%s:%d" % (self.host, self.port), 'workers': 4}), handler)
         arbiter.run()
+
 
 class EventletServer(ServerAdapter):
     """ Untested """
@@ -1352,6 +1362,7 @@ class AutoServer(ServerAdapter):
                 return sa(self.host, self.port, **self.options).run(handler)
             except ImportError:
                 pass
+
 
 server_names = {
     'cgi': CGIServer,
