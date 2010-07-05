@@ -1322,9 +1322,10 @@ class DieselServer(ServerAdapter):
 class GunicornServer(ServerAdapter):
     """ Untested. """
     def run(self, handler):
-        import gunicorn.arbiter
-        gunicorn.arbiter.Arbiter((self.host, self.port), 4, handler).run()
-    
+        from gunicorn.arbiter import Arbiter
+        from gunicorn.config import Config
+        arbiter = Arbiter(Config({'bind': "%s:%d" % (self.host, self.port), 'workers': 4}), handler)
+        arbiter.run()
 
 class EventletServer(ServerAdapter):
     """ Untested """
@@ -1351,6 +1352,24 @@ class AutoServer(ServerAdapter):
                 return sa(self.host, self.port, **self.options).run(handler)
             except ImportError:
                 pass
+
+server_names = {
+    'cgi': CGIServer,
+    'flup': FlupFCGIServer,
+    'wsgiref': WSGIRefServer,
+    'cherrypy': CherryPyServer,
+    'paste': PasteServer,
+    'fapws3': FapwsServer,
+    'tornado': TornadoServer,
+    'gae': AppEngineServer,
+    'twisted': TwistedServer,
+    'diesel': DieselServer,
+    'gunicorn': GunicornServer,
+    'eventlet': EventletServer,
+    'gevent': GeventServer,
+    'rocket': RocketServer,
+    'auto': AutoServer,
+}
 
 
 def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080,
