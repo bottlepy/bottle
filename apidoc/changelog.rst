@@ -5,6 +5,16 @@
 Release Notes and Changelog
 ===========================
 
+Release 0.9 
+===========
+
+This changes are not released yet and are only part of the development documentation.
+
+.. rubric:: New Features
+
+* A new hook-API to inject code immediately before or after the execution of handler callbacks.
+
+
 Release 0.7
 ===========
 

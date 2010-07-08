@@ -81,6 +81,7 @@ import thread
 import threading
 import time
 import tokenize
+import types
 
 from Cookie import SimpleCookie
 from tempfile import TemporaryFile
@@ -372,6 +373,7 @@ class Bottle(object):
         self.castfilter = []
         if autojson and json_dumps:
             self.add_filter(dict, dict2json)
+        self.hooks = {'before_request': [], 'after_request': []}
 
     def mount(self, app, script_path):
         ''' Mount a Bottle application to a specific URL prefix '''
@@ -470,9 +472,18 @@ class Bottle(object):
         return self.route(path, method, **kargs)
 
     def error(self, code=500):
-        """ Decorator: Registrer an output handler for a HTTP error code"""
+        """ Decorator: Register an output handler for a HTTP error code"""
         def wrapper(handler):
             self.error_handler[int(code)] = handler
+            return handler
+        return wrapper
+
+    def hook(self, hook):
+        """ Decorator: Register a hook."""
+        def wrapper(handler):
+            if name not in self.hooks:
+                raise ValueError("Unknown hook name %s" % name)
+            self.hooks[name] = handler
             return handler
         return wrapper
 
@@ -560,16 +571,19 @@ class Bottle(object):
         return self._cast(HTTPError(500, 'Unsupported response type: %s'\
                                          % type(first)), request, response)
 
-    def __call__(self, environ, start_response):
+    def wsgi(self, environ, start_response):
         """ The bottle WSGI-interface. """
         try:
             environ['bottle.app'] = self
             request.bind(environ)
-            response.bind()
-            out = self.handle(request.path, request.method)
-            out = self._cast(out, request, response)
+            response.bind(start_response)
+            for func in self.hooks['before_request']: func()
+            response.output = self.handle(request.path, request.method)
+            for func in self.hooks['after_request']: func()
+            out = self._cast(response.output, request, response)
             # rfc2616 section 4.3
             if response.status in (100, 101, 204, 304) or request.method == 'HEAD':
+                if hasattr(out, 'close'): out.close()
                 out = []
             status = '%d %s' % (response.status, HTTP_CODES[response.status])
             start_response(status, response.headerlist)
@@ -577,8 +591,7 @@ class Bottle(object):
         except (KeyboardInterrupt, SystemExit, MemoryError):
             raise
         except Exception, e:
-            if not self.catchall:
-                raise
+            if not self.catchall: raise
             err = '<h1>Critical error while processing request: %s</h1>' \
                   % environ.get('PATH_INFO', '/')
             if DEBUG:
@@ -587,6 +600,9 @@ class Bottle(object):
             environ['wsgi.errors'].write(err) #TODO: wsgi.error should not get html
             start_response('500 INTERNAL SERVER ERROR', [('Content-Type', 'text/html')])
             return [tob(err)]
+        
+    def __call__(self, environ, start_response):
+        return self.wsgi(environ, start_response)
 
 
 class Request(threading.local, DictMixin):
@@ -615,7 +631,7 @@ class Request(threading.local, DictMixin):
     def copy(self):
         ''' Returns a copy of self '''
         return Request(self.environ.copy())
-        
+
     def path_shift(self, shift=1):
         ''' Shift path fragments from PATH_INFO to SCRIPT_NAME and vice versa.
 

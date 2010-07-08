@@ -62,6 +62,7 @@ The documentation is a work in progress. If you have questions not answered here
    stpl
    changelog
    development
+   plugindev
 
 Tutorials and Resources
 =======================
