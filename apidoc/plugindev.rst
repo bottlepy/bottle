@@ -11,17 +11,16 @@ Bottles core features cover most of the common use-cases, but as a micro-framewo
 In most cases, plug-ins are used to alter the the request/response circle in some way. They add, manipulate or remove information from the request and/or alter the data returned to the browser. Some plug-ins do not touch the request itself, but have other side effects such as opening and closing database connections or cleaning up temporary files. Apart from that, you can differentiate plug-ins by the point of contact with the application:
 
 Decorators
-    The decorator approach is best for wrapping a small number of routes while leaving all other callbacks untouched. If your application requires session support or database connections for only some of the registered routes, choose this approach. With a decorator you have full access to the request and response objects and the unfiltered return value of the wrapped callback.
+    The decorator approach is best for wrapping a small number of routes while leaving all other callbacks untouched. If your application requires session support or database connections for only some of the routes, choose this approach. With a decorator you have full access to the request and response objects and the unfiltered return value of the wrapped callback.
 
 Middleware
     WSGI-middleware wraps an entire application. It is an application itself and calls the wrapped application internally. This way a middleware can alter both the incoming environ-dict and the response iterable before it is returned to the server. This is transparent to the wrapped application and does not require any special support or preparation. The downside of this approach is that the request and response objects are both not available and you have to deal with raw WSGI.
 
 Hooks
     .. versionadded:: 0.9
-    With `hooks` you can register functions to be called during specific stages of the request circle. The most interesting hooks are `before_request` and `after_request`. Apart from decorators, hooks affect all routes in an application but you still have full control over the request and response objects and can manipulate the callback return value at will. This technique is described in detail further down this guide.
+    With `hooks` you can register functions to be called at specific stages during the request circle. The most interesting hooks are `before_request` and `after_request`. Both affect all routes in an application, have full control over the request and response objects and can manipulate the route-callback return value at will. This new API fills the gap between middleware and decorators and is described in detail further down this guide.
 
-
-The following table sums it up:
+Which technique is best for your plugin depends on the level and scope of interaction you need with the framework and application. The following table sums it up:
 
 ==========================  ========== ===== =========
 Aspect                      Middleware Hooks Decorator
@@ -29,6 +28,27 @@ Aspect                      Middleware Hooks Decorator
 Affects whole application   Yes        Yes   No
 Access to Bottle features   No         Yes   Yes
 ==========================  ========== ===== =========
+
+
+.. _best-practise:
+
+Recommendations
+==============================
+
+These are just recommendations, but following them makes it easyer for others to reuse your plugin.
+
+.. rubric:: Initializing Plugins
+
+Just importing a plugin-module should not have any side-effects and particularly **never install the plugin automatically**. For consistency, all plugins should instead put there initialization code into a special-named function:
+
+.. function:: init_plugin_name(app=None, **config)
+
+    Initialisation-functions start with ``init_`` and take a :class:`Bottle` application object as their first optional argument. If the `app`-argument is empty, the plugin should default to :func:`default_app`.
+
+.. rubric:: Storing Configuration
+
+Please keep in mind that a plugin may be used on different application objects with different configurations at the same time. Use the :attr:`Bottle.config` dict to store plugin configuration and ``request['bottle.app'].config`` to access it at runtime.
+
 
 Writing Middleware
 ==================
@@ -39,18 +59,22 @@ WSGI-Middleware is not specific to Bottle and there are `several <http://www.pyt
     app = MyMiddleware(app=app) # Wrap it
     bottle.run(app)             # Run it
 
-Just one little trick. Instead of wrapping the entire :class:`Bottle` application object, you can do this instead::
+This approach works fine, but is not very portable (see :ref:`best-practise`). A more general approach is to define a function that takes care of the plugin initialization and keeps the original application object intact::
 
-    app = bottle.app()
-    app.wsgi = MyMiddleware(app=app.wsgi)
-    bottle.run(app)
+    import bottle
+    def init_my_middleware(app=None, **config):
+        # Default to the global application object
+        if not app:
+            app = bottle.app()
+        # Do not wrap the entire application, but only the WSGI part
+        app.wsgi = MyMiddleware(app=app.wsgi, config=config)
 
-Now ``app`` is still an instance of :class:`Bottle` and all methods remain accessible.
+Now ``app`` is still an instance of :class:`Bottle` and all methods remain accessible. Other plugins can wrap ``app.wsgi`` again without any conflicts.
 
 Writing Decorators
 ==================
 
-Bottle uses decorators all over the place, so you should already now how to use them. Writing a decorator (or a decorator factory, see below) is not that hard, too. Basically a decorator is a function that takes a function object and returns either the same or a new function object. This way it is possible to `wrap` a function and alter its input and output whenever that function gets called::
+Bottle uses decorators all over the place, so you should already now how to use them. Writing a decorator (or a decorator factory, see below) is not that hard, too. Basically a decorator is a function that takes a function object and returns either the same or a new function object. This way it is possible to `wrap` a function and alter its input and output whenever that function gets called. Decorators are an extremely flexible way to reduce repetitive work::
 
   from bottle import route
 
@@ -72,7 +96,7 @@ Bottle uses decorators all over the place, so you should already now how to use 
 
 .. rubric:: Decorator factories: Configurable decorators
 
-Let's go one step further: A `decorator factory` is a function that return a decorator. Because inner functions have access to the local variables of the outer function they were defined in, we can use this to configure the behaviour of our decorator. Here is an example::
+Let's go one step further: A `decorator factory` is a function that return a decorator. Because inner functions have access to the local variables of the outer function they were defined in, we can use this to configure the behavior of our decorator. Here is an example::
 
   from bottle import request, response, abort
 
@@ -82,7 +106,7 @@ Let's go one step further: A `decorator factory` is a function that return a dec
               name, password = request.auth()
               if name not in users or users[name] != password:
                   response.headers['WWW-Authenticate'] = 'Basic realm="%s"' % realm
-                  abort('401', 'Access Denied')
+                  abort('401', 'Access Denied. You need to login first.')
               kwargs['user'] = name
               return func(*args, **kwargs)
           return wrapper
@@ -93,13 +117,13 @@ Let's go one step further: A `decorator factory` is a function that return a dec
   def secure_area(user):
       print 'Hello %s' % user
 
-Of cause it is a bad idea to store clear passwords in a dictionary. Apart from that this example is actually quite complete and usable. 
+Of cause it is a bad idea to store clear passwords in a dictionary. But besides that, this example is actually quite complete and usable as it is. 
 
 Writing Hooks
 ================
 
 .. versionadded:: 0.9
-As described above, hooks allow you to register functions to be called during specific stages of the request circle. There are currently three hooks available:
+As described above, hooks allow you to register functions to be called at specific stages during the request circle. There are currently only two hooks available:
 
 before_request
     This hook is called immediately before each route callback.
@@ -107,13 +131,13 @@ before_request
 after_request
     This hook is called immediately after each route callback.
 
-You can use the :func:`hook` or :meth:`Bottle.hook` decorator to register a hook-callback. This example shows how to open and close a database connection (SQLite 3) with each request::
+You can use the :func:`hook` or :meth:`Bottle.hook` decorator to register a function to a hook. This example shows how to open and close a database connection (SQLite 3) with each request::
 
 
     import sqlite3
     import bottle
 
-    def init_sqlite3(app = None, dbfile=':memory:'):
+    def init_sqlite(app=None, dbfile=':memory:'):
         if not app:
             app = bottle.app()
 
@@ -125,3 +149,18 @@ You can use the :func:`hook` or :meth:`Bottle.hook` decorator to register a hook
         def after_request():
             bottle.local.db.close()
 
+The :data:`local` object is used to store the database handle during the request. It is a thread-save object (just like :data:`request` and :data:`response` are) even if it looks like a global module variable. Here is an example for an application using this plugin::
+
+    from bottle import default_app, local, route, run
+    from plugins.sqlite import init_sqlite # Or whatever you named your plugin
+    
+    @route('/wiki/:name')
+    @view('wiki_page')
+    def show_page(name):
+        sql = 'select title, text rom wiki_pages where name = ?'
+        cursor = local.db.execute(sql, name)
+        entry = cursor.fetch()
+        return dict(name=name, title=entry[0], text=entry[1])
+
+    init_sqlite() # Install plugin to default app
+    run() # Run default app
