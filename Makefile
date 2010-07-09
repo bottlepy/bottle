@@ -1,4 +1,4 @@
-.PHONY: test coverage html_coverage release clean
+.PHONY: test coverage docs html_coverage release clean
 
 
 test:
@@ -9,6 +9,12 @@ coverage:
 
 html_coverage:
 	python test/testall.py coverage html
+
+docs:
+	cd apidoc/; $(MAKE) html
+	mkdir -p build/docs
+	rm -r build/docs/*
+	cp -a apidoc/html/* build/docs/
 
 release:
 	python setup.py release sdist upload
