@@ -478,14 +478,24 @@ class Bottle(object):
             return handler
         return wrapper
 
-    def hook(self, hook):
-        """ Decorator: Register a hook."""
-        def wrapper(handler):
-            if name not in self.hooks:
-                raise ValueError("Unknown hook name %s" % name)
-            self.hooks[name] = handler
-            return handler
+    def hook(self, name):
+        """ Return a decorator that adds a callback to the specified hook. """
+        def wrapper(func):
+            self.add_hook(name, func)
+            return func
         return wrapper
+
+    def add_hook(self, name, func):
+        ''' Add a callback from a hook. '''
+        if name not in self.hooks:
+            raise ValueError("Unknown hook name %s" % name)
+        self.hooks[name] = func
+
+    def remove_hook(self, name, func):
+        ''' Remove a callback from a hook. '''
+        if name not in self.hooks:
+            raise ValueError("Unknown hook name %s" % name)
+        self.hooks[name].remove(func)
 
     def handle(self, url, method):
         """ Execute the handler bound to the specified url and method and return
