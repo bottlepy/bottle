@@ -1,4 +1,5 @@
 include bottle.py
 include setup.py
-include homepage/
-imclude docs/
+recursive-include test *.py *.tpl
+recursive-include apidoc/*.rst
+
