@@ -32,10 +32,6 @@ Bottle searches in ``./`` and ``./views/`` for templates. In a mod_python_ or mo
 
     bottle.TEMPLATE_PATH.insert(0,'/absolut/path/to/templates/')
 
-or change the working directory::
-
-    os.chdir(os.path.dirname(__file__))
-
 so bottle searches the right paths.
 
 Dynamic Routes and Slashes

@@ -5,11 +5,10 @@
 Release Notes and Changelog
 ===========================
 
-Release 0.7
+Release 0.8
 ===========
 
 .. rubric:: API changes 
-
 
 These changes may break compatibility with previous versions.
 
@@ -18,9 +17,8 @@ These changes may break compatibility with previous versions.
 
   * Regular expressions must be encapsulated with ``#``. In 0.6 all non-alphanumeric characters not present in the regular expression were allowed.
   * Regular expressions not part of a route wildcard are escaped automatically. You don't have to escape dots or other regular control characters anymore. In 0.6 the whole URL was interpreted as a regular expression. You can use anonymous wildcards (``/index:#(\.html)?#``) to achieve a similar behaviour.
-  * Wildcards are escaped with a second colon (``/path/::not_a_wildcard``).
 
-* The ``BreakTheBottle`` exception is gone. Use :class:`HTTPResponse`` instead.
+* The ``BreakTheBottle`` exception is gone. Use :class:`HTTPResponse` instead.
 * The :class:`SimpleTemplate` engine escapes HTML special characters in ``{{bad_html}}`` expressions automatically. Use the new ``{{!good_html}}`` syntax to get old behaviour (no escaping).
 * The :class:`SimpleTemplate` engine returns unicode strings instead of lists of byte strings.
 * ``bottle.optimize()`` and the automatic route optimization is obsolete.
