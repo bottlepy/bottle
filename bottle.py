@@ -1366,12 +1366,11 @@ def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080,
     if not isinstance(server, ServerAdapter):
         raise RuntimeError("Server must be a subclass of WSGIAdapter")
     server.quiet = server.quiet or quiet
-    if not server.quiet: # pragma: no cover
-        if not os.environ.get('BOTTLE_CHILD'):
-            print "Bottle server starting up (using %s)..." % repr(server)
-            print "Listening on http://%s:%d/" % (server.host, server.port)
-            print "Use Ctrl-C to quit."
-            print
+    if not server.quiet and not os.environ.get('BOTTLE_CHILD'):
+        print "Bottle server starting up (using %s)..." % repr(server)
+        print "Listening on http://%s:%d/" % (server.host, server.port)
+        print "Use Ctrl-C to quit."
+        print
     try:
         if reloader:
             interval = min(interval, 1)
@@ -1381,49 +1380,43 @@ def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080,
                 _reloader_observer(server, app, interval)
         else:
             server.run(app)
-    except KeyboardInterrupt:
-        pass
+    except KeyboardInterrupt: pass
+    if not server.quiet and not os.environ.get('BOTTLE_CHILD'):
+        print "Shutting down..."
 
-''' 
-On a normal reload, the child exit(3) and the observer restarts the child.
-On Ctrl-C: Both recieve ite interrupt and exit(0).
-On kill-child: The observer gets a return code != 3 and exits.
-On kill-observer: The lockfile is not updated anymore. The client exits.
-
-'''
 
 class FileCheckerThread(threading.Thread):
-    ''' Thread that checks for changed module files every interval seconds.'''
+    ''' Thread that periodically checks for changed module files. '''
 
     def __init__(self, lockfile, interval):
         threading.Thread.__init__(self)
-        self.lockfile = lockfile
-        self.interval = interval
+        self.lockfile, self.interval = lockfile, interval
+        #1: lockfile to old; 2: lockfile missing
+        #3: module file changed; 5: external exit
         self.status = 0
-        #1: logfile changed; 3: module file changed; 5: external exit
 
     def run(self):
         exists = os.path.exists
+        mtime = lambda path: os.stat(path).st_mtime
         files = dict()
         for module in sys.modules.values():
             try:
                 path = inspect.getsourcefile(module)
-                if path: files[path] = os.stat(path).st_mtime
-            except TypeError:
-                pass
+                if path: files[path] = mtime(path)
+            except TypeError: pass
         while not self.status:
-            for path, mtime in files.iteritems():
-                if not exists(path) or os.stat(path).st_mtime > mtime:
+            for path, lmtime in files.iteritems():
+                if not exists(path) or mtime(path) > lmtime:
                     self.status = 3
             if not exists(self.lockfile):
                 self.status = 2
-            elif os.stat(self.lockfile).st_mtime < time.time()-self.interval*2:
+            elif mtime(self.lockfile) < time.time() - self.interval * 2:
                 self.status = 1
             if not self.status:
                 time.sleep(self.interval)
-        # status == 5 means: The main thread wants us to terminate silently
         if self.status != 5:
             thread.interrupt_main()
+
 
 def _reloader_child(server, app, interval):
     ''' Start the server and check for modified files in a background thread.
@@ -1431,18 +1424,18 @@ def _reloader_child(server, app, interval):
         the main thread to exit the server loop. The process exists with status
         code 3 to request a reload by the observer process. If the lockfile
         is not modified in 2*interval second or missing, we assume that the
-        observer process died and exit with status code 1.
+        observer process died and exit with status code 1 or 2.
     '''
     lockfile = os.environ.get('BOTTLE_LOCKFILE')
-    t = FileCheckerThread(lockfile, interval)
+    bgcheck = FileCheckerThread(lockfile, interval)
     try:
-        t.start()
+        bgcheck.start()
         server.run(app)
-    except KeyboardInterrupt, e:
-        pass
-    t.status, status = 5, t.status # t.status=3 ==> Thread terminates silently
-    t.join()
+    except KeyboardInterrupt, e: pass
+    bgcheck.status, status = 5, bgcheck.status
+    bgcheck.join() # bgcheck.status == 5 --> silent exit
     if status: sys.exit(status)
+
 
 def _reloader_observer(server, app, interval):
     ''' Start a child process with identical commandline arguments and restart
@@ -1464,9 +1457,9 @@ def _reloader_observer(server, app, interval):
             if p.poll() != 3:
                 if os.path.exists(lockfile): os.unlink(lockfile)
                 sys.exit(p.poll())
-            if not server.quiet: print "Restarting server..."
-    except KeyboardInterrupt:
-        pass
+            elif not server.quiet:
+                print "Reloading server..."
+    except KeyboardInterrupt: pass
     if os.path.exists(lockfile): os.unlink(lockfile)
 
 
