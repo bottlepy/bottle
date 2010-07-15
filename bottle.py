@@ -1006,7 +1006,7 @@ def redirect(url, code=303):
 
 
 def send_file(*a, **k): #BC 0.6.4
-    """ Raises the output of static_file() """
+    """ Raises the output of static_file(). (deprecated) """
     raise static_file(*a, **k)
 
 
@@ -1198,7 +1198,8 @@ url    = functools.wraps(Bottle.get_url)(lambda *a, **ka: app().get_url(*a, **ka
 mount  = functools.wraps(Bottle.get_url)(lambda *a, **ka: app().mount(*a, **ka))
 
 def default():
-    raise DeprecationWarning("Use @error(404) instead.")
+    raise DeprecationWarning("The default() decorator is deprecated. "\
+                             "Use @error(404) instead.")
 
 
 
