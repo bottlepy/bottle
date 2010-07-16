@@ -146,7 +146,7 @@ class BottleException(Exception):
 
 
 class HTTPResponse(BottleException):
-    """ Used to break execution and imediately finish the response """
+    """ Used to break execution and immediately finish the response """
     def __init__(self, output='', status=200, header=None):
         super(BottleException, self).__init__("HTTP Response %d" % status)
         self.status = int(status)
@@ -393,7 +393,7 @@ class Bottle(object):
 
     def add_filter(self, ftype, func):
         ''' Register a new output filter. Whenever bottle hits a handler output
-            matching `ftype`, `func` is applyed to it. '''
+            matching `ftype`, `func` is applied to it. '''
         if not isinstance(ftype, type):
             raise TypeError("Expected type object, got %s" % type(ftype))
         self.castfilter = [(t, f) for (t, f) in self.castfilter if t != ftype]
@@ -426,14 +426,14 @@ class Bottle(object):
         return '/' + self.routes.build(routename, **kargs)
 
     def route(self, path=None, method='GET', **kargs):
-        """ Decorator: Bind a function to a GET request path.
+        """ Decorator: bind a function to a GET request path.
 
             If the path parameter is None, the signature of the decorated
             function is used to generate the paths. See yieldroutes()
             for details.
 
             The method parameter (default: GET) specifies the HTTP request
-            method to listen to. You can specify a list of methods, too. 
+            method to listen to. You can specify a list of methods too. 
         """
         def wrapper(callback):
             routes = [path] if path else yieldroutes(callback)
@@ -592,7 +592,7 @@ class Bottle(object):
 
 class Request(threading.local, DictMixin):
     """ Represents a single HTTP request using thread-local attributes.
-        The Request object wrapps a WSGI environment and can be used as such.
+        The Request object wraps a WSGI environment and can be used as such.
     """
     def __init__(self, environ=None):
         """ Create a new Request instance.
@@ -620,8 +620,8 @@ class Request(threading.local, DictMixin):
     def path_shift(self, shift=1):
         ''' Shift path fragments from PATH_INFO to SCRIPT_NAME and vice versa.
 
-          :param shift: The number of path fragemts to shift. May be negative to
-            change ths shift direction. (default: 1)
+          :param shift: The number of path fragments to shift. May be negative to
+            change the shift direction. (default: 1)
         '''
         script_name = self.environ.get('SCRIPT_NAME','/')
         self['SCRIPT_NAME'], self.path = path_shift(script_name, self.path, shift)
@@ -712,7 +712,7 @@ class Request(threading.local, DictMixin):
 
             This supports urlencoded and multipart POST requests. Multipart
             is commonly used for file uploads and may result in some of the
-            values beeing cgi.FieldStorage objects instead of strings.
+            values being cgi.FieldStorage objects instead of strings.
 
             Multiple values per key are possible. See MultiDict for details.
         """
@@ -1137,7 +1137,7 @@ def path_shift(script_name, path_info, shift=1):
         :return: The modified paths.
         :param script_name: The SCRIPT_NAME path.
         :param script_name: The PATH_INFO path.
-        :param shift: The number of path fragemts to shift. May be negative to
+        :param shift: The number of path fragments to shift. May be negative to
           change ths shift direction. (default: 1)
     '''
     if shift == 0: return script_name, path_info
@@ -1533,8 +1533,8 @@ class BaseTemplate(object):
 
     @classmethod
     def search(cls, name, lookup=[]):
-        """ Search name in all directiries specified in lookup.
-        First without, then with common extentions. Return first hit. """
+        """ Search name in all directories specified in lookup.
+        First without, then with common extensions. Return first hit. """
         if os.path.isfile(name): return name
         for spath in lookup:
             fname = os.path.join(spath, name)
@@ -1553,7 +1553,7 @@ class BaseTemplate(object):
             return cls.settings[key]
 
     def prepare(self, **options):
-        """ Run preparatios (parsing, caching, ...).
+        """ Run preparations (parsing, caching, ...).
         It should be possible to call this again to refresh a template or to
         update settings.
         """
@@ -1562,7 +1562,7 @@ class BaseTemplate(object):
     def render(self, **args):
         """ Render the template with the specified local variables and return
         a single byte or unicode string. If it is a byte string, the encoding
-        must match self.encoding. This method must be thread save!
+        must match self.encoding. This method must be thread-safe!
         """
         raise NotImplementedError
 
@@ -1799,11 +1799,11 @@ cheetah_template = functools.partial(template, template_adapter=CheetahTemplate)
 jinja2_template = functools.partial(template, template_adapter=Jinja2Template)
 
 def view(tpl_name, **defaults):
-    ''' Decorator: Renders a template for a handler.
+    ''' Decorator: renders a template for a handler.
         The handler can control its behavior like that:
 
           - return a dict of template vars to fill out the template
-          - return other than a dict and the view decorator will not
+          - return something other than a dict and the view decorator will not
             process the template, but return the handler result as is.
             This includes returning a HTTPResponse(dict) to get,
             for instance, JSON with autojson or other castfilters
@@ -1922,7 +1922,7 @@ metadata about the current request into this instance of :class:`Request`.
 It is thread-safe and can be accessed from within handler functions. """
 
 response = Response()
-""" The :class:`Bottle` WSGI handler uses metasata assigned to this instance
+""" The :class:`Bottle` WSGI handler uses metadata assigned to this instance
 of :class:`Response` to generate the WSGI response. """
 
 local = threading.local()

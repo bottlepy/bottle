@@ -13,7 +13,7 @@ Release 0.7
 
 These changes may break compatibility with previous versions.
 
-* The build-in Key/Value database is not available anymore. It is marked deprecated since 0.6.4
+* The built-in Key/Value database is not available anymore. It is marked deprecated since 0.6.4
 * The Route syntax and behaviour changed.
 
   * Regular expressions must be encapsulated with ``#``. In 0.6 all non-alphanumeric characters not present in the regular expression were allowed.

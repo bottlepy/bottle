@@ -7,7 +7,7 @@ API Reference
    :synopsis: WSGI micro framework
 .. moduleauthor:: Marcel Hellkamp <marc@paws.de>
 
-This is an API reference, NOT a documentation. If you are new to bottle, have a look at the :doc:`tutorial`.
+This is an API reference, NOT documentation. If you are new to bottle, have a look at the :doc:`tutorial`.
 
 Module Contents
 =====================================
@@ -112,7 +112,7 @@ The :class:`Response` class on the other hand stores header and cookie data that
 
 .. note::
 
-   You usually don't instantiate :class:`Request` or :class:`Response` yourself, but use the module-level instances :data:`bottle.request` and :data:`bottle.response` only. These hold the context for the current request cycle and are updated on every request. Their attributes are thread-local, so it is save to use the global instance in multi-threaded environments too.
+   You usually don't instantiate :class:`Request` or :class:`Response` yourself, but use the module-level instances :data:`bottle.request` and :data:`bottle.response` only. These hold the context for the current request cycle and are updated on every request. Their attributes are thread-local, so it is safe to use the global instance in multi-threaded environments too.
 
 .. autoclass:: Request
    :members:

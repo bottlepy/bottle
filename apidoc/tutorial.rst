@@ -35,7 +35,7 @@ This tutorial introduces you to the concepts and features of the Bottle web fram
 * :ref:`tutorial-routing`: Web development starts with binding URLs to code. This section tells you how to do it.
 * :ref:`tutorial-output`: You have to return something to the Browser. Bottle makes it easy for you, supporting more than just plain strings.
 * :ref:`tutorial-request`: Each client request carries a lot of information. HTTP-headers, form data and cookies to name just three. Here is how to use them.
-* :ref:`tutorial-templates`: You don't want to write HTML within your python code, do you? Template separate code from presentation.
+* :ref:`tutorial-templates`: You don't want to write HTML within your python code, do you? Templates separate code from presentation.
 * :ref:`tutorial-debugging`: These tools and features will help you during development.
 * :ref:`tutorial-deployment`: Get it up and running.
 
@@ -62,11 +62,11 @@ Whats happening here?
 4. In this exmaple we simply return a string to the browser.
 5. Now it is time to start the actual HTTP server. The default is a development server running on 'localhost' port 8080 and serving requests until you hit :kbd:`Control-c`.
 
-This is it. Run this script, visit http://localhost:8080/hello and you will see "Hello World!" in your Browser. Of cause this is a very simple example, but it shows the basic concept of how applications are build with bottle. Continue reading and you'll see what else is possible.
+This is it. Run this script, visit http://localhost:8080/hello and you will see "Hello World!" in your browser. Of cause this is a very simple example, but it shows the basic concept of how applications are built with bottle. Continue reading and you'll see what else is possible.
 
 .. rubric:: The Application Object
 
-Several functions and decorators such as :func:`route` or :func:`run` rely on a global application object to store routes, callbacks and configuration. This makes writing small application easy, but can lead to problems in more complex scenarios. If you prefer a more explicit way to define your application and don't mind the extra typing, you can create your own concealed application object and use that instead of the global one::
+Several functions and decorators such as :func:`route` or :func:`run` rely on a global application object to store routes, callbacks and configuration. This makes writing a small application easy, but can lead to problems in more complex scenarios. If you prefer a more explicit way to define your application and don't mind the extra typing, you can create your own concealed application object and use that instead of the global one::
 
     from bottle import Bottle, run
 
@@ -176,18 +176,18 @@ Static files such as images or css files are not served automatically. You have 
   def server_static(filename):
       return static_file(filename, root='/path/to/your/static/files')
 
-The :func:`static_file` function is a helper to serve files in a save and convenient way (see :ref:`tutorial-static-files`). This example is limited to files directly within the ``/path/to/your/static/files`` directory because the ``:filename`` wildcard won't match a path with a slash in it. To serve files in subdirectories too, we can loosen the wildcard a bit::
+The :func:`static_file` function is a helper to serve files in a safe and convenient way (see :ref:`tutorial-static-files`). This example is limited to files directly within the ``/path/to/your/static/files`` directory because the ``:filename`` wildcard won't match a path with a slash in it. To serve files in subdirectories too, we can loosen the wildcard a bit::
 
   @route('/static/:path#.+#')
   def server_static(path):
       return static_file(path, root='/path/to/your/static/files')
 
-Be carefull when specifying a relative root-path such as ``root='./static/files'``. The working directory (``./``) and the project directory are not always the same.
+Be careful when specifying a relative root-path such as ``root='./static/files'``. The working directory (``./``) and the project directory are not always the same.
 
 Error Pages
 ------------------------------------------------------------------------------
 
-If anything goes wrong, Bottle displays an informative but fairly booring error page. You can override the default error pages using the :func:`error` decorator. It works similar to the :func:`route` decorator, but expects an HTTP status code instead of a route::
+If anything goes wrong Bottle displays an informative but fairly boring error page. You can override the default error pages using the :func:`error` decorator. It works similar to the :func:`route` decorator but expects an HTTP status code instead of a route::
 
   @error(404)
   def error404(error):
@@ -208,7 +208,7 @@ In pure WSGI, the range of types you may return from your application is very li
 Bottle is much more flexible and supports a wide range of types. It even adds a ``Content-Length`` header if possible and encodes unicode automatically, so you don't have to. What follows is a list of data types you may return from your application callbacks and a short description of how these are handled by the framework:
 
 Dictionaries
-    As I have already mentioned above, Python dictionaries (or subclasses thereof) are automatically transformed into JSON strings and returned to the browser with the ``Content-Type`` header set to ``application/json``. This makes it easy to implement json-bases APIs. Data formats other than json are supported too. See the :ref:`tutorial-output-filter` to learn more.
+    As mentioned above, Python dictionaries (or subclasses thereof) are automatically transformed into JSON strings and returned to the browser with the ``Content-Type`` header set to ``application/json``. This makes it easy to implement json-based APIs. Data formats other than json are supported too. See the :ref:`tutorial-output-filter` to learn more.
 
 Empty Strings, ``False``, ``None`` or other non-true values:
     These produce an empty output with ``Content-Length`` header set to 0. 
@@ -217,13 +217,13 @@ Unicode strings
     Unicode strings (or iterables yielding unicode strings) are automatically encoded with the codec specified in the ``Content-Type`` header (utf8 by default) and then treated as normal byte strings (see below).
 
 Byte strings
-    Bottle returns strings as a whole (instead of iterating over each char) and adds a ``Content-Length`` header based on the string length. Lists of byte strings are joined first. Other iterables yielding byte strings are not joined because they may grow to big to fit into memory. The ``Content-Length`` header is not set in this case.
+    Bottle returns strings as a whole (instead of iterating over each char) and adds a ``Content-Length`` header based on the string length. Lists of byte strings are joined first. Other iterables yielding byte strings are not joined because they may grow too big to fit into memory. The ``Content-Length`` header is not set in this case.
 
 Instances of :exc:`HTTPError` or :exc:`HTTPResponse`
-    Returning these has the same effect than raising them as an exception. In case of an :exc:`HTTPError`, the error handler are applied. See :ref:`tutorial-errorhandling` for details.
+    Returning these has the same effect as when raising them as an exception. In case of an :exc:`HTTPError`, the error handler is applied. See :ref:`tutorial-errorhandling` for details.
 
 File objects
-    Everything that has a ``.read()`` method is treated as a file or file-like object and passed to the ``wsgi.file_wrapper`` callable defined by the WSGI server framework. Some WSGI server implementations can make use of optimized system calls (sendfile) to transmit files more efficiently. In other cases this just iterates over chuncks that fit into memory. Optional headers such as ``Content-Length`` or ``Content-Type`` are *not* set automatically. Use :func:`send_file` if possible. See :ref:`tutorial-static-files` for details.
+    Everything that has a ``.read()`` method is treated as a file or file-like object and passed to the ``wsgi.file_wrapper`` callable defined by the WSGI server framework. Some WSGI server implementations can make use of optimized system calls (sendfile) to transmit files more efficiently. In other cases this just iterates over chunks that fit into memory. Optional headers such as ``Content-Length`` or ``Content-Type`` are *not* set automatically. Use :func:`send_file` if possible. See :ref:`tutorial-static-files` for details.
 
 Iterables and generators
     You are allowed to use ``yield`` within your callbacks or return an iterable, as long as the iterable yields byte strings, unicode strings, :exc:`HTTPError` or :exc:`HTTPResponse` instances. Nested iterables are not supported, sorry. Please note that the HTTP status code and the headers are sent to the browser as soon as the iterable yields its first non-empty value. Changing these later has no effect.
@@ -232,7 +232,7 @@ The ordering of this list is significant. You may for example return a subclass 
 
 .. rubric:: Changing the Default Encoding
 
-Bottle uses the `charset` parameter of the ``Content-Type`` header to decide how to encode unicode strings. This header defaults to ``text/html; charset=UTF8`` and can be changed using the :attr:`Response.content_type` attribute or by setting the :attr:`Response.charset` attribute directly. (The :class:`Response` object is described in the section: :ref:`tutorial-response`)::
+Bottle uses the `charset` parameter of the ``Content-Type`` header to decide how to encode unicode strings. This header defaults to ``text/html; charset=UTF8`` and can be changed using the :attr:`Response.content_type` attribute or by setting the :attr:`Response.charset` attribute directly. (The :class:`Response` object is described in the section :ref:`tutorial-response`.)
 
     from bottle import response
     @route('/iso')
@@ -245,7 +245,7 @@ Bottle uses the `charset` parameter of the ``Content-Type`` header to decide how
         response.content_type = 'text/html; charset=latin9'
         return u'ISO-8859-15 is also known as latin9.'
 
-In some rare cases the Python encoding names differ from the names supported by the HTTP specification. Then, you have to do both: First set the :attr:`Response.content_type` header (which is sent to the client unchanged) and then set the :attr:`Response.charset` attribute (which is used to decode unicode).
+In some rare cases the Python encoding names differ from the names supported by the HTTP specification. Then, you have to do both: first set the :attr:`Response.content_type` header (which is sent to the client unchanged) and then set the :attr:`Response.charset` attribute (which is used to encode unicode).
 
 .. _tutorial-static-files:
 
@@ -353,7 +353,7 @@ TODO
 Accessing Request Data
 ==============================================================================
 
-Bottle provides access to HTTP related meta-data such as cookies, headers and POST form data through a global ``request`` object. This object always contains information about the *current* request, as long as it is accessed from within a callback function. This works even in multi-threaded environments where multiple requests are handled at the same time. For details on how a global object can be thread-save, see :doc:`contextlocal`.
+Bottle provides access to HTTP related meta-data such as cookies, headers and POST form data through a global ``request`` object. This object always contains information about the *current* request, as long as it is accessed from within a callback function. This works even in multi-threaded environments where multiple requests are handled at the same time. For details on how a global object can be thread-safe, see :doc:`contextlocal`.
 
 .. note::
   Bottle stores most of the parsed HTTP meta-data in :class:`MultiDict` instances. These behave like normal dictionaries but are able to store multiple values per key. The standard dictionary access methods will only return a single value. Use the :meth:`MultiDict.getall` method do receive a (possibly empty) list of all values for a specific key. The :class:`HeaderDict` class inherits from :class:`MultiDict` and  additionally uses case insensitive keys. 
@@ -379,7 +379,7 @@ Cookies are stored in :attr:`Request.COOKIES` as a normal dictionary. The :meth:
   from bottle import route, request, response
   @route('/counter')
   def counter():
-      count = int( request.COOKIES.get('counter', '0') ) + 1
+      count = int( request.COOKIES.get('counter', '0') )
       count += 1
       response.set_cookie('counter', str(count))
       return 'You visited this page %d times' % count
@@ -455,7 +455,7 @@ The :class:`Request` object stores the WSGI environment dictionary in :attr:`Req
 Templates
 ================================================================================
 
-Bottle comes with a fast and powerful build-in template engine called :doc:`stpl`. To render a template you can use the :func:`template` function or the :func:`view` decorator. All you have to do is to provide the name of the template and the variables you want to pass to the template as keyword arguments. Here’s a simple example of how to render a template::
+Bottle comes with a fast and powerful built-in template engine called :doc:`stpl`. To render a template you can use the :func:`template` function or the :func:`view` decorator. All you have to do is to provide the name of the template and the variables you want to pass to the template as keyword arguments. Here’s a simple example of how to render a template::
 
     @route('/hello')
     @route('/hello/:name')
@@ -476,7 +476,7 @@ The :func:`view` decorator allows you to return a dictionary with the template v
 
 .. highlight:: html+django
 
-The template syntax is a very thin layer around the Python language. It's main purpose is to ensure correct indention of blocks, so you can format your template without worrying about indentions. Follow the link for a full syntax description: :doc:`stpl`
+The template syntax is a very thin layer around the Python language. It's main purpose is to ensure correct indentation of blocks, so you can format your template without worrying about indentation. Follow the link for a full syntax description: :doc:`stpl`
 
 Here is an example template::
 
@@ -504,14 +504,14 @@ Templates are cached in memory after compilation. Modifications made to the temp
 Development
 ================================================================================
 
-Bottle has two features that may be helpfull during development.
+Bottle has two features that may be helpful during development.
 
 
 
 Debug Mode
 --------------------------------------------------------------------------------
 
-In debug mode, bottle is much more verbose and tries to help you finding 
+In debug mode, bottle is much more verbose and tries to help you find 
 bugs. You should never use debug mode in production environments.
 
 .. highlight:: python
@@ -523,8 +523,8 @@ bugs. You should never use debug mode in production environments.
 
 This does the following:
 
-* Exceptions will print a stacktrace
-* Error pages will contain that stacktrace
+* Exceptions will print a stacktrace.
+* Error pages will contain that stacktrace.
 * Templates will not be cached.
 
 
@@ -542,12 +542,12 @@ the newest version of your code.
     from bottle import run
     run(reloader=True)
 
-How it works: The main process will not start a server, but spawn a new 
-child process using the same command line agruments used to start the 
-main process. All module level code is executed at least twice! Be 
-carefull.
+How it works: the main process will not start a server, but spawn a new 
+child process using the same command line arguments used to start the 
+main process. All module-level code is executed at least twice! Be 
+careful.
 
-The child process will have ``os.environ['BOTTLE_CHILD']`` set to ``true`` 
+The child process will have ``os.environ['BOTTLE_CHILD']`` set to ``True`` 
 and start as a normal non-reloading app server. As soon as any of the 
 loaded modules changes, the child process is terminated and respawned by 
 the main process. Changes in template files will not trigger a reload. 
@@ -565,7 +565,7 @@ finally clauses, etc., are not executed after a ``SIGTERM``.
 Deployment
 ================================================================================
 
-Bottle uses the build-in ``wsgiref.SimpleServer`` by default. This non-threading
+Bottle uses the built-in ``wsgiref.SimpleServer`` by default. This non-threading
 HTTP server is perfectly fine for development and early production,
 but may become a performance bottleneck when server load increases.
 
@@ -610,12 +610,12 @@ there are more CPU cores available. The trick is to balance the load
 between multiple independent Python processes to utilise all of your 
 CPU cores.
 
-Instead of a single Bottle application server, you start one instances 
+Instead of a single Bottle application server, you start one instance 
 of your server for each CPU core available using different local port 
 (localhost:8080, 8081, 8082, ...). Then a high performance load 
 balancer acts as a reverse proxy and forwards each new requests to 
 a random Bottle processes, spreading the load between all available 
-backed server instances. This way you can use all of your CPU cores and 
+back end server instances. This way you can use all of your CPU cores and 
 even spread out the load between different physical servers.
 
 But there are a few drawbacks:
@@ -623,7 +623,7 @@ But there are a few drawbacks:
 * You can't easily share data between multiple Python processes.
 * It takes a lot of memory to run several copies of Python and Bottle at the same time.
 
-One of the fastest load balancer available is Pound_ but most common web servers have a proxy-module that can do the work just fine.
+One of the fastest load balancers available is Pound_ but most common web servers have a proxy-module that can do the work just fine.
 
 I'll add examples for lighttpd_ and 
 Apache_ web servers soon.
@@ -643,7 +643,7 @@ A call to `bottle.default_app()` returns your WSGI application. After applying a
 
 .. rubric: How default_app() works
 
-Bottle creates a single instance of `bottle.Bottle()` and uses it as a default for most of the modul-level decorators and the `bottle.run()` routine. 
+Bottle creates a single instance of `bottle.Bottle()` and uses it as a default for most of the module-level decorators and the `bottle.run()` routine. 
 `bottle.default_app()` returns (or changes) this default. You may, however, create your own instances of `bottle.Bottle()`.
 
 ::
@@ -664,7 +664,7 @@ mod_wsgi_ and Bottle's WSGI interface.
 
 All you need is an ``app.wsgi`` file that provides an 
 ``application`` object. This object is used by mod_wsgi to start your 
-application and should be a WSGI conform Python callable.
+application and should be a WSGI-compatible Python callable.
 
 File ``/var/www/yourapp/app.wsgi``::
 
@@ -747,12 +747,12 @@ Glossary
    handler function
       A function to handle some specific event or situation. In a web
       framework, the application is developed by attaching a handler function
-      as callback for each specific URL composing the application.
+      as callback for each specific URL comprising the application.
 
    secure cookie
-      bottle creates signed cookies with objects that can be pickled. A secure
+      Bottle creates signed cookies with objects that can be pickled. A secure
       cookie will be created automatically when a type that is not a string is
-      use as value in :meth:`request.set_cookie` and bottle's config
+      used as the value in :meth:`request.set_cookie` and bottle's config
       includes a `securecookie.key` entry with a salt.
 
    source directory

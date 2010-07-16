@@ -4,7 +4,7 @@ SimpleTemplate Engine
 
 .. currentmodule:: bottle
 
-Bottle comes with a fast, powerful and easy to learn build-in template engine called *SimpleTemplate* or *stpl* for short. It is the default engine used by the :func:`view` and :func:`template` helpers but can be used as a stand-alone general purpose template engine, too. This document explains the template syntax and shows examples for common use cases.
+Bottle comes with a fast, powerful and easy to learn built-in template engine called *SimpleTemplate* or *stpl* for short. It is the default engine used by the :func:`view` and :func:`template` helpers but can be used as a stand-alone general purpose template engine too. This document explains the template syntax and shows examples for common use cases.
 
 .. rubric:: Basic API Usage:
 
@@ -21,20 +21,20 @@ In this document we use the :func:`template` helper in examples for the sake of 
    >>> template('Hello {{name}}!', name='World')
    u'Hello World!'
 
-Just keep in mind that compiling and rendering templates are two different actions, even if the :func:`template` helper hides this fact. Templates are usually compiled only once and cached internally, but rendered many times with differend keyword arguments.
+Just keep in mind that compiling and rendering templates are two different actions, even if the :func:`template` helper hides this fact. Templates are usually compiled only once and cached internally, but rendered many times with different keyword arguments.
 
 :class:`SimpleTemplate` Syntax
 ==============================
 
-Python is a very powerful language but its whitespace-aware syntax makes it difficult to use as a templates language. SimpleTemplate removes some of these restrictions and allows you to write clean, readable and maintainable templates while preserving full access to the features, libraries and speed of the Python language.
+Python is a very powerful language but its whitespace-aware syntax makes it difficult to use as a template language. SimpleTemplate removes some of these restrictions and allows you to write clean, readable and maintainable templates while preserving full access to the features, libraries and speed of the Python language.
 
 .. warning::
 
-   The :class:`SimpleTemplate` Syntax compiles directly to python bytecode and is executed on each :meth:`SimpleTemplate.render` call. Do not render untrusted templates! They may contain and execute harmfull python code.
+   The :class:`SimpleTemplate` syntax compiles directly to python bytecode and is executed on each :meth:`SimpleTemplate.render` call. Do not render untrusted templates! They may contain and execute harmful python code.
 
 .. rubric:: Inline Statements
 
-You already learned the use of the ``{{...}}`` statement from the "Hello World!" example above, but there is more: Any python statement is allowed within the curly brackets as long as it returns a string or something that has a string representation::
+You already learned the use of the ``{{...}}`` statement from the "Hello World!" example above, but there is more: any python statement is allowed within the curly brackets as long as it returns a string or something that has a string representation::
 
   >>> template('Hello {{name}}!', name='World')
   u'Hello World!'
@@ -54,7 +54,7 @@ The contained python statement is executed at render-time and has access to all 
 
 .. rubric:: Embedded python code
 
-The ``%`` character marks a line of python code. The only difference between this and real python code is that you have to explicitly close blocks with an ``%end`` statement. In return you can align the code with the surrounding template and don't have to worry about correct indention of blocks. The *SimpleTemplate* parser handles that for you. Lines *not* starting with a ``%`` are rendered as text as usual::
+The ``%`` character marks a line of python code. The only difference between this and real python code is that you have to explicitly close blocks with an ``%end`` statement. In return you can align the code with the surrounding template and don't have to worry about correct indentation of blocks. The *SimpleTemplate* parser handles that for you. Lines *not* starting with a ``%`` are rendered as text as usual::
 
   %if name:
     Hi <b>{{name}}</b>
@@ -62,7 +62,7 @@ The ``%`` character marks a line of python code. The only difference between thi
     <i>Hello stranger</i>
   %end
 
-The ``%`` character is only recognised if it is the first non-whitespace character in a line. To escape a heading ``%`` you can add a second one. ``%%`` is replaced by a single ``%`` in the resulting template::
+The ``%`` character is only recognised if it is the first non-whitespace character in a line. To escape a leading ``%`` you can add a second one. ``%%`` is replaced by a single ``%`` in the resulting template::
 
   This line contains a % but no python code.
   %% This text-line starts with '%'
@@ -94,7 +94,7 @@ You can include other templates using the ``%include sub_template [kwargs]`` sta
 
 The ``%rebase base_template [kwargs]`` statement causes ``base_template`` to be rendered instead of the original template. The base-template then includes the original template using an empty ``%include`` statement and has access to all variables specified by ``kwargs``. This way it is possible to wrap a template with another template or to simulate the inheritance feature found in some other template engines.
 
-Lets say you have a content-templates and want to wrap it with a common HTML layout frame. Instead of including several header and foother templates, you can use a single base-template to render the layout frame.
+Let's say you have a content template and want to wrap it with a common HTML layout frame. Instead of including several header and footer templates, you can use a single base-template to render the layout frame.
 
 Base-template named ``layout.tpl``::
 
@@ -129,7 +129,7 @@ Now you can render ``content.tpl``:
   </body>
   </html>
 
-A more complex scenario involves chained rebases and multiple content blocks. The ``block_content.tpl`` template defines two functions and passes them to a ``colums.tpl`` base template::
+A more complex scenario involves chained rebases and multiple content blocks. The ``block_content.tpl`` template defines two functions and passes them to a ``columns.tpl`` base template::
 
   %def leftblock():
     Left block content.
@@ -143,10 +143,10 @@ The ``columns.tpl`` base-template uses the two callables to render the content o
 
   %rebase layout title=title
   <div style="width: 50%; float:left">
-    %left()
+    %leftblock()
   </div>
   <div style="width: 50%; float:right">
-    %right()
+    %rightblock()
   </div>
 
 Lets see how ``block_content.tpl`` renders:
@@ -182,7 +182,7 @@ Lets see how ``block_content.tpl`` renders:
 Known bugs
 ==============================
 
-Some syntax construcs allowed in python are problematic within a template. The following syntaxes won't work with SimpleTemplate:
+Some syntax constructions allowed in python are problematic within a template. The following syntaxes won't work with SimpleTemplate:
 
-  * Multi-line statements must end with a backslash (``\``) and a comment, if presend, must not contain any additional ``#`` characters.
+  * Multi-line statements must end with a backslash (``\``) and a comment, if present, must not contain any additional ``#`` characters.
   * Multi-line strings are not supported yet.
