@@ -1356,7 +1356,7 @@ class RocketServer(ServerAdapter):
         
 class AutoServer(ServerAdapter):
     """ Untested. """
-    adapters = [CherryPyServer, PasteServer, TwistedServer, WSGIRefServer]
+    adapters = [PasteServer, CherryPyServer, TwistedServer, WSGIRefServer]
     def run(self, handler):
         for sa in self.adapters:
             try:
