@@ -22,10 +22,12 @@ These changes may break compatibility with previous versions.
 * The :class:`SimpleTemplate` engine escapes HTML special characters in ``{{bad_html}}`` expressions automatically. Use the new ``{{!good_html}}`` syntax to get old behaviour (no escaping).
 * The :class:`SimpleTemplate` engine returns unicode strings instead of lists of byte strings.
 * ``bottle.optimize()`` and the automatic route optimization is obsolete.
-* :attr:`Request._environ` was renamed to :attr:`Request.environ`
+* Some functions and attributes were renamed:
+  * :attr:`Request._environ` is now :attr:`Request.environ`
+  * :attr:`Response.header` is now :attr:`Response.headers`
+  * :func:`default_app` is obsolete. Use :func:`app` instead.
 * The default :func:`redirect` code changed from 307 to 303.
 * Removed support for ``@default``. Use ``@error(404)`` instead.
-* `default_app()` is obsolete. Use :func:`app` instead.
 
 .. rubric:: New features
 

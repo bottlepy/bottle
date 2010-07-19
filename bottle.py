@@ -133,6 +133,12 @@ else:
 def tob(data, enc='utf8'): # Convert strings to bytes (py2 and py3)
     return data.encode(enc) if isinstance(data, unicode) else data
 
+# Background compatibility
+import warnings
+def depr(message, critical=False):
+    if critical: raise DeprecationWarning(message)
+    warnings.warn(message, DeprecationWarning, stacklevel=3)
+
 
 
 
@@ -374,6 +380,9 @@ class Bottle(object):
         if autojson and json_dumps:
             self.add_filter(dict, dict2json)
 
+    def optimize(self, *a, **ka):
+        depr("Bottle.optimize() is obsolete.")
+
     def mount(self, app, script_path):
         ''' Mount a Bottle application to a specific URL prefix '''
         if not isinstance(app, Bottle):
@@ -613,6 +622,11 @@ class Request(threading.local, DictMixin):
         self.path = '/' + environ.get('PATH_INFO', '/').lstrip('/')
         self.method = environ.get('REQUEST_METHOD', 'GET').upper()
 
+    @property
+    def _environ(self):
+        depr("Request._environ renamed to Request.environ")
+        return self.environ
+
     def copy(self):
         ''' Returns a copy of self '''
         return Request(self.environ.copy())
@@ -831,6 +845,11 @@ class Response(threading.local):
         self.status = 200
         self.headers = HeaderDict()
         self.content_type = 'text/html; charset=UTF-8'
+
+    @property
+    def header(self):
+        depr("Response.header renamed to Response.headers")
+        return self.headers
 
     def copy(self):
         ''' Returns a copy of self '''
@@ -1196,8 +1215,8 @@ url    = functools.wraps(Bottle.get_url)(lambda *a, **ka: app().get_url(*a, **ka
 mount  = functools.wraps(Bottle.get_url)(lambda *a, **ka: app().mount(*a, **ka))
 
 def default():
-    raise DeprecationWarning("The default() decorator is deprecated. "\
-                             "Use @error(404) instead.")
+    depr("The default() decorator is deprecated. Use @error(404) instead.")
+    return error(404)
 
 
 
