@@ -12,9 +12,9 @@ html_coverage:
 
 docs:
 	cd apidoc/; $(MAKE) html
-	mkdir -p build/docs
-	rm -r build/docs/*
-	cp -a apidoc/html/* build/docs/
+	mkdir -p build
+	rm -rf build/docs
+	mv apidoc/html build/docs
 
 release:
 	python setup.py release sdist upload
