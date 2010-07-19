@@ -432,7 +432,9 @@ class Bottle(object):
 
     def get_url(self, routename, **kargs):
         """ Return a string that matches a named route """
-        return '/' + self.routes.build(routename, **kargs)
+        scriptname = request.environ.get('SCRIPT_NAME', '').strip('/') + '/'
+        location = self.routes.build(routename, **kargs).lstrip('/')
+        return urljoin(urljoin('/', scriptname), location)
 
     def route(self, path=None, method='GET', **kargs):
         """ Decorator: bind a function to a GET request path.
