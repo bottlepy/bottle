@@ -1214,7 +1214,7 @@ put    = functools.wraps(Bottle.put)(lambda *a, **ka: app().put(*a, **ka))
 delete = functools.wraps(Bottle.delete)(lambda *a, **ka: app().delete(*a, **ka))
 error  = functools.wraps(Bottle.error)(lambda *a, **ka: app().error(*a, **ka))
 url    = functools.wraps(Bottle.get_url)(lambda *a, **ka: app().get_url(*a, **ka))
-mount  = functools.wraps(Bottle.get_url)(lambda *a, **ka: app().mount(*a, **ka))
+mount  = functools.wraps(Bottle.mount)(lambda *a, **ka: app().mount(*a, **ka))
 
 def default():
     depr("The default() decorator is deprecated. Use @error(404) instead.")
