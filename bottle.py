@@ -489,7 +489,7 @@ class Bottle(object):
         ''' Add a callback from a hook. '''
         if name not in self.hooks:
             raise ValueError("Unknown hook name %s" % name)
-        self.hooks[name] = func
+        self.hooks[name].append(func)
 
     def remove_hook(self, name, func):
         ''' Remove a callback from a hook. '''
