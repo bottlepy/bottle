@@ -426,7 +426,7 @@ class Bottle(object):
         """ Return a string that matches a named route """
         return '/' + self.routes.build(routename, **kargs)
 
-    def route(self, path=None, method='GET', **kargs):
+    def route(self, path=None, method='GET', no_hooks=False, **kargs):
         """ Decorator: Bind a function to a GET request path.
 
             If the path parameter is None, the signature of the decorated
@@ -434,11 +434,15 @@ class Bottle(object):
             for details.
 
             The method parameter (default: GET) specifies the HTTP request
-            method to listen to. You can specify a list of methods, too. 
+            method to listen to. You can specify a list of methods, too.
+            
+            The no_hooks parameter disables hooks (default: False)
         """
-        def wrapper(callback):
-            routes = [path] if path else yieldroutes(callback)
+        def wrapper(func):
+            routes = [path] if path else yieldroutes(func)
             methods = method.split(';') if isinstance(method, str) else method
+            if no_hooks: callback = func
+            else:        callback = self._add_hook_wrapper(func)
             for r in routes:
                 for m in methods:
                     r, m = r.strip().lstrip('/'), m.strip().upper()
@@ -448,7 +452,17 @@ class Bottle(object):
                     else:
                         self.routes.add(r, {m: callback}, **kargs)
                         self.routes.compile()
-            return callback
+            return func
+        return wrapper
+
+    def _add_hook_wrapper(self, func):
+        ''' Add hooks to a callable. See #84 '''
+        @functools.wraps(func)
+        def wrapper(*a, **ka):
+            for hook in self.hooks['before_request']: hook()
+            response.output = func(*a, **ka)
+            for hook in self.hooks['after_request']: hook()
+            return response.output
         return wrapper
 
     def get(self, path=None, method='GET', **kargs):
@@ -586,11 +600,9 @@ class Bottle(object):
         try:
             environ['bottle.app'] = self
             request.bind(environ)
-            response.bind(start_response)
-            for func in self.hooks['before_request']: func()
-            response.output = self.handle(request.path, request.method)
-            for func in self.hooks['after_request']: func()
-            out = self._cast(response.output, request, response)
+            response.bind()
+            out = self.handle(request.path, request.method)
+            out = self._cast(out, request, response)
             # rfc2616 section 4.3
             if response.status in (100, 101, 204, 304) or request.method == 'HEAD':
                 if hasattr(out, 'close'): out.close()
@@ -1219,6 +1231,7 @@ delete = functools.wraps(Bottle.delete)(lambda *a, **ka: app().delete(*a, **ka))
 error  = functools.wraps(Bottle.error)(lambda *a, **ka: app().error(*a, **ka))
 url    = functools.wraps(Bottle.get_url)(lambda *a, **ka: app().get_url(*a, **ka))
 mount  = functools.wraps(Bottle.get_url)(lambda *a, **ka: app().mount(*a, **ka))
+hook   = functools.wraps(Bottle.hook)(lambda *a, **ka: app().hook(*a, **ka))
 
 def default():
     raise DeprecationWarning("Use @error(404) instead.")
