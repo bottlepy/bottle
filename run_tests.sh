@@ -1,5 +1,10 @@
 #!/bin/bash
 
+root=`pwd`
+if [ -d "$root/tbuild/opt/bin" ]; then
+    PATH="$root/tbuild/opt/bin:$PATH"
+fi
+
 function fail {
   cat test.log
   echo -e "\e[0;31mFAILED! :(\e[0m"

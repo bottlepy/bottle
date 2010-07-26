@@ -135,6 +135,23 @@ class TestWsgi(ServerTestBase):
         self.assertTrue('b=b' in c)
         self.assertTrue('c=c; Path=/' in c)
 
+class TestHooks(ServerTestBase):
+    def test_hooks(self):
+        @bottle.route('/hooks')
+        @bottle.route('/nohooks', no_hooks=True)
+        def test():
+            return bottle.request.environ.get('hooktest','nohooks')
+        @bottle.hook('before_request')
+        def hook():
+            bottle.request.environ['hooktest'] = 'before'
+        @bottle.hook('after_request')
+        def hook():
+            if isinstance(bottle.response.output, str):
+                bottle.response.output += '-after'
+        self.assertBody('before-after', '/hooks')
+        self.assertBody('nohooks', '/nohooks')
+
+
 class TestDecorators(ServerTestBase):
     ''' Tests Decorators '''
 
@@ -196,16 +213,17 @@ class TestDecorators(ServerTestBase):
 
     def test_decorators(self):
         app = bottle.Bottle()
-        app.route('/g')('foo')
-        bottle.route('/g')('foo')
-        app.route('/g2', method='GET')('foo')
-        bottle.get('/g2')('foo')
-        app.route('/p', method='POST')('foo')
-        bottle.post('/p')('foo')
-        app.route('/p2', method='PUT')('foo')
-        bottle.put('/p2')('foo')
-        app.route('/d', method='DELETE')('foo')
-        bottle.delete('/d')('foo')
+        def foo(): pass
+        app.route('/g')(foo)
+        bottle.route('/g')(foo)
+        app.route('/g2', method='GET')(foo)
+        bottle.get('/g2')(foo)
+        app.route('/p', method='POST')(foo)
+        bottle.post('/p')(foo)
+        app.route('/p2', method='PUT')(foo)
+        bottle.put('/p2')(foo)
+        app.route('/d', method='DELETE')(foo)
+        bottle.delete('/d')(foo)
         self.assertEqual(app.routes, bottle.app().routes)
 
     def test_autoroute(self):

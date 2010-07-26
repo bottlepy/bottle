@@ -68,8 +68,11 @@ class TestOutputFilter(ServerTestBase):
 
     def test_json(self):
         self.app.route('/')(lambda: {'a': 1})
-        self.assertBody(bottle.json_dumps({'a': 1}))
-        self.assertHeader('Content-Type','application/json')
+        if bottle.json_dumps:
+            self.assertBody(bottle.json_dumps({'a': 1}))
+            self.assertHeader('Content-Type','application/json')
+        else:
+            print "Warning: No json module installed."
 
     def test_custom(self):
         self.app.route('/')(lambda: {'a': 1, 'b': 2})

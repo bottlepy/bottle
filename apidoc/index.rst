@@ -87,7 +87,7 @@ These chapters are intended for developers interested in the bottle development 
 
    changelog
    development
-
+   plugindev
 
 Licence
 ==================

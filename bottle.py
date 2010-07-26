@@ -82,6 +82,7 @@ import threading
 import time
 import tokenize
 import tempfile
+import types
 
 from Cookie import SimpleCookie
 from tempfile import TemporaryFile
@@ -389,6 +390,7 @@ class Bottle(object):
         self.castfilter = []
         if autojson and json_dumps:
             self.add_filter(dict, dict2json)
+        self.hooks = {'before_request': [], 'after_request': []}
 
     def optimize(self, *a, **ka):
         depr("Bottle.optimize() is obsolete.")
@@ -446,8 +448,8 @@ class Bottle(object):
         location = self.routes.build(routename, **kargs).lstrip('/')
         return urljoin(urljoin('/', scriptname), location)
 
-    def route(self, path=None, method='GET', **kargs):
-        """ Decorator: bind a function to a GET request path.
+    def route(self, path=None, method='GET', no_hooks=False, **kargs):
+        """ Decorator: Bind a function to a GET request path.
 
             If the path parameter is None, the signature of the decorated
             function is used to generate the paths. See yieldroutes()
@@ -455,10 +457,14 @@ class Bottle(object):
 
             The method parameter (default: GET) specifies the HTTP request
             method to listen to. You can specify a list of methods too. 
+            
+            The no_hooks parameter disables hooks (default: False)
         """
-        def wrapper(callback):
-            routes = [path] if path else yieldroutes(callback)
+        def wrapper(func):
+            routes = [path] if path else yieldroutes(func)
             methods = method.split(';') if isinstance(method, str) else method
+            if no_hooks: callback = func
+            else:        callback = self._add_hook_wrapper(func)
             for r in routes:
                 for m in methods:
                     r, m = r.strip().lstrip('/'), m.strip().upper()
@@ -467,7 +473,17 @@ class Bottle(object):
                         old.target[m] = callback
                     else:
                         self.routes.add(r, {m: callback}, **kargs)
-            return callback
+            return func
+        return wrapper
+
+    def _add_hook_wrapper(self, func):
+        ''' Add hooks to a callable. See #84 '''
+        @functools.wraps(func)
+        def wrapper(*a, **ka):
+            for hook in self.hooks['before_request']: hook()
+            response.output = func(*a, **ka)
+            for hook in self.hooks['after_request']: hook()
+            return response.output
         return wrapper
 
     def get(self, path=None, method='GET', **kargs):
@@ -491,11 +507,30 @@ class Bottle(object):
         return self.route(path, method, **kargs)
 
     def error(self, code=500):
-        """ Decorator: Registrer an output handler for a HTTP error code"""
+        """ Decorator: Register an output handler for a HTTP error code"""
         def wrapper(handler):
             self.error_handler[int(code)] = handler
             return handler
         return wrapper
+
+    def hook(self, name):
+        """ Return a decorator that adds a callback to the specified hook. """
+        def wrapper(func):
+            self.add_hook(name, func)
+            return func
+        return wrapper
+
+    def add_hook(self, name, func):
+        ''' Add a callback from a hook. '''
+        if name not in self.hooks:
+            raise ValueError("Unknown hook name %s" % name)
+        self.hooks[name].append(func)
+
+    def remove_hook(self, name, func):
+        ''' Remove a callback from a hook. '''
+        if name not in self.hooks:
+            raise ValueError("Unknown hook name %s" % name)
+        self.hooks[name].remove(func)
 
     def handle(self, url, method):
         """ Execute the handler bound to the specified url and method and return
@@ -581,7 +616,7 @@ class Bottle(object):
         return self._cast(HTTPError(500, 'Unsupported response type: %s'\
                                          % type(first)), request, response)
 
-    def __call__(self, environ, start_response):
+    def wsgi(self, environ, start_response):
         """ The bottle WSGI-interface. """
         try:
             environ['bottle.app'] = self
@@ -591,6 +626,7 @@ class Bottle(object):
             out = self._cast(out, request, response)
             # rfc2616 section 4.3
             if response.status in (100, 101, 204, 304) or request.method == 'HEAD':
+                if hasattr(out, 'close'): out.close()
                 out = []
             status = '%d %s' % (response.status, HTTP_CODES[response.status])
             start_response(status, response.headerlist)
@@ -598,8 +634,7 @@ class Bottle(object):
         except (KeyboardInterrupt, SystemExit, MemoryError):
             raise
         except Exception, e:
-            if not self.catchall:
-                raise
+            if not self.catchall: raise
             err = '<h1>Critical error while processing request: %s</h1>' \
                   % environ.get('PATH_INFO', '/')
             if DEBUG:
@@ -608,6 +643,9 @@ class Bottle(object):
             environ['wsgi.errors'].write(err) #TODO: wsgi.error should not get html
             start_response('500 INTERNAL SERVER ERROR', [('Content-Type', 'text/html')])
             return [tob(err)]
+        
+    def __call__(self, environ, start_response):
+        return self.wsgi(environ, start_response)
 
 
 class Request(threading.local, DictMixin):
@@ -641,7 +679,7 @@ class Request(threading.local, DictMixin):
     def copy(self):
         ''' Returns a copy of self '''
         return Request(self.environ.copy())
-        
+
     def path_shift(self, shift=1):
         ''' Shift path fragments from PATH_INFO to SCRIPT_NAME and vice versa.
 
@@ -1224,6 +1262,8 @@ delete = functools.wraps(Bottle.delete)(lambda *a, **ka: app().delete(*a, **ka))
 error  = functools.wraps(Bottle.error)(lambda *a, **ka: app().error(*a, **ka))
 url    = functools.wraps(Bottle.get_url)(lambda *a, **ka: app().get_url(*a, **ka))
 mount  = functools.wraps(Bottle.mount)(lambda *a, **ka: app().mount(*a, **ka))
+hook   = functools.wraps(Bottle.hook)(lambda *a, **ka: app().hook(*a, **ka))
+
 
 def default():
     depr("The default() decorator is deprecated. Use @error(404) instead.")
