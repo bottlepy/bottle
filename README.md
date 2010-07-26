@@ -5,7 +5,7 @@ Bottle Web Framework
 
 Bottle is a fast and simple [WSGI][wsgi]-framework for the
 [Python Programming Language][py]. It offers request dispatching with url
-parameter support (routes), templates, a build-in HTTP server and adapters for
+parameter support (routes), templates, a built-in HTTP server and adapters for
 many third party WSGI/HTTP-server and template engines - all in a single file
 and with no dependencies other than the Python Standard Library.
 
