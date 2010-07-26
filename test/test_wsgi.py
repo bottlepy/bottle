@@ -200,7 +200,8 @@ class TestDecorators(ServerTestBase):
 
     def test_routebuild(self):
         """ WSGI: Test route builder """
-        bottle.route('/a/:b/c', name='named')(5)
+        def foo(): pass
+        bottle.route('/a/:b/c', name='named')(foo)
         bottle.request.environ['SCRIPT_NAME'] = ''
         self.assertEqual('/a/xxx/c', bottle.url('named', b='xxx'))
         self.assertEqual('/a/xxx/c', bottle.app().get_url('named', b='xxx'))
