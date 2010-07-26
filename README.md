@@ -3,10 +3,11 @@ Bottle Web Framework
 
 <div style="float: right; padding: 0px 0px 2em 2em"><img src="http://bottle.paws.de/bottle-logo.png" alt="Bottle Logo" /></div>
 
-Bottle is a fast and simple [WSGI][wsgi]-framework for the [Python Programming Language][py]. It
-offers request dispatching with url parameter support (routes), templates, key/value
-databases, a build-in HTTP server and adapters for many third party
-WSGI/HTTP-server and template engines - all in a single file and with no dependencies other than the Python Standard Library.
+Bottle is a fast and simple [WSGI][wsgi]-framework for the
+[Python Programming Language][py]. It offers request dispatching with url
+parameter support (routes), templates, a build-in HTTP server and adapters for
+many third party WSGI/HTTP-server and template engines - all in a single file
+and with no dependencies other than the Python Standard Library.
 
 For news, bugs and documentation visit the [bottle.py homepage][home].
 
@@ -19,7 +20,7 @@ For news, bugs and documentation visit the [bottle.py homepage][home].
 Installation and Dependencies
 -----------------------------
 
-You can install bottle with `easy_install bottle` or just [download][bottle-dl] bottle.py and place it in your project directory. There are no (hard) dependencies other than the Python Standard Library.
+You can install bottle with `pip install bottle` or just [download][bottle-dl] bottle.py and place it in your project directory. There are no (hard) dependencies other than the Python Standard Library.
 
   [mako]: http://www.makotemplates.org/
   [cherrypy]: http://www.cherrypy.org/
