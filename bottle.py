@@ -287,6 +287,7 @@ class Router(object):
         self.named   = {}  # Cache for named routes and their format strings
         self.static  = {}  # Cache for static routes
         self.dynamic = []  # Search structure for dynamic routes
+        self.compiled = False
 
     def add(self, route, target=None, **ka):
         """ Add a route->target pair or a :class:`Route` object to the Router.
@@ -297,6 +298,7 @@ class Router(object):
         if self.get_route(route):
             return RouteError('Route %s is not uniqe.' % route)
         self.routes.append(route)
+        self.compiled = False
         return route
 
     def get_route(self, route, target=None, **ka):
@@ -321,13 +323,19 @@ class Router(object):
             target, args_re = subroutes[match.lastindex - 1]
             args = args_re.match(uri).groupdict() if args_re else {}
             return target, args
+        if not self.compiled: # Late check to reduce overhead on hits
+            self.compile() # Compile and try again.
+            return self.match(uri)
         return None, {}
 
     def build(self, _name, **args):
-        ''' Build an URI out of a named route and values for te wildcards. '''
+        ''' Build an URI out of a named route and values for the wildcards. '''
         try:
             return self.named[_name] % args
         except KeyError:
+            if not self.compiled: # Late check to reduce overhead on hits
+                self.compile() # Compile and try again.
+                return self.build(_name, **args)
             raise RouteBuildError("No route found with name '%s'." % _name)
 
     def compile(self):
@@ -350,9 +358,11 @@ class Router(object):
                 self.dynamic[-1] = (re.compile(combined), self.dynamic[-1][1])
                 self.dynamic[-1][1].append((route.target, gregexp))
             except (AssertionError, IndexError), e: # AssertionError: Too many groups
-                self.dynamic.append((re.compile('(^%s$)'%fpatt),[(route.target, gregexp)]))
+                self.dynamic.append((re.compile('(^%s$)'%fpatt),
+                                    [(route.target, gregexp)]))
             except re.error, e:
                 raise RouteSyntaxError("Could not add Route: %s (%s)" % (route, e))
+        self.compiled = True
 
     def __eq__(self, other):
         return self.routes == other.routes
@@ -457,7 +467,6 @@ class Bottle(object):
                         old.target[m] = callback
                     else:
                         self.routes.add(r, {m: callback}, **kargs)
-                        self.routes.compile()
             return callback
         return wrapper
 
