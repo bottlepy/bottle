@@ -5,6 +5,7 @@
 Release Notes and Changelog
 ===========================
 
+
 Release 0.9 
 ===========
 
@@ -13,6 +14,14 @@ This changes are not released yet and are only part of the development documenta
 .. rubric:: New Features
 
 * A new hook-API to inject code immediately before or after the execution of handler callbacks.
+
+
+Bugfix Release 0.8.2
+=====================
+
+* Added backward compatibility wrappers and deprecation warnings to some of the API changes.
+* Fixed "FileCheckerThread seems to fail on eggs" (Issue #87)
+* Fixed "Bottle.get_url() does not return correct path when SCRIPT_NAME is set." (Issue #83)
 
 
 Release 0.8
