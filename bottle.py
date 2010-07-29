@@ -62,7 +62,7 @@ This is an example::
 from __future__ import with_statement
 
 __author__ = 'Marcel Hellkamp'
-__version__ = '0.8.1'
+__version__ = '0.8.2'
 __license__ = 'MIT'
 
 import base64
