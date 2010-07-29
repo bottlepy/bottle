@@ -1501,7 +1501,7 @@ class FileCheckerThread(threading.Thread):
         for module in sys.modules.values():
             try:
                 path = inspect.getsourcefile(module)
-                if path: files[path] = mtime(path)
+                if path and exists(path): files[path] = mtime(path)
             except TypeError: pass
         while not self.status:
             for path, lmtime in files.iteritems():
