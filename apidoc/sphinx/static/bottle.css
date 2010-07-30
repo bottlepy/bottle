@@ -27,6 +27,11 @@ div.sphinxsidebar ul, div.sphinxsidebar ul ul, div.sphinxsidebar ul.want-points 
   list-style-type:disc;
 }
 
+div.sphinxsidebar code {
+  border: 1px dotted #98DBCC;
+}
+
+
 div.body dt {
   font-weight: bold;
 }
