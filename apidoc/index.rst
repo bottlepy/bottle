@@ -1,7 +1,6 @@
 .. highlight:: python
 .. currentmodule:: bottle
 
-
 .. _mako: http://www.makotemplates.org/
 .. _cheetah: http://www.cheetahtemplate.org/
 .. _jinja2: http://jinja.pocoo.org/2/
@@ -21,7 +20,6 @@ Bottle: Python Web Framework
 
 Bottle is a fast, simple and lightweight WSGI_ micro web-framework for Python_. It is distributed as a single file module and has no dependencies other than the `Python Standard Library <http://docs.python.org/library/>`_. 
 
-.. rubric:: Core Features
 
 * **Routing:** Requests to function-call mapping with support for clean and  dynamic URLs.
 * **Templates:** Fast and pythonic :ref:`built-in template engine <tutorial-templates>` and support for mako_, jinja2_ and cheetah_ templates.

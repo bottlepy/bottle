@@ -1,0 +1,169 @@
+{% set page_width = '940px' %}
+{% set sidebar_width = '230px' %}
+
+@import url("basic.css");
+
+/* Positional Layout */
+
+body {
+  width: {{ page_width }};
+  margin: 0 auto 0 auto;
+  padding: 15px;
+}
+
+div.document {
+}
+
+div.documentwrapper {
+  float: left;
+  width: 100%;
+}
+
+div.bodywrapper {
+  margin: 0 0 0 {{ sidebar_width }};
+}
+
+div.sphinxsidebar {
+  width: {{ sidebar_width }};
+}
+
+div.sphinxsidebarwrapper {
+  margin: 0 15px;
+  padding: 0;
+}
+
+div.related {
+  line-height: 30px;
+  display: none;
+}
+
+/* Design and Colors */
+
+body {
+  background: #eee url("_static/logo_bg.png") no-repeat scroll 0 0;
+  font-family: 'Veranda', sans-serif;
+  font-size: 16px;
+}
+
+div.body {
+  border: 1px solid #bbb;
+  background-color: #fff;
+  padding: 0 15px 15px 15px;
+  color: #222;
+  line-height: 1.4em;
+}
+
+a {
+  color:#005566;
+  text-decoration: none;
+}
+
+a:hover {
+  color: black;
+  text-decoration: underline;
+}
+
+/* Notes and Codes */
+
+pre, div.admonition {
+  background: #fafafa;
+  margin: 20px -15px;
+  padding: 10px 30px;
+  border-top: 1px solid #ccc;
+  border-bottom: 1px solid #ccc;
+}
+
+div.admonition p.last {
+  margin-bottom: 0;
+}
+
+div.admonition p.admonition-title:after {
+  content:":";
+}
+
+div.warning {
+  background-color: #fee;
+}
+
+div.note {
+  background-color: #ffd;
+}
+
+pre {
+  font-size: 12px;
+  line-height: 1.2em;
+}
+
+code, tt.docutils {
+  border: 1px dotted #ddd;
+  background-color: #eee;
+  font-size: 85%;
+}
+
+tt.xref {
+  border: 0 !important;
+  background-color: transparent !important;
+}
+
+/* Misc */
+
+img.floatright {
+  float: right;
+  margin: 0.5em 1em;
+}
+
+div.body {
+  border-radius: 10px;
+  -moz-border-radius: 10px;
+  -webkit-border-radius: 10px;
+}
+
+div.sphinxsidebar ul {
+  margin: 15px 0;
+  padding: 0;
+  color: #000;
+}
+
+div.sphinxsidebar h3 {
+  background-color: #ddd;
+  margin: 0 -15px 0 -5px;
+  padding: 2px 5px;
+  border-top-left-radius: 10px;
+  -moz-border-radius-topleft: 10px;
+  -webkit-border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
+  -moz-border-radius-bottomleft: 10px;
+  -webkit-border-bottom-left-radius: 10px;
+}
+
+div.sphinxsidebar a {
+  color: #002a32;
+}
+
+div.sphinxsidebar h3 a {
+  color: #000;
+}
+
+div.sphinxsidebar ul ul {
+  list-style: disc outside none;
+}
+
+div.sphinxsidebar input {
+  border: 1px solid grey;
+}
+
+div.sphinxsidebar input:hover {
+  border: 1px solid black;
+}
+
+div.sphinxsidebar input:focus {
+  border: 1px solid black;
+}
+
+div.footer {
+  text-align: center;
+  font-size: 75%;
+  padding: 1em;
+  opacity: 0.5;
+}
+
