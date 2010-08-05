@@ -1184,11 +1184,12 @@ def tonativefunc(enc='utf-8'):
 def yieldroutes(func):
     """ Return a generator for routes that match the signature (name, args) 
     of the func parameter. This may yield more than one route if the function
-    takes optional keyword arguments. The output is best described by example:
-      a()         -> '/a'
-      b(x, y)     -> '/b/:x/:y'
-      c(x, y=5)   -> '/c/:x' and '/c/:x/:y'
-      d(x=5, y=6) -> '/d' and '/d/:x' and '/d/:x/:y'
+    takes optional keyword arguments. The output is best described by example::
+    
+        a()         -> '/a'
+        b(x, y)     -> '/b/:x/:y'
+        c(x, y=5)   -> '/c/:x' and '/c/:x/:y'
+        d(x=5, y=6) -> '/d' and '/d/:x' and '/d/:x/:y'
     """
     path = func.__name__.replace('__','/').lstrip('/')
     spec = inspect.getargspec(func)

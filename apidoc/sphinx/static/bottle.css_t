@@ -73,6 +73,12 @@ pre, div.admonition {
   border-bottom: 1px solid #ccc;
 }
 
+dd pre, dd div.admonition {
+  margin: 1em 0;
+  padding: 5px 5px;
+  border: 1px solid #ccc;
+}
+
 div.admonition p.last {
   margin-bottom: 0;
 }
