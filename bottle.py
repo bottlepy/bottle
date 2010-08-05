@@ -472,13 +472,13 @@ class Bottle(object):
               :class:`Router` for syntax details. If no path is specified, it
               is automatically generated from the callback signature. See
               :func:`yieldroutes` for details.
-            :param method: The HTTP verb (POST, GET, ...) or a list of methods
-              to listen to. (default: GET)
-            :param decorate: A decorator or a list of decorators that are
-              applied to the callback. They are applied in reverse order.
+            :param method: The HTTP method (POST, GET, ...) or a list of
+              methods to listen to. (default: GET)
+            :param decorate: A decorator or a list of decorators. These are
+              applied to the callback in reverse order.
             :param no_hooks: If true, application hooks are not triggered
               by this route. (default: False)
-            :param template: The template used for this callback.
+            :param template: The template to use for this callback.
               (default: no template)
             :param template_opts: A dict with additional template parameters.
             :param static: If true, all paths are static even if they contain
