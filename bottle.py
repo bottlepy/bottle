@@ -1341,7 +1341,8 @@ class FapwsServer(ServerAdapter):
     def run(self, handler): # pragma: no cover
         import fapws._evwsgi as evwsgi
         from fapws import base
-        evwsgi.start(self.host, self.port)
+        # If this segfaults, your fapws3 is to old. See #85
+        evwsgi.start(self.host, str(self.port))
         evwsgi.set_base_module(base)
         def app(environ, start_response):
             environ['wsgi.multiprocess'] = False
