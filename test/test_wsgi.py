@@ -135,10 +135,91 @@ class TestWsgi(ServerTestBase):
         self.assertTrue('b=b' in c)
         self.assertTrue('c=c; Path=/' in c)
 
-class TestHooks(ServerTestBase):
+class TestRouteDecorator(ServerTestBase):
+    def test_decorators(self):
+        app = bottle.Bottle()
+        def foo(): pass
+        app.route('/g')(foo)
+        bottle.route('/g')(foo)
+        app.route('/g2', method='GET')(foo)
+        bottle.get('/g2')(foo)
+        app.route('/p', method='POST')(foo)
+        bottle.post('/p')(foo)
+        app.route('/p2', method='PUT')(foo)
+        bottle.put('/p2')(foo)
+        app.route('/d', method='DELETE')(foo)
+        bottle.delete('/d')(foo)
+        self.assertEqual(app.routes, bottle.app().routes)
+
+    def test_single_path(self):
+        @bottle.route('/a')
+        def test(): return 'ok'
+        self.assertBody('ok', '/a')
+        self.assertStatus(404, '/b')
+
+    def test_path_list(self):
+        @bottle.route(['/a','/b'])
+        def test(): return 'ok'
+        self.assertBody('ok', '/a')
+        self.assertBody('ok', '/b')
+        self.assertStatus(404, '/c')
+
+    def test_no_path(self):
+        @bottle.route()
+        def test(x=5): return str(x)
+        self.assertBody('5', '/test')
+        self.assertBody('6', '/test/6')
+
+    def test_no_params_at_all(self):
+        @bottle.route
+        def test(x=5): return str(x)
+        self.assertBody('5', '/test')
+        self.assertBody('6', '/test/6')
+
+    def test_method(self):
+        @bottle.route(method=' gEt ')
+        def test(): return 'ok'
+        self.assertBody('ok', '/test', method='GET')
+        self.assertStatus(200, '/test', method='HEAD')
+        self.assertStatus(405, '/test', method='PUT')
+
+    def test_method_list(self):
+        @bottle.route(method=['GET','post'])
+        def test(): return 'ok'
+        self.assertBody('ok', '/test', method='GET')
+        self.assertBody('ok', '/test', method='POST')
+        self.assertStatus(405, '/test', method='PUT')
+
+    def test_decorate(self):
+        def revdec(func):
+            def wrapper(*a, **ka):
+                return reversed(func(*a, **ka))
+            return wrapper
+
+        @bottle.route('/nodec')
+        @bottle.route('/dec', decorate=revdec)
+        def test(): return '1', '2'
+        self.assertBody('21', '/dec')
+        self.assertBody('12', '/nodec')
+
+    def test_decorate_list(self):
+        def revdec(func):
+            def wrapper(*a, **ka):
+                return reversed(func(*a, **ka))
+            return wrapper
+        def titledec(func):
+            def wrapper(*a, **ka):
+                return ''.join(func(*a, **ka)).title()
+            return wrapper
+
+        @bottle.route('/revtitle', decorate=[revdec, titledec])
+        @bottle.route('/titlerev', decorate=[titledec, revdec])
+        def test(): return 'a', 'b', 'c'
+        self.assertBody('cbA', '/revtitle')
+        self.assertBody('Cba', '/titlerev')
+
     def test_hooks(self):
-        @bottle.route('/hooks')
-        @bottle.route('/nohooks', no_hooks=True)
+        @bottle.route()
         def test():
             return bottle.request.environ.get('hooktest','nohooks')
         @bottle.hook('before_request')
@@ -148,8 +229,58 @@ class TestHooks(ServerTestBase):
         def hook():
             if isinstance(bottle.response.output, str):
                 bottle.response.output += '-after'
-        self.assertBody('before-after', '/hooks')
-        self.assertBody('nohooks', '/nohooks')
+        self.assertBody('before-after', '/test')
+
+    def test_no_hooks(self):
+        @bottle.route(no_hooks=True)
+        def test():
+            return 'nohooks'
+        bottle.hook('before_request')(lambda: 1/0)
+        bottle.hook('after_request')(lambda: 1/0)
+        self.assertBody('nohooks', '/test')
+
+    def test_hook_order(self):
+        @bottle.route()
+        def test(): return bottle.request.environ.get('hooktest','nohooks')
+        @bottle.hook('before_request')
+        def hook(): bottle.request.environ.setdefault('hooktest', []).append('b1')
+        @bottle.hook('before_request')
+        def hook(): bottle.request.environ.setdefault('hooktest', []).append('b2')
+        @bottle.hook('after_request')
+        def hook(): bottle.response.output += 'a1'
+        @bottle.hook('after_request')
+        def hook(): bottle.response.output += 'a2'
+        self.assertBody('b1b2a2a1', '/test')
+
+    def test_template(self):
+        @bottle.route(template='test {{a}} {{b}}')
+        def test(): return dict(a=5, b=6)
+        self.assertBody('test 5 6', '/test')
+
+    def test_template_opts(self):
+        @bottle.route(template='test {{a}} {{b}}', template_opts={'b': 6})
+        def test(): return dict(a=5)
+        self.assertBody('test 5 6', '/test')
+
+    def test_static(self):
+        @bottle.route('/:foo', static=True)
+        def test(): return 'ok'
+        print bottle.app().routes.static
+        self.assertBody('ok', '/:foo')
+
+    def test_name(self):
+        @bottle.route(name='foo')
+        def test(x=5): return 'ok'
+        self.assertEquals('/test/6', bottle.url('foo', x=6))
+
+    def test_callback(self):
+        def test(x=5): return str(x)
+        rv = bottle.route(callback=test)
+        self.assertBody('5', '/test')
+        self.assertBody('6', '/test/6')
+        self.assertEqual(rv, test)
+
+
 
 
 class TestDecorators(ServerTestBase):
@@ -211,21 +342,6 @@ class TestDecorators(ServerTestBase):
         self.assertEqual('/app/a/xxx/c', bottle.url('named', b='xxx'))
         bottle.request.environ['SCRIPT_NAME'] = 'app/'
         self.assertEqual('/app/a/xxx/c', bottle.url('named', b='xxx'))
-
-    def test_decorators(self):
-        app = bottle.Bottle()
-        def foo(): pass
-        app.route('/g')(foo)
-        bottle.route('/g')(foo)
-        app.route('/g2', method='GET')(foo)
-        bottle.get('/g2')(foo)
-        app.route('/p', method='POST')(foo)
-        bottle.post('/p')(foo)
-        app.route('/p2', method='PUT')(foo)
-        bottle.put('/p2')(foo)
-        app.route('/d', method='DELETE')(foo)
-        bottle.delete('/d')(foo)
-        self.assertEqual(app.routes, bottle.app().routes)
 
     def test_autoroute(self):
         app = bottle.Bottle()

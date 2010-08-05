@@ -151,6 +151,11 @@ def depr(message, critical=False):
     if critical: raise DeprecationWarning(message)
     warnings.warn(message, DeprecationWarning, stacklevel=3)
 
+# Small helpers
+def makelist(data):
+    if isinstance(data, (tuple, list, set, dict)): return list(data)
+    elif data: return [data]
+    else: return []
 
 
 
@@ -222,14 +227,14 @@ class Route(object):
         self.route = route
         self.target = target
         self.name = name
-        if static:
-            self.route = self.route.replace(':','\\:')
+        self.flat = static
         self._tokens = None
 
     def tokens(self):
         """ Return a list of (type, value) tokens. """
         if not self._tokens:
-            self._tokens = list(self.tokenise(self.route))
+            r = self.route.replace(':','\\:') if self.flat else self.route
+            self._tokens = list(self.tokenise(r))
         return self._tokens
 
     @classmethod
@@ -285,7 +290,7 @@ class Route(object):
         return "<Route(%s) />" % repr(self.route)
 
     def __eq__(self, other):
-        return self.route == other.route
+        return (self.route, self.flat) == (other.route, other.flat)
 
 class Router(object):
     ''' A route associates a string (e.g. URL) with an object (e.g. function)
@@ -459,33 +464,52 @@ class Bottle(object):
         location = self.routes.build(routename, **kargs).lstrip('/')
         return urljoin(urljoin('/', scriptname), location)
 
-    def route(self, path=None, method='GET', no_hooks=False, **kargs):
-        """ Decorator: Bind a function to a GET request path.
+    def route(self, path=None, method='GET', no_hooks=False, decorate=None,
+              template=None, template_opts={}, callback=None, **kargs):
+        """ Decorator: Bind a callback function to a request path.
 
-            If the path parameter is None, the signature of the decorated
-            function is used to generate the paths. See yieldroutes()
-            for details.
-
-            The method parameter (default: GET) specifies the HTTP request
-            method to listen to. You can specify a list of methods too. 
-            
-            The no_hooks parameter disables hooks (default: False)
+            :param path: The request path or a list of paths to listen to. See 
+              :class:`Router` for syntax details. If no path is specified, it
+              is automatically generated from the callback signature. See
+              :func:`yieldroutes` for details.
+            :param method: The HTTP verb (POST, GET, ...) or a list of methods
+              to listen to. (default: GET)
+            :param decorate: A decorator or a list of decorators that are
+              applied to the callback. They are applied in reverse order.
+            :param no_hooks: If true, application hooks are not triggered
+              by this route. (default: False)
+            :param template: The template used for this callback.
+              (default: no template)
+            :param template_opts: A dict with additional template parameters.
+            :param static: If true, all paths are static even if they contain
+              dynamic syntax tokens. (default: False)
+            :param name: The name for this route. (default: None)
+            :param callback: If set, the route decorator is directly applied
+              to the callback and the callback is returned instead. This
+              equals ``Bottle.route(...)(callback)``.
         """
+        # @route can be used without any parameters
+        if callable(path): path, callback = None, path
+        # Build up the list of decorators
+        decorators = makelist(decorate)
+        if template:     decorators.insert(0, view(template, **template_opts))
+        if not no_hooks: decorators.append(self._add_hook_wrapper)
         def wrapper(func):
-            routes = [path] if path else yieldroutes(func)
-            methods = method.split(';') if isinstance(method, str) else method
-            if no_hooks: callback = func
-            else:        callback = self._add_hook_wrapper(func)
-            for r in routes:
-                for m in methods:
-                    r, m = r.strip().lstrip('/'), m.strip().upper()
-                    old = self.routes.get_route(r, **kargs)
+            callback = func
+            for decorator in reversed(decorators):
+                callback = decorator(callback)
+            functools.update_wrapper(callback, func)
+            for route in makelist(path) or yieldroutes(func):
+                for meth in makelist(method):
+                    route = route.strip().lstrip('/')
+                    meth = meth.strip().upper()
+                    old = self.routes.get_route(route, **kargs)
                     if old:
-                        old.target[m] = callback
+                        old.target[meth] = callback
                     else:
-                        self.routes.add(r, {m: callback}, **kargs)
+                        self.routes.add(route, {meth: callback}, **kargs)
             return func
-        return wrapper
+        return wrapper(callback) if callback else wrapper
 
     def _add_hook_wrapper(self, func):
         ''' Add hooks to a callable. See #84 '''
@@ -535,7 +559,10 @@ class Bottle(object):
         ''' Add a callback from a hook. '''
         if name not in self.hooks:
             raise ValueError("Unknown hook name %s" % name)
-        self.hooks[name].append(func)
+        if name in ('after_request'):
+            self.hooks[name].insert(0, func)
+        else:
+            self.hooks[name].append(func)
 
     def remove_hook(self, name, func):
         ''' Remove a callback from a hook. '''
@@ -1233,7 +1260,6 @@ def path_shift(script_name, path_info, shift=1):
     new_path_info = '/' + '/'.join(pathlist)
     if path_info.endswith('/') and pathlist: new_path_info += '/'
     return new_script_name, new_path_info
-
 
 
 
