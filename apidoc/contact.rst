@@ -6,9 +6,9 @@ Contact
 
 .. image:: _static/myface_small.png
    :alt: Photo
-   :align: left
+   :class: floatright
 
-Hi, I'm *Marcel Hellkamp* (aka *defnull*), author of Bottle and the guy behind this blog and website. I'm 25 years old and studying computer science at the Georg-August-University in Göttingen, Germany. Python is my favorite language, but I also code in ruby and JavaScript a lot. Watch me on `twitter <http://twitter.com/bottlepy>`_ or visit my profile at `GitHub <http://github.com/defnull>`_ to get in contact. A `mailinglist <http://groups.google.de/group/bottlepy>`_ is open for Bottle related questions, too.
+Hi, I'm *Marcel Hellkamp* (aka *defnull*), author of Bottle and the guy behind this website. I'm 26 years old and studying computer science at the Georg-August-University in Göttingen, Germany. Python is my favorite language, but I also code in ruby and JavaScript a lot. Watch me on `twitter <http://twitter.com/bottlepy>`_ or visit my profile at `GitHub <http://github.com/defnull>`_ to get in contact. A `mailinglist <http://groups.google.de/group/bottlepy>`_ is open for Bottle related questions, too.
 
 .. rubric:: About Bottle
 
@@ -27,5 +27,4 @@ Zwecken ist ausdrücklich untersagt.
   * **Ort**: D - 37075 Göttingen
   * **Strasse**: Theodor-Heuss Strasse 13
   * **Telefon**: +49 (0) 551 2509854
-  * **E-Mail**: <img src='/email.png' alt='domain: paws.de, user: bottle' style="vertical-align:text-bottom;" />
-
+  * **E-Mail**: marc at gsites dot de

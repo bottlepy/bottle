@@ -983,9 +983,11 @@ class Response(threading.local):
     def set_cookie(self, key, value, secret=None, **kargs):
         """ Add a new cookie with various options.
         
-        If the cookie value is not a string, a secure cookie is created.
+        If the cookie value is not a string, the value is pickled and a secure
+        cookie is created. For this you have to provide a secret key which
+        is used to sign the cookie.
         
-        Possible options are:
+        Possible cookie options are:
             expires, path, comment, domain, max_age, secure, version, httponly
             See http://de.wikipedia.org/wiki/HTTP-Cookie#Aufbau for details
         """
