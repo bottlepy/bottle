@@ -122,17 +122,28 @@ if sys.version_info >= (3,0,0): # pragma: no cover
             wrapped buffer. This subclass keeps it open. '''
         def close(self): pass
     StringType = bytes
-    def touni(x, enc='utf8'): # Convert anything to unicode (py3)
+    def touni(x, enc='utf8'):
+        """ Convert anything to unicode """
         return str(x, encoding=enc) if isinstance(x, bytes) else str(x)
 else:
     from StringIO import StringIO as BytesIO
     from types import StringType
     NCTextIOWrapper = None
-    def touni(x, enc='utf8'): # Convert anything to unicode (py2)
+    def touni(x, enc='utf8'):
+        """ Convert anything to unicode """
         return x if isinstance(x, unicode) else unicode(str(x), encoding=enc)
 
-def tob(data, enc='utf8'): # Convert strings to bytes (py2 and py3)
-    return data.encode(enc) if isinstance(data, unicode) else data
+def tob(data, enc='utf8'):
+    """ Convert anything to bytes """
+    return data.encode(enc) if isinstance(data, unicode) else StringType(data)
+
+# Convert strings and unicode to native strings
+if sys.version_info >= (3,0,0):
+    tonat = touni
+else:
+    tonat = tob
+tonat.__doc__ = """ Convert anything to native strings """
+
 
 # Background compatibility
 import warnings
@@ -1156,14 +1167,14 @@ def cookie_encode(data, key):
     ''' Encode and sign a pickle-able object. Return a string '''
     msg = base64.b64encode(pickle.dumps(data, -1))
     sig = base64.b64encode(hmac.new(key, msg).digest())
-    return u'!'.encode('ascii') + sig + u'?'.encode('ascii') + msg #2to3 hack
+    return tob('!') + sig + tob('?') + msg
 
 
 def cookie_decode(data, key):
     ''' Verify and decode an encoded string. Return an object or None'''
-    if isinstance(data, unicode): data = data.encode('ascii') #2to3 hack
+    data = tob(data)
     if cookie_is_encoded(data):
-        sig, msg = data.split(u'?'.encode('ascii'),1) #2to3 hack
+        sig, msg = data.split(tob('?'), 1)
         if sig[1:] == base64.b64encode(hmac.new(key, msg).digest()):
             return pickle.loads(base64.b64decode(msg))
     return None
@@ -1171,14 +1182,7 @@ def cookie_decode(data, key):
 
 def cookie_is_encoded(data):
     ''' Return True if the argument looks like a encoded cookie.'''
-    return bool(data.startswith(u'!'.encode('ascii')) and u'?'.encode('ascii') in data) #2to3 hack
-
-
-def tonativefunc(enc='utf-8'):
-    ''' Returns a function that turns everything into 'native' strings using enc '''
-    if sys.version_info >= (3,0,0):
-        return lambda x: x.decode(enc) if isinstance(x, bytes) else str(x)
-    return lambda x: x.encode(enc) if isinstance(x, unicode) else str(x)
+    return bool(data.startswith(tob('!')) and tob('?') in data)
 
 
 def yieldroutes(func):
