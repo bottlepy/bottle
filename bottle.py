@@ -1278,7 +1278,6 @@ def default():
 
 class ServerAdapter(object):
     quiet = False
-
     def __init__(self, host='127.0.0.1', port=8080, **kargs):
         self.options = kargs
         self.host = host
@@ -1343,6 +1342,10 @@ class FapwsServer(ServerAdapter):
         from fapws import base
         # If this segfaults, your fapws3 is to old. See #85
         evwsgi.start(self.host, str(self.port))
+        # fapws3 never releases the GIL. Complain upstream. I tried. No luck.
+        if 'BOTTLE_CHILD' in os.environ and not self.quiet:
+            print "WARNING: Auto-reloading does not work with Fapws3."
+            print "         (Fapws3 breaks python thread support)"
         evwsgi.set_base_module(base)
         def app(environ, start_response):
             environ['wsgi.multiprocess'] = False
