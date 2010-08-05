@@ -1326,9 +1326,11 @@ class CherryPyServer(ServerAdapter):
 class PasteServer(ServerAdapter):
     def run(self, handler): # pragma: no cover
         from paste import httpserver
-        from paste.translogger import TransLogger
-        app = TransLogger(handler)
-        httpserver.serve(app, host=self.host, port=str(self.port), **self.options)
+        if not self.quiet:
+            from paste.translogger import TransLogger
+            handler = TransLogger(handler)
+        httpserver.serve(handler, host=self.host, port=str(self.port),
+                         **self.options)
 
 
 class FapwsServer(ServerAdapter):
@@ -1455,15 +1457,51 @@ server_names = {
 }
 
 
-def run(app=None, server=WSGIRefServer, host='127.0.0.1', port=8080,
+def load_app(target):
+    """ Load a bottle application based on a target string and return the app
+        object.
+        
+        The target should be a valid python import path
+        (e.g. mypackage.mymodule). The default application is returned.
+        If the targed contains a colon (e.g. mypackage.mymodule:myapp) the
+        module variable specified after the colon is returned instead.
+    """
+    path, name = target.split(":", 1) if ':' in target else (target, None)
+    app = None if name else bottle.app.push()
+    __import__(path)
+    module = sys.modules[path]
+    if app and app in bottle.app: bottle.app.remove(app)
+    return app if app else getattr(module, target)
+
+
+def run(app=None, server='wsgiref', host='127.0.0.1', port=8080,
         interval=1, reloader=False, quiet=False, **kargs):
-    """ Runs bottle as a web server. """
-    app = app if app else default_app()
-    # Instantiate server, if it is a class instead of an instance
+    """ Start a server instance. This method blocks until the server
+        terminates.
+
+        :param app: WSGI application or target string supported by
+               :func:`load_app`. (default: :func:`default_app`)
+        :param server: Server adapter to use. See :data:`server_names` dict
+               for valid names or pass a :class:`ServerAdapter` subclass.
+               (default: wsgiref)
+        :param host: Server address to bind to. Pass ``0.0.0.0`` to listens on
+               all interfaces including the external one. (default: 127.0.0.1)
+        :param host: Server port to bind to. Values below 1024 require root
+               privileges. (default: 8080)
+        :param reloader: Start auto-reloading server? (default: False)
+        :param interval: Auto-reloader interval in seconds (default: 1)
+        :param quiet: Supress output to stdout and stderr? (default: False)
+        :param options: Options passed to the server adapter.
+     """
+    app = app or default_app()
+    if isinstance(app, basestring):
+        app = load_app(app)
+    if isinstance(server, basestring):
+        server = server_names.get(server)
     if isinstance(server, type):
         server = server(host=host, port=port, **kargs)
     if not isinstance(server, ServerAdapter):
-        raise RuntimeError("Server must be a subclass of WSGIAdapter")
+        raise RuntimeError("Server must be a subclass of ServerAdapter")
     server.quiet = server.quiet or quiet
     if not server.quiet and not os.environ.get('BOTTLE_CHILD'):
         print "Bottle server starting up (using %s)..." % repr(server)

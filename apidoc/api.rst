@@ -20,6 +20,10 @@ The module defines several functions, constants, and an exception.
 
 .. autofunction:: debug
 
+.. autofunction:: run
+
+.. autofunction:: load_app
+
 .. autodata:: request
 
 .. autodata:: response
