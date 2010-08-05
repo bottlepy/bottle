@@ -1517,7 +1517,8 @@ def run(app=None, server='wsgiref', host='127.0.0.1', port=8080,
                 _reloader_observer(server, app, interval)
         else:
             server.run(app)
-    except KeyboardInterrupt: pass
+    except KeyboardInterrupt:
+        pass
     if not server.quiet and not os.environ.get('BOTTLE_CHILD'):
         print "Shutting down..."
 
@@ -1540,7 +1541,8 @@ class FileCheckerThread(threading.Thread):
             try:
                 path = inspect.getsourcefile(module)
                 if path and exists(path): files[path] = mtime(path)
-            except TypeError: pass
+            except TypeError:
+                pass
         while not self.status:
             for path, lmtime in files.iteritems():
                 if not exists(path) or mtime(path) > lmtime:
@@ -1568,7 +1570,8 @@ def _reloader_child(server, app, interval):
     try:
         bgcheck.start()
         server.run(app)
-    except KeyboardInterrupt, e: pass
+    except KeyboardInterrupt, e:
+        pass
     bgcheck.status, status = 5, bgcheck.status
     bgcheck.join() # bgcheck.status == 5 --> silent exit
     if status: sys.exit(status)
@@ -1596,7 +1599,8 @@ def _reloader_observer(server, app, interval):
                 sys.exit(p.poll())
             elif not server.quiet:
                 print "Reloading server..."
-    except KeyboardInterrupt: pass
+    except KeyboardInterrupt:
+        pass
     if os.path.exists(lockfile): os.unlink(lockfile)
 
 
