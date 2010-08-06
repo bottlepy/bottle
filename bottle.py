@@ -1500,7 +1500,7 @@ def load_app(target):
         
         The target should be a valid python import path
         (e.g. mypackage.mymodule). The default application is returned.
-        If the targed contains a colon (e.g. mypackage.mymodule:myapp) the
+        If the target contains a colon (e.g. mypackage.mymodule:myapp) the
         module variable specified after the colon is returned instead.
     """
     path, name = target.split(":", 1) if ':' in target else (target, None)
@@ -1527,7 +1527,7 @@ def run(app=None, server='wsgiref', host='127.0.0.1', port=8080,
                privileges. (default: 8080)
         :param reloader: Start auto-reloading server? (default: False)
         :param interval: Auto-reloader interval in seconds (default: 1)
-        :param quiet: Supress output to stdout and stderr? (default: False)
+        :param quiet: Suppress output to stdout and stderr? (default: False)
         :param options: Options passed to the server adapter.
      """
     app = app or default_app()
