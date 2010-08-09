@@ -1372,9 +1372,12 @@ class FapwsServer(ServerAdapter):
     """
     def run(self, handler): # pragma: no cover
         import fapws._evwsgi as evwsgi
-        from fapws import base
-        # If this segfaults, your fapws3 is to old. See #85
-        evwsgi.start(self.host, str(self.port))
+        from fapws import base, config
+        port = self.port
+        if float(config.SERVER_IDENT[-2:]) > 0.4:
+            # fapws3 silently changed its API in 0.5
+            port = str(port)
+        evwsgi.start(self.host, port)
         # fapws3 never releases the GIL. Complain upstream. I tried. No luck.
         if 'BOTTLE_CHILD' in os.environ and not self.quiet:
             print "WARNING: Auto-reloading does not work with Fapws3."
@@ -1383,7 +1386,7 @@ class FapwsServer(ServerAdapter):
         def app(environ, start_response):
             environ['wsgi.multiprocess'] = False
             return handler(environ, start_response)
-        evwsgi.wsgi_cb(('',app))
+        evwsgi.wsgi_cb(('', app))
         evwsgi.run()
 
 
