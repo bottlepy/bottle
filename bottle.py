@@ -82,7 +82,6 @@ import threading
 import time
 import tokenize
 import tempfile
-import types
 
 from Cookie import SimpleCookie
 from tempfile import TemporaryFile
@@ -1287,15 +1286,17 @@ def validate(**vkargs):
     return decorator
 
 
-route  = functools.wraps(Bottle.route)(lambda *a, **ka: app().route(*a, **ka))
-get    = functools.wraps(Bottle.get)(lambda *a, **ka: app().get(*a, **ka))
-post   = functools.wraps(Bottle.post)(lambda *a, **ka: app().post(*a, **ka))
-put    = functools.wraps(Bottle.put)(lambda *a, **ka: app().put(*a, **ka))
-delete = functools.wraps(Bottle.delete)(lambda *a, **ka: app().delete(*a, **ka))
-error  = functools.wraps(Bottle.error)(lambda *a, **ka: app().error(*a, **ka))
-url    = functools.wraps(Bottle.get_url)(lambda *a, **ka: app().get_url(*a, **ka))
-mount  = functools.wraps(Bottle.mount)(lambda *a, **ka: app().mount(*a, **ka))
-hook   = functools.wraps(Bottle.hook)(lambda *a, **ka: app().hook(*a, **ka))
+def make_default_app_wrapper(name):
+    ''' Return a callable that relays calls to the current default app. '''
+    @functools.wraps(getattr(Bottle, name))
+    def wrapper(*a, **ka):
+        return getattr(app(), name)(*a, **ka)
+    return wrapper
+
+for name in 'route get post put delete error mount hook'.split():
+    globals()[name] = make_default_app_wrapper(name)
+
+url = make_default_app_wrapper('get_url')
 
 
 def default():
@@ -1372,9 +1373,12 @@ class FapwsServer(ServerAdapter):
     """
     def run(self, handler): # pragma: no cover
         import fapws._evwsgi as evwsgi
-        from fapws import base
-        # If this segfaults, your fapws3 is to old. See #85
-        evwsgi.start(self.host, str(self.port))
+        from fapws import base, config
+        port = self.port
+        if float(config.SERVER_IDENT[-2:]) > 0.4:
+            # fapws3 silently changed its API in 0.5
+            port = str(port)
+        evwsgi.start(self.host, port)
         # fapws3 never releases the GIL. Complain upstream. I tried. No luck.
         if 'BOTTLE_CHILD' in os.environ and not self.quiet:
             print "WARNING: Auto-reloading does not work with Fapws3."
@@ -1383,7 +1387,7 @@ class FapwsServer(ServerAdapter):
         def app(environ, start_response):
             environ['wsgi.multiprocess'] = False
             return handler(environ, start_response)
-        evwsgi.wsgi_cb(('',app))
+        evwsgi.wsgi_cb(('', app))
         evwsgi.run()
 
 
@@ -1434,7 +1438,7 @@ class GeventServer(ServerAdapter):
     """ Untested. """
     def run(self, handler):
         from gevent import wsgi
-        from gevent.hub import getcurrent
+        #from gevent.hub import getcurrent
         #self.set_context_ident(getcurrent, weakref=True) # see contextlocal
         wsgi.WSGIServer((self.host, self.port), handler).serve_forever()
 
@@ -1504,11 +1508,11 @@ def load_app(target):
         module variable specified after the colon is returned instead.
     """
     path, name = target.split(":", 1) if ':' in target else (target, None)
-    app = None if name else bottle.app.push()
+    rv = None if name else app.push()
     __import__(path)
     module = sys.modules[path]
-    if app and app in bottle.app: bottle.app.remove(app)
-    return app if app else getattr(module, target)
+    if rv and rv in app: app.remove(rv)
+    return rv if rv else getattr(module, target)
 
 
 def run(app=None, server='wsgiref', host='127.0.0.1', port=8080,
@@ -1607,7 +1611,7 @@ def _reloader_child(server, app, interval):
     try:
         bgcheck.start()
         server.run(app)
-    except KeyboardInterrupt, e:
+    except KeyboardInterrupt:
         pass
     bgcheck.status, status = 5, bgcheck.status
     bgcheck.join() # bgcheck.status == 5 --> silent exit
@@ -1806,8 +1810,7 @@ class SimpleTemplate(BaseTemplate):
         lineno = 0 # Current line of code
         ptrbuffer = [] # Buffer for printable strings and token tuple instances
         codebuffer = [] # Buffer for generated python code
-        touni = functools.partial(unicode, encoding=self.encoding)
-        multiline = dedent = False
+        multiline = dedent = oneline = False
 
         def yield_tokens(line):
             for i, part in enumerate(re.split(r'\{\{(.*?)\}\}', line)):
