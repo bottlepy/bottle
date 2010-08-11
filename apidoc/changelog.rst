@@ -14,7 +14,7 @@ This changes are not released yet and are only part of the development documenta
 .. rubric:: New Features
 
 * A new hook-API to inject code immediately before or after the execution of handler callbacks.
-
+* The :meth:`Bottle.route` decorator got a lot of new features. See API documentation for details.
 
 Bugfix Release 0.8.2
 =====================
