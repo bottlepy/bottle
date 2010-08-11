@@ -314,7 +314,7 @@ class Router(object):
         if self.get_route(route):
             return RouteError('Route %s is not uniqe.' % route)
         self.routes.append(route)
-        self.compiled = False
+        self.compiled, self.named, self.static, self.dynamic = False, {}, {}, []
         return route
 
     def get_route(self, route, target=None, **ka):
