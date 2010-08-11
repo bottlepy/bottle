@@ -1590,7 +1590,7 @@ class FileCheckerThread(threading.Thread):
                     self.status = 3
             if not exists(self.lockfile):
                 self.status = 2
-            elif mtime(self.lockfile) < time.time() - self.interval * 2:
+            elif mtime(self.lockfile) < time.time() - self.interval - 5:
                 self.status = 1
             if not self.status:
                 time.sleep(self.interval)
