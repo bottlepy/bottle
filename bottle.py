@@ -208,7 +208,7 @@ class RouteSyntaxError(RouteError):
 
 
 class RouteBuildError(RouteError):
-    """ The route could not been build """
+    """ The route could not been built """
 
 
 class Route(object):
