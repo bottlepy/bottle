@@ -1364,7 +1364,12 @@ class PasteServer(ServerAdapter):
             handler = TransLogger(handler)
         httpserver.serve(handler, host=self.host, port=str(self.port),
                          **self.options)
-
+                         
+class MeinheldServer(ServerAdapter):
+    def run(self, handler):
+        from meinheld import server
+        server.listen((self.host, self.port))
+        server.run(handler)
 
 class FapwsServer(ServerAdapter):
     """
@@ -1490,6 +1495,7 @@ server_names = {
     'gae': AppEngineServer,
     'twisted': TwistedServer,
     'diesel': DieselServer,
+    'meinheld': MeinheldServer,
     'gunicorn': GunicornServer,
     'eventlet': EventletServer,
     'gevent': GeventServer,
