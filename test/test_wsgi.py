@@ -265,7 +265,6 @@ class TestRouteDecorator(ServerTestBase):
     def test_static(self):
         @bottle.route('/:foo', static=True)
         def test(): return 'ok'
-        print bottle.app().routes.static
         self.assertBody('ok', '/:foo')
 
     def test_name(self):
