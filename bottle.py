@@ -1719,10 +1719,12 @@ class BaseTemplate(object):
         """
         raise NotImplementedError
 
-    def render(self, **args):
+    def render(self, *args, **kwargs):
         """ Render the template with the specified local variables and return
         a single byte or unicode string. If it is a byte string, the encoding
         must match self.encoding. This method must be thread-safe!
+        Local variables may be provided in dictionaries (*args)
+        or directly, as keywords (**kwargs).
         """
         raise NotImplementedError
 
@@ -1742,9 +1744,10 @@ class MakoTemplate(BaseTemplate):
                 name += os.path.splitext(self.filename)[1]
             self.tpl = mylookup.get_template(name)
 
-    def render(self, **args):
+    def render(self, *args, **kwargs):
+        for dictarg in args: kwargs.update(dictarg)
         _defaults = self.defaults.copy()
-        _defaults.update(args)
+        _defaults.update(kwargs)
         return self.tpl.render(**_defaults)
 
 
@@ -1759,9 +1762,10 @@ class CheetahTemplate(BaseTemplate):
         else:
             self.tpl = Template(file=self.filename, **options)
 
-    def render(self, **args):
+    def render(self, *args, **kwargs):
+        for dictarg in args: kwargs.update(dictarg)
         self.context.vars.update(self.defaults)
-        self.context.vars.update(args)
+        self.context.vars.update(kwargs)
         out = str(self.tpl)
         self.context.vars.clear()
         return [out]
@@ -1781,9 +1785,10 @@ class Jinja2Template(BaseTemplate):
         else:
             self.tpl = self.env.get_template(self.filename)
 
-    def render(self, **args):
+    def render(self, *args, **kwargs):
+        for dictarg in args: kwargs.update(dictarg)
         _defaults = self.defaults.copy()
-        _defaults.update(args)
+        _defaults.update(kwargs)
         return self.tpl.render(**_defaults).encode("utf-8")
 
     def loader(self, name):
@@ -1907,41 +1912,48 @@ class SimpleTemplate(BaseTemplate):
         flush()
         return '\n'.join(codebuffer) + '\n'
 
-    def subtemplate(self, _name, _stdout, **args):
+    def subtemplate(self, _name, _stdout, *args, **kwargs):
+        for dictarg in args: kwargs.update(dictarg)
         if _name not in self.cache:
             self.cache[_name] = self.__class__(name=_name, lookup=self.lookup)
-        return self.cache[_name].execute(_stdout, **args)
+        return self.cache[_name].execute(_stdout, kwargs)
 
-    def execute(self, _stdout, **args):
+    def execute(self, _stdout, *args, **kwargs):
+        for dictarg in args: kwargs.update(dictarg)
         env = self.defaults.copy()
         env.update({'_stdout': _stdout, '_printlist': _stdout.extend,
                '_include': self.subtemplate, '_str': self._str,
                '_escape': self._escape})
-        env.update(args)
+        env.update(kwargs)
         eval(self.co, env)
         if '_rebase' in env:
             subtpl, rargs = env['_rebase']
             subtpl = self.__class__(name=subtpl, lookup=self.lookup)
             rargs['_base'] = _stdout[:] #copy stdout
             del _stdout[:] # clear stdout
-            return subtpl.execute(_stdout, **rargs)
+            return subtpl.execute(_stdout, rargs)
         return env
 
-    def render(self, **args):
+    def render(self, *args, **kwargs):
         """ Render the template using keyword arguments as local variables. """
+        for dictarg in args: kwargs.update(dictarg)
         stdout = []
-        self.execute(stdout, **args)
+        self.execute(stdout, kwargs)
         return ''.join(stdout)
 
 
-def template(tpl, template_adapter=SimpleTemplate, **kwargs):
+def template(*args, **kwargs):
     '''
     Get a rendered template as a string iterator.
     You can use a name, a filename or a template string as first parameter.
+    Template rendering arguments can be passed as dictionaries
+    or directly (as keyword arguments).
     '''
+    tpl = args[0] if args else None
+    template_adapter = kwargs.pop('template_adapter', SimpleTemplate)
     if tpl not in TEMPLATES or DEBUG:
-        settings = kwargs.get('template_settings',{})
-        lookup = kwargs.get('template_lookup', TEMPLATE_PATH)
+        settings = kwargs.pop('template_settings', {})
+        lookup = kwargs.pop('template_lookup', TEMPLATE_PATH)
         if isinstance(tpl, template_adapter):
             TEMPLATES[tpl] = tpl
             if settings: TEMPLATES[tpl].prepare(**settings)
@@ -1951,6 +1963,7 @@ def template(tpl, template_adapter=SimpleTemplate, **kwargs):
             TEMPLATES[tpl] = template_adapter(name=tpl, lookup=lookup, **settings)
     if not TEMPLATES[tpl]:
         abort(500, 'Template (%s) not found' % tpl)
+    for dictarg in args[1:]: kwargs.update(dictarg)
     return TEMPLATES[tpl].render(**kwargs)
 
 mako_template = functools.partial(template, template_adapter=MakoTemplate)
@@ -1974,7 +1987,7 @@ def view(tpl_name, **defaults):
             if isinstance(result, dict):
                 tplvars = defaults.copy()
                 tplvars.update(result)
-                return template(tpl_name, **tplvars)
+                return template(tpl_name, tplvars)
             return result
         return wrapper
     return decorator

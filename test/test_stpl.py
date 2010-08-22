@@ -7,6 +7,8 @@ class TestSimpleTemplate(unittest.TestCase):
         """ Templates: Parse string"""
         t = SimpleTemplate('start {{var}} end').render(var='var')
         self.assertEqual(u'start var end', t)
+        t = SimpleTemplate('start {{self}} end').render({'self':'var'}) # "self" cannot be used as a kwarg
+        self.assertEqual(u'start var end', t)
 
     def test_file(self):
         """ Templates: Parse file"""
