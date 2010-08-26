@@ -404,12 +404,30 @@ class Bottle(object):
         self.config = config or {}
         self.serve = True
         self.castfilter = []
+        self.plugins = []
         if autojson and json_dumps:
             self.add_filter(dict, dict2json)
         self.hooks = {'before_request': [], 'after_request': []}
 
     def optimize(self, *a, **ka):
         depr("Bottle.optimize() is obsolete.")
+
+    def install(self, plugin, **config):
+        ''' Install and configure a plugin.
+            :param plugin: Either a plugin class or a name.'''
+        plugin = plugin_names.get(plugin) or plugin
+        if not issubclass(plugin, BasePlugin):
+            raise PluginError("Unknown plugin: %s" % plugin)
+        self.plugins.append(plugin(self, **config))
+
+    def uninstall(self, plugin):
+        ''' Uninstall a specific plugin or all instances of a plugin type.
+            :param plugin: Either a plugin instance, name or class. '''
+        plugin = plugin_names.get(plugin) or plugin
+        if plugin in self.plugins:
+            self.plugins.remove(plugin)
+        else:
+            self.plugins = [p for p in self.plugins if not type(p) == plugin]
 
     def mount(self, app, script_path):
         ''' Mount a Bottle application to a specific URL prefix '''
