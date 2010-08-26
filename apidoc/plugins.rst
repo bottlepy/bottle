@@ -165,8 +165,7 @@ This example shows a minimal plugin implementation and is a good starting point 
 Hook-Based Plugins
 ------------------
 
-
-::
+TODO: Example::
 
     class HookPlugin(BasePlugin):
         plugin_name = 'hook'
@@ -185,7 +184,7 @@ Hook-Based Plugins
 Middleware Plugins
 ------------------
 
-::
+TODO: Example::
 
     class MiddlewarePlugin(BasePlugin):
         plugin_name = 'middleware'
