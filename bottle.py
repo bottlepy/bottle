@@ -161,7 +161,10 @@ def makelist(data):
 
 
 
-# Exceptions and Events
+
+###############################################################################
+# Exceptions and Events ########################################################
+###############################################################################
 
 class BottleException(Exception):
     """ A base class for exceptions used by bottle. """
@@ -198,7 +201,9 @@ class HTTPError(HTTPResponse):
 
 
 
-# Routing
+###############################################################################
+# Routing ######################################################################
+###############################################################################
 
 class RouteError(BottleException):
     """ This is a base class for all routing related exceptions """
@@ -388,7 +393,10 @@ class Router(object):
 
 
 
-# WSGI abstraction: Application, Request and Response objects
+
+###############################################################################
+# Application Object ###########################################################
+###############################################################################
 
 class Bottle(object):
     """ WSGI application """
@@ -685,6 +693,14 @@ class Bottle(object):
     def __call__(self, environ, start_response):
         return self.wsgi(environ, start_response)
 
+
+
+
+
+
+###############################################################################
+# HTTP and WSGI Tools ##########################################################
+###############################################################################
 
 class Request(threading.local, DictMixin):
     """ Represents a single HTTP request using thread-local attributes.
@@ -1014,7 +1030,9 @@ class Response(threading.local):
 
 
 
-# Data Structures
+###############################################################################
+# Common Utilities #############################################################
+###############################################################################
 
 class MultiDict(DictMixin):
     """ A dict that remembers old values for each key """
@@ -1090,9 +1108,12 @@ class WSGIFileWrapper(object):
 
 
 
-# Module level functions
 
-# Output filter
+
+
+###############################################################################
+# Application Helper ###########################################################
+###############################################################################
 
 def dict2json(d):
     response.content_type = 'application/json'
@@ -1163,7 +1184,9 @@ def static_file(filename, root, guessmime=True, mimetype=None, download=False):
 
 
 
-# Utilities
+###############################################################################
+# HTTP Utilities ans MISC (TODO) ###############################################
+###############################################################################
 
 def debug(mode=True):
     """ Change the debug level.
@@ -1309,7 +1332,9 @@ def default():
 
 
 
-# Server adapter
+###############################################################################
+# Server Adapter ###############################################################
+###############################################################################
 
 class ServerAdapter(object):
     quiet = False
@@ -1505,6 +1530,14 @@ server_names = {
 }
 
 
+
+
+
+
+###############################################################################
+# Application Control ##########################################################
+###############################################################################
+
 def load_app(target):
     """ Load a bottle application based on a target string and return the app
         object.
@@ -1653,7 +1686,12 @@ def _reloader_observer(server, app, interval):
 
 
 
-# Templates
+
+
+
+###############################################################################
+# Template Adapters ############################################################
+###############################################################################
 
 class TemplateError(HTTPError):
     def __init__(self, message):
@@ -2002,7 +2040,9 @@ jinja2_view = functools.partial(view, template_adapter=Jinja2Template)
 
 
 
-# Modul initialization and configuration
+###############################################################################
+# Constants and Globals ########################################################
+###############################################################################
 
 TEMPLATE_PATH = ['./', './views/']
 TEMPLATES = {}
