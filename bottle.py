@@ -392,12 +392,14 @@ class Router(object):
 
 class Bottle(object):
     """ WSGI application """
+    router_class = Router
 
     def __init__(self, catchall=True, autojson=True, config=None):
         """ Create a new bottle instance.
             You usually don't do that. Use `bottle.app.push()` instead.
         """
-        self.routes = Router()
+        self.router = None
+        self.routes = []
         self.mounts = {}
         self.error_handler = {}
         self.catchall = catchall
@@ -405,42 +407,45 @@ class Bottle(object):
         self.serve = True
         self.castfilter = []
         self.plugins = []
-        if autojson and json_dumps:
-            self.add_filter(dict, dict2json)
-        self.hooks = {'before_request': [], 'after_request': []}
+        self.hooks = self.install(HooksPlugin)
+        if autojson and json_dumps: self.install(JsonPlugin, json_dumps)
 
     def optimize(self, *a, **ka):
         depr("Bottle.optimize() is obsolete.")
 
-    def install(self, plugin, **config):
-        ''' Install and configure a plugin.
-            :param plugin: Either a plugin class or a name.'''
+    def install(self, plugin, *args, **kwargs):
+        ''' Install and configure a plugin. The plugin instance is returned.
+            :param plugin: Either a plugin class or name.'''
+        self.reset_routes()
         plugin = plugin_names.get(plugin) or plugin
-        if not issubclass(plugin, BasePlugin):
+        if issubclass(plugin, BasePlugin):
+            rv = plugin(self, *args, **kwargs)
+            self.plugins.append(rv)
+            return rv
+        else:
             raise PluginError("Unknown plugin: %s" % plugin)
-        self.plugins.append(plugin(self, **config))
 
     def uninstall(self, plugin):
         ''' Uninstall a specific plugin or all instances of a plugin type.
             :param plugin: Either a plugin instance, name or class. '''
+        self.reset_routes()
         plugin = plugin_names.get(plugin) or plugin
         if plugin in self.plugins:
             self.plugins.remove(plugin)
-        else:
+        elif issubclass(plugin, BasePlugin):
             self.plugins = [p for p in self.plugins if not type(p) == plugin]
+        else:
+            self.plugins = [p for p in self.plugins if p.plugin_name != plugin]
 
-    def mount(self, app, script_path):
-        ''' Mount a Bottle application to a specific URL prefix '''
-        if not isinstance(app, Bottle):
-            raise TypeError('Only Bottle instances are supported for now.')
+    def mount(self, app, script_path, **route_args):
+        ''' Mount a Bottle application to a specific URL prefix.
+            :param app: An instance of Bottle to mount.
+            :param script_path: The root path for the mounted app.'''
         script_path = '/'.join(filter(None, script_path.split('/')))
         path_depth = script_path.count('/') + 1
-        if not script_path:
-            raise TypeError('Empty script_path. Perhaps you want a merge()?')
-        for other in self.mounts:
-            if other.startswith(script_path):
-                raise TypeError('Conflict with existing mount: %s' % other)
-        @self.route('/%s/:#.*#' % script_path, method="ANY")
+        route_args.setdefault('method', 'ANY')
+        route_args.setdefault('skip', True)
+        @self.route('/%s/:#.*#' % script_path, **route_args)
         def mountpoint():
             request.path_shift(path_depth)
             return app.handle(request.path, request.method)
@@ -449,6 +454,7 @@ class Bottle(object):
     def add_filter(self, ftype, func):
         ''' Register a new output filter. Whenever bottle hits a handler output
             matching `ftype`, `func` is applied to it. '''
+        depr("Filter support is deprecated. Use plugins instead.")
         if not isinstance(ftype, type):
             raise TypeError("Expected type object, got %s" % type(ftype))
         self.castfilter = [(t, f) for (t, f) in self.castfilter if t != ftype]
@@ -460,8 +466,9 @@ class Bottle(object):
             Return (callback, param) tuple or raise HTTPError.
             method: HEAD falls back to GET. All methods fall back to ANY.
         """
+        if not self.router: self.build_routes()
         path, method = path.strip().lstrip('/'), method.upper()
-        callbacks, args = self.routes.match(path)
+        callbacks, args = self.router.match(path)
         if not callbacks:
             raise HTTPError(404, "Not found: " + path)
         if method in callbacks:
@@ -478,12 +485,13 @@ class Bottle(object):
 
     def get_url(self, routename, **kargs):
         """ Return a string that matches a named route """
+        if not self.router: self.build_routes()
         scriptname = request.environ.get('SCRIPT_NAME', '').strip('/') + '/'
-        location = self.routes.build(routename, **kargs).lstrip('/')
+        location = self.router.build(routename, **kargs).lstrip('/')
         return urljoin(urljoin('/', scriptname), location)
 
-    def route(self, path=None, method='GET', no_hooks=False, decorate=None,
-              template=None, template_opts={}, callback=None, **kargs):
+    def route(self, path=None, method='GET', decorate=None, template=None,
+              skip=None, template_opts={}, callback=None, **kargs):
         """ Decorator: Bind a callback function to a request path.
 
             :param path: The request path or a list of paths to listen to. See 
@@ -494,8 +502,8 @@ class Bottle(object):
               methods to listen to. (default: GET)
             :param decorate: A decorator or a list of decorators. These are
               applied to the callback in reverse order.
-            :param no_hooks: If true, application hooks are not triggered
-              by this route. (default: False)
+            :param skip: A list of plugins to not install to this route or True
+              to skip all plugins. (default: Install all plugins)
             :param template: The template to use for this callback.
               (default: no template)
             :param template_opts: A dict with additional template parameters.
@@ -503,41 +511,48 @@ class Bottle(object):
               dynamic syntax tokens. (default: False)
             :param name: The name for this route. (default: None)
             :param callback: If set, the route decorator is directly applied
-              to the callback and the callback is returned instead. This
-              equals ``Bottle.route(...)(callback)``.
+              to the callback. This equals ``Bottle.route(...)(callback)``.
         """
-        # @route can be used without any parameters
+        self.reset_routes()
+        # @route doubles as decorator and decorator factory
         if callable(path): path, callback = None, path
-        # Build up the list of decorators
-        decorators = makelist(decorate)
-        if template:     decorators.insert(0, view(template, **template_opts))
-        if not no_hooks: decorators.append(self._add_hook_wrapper)
-        def wrapper(func):
-            callback = func
-            for decorator in reversed(decorators):
-                callback = decorator(callback)
-            functools.update_wrapper(callback, func)
-            for route in makelist(path) or yieldroutes(func):
-                for meth in makelist(method):
-                    route = route.strip().lstrip('/')
-                    meth = meth.strip().upper()
-                    old = self.routes.get_route(route, **kargs)
-                    if old:
-                        old.target[meth] = callback
-                    else:
-                        self.routes.add(route, {meth: callback}, **kargs)
-            return func
+        # Build up the list of decorators (not including plugins)
+        decorators = [view(template, **template_opts)] if template else []
+        decorators += makelist(decorate)
+        skiplist = makelist(skip)
+        def wrapper(callback):
+            for route in makelist(path) or yieldroutes(callback):
+                route = route.strip().lstrip('/')
+                for verb in makelist(method):
+                    verb = verb.strip().upper()
+                    options = (verb, route, callback, decorators, skiplist, kargs)
+                    self.routes.append(options)
+            return callback
         return wrapper(callback) if callback else wrapper
 
-    def _add_hook_wrapper(self, func):
-        ''' Add hooks to a callable. See #84 '''
-        @functools.wraps(func)
-        def wrapper(*a, **ka):
-            for hook in self.hooks['before_request']: hook()
-            response.output = func(*a, **ka)
-            for hook in self.hooks['after_request']: hook()
-            return response.output
-        return wrapper
+    def build_routes(self):
+        ''' Build router and apply plugins to callbacks. '''
+        self.router = self.router_class()
+        for entry in self.routes:
+            method, route, func, decorators, skiplist, kargs = entry
+            callback = func
+            for dec in reversed(decorators):
+                callback = dec(callback)
+            for plugin in self.plugins:
+                if plugin in skiplist or type(plugin) in skiplist \
+                or plugin.plugin_name in skiplist or True in skiplist:
+                    continue
+                callback = plugin(callback)
+            functools.update_wrapper(callback, func)
+            old = self.router.get_route(route, **kargs)
+            if old:
+                old.target[method] = callback
+            else:
+                self.router.add(route, {method: callback}, **kargs)
+
+    def reset_routes(self):
+        ''' Force Bottle to rebuild the router and reapply plugins '''
+        self.router = None
 
     def get(self, path=None, method='GET', **kargs):
         """ Decorator: Bind a function to a GET request path.
@@ -569,24 +584,9 @@ class Bottle(object):
     def hook(self, name):
         """ Return a decorator that adds a callback to the specified hook. """
         def wrapper(func):
-            self.add_hook(name, func)
+            self.hooks.add(name, func)
             return func
         return wrapper
-
-    def add_hook(self, name, func):
-        ''' Add a callback from a hook. '''
-        if name not in self.hooks:
-            raise ValueError("Unknown hook name %s" % name)
-        if name in ('after_request'):
-            self.hooks[name].insert(0, func)
-        else:
-            self.hooks[name].append(func)
-
-    def remove_hook(self, name, func):
-        ''' Remove a callback from a hook. '''
-        if name not in self.hooks:
-            raise ValueError("Unknown hook name %s" % name)
-        self.hooks[name].remove(func)
 
     def handle(self, url, method):
         """ Execute the handler bound to the specified url and method and return
@@ -1054,14 +1054,14 @@ class BasePlugin(object):
     plugin_name = None
     ''' Do not forget to name your subclass. '''
 
-    def __init__(self, app=None, **config):
-        self.setup(app or bottle.default_app(), **config)
+    def __init__(self, app=None, *args, **kwargs):
+        self.setup(app or bottle.default_app(), *args, **kwargs)
 
     def __call__(self, func):
         wrapped = self.wrap(func)
         if wrapped == func: return func
         wrapped._bottle_wrapped = func
-        return functools.wrap(func)(wrapped)
+        return functools.wraps(func)(wrapped)
 
     def setup(self, app, **config):
         ''' This method is called by __init__(). Override to accept init
@@ -1072,6 +1072,54 @@ class BasePlugin(object):
         ''' This method is called by __call__(). Override to apply decorators.
         '''
         return func
+
+
+class HooksPlugin(BasePlugin):
+    plugin_name = 'hooks'
+
+    def setup(self, app, before=None, after=None):
+        self.app = app
+        self.before = before or []
+        self.after = after or []
+
+    def wrap(self, callback):
+        if not self.before and not self.after: return callback
+        def wrapper(*a, **ka):
+            for hook in self.before: hook()
+            rv = callback(*a, **ka)
+            for hook in self.after: hook()
+            return rv
+        return wrapper
+
+    def add(self, name, func):
+        ''' Add a callback from a hook. '''
+        if name == 'before_request':  self.before.append(func)
+        elif name == 'after_request': self.after.insert(0, func)
+        else: raise ValueError("Unknown hook name %s" % name)
+        self.app.reset_routes()
+
+    def remove(self, name, func):
+        if name == 'before_request':  self.before.remove(func)
+        elif name == 'after_request': self.after.remove(func)
+        else: raise ValueError("Unknown hook name %s" % name)
+        self.app.reset_routes()
+
+
+class JsonPlugin(BasePlugin):
+    plugin_name = 'json'
+
+    def setup(self, app, json_func=json_dumps):
+        self.app = app
+        self.json = json_func
+
+    def wrap(self, callback):
+        def wrapper(*a, **ka):
+            rv = callback(*a, **ka)
+            if isinstance(rv, dict):
+                response.content_type = 'application/json'
+                return self.json(rv)
+            return rv
+        return wrapper
 
 
 
@@ -1151,7 +1199,6 @@ class WSGIFileWrapper(object):
            part = read(buff)
            if not part: break
            yield part
-
 
 
 # Module level functions
@@ -1358,7 +1405,7 @@ def make_default_app_wrapper(name):
         return getattr(app(), name)(*a, **ka)
     return wrapper
 
-for name in 'route get post put delete error mount hook'.split():
+for name in 'route get post put delete error mount hook install uninstall'.split():
     globals()[name] = make_default_app_wrapper(name)
 
 url = make_default_app_wrapper('get_url')

@@ -219,20 +219,23 @@ class TestRouteDecorator(ServerTestBase):
         self.assertBody('Cba', '/titlerev')
 
     def test_hooks(self):
+        testlist = []
         @bottle.route()
         def test():
             return bottle.request.environ.get('hooktest','nohooks')
         @bottle.hook('before_request')
         def hook():
-            bottle.request.environ['hooktest'] = 'before'
+            bottle.request.environ['hooktest'] = 'hooks'
+            testlist.append(1)
         @bottle.hook('after_request')
         def hook():
-            if isinstance(bottle.response.output, str):
-                bottle.response.output += '-after'
-        self.assertBody('before-after', '/test')
+            testlist.append(2)
+        self.assertEqual(testlist, [])
+        self.assertBody('hooks', '/test')
+        self.assertEqual(testlist, [1,2])
 
     def test_no_hooks(self):
-        @bottle.route(no_hooks=True)
+        @bottle.route(skip='hooks')
         def test():
             return 'nohooks'
         bottle.hook('before_request')(lambda: 1/0)
@@ -240,17 +243,20 @@ class TestRouteDecorator(ServerTestBase):
         self.assertBody('nohooks', '/test')
 
     def test_hook_order(self):
+        testlist = []
         @bottle.route()
-        def test(): return bottle.request.environ.get('hooktest','nohooks')
+        def test(): return repr(testlist)
         @bottle.hook('before_request')
-        def hook(): bottle.request.environ.setdefault('hooktest', []).append('b1')
+        def hook(): testlist.append(1)
         @bottle.hook('before_request')
-        def hook(): bottle.request.environ.setdefault('hooktest', []).append('b2')
+        def hook(): testlist.append(2)
         @bottle.hook('after_request')
-        def hook(): bottle.response.output += 'a1'
+        def hook(): testlist.append(3)
         @bottle.hook('after_request')
-        def hook(): bottle.response.output += 'a2'
-        self.assertBody('b1b2a2a1', '/test')
+        def hook(): testlist.append(4)
+        self.assertEqual(testlist, [])
+        self.assertBody('[1, 2]', '/test')
+        self.assertEqual(testlist, [1, 2, 4, 3])
 
     def test_template(self):
         @bottle.route(template='test {{a}} {{b}}')

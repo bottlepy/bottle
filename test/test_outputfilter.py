@@ -77,6 +77,7 @@ class TestOutputFilter(ServerTestBase):
     def test_custom(self):
         self.app.route('/')(lambda: {'a': 1, 'b': 2})
         self.app.add_filter(dict, lambda x: x.keys())
+        self.app.uninstall('json')
         self.assertBody('ab')
 
     def test_generator_callback(self):
