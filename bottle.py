@@ -1014,6 +1014,51 @@ class Response(threading.local):
 
 
 
+# Plugins
+
+plugin_names = {} # See PluginMetaclass and Bottle.install()
+
+class PluginError(BottleException): pass
+
+class PluginMetaclass(type):
+    def __init__(cls, name, bases, dct):
+        super(PluginMetaclass, cls).__init__(name, bases, dct)
+        name = dct.get('plugin_name')
+        if name in plugin_names and plugin_names[name] != cls:
+            raise PluginError('Plugin name not unique: %s' % name)
+        elif name:
+            plugin_names[name] = cls
+
+
+class BasePlugin(object):
+    __metaclass__ = PluginMetaclass
+    plugin_name = None
+    ''' Do not forget to name your subclass. '''
+
+    def __init__(self, app=None, **config):
+        self.setup(app or bottle.default_app(), **config)
+
+    def __call__(self, func):
+        wrapped = self.wrap(func)
+        if wrapped == func: return func
+        wrapped._bottle_wrapped = func
+        return functools.wrap(func)(wrapped)
+
+    def setup(self, app, **config):
+        ''' This method is called by __init__(). Override to accept init
+        parameters. '''
+        return
+
+    def wrap(self, func):
+        ''' This method is called by __call__(). Override to apply decorators.
+        '''
+        return func
+
+
+
+
+
+
 # Data Structures
 
 class MultiDict(DictMixin):
