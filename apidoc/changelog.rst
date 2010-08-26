@@ -6,6 +6,11 @@ Release Notes and Changelog
 ===========================
 
 
+Bugfix Release 0.8.3
+=====================
+
+* Fixed "Reloading server dies on slow hardware." (Issue #90)
+
 Bugfix Release 0.8.2
 =====================
 
