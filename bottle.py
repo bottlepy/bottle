@@ -674,34 +674,35 @@ class Bottle(object):
 
     def wsgi(self, environ, start_response):
         """ The bottle WSGI-interface. """
+        environ['bottle.app'] = self
+        request.bind(environ)
+        response.bind()
+        out = self.handle(request.path, request.method)
+        out = self._cast(out, request, response)
+        # rfc2616 section 4.3
+        if response.status in (100, 101, 204, 304) or request.method == 'HEAD':
+            if hasattr(out, 'close'): out.close()
+            out = []
+        status = '%d %s' % (response.status, HTTP_CODES[response.status])
+        start_response(status, response.headerlist)
+        return out
+
+    def __call__(self, environ, start_response):
         try:
-            environ['bottle.app'] = self
-            request.bind(environ)
-            response.bind()
-            out = self.handle(request.path, request.method)
-            out = self._cast(out, request, response)
-            # rfc2616 section 4.3
-            if response.status in (100, 101, 204, 304) or request.method == 'HEAD':
-                if hasattr(out, 'close'): out.close()
-                out = []
-            status = '%d %s' % (response.status, HTTP_CODES[response.status])
-            start_response(status, response.headerlist)
-            return out
+            return self.wsgi(environ, start_response)
         except (KeyboardInterrupt, SystemExit, MemoryError):
             raise
         except Exception, e:
             if not self.catchall: raise
-            err = '<h1>Critical error while processing request: %s</h1>' \
-                  % environ.get('PATH_INFO', '/')
+            err = '<h1>Critical error while processing request: %s</h1>'
+            err = err % environ.get('PATH_INFO', '/')
             if DEBUG:
                 err += '<h2>Error:</h2>\n<pre>%s</pre>\n' % repr(e)
                 err += '<h2>Traceback:</h2>\n<pre>%s</pre>\n' % format_exc(10)
             environ['wsgi.errors'].write(err) #TODO: wsgi.error should not get html
-            start_response('500 INTERNAL SERVER ERROR', [('Content-Type', 'text/html')])
+            start_response('500 INTERNAL SERVER ERROR',
+                           [('Content-Type', 'text/html')])
             return [tob(err)]
-        
-    def __call__(self, environ, start_response):
-        return self.wsgi(environ, start_response)
 
 
 class Request(threading.local, DictMixin):
