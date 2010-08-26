@@ -58,17 +58,17 @@ The effects and APIs of plugins are manifold and depend on the specific plugin. 
             completely. '''
         return template('contact')
 
-Other plugin may populate the thread-save :data:`local` object, change details of the :data:`request`, filter the data returned by the callback or bypass the callback completely. An "auth" plugin for example may check for a valid session and return a login page instead of calling the original callback. What happens exactly depends on the plugin.
+Other plugin may populate the thread-save :data:`local` object, change details of the :data:`request`, filter the data returned by the callback or bypass the callback completely. An "auth" plugin for example could check for a valid session and return a login page instead of calling the original callback. What happens exactly depends on the plugin.
 
 .. rubric:: Skip or Disable Plugins
 
 You may want to explicitly disable a plugin for a small number of routes. This
-is possible using the `disable` option of the :func:`route` decorator::
+is possible using the `skip` option of the :func:`route` decorator::
 
     # Save the return value of install() to get a handle for this plugin
     plugin_instance = install('sqlite')
 
-    @route('/open/:db', disable=[plugin_instance])
+    @route('/open/:db', skip=[plugin_instance])
     def open_db(db):
         # The 'db' keyword argument is not replaced by the plugin this time.
         if db in ('test', 'test2'):
@@ -162,24 +162,7 @@ This example shows a minimal plugin implementation and is a good starting point 
 * You may add additional methods and attributes as needed. Just make sure that the ``__init__`` and ``__call__`` methods of the base class remain available.
 
 
-Hook-Based Plugins
-------------------
 
-TODO: Example::
-
-    class HookPlugin(BasePlugin):
-        plugin_name = 'hook'
-
-        def setup(self, app, **config):
-            self.app = app
-            self.app.add_hook('before_request', self.before_request)
-            self.app.add_hook('after_request', self.after_request)
-
-        def before_request(self):
-            pass
-
-        def after_request(self):
-            pass
 
 Middleware Plugins
 ------------------
