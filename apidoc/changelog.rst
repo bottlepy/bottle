@@ -15,6 +15,17 @@ This changes are not released yet and are only part of the development documenta
 
 * A new hook-API to inject code immediately before or after the execution of handler callbacks.
 * The :meth:`Bottle.route` decorator got a lot of new features. See API documentation for details.
+* The :attr:`Request.headers` dict is now guaranteed to contain native strings but still allows access to the raw data provided by the WSGI environment (see :class:`WSGIHeaderDict`).
+
+.. rubric:: API changes 
+
+* :attr:`Request.header` is now :attr:`Request.headers`
+
+
+Bugfix Release 0.8.3
+=====================
+
+* Fixed "Reloading server dies on slow hardware." (Issue #90)
 
 Bugfix Release 0.8.2
 =====================

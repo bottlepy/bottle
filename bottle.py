@@ -849,16 +849,14 @@ class Request(threading.local, DictMixin):
 
     @property
     def header(self):
-        ''' :class:`HeaderDict` filled with request headers.
+        depr("The Request.header property was renamed to Request.headers")
+        return self.headers
 
-            HeaderDict keys are case insensitive str.title()d 
-        '''
+    @property
+    def headers(self):
+        ''' :class:`WSGIHeaderDict` filled with request headers. '''
         if 'bottle.headers' not in self.environ:
-            header = self.environ['bottle.headers'] = HeaderDict()
-            for key, value in self.environ.iteritems():
-                if key.startswith('HTTP_'):
-                    key = key[5:].replace('_','-').title()
-                    header[key] = value
+            self.environ['bottle.headers'] = WSGIHeaderDict(self.environ)
         return self.environ['bottle.headers']
 
     @property
@@ -958,7 +956,7 @@ class Request(threading.local, DictMixin):
             This implementation currently only supports basic auth and returns
             None on errors.
         """
-        return parse_auth(self.environ.get('HTTP_AUTHORIZATION',''))
+        return parse_auth(self.headers.get('Autorization',''))
 
     @property
     def COOKIES(self):
@@ -968,7 +966,7 @@ class Request(threading.local, DictMixin):
             Request.get_cookie() for details.
         """
         if 'bottle.cookies' not in self.environ:
-            raw_dict = SimpleCookie(self.environ.get('HTTP_COOKIE',''))
+            raw_dict = SimpleCookie(self.headers.get('Cookie',''))
             self.environ['bottle.cookies'] = {}
             for cookie in raw_dict.itervalues():
                 self.environ['bottle.cookies'][cookie.key] = cookie.value
@@ -1224,6 +1222,47 @@ class HeaderDict(MultiDict):
     def replace(self, key, value): return MultiDict.replace(self, self.httpkey(key), str(value))
     def getall(self, key): return MultiDict.getall(self, self.httpkey(key))
     def httpkey(self, key): return str(key).replace('_','-').title()
+
+
+
+class WSGIHeaderDict(DictMixin):
+    ''' This dict-like class takes a WSGI environ dict and provides convenient
+        access to HTTP_* fields. Keys and values are stored as native strings
+        (bytes/unicode) based on the python version used (2/3) and keys are
+        case-insensistive. If the WSGI environment contains non-native strings,
+        these are de- or encoded using 'utf8' (default) or 'latin1' (fallback)
+        charset. To get the original value, use the .raw(key) method.
+
+        This is not a MultiDict because incoming headers are unique. The API
+        will remain stable even on WSGI spec changes, if possible.
+        '''
+
+    def __init__(self, environ):
+        self.cache = {}
+        self.environ = environ
+        for key, value in self.environ.iteritems():
+            key = tonat(key, 'latin1') # Headers are limited to ASCII anyway
+            if key.startswith('HTTP_'):
+                self[key[5:].replace('_','-')] = value
+
+    def __len__(self): return len(self.cache)
+    def keys(self): return self.cache.keys()
+    def __iter__(self): return iter(self.cache)
+    def __contains__(self, key): return key.title() in self.keys()
+    def __delitem__(self, key): del self.cache[key.title()]
+    def __getitem__(self, key): return self.cache[key.title()]
+    def __setitem__(self, key, value):
+        try:
+            self.cache[key.title()] = tonat(value, 'utf8')
+        except UnicodeError:
+            self.cache[key.title()] = tonat(value, 'latin1')
+
+    def raw(self, key, default=None):
+        ''' Return the raw WSGI header value for that key. '''
+        ekey = 'HTTP_%s' % key.replace('-','_').upper()
+        return self.environ.get(ekey, default)
+
+
 
 
 class AppStack(list):

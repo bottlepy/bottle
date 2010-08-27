@@ -83,7 +83,10 @@ Data Structures
 
 .. autoclass:: HeaderDict
    :members:
-   
+
+.. autoclass:: WSGIHeaderDict
+   :members:
+
 .. autoclass:: AppStack
    :members:
 
