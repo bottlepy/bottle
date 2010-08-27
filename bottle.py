@@ -406,8 +406,15 @@ class Bottle(object):
         """ Create a new bottle instance.
             You usually don't do that. Use `bottle.app.push()` instead.
         """
-        self.router = None
+        # List of installed routes including meta data.
         self.routes = []
+        # Dict of callbacks with plugins applied. Populated on demand.
+        # The self.routes index is used as key
+        self.callbacks = {}
+        # Router object to map requests to self.routes indices.
+        # Created and configured on demand.
+        self.router = None
+
         self.mounts = {}
         self.error_handler = {}
         self.catchall = catchall
@@ -415,6 +422,7 @@ class Bottle(object):
         self.serve = True
         self.castfilter = []
         self.plugins = []
+        # Default plugins
         self.hooks = self.install(HooksPlugin)
         if autojson and json_dumps: self.install(JsonPlugin, json_dumps)
 
@@ -424,7 +432,7 @@ class Bottle(object):
     def install(self, plugin, *args, **kwargs):
         ''' Install and configure a plugin. The plugin instance is returned.
             :param plugin: Either a plugin class or name.'''
-        self.reset_routes()
+        self.reset_plugins()
         plugin = plugin_names.get(plugin) or plugin
         if issubclass(plugin, BasePlugin):
             rv = plugin(self, *args, **kwargs)
@@ -436,7 +444,7 @@ class Bottle(object):
     def uninstall(self, plugin):
         ''' Uninstall a specific plugin or all instances of a plugin type.
             :param plugin: Either a plugin instance, name or class. '''
-        self.reset_routes()
+        self.reset_plugins()
         plugin = plugin_names.get(plugin) or plugin
         if plugin in self.plugins:
             self.plugins.remove(plugin)
@@ -474,28 +482,35 @@ class Bottle(object):
             Return (callback, param) tuple or raise HTTPError.
             method: HEAD falls back to GET. All methods fall back to ANY.
         """
-        if not self.router: self.build_routes()
+        router = self.router or self._build_router()
         path, method = path.strip().lstrip('/'), method.upper()
-        callbacks, args = self.router.match(path)
-        if not callbacks:
+        methods, args = router.match(path)
+        if not methods:
             raise HTTPError(404, "Not found: " + path)
-        if method in callbacks:
-            return callbacks[method], args
-        if method == 'HEAD' and 'GET' in callbacks:
-            return callbacks['GET'], args
-        if 'ANY' in callbacks:
-            return callbacks['ANY'], args
-        allow = [m for m in callbacks if m != 'ANY']
-        if 'GET' in allow and 'HEAD' not in allow:
-            allow.append('HEAD')
-        raise HTTPError(405, "Method not allowed.",
-                        header=[('Allow',",".join(allow))])
+        elif method in methods:
+            index = methods[method]
+        elif method == 'HEAD' and 'GET' in methods:
+            index = methods['GET']
+        elif 'ANY' in methods:
+            index = methods['ANY']
+        else:
+            allow = [m for m in methods if m != 'ANY']
+            if 'GET' in allow and 'HEAD' not in allow:
+                allow.append('HEAD')
+            raise HTTPError(405, "Method not allowed.",
+                            header=[('Allow',",".join(allow))])
+        try:
+            return self.callbacks[index], args
+        except KeyError:
+            # Be lazy and only prepare callbacks (apply patches) if needed.
+            self.callbacks[index] = self._prepare_callback(index)
+            return self.callbacks[index], args
 
     def get_url(self, routename, **kargs):
         """ Return a string that matches a named route """
-        if not self.router: self.build_routes()
+        router = self.router or self._build_router()
         scriptname = request.environ.get('SCRIPT_NAME', '').strip('/') + '/'
-        location = self.router.build(routename, **kargs).lstrip('/')
+        location = router.build(routename, **kargs).lstrip('/')
         return urljoin(urljoin('/', scriptname), location)
 
     def route(self, path=None, method='GET', decorate=None, template=None,
@@ -521,7 +536,7 @@ class Bottle(object):
             :param callback: If set, the route decorator is directly applied
               to the callback. This equals ``Bottle.route(...)(callback)``.
         """
-        self.reset_routes()
+        self.router = None # Force bottle to rebuild the router
         # Support @route syntax as a shortcut for @route()
         if callable(path): path, callback = None, path
         # Build up the list of decorators (not including plugins)
@@ -544,27 +559,34 @@ class Bottle(object):
             return callback # return original callback
         return wrapper(callback) if callback else wrapper
 
-    def build_routes(self):
-        ''' Build router and apply plugins to callbacks. '''
-        self.router = self.router_class()
-        for entry in self.routes:
-            method, route, callback, skiplist, kargs = entry
-            wrapped = callback
-            for plugin in reversed(self.plugins):
-                if plugin in skiplist or type(plugin) in skiplist \
-                or plugin.plugin_name in skiplist or True in skiplist:
-                    continue
-                wrapped = plugin(wrapped)
-            functools.update_wrapper(wrapped, callback)
-            old = self.router.get_route(route, **kargs)
-            if old:
-                old.target[method] = wrapped
-            else:
-                self.router.add(route, {method: wrapped}, **kargs)
+    def reset_plugins(self):
+        ''' Force Bottle to reapply plugins. '''
+        self.callbacks.clear()
 
-    def reset_routes(self):
-        ''' Force Bottle to rebuild the router and reapply plugins '''
-        self.router = None
+    def _build_router(self):
+        ''' Build router and return the new router instance. '''
+        self.router = router = self.router_class()
+        for index, route in enumerate(self.routes):
+            method, route, _, _, config = route
+            old = router.get_route(route, **config)
+            if old:
+                # TODO: **config has no effect here...
+                old.target[method] = index
+            else:
+                router.add(route, {method: index}, **config)
+        return router
+
+    def _prepare_callback(self, index):
+        """ Apply plugins to a route callback and return a new callable. """
+        callback, skiplist = self.routes[index][2:4]
+        wrapped = callback
+        for plugin in reversed(self.plugins):
+            if plugin in skiplist or type(plugin) in skiplist \
+            or plugin.plugin_name in skiplist or True in skiplist:
+                continue
+            wrapped = plugin(wrapped)
+        functools.update_wrapper(wrapped, callback)
+        return wrapped
 
     def get(self, path=None, method='GET', **kargs):
         """ Decorator: Bind a function to a GET request path.
@@ -623,6 +645,7 @@ class Bottle(object):
         Support: False, str, unicode, dict, HTTPResponse, HTTPError, file-like,
         iterable of strings and iterable of unicodes
         """
+        # TODO: This should be a plugin.
         # Filtered types (recursive, because they may return anything)
         for testtype, filterfunc in self.castfilter:
             if isinstance(out, testtype):
@@ -1118,13 +1141,13 @@ class HooksPlugin(BasePlugin):
         if name == 'before_request':  self.before.append(func)
         elif name == 'after_request': self.after.insert(0, func)
         else: raise ValueError("Unknown hook name %s" % name)
-        self.app.reset_routes()
+        if len(self.before) + len(self.after) == 1: self.app.reset_plugins()
 
     def remove(self, name, func):
         if name == 'before_request':  self.before.remove(func)
         elif name == 'after_request': self.after.remove(func)
         else: raise ValueError("Unknown hook name %s" % name)
-        self.app.reset_routes()
+        if not self.before and not self.after: self.app.reset_plugins()
 
 
 class JsonPlugin(BasePlugin):
