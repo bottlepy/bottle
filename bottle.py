@@ -559,6 +559,13 @@ class Bottle(object):
             return callback # return original callback
         return wrapper(callback) if callback else wrapper
 
+    def remove_route(self, path, method='GET'):
+        """ Remove a route. """
+        for index, route in list(reversed(enumerate(self.routes))):
+            if not method or route[0] == method and route[1] == path:
+                del self.routes[index]
+        self.router = None
+
     def reset_plugins(self):
         ''' Force Bottle to reapply plugins. '''
         self.callbacks.clear()
