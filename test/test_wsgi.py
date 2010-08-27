@@ -202,6 +202,19 @@ class TestRouteDecorator(ServerTestBase):
         self.assertBody('21', '/dec')
         self.assertBody('12', '/nodec')
 
+    def test_decorate_transparency(self):
+        """ The @route() decorator does return its argument unchanged, even
+            if a decorate-parameter is present. """
+        def dec(func):
+            def wrapper(*a, **ka):
+                return func(*a, **ka)
+            return wrapper
+        def test(): pass
+        test2 = bottle.route('/test2', decorate=dec)(test)
+        test3 = bottle.route('/test3', decorate=dec, callback=test)
+        self.assertEquals(test, test2)
+        self.assertEquals(test, test3)
+
     def test_decorate_list(self):
         def revdec(func):
             def wrapper(*a, **ka):

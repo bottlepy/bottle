@@ -522,7 +522,7 @@ class Bottle(object):
               to the callback. This equals ``Bottle.route(...)(callback)``.
         """
         self.reset_routes()
-        # @route doubles as decorator and decorator factory
+        # Support @route syntax as a shortcut for @route()
         if callable(path): path, callback = None, path
         # Build up the list of decorators (not including plugins)
         decorators = [view(template, **template_opts)] if template else []
@@ -533,30 +533,34 @@ class Bottle(object):
                 route = route.strip().lstrip('/')
                 for verb in makelist(method):
                     verb = verb.strip().upper()
-                    options = (verb, route, callback, decorators, skiplist, kargs)
+                    # Apply decorators (not including plugins)
+                    wrapped = callback
+                    for dec in reversed(decorators):
+                        wrapped = dec(wrapped)
+                        functools.update_wrapper(wrapped, callback)
+                    # Store to application with all meta data needed.
+                    options = (verb, route, wrapped, skiplist, kargs)
                     self.routes.append(options)
-            return callback
+            return callback # return original callback
         return wrapper(callback) if callback else wrapper
 
     def build_routes(self):
         ''' Build router and apply plugins to callbacks. '''
         self.router = self.router_class()
         for entry in self.routes:
-            method, route, func, decorators, skiplist, kargs = entry
-            callback = func
-            for dec in reversed(decorators):
-                callback = dec(callback)
-            for plugin in self.plugins:
+            method, route, callback, skiplist, kargs = entry
+            wrapped = callback
+            for plugin in reversed(self.plugins):
                 if plugin in skiplist or type(plugin) in skiplist \
                 or plugin.plugin_name in skiplist or True in skiplist:
                     continue
-                callback = plugin(callback)
-            functools.update_wrapper(callback, func)
+                wrapped = plugin(wrapped)
+            functools.update_wrapper(wrapped, callback)
             old = self.router.get_route(route, **kargs)
             if old:
-                old.target[method] = callback
+                old.target[method] = wrapped
             else:
-                self.router.add(route, {method: callback}, **kargs)
+                self.router.add(route, {method: wrapped}, **kargs)
 
     def reset_routes(self):
         ''' Force Bottle to rebuild the router and reapply plugins '''
