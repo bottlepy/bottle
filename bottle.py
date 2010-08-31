@@ -433,13 +433,11 @@ class Bottle(object):
         ''' Install and configure a plugin. The plugin instance is returned.
             :param plugin: Either a plugin class or name.'''
         self.reset_plugins()
-        plugin = plugin_names.get(plugin) or plugin
-        if issubclass(plugin, BasePlugin):
-            rv = plugin(self, *args, **kwargs)
-            self.plugins.append(rv)
-            return rv
-        else:
-            raise PluginError("Unknown plugin: %s" % plugin)
+        if not issubclass(plugin, BasePlugin):
+            plugin = import_plugin(plugin)
+        p = plugin(self, *args, **kwargs)
+        self.plugins.append(p)
+        return p
 
     def uninstall(self, plugin):
         ''' Uninstall a specific plugin or all instances of a plugin type.
@@ -1085,7 +1083,18 @@ class Response(threading.local):
 # Plugins ######################################################################
 ###############################################################################
 
-plugin_names = {} # See PluginMetaclass and Bottle.install()
+# Known plugins (name->class)
+# Populated by PluginMetaclass and used by Bottle.install()
+plugin_names = {} 
+
+def import_plugin(name):
+    """ Try to import 'bottle_<name>' and return the plugin class. """
+    if name not in plugin_names:
+        __import__('bottle_%s'%name)
+    if name not in plugin_names:
+        raise PluginError("Unable to load plugin %s." % name)
+    return plugin_names[name]
+
 
 class PluginError(BottleException): pass
 
