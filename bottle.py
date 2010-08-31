@@ -903,7 +903,7 @@ class Request(threading.local, DictMixin):
             This implementation currently only supports basic auth and returns
             None on errors.
         """
-        return parse_auth(self.headers.get('Autorization',''))
+        return parse_auth(self.headers.get('Authorization',''))
 
     @property
     def COOKIES(self):
