@@ -2042,7 +2042,7 @@ def template(*args, **kwargs):
     if not TEMPLATES[tpl]:
         abort(500, 'Template (%s) not found' % tpl)
     for dictarg in args[1:]: kwargs.update(dictarg)
-    return TEMPLATES[tpl].render(**kwargs)
+    return TEMPLATES[tpl].render(kwargs)
 
 mako_template = functools.partial(template, template_adapter=MakoTemplate)
 cheetah_template = functools.partial(template, template_adapter=CheetahTemplate)
