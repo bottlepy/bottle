@@ -922,7 +922,7 @@ class Request(threading.local, DictMixin):
     def get_cookie(self, name, secret=None):
         """ Return the (decoded) value of a cookie. """
         value = self.COOKIES.get(name)
-        dec = cookie_decode(value, secret) if secret else None
+        dec = cookie_decode(value, secret) if (secret and value is not None) else None
         return dec or value
 
     @property
