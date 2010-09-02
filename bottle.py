@@ -225,8 +225,8 @@ class Route(object):
     def __init__(self, route, target=None, name=None, static=False):
         """ Create a Route. The route string may contain `:key`,
             `:key#regexp#` or `:#regexp#` tokens for each dynamic part of the
-            route. These can be escaped with a backslash infront of the `:`
-            and are compleately ignored if static is true. A name may be used
+            route. These can be escaped with a backslash in front of the `:`
+            and are completely ignored if static is true. A name may be used
             to refer to this route later (depends on Router)
         """
         self.route = route
@@ -715,7 +715,7 @@ class Request(threading.local, DictMixin):
         self.bind(environ or {},)
 
     def bind(self, environ):
-        """ Bind a new WSGI enviroment.
+        """ Bind a new WSGI environment.
             
             This is done automatically for the global `bottle.request`
             instance on every request.
@@ -825,7 +825,7 @@ class Request(threading.local, DictMixin):
     def POST(self):
         """ Property: The HTTP POST body parsed into a MultiDict.
 
-            This supports urlencoded and multipart POST requests. Multipart
+            This supports url-encoded and multipart POST requests. Multipart
             is commonly used for file uploads and may result in some of the
             values being cgi.FieldStorage objects instead of strings.
 
@@ -898,7 +898,7 @@ class Request(threading.local, DictMixin):
 
     @property
     def auth(self): #TODO: Tests and docs. Add support for digest. namedtuple?
-        """ HTTP authorisation data as a (user, passwd) tuple. (experimental)
+        """ HTTP authorization data as a (user, passwd) tuple. (experimental)
         
             This implementation currently only supports basic auth and returns
             None on errors.
@@ -1010,14 +1010,14 @@ class Response(threading.local):
             |param max_age| maximum age in seconds. (default: None)
             |param expires| a datetime object or UNIX timestamp. (defaut: None)
             |param domain| the domain that is allowed to read the cookie.
-              (default: current doimain)
+              (default: current domain)
             |param path| limits the cookie to a given path (default: /)
 
-            If neigher `expires` nor `max_age` are set (default), the cookie
+            If neither `expires` nor `max_age` are set (default), the cookie
             lasts only as long as the browser is not closed.
 
             Secure cookies may store any pickle-able object and are
-            cryptographically signed to prevent manaipulation. Keep in mind that
+            cryptographically signed to prevent manipulation. Keep in mind that
             cookies are limited to 4kb in most browsers.
             
             Warning: Secure cookies are not encrypted (the client can still see
@@ -1110,7 +1110,7 @@ class WSGIHeaderDict(DictMixin):
     ''' This dict-like class takes a WSGI environ dict and provides convenient
         access to HTTP_* fields. Keys and values are stored as native strings
         (bytes/unicode) based on the python version used (2/3) and keys are
-        case-insensistive. If the WSGI environment contains non-native strings,
+        case-insensitive. If the WSGI environment contains non-native strings,
         these are de- or encoded using 'utf8' (default) or 'latin1' (fallback)
         charset. To get the original value, use the .raw(key) method.
 
@@ -1188,7 +1188,7 @@ def dict2json(d):
     return json_dumps(d)
 
 
-def abort(code=500, text='Unknown Error: Appliction stopped.'):
+def abort(code=500, text='Unknown Error: Application stopped.'):
     """ Aborts execution and causes a HTTP error. """
     raise HTTPError(code, text)
 
@@ -1331,7 +1331,7 @@ def path_shift(script_name, path_info, shift=1):
         :param script_name: The SCRIPT_NAME path.
         :param script_name: The PATH_INFO path.
         :param shift: The number of path fragments to shift. May be negative to
-          change ths shift direction. (default: 1)
+          change the shift direction. (default: 1)
     '''
     if shift == 0: return script_name, path_info
     pathlist = path_info.strip('/').split('/')
@@ -1467,7 +1467,7 @@ class MeinheldServer(ServerAdapter):
 
 class FapwsServer(ServerAdapter):
     """
-    Extremly fast webserver using libev.
+    Extremely fast webserver using libev.
     See http://william-os4y.livejournal.com/
     """
     def run(self, handler): # pragma: no cover
@@ -2085,7 +2085,7 @@ def view(tpl_name, **defaults):
           - return something other than a dict and the view decorator will not
             process the template, but return the handler result as is.
             This includes returning a HTTPResponse(dict) to get,
-            for instance, JSON with autojson or other castfilters
+            for instance, JSON with autojson or other castfilters.
     '''
     def decorator(func):
         @functools.wraps(func)
