@@ -919,11 +919,17 @@ class Request(threading.local, DictMixin):
                 self.environ['bottle.cookies'][cookie.key] = cookie.value
         return self.environ['bottle.cookies']
 
-    def get_cookie(self, name, secret=None):
-        """ Return the (decoded) value of a cookie. """
-        value = self.COOKIES.get(name)
-        dec = cookie_decode(value, secret) if (secret and value is not None) else None
-        return dec or value
+    def get_cookie(self, key, secret=None):
+        """ Return the content of a cookie. To read a `Secure Cookies`, use the
+            same `secret` as used to create the cookie (see
+            :meth:`Response.set_cookie`). If anything goes wrong, None is
+            returned.
+        """
+        value = self.COOKIES.get(key)
+        if secret and value:
+            dec = cookie_decode(value, secret) # (key, value) tuple or None
+            return dec[1] if dec and dec[0] == key else None
+        return value or None
 
     @property
     def is_ajax(self):
@@ -995,23 +1001,46 @@ class Response(threading.local):
         return self._COOKIES
 
     def set_cookie(self, key, value, secret=None, **kargs):
-        """ Add a new cookie with various options.
-        
-        If the cookie value is not a string, the value is pickled and a secure
-        cookie is created. For this you have to provide a secret key which
-        is used to sign the cookie.
-        
-        Possible cookie options are:
-            expires, path, comment, domain, max_age, secure, version, httponly
-            See http://de.wikipedia.org/wiki/HTTP-Cookie#Aufbau for details
-        """
-        if not isinstance(value, basestring):
-            if not secret:
-                raise TypeError('Cookies must be strings when secret is not set')
-            value = cookie_encode(value, secret).decode('ascii') #2to3 hack
+        ''' Add a cookie. If the `secret` parameter is set, this creates a
+            `Secure Cookie` (described below).
+
+            |param key| the name of the cookie.
+            |param value| the value of the cookie.
+            |param secret| required for secure cookies. (default: None)
+            |param max_age| maximum age in seconds. (default: None)
+            |param expires| a datetime object or UNIX timestamp. (defaut: None)
+            |param domain| the domain that is allowed to read the cookie.
+              (default: current doimain)
+            |param path| limits the cookie to a given path (default: /)
+
+            If neigher `expires` nor `max_age` are set (default), the cookie
+            lasts only as long as the browser is not closed.
+
+            Secure cookies may store any pickle-able object and are
+            cryptographically signed to prevent manaipulation. Keep in mind that
+            cookies are limited to 4kb in most browsers.
+            
+            Warning: Secure cookies are not encrypted (the client can still see
+            the content) and not copy-protected (the client can restore an old
+            cookie). The main intention is to make pickling and unpickling
+            save, not to store secret information at client side.
+        '''
+        if secret:
+            value = touni(cookie_encode((key, value), secret))
+        elif not isinstance(value, basestring):
+            raise TypeError('Secret missing for non-string Cookie.')
+            
         self.COOKIES[key] = value
         for k, v in kargs.iteritems():
             self.COOKIES[key][k.replace('_', '-')] = v
+
+    def delete_cookie(self, key, **kwargs):
+        ''' Delete a cookie. Be sure to use the same `domain` and `path`
+            parameters as used to create the cookie.
+        '''
+        kwargs['max_age'] = -1
+        kwargs['expires'] = 0
+        self.set_cookie(key, **kwargs)
 
     def get_content_type(self):
         """ Current 'Content-Type' header. """
@@ -1224,7 +1253,7 @@ def static_file(filename, root, guessmime=True, mimetype=None, download=False):
 
 
 ###############################################################################
-# HTTP Utilities ans MISC (TODO) ###############################################
+# HTTP Utilities and MISC (TODO) ###############################################
 ###############################################################################
 
 def debug(mode=True):
@@ -1255,14 +1284,14 @@ def parse_auth(header):
 
 
 def cookie_encode(data, key):
-    ''' Encode and sign a pickle-able object. Return a string '''
+    ''' Encode and sign a pickle-able object. Return a (byte) string '''
     msg = base64.b64encode(pickle.dumps(data, -1))
     sig = base64.b64encode(hmac.new(key, msg).digest())
     return tob('!') + sig + tob('?') + msg
 
 
 def cookie_decode(data, key):
-    ''' Verify and decode an encoded string. Return an object or None'''
+    ''' Verify and decode an encoded string. Return an object or None.'''
     data = tob(data)
     if cookie_is_encoded(data):
         sig, msg = data.split(tob('?'), 1)
