@@ -433,7 +433,7 @@ class Bottle(object):
         ''' Install and configure a plugin. The plugin instance is returned.
             :param plugin: Either a plugin class or name.'''
         self.reset_plugins()
-        if not issubclass(plugin, BasePlugin):
+        if not isinstance(plugin, type) or not issubclass(plugin, BasePlugin):
             plugin = import_plugin(plugin)
         p = plugin(self, *args, **kwargs)
         self.plugins.append(p)
@@ -2217,14 +2217,14 @@ def view(tpl_name, **defaults):
     '''
     def decorator(func):
         @functools.wraps(func)
-        def wrapper(*args, **kwargs):
+        def view_wrapper(*args, **kwargs):
             result = func(*args, **kwargs)
             if isinstance(result, dict):
                 tplvars = defaults.copy()
                 tplvars.update(result)
                 return template(tpl_name, tplvars)
             return result
-        return wrapper
+        return view_wrapper
     return decorator
 
 mako_view = functools.partial(view, template_adapter=MakoTemplate)

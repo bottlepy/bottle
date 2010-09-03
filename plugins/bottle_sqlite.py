@@ -6,10 +6,9 @@ connection is made.
 
 Example::
 
-    from .plugins.sqlite import SQLitePlugin
     import bottle
 
-    bottle.install(SQLitePlugin, dbfile='/tmp/test.db')
+    bottle.install('sqlite', dbfile='/tmp/test.db')
 
     @bottle.route('/show/:id')
     def show(db, id):
@@ -26,6 +25,7 @@ __licence__ = 'MIT'
 
 import sqlite3
 import inspect
+import bottle
 
 def accepts_keyword(func, name):
     ''' Return True if it is save to pass a named keyword argument to
@@ -39,7 +39,8 @@ def accepts_keyword(func, name):
         func = getattr(func, '_bottle_wrapped', None)
     return True
 
-class SQLitePlugin(BasePlugin):
+
+class SQLitePlugin(bottle.BasePlugin):
     plugin_name = 'sqlite'
 
     def setup(self, app, dbfile=':memory:', keyword='db',
