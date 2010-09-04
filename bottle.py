@@ -219,7 +219,7 @@ class RouteBuildError(RouteError):
 
 class Route(object):
     ''' Represents a single route and can parse the dynamic route syntax '''
-    syntax = re.compile(r'(.*?)(?<!\\):([a-zA-Z_]+)?(?:#(.*?)#)?')
+    syntax = re.compile(r'(?<!\\):([a-zA-Z_]+)?(?:#(.*?)#)?')
     default = '[^/]+'
 
     def __init__(self, route, target=None, name=None, static=False):
@@ -229,43 +229,21 @@ class Route(object):
             and are completely ignored if static is true. A name may be used
             to refer to this route later (depends on Router)
         """
-        self.route = route
+        self.route = route.replace('\\:',':')
         self.target = target
         self.name = name
-        self.flat = static
-        self._tokens = None
-
-    def tokens(self):
-        """ Return a list of (type, value) tokens. """
-        if not self._tokens:
-            r = self.route.replace(':','\\:') if self.flat else self.route
-            self._tokens = list(self.tokenise(r))
-        return self._tokens
-
-    @classmethod
-    def tokenise(cls, route):
-        ''' Split a string into an iterator of (type, value) tokens. '''
-        match = None
-        for match in cls.syntax.finditer(route):
-            pre, name, rex = match.groups()
-            if pre: yield ('TXT', pre.replace('\\:',':'))
-            if rex and name: yield ('VAR', (rex, name))
-            elif name: yield ('VAR', (cls.default, name))
-            elif rex: yield ('ANON', rex)
-        if not match:
-            yield ('TXT', route.replace('\\:',':'))
-        elif match.end() < len(route):
-            yield ('TXT', route[match.end():].replace('\\:',':'))
+        self.realroute = route.replace(':','\\:') if static else route
+        self.tokens = self.syntax.split(self.realroute)
 
     def group_re(self):
         ''' Return a regexp pattern with named groups '''
         out = ''
-        for token, data in self.tokens():
-            if   token == 'TXT':  out += re.escape(data)
-            elif token == 'VAR':  out += '(?P<%s>%s)' % (data[1], data[0])
-            elif token == 'ANON': out += '(?:%s)' % data
+        for i, part in enumerate(self.tokens):
+            if i%3 == 0:   out += re.escape(part.replace('\:',':'))
+            elif i%3 == 1: out += '(?P<%s>' % part if part else '(?:'
+            else:          out += '%s)' % (part or self.default)
         return out
-
+        
     def flat_re(self):
         ''' Return a regexp pattern with non-grouping parentheses '''
         rf = lambda m: m.group(0) if len(m.group(1)) % 2 else m.group(1) + '(?:'
@@ -273,29 +251,24 @@ class Route(object):
 
     def format_str(self):
         ''' Return a format string with named fields. '''
-        out, i = '', 0
-        for token, value in self.tokens():
-            if token == 'TXT': out += value.replace('%','%%')
-            elif token == 'ANON': out += '%%(anon%d)s' % i; i+=1
-            elif token == 'VAR': out += '%%(%s)s' % value[1]
+        out, c = '', 0
+        for i, part in enumerate(self.tokens):
+            if i%3 == 0:  out += part.replace('\\:',':').replace('%','%%')
+            elif i%3 == 1:
+                if not part: part = 'anon%d' % c; c+=1
+                out += '%%(%s)s' % part
         return out
 
     @property
     def static(self):
-        return not self.is_dynamic()
-
-    def is_dynamic(self):
-        ''' Return true if the route contains dynamic parts '''
-        for token, value in self.tokens():
-            if token != 'TXT':
-                return True
-        return False
+        return len(self.tokens) == 1
 
     def __repr__(self):
-        return "<Route(%s) />" % repr(self.route)
+        return "<Route(%s) />" % repr(self.realroute)
 
     def __eq__(self, other):
-        return (self.route, self.flat) == (other.route, other.flat)
+        return (self.realroute) == (other.realroute)
+
 
 class Router(object):
     ''' A route associates a string (e.g. URL) with an object (e.g. function)
