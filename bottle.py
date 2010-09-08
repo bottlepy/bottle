@@ -790,8 +790,10 @@ class Request(threading.local, DictMixin):
             data = parse_qs(self.query_string, keep_blank_values=True)
             get = self.environ['bottle.get'] = MultiDict()
             for key, values in data.iteritems():
-                for value in values:
-                    get[key] = value
+                if values:
+                    get[key] = values[0]
+                if len(values) > 1:
+                    get[key] = values
         return self.environ['bottle.get']
 
     @property
