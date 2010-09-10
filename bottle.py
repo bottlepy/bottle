@@ -219,53 +219,31 @@ class RouteBuildError(RouteError):
 
 class Route(object):
     ''' Represents a single route and can parse the dynamic route syntax '''
-    syntax = re.compile(r'(.*?)(?<!\\):([a-zA-Z_]+)?(?:#(.*?)#)?')
+    syntax = re.compile(r'(?<!\\):([a-zA-Z_]+)?(?:#(.*?)#)?')
     default = '[^/]+'
 
     def __init__(self, route, target=None, name=None, static=False):
         """ Create a Route. The route string may contain `:key`,
             `:key#regexp#` or `:#regexp#` tokens for each dynamic part of the
-            route. These can be escaped with a backslash infront of the `:`
-            and are compleately ignored if static is true. A name may be used
+            route. These can be escaped with a backslash in front of the `:`
+            and are completely ignored if static is true. A name may be used
             to refer to this route later (depends on Router)
         """
-        self.route = route
+        self.route = route.replace('\\:',':')
         self.target = target
         self.name = name
-        self.flat = static
-        self._tokens = None
-
-    def tokens(self):
-        """ Return a list of (type, value) tokens. """
-        if not self._tokens:
-            r = self.route.replace(':','\\:') if self.flat else self.route
-            self._tokens = list(self.tokenise(r))
-        return self._tokens
-
-    @classmethod
-    def tokenise(cls, route):
-        ''' Split a string into an iterator of (type, value) tokens. '''
-        match = None
-        for match in cls.syntax.finditer(route):
-            pre, name, rex = match.groups()
-            if pre: yield ('TXT', pre.replace('\\:',':'))
-            if rex and name: yield ('VAR', (rex, name))
-            elif name: yield ('VAR', (cls.default, name))
-            elif rex: yield ('ANON', rex)
-        if not match:
-            yield ('TXT', route.replace('\\:',':'))
-        elif match.end() < len(route):
-            yield ('TXT', route[match.end():].replace('\\:',':'))
+        self.realroute = route.replace(':','\\:') if static else route
+        self.tokens = self.syntax.split(self.realroute)
 
     def group_re(self):
         ''' Return a regexp pattern with named groups '''
         out = ''
-        for token, data in self.tokens():
-            if   token == 'TXT':  out += re.escape(data)
-            elif token == 'VAR':  out += '(?P<%s>%s)' % (data[1], data[0])
-            elif token == 'ANON': out += '(?:%s)' % data
+        for i, part in enumerate(self.tokens):
+            if i%3 == 0:   out += re.escape(part.replace('\:',':'))
+            elif i%3 == 1: out += '(?P<%s>' % part if part else '(?:'
+            else:          out += '%s)' % (part or self.default)
         return out
-
+        
     def flat_re(self):
         ''' Return a regexp pattern with non-grouping parentheses '''
         rf = lambda m: m.group(0) if len(m.group(1)) % 2 else m.group(1) + '(?:'
@@ -273,29 +251,24 @@ class Route(object):
 
     def format_str(self):
         ''' Return a format string with named fields. '''
-        out, i = '', 0
-        for token, value in self.tokens():
-            if token == 'TXT': out += value.replace('%','%%')
-            elif token == 'ANON': out += '%%(anon%d)s' % i; i+=1
-            elif token == 'VAR': out += '%%(%s)s' % value[1]
+        out, c = '', 0
+        for i, part in enumerate(self.tokens):
+            if i%3 == 0:  out += part.replace('\\:',':').replace('%','%%')
+            elif i%3 == 1:
+                if not part: part = 'anon%d' % c; c+=1
+                out += '%%(%s)s' % part
         return out
 
     @property
     def static(self):
-        return not self.is_dynamic()
-
-    def is_dynamic(self):
-        ''' Return true if the route contains dynamic parts '''
-        for token, value in self.tokens():
-            if token != 'TXT':
-                return True
-        return False
+        return len(self.tokens) == 1
 
     def __repr__(self):
-        return "<Route(%s) />" % repr(self.route)
+        return "<Route(%s) />" % repr(self.realroute)
 
     def __eq__(self, other):
-        return (self.route, self.flat) == (other.route, other.flat)
+        return (self.realroute) == (other.realroute)
+
 
 class Router(object):
     ''' A route associates a string (e.g. URL) with an object (e.g. function)
@@ -766,7 +739,7 @@ class Request(threading.local, DictMixin):
         self.bind(environ or {},)
 
     def bind(self, environ):
-        """ Bind a new WSGI enviroment.
+        """ Bind a new WSGI environment.
             
             This is done automatically for the global `bottle.request`
             instance on every request.
@@ -876,7 +849,7 @@ class Request(threading.local, DictMixin):
     def POST(self):
         """ Property: The HTTP POST body parsed into a MultiDict.
 
-            This supports urlencoded and multipart POST requests. Multipart
+            This supports url-encoded and multipart POST requests. Multipart
             is commonly used for file uploads and may result in some of the
             values being cgi.FieldStorage objects instead of strings.
 
@@ -949,12 +922,12 @@ class Request(threading.local, DictMixin):
 
     @property
     def auth(self): #TODO: Tests and docs. Add support for digest. namedtuple?
-        """ HTTP authorisation data as a (user, passwd) tuple. (experimental)
+        """ HTTP authorization data as a (user, passwd) tuple. (experimental)
         
             This implementation currently only supports basic auth and returns
             None on errors.
         """
-        return parse_auth(self.headers.get('Autorization',''))
+        return parse_auth(self.headers.get('Authorization',''))
 
     @property
     def COOKIES(self):
@@ -970,11 +943,17 @@ class Request(threading.local, DictMixin):
                 self.environ['bottle.cookies'][cookie.key] = cookie.value
         return self.environ['bottle.cookies']
 
-    def get_cookie(self, name, secret=None):
-        """ Return the (decoded) value of a cookie. """
-        value = self.COOKIES.get(name)
-        dec = cookie_decode(value, secret) if secret else None
-        return dec or value
+    def get_cookie(self, key, secret=None):
+        """ Return the content of a cookie. To read a `Secure Cookies`, use the
+            same `secret` as used to create the cookie (see
+            :meth:`Response.set_cookie`). If anything goes wrong, None is
+            returned.
+        """
+        value = self.COOKIES.get(key)
+        if secret and value:
+            dec = cookie_decode(value, secret) # (key, value) tuple or None
+            return dec[1] if dec and dec[0] == key else None
+        return value or None
 
     @property
     def is_ajax(self):
@@ -1046,23 +1025,46 @@ class Response(threading.local):
         return self._COOKIES
 
     def set_cookie(self, key, value, secret=None, **kargs):
-        """ Add a new cookie with various options.
-        
-        If the cookie value is not a string, the value is pickled and a secure
-        cookie is created. For this you have to provide a secret key which
-        is used to sign the cookie.
-        
-        Possible cookie options are:
-            expires, path, comment, domain, max_age, secure, version, httponly
-            See http://de.wikipedia.org/wiki/HTTP-Cookie#Aufbau for details
-        """
-        if not isinstance(value, basestring):
-            if not secret:
-                raise TypeError('Cookies must be strings when secret is not set')
-            value = cookie_encode(value, secret).decode('ascii') #2to3 hack
+        ''' Add a cookie. If the `secret` parameter is set, this creates a
+            `Secure Cookie` (described below).
+
+            |param key| the name of the cookie.
+            |param value| the value of the cookie.
+            |param secret| required for secure cookies. (default: None)
+            |param max_age| maximum age in seconds. (default: None)
+            |param expires| a datetime object or UNIX timestamp. (defaut: None)
+            |param domain| the domain that is allowed to read the cookie.
+              (default: current domain)
+            |param path| limits the cookie to a given path (default: /)
+
+            If neither `expires` nor `max_age` are set (default), the cookie
+            lasts only as long as the browser is not closed.
+
+            Secure cookies may store any pickle-able object and are
+            cryptographically signed to prevent manipulation. Keep in mind that
+            cookies are limited to 4kb in most browsers.
+            
+            Warning: Secure cookies are not encrypted (the client can still see
+            the content) and not copy-protected (the client can restore an old
+            cookie). The main intention is to make pickling and unpickling
+            save, not to store secret information at client side.
+        '''
+        if secret:
+            value = touni(cookie_encode((key, value), secret))
+        elif not isinstance(value, basestring):
+            raise TypeError('Secret missing for non-string Cookie.')
+            
         self.COOKIES[key] = value
         for k, v in kargs.iteritems():
             self.COOKIES[key][k.replace('_', '-')] = v
+
+    def delete_cookie(self, key, **kwargs):
+        ''' Delete a cookie. Be sure to use the same `domain` and `path`
+            parameters as used to create the cookie.
+        '''
+        kwargs['max_age'] = -1
+        kwargs['expires'] = 0
+        self.set_cookie(key, **kwargs)
 
     def get_content_type(self):
         """ Current 'Content-Type' header. """
@@ -1238,7 +1240,7 @@ class WSGIHeaderDict(DictMixin):
     ''' This dict-like class takes a WSGI environ dict and provides convenient
         access to HTTP_* fields. Keys and values are stored as native strings
         (bytes/unicode) based on the python version used (2/3) and keys are
-        case-insensistive. If the WSGI environment contains non-native strings,
+        case-insensitive. If the WSGI environment contains non-native strings,
         these are de- or encoded using 'utf8' (default) or 'latin1' (fallback)
         charset. To get the original value, use the .raw(key) method.
 
@@ -1316,7 +1318,7 @@ def dict2json(d):
     return json_dumps(d)
 
 
-def abort(code=500, text='Unknown Error: Appliction stopped.'):
+def abort(code=500, text='Unknown Error: Application stopped.'):
     """ Aborts execution and causes a HTTP error. """
     raise HTTPError(code, text)
 
@@ -1381,7 +1383,7 @@ def static_file(filename, root, guessmime=True, mimetype=None, download=False):
 
 
 ###############################################################################
-# HTTP Utilities ans MISC (TODO) ###############################################
+# HTTP Utilities and MISC (TODO) ###############################################
 ###############################################################################
 
 def debug(mode=True):
@@ -1412,14 +1414,14 @@ def parse_auth(header):
 
 
 def cookie_encode(data, key):
-    ''' Encode and sign a pickle-able object. Return a string '''
+    ''' Encode and sign a pickle-able object. Return a (byte) string '''
     msg = base64.b64encode(pickle.dumps(data, -1))
     sig = base64.b64encode(hmac.new(key, msg).digest())
     return tob('!') + sig + tob('?') + msg
 
 
 def cookie_decode(data, key):
-    ''' Verify and decode an encoded string. Return an object or None'''
+    ''' Verify and decode an encoded string. Return an object or None.'''
     data = tob(data)
     if cookie_is_encoded(data):
         sig, msg = data.split(tob('?'), 1)
@@ -1459,7 +1461,7 @@ def path_shift(script_name, path_info, shift=1):
         :param script_name: The SCRIPT_NAME path.
         :param script_name: The PATH_INFO path.
         :param shift: The number of path fragments to shift. May be negative to
-          change ths shift direction. (default: 1)
+          change the shift direction. (default: 1)
     '''
     if shift == 0: return script_name, path_info
     pathlist = path_info.strip('/').split('/')
@@ -1595,7 +1597,7 @@ class MeinheldServer(ServerAdapter):
 
 class FapwsServer(ServerAdapter):
     """
-    Extremly fast webserver using libev.
+    Extremely fast webserver using libev.
     See http://william-os4y.livejournal.com/
     """
     def run(self, handler): # pragma: no cover
@@ -2199,7 +2201,7 @@ def template(*args, **kwargs):
     if not TEMPLATES[tpl]:
         abort(500, 'Template (%s) not found' % tpl)
     for dictarg in args[1:]: kwargs.update(dictarg)
-    return TEMPLATES[tpl].render(**kwargs)
+    return TEMPLATES[tpl].render(kwargs)
 
 mako_template = functools.partial(template, template_adapter=MakoTemplate)
 cheetah_template = functools.partial(template, template_adapter=CheetahTemplate)
@@ -2213,7 +2215,7 @@ def view(tpl_name, **defaults):
           - return something other than a dict and the view decorator will not
             process the template, but return the handler result as is.
             This includes returning a HTTPResponse(dict) to get,
-            for instance, JSON with autojson or other castfilters
+            for instance, JSON with autojson or other castfilters.
     '''
     def decorator(func):
         @functools.wraps(func)
