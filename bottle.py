@@ -402,27 +402,65 @@ class Bottle(object):
     def optimize(self, *a, **ka):
         depr("Bottle.optimize() is obsolete.")
 
-    def install(self, plugin, *args, **kwargs):
-        ''' Install and configure a plugin. The plugin instance is returned.
-            :param plugin: Either a plugin class or name.'''
+    def add_filter(self, ftype, func):
+        ''' Register a new output filter. Whenever bottle hits a handler output
+            matching `ftype`, `func` is applied to it. '''
+        depr("Filter support is deprecated. Use plugins instead.")
+        if not isinstance(ftype, type):
+            raise TypeError("Expected type object, got %s" % type(ftype))
+        self.castfilter = [(t, f) for (t, f) in self.castfilter if t != ftype]
+        self.castfilter.append((ftype, func))
+        self.castfilter.sort()
+
+    def install(self, plugin, *args, **config):
+        ''' Load a plugin and install it to this app. The plugin instance
+            is returned. Try to import missing plugins by searching for a module
+            or package named bottle_<plugin-name>.
+
+            :param plugin: Either a plugin instance, name or class.
+        '''
         self.reset_plugins()
-        if not isinstance(plugin, type) or not issubclass(plugin, BasePlugin):
-            plugin = import_plugin(plugin)
-        p = plugin(self, *args, **kwargs)
-        self.plugins.append(p)
-        return p
+        if isinstance(plugin, basestring):
+            if plugin not in plugin_names:
+                __import__('bottle_%s' % plugin)
+            if plugin not in plugin_names:
+                raise PluginError("Unable to load plugin %s." % name)
+            plugin = plugin_names[name]
+        if isinstance(plugin, type) and issubclass(plugin, BasePlugin):
+            plugin = plugin(self, *args, **config)
+        if not isinstance(plugin, BasePlugin):
+            raise PluginError("Plugins must subclass bottle.BasePlugin.")
+        self.plugins.append(plugin)
+        return plugin
 
     def uninstall(self, plugin):
         ''' Uninstall a specific plugin or all instances of a plugin type.
             :param plugin: Either a plugin instance, name or class. '''
         self.reset_plugins()
         plugin = plugin_names.get(plugin) or plugin
-        if plugin in self.plugins:
+        if plugin in self.plugins: # remove instance
             self.plugins.remove(plugin)
-        elif issubclass(plugin, BasePlugin):
-            self.plugins = [p for p in self.plugins if not type(p) == plugin]
-        else:
+        elif isinstance(plugin, basestring): # remove all with this name
             self.plugins = [p for p in self.plugins if p.plugin_name != plugin]
+        else: # remove all with same type
+            self.plugins = [p for p in self.plugins if not type(p) == plugin]
+
+    def reset_plugins(self):
+        ''' Force Bottle to reapply all plugins. '''
+        self.callbacks.clear()
+
+    def _apply_plugins(self, index):
+        """ Apply plugins to a route callback and return a new callable. """
+        callback, skiplist = self.routes[index][2:4]
+        wrapped = callback
+        for plugin in reversed(self.plugins):
+            if plugin in skiplist or type(plugin) in skiplist \
+            or plugin.plugin_name in skiplist or True in skiplist:
+                continue
+            wrapped = plugin(wrapped)
+        functools.update_wrapper(wrapped, callback)
+        self.callbacks[index] = wrapped
+        return wrapped
 
     def mount(self, app, script_path, **route_args):
         ''' Mount a Bottle application to a specific URL prefix.
@@ -437,16 +475,6 @@ class Bottle(object):
             request.path_shift(path_depth)
             return app.handle(request.path, request.method)
         self.mounts[script_path] = app
-
-    def add_filter(self, ftype, func):
-        ''' Register a new output filter. Whenever bottle hits a handler output
-            matching `ftype`, `func` is applied to it. '''
-        depr("Filter support is deprecated. Use plugins instead.")
-        if not isinstance(ftype, type):
-            raise TypeError("Expected type object, got %s" % type(ftype))
-        self.castfilter = [(t, f) for (t, f) in self.castfilter if t != ftype]
-        self.castfilter.append((ftype, func))
-        self.castfilter.sort()
 
     def match_url(self, path, method='GET'):
         """ Find a callback bound to a path and a specific HTTP method.
@@ -474,8 +502,7 @@ class Bottle(object):
             return self.callbacks[index], args
         except KeyError:
             # Be lazy and only prepare callbacks (apply patches) if needed.
-            self.callbacks[index] = self._prepare_callback(index)
-            return self.callbacks[index], args
+            return self._apply_plugins(index), args
 
     def get_url(self, routename, **kargs):
         """ Return a string that matches a named route """
@@ -537,10 +564,6 @@ class Bottle(object):
                 del self.routes[index]
         self.router = None
 
-    def reset_plugins(self):
-        ''' Force Bottle to reapply plugins. '''
-        self.callbacks.clear()
-
     def _build_router(self):
         ''' Build router and return the new router instance. '''
         self.router = router = self.router_class()
@@ -553,18 +576,6 @@ class Bottle(object):
             else:
                 router.add(route, {method: index}, **config)
         return router
-
-    def _prepare_callback(self, index):
-        """ Apply plugins to a route callback and return a new callable. """
-        callback, skiplist = self.routes[index][2:4]
-        wrapped = callback
-        for plugin in reversed(self.plugins):
-            if plugin in skiplist or type(plugin) in skiplist \
-            or plugin.plugin_name in skiplist or True in skiplist:
-                continue
-            wrapped = plugin(wrapped)
-        functools.update_wrapper(wrapped, callback)
-        return wrapped
 
     def get(self, path=None, method='GET', **kargs):
         """ Decorator: Bind a function to a GET request path.
@@ -1088,15 +1099,6 @@ class Response(threading.local):
 # Known plugins (name->class)
 # Populated by PluginMetaclass and used by Bottle.install()
 plugin_names = {} 
-
-def import_plugin(name):
-    """ Try to import 'bottle_<name>' and return the plugin class. """
-    if name not in plugin_names:
-        __import__('bottle_%s'%name)
-    if name not in plugin_names:
-        raise PluginError("Unable to load plugin %s." % name)
-    return plugin_names[name]
-
 
 class PluginError(BottleException): pass
 
