@@ -13,7 +13,7 @@ from subprocess import Popen, PIPE
 serverscript = os.path.join(os.path.dirname(__file__), 'servertest.py')
 
 def ping(server, port):
-    ''' Check if a server acccepts connections on a specific TCP port '''
+    ''' Check if a server accepts connections on a specific TCP port '''
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((server, port))
@@ -23,10 +23,15 @@ def ping(server, port):
         return False
 
 class TestServer(unittest.TestCase):
-    server = 'WSGIRefServer'
-    port = 12643
+    server = 'wsgiref'
 
     def setUp(self):
+        # Find a free port
+        for port in range(8800, 8900):
+            self.port = port
+            if not ping('127.0.0.1', port): break
+        else:
+            raise ValueError("Could not find a free port to test networking.")
         # Start servertest.py in a subprocess
         cmd = [sys.executable, serverscript, self.server, str(self.port)]
         cmd += sys.argv[1:] # pass cmdline arguments to subprocesses
@@ -37,6 +42,8 @@ class TestServer(unittest.TestCase):
             # Check if the process has died for some reason
             if self.p.poll() != None: break
             if ping('127.0.0.1', self.port): break
+        else:
+            raise AssertionError("Server took to long to start up.")
 
     def tearDown(self):
         while self.p.poll() is None:
@@ -47,7 +54,7 @@ class TestServer(unittest.TestCase):
         for stream in (self.p.stdout, self.p.stderr):
             for line in stream:
                 if tob('Warning') in line \
-                or tob('Error') in line:
+                or tob('Error') in line or True:
                     print line.strip().decode('utf8')
 
     def fetch(self, url):
@@ -65,34 +72,38 @@ class TestServer(unittest.TestCase):
 
 
 class TestCherryPyServer(TestServer):
-    server = 'CherryPyServer'
+    server = 'cherrypy'
 
 class TestPasteServer(TestServer):
-    server = 'PasteServer'
+    server = 'paste'
 
 class TestTornadoServer(TestServer):
-    server = 'TornadoServer'
+    server = 'tornado'
 
 class TestTwistedServer(TestServer):
-    server = 'TwistedServer'
+    server = 'twisted'
 
 class TestDieselServer(TestServer):
-    server = 'DieselServer'
+    server = 'diesel'
 
 class TestGunicornServer(TestServer):
-    server = 'GunicornServer'
+    server = 'gunicorn'
 
 class TestGeventServer(TestServer):
-    server = 'GeventServer'
+    server = 'gevent'
 
 class TestEventletServer(TestServer):
-    server = 'EventletServer'
+    server = 'eventlet'
 
 class TestRocketServer(TestServer):
-    server = 'RocketServer'
+    server = 'rocket'
 
 class TestFapwsServer(TestServer):
-    server = 'FapwsServer'
+    server = 'fapws3'
+
+class TestFapwsServer(TestServer):
+    server = 'meinheld'
+
 
 if __name__ == '__main__': #pragma: no cover
     unittest.main()
