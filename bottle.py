@@ -2067,7 +2067,7 @@ def view(tpl_name, **defaults):
             if isinstance(result, dict):
                 tplvars = defaults.copy()
                 tplvars.update(result)
-                return template(tpl_name, tplvars)
+                return template(tpl_name, **tplvars)
             return result
         return wrapper
     return decorator

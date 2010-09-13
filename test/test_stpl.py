@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import unittest
-from bottle import SimpleTemplate, TemplateError
+from bottle import SimpleTemplate, TemplateError, view, template
 
 class TestSimpleTemplate(unittest.TestCase):
     def test_string(self):
@@ -203,7 +203,18 @@ class TestSimpleTemplate(unittest.TestCase):
         t = SimpleTemplate(u'\n\n%#coding: iso8859_15\nöäü?@€'.encode('utf8'))
         self.assertEqual(u'\n\nöäü?@€', t.render())
         self.assertEqual(t.encoding, 'utf8')
-        
+
+    def test_template_shortcut(self):
+        result = template('start {{var}} end', var='middle')
+        self.assertEqual(u'start middle end', result)
+
+    def test_view_decorator(self):
+        @view('start {{var}} end')
+        def test():
+            return dict(var='middle')
+        self.assertEqual(u'start middle end', test())
+
+
 if __name__ == '__main__': #pragma: no cover
     unittest.main()
 
