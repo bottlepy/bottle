@@ -1520,7 +1520,8 @@ class GunicornServer(ServerAdapter):
     def run(self, handler):
         from gunicorn.arbiter import Arbiter
         from gunicorn.config import Config
-        arbiter = Arbiter(Config({'bind': "%s:%d" % (self.host, self.port), 'workers': 4}), handler)
+        handler.cfg = Config({'bind': "%s:%d" % (self.host, self.port), 'workers': 4})
+        arbiter = Arbiter(handler)
         arbiter.run()
 
 
