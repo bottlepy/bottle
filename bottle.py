@@ -1068,7 +1068,7 @@ class BasePlugin(object):
     ''' Do not forget to name your subclass. '''
 
     def __init__(self, app=None, *args, **kwargs):
-        self.setup(app or bottle.default_app(), *args, **kwargs)
+        self.setup(app or default_app(), *args, **kwargs)
 
     def __call__(self, func):
         wrapped = self.wrap(func)
