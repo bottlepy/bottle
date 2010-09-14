@@ -8,55 +8,8 @@ Python Standard Library.
 
 Homepage and documentation: http://bottle.paws.de/
 
-Licence (MIT)
--------------
-
-    Copyright (c) 2009, Marcel Hellkamp.
-
-    Permission is hereby granted, free of charge, to any person obtaining a copy
-    of this software and associated documentation files (the "Software"), to deal
-    in the Software without restriction, including without limitation the rights
-    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-    copies of the Software, and to permit persons to whom the Software is
-    furnished to do so, subject to the following conditions:
-
-    The above copyright notice and this permission notice shall be included in
-    all copies or substantial portions of the Software.
-
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-    THE SOFTWARE.
-
-
-Example
--------
-
-This is an example::
-
-    from bottle import route, run, request, response, static_file, abort
-    
-    @route('/')
-    def hello_world():
-        return 'Hello World!'
-    
-    @route('/hello/:name')
-    def hello_name(name):
-        return 'Hello %s!' % name
-    
-    @route('/hello', method='POST')
-    def hello_post():
-        name = request.POST['name']
-        return 'Hello %s!' % name
-    
-    @route('/static/:filename#.*#')
-    def static(filename):
-        return static_file(filename, root='/path/to/static/files/')
-    
-    run(host='localhost', port=8080)
+Copyright (c) 2010, Marcel Hellkamp.
+License: MIT (see LICENSE.txt for details)
 """
 
 from __future__ import with_statement
@@ -70,6 +23,7 @@ import cgi
 import email.utils
 import functools
 import hmac
+import httplib
 import inspect
 import itertools
 import mimetypes
@@ -77,12 +31,12 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 import thread
 import threading
 import time
 import tokenize
-import tempfile
-import httplib
+import warnings
 
 from Cookie import SimpleCookie
 from tempfile import TemporaryFile
@@ -90,28 +44,25 @@ from traceback import format_exc
 from urllib import quote as urlquote
 from urlparse import urlunsplit, urljoin
 
-try:
-    from collections import MutableMapping as DictMixin
+try: from collections import MutableMapping as DictMixin
 except ImportError: # pragma: no cover
     from UserDict import DictMixin
 
-try:
-    from urlparse import parse_qs
+try: from urlparse import parse_qs
 except ImportError: # pragma: no cover
     from cgi import parse_qs
 
-try:
-    import cPickle as pickle
+try: import cPickle as pickle
 except ImportError: # pragma: no cover
     import pickle
 
-try:
-    try:
-        from json import dumps as json_dumps
-    except ImportError: # pragma: no cover
-        from simplejson import dumps as json_dumps
+try: from json import dumps as json_dumps
 except ImportError: # pragma: no cover
-    json_dumps = None
+    try: from simplejson import dumps as json_dumps
+    except ImportError: # pragma: no cover
+        try: from django.utils.simplejson import dumps as json_dumps
+        except ImportError: # pragma: no cover
+            json_dumps = None
 
 if sys.version_info >= (3,0,0): # pragma: no cover
     # See Request.POST
@@ -146,7 +97,6 @@ tonat.__doc__ = """ Convert anything to native strings """
 
 
 # Background compatibility
-import warnings
 def depr(message, critical=False):
     if critical: raise DeprecationWarning(message)
     warnings.warn(message, DeprecationWarning, stacklevel=3)
@@ -1679,7 +1629,8 @@ class GunicornServer(ServerAdapter):
     def run(self, handler):
         from gunicorn.arbiter import Arbiter
         from gunicorn.config import Config
-        arbiter = Arbiter(Config({'bind': "%s:%d" % (self.host, self.port), 'workers': 4}), handler)
+        handler.cfg = Config({'bind': "%s:%d" % (self.host, self.port), 'workers': 4})
+        arbiter = Arbiter(handler)
         arbiter.run()
 
 
@@ -2226,7 +2177,7 @@ def view(tpl_name, **defaults):
             if isinstance(result, dict):
                 tplvars = defaults.copy()
                 tplvars.update(result)
-                return template(tpl_name, tplvars)
+                return template(tpl_name, **tplvars)
             return result
         return view_wrapper
     return decorator

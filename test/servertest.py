@@ -17,12 +17,14 @@ def test():
     return "OK"
 
 if __name__ == '__main__':
-    server = getattr(bottle, sys.argv[1])
+    server = sys.argv[1]
     port   = int(sys.argv[2])
     try:
-        run(port=port, server=server)
+        run(port=port, server=server, quiet=True)
     except ImportError:
         print "Warning: Could not test %s. Import error." % server
+    except KeyboardInterrupt:
+        pass
 
     if 'coverage' in sys.argv:
         cov.stop()

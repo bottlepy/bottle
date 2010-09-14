@@ -1,23 +1,30 @@
 #!/bin/bash
 
 root=`pwd`
+
+# build_env.sh installs to in ./tbuild
 if [ -d "$root/tbuild/opt/bin" ]; then
     PATH="$root/tbuild/opt/bin:$PATH"
 fi
 
 function fail {
+  # Print test log and rexit script.
   cat test.log
   echo -e "\e[0;31mFAILED! :(\e[0m"
   exit 1
 }
 
 function runtest {
+    # Run tests using interpreter $1 and test folder $2 if interpreter is installed.
     if type $1 &>/dev/null ; then
-        $1 $2/testall.py &> test.log || fail
+        $1 $2/testall.py | tee test.log | egrep -i "(warning|error)" || fail
     else
         echo "Warning: Skipping test for $1 (Not installed)"
     fi
 }
+
+
+
 
 runtest python2.5 test
 runtest python2.6 test
