@@ -23,6 +23,7 @@ import cgi
 import email.utils
 import functools
 import hmac
+import httplib
 import inspect
 import itertools
 import mimetypes
@@ -30,12 +31,12 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 import thread
 import threading
 import time
 import tokenize
-import tempfile
-import httplib
+import warnings
 
 from Cookie import SimpleCookie
 from tempfile import TemporaryFile
@@ -43,28 +44,25 @@ from traceback import format_exc
 from urllib import quote as urlquote
 from urlparse import urlunsplit, urljoin
 
-try:
-    from collections import MutableMapping as DictMixin
+try: from collections import MutableMapping as DictMixin
 except ImportError: # pragma: no cover
     from UserDict import DictMixin
 
-try:
-    from urlparse import parse_qs
+try: from urlparse import parse_qs
 except ImportError: # pragma: no cover
     from cgi import parse_qs
 
-try:
-    import cPickle as pickle
+try: import cPickle as pickle
 except ImportError: # pragma: no cover
     import pickle
 
-try:
-    try:
-        from json import dumps as json_dumps
-    except ImportError: # pragma: no cover
-        from simplejson import dumps as json_dumps
+try: from json import dumps as json_dumps
 except ImportError: # pragma: no cover
-    json_dumps = None
+    try: from simplejson import dumps as json_dumps
+    except ImportError: # pragma: no cover
+        try: from django.utils.simplejson import dumps as json_dumps
+        except ImportError: # pragma: no cover
+            json_dumps = None
 
 if sys.version_info >= (3,0,0): # pragma: no cover
     # See Request.POST
@@ -99,7 +97,6 @@ tonat.__doc__ = """ Convert anything to native strings """
 
 
 # Background compatibility
-import warnings
 def depr(message, critical=False):
     if critical: raise DeprecationWarning(message)
     warnings.warn(message, DeprecationWarning, stacklevel=3)
