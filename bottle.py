@@ -1548,21 +1548,43 @@ server_names = {
 # Application Control ##########################################################
 ###############################################################################
 
+
+def _load(target, **kwargs):
+    """ Fetch something from a module. The exact behaviour depends on the the
+        target string:
+
+        If the target is a valid python import path (e.g. `package.module`), 
+        the rightmost part is returned as a module object.
+        If the target contains a colon (e.g. `package.module:var`) the module
+        variable specified after the colon is returned.
+        If the part after the colon contains any non-alphanumeric characters
+        (e.g. `package.module:function(argument)`) the result of the expression
+        is returned.
+    """
+    module, target = target.split(":", 1) if ':' in target else (target, None)
+    if module not in sys.modules:
+        __import__(module)
+    if not target:
+        return sys.modules[module]
+    if target.isalnum():
+        return getattr(sys.modules[module], target)
+    package_name = module.split('.')[0]
+    kwargs[package_name] = sys.modules[package_name]
+    return eval('%s.%s' % (module, target), kwargs)
+
 def load_app(target):
-    """ Load a bottle application based on a target string and return the app
-        object.
-        
-        The target should be a valid python import path
-        (e.g. mypackage.mymodule). The default application is returned.
-        If the target contains a colon (e.g. mypackage.mymodule:myapp) the
+    """ Load a bottle application based on a target string and return the
+        application object.
+
+        If the target is an import path (e.g. package.module) the module is
+        returned and the default application is returned.
+        If the target contains a colon (e.g. package.module:app) the
         module variable specified after the colon is returned instead.
     """
-    path, name = target.split(":", 1) if ':' in target else (target, None)
-    rv = None if name else app.push()
-    __import__(path)
-    module = sys.modules[path]
-    if rv and rv in app: app.remove(rv)
-    return rv if rv else getattr(module, target)
+    tmp = app.push()
+    rv = _load(target)
+    app.remove(tmp)
+    return rv if isinstance(rv, Bottle) else tmp
 
 
 def run(app=None, server='wsgiref', host='127.0.0.1', port=8080,
