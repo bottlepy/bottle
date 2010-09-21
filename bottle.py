@@ -1561,7 +1561,17 @@ def _load(target, **kwargs):
         variable specified after the colon is returned.
         If the part after the colon contains any non-alphanumeric characters
         (e.g. `package.module:function(argument)`) the result of the expression
-        is returned.
+        is returned. The exec namespace is updated with the keyword arguments
+        provided to this function.
+        
+        Example::
+        >>> _load('bottle')
+        <module 'bottle' from 'bottle.py'>
+        >>> _load('bottle:Bottle')
+        <class 'bottle.Bottle'>
+        >>> _load('bottle:cookie_encode(v, secret)', v='foo', secret='bar')
+        '!F+hN4dQxaDJ4QxxaZ+Z3jw==?gAJVA2Zvb3EBLg=='
+
     """
     module, target = target.split(":", 1) if ':' in target else (target, None)
     if module not in sys.modules:
@@ -1578,27 +1588,26 @@ def load_app(target):
     """ Load a bottle application based on a target string and return the
         application object.
 
-        If the target is an import path (e.g. package.module) the module is
-        returned and the default application is returned.
-        If the target contains a colon (e.g. package.module:app) the
+        If the target is an import path (e.g. package.module), the application
+        stack is used to isolate the routes defined in that module.
+        If the target contains a colon (e.g. package.module:myapp) the
         module variable specified after the colon is returned instead.
     """
-    tmp = app.push()
-    rv = _load(target)
-    app.remove(tmp)
+    tmp = app.push() # Create a new "default application"
+    rv = _load(target) # Import the target module
+    app.remove(tmp) # Remove the temporary added default application
     return rv if isinstance(rv, Bottle) else tmp
 
 
 def run(app=None, server='wsgiref', host='127.0.0.1', port=8080,
         interval=1, reloader=False, quiet=False, **kargs):
-    """ Start a server instance. This method blocks until the server
-        terminates.
+    """ Start a server instance. This method blocks until the server terminates.
 
         :param app: WSGI application or target string supported by
                :func:`load_app`. (default: :func:`default_app`)
-        :param server: Server adapter to use. See :data:`server_names` dict
+        :param server: Server adapter to use. See :data:`server_names` keys
                for valid names or pass a :class:`ServerAdapter` subclass.
-               (default: wsgiref)
+               (default: `wsgiref`)
         :param host: Server address to bind to. Pass ``0.0.0.0`` to listens on
                all interfaces including the external one. (default: 127.0.0.1)
         :param host: Server port to bind to. Values below 1024 require root
