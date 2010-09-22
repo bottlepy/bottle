@@ -16,7 +16,7 @@ This is my first open source project so far. It started and a small experiment b
 
 .. rubric:: Impressum und Kontaktdaten
 
-(This is required by [German law](http://bundesrecht.juris.de/tmg/__5.html))
+(This is required by `German law <http://bundesrecht.juris.de/tmg/__5.html>`_)
 
 Die Nutzung der folgenden Kontaktdaten ist ausschließlich für die 
 Kontaktaufnahme mit dem Betreiber dieser Webseite bei rechtlichen 
