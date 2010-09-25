@@ -1374,7 +1374,9 @@ class CGIServer(ServerAdapter):
 class FlupFCGIServer(ServerAdapter):
     def run(self, handler): # pragma: no cover
         import flup.server.fcgi
-        flup.server.fcgi.WSGIServer(handler, bindAddress=(self.host, self.port)).run()
+        kwargs = {'bindAddress':(self.host, self.port)}
+        kwargs.update(self.options) # allow to override bindAddress and others
+        flup.server.fcgi.WSGIServer(handler, **kwargs).run()
 
 
 class WSGIRefServer(ServerAdapter):
