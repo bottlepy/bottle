@@ -73,8 +73,6 @@ Decorators
     The decorator approach is best for wrapping a small number of routes while leaving all other callbacks untouched. If your application requires session support or database connections for only some of the routes, choose this approach. With a decorator you have full access to the request and response objects and the unfiltered return value of the wrapped callback.
 
 Hooks
-    .. versionadded:: 0.9
-
     With `hooks` you can register functions to be called at specific stages during the request circle. The most interesting hooks are `before_request` and `after_request`. Both affect all routes in an application, have full control over the request and response objects and can manipulate the route-callback return value at will. This new API fills the gap between middleware and decorators and is described in detail further down this guide.
 
 Which technique is best for your plugin depends on the level and scope of interaction you need with the framework and application. Combinations are possible, too. The following table sums it up:
