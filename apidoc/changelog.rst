@@ -5,6 +5,10 @@
 Release Notes and Changelog
 ===========================
 
+Bugfix Release 0.8.4
+=====================
+
+* Fixed "Using DictMixins with the @view decorator" (Issue #102 and #103)
 
 Bugfix Release 0.8.3
 =====================
