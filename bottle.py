@@ -1069,7 +1069,7 @@ class WSGIHeaderDict(DictMixin):
         for key, value in self.environ.iteritems():
             key = tonat(key, 'latin1') # Headers are limited to ASCII anyway
             if key.startswith('HTTP_'):
-                self[key[5:].replace('_','-')] = value
+                self[key[5:].replace('_','-').title()] = value
 
     def __len__(self): return len(self.cache)
     def keys(self): return self.cache.keys()
@@ -1338,9 +1338,8 @@ def make_default_app_wrapper(name):
 
 for name in 'route get post put delete error mount hook'.split():
     globals()[name] = make_default_app_wrapper(name)
-
 url = make_default_app_wrapper('get_url')
-
+del name
 
 def default():
     depr("The default() decorator is deprecated. Use @error(404) instead.")
@@ -2124,9 +2123,12 @@ TEMPLATE_PATH = ['./', './views/']
 TEMPLATES = {}
 DEBUG = False
 MEMFILE_MAX = 1024*100
+
+#: A dict to map HTTP status codes (e.g. 404) to phrases (e.g. 'Not Found')
 HTTP_CODES = httplib.responses
 HTTP_CODES[418] = "I'm a teapot" # RFC 2324
 
+#: The default template used for error pages. Override with @error()
 ERROR_PAGE_TEMPLATE = SimpleTemplate("""
 %try:
     %from bottle import DEBUG, HTTP_CODES, request
@@ -2159,19 +2161,15 @@ ERROR_PAGE_TEMPLATE = SimpleTemplate("""
     <b>ImportError:</b> Could not generate the error page. Please add bottle to sys.path
 %end
 """)
-""" The HTML template used for error messages """
 
+#: A thread-save instance of :class:`Request` representing the `current` request.
 request = Request()
-""" Whenever a page is requested, the :class:`Bottle` WSGI handler stores
-metadata about the current request into this instance of :class:`Request`.
-It is thread-safe and can be accessed from within handler functions. """
 
+#: A thread-save instance of :class:`Response` used to build the HTTP response.
 response = Response()
-""" The :class:`Bottle` WSGI handler uses metadata assigned to this instance
-of :class:`Response` to generate the WSGI response. """
 
+#: A thread-save namepsace. Not used by Bottle.
 local = threading.local()
-""" Thread-local namespace. Not used by Bottle, but could get handy """
 
 # Initialize app stack (create first empty Bottle app)
 # BC: 0.6.4 and needed for run()
