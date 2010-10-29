@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 import unittest
 import sys, os.path
-from bottle import request, response
+import bottle
+from bottle import request, response, tob, tonat, touni
 import tools
-from tools import tob
 import wsgiref.util
 
 class TestRequest(unittest.TestCase):
@@ -75,7 +75,7 @@ class TestRequest(unittest.TestCase):
         e['HTTP_SOME_HEADER'] = 'some value'
         request.bind(e)
         request['HTTP_SOME_OTHER_HEADER'] = 'some other value'
-        self.assertTrue('Some-Header' in request.header)
+        self.assertTrue('Some-Header' in request.headers)
         self.assertTrue(request.header['Some-Header'] == 'some value')
         self.assertTrue(request.header['Some-Other-Header'] == 'some other value')
 
@@ -257,6 +257,50 @@ class TestMultipart(unittest.TestCase):
         # Field (multi)
         self.assertEqual(2, len(request.POST.getall('field2')))
         self.assertEqual(['value2', 'value3'], request.POST.getall('field2'))
+
+
+class TestWSGIHeaderDict(unittest.TestCase):
+    def setUp(self):
+        self.env = {}
+        self.headers = bottle.WSGIHeaderDict(self.env)
+        self.env['HTTP_FOO_BAR'] = 'test'
+
+    def test_native(self):
+        self.headers['Foo-Bar'] = 'test'
+        self.env['HTTP_TEST'] = 'foobar'
+        self.assertEqual(self.headers['Foo-Bar'], 'test')
+        self.assertEqual(self.headers['Test'], 'foobar')
+
+    def test_bytes(self):
+        self.headers[tob('Foo-Bar')] = tob('test')
+        self.env[tob('HTTP_TEST')] = tob('foobar')
+        self.assertEqual(self.headers['Foo-Bar'], 'test')
+        self.assertEqual(self.headers['Test'], 'foobar')
+
+    def test_unicode(self):
+        self.headers[touni('Foo-Bar')] = touni('test')
+        self.env[touni('HTTP_TEST')] = touni('foobar')
+        self.assertEqual(self.headers['Foo-Bar'], 'test')
+        self.assertEqual(self.headers['Test'], 'foobar')
+
+    def test_dict(self):
+        for key in 'foo-bar Foo-Bar foo-Bar FOO-BAR'.split():
+            self.assertTrue(key in self.headers)
+            self.assertEqual(self.headers.get(key), 'test')
+            self.assertEqual(self.headers.get(key, 5), 'test')
+        self.headers['foo-bar'] = 'test2'
+        for key in 'foo-bar Foo-Bar foo-Bar FOO-BAR'.split():
+            self.assertTrue(key in self.headers)
+            self.assertEqual(self.headers.get(key), 'test2')
+            self.assertEqual(self.headers.get(key, 5), 'test2')
+        del self.headers['foo-bar']
+        for key in 'foo-bar Foo-Bar foo-Bar FOO-BAR'.split():
+            self.assertTrue(key not in self.headers)
+            self.assertEqual(self.headers.get(key), None)
+            self.assertEqual(self.headers.get(key, 5), 5)
+            self.assertRaises(KeyError, lambda x: self.headers[x], key)
+
+
 
 if __name__ == '__main__': #pragma: no cover
     unittest.main()

@@ -6,8 +6,8 @@ import urllib2
 from StringIO import StringIO
 import thread
 import time
-from tools import ServerTestBase, tob
-
+from tools import ServerTestBase
+from bottle import tob, touni, tonat
 
 class TestWsgi(ServerTestBase):
     ''' Tests for WSGI functionality, routing and output casting (decorators) '''
