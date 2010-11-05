@@ -1107,26 +1107,32 @@ def parse_auth(header):
         return None
 
 
+def _lscmp(a, b):
+    ''' Compares two strings in a cryptographically save way:
+        Runtime is not affected by a common prefix. '''
+    return not sum(0 if x==y else 1 for x, y in zip(a, b)) and len(a) == len(b)
+
+
 def cookie_encode(data, key):
     ''' Encode and sign a pickle-able object. Return a string '''
     msg = base64.b64encode(pickle.dumps(data, -1))
     sig = base64.b64encode(hmac.new(key, msg).digest())
-    return u'!'.encode('ascii') + sig + u'?'.encode('ascii') + msg #2to3 hack
+    return tob('!') + sig + tob('?') + msg
 
 
 def cookie_decode(data, key):
     ''' Verify and decode an encoded string. Return an object or None'''
-    if isinstance(data, unicode): data = data.encode('ascii') #2to3 hack
+    data = tob(data)
     if cookie_is_encoded(data):
-        sig, msg = data.split(u'?'.encode('ascii'),1) #2to3 hack
-        if sig[1:] == base64.b64encode(hmac.new(key, msg).digest()):
+        sig, msg = data.split(tob('?'), 1)
+        if _lscmp(sig[1:], base64.b64encode(hmac.new(key, msg).digest())):
             return pickle.loads(base64.b64decode(msg))
     return None
 
 
 def cookie_is_encoded(data):
     ''' Return True if the argument looks like a encoded cookie.'''
-    return bool(data.startswith(u'!'.encode('ascii')) and u'?'.encode('ascii') in data) #2to3 hack
+    return bool(data.startswith(tob('!')) and tob('?') in data)
 
 
 def tonativefunc(enc='utf-8'):
