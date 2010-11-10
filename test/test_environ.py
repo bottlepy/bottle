@@ -6,7 +6,7 @@ import tools
 from tools import tob
 import wsgiref.util
 
-class TestEnviron(unittest.TestCase):
+class TestRequest(unittest.TestCase):
     def test_path(self):
         """ Environ: PATH_INFO """ 
         t = dict()
@@ -210,6 +210,27 @@ class TestEnviron(unittest.TestCase):
         self.assertEqual(42, len(request.body.read(1024)))
         self.assertEqual(42, len(request.body.readline()))
         self.assertEqual(42, len(request.body.readline(1024)))
+
+class TestResponse(unittest.TestCase):
+    def setUp(self):
+        response.bind()
+
+    def test_set_cookie(self):
+        response.set_cookie('name', 'value', max_age=5)
+        response.set_cookie('name2', 'value 2', path='/foo')
+        cookies = [value for name, value in response.wsgiheader()
+                   if name.title() == 'Set-Cookie']
+        cookies.sort()
+        self.assertTrue(cookies[0], 'name=value; Max-Age=5')
+        self.assertTrue(cookies[1], 'name2="value 2"; Path=/foo')
+
+    def test_delete_cookie(self):
+        response.set_cookie('name', 'value')
+        response.delete_cookie('name')
+        cookies = [value for name, value in response.wsgiheader()
+                   if name.title() == 'Set-Cookie']
+        self.assertTrue('name=;' in cookies[0])
+
 
 class TestMultipart(unittest.TestCase):
     def test_multipart(self):

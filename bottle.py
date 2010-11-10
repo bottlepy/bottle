@@ -985,7 +985,7 @@ class Response(threading.local):
             parameters as used to create the cookie. '''
         kwargs['max_age'] = -1
         kwargs['expires'] = 0
-        self.set_cookie(key, **kwargs)
+        self.set_cookie(key, '', **kwargs)
 
     def get_content_type(self):
         """ Current 'Content-Type' header. """
