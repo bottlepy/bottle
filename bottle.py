@@ -1616,7 +1616,7 @@ def run(app=None, server='wsgiref', host='127.0.0.1', port=8080,
                (default: `wsgiref`)
         :param host: Server address to bind to. Pass ``0.0.0.0`` to listens on
                all interfaces including the external one. (default: 127.0.0.1)
-        :param host: Server port to bind to. Values below 1024 require root
+        :param port: Server port to bind to. Values below 1024 require root
                privileges. (default: 8080)
         :param reloader: Start auto-reloading server? (default: False)
         :param interval: Auto-reloader interval in seconds (default: 1)
