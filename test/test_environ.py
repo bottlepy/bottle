@@ -263,42 +263,30 @@ class TestWSGIHeaderDict(unittest.TestCase):
     def setUp(self):
         self.env = {}
         self.headers = bottle.WSGIHeaderDict(self.env)
-        self.env['HTTP_FOO_BAR'] = 'test'
 
     def test_native(self):
-        self.headers['Foo-Bar'] = 'test'
-        self.env['HTTP_TEST'] = 'foobar'
-        self.assertEqual(self.headers['Foo-Bar'], 'test')
-        self.assertEqual(self.headers['Test'], 'foobar')
+        self.env['HTTP_TEST_HEADER'] = 'foobar'
+        self.assertEqual(self.headers['Test-header'], 'foobar')
 
     def test_bytes(self):
-        self.headers[tob('Foo-Bar')] = tob('test')
-        self.env[tob('HTTP_TEST')] = tob('foobar')
-        self.assertEqual(self.headers['Foo-Bar'], 'test')
-        self.assertEqual(self.headers['Test'], 'foobar')
+        self.env['HTTP_TEST_HEADER'] = tob('foobar')
+        self.assertEqual(self.headers['Test-Header'], 'foobar')
 
     def test_unicode(self):
-        self.headers[touni('Foo-Bar')] = touni('test')
-        self.env[touni('HTTP_TEST')] = touni('foobar')
-        self.assertEqual(self.headers['Foo-Bar'], 'test')
-        self.assertEqual(self.headers['Test'], 'foobar')
+        self.env['HTTP_TEST_HEADER'] = touni('foobar')
+        self.assertEqual(self.headers['Test-Header'], 'foobar')
 
     def test_dict(self):
-        for key in 'foo-bar Foo-Bar foo-Bar FOO-BAR'.split():
-            self.assertTrue(key in self.headers)
-            self.assertEqual(self.headers.get(key), 'test')
-            self.assertEqual(self.headers.get(key, 5), 'test')
-        self.headers['foo-bar'] = 'test2'
-        for key in 'foo-bar Foo-Bar foo-Bar FOO-BAR'.split():
-            self.assertTrue(key in self.headers)
-            self.assertEqual(self.headers.get(key), 'test2')
-            self.assertEqual(self.headers.get(key, 5), 'test2')
-        del self.headers['foo-bar']
         for key in 'foo-bar Foo-Bar foo-Bar FOO-BAR'.split():
             self.assertTrue(key not in self.headers)
             self.assertEqual(self.headers.get(key), None)
             self.assertEqual(self.headers.get(key, 5), 5)
             self.assertRaises(KeyError, lambda x: self.headers[x], key)
+        self.env['HTTP_FOO_BAR'] = 'test'
+        for key in 'foo-bar Foo-Bar foo-Bar FOO-BAR'.split():
+            self.assertTrue(key in self.headers)
+            self.assertEqual(self.headers.get(key), 'test')
+            self.assertEqual(self.headers.get(key, 5), 'test')
 
 
 

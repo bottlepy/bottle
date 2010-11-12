@@ -725,8 +725,8 @@ class Request(threading.local, DictMixin):
 
     @property
     def headers(self):
-        ''' A dict-like object filled with request headers.
-        
+        ''' Request HTTP Headers stored in a dict-like object.
+
             This dictionary uses case-insensitive keys and native strings as
             keys and values. See :class:`WSGIHeaderDict` for details.
         '''
@@ -1050,43 +1050,46 @@ class HeaderDict(MultiDict):
     def httpkey(self, key): return str(key).replace('_','-').title()
 
 
-
 class WSGIHeaderDict(DictMixin):
-    ''' This dict-like class takes a WSGI environ dict and provides convenient
-        access to HTTP_* fields. Keys and values are stored as native strings
-        (bytes/unicode) based on the python version used (2/3) and keys are
-        case-insensitive. If the WSGI environment contains non-native strings,
-        these are de- or encoded using 'utf8' (default) or 'latin1' (fallback)
-        charset. To get the original value, use the .raw(key) method.
+    ''' This dict-like class wraps a WSGI environ dict and provides convenient
+        access to HTTP_* fields. Keys and values are native strings
+        (2.x bytes or 3.x unicode) and keys are case-insensitive. If the WSGI
+        environment contains non-native string values, these are de- or encoded
+        using a lossless 'latin1' character set.
 
-        This is not a MultiDict because incoming headers are unique. The API
-        will remain stable even on WSGI spec changes, if possible.
-        '''
+        The API will remain stable even on changes to the relevant PEPs.
+        Currently PEP 333, 444 and 3333 are supported. (PEP 444 is the only one
+        that uses non-native strings.)
+     '''
 
     def __init__(self, environ):
-        self.cache = {}
         self.environ = environ
-        for key, value in self.environ.iteritems():
-            key = tonat(key, 'latin1') # Headers are limited to ASCII anyway
-            if key.startswith('HTTP_'):
-                self[key[5:].replace('_','-').title()] = value
 
-    def __len__(self): return len(self.cache)
-    def keys(self): return self.cache.keys()
-    def __iter__(self): return iter(self.cache)
-    def __contains__(self, key): return key.title() in self.keys()
-    def __delitem__(self, key): del self.cache[key.title()]
-    def __getitem__(self, key): return self.cache[key.title()]
-    def __setitem__(self, key, value):
-        try:
-            self.cache[key.title()] = tonat(value, 'utf8')
-        except UnicodeError:
-            self.cache[key.title()] = tonat(value, 'latin1')
+    def _ekey(self, key): # Translate header field name to environ key.
+        return 'HTTP_' + key.replace('-','_').upper()
 
     def raw(self, key, default=None):
-        ''' Return the raw WSGI header value for that key. '''
-        ekey = 'HTTP_%s' % key.replace('-','_').upper()
-        return self.environ.get(ekey, default)
+        ''' Return the header value as is (may be bytes or unicode). '''
+        return self.environ.get(self._ekey(key), default)
+
+    def __getitem__(self, key):
+        return tonat(self.environ[self._ekey(key)], 'latin1')
+
+    def __setitem__(self, key, value):
+        raise TypeError("%s is read-only." % self.__class__)
+
+    def __delitem__(self, key):
+        raise TypeError("%s is read-only." % self.__class__)
+
+    def __iter__(self):
+        for key in self.environ:
+            if key[:5] == 'HTTP_':
+                yield key[5:].replace('_', '-').title()
+
+    def keys(self): return list(self)
+    def __len__(self): return len(list(self))
+    def __contains__(self, key): return self._ekey(key) in self.environ
+
 
 
 
