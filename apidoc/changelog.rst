@@ -20,6 +20,7 @@ This changes are not released yet and are only part of the development documenta
 .. rubric:: API changes 
 
 * :attr:`Request.header` is now :attr:`Request.headers`
+* Route parameter names are now allowed to contain digits. #108
 
 Bugfix Release 0.8.4
 =====================
