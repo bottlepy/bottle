@@ -26,6 +26,14 @@ class TestRouter(unittest.TestCase):
         self.assertEqual(('anon', {}), match('/anon/match'))
         self.assertEqual((None, {}), match('//no/m/at/ch/'))
 
+    def testWildcardNames(self):
+        add = self.add
+        match = self.r.match
+        add('/alpha/:abc', 'abc')
+        self.assertEqual(('abc', {'abc': 'alpha'}), match('/alpha/alpha'))
+        add('/alnum/:md5', 'md5')
+        self.assertEqual(('md5', {'md5': 'sha1'}), match('/alnum/sha1'))
+
     def testParentheses(self):
         add = self.add
         match = self.r.match
