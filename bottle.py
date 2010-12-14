@@ -197,7 +197,7 @@ class RouteBuildError(RouteError):
 
 class Route(object):
     ''' Represents a single route and can parse the dynamic route syntax '''
-    syntax = re.compile(r'(.*?)(?<!\\):([a-zA-Z_]+)?(?:#(.*?)#)?')
+    syntax = re.compile(r'(.*?)(?<!\\):([a-zA-Z_][a-zA-Z_0-9]*)?(?:#(.*?)#)?')
     default = '[^/]+'
 
     def __init__(self, route, target=None, name=None, static=False):
