@@ -104,6 +104,8 @@ class TestFapwsServer(TestServer):
 class TestFapwsServer(TestServer):
     server = 'meinheld'
 
+class TestBjoernServer(TestServer):
+    server = 'bjoern'
 
 if __name__ == '__main__': #pragma: no cover
     unittest.main()

@@ -1517,8 +1517,14 @@ class RocketServer(ServerAdapter):
         from rocket import Rocket
         server = Rocket((self.host, self.port), 'wsgi', { 'wsgi_app' : handler })
         server.start()
-            
-        
+
+class BjoernServer(ServerAdapter):
+    """ Screamingly fast server written in C: https://github.com/jonashaag/bjoern """
+    def run(self, handler):
+        from bjoern import run
+        run(handler, self.host, self.port)
+
+
 class AutoServer(ServerAdapter):
     """ Untested. """
     adapters = [PasteServer, CherryPyServer, TwistedServer, WSGIRefServer]
@@ -1546,6 +1552,7 @@ server_names = {
     'eventlet': EventletServer,
     'gevent': GeventServer,
     'rocket': RocketServer,
+    'bjoern' : BjoernServer,
     'auto': AutoServer,
 }
 
