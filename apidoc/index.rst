@@ -5,13 +5,13 @@
 .. _cheetah: http://www.cheetahtemplate.org/
 .. _jinja2: http://jinja.pocoo.org/2/
 .. _paste: http://pythonpaste.org/
-.. _fapws3: http://github.com/william-os4y/fapws3
+.. _fapws3: https://github.com/william-os4y/fapws3
 .. _flup: http://trac.saddi.com/flup
 .. _cherrypy: http://www.cherrypy.org/
 .. _WSGI: http://www.wsgi.org/wsgi/
 .. _Python: http://python.org/
-.. _testing: http://github.com/defnull/bottle/raw/master/bottle.py
-.. _issue_tracker: http://github.com/defnull/bottle/issues
+.. _testing: https://github.com/defnull/bottle/raw/master/bottle.py
+.. _issue_tracker: https://github.com/defnull/bottle/issues
 .. _PyPi: http://pypi.python.org/pypi/bottle
 
 ============================
@@ -42,7 +42,7 @@ Bottle is a fast, simple and lightweight WSGI_ micro web-framework for Python_. 
 
 .. _download:
 
-.. __: http://github.com/defnull/bottle/raw/master/bottle.py
+.. __: https://github.com/defnull/bottle/raw/master/bottle.py
 
 Install the latest stable release via PyPi_ (``easy_install -U bottle``) or download `bottle.py`__ (unstable) into your project directory. There are no hard [1]_ dependencies other than the Python standard library. Bottle runs with **Python 2.5+ and 3.x** (using 2to3)
 

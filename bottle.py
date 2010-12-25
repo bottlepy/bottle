@@ -1512,7 +1512,7 @@ class EventletServer(ServerAdapter):
 
 class RocketServer(ServerAdapter):
     """ Untested. As requested in issue 63
-        http://github.com/defnull/bottle/issues/#issue/63 """
+        https://github.com/defnull/bottle/issues/#issue/63 """
     def run(self, handler):
         from rocket import Rocket
         server = Rocket((self.host, self.port), 'wsgi', { 'wsgi_app' : handler })
@@ -1824,7 +1824,7 @@ class MakoTemplate(BaseTemplate):
         from mako.template import Template
         from mako.lookup import TemplateLookup
         options.update({'input_encoding':self.encoding})
-        #TODO: This is a hack... http://github.com/defnull/bottle/issues#issue/8
+        #TODO: This is a hack... https://github.com/defnull/bottle/issues#issue/8
         mylookup = TemplateLookup(directories=['.']+self.lookup, **options)
         if self.source:
             self.tpl = Template(self.source, lookup=mylookup)
