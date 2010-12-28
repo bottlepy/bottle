@@ -40,11 +40,3 @@ Dynamic Routes and Slashes
 In :ref:`dynamic route syntax <tutorial-dynamic-routes>`, a placeholder token (``:name``) matches everything up to the next slash. This equals to ``[^/]+`` in regular expression syntax. To accept slashes too, you have to add a custom regular pattern to the placeholder. An example: ``/images/:filepath#.*#`` would match ``/images/icons/error.png`` but ``/images/:filename`` won't.
 
 
-
-
-
-
-.. rubric:: Footnotes
-
-.. [1] Because they are. See <http://www.ietf.org/rfc/rfc3986.txt>
-

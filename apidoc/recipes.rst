@@ -78,7 +78,7 @@ Again, this is not the recommend way to implement subprojects. It is only here b
 Ignore trailing slashes
 --------------------------------------------------------------------------------
 
-For Bottle, ``/example`` and ``/example/`` are two different routes. To treat both URLs the same you can add two ``@route`` decorators::
+For Bottle, ``/example`` and ``/example/`` are two different routes [1]_. To treat both URLs the same you can add two ``@route`` decorators::
 
     @route('/test')
     @route('/test/')
@@ -96,4 +96,8 @@ or add a WSGI middleware that strips trailing slashes from all URLs::
     app = bottle.app()
     myapp = StripPathMiddleware(app)
     bottle.run(app=appmy)
+
+.. rubric:: Footnotes
+
+.. [1] Because they are. See <http://www.ietf.org/rfc/rfc3986.txt>
 
