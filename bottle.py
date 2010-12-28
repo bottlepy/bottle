@@ -276,12 +276,13 @@ class Router(object):
     def build(self, _name, **args):
         ''' Build an URI out of a named route and values for the wildcards. '''
         try:
-            return self.named[_name] % args
+            mask = self.named[_name]
         except KeyError:
             if not self.compiled: # Late check to reduce overhead on hits
                 self.compile() # Compile and try again.
                 return self.build(_name, **args)
             raise RouteBuildError("No route found with name '%s'." % _name)
+        return mask % args
 
     def compile(self):
         ''' Build the search structures. Call this before actually using the
