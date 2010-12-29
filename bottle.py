@@ -24,7 +24,6 @@ import email.utils
 import functools
 import hmac
 import httplib
-import inspect
 import itertools
 import mimetypes
 import os
@@ -35,7 +34,6 @@ import tempfile
 import thread
 import threading
 import time
-import tokenize
 import warnings
 
 from Cookie import SimpleCookie
@@ -78,7 +76,7 @@ if sys.version_info >= (3,0,0): # pragma: no cover
         return str(x, encoding=enc) if isinstance(x, bytes) else str(x)
 else:
     from StringIO import StringIO as BytesIO
-    from types import StringType
+    StringType = type('')
     NCTextIOWrapper = None
     def touni(x, enc='utf8'):
         """ Convert anything to unicode """
@@ -1285,6 +1283,7 @@ def yieldroutes(func):
         c(x, y=5)   -> '/c/:x' and '/c/:x/:y'
         d(x=5, y=6) -> '/d' and '/d/:x' and '/d/:x/:y'
     """
+    import inspect # Expensive module. Only import if necessary.
     path = func.__name__.replace('__','/').lstrip('/')
     spec = inspect.getargspec(func)
     argc = len(spec[0]) - len(spec[3] or [])
@@ -1693,11 +1692,9 @@ class FileCheckerThread(threading.Thread):
         mtime = lambda path: os.stat(path).st_mtime
         files = dict()
         for module in sys.modules.values():
-            try:
-                path = inspect.getsourcefile(module)
-                if path and exists(path): files[path] = mtime(path)
-            except TypeError:
-                pass
+            path = getattr(module, '__file__', '')
+            if path[-4:] in ('.pyo', '.pyc'): path = path[:-1]
+            if path and exists(path): files[path] = mtime(path)
         while not self.status:
             for path, lmtime in files.iteritems():
                 if not exists(path) or mtime(path) > lmtime:
@@ -1970,17 +1967,16 @@ class SimpleTemplate(BaseTemplate):
                 else: yield 'TXT', part
 
         def split_comment(codeline):
-            """ Removes comments from a line of code. """
-            line = codeline.splitlines()[0]
-            try:
-                tokens = list(tokenize.generate_tokens(iter(line).next))
-            except tokenize.TokenError:
-                return line.rsplit('#',1) if '#' in line else (line, '')
-            for token in tokens:
-                if token[0] == tokenize.COMMENT:
-                    start, end = token[2][1], token[3][1]
-                    return codeline[:start] + codeline[end:], codeline[start:end]
-            return line, ''
+            """ Removes comments from python code. """
+            #: This matches comments and all kinds of quoted strings but does
+            #: NOT match comments (#...) within quoted strings. (trust me)
+            re_foo = '((?:\'\'(?!\')|""(?!")|\'\'\'\'\'\'|""""""' \
+                     '|\'(?:[^\\\\\']|\\\\.)+?\'|"(?:[^\\\\"]|\\\\.)+?"' \
+                     '|\'\'\'(?:[^\\\\]|\\\\.|\\n)+?\'\'\'' \
+                     '|"""(?:[^\\\\]|\\\\.|\\n)+?""")|#.*)'
+            #: Replace comments with nothing but leave strings alone.
+            sub = lambda m: '' if m.group(0)[0]=='#' else m.group(0)
+            return re.sub(re_foo, sub, codeline)
 
         def flush(): # Flush the ptrbuffer
             if not ptrbuffer: return
@@ -2013,7 +2009,7 @@ class SimpleTemplate(BaseTemplate):
                 if m: line = line.replace('coding','coding (removed)')
             if line.strip()[:2].count('%') == 1:
                 line = line.split('%',1)[1].lstrip() # Full line following the %
-                cline = split_comment(line)[0].strip()
+                cline = split_comment(line).strip()
                 cmd = re.split(r'[^a-zA-Z0-9_]', cline)[0]
                 flush() ##encodig (TODO: why?)
                 if cmd in self.blocks or multiline:
