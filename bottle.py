@@ -144,7 +144,7 @@ class HTTPError(HTTPResponse):
         self.traceback = traceback
 
     def __repr__(self):
-        return ''.join(ERROR_PAGE_TEMPLATE.render(e=self))
+        return template(ERROR_PAGE_TEMPLATE, e=self)
 
 
 
@@ -2141,7 +2141,7 @@ HTTP_CODES = httplib.responses
 HTTP_CODES[418] = "I'm a teapot" # RFC 2324
 
 #: The default template used for error pages. Override with @error()
-ERROR_PAGE_TEMPLATE = SimpleTemplate("""
+ERROR_PAGE_TEMPLATE = """
 %try:
     %from bottle import DEBUG, HTTP_CODES, request
     %status_name = HTTP_CODES.get(e.status, 'Unknown').title()
@@ -2172,7 +2172,7 @@ ERROR_PAGE_TEMPLATE = SimpleTemplate("""
 %except ImportError:
     <b>ImportError:</b> Could not generate the error page. Please add bottle to sys.path
 %end
-""")
+"""
 
 #: A thread-save instance of :class:`Request` representing the `current` request.
 request = Request()
