@@ -96,19 +96,33 @@ else:
 tonat.__doc__ = """ Convert anything to native strings """
 
 
-# Background compatibility
+# Backward compatibility
 def depr(message, critical=False):
     if critical: raise DeprecationWarning(message)
     warnings.warn(message, DeprecationWarning, stacklevel=3)
 
+
 # Small helpers
+
 def makelist(data):
     if isinstance(data, (tuple, list, set, dict)): return list(data)
     elif data: return [data]
     else: return []
 
 
-
+class cached_property(object):
+    """ Decorator to create properties that are computed only once per instance
+        and then saved as normal attributes. Works for any new-style classes
+        with a __dict__ (no slots). """
+    def __init__(self, func, name=None, doc=None):
+        self.__name__ = name or func.__name__
+        self.__doc__ = doc or func.__doc__
+        self.__module__ = func.__module__
+        self.func = func
+    def __get__(self, obj, type=None):
+        if obj is None: return self
+        value = obj.__dict__[self.__name__] = self.func(obj)
+        return value
 
 
 
@@ -1929,24 +1943,24 @@ class SimpleTemplate(BaseTemplate):
 
     def prepare(self, escape_func=cgi.escape, noescape=False):
         self.cache = {}
-        if self.source:
-            self.code = self.translate(self.source)
-            self.co = compile(self.code, '<string>', 'exec')
-        else:
-            self.code = self.translate(open(self.filename).read())
-            self.co = compile(self.code, self.filename, 'exec')
         enc = self.encoding
         self._str = lambda x: touni(x, enc)
         self._escape = lambda x: escape_func(touni(x, enc))
         if noescape:
             self._str, self._escape = self._escape, self._str
 
-    def translate(self, template):
+    @cached_property
+    def co(self):
+        return compile(self.code, self.filename or '<string>', 'exec')
+
+    @cached_property
+    def code(self):
         stack = [] # Current Code indentation
         lineno = 0 # Current line of code
         ptrbuffer = [] # Buffer for printable strings and token tuple instances
         codebuffer = [] # Buffer for generated python code
         multiline = dedent = oneline = False
+        template = self.source if self.source else open(self.filename).read()
 
         def yield_tokens(line):
             for i, part in enumerate(re.split(r'\{\{(.*?)\}\}', line)):
