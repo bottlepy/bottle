@@ -70,13 +70,12 @@ if sys.version_info >= (3,0,0): # pragma: no cover
         ''' Garbage collecting an io.TextIOWrapper(buffer) instance closes the
             wrapped buffer. This subclass keeps it open. '''
         def close(self): pass
-    StringType = bytes
     def touni(x, enc='utf8'):
         """ Convert anything to unicode """
         return str(x, encoding=enc) if isinstance(x, bytes) else str(x)
 else:
     from StringIO import StringIO as BytesIO
-    StringType = type('')
+    bytes = str
     NCTextIOWrapper = None
     def touni(x, enc='utf8'):
         """ Convert anything to unicode """
@@ -84,7 +83,7 @@ else:
 
 def tob(data, enc='utf8'):
     """ Convert anything to bytes """
-    return data.encode(enc) if isinstance(data, unicode) else StringType(data)
+    return data.encode(enc) if isinstance(data, unicode) else bytes(data)
 
 # Convert strings and unicode to native strings
 if sys.version_info >= (3,0,0):
@@ -549,13 +548,13 @@ class Bottle(object):
             return []
         # Join lists of byte or unicode strings. Mixed lists are NOT supported
         if isinstance(out, (tuple, list))\
-        and isinstance(out[0], (StringType, unicode)):
+        and isinstance(out[0], (bytes, unicode)):
             out = out[0][0:0].join(out) # b'abc'[0:0] -> b''
         # Encode unicode strings
         if isinstance(out, unicode):
             out = out.encode(response.charset)
         # Byte Strings are just returned
-        if isinstance(out, StringType):
+        if isinstance(out, bytes):
             response.headers['Content-Length'] = str(len(out))
             return [out]
         # HTTPError or HTTPException (recursive, because they may wrap anything)
@@ -591,7 +590,7 @@ class Bottle(object):
         # These are the inner types allowed in iterator or generator objects.
         if isinstance(first, HTTPResponse):
             return self._cast(first, request, response)
-        if isinstance(first, StringType):
+        if isinstance(first, bytes):
             return itertools.chain([first], out)
         if isinstance(first, unicode):
             return itertools.imap(lambda x: x.encode(response.charset),
@@ -1346,6 +1345,19 @@ def validate(**vkargs):
         return wrapper
     return decorator
 
+def auth_basic(check, realm="private", text="Access denied"):
+    ''' Callback decorator to require HTTP auth (basic).
+        TODO: Add route(check_auth=...) parameter. '''
+    def decorator(func):
+      def wrapper(*a, **ka):
+        user, password = request.auth or (None, None)
+        if user is None or not check(user, password):
+          response.headers['WWW-Authenticate'] = 'Basic realm="%s"' % realm
+          return HTTPError(401, text)
+        return func(*a, **ka)
+      return wrapper
+    return decorator 
+
 
 def make_default_app_wrapper(name):
     ''' Return a callable that relays calls to the current default app. '''
@@ -1968,6 +1980,7 @@ class SimpleTemplate(BaseTemplate):
 
         def split_comment(codeline):
             """ Removes comments from python code. """
+            if '#' not in codeline: return codeline
             #: This matches comments and all kinds of quoted strings but does
             #: NOT match comments (#...) within quoted strings. (trust me)
             re_foo = '((?:\'\'(?!\')|""(?!")|\'\'\'\'\'\'|""""""' \
