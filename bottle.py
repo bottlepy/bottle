@@ -1949,6 +1949,7 @@ class SimpleTALTemplate(BaseTemplate):
 class SimpleTemplate(BaseTemplate):
     blocks = ('if','elif','else','try','except','finally','for','while','with','def','class')
     dedent_blocks = ('elif', 'else', 'except', 'finally')
+    re_pytokens = None
 
     def prepare(self, escape_func=cgi.escape, noescape=False):
         self.cache = {}
@@ -1957,6 +1958,25 @@ class SimpleTemplate(BaseTemplate):
         self._escape = lambda x: escape_func(touni(x, enc))
         if noescape:
             self._str, self._escape = self._escape, self._str
+
+    @classmethod
+    def split_comment(cls, code):
+        """ Removes comments (#...) from python code. """
+        if '#' not in code: return code
+        if not cls.re_pytokens:
+            #: This matches comments and all kinds of quoted strings but does
+            #: NOT match comments (#...) within quoted strings. (trust me)
+            cls.re_pytokens = re.compile(r'''
+              (''(?!')|""(?!")|'{6}|"{6}    # Empty strings (all 4 types)
+               |'(?:[^\\']|\\.)+?'          # Single quotes (')
+               |"(?:[^\\"]|\\.)+?"          # Double quotes (")
+               |'{3}(?:[^\\]|\\.|\n)+?'{3}  # Triple-quoted strings (')
+               |"{3}(?:[^\\]|\\.|\n)+?"{3}  # Triple-quoted strings (")
+               |\#.*                        # Comments
+              )''', re.VERBOSE)
+        #: Remove comments only (leave quoted strings as they are)
+        subf = lambda m: '' if m.group(0)[0]=='#' else m.group(0)
+        return re.sub(cls.re_pytokens, subf, code)
 
     @cached_property
     def co(self):
@@ -1977,19 +1997,6 @@ class SimpleTemplate(BaseTemplate):
                     if part.startswith('!'): yield 'RAW', part[1:]
                     else: yield 'CMD', part
                 else: yield 'TXT', part
-
-        def split_comment(codeline):
-            """ Removes comments from python code. """
-            if '#' not in codeline: return codeline
-            #: This matches comments and all kinds of quoted strings but does
-            #: NOT match comments (#...) within quoted strings. (trust me)
-            re_foo = '((?:\'\'(?!\')|""(?!")|\'\'\'\'\'\'|""""""' \
-                     '|\'(?:[^\\\\\']|\\\\.)+?\'|"(?:[^\\\\"]|\\\\.)+?"' \
-                     '|\'\'\'(?:[^\\\\]|\\\\.|\\n)+?\'\'\'' \
-                     '|"""(?:[^\\\\]|\\\\.|\\n)+?""")|#.*)'
-            #: Replace comments with nothing but leave strings alone.
-            sub = lambda m: '' if m.group(0)[0]=='#' else m.group(0)
-            return re.sub(re_foo, sub, codeline)
 
         def flush(): # Flush the ptrbuffer
             if not ptrbuffer: return
@@ -2022,7 +2029,7 @@ class SimpleTemplate(BaseTemplate):
                 if m: line = line.replace('coding','coding (removed)')
             if line.strip()[:2].count('%') == 1:
                 line = line.split('%',1)[1].lstrip() # Full line following the %
-                cline = split_comment(line).strip()
+                cline = self.split_comment(line).strip()
                 cmd = re.split(r'[^a-zA-Z0-9_]', cline)[0]
                 flush() ##encodig (TODO: why?)
                 if cmd in self.blocks or multiline:
