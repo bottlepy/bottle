@@ -137,19 +137,13 @@ class TestWsgi(ServerTestBase):
 
 class TestRouteDecorator(ServerTestBase):
     def test_decorators(self):
-        app = bottle.Bottle()
-        def foo(): pass
-        app.route('/g')(foo)
-        bottle.route('/g')(foo)
-        app.route('/g2', method='GET')(foo)
-        bottle.get('/g2')(foo)
-        app.route('/p', method='POST')(foo)
-        bottle.post('/p')(foo)
-        app.route('/p2', method='PUT')(foo)
-        bottle.put('/p2')(foo)
-        app.route('/d', method='DELETE')(foo)
-        bottle.delete('/d')(foo)
-        self.assertEqual(app.routes, bottle.app().routes)
+        def foo(): return bottle.request.method
+        bottle.get('/')(foo)
+        bottle.post('/')(foo)
+        bottle.put('/')(foo)
+        bottle.delete('/')(foo)
+        for verb in 'GET POST PUT DELETE'.split():
+            self.assertBody(verb, '/', method=verb)
 
     def test_single_path(self):
         @bottle.route('/a')
@@ -177,7 +171,7 @@ class TestRouteDecorator(ServerTestBase):
         self.assertBody('6', '/test/6')
 
     def test_method(self):
-        @bottle.route(method=' gEt ')
+        @bottle.route(method='gEt')
         def test(): return 'ok'
         self.assertBody('ok', '/test', method='GET')
         self.assertStatus(200, '/test', method='HEAD')
@@ -349,11 +343,11 @@ class TestDecorators(ServerTestBase):
         def c(x, y): pass
         def d(x, y=5): pass
         def e(x=5, y=6): pass
-        self.assertEqual(['a'],list(bottle.yieldroutes(a)))
-        self.assertEqual(['b/:x'],list(bottle.yieldroutes(b)))
-        self.assertEqual(['c/:x/:y'],list(bottle.yieldroutes(c)))
-        self.assertEqual(['d/:x','d/:x/:y'],list(bottle.yieldroutes(d)))
-        self.assertEqual(['e','e/:x','e/:x/:y'],list(bottle.yieldroutes(e)))
+        self.assertEqual(['/a'],list(bottle.yieldroutes(a)))
+        self.assertEqual(['/b/:x'],list(bottle.yieldroutes(b)))
+        self.assertEqual(['/c/:x/:y'],list(bottle.yieldroutes(c)))
+        self.assertEqual(['/d/:x','/d/:x/:y'],list(bottle.yieldroutes(d)))
+        self.assertEqual(['/e','/e/:x','/e/:x/:y'],list(bottle.yieldroutes(e)))
 
 
 class TestAppMounting(ServerTestBase):
