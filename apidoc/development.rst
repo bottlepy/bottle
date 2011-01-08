@@ -10,7 +10,7 @@ There are several ways to join the community and stay up to date. Here are some 
 
 * **Mailinglist**: Join the mailinglist by sending an email to `bottlepy@googlegroups.com <mailto:bottlepy@googlegroups.com>`_ or using the web front-end at `google groups <http://groups.google.de/group/bottlepy>`_. You don't need a Google account to use the mailing-list, but then I have to approve your subscription manually to protect the list from spam. Please be patient in that case.
 * **Twitter**: Follow us on `Twitter<twitter.com/bottlepy>`_ or search for the ``#bottlepy`` tag.
-
+* **IRC**: Join `#bottlepy <irc://irc.freenode.net/bottlepy>`_ on irc.freenode.net.
 
 Get the Sources
 ---------------
