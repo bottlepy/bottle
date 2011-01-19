@@ -7,6 +7,8 @@ $(document).ready(function() {
     return Math.round(wsize*(pos/dsize))
   }
 
+  var timeoutId;
+
   $('h1 > a.headerlink, h2 > a.headerlink').each(function(index){
     var lnk = $(this);
     var pos = lnk.offset().top
@@ -18,10 +20,20 @@ $(document).ready(function() {
     node.append($('<a>').text(title).attr('href', lnk.attr('href')))
     node.css('right', '-'+(node.outerWidth()-peak)+'px')
     node.mouseenter(function(){
-      node.animate({'right': '0px'}, 250)
+      if(timeoutId) {
+          window.clearTimeout(timeoutId);
+          timeoutId = null;
+      }
+      $('div.sidelegend').animate({'right': '0px'}, 250)
     })
     node.mouseleave(function(){
-      node.stop(true).animate({'right': '-'+(node.outerWidth()-peak)+'px'}, 250)
+      timeoutId = window.setTimeout(function(){
+        $('div.sidelegend').each(function(){
+          var n = $(this)
+          n.animate({'right': '-'+(n.outerWidth()-peak)+'px'}, 250)
+        })
+        timeoutId = null;
+      }, 1000)
     })
 
     $(document).resize(function(){
