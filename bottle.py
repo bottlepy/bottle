@@ -107,20 +107,45 @@ def makelist(data):
     else: return []
 
 
-class cached_property(object):
-    """ Decorator to create properties that are computed only once per instance
-        and then saved as normal attributes. Works for any new-style classes
-        with a __dict__ (no slots). """
-    def __init__(self, func, name=None, doc=None):
-        self.__name__ = name or func.__name__
-        self.__doc__ = doc or func.__doc__
-        self.__module__ = func.__module__
-        self.func = func
-    def __get__(self, obj, type=None):
-        if obj is None: return self
-        value = obj.__dict__[self.__name__] = self.func(obj)
-        return value
+class DictProperty(object):
+    ''' Property that maps to a key in a local dict-like attribute. '''
+    def __init__(self, attr, key=None, read_only=False):
+        self.attr, self.key, self.read_only = attr, key, read_only
 
+    def __call__(self, func):
+        functools.update_wrapper(self, func, updated=[])
+        self.getter, self.key = func, self.key or func.__name__
+        return self
+
+    def __get__(self, obj, cls):
+        if not obj: return self
+        key, storage = self.key, getattr(obj, self.attr)
+        if key not in storage: storage[key] = self.getter(obj)
+        return storage[key]
+
+    def __set__(self, obj, value):
+        if self.read_only: raise ApplicationError("Read-Only property.")
+        getattr(obj, self.attr)[self.key] = value
+
+    def __delete__(self, obj):
+        if self.read_only: raise ApplicationError("Read-Only property.")
+        del getattr(obj, self.attr)[self.key]
+
+def cached_property(func):
+    ''' A property that, if accessed, replaces itself with the computed
+        value. Subsequent accesses won't call the getter again. '''
+    return DictProperty('__dict__')(func)
+
+class lazy_attribute(object): # Does not need configuration -> lower-case name
+    ''' A property that caches itself to the class object. '''
+    def __init__(self, func):
+        functools.update_wrapper(self, func, updated=[])
+        self.getter = func
+    
+    def __get__(self, obj, cls):
+        value = self.getter(cls)
+        setattr(cls, self.__name__, value)
+        return value
 
 
 ###############################################################################
@@ -198,9 +223,12 @@ class Router(object):
             ´HEAD´ route installed.
           * ´ANY´ routes do match if there is no other suitable route installed.
     '''
-    syntax = re.compile(r'(?<!\\):([a-zA-Z_][a-zA-Z_0-9]*)?(?:#(.*?)#)?')
     default = '[^/]+'
-    
+
+    @lazy_attribute
+    def syntax(cls):
+        return re.compile(r'(?<!\\):([a-zA-Z_][a-zA-Z_0-9]*)?(?:#(.*?)#)?')
+
     def __init__(self):
         self.routes = {}  # A {rule: {method: target}} mapping
         self.rules  = []  # An ordered list of rules
@@ -246,6 +274,7 @@ class Router(object):
             pairs = zip(parts, names)
             self.named[_name] = (rule, pairs)
         try:
+            anon = list(anon)
             url = [s if k is None
                    else s+str(args.pop(k)) if k else s+str(anon.pop())
                    for s, k in pairs]
@@ -745,126 +774,100 @@ class Request(threading.local, DictMixin):
         depr("The Request.header property was renamed to Request.headers")
         return self.headers
 
-    @property
+    @DictProperty('environ', 'bottle.headers', read_only=True)
     def headers(self):
-        ''' Request HTTP Headers stored in a dict-like object.
+        ''' Request HTTP Headers stored in a :cls:`HeaderDict`. '''
+        return WSGIHeaderDict(self.environ)
 
-            This dictionary uses case-insensitive keys and native strings as
-            keys and values. See :class:`WSGIHeaderDict` for details.
-        '''
-        if 'bottle.headers' not in self.environ:
-            self.environ['bottle.headers'] = WSGIHeaderDict(self.environ)
-        return self.environ['bottle.headers']
-
-    @property
+    @DictProperty('environ', 'bottle.get', read_only=True)
     def GET(self):
-        """ The QUERY_STRING parsed into an instance of :class:`MultiDict`.
+        """ The QUERY_STRING parsed into an instance of :class:`MultiDict`. """
+        data = parse_qs(self.query_string, keep_blank_values=True)
+        get = self.environ['bottle.get'] = MultiDict()
+        for key, values in data.iteritems():
+            for value in values:
+                get[key] = value
+        return get
 
-            If you expect more than one value for a key, use ``.getall(key)`` on
-            this dictionary to get a list of all values. Otherwise, only the
-            first value is returned.
-        """
-        if 'bottle.get' not in self.environ:
-            data = parse_qs(self.query_string, keep_blank_values=True)
-            get = self.environ['bottle.get'] = MultiDict()
-            for key, values in data.iteritems():
-                for value in values:
-                    get[key] = value
-        return self.environ['bottle.get']
-
-    @property
+    @DictProperty('environ', 'bottle.post', read_only=True)
     def POST(self):
         """ The combined values from :attr:`forms` and :attr:`files`. Values are
             either strings (form values) or instances of
             :class:`cgi.FieldStorage` (file uploads).
-
-            If you expect more than one value for a key, use ``.getall(key)`` on
-            this dictionary to get a list of all values. Otherwise, only the
-            first value is returned.
         """
-        if 'bottle.post' not in self.environ:
-            self.environ['bottle.post'] = MultiDict()
-            self.environ['bottle.forms'] = MultiDict()
-            self.environ['bottle.files'] = MultiDict()
-            safe_env = {'QUERY_STRING':''} # Build a safe environment for cgi
-            for key in ('REQUEST_METHOD', 'CONTENT_TYPE', 'CONTENT_LENGTH'):
-                if key in self.environ: safe_env[key] = self.environ[key]
-            if NCTextIOWrapper:
-                fb = NCTextIOWrapper(self.body, encoding='ISO-8859-1', newline='\n')
-                # TODO: Content-Length may be wrong now. Does cgi.FieldStorage
-                # use it at all? I think not, because all tests pass.
-            else:
-                fb = self.body
-            data = cgi.FieldStorage(fp=fb, environ=safe_env, keep_blank_values=True)
-            for item in data.list or []:
-                if item.filename:
-                    self.environ['bottle.post'][item.name] = item
-                    self.environ['bottle.files'][item.name] = item
-                else:
-                    self.environ['bottle.post'][item.name] = item.value
-                    self.environ['bottle.forms'][item.name] = item.value
-        return self.environ['bottle.post']
+        post = MultiDict()
+        safe_env = {'QUERY_STRING':''} # Build a safe environment for cgi
+        for key in ('REQUEST_METHOD', 'CONTENT_TYPE', 'CONTENT_LENGTH'):
+            if key in self.environ: safe_env[key] = self.environ[key]
+        if NCTextIOWrapper:
+            fb = NCTextIOWrapper(self.body, encoding='ISO-8859-1', newline='\n')
+        else:
+            fb = self.body
+        data = cgi.FieldStorage(fp=fb, environ=safe_env, keep_blank_values=True)
+        for item in data.list or []:
+            post[item.name] = item if item.filename else item.value
+        return post
 
-    @property
+    @DictProperty('environ', 'bottle.forms', read_only=True)
     def forms(self):
         """ POST form values parsed into an instance of :class:`MultiDict`.
 
             This property contains form values parsed from an `url-encoded`
             or `multipart/form-data` encoded POST request bidy. The values are
             native strings.
-
-            If you expect more than one value for a key, use ``.getall(key)`` on
-            this dictionary to get a list of all values. Otherwise, only the
-            first value is returned.
         """
-        if 'bottle.forms' not in self.environ: self.POST
-        return self.environ['bottle.forms']
+        forms = MultiDict()
+        for name, item in self.POST.iterallitems():
+            if not hasattr(item, 'filename'):
+                forms[name] = item
+        return forms
 
-    @property
+    @DictProperty('environ', 'bottle.files', read_only=True)
     def files(self):
         """ File uploads parsed into an instance of :class:`MultiDict`.
 
             This property contains file uploads parsed from an
             `multipart/form-data` encoded POST request body. The values are
             instances of :class:`cgi.FieldStorage`.
-
-            If you expect more than one value for a key, use ``.getall(key)`` on
-            this dictionary to get a list of all values. Otherwise, only the
-            first value is returned.
         """
-        if 'bottle.files' not in self.environ: self.POST
-        return self.environ['bottle.files']
+        files = MultiDict()
+        for name, item in self.POST.iterallitems():
+            if hasattr(item, 'filename'):
+                files[name] = item
+        return files
         
-    @property
+    @DictProperty('environ', 'bottle.params', read_only=True)
     def params(self):
         """ A combined :class:`MultiDict` with values from :attr:`forms` and
             :attr:`GET`. File-uploads are not included. """
-        if 'bottle.params' not in self.environ:
-            self.environ['bottle.params'] = MultiDict(self.GET)
-            self.environ['bottle.params'].update(dict(self.forms))
-        return self.environ['bottle.params']
+        params = MultiDict(self.GET)
+        for key, value in self.forms.iterallitems():
+            params[key] = value
+        return params
 
-    @property
-    def body(self):
+    @DictProperty('environ', 'bottle.body', read_only=True)
+    def _body(self):
         """ The HTTP request body as a seekable file-like object.
 
             This property returns a copy of the `wsgi.input` stream and should
             be used instead of `environ['wsgi.input']`.
          """
-        if 'bottle.body' not in self.environ:
-            maxread = max(0, self.content_length)
-            stream = self.environ['wsgi.input']
-            body = BytesIO() if maxread < MEMFILE_MAX else TemporaryFile(mode='w+b')
-            while maxread > 0:
-                part = stream.read(min(maxread, MEMFILE_MAX))
-                if not part: #TODO: Wrong content_length. Error? Do nothing?
-                    break
-                body.write(part)
-                maxread -= len(part)
-            self.environ['wsgi.input'] = body
-            self.environ['bottle.body'] = body
-        self.environ['bottle.body'].seek(0)
-        return self.environ['bottle.body']
+        maxread = max(0, self.content_length)
+        stream = self.environ['wsgi.input']
+        body = BytesIO() if maxread < MEMFILE_MAX else TemporaryFile(mode='w+b')
+        while maxread > 0:
+            part = stream.read(min(maxread, MEMFILE_MAX))
+            if not part: break
+            body.write(part)
+            maxread -= len(part)
+        self.environ['wsgi.input'] = body
+        body.seek(0)
+        return body
+    
+    @property
+    def body(self):
+        self._body.seek(0)
+        return self._body
 
     @property
     def auth(self): #TODO: Tests and docs. Add support for digest. namedtuple?
@@ -875,17 +878,16 @@ class Request(threading.local, DictMixin):
         """
         return parse_auth(self.headers.get('Authorization',''))
 
-    @property
+    @DictProperty('environ', 'bottle.cookies', read_only=True)
     def COOKIES(self):
         """ Cookies parsed into a dictionary. Secure cookies are NOT decoded
             automatically. See :meth:`get_cookie` for details.
         """
-        if 'bottle.cookies' not in self.environ:
-            raw_dict = SimpleCookie(self.headers.get('Cookie',''))
-            self.environ['bottle.cookies'] = {}
-            for cookie in raw_dict.itervalues():
-                self.environ['bottle.cookies'][cookie.key] = cookie.value
-        return self.environ['bottle.cookies']
+        raw_dict = SimpleCookie(self.headers.get('Cookie',''))
+        cookies = {}
+        for cookie in raw_dict.itervalues():
+            cookies[cookie.key] = cookie.value
+        return cookies
 
     def get_cookie(self, key, secret=None):
         """ Return the content of a cookie. To read a `Secure Cookies`, use the
@@ -1607,7 +1609,7 @@ server_names = {
 ###############################################################################
 
 
-def _load(target, **kwargs):
+def _load(target, **vars):
     """ Fetch something from a module. The exact behaviour depends on the the
         target string:
 
@@ -1616,9 +1618,9 @@ def _load(target, **kwargs):
         If the target contains a colon (e.g. `package.module:var`) the module
         variable specified after the colon is returned.
         If the part after the colon contains any non-alphanumeric characters
-        (e.g. `package.module:function(argument)`) the result of the expression
-        is returned. The exec namespace is updated with the keyword arguments
-        provided to this function.
+        (e.g. `package.module:func(var)`) the result of the expression
+        is returned. The expression has access to keyword arguments supplied
+        to this function.
         
         Example::
         >>> _load('bottle')
@@ -1637,8 +1639,8 @@ def _load(target, **kwargs):
     if target.isalnum():
         return getattr(sys.modules[module], target)
     package_name = module.split('.')[0]
-    kwargs[package_name] = sys.modules[package_name]
-    return eval('%s.%s' % (module, target), kwargs)
+    vars[package_name] = sys.modules[package_name]
+    return eval('%s.%s' % (module, target), vars)
 
 def load_app(target):
     """ Load a bottle application based on a target string and return the
@@ -1963,7 +1965,19 @@ class SimpleTALTemplate(BaseTemplate):
 class SimpleTemplate(BaseTemplate):
     blocks = ('if','elif','else','try','except','finally','for','while','with','def','class')
     dedent_blocks = ('elif', 'else', 'except', 'finally')
-    re_pytokens = None
+
+    @lazy_attribute
+    def re_pytokens(cls):
+        ''' This matches comments and all kinds of quoted strings but does
+            NOT match comments (#...) within quoted strings. (trust me) '''
+        return re.compile(r'''
+            (''(?!')|""(?!")|'{6}|"{6}    # Empty strings (all 4 types)
+             |'(?:[^\\']|\\.)+?'          # Single quotes (')
+             |"(?:[^\\"]|\\.)+?"          # Double quotes (")
+             |'{3}(?:[^\\]|\\.|\n)+?'{3}  # Triple-quoted strings (')
+             |"{3}(?:[^\\]|\\.|\n)+?"{3}  # Triple-quoted strings (")
+             |\#.*                        # Comments
+            )''', re.VERBOSE)
 
     def prepare(self, escape_func=cgi.escape, noescape=False):
         self.cache = {}
@@ -1977,17 +1991,6 @@ class SimpleTemplate(BaseTemplate):
     def split_comment(cls, code):
         """ Removes comments (#...) from python code. """
         if '#' not in code: return code
-        if not cls.re_pytokens:
-            #: This matches comments and all kinds of quoted strings but does
-            #: NOT match comments (#...) within quoted strings. (trust me)
-            cls.re_pytokens = re.compile(r'''
-              (''(?!')|""(?!")|'{6}|"{6}    # Empty strings (all 4 types)
-               |'(?:[^\\']|\\.)+?'          # Single quotes (')
-               |"(?:[^\\"]|\\.)+?"          # Double quotes (")
-               |'{3}(?:[^\\]|\\.|\n)+?'{3}  # Triple-quoted strings (')
-               |"{3}(?:[^\\]|\\.|\n)+?"{3}  # Triple-quoted strings (")
-               |\#.*                        # Comments
-              )''', re.VERBOSE)
         #: Remove comments only (leave quoted strings as they are)
         subf = lambda m: '' if m.group(0)[0]=='#' else m.group(0)
         return re.sub(cls.re_pytokens, subf, code)
