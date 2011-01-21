@@ -1495,6 +1495,11 @@ class AppEngineServer(ServerAdapter):
     quiet = True
     def run(self, handler):
         from google.appengine.ext.webapp import util
+        # A main() function in the handler script enables 'App Caching'.
+        # Make sure it is there. This _really_ improves performance.
+        module = sys.modules.get('__main__')
+        if module and not hasattr(module, 'main'):
+            module.main = lambda: util.run_wsgi_app(handler)
         util.run_wsgi_app(handler)
 
 
