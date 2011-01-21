@@ -95,6 +95,10 @@ div.note {
   background-color: #ffd;
 }
 
+div.highlight {
+  background: transparent;
+}
+
 pre {
   font-size: 12px;
   line-height: 1.2em;
