@@ -16,10 +16,10 @@ class TestRouter(unittest.TestCase):
             env['wsgi.run_once'] = 'true'
         return self.r.match(env)
 
-    def assertMatches(self, rule, url, **args):
-        self.add(rule, id(args))
-        target, urlargs = self.match(url)
-        self.assertEqual(id(args), target)
+    def assertMatches(self, rule, url, method='GET', **args):
+        self.add(rule, rule, method)
+        target, urlargs = self.match(url, method)
+        self.assertEqual(rule, target)
         self.assertEqual(args, urlargs)
 
     def testBasic(self):
@@ -62,6 +62,11 @@ class TestRouter(unittest.TestCase):
         # RouteBuildError: Parameter 'name' does not match pattern for route 'testroute': '[a-z]+'
         #self.assertRaises(bottle.RouteBuildError, build, 'anonroute')
         # RouteBuildError: Anonymous pattern found. Can't generate the route 'anonroute'.
+
+    def test_method(self):
+        #TODO Test method handling. This is done in the router now.
+        pass
+
 
 class TestRouterInCGIMode(TestRouter):
     CGI = True

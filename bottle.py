@@ -183,7 +183,9 @@ class HTTPError(HTTPResponse):
         return template(ERROR_PAGE_TEMPLATE, e=self)
 
 
-
+class PluginReset(BottleException):
+    """ If raised by a plugin or request handler, the route is reset and all
+        plugins are re-applied. """
 
 
 
@@ -290,7 +292,6 @@ class Router(object):
         targets, urlargs = self._match_path(environ)
         if not targets:
             raise HTTPError(404, "Not found: " + environ['PATH_INFO'])
-        environ['router.url_args'] = urlargs
         method = environ['REQUEST_METHOD'].upper()
         if method in targets:
             return targets[method], urlargs
@@ -382,11 +383,15 @@ class Bottle(object):
             You usually don't do that. Use `bottle.app.push()` instead.
         """
         self.routes = [] # List of installed routes including metadata.
-        self.callbacks = {} # Cache for wrapped callbacks.
-        self.router = Router() # Maps to self.routes indices.
+        self.router = Router() # Maps requests to self.route indices.
+        self.ccache = {} # Cache for callbacks with plugins applied.
+        
+        self.plugins = [] # List of installed plugins.
+        self.plugins.append(self._add_hook_wrapper)
 
         self.mounts = {}
         self.error_handler = {}
+        #: If true, most exceptions are catched and returned as :exc:`HTTPError`
         self.catchall = catchall
         self.config = config or {}
         self.serve = True
@@ -424,69 +429,108 @@ class Bottle(object):
         self.castfilter.append((ftype, func))
         self.castfilter.sort()
 
-    def match_url(self, path, method='GET'):
-        return self.match({'PATH_INFO': path, 'REQUEST_METHOD': method})
-        
     def match(self, environ):
-        """ Return a (callback, url-args) tuple or raise HTTPError. """
-        target, args = self.router.match(environ)
+        """ Search for a matching route and return a (callback, urlargs) tuple.
+            The first element is the associated route callback with plugins
+            applied. The second value is a dictionary with parameters extracted
+            from the URL. The :class:`Router` raises :exc:`HTTPError` (404/405)
+            on a non-match."""
+        handle, args = self.router.match(environ)
+        environ['route.handle'] = handle # TODO move to router?
+        environ['route.url_args'] = args
         try:
-            return self.callbacks[target], args
+            return self.ccache[handle], args
         except KeyError:
-            callback, decorators = self.routes[target]
-            wrapped = callback
-            for wrapper in decorators[::-1]:
-                wrapped = wrapper(wrapped)
-            #for plugin in self.plugins or []:
-            #    wrapped = plugin.apply(wrapped, rule)
-            functools.update_wrapper(wrapped, callback)
-            self.callbacks[target] = wrapped
-            return wrapped, args
+            config = self.routes[handle]
+            callback = self.ccache[handle] = self._build_callback(config)
+            return callback, args
 
+    def _build_callback(self, config):
+        ''' Apply plugins to a route and return a new callable. '''
+        wrapped = config['callback']
+        plugins = self.plugins + config.get('apply', [])
+        skip    = config['skip']
+        try:
+            for plugin in reversed(plugins):
+                if True in skip: break
+                if plugin in skip or type(plugin) in skip: continue
+                if getattr(plugin, 'name', True) in skip: continue
+                if hasattr(plugin, 'apply'):
+                    wrapped = plugin.apply(wrapped, self, config)
+                else:
+                    wrapped = plugin(wrapped)
+                if not wrapped: break
+                functools.update_wrapper(wrapped, config['callback'])
+            return wrapped
+        except PluginReset: # A plugin may have changed the config dict inplace.
+            return self.build_handler(config) # Apply all plugins again.
+        
     def get_url(self, routename, **kargs):
         """ Return a string that matches a named route """
         scriptname = request.environ.get('SCRIPT_NAME', '').strip('/') + '/'
         location = self.router.build(routename, **kargs).lstrip('/')
         return urljoin(urljoin('/', scriptname), location)
 
-    def route(self, path=None, method='GET', no_hooks=False, decorate=None,
-              template=None, template_opts={}, callback=None, name=None,
-              static=False):
-        """ Decorator: Bind a callback function to a request path.
+    def route(self, path=None, method='GET', callback=None, name=None,
+              apply=None, skip=None, **config):
+        """ A decorator to bind a function to a request URL. Example::
 
-            :param path: The request path or a list of paths to listen to. See 
-              :class:`Router` for syntax details. If no path is specified, it
-              is automatically generated from the callback signature. See
-              :func:`yieldroutes` for details.
-            :param method: The HTTP method (POST, GET, ...) or a list of
-              methods to listen to. (default: GET)
-            :param decorate: A decorator or a list of decorators. These are
-              applied to the callback in reverse order (on demand only).
-            :param no_hooks: If true, application hooks are not triggered
-              by this route. (default: False)
-            :param template: The template to use for this callback.
-              (default: no template)
-            :param template_opts: A dict with additional template parameters.
-            :param name: The name for this route. (default: None)
-            :param callback: If set, the route decorator is directly applied
-              to the callback and the callback is returned instead. This
-              equals ``Bottle.route(...)(callback)``.
+                @app.route('/hello/:name')
+                def hello(name):
+                    return 'Hello %s' % name
+
+            The ``:name`` part is a wildcard. See :class:`Router` for syntax
+            details.
+
+            :param path: Request path or a list of paths to listen to. If no
+              path is specified, it is automatically generated from the 
+              signature of the function.
+            :param method: HTTP method (`GET`, `POST`, `PUT`, ...) or a list of
+              methods to listen to. (default: `GET`)
+            :param callback: An optional shortcut to avoid the decorator
+              syntax. ``route(..., callback=func)`` equals ``route(...)(func)``
+            :param name: The name fir this route. (default: None)
+            :param apply: A decorator or plugin or a list of plugins. These are
+              applied to the route callback in addition to installed plugins.
+            :param skip: A list of plugins, plugin classes or names. Matching
+              plugins are not installed to this route. Set this to ``True`` to
+              skip all plugins.
+ 
+            Any additional keyword arguments are stored as route-specific
+            configuration and passed to plugins that implement
+            :meth:`Plugin.apply`.
         """
-        # @route can be used without any parameters
         if callable(path): path, callback = None, path
-        # Build up the list of decorators
-        decorators = makelist(decorate)
-        if template:     decorators.insert(0, view(template, **template_opts))
-        if not no_hooks: decorators.append(self._add_hook_wrapper)
-        #decorators.append(partial(self.apply_plugins, skiplist))
-        def wrapper(func):
-            for rule in makelist(path) or yieldroutes(func):
 
+        plugins = makelist(apply)
+        skiplist = makelist(skip)
+        if 'decorate' in config:
+            depr("The 'decorate' parameter was renamed to 'apply'") # 0.9
+            plugins += makelist(config.pop('decorate'))
+        if 'template' in config:
+            depr("The 'template' parameter is no longer used. Add the view() "\
+                 "decorator to the 'apply' parameter instead.") # 0.9
+            tpl, tplo = config.pop('template'), config.pop('template_opts', {})
+            plugins.insert(0, view(tpl, **tplo))
+        if config.pop('no_hooks', False):
+            depr("The no_hooks parameter is no longer used. Add 'hooks' to the"\
+                 "list of skipped plugins instead.") # 0.9
+            skiplist.append(self._add_hook_wrapper)
+        static = config.pop('static', False) # depr 0.9
+        config.update(apply=plugins, skip=skiplist)
+
+        def decorator(callback):
+            for rule in makelist(path) or yieldroutes(callback):
                 for verb in makelist(method):
-                    self.router.add(rule, verb, len(self.routes), name=name, static=static)
-                    self.routes.append((func, decorators))
-            return func
-        return wrapper(callback) if callback else wrapper
+                    verb = verb.upper()
+                    cfg = config.copy()
+                    cfg.update(rule=rule, method=verb, callback=callback)
+                    self.routes.append(cfg)
+                    handle = self.routes.index(cfg)
+                    self.router.add(rule, verb, handle, name=name, static=static)
+            return callback
+
+        return decorator(callback) if callback else decorator
 
     def _add_hook_wrapper(self, func):
         ''' Add hooks to a callable. See #84 '''
@@ -543,22 +587,35 @@ class Bottle(object):
             raise ValueError("Unknown hook name %s" % name)
         self.hooks[name].remove(func)
 
-    def handle(self, environ):
-        """ Execute the handler bound to the specified url and method and return
-        its output. If catchall is true, exceptions are catched and returned as
-        HTTPError(500) objects. """
+    def handle(self, environ, method='GET'):
+        """ Execute the first matching route callback and return the result.
+            :exc:`HTTPResponse` exceptions are catched and returned. If :attr:`Bottle.catchall` is true, other exceptions are catched as
+            well and returned as :exc:`HTTPError` instances (500).
+        """
+        if isinstance(environ, str):
+            depr("Bottle.handle() takes an environ dictionary.") # v0.9
+            environ = {'PATH_INFO': environ, 'REQUEST_METHOD': method.upper()}
         if not self.serve:
             return HTTPError(503, "Server stopped")
         try:
-            handler, args = self.match(environ)
-            return handler(**args)
-        except HTTPResponse, e:
-            return e
+            callback, args = self.match(environ)
+            return callback(**args)
+        except HTTPResponse, r:
+            return r
+        except PluginReset: # Route reset requested by the callback or a plugin.
+            del self.ccache[handle]
+            return self.handle(environ) # Try again.
+        except (KeyboardInterrupt, SystemExit, MemoryError):
+            raise
         except Exception, e:
-            if isinstance(e, (KeyboardInterrupt, SystemExit, MemoryError))\
-            or not self.catchall:
-                raise
-            return HTTPError(500, 'Unhandled exception', e, format_exc(10))
+            if not self.catchall: raise
+            return HTTPError(500, "Internal Server Error", e, format_exc(10))
+
+        try:
+            return (self.handler or self.build_handler())(**args)
+        except RouteReset:
+            self.reset()
+            return self(**args)
 
     def _cast(self, out, request, response, peek=None):
         """ Try to convert the parameter into something WSGI compatible and set
