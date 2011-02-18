@@ -206,23 +206,28 @@ class RouteBuildError(RouteError):
 class Router(object):
     ''' A Router is an ordered collection of route->target pairs. It is used to
         efficiently match WSGI requests against a number of routes and return
-        the first target that satisfies the request. A route is defined by a
-        path-rule and a HTTP method.
-        
+        the first target that satisfies the request. The target may be anything,
+        usually a string, ID or callable object. A route consists of a path-rule
+        and a HTTP method.
+
         The path-rule is either a static path (e.g. `/contact`) or a dynamic
         path that contains wildcards (e.g. `/wiki/:page`). By default, wildcards
         consume characters up to the next slash (`/`). To change that, you may
         add a regular expression pattern (e.g. `/wiki/:page#[a-z]+#`).
 
         For performance reasons, static routes (rules without wildcards) are
-        checked first. Dynamic routes are tested in order and the first
-        matching rule returns. Try to avoid ambiguous or overlapping rules.
+        checked first. Dynamic routes are searched in order. Try to avoid
+        ambiguous or overlapping rules.
 
         The HTTP method string matches only on equality, with two exceptions:
           * ´GET´ routes also match ´HEAD´ requests if there is no appropriate
             ´HEAD´ route installed.
           * ´ANY´ routes do match if there is no other suitable route installed.
+
+        An optional ``name`` parameter is used by :meth:`build` to identify
+        routes.
     '''
+
     default = '[^/]+'
 
     @lazy_attribute
@@ -236,8 +241,12 @@ class Router(object):
         self.static = {}  # Cache for static routes: {path: {method: target}}
         self.dynamic = [] # Cache for dynamic routes. See _compile()
 
-    def add(self, rule, method, target, name=None):
-        ''' Add a new route or overwrite an existing target. '''
+    def add(self, rule, method, target, name=None, static=False):
+        ''' Add a new route or replace the target for an existing route. '''
+        if static:
+            depr("Use a backslash to escape ':' in routes.") # 0.9
+            rule = rule.replace(':','\\:')
+
         if rule in self.routes:
             self.routes[rule][method.upper()] = target
         else:
@@ -472,12 +481,9 @@ class Bottle(object):
         #decorators.append(partial(self.apply_plugins, skiplist))
         def wrapper(func):
             for rule in makelist(path) or yieldroutes(func):
+
                 for verb in makelist(method):
-                    if static:
-                        rule = rule.replace(':','\\:')
-                        depr("Use backslash to escape ':' in routes.")
-                    #TODO: Prepare this for plugins
-                    self.router.add(rule, verb, len(self.routes), name=name)
+                    self.router.add(rule, verb, len(self.routes), name=name, static=static)
                     self.routes.append((func, decorators))
             return func
         return wrapper(callback) if callback else wrapper
