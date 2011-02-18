@@ -8,7 +8,7 @@ Python Standard Library.
 
 Homepage and documentation: http://bottle.paws.de/
 
-Copyright (c) 2010, Marcel Hellkamp.
+Copyright (c) 2011, Marcel Hellkamp.
 License: MIT (see LICENSE.txt for details)
 """
 
