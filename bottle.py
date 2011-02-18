@@ -248,17 +248,6 @@ class Router(object):
         if name:
             self.named[name] = (rule, None)
 
-    def delete(self, rule, method=None):
-        ''' Delete an existing route. Omit `method` to delete all targets. '''
-        if rule not in self.routes and rule in self.named:
-            rule = self.named[rule][0]
-        if rule in self.routes:
-            if method: del self.routes[rule][method]
-            else: self.routes[rule].clear()
-            if not self.routes[rule]:
-                del self.routes[rule]
-                self.rules.remove(rule)
-
     def build(self, _name, *anon, **args):
         ''' Return a string that matches a named route. Use keyword arguments
             to fill out named wildcards. Remaining arguments are appended as a
