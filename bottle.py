@@ -429,6 +429,40 @@ class Bottle(object):
         self.castfilter.append((ftype, func))
         self.castfilter.sort()
 
+    def install(self, plugin):
+        ''' Add a plugin to the list of plugins and prepare it for beeing
+            applied to all routes of this application. A plugin may be a simple
+            decorator or an object that implements the :class:`Plugin` API.
+        '''
+        self.ccache.clear()
+        if hasattr(plugin, 'setup'): plugin.setup(self)
+        if not callable(plugin) and not hasattr(plugin, 'apply'):
+            raise TypeError("Plugins must be callable or implement .apply()")
+        self.plugins.append(plugin)
+        return plugin
+
+    def uninstall(self, plugin):
+        ''' Uninstall plugins. Pass an instance to remove a specific plugin.
+            Pass a type object to remove all plugins that match that type.
+            Subclasses are not removed. Pass a string to remove all plugins with
+            a matching ``name`` attribute. Pass ``True`` to remove all plugins.
+            The list of affected plugins is returned. '''
+        self.ccache.clear()
+        removed, remove = [], plugin
+        for i, plugin in list(enumerate(self.plugins))[::-1]:
+            if remove is True or remove is plugin or remove is type(plugin) \
+            or getattr(plugin, 'name', True) == remove:
+                removed.append(plugin)
+                del self.plugins[i]
+                if hasattr(plugin, 'close'): plugin.close()
+        return removed
+
+    def close(self):
+        ''' Closes the application and all installed plugins. '''
+        for plugin in self.plugins:
+            if hasattr(plugin, 'close'): plugin.close()
+        self.stopped = True
+
     def match(self, environ):
         """ Search for a matching route and return a (callback, urlargs) tuple.
             The first element is the associated route callback with plugins
@@ -456,7 +490,7 @@ class Bottle(object):
                 if plugin in skip or type(plugin) in skip: continue
                 if getattr(plugin, 'name', True) in skip: continue
                 if hasattr(plugin, 'apply'):
-                    wrapped = plugin.apply(wrapped, self, config)
+                    wrapped = plugin.apply(wrapped, config)
                 else:
                     wrapped = plugin(wrapped)
                 if not wrapped: break
@@ -525,6 +559,7 @@ class Bottle(object):
                     verb = verb.upper()
                     cfg = config.copy()
                     cfg.update(rule=rule, method=verb, callback=callback)
+                    cfg.update(app=self)
                     self.routes.append(cfg)
                     handle = self.routes.index(cfg)
                     self.router.add(rule, verb, handle, name=name, static=static)
