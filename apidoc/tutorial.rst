@@ -58,30 +58,16 @@ Whats happening here?
 
 1. First we import some bottle components. The :func:`route` decorator and the :func:`run` function. 
 2. The :func:`route` :term:`decorator` is used do bind a piece of code to an URL. In this example we want to answer requests to the ``/hello`` URL.
-3. This function is the :term:`handler function` or :term:`callback` for the ``/hello`` route. It is called every time someone requests the ``/hello`` URL and is responsable for generating the page content.
-4. In this exmaple we simply return a string to the browser.
+3. This function is the :term:`handler function` or :term:`callback` for the ``/hello`` route. It is called every time someone requests the ``/hello`` URL and is responsible for generating the page content.
+4. In this example we simply return a string to the browser.
 5. Now it is time to start the actual HTTP server. The default is a development server running on 'localhost' port 8080 and serving requests until you hit :kbd:`Control-c`.
 
 This is it. Run this script, visit http://localhost:8080/hello and you will see "Hello World!" in your browser. Of cause this is a very simple example, but it shows the basic concept of how applications are built with bottle. Continue reading and you'll see what else is possible.
 
-.. rubric:: The Application Object
 
-Several functions and decorators such as :func:`route` or :func:`run` rely on a global application object to store routes, callbacks and configuration. This makes writing a small application easy, but can lead to problems in more complex scenarios. If you prefer a more explicit way to define your application and don't mind the extra typing, you can create your own concealed application object and use that instead of the global one::
-
-    from bottle import Bottle, run
-
-    myapp = Bottle()
+.. note::
+    For the sake of simplicity, most examples in this tutorial use a module-level :func:`route` decorator to bind routes. This decorator adds routes to a global application object that is created automatically in the background. If you prefer a more explicit way to define your application and don't mind the extra typing, you can create a separate application object and use that instead of the global one. The object-oriented approach is further described in the :ref:`default-app` section. Just keep in mind that you have a choice.
     
-    @myapp.route('/hello')
-    def hello():
-        return "Hello World!"
-    
-    run(app=myapp, host='localhost', port=8080)
-
-This tutorial uses the global-application syntax for the sake of simplicity. Just keep in mind that you have a choice. The object-oriented approach is further described in the :ref:`tutorial-appobject` section.
-
-
-
 .. _tutorial-routing:
 
 Routing
@@ -501,33 +487,76 @@ Templates are cached in memory after compilation. Modifications made to the temp
 
 .. _tutorial-debugging:
 
+
+
+
 Development
 ================================================================================
 
-Bottle has two features that may be helpful during development.
+You learned the basics and want to write your own application? Here are
+some tips that might help you to be more productive.
+
+.. _default-app:
+
+Default Application
+--------------------------------------------------------------------------------
+
+Bottle maintains a global stack of :class:`Bottle` instances and uses the top of the stack as a default for some of the module-level functions and decorators. The :func:`route` decorator, for example, is a shortcut for calling :meth:`Bottle.route` on the default application::
+
+    @route('/')
+    def hello():
+        return 'Hello World'
+
+This is very convenient for small applications and saves you some typing, but also means that, as soon as your module is imported, routes are installed to the global application. To avoid this kind of import side-effects, Bottle offers a second, more explicit way to build applications::
+
+    app = Bottle()
+    
+    @app.route('/')
+    def hello():
+        return 'Hello World'
+
+Separating the application object improves re-usability a lot, too. Other developers can safely import the ``app`` object from your module and use :meth:`Bottle.mount` to merge applications together.
+
+As an alternative, you can make use of the application stack to isolate your routes while still using the convenient shortcuts::
+
+    default_app.push()
+
+    @route('/')
+    def hello():
+        return 'Hello World'
+
+    app = default_app.pop()
+
+Both :func:`app` and :func:`default_app` are instance of :class:`AppStack` and implement a stack-like API. You can push and pop applications from and to the stack as needed. This also helps if you want to import a third party module that does not offer a separate application object::
+
+    default_app.push()
+
+    import some.module
+
+    app = default_app.pop()
+
 
 
 
 Debug Mode
 --------------------------------------------------------------------------------
 
-In debug mode, bottle is much more verbose and tries to help you find 
-bugs. You should never use debug mode in production environments.
+During early development, the debug mode can be very helpful.
 
 .. highlight:: python
 
 ::
 
-    import bottle
     bottle.debug(True)
 
-This does the following:
+In this mode, bottle is much more verbose and provides helpful debugging information whenever an error occurs. It also disables some optimisations that might get in your way and adds some checks that warn you about possible misconfiguration.
 
-* Exceptions will print a stacktrace.
-* Error pages will contain that stacktrace.
-* Templates will not be cached.
+Here is an incomplete list of things that change in debug mode:
 
+* A stacktrace is added to the default error page.
+* Templates are not cached anymore.
 
+Just make sure to not use the debug mode on a production server.
 
 Auto Reloading
 --------------------------------------------------------------------------------
@@ -549,7 +578,7 @@ careful.
 
 The child process will have ``os.environ['BOTTLE_CHILD']`` set to ``True`` 
 and start as a normal non-reloading app server. As soon as any of the 
-loaded modules changes, the child process is terminated and respawned by 
+loaded modules changes, the child process is terminated and re-spawned by 
 the main process. Changes in template files will not trigger a reload. 
 Please use debug mode to deactivate template caching.
 

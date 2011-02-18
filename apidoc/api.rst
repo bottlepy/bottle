@@ -7,16 +7,12 @@ API Reference
    :synopsis: WSGI micro framework
 .. moduleauthor:: Marcel Hellkamp <marc@paws.de>
 
-This is an API reference, NOT documentation. If you are new to bottle, have a look at the :doc:`tutorial`.
+This is a mostly auto-generated API. If you are new to bottle, you might find the
+narrative :doc:`tutorial` more helpful. 
 
 Module Contents
 =====================================
 The module defines several functions, constants, and an exception.
-
-.. function:: app()
-
-   Return the current *default application* (see :class:`Bottle`).
-   Actually, this is a callable instance of :class:`AppStack` and implements a stack-like API.
 
 .. autofunction:: debug
 
@@ -30,32 +26,39 @@ The module defines several functions, constants, and an exception.
 
 .. autodata:: HTTP_CODES
 
+.. function:: app()
+              default_app()
+
+    Return the current :ref:`default-app`. Actually, these are callable instances of :class:`AppStack` and implement a stack-like API.
+
+.. autoclass:: AppStack
+    :members:
+
+    .. method:: pop()
+   
+       Return the current default application and remove it from the stack.
+   
+   
 
 Routing 
 -------------------
 
-Bottle maintains a stack of :class:`Bottle` instances (see :func:`app` and :class:`AppStack`) and
-uses the top of the stack as a *default application* for some of the module-level functions
-and decorators.
+Bottle maintains a stack of :class:`Bottle` instances (see :func:`app` and :class:`AppStack`) and uses the top of the stack as a *default application* for some of the module-level functions and decorators.
 
-.. function:: route(path, method='GET', name=None)
 
-   Decorator to bind a function to a path. This equals :meth:`Bottle.route` using the current default application.
-
-.. function:: get(...)
+.. function:: route(path, method='GET', callback=None, **options)
+              get(...)
               post(...)
               put(...)
               delete(...)
 
-   These are equal to :func:`route` with the `method` parameter set to the corresponding verb.
+   Decorator to install a route to the current default application. See :meth:`Bottle.route` for details.
 
+   
 .. function:: error(...)
 
-   Calls :meth:`Bottle.error` using the default application.
+   Decorator to install an error handler to the current default application. See :meth:`Bottle.error` for details.
 
-.. function:: url(...)
-
-   Calls :meth:`Bottle.url` using the default application.
 
 WSGI and HTTP Utilities
 ----------------------------
@@ -109,6 +112,7 @@ The :class:`Bottle` Class
 
 .. autoclass:: Bottle
    :members:
+
 
 HTTP :class:`Request` and :class:`Response` objects
 ===================================================
