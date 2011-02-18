@@ -498,25 +498,21 @@ class Bottle(object):
             return response.output
         return wrapper
 
-    def get(self, path=None, method='GET', **kargs):
-        """ Decorator: Bind a function to a GET request path.
-            See :meth:'route' for details. """
-        return self.route(path, method, **kargs)
+    def get(self, path=None, method='GET', **options):
+        """ Equals :meth:`route`. """
+        return self.route(path, method, **options)
 
-    def post(self, path=None, method='POST', **kargs):
-        """ Decorator: Bind a function to a POST request path.
-            See :meth:'route' for details. """
-        return self.route(path, method, **kargs)
+    def post(self, path=None, method='POST', **options):
+        """ Equals :meth:`route` with a ``POST`` method parameter. """
+        return self.route(path, method, **options)
 
-    def put(self, path=None, method='PUT', **kargs):
-        """ Decorator: Bind a function to a PUT request path.
-            See :meth:'route' for details. """
-        return self.route(path, method, **kargs)
+    def put(self, path=None, method='PUT', **options):
+        """ Equals :meth:`route` with a ``PUT`` method parameter. """
+        return self.route(path, method, **options)
 
-    def delete(self, path=None, method='DELETE', **kargs):
-        """ Decorator: Bind a function to a DELETE request path.
-            See :meth:'route' for details. """
-        return self.route(path, method, **kargs)
+    def delete(self, path=None, method='DELETE', **options):
+        """ Equals :meth:`route` with a ``DELETE`` method parameter. """
+        return self.route(path, method, **options)
 
     def error(self, code=500):
         """ Decorator: Register an output handler for a HTTP error code"""
