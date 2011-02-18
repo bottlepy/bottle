@@ -39,7 +39,7 @@ import warnings
 from Cookie import SimpleCookie
 from tempfile import TemporaryFile
 from traceback import format_exc
-from urllib import quote as urlquote
+from urllib import quote_plus as urlquote
 from urlparse import urlunsplit, urljoin
 
 try: from collections import MutableMapping as DictMixin
@@ -124,11 +124,11 @@ class DictProperty(object):
         return storage[key]
 
     def __set__(self, obj, value):
-        if self.read_only: raise ApplicationError("Read-Only property.")
+        if self.read_only: raise AttributeError("Read-Only property.")
         getattr(obj, self.attr)[self.key] = value
 
     def __delete__(self, obj):
-        if self.read_only: raise ApplicationError("Read-Only property.")
+        if self.read_only: raise AttributeError("Read-Only property.")
         del getattr(obj, self.attr)[self.key]
 
 def cached_property(func):
@@ -284,7 +284,7 @@ class Router(object):
         except KeyError, e:
             raise RouteBuildError(*e.args)
         
-        if args: url += ['?', urlencode(args.iteritems())]
+        if args: url += ['?', urlquote(args.iteritems())]
         return ''.join(url)
 
     def match(self, environ):
@@ -744,14 +744,18 @@ class Request(threading.local, DictMixin):
     @property
     def fullpath(self):
         """ Request path including SCRIPT_NAME (if present). """
-        return self.environ.get('SCRIPT_NAME', '').rstrip('/') + self.path
+        spath = self.environ.get('SCRIPT_NAME','').rstrip('/') + '/'
+        rpath = self.path.lstrip('/')
+        return urljoin(spath, rpath)
 
     @property
     def url(self):
         """ Full URL as requested by the client (computed).
 
             This value is constructed out of different environment variables
-            and includes scheme, host, port, scriptname, path and query string. 
+            and includes scheme, host, port, scriptname, path and query string.
+            
+            Special characters are NOT escaped.
         """
         scheme = self.environ.get('wsgi.url_scheme', 'http')
         host   = self.environ.get('HTTP_X_FORWARDED_HOST')
@@ -761,7 +765,7 @@ class Request(threading.local, DictMixin):
             port = self.environ.get('SERVER_PORT', '80')
             if (scheme, port) not in (('https','443'), ('http','80')):
                 host += ':' + port
-        parts = (scheme, host, urlquote(self.fullpath), self.query_string, '')
+        parts = (scheme, host, self.fullpath, self.query_string, '')
         return urlunsplit(parts)
 
     @property
@@ -776,7 +780,7 @@ class Request(threading.local, DictMixin):
 
     @DictProperty('environ', 'bottle.headers', read_only=True)
     def headers(self):
-        ''' Request HTTP Headers stored in a :cls:`HeaderDict`. '''
+        ''' Request HTTP Headers stored in a :class:`HeaderDict`. '''
         return WSGIHeaderDict(self.environ)
 
     @DictProperty('environ', 'bottle.get', read_only=True)
@@ -1119,14 +1123,14 @@ class WSGIHeaderDict(DictMixin):
 
 
 class AppStack(list):
-    """ A stack implementation. """
+    """ A stack-like list. Calling it returns the head of the stack. """
 
     def __call__(self):
-        """ Return the current default app. """
+        """ Return the current default application. """
         return self[-1]
 
     def push(self, value=None):
-        """ Add a new Bottle instance to the stack """
+        """ Add a new :class:`Bottle` instance to the stack """
         if not isinstance(value, Bottle):
             value = Bottle()
         self.append(value)
