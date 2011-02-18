@@ -100,7 +100,6 @@ def depr(message, critical=False):
 
 
 # Small helpers
-
 def makelist(data):
     if isinstance(data, (tuple, list, set, dict)): return list(data)
     elif data: return [data]
@@ -141,16 +140,21 @@ class lazy_attribute(object): # Does not need configuration -> lower-case name
     def __init__(self, func):
         functools.update_wrapper(self, func, updated=[])
         self.getter = func
-    
+
     def __get__(self, obj, cls):
         value = self.getter(cls)
         setattr(cls, self.__name__, value)
         return value
 
 
+
+
+
+
 ###############################################################################
 # Exceptions and Events ########################################################
 ###############################################################################
+
 
 class BottleException(Exception):
     """ A base class for exceptions used by bottle. """
@@ -174,7 +178,8 @@ class HTTPResponse(BottleException):
 
 class HTTPError(HTTPResponse):
     """ Used to generate an error page """
-    def __init__(self, code=500, output='Unknown Error', exception=None, traceback=None, header=None):
+    def __init__(self, code=500, output='Unknown Error', exception=None,
+                 traceback=None, header=None):
         super(HTTPError, self).__init__(output, code, header)
         self.exception = exception
         self.traceback = traceback
@@ -183,9 +188,7 @@ class HTTPError(HTTPResponse):
         return template(ERROR_PAGE_TEMPLATE, e=self)
 
 
-class PluginReset(BottleException):
-    """ If raised by a plugin or request handler, the route is reset and all
-        plugins are re-applied. """
+
 
 
 
@@ -193,8 +196,14 @@ class PluginReset(BottleException):
 # Routing ######################################################################
 ###############################################################################
 
+
 class RouteError(BottleException):
     """ This is a base class for all routing related exceptions """
+
+
+class RouteReset(BottleException):
+    """ If raised by a plugin or request handler, the route is reset and all
+        plugins are re-applied. """
 
 
 class RouteSyntaxError(RouteError):
@@ -283,7 +292,7 @@ class Router(object):
             raise RouteBuildError(msg)
         except KeyError, e:
             raise RouteBuildError(*e.args)
-        
+
         if args: url += ['?', urlquote(args.iteritems())]
         return ''.join(url)
 
@@ -367,13 +376,14 @@ class Router(object):
         return re.compile('^%s$'%out)
 
 
-        
+
 
 
 
 ###############################################################################
 # Application Object ###########################################################
 ###############################################################################
+
 
 class Bottle(object):
     """ WSGI application """
@@ -385,7 +395,7 @@ class Bottle(object):
         self.routes = [] # List of installed routes including metadata.
         self.router = Router() # Maps requests to self.route indices.
         self.ccache = {} # Cache for callbacks with plugins applied.
-        
+
         self.plugins = [] # List of installed plugins.
         self.plugins.append(self._add_hook_wrapper)
 
@@ -498,7 +508,7 @@ class Bottle(object):
             return wrapped
         except PluginReset: # A plugin may have changed the config dict inplace.
             return self.build_handler(config) # Apply all plugins again.
-        
+
     def get_url(self, routename, **kargs):
         """ Return a string that matches a named route """
         scriptname = request.environ.get('SCRIPT_NAME', '').strip('/') + '/'
@@ -517,7 +527,7 @@ class Bottle(object):
             details.
 
             :param path: Request path or a list of paths to listen to. If no
-              path is specified, it is automatically generated from the 
+              path is specified, it is automatically generated from the
               signature of the function.
             :param method: HTTP method (`GET`, `POST`, `PUT`, ...) or a list of
               methods to listen to. (default: `GET`)
@@ -529,7 +539,7 @@ class Bottle(object):
             :param skip: A list of plugins, plugin classes or names. Matching
               plugins are not installed to this route. Set this to ``True`` to
               skip all plugins.
- 
+
             Any additional keyword arguments are stored as route-specific
             configuration and passed to plugins that implement
             :meth:`Plugin.apply`.
@@ -746,7 +756,7 @@ class Bottle(object):
             environ['wsgi.errors'].write(err) #TODO: wsgi.error should not get html
             start_response('500 INTERNAL SERVER ERROR', [('Content-Type', 'text/html')])
             return [tob(err)]
-        
+
     def __call__(self, environ, start_response):
         return self.wsgi(environ, start_response)
 
@@ -759,13 +769,14 @@ class Bottle(object):
 # HTTP and WSGI Tools ##########################################################
 ###############################################################################
 
+
 class Request(threading.local, DictMixin):
     """ Represents a single HTTP request using thread-local attributes.
         The Request object wraps a WSGI environment and can be used as such.
     """
     def __init__(self, environ=None):
         """ Create a new Request instance.
-        
+
             You usually don't do this but use the global `bottle.request`
             instance instead.
         """
@@ -773,7 +784,7 @@ class Request(threading.local, DictMixin):
 
     def bind(self, environ):
         """ Bind a new WSGI environment.
-            
+
             This is done automatically for the global `bottle.request`
             instance on every request.
         """
@@ -837,7 +848,7 @@ class Request(threading.local, DictMixin):
 
             This value is constructed out of different environment variables
             and includes scheme, host, port, scriptname, path and query string.
-            
+
             Special characters are NOT escaped.
         """
         scheme = self.environ.get('wsgi.url_scheme', 'http')
@@ -922,7 +933,7 @@ class Request(threading.local, DictMixin):
             if hasattr(item, 'filename'):
                 files[name] = item
         return files
-        
+
     @DictProperty('environ', 'bottle.params', read_only=True)
     def params(self):
         """ A combined :class:`MultiDict` with values from :attr:`forms` and
@@ -950,7 +961,7 @@ class Request(threading.local, DictMixin):
         self.environ['wsgi.input'] = body
         body.seek(0)
         return body
-    
+
     @property
     def body(self):
         self._body.seek(0)
@@ -993,7 +1004,6 @@ class Request(threading.local, DictMixin):
         ''' True if the request was generated using XMLHttpRequest '''
         #TODO: write tests
         return self.header.get('X-Requested-With') == 'XMLHttpRequest'
-
 
 
 class Response(threading.local):
@@ -1043,7 +1053,7 @@ class Response(threading.local):
     @property
     def charset(self):
         """ Return the charset specified in the content-type header.
-        
+
             This defaults to `UTF-8`.
         """
         if 'charset=' in self.content_type:
@@ -1076,7 +1086,7 @@ class Response(threading.local):
             Secure cookies may store any pickle-able object and are
             cryptographically signed to prevent manipulation. Keep in mind that
             cookies are limited to 4kb in most browsers.
-            
+
             Warning: Secure cookies are not encrypted (the client can still see
             the content) and not copy-protected (the client can restore an old
             cookie). The main intention is to make pickling and unpickling
@@ -1117,6 +1127,7 @@ class Response(threading.local):
 # Common Utilities #############################################################
 ###############################################################################
 
+
 class MultiDict(DictMixin):
     """ A dict that remembers old values for each key """
     # collections.MutableMapping would be better for Python >= 2.6
@@ -1149,14 +1160,20 @@ class MultiDict(DictMixin):
 
 
 class HeaderDict(MultiDict):
-    """ Same as :class:`MultiDict`, but title()s the keys and overwrites by default. """
-    def __contains__(self, key): return MultiDict.__contains__(self, self.httpkey(key))
-    def __getitem__(self, key): return MultiDict.__getitem__(self, self.httpkey(key))
-    def __delitem__(self, key): return MultiDict.__delitem__(self, self.httpkey(key))
+    """ Same as :class:`MultiDict`, but title()s the keys and overwrites. """
+    def __contains__(self, key):
+        return MultiDict.__contains__(self, self.httpkey(key))
+    def __getitem__(self, key):
+        return MultiDict.__getitem__(self, self.httpkey(key))
+    def __delitem__(self, key):
+        return MultiDict.__delitem__(self, self.httpkey(key))
     def __setitem__(self, key, value): self.replace(key, value)
-    def get(self, key, default=None, index=-1): return MultiDict.get(self, self.httpkey(key), default, index)
-    def append(self, key, value): return MultiDict.append(self, self.httpkey(key), str(value))
-    def replace(self, key, value): return MultiDict.replace(self, self.httpkey(key), str(value))
+    def get(self, key, default=None, index=-1):
+        return MultiDict.get(self, self.httpkey(key), default, index)
+    def append(self, key, value):
+        return MultiDict.append(self, self.httpkey(key), str(value))
+    def replace(self, key, value):
+        return MultiDict.replace(self, self.httpkey(key), str(value))
     def getall(self, key): return MultiDict.getall(self, self.httpkey(key))
     def httpkey(self, key): return str(key).replace('_','-').title()
 
@@ -1202,9 +1219,6 @@ class WSGIHeaderDict(DictMixin):
     def __contains__(self, key): return self._ekey(key) in self.environ
 
 
-
-
-
 class AppStack(list):
     """ A stack-like list. Calling it returns the head of the stack. """
 
@@ -1218,6 +1232,7 @@ class AppStack(list):
             value = Bottle()
         self.append(value)
         return value
+
 
 class WSGIFileWrapper(object):
 
@@ -1241,6 +1256,7 @@ class WSGIFileWrapper(object):
 ###############################################################################
 # Application Helper ###########################################################
 ###############################################################################
+
 
 def dict2json(d):
     response.content_type = 'application/json'
@@ -1371,10 +1387,10 @@ def cookie_is_encoded(data):
 
 
 def yieldroutes(func):
-    """ Return a generator for routes that match the signature (name, args) 
+    """ Return a generator for routes that match the signature (name, args)
     of the func parameter. This may yield more than one route if the function
     takes optional keyword arguments. The output is best described by example::
-    
+
         a()         -> '/a'
         b(x, y)     -> '/b/:x/:y'
         c(x, y=5)   -> '/c/:x' and '/c/:x/:y'
@@ -1389,6 +1405,7 @@ def yieldroutes(func):
     for arg in spec[0][argc:]:
         path += '/:%s' % arg
         yield path
+
 
 def path_shift(script_name, path_info, shift=1):
     ''' Shift path fragments from PATH_INFO to SCRIPT_NAME and vice versa.
@@ -1443,6 +1460,7 @@ def validate(**vkargs):
         return wrapper
     return decorator
 
+
 def auth_basic(check, realm="private", text="Access denied"):
     ''' Callback decorator to require HTTP auth (basic).
         TODO: Add route(check_auth=...) parameter. '''
@@ -1454,7 +1472,7 @@ def auth_basic(check, realm="private", text="Access denied"):
           return HTTPError(401, text)
         return func(*a, **ka)
       return wrapper
-    return decorator 
+    return decorator
 
 
 def make_default_app_wrapper(name):
@@ -1464,10 +1482,12 @@ def make_default_app_wrapper(name):
         return getattr(app(), name)(*a, **ka)
     return wrapper
 
+
 for name in 'route get post put delete error mount hook'.split():
     globals()[name] = make_default_app_wrapper(name)
 url = make_default_app_wrapper('get_url')
 del name
+
 
 def default():
     depr("The default() decorator is deprecated. Use @error(404) instead.")
@@ -1482,6 +1502,7 @@ def default():
 # Server Adapter ###############################################################
 ###############################################################################
 
+
 class ServerAdapter(object):
     quiet = False
     def __init__(self, host='127.0.0.1', port=8080, **config):
@@ -1491,7 +1512,7 @@ class ServerAdapter(object):
 
     def run(self, handler): # pragma: no cover
         pass
-        
+
     def __repr__(self):
         args = ', '.join(['%s=%s'%(k,repr(v)) for k, v in self.options.items()])
         return "%s(%s)" % (self.__class__.__name__, args)
@@ -1538,12 +1559,13 @@ class PasteServer(ServerAdapter):
             handler = TransLogger(handler)
         httpserver.serve(handler, host=self.host, port=str(self.port),
                          **self.options)
-                         
+
 class MeinheldServer(ServerAdapter):
     def run(self, handler):
         from meinheld import server
         server.listen((self.host, self.port))
         server.run(handler)
+
 
 class FapwsServer(ServerAdapter):
     """ Extremely fast webserver using libev. See http://www.fapws.org/ """
@@ -1648,6 +1670,7 @@ class RocketServer(ServerAdapter):
         server = Rocket((self.host, self.port), 'wsgi', { 'wsgi_app' : handler })
         server.start()
 
+
 class BjoernServer(ServerAdapter):
     """ Screamingly fast server written in C: https://github.com/jonashaag/bjoern """
     def run(self, handler):
@@ -1700,7 +1723,7 @@ def _load(target, **vars):
     """ Fetch something from a module. The exact behaviour depends on the the
         target string:
 
-        If the target is a valid python import path (e.g. `package.module`), 
+        If the target is a valid python import path (e.g. `package.module`),
         the rightmost part is returned as a module object.
         If the target contains a colon (e.g. `package.module:var`) the module
         variable specified after the colon is returned.
@@ -1708,7 +1731,7 @@ def _load(target, **vars):
         (e.g. `package.module:func(var)`) the result of the expression
         is returned. The expression has access to keyword arguments supplied
         to this function.
-        
+
         Example::
         >>> _load('bottle')
         <module 'bottle' from 'bottle.py'>
@@ -1728,6 +1751,7 @@ def _load(target, **vars):
     package_name = module.split('.')[0]
     vars[package_name] = sys.modules[package_name]
     return eval('%s.%s' % (module, target), vars)
+
 
 def load_app(target):
     """ Load a bottle application based on a target string and return the
@@ -1879,6 +1903,7 @@ def _reloader_observer(server, app, interval):
 # Template Adapters ############################################################
 ###############################################################################
 
+
 class TemplateError(HTTPError):
     def __init__(self, message):
         HTTPError.__init__(self, 500, message)
@@ -1907,7 +1932,7 @@ class BaseTemplate(object):
         self.lookup = map(os.path.abspath, lookup)
         self.encoding = encoding
         self.settings = self.settings.copy() # Copy from class variable
-        self.settings.update(settings) # Apply 
+        self.settings.update(settings) # Apply
         if not self.source and self.name:
             self.filename = self.search(self.name, self.lookup)
             if not self.filename:
@@ -2022,6 +2047,7 @@ class Jinja2Template(BaseTemplate):
             with open(fname, "rb") as f:
                 return f.read().decode(self.encoding)
 
+
 class SimpleTALTemplate(BaseTemplate):
     ''' Untested! '''
     def prepare(self, **options):
@@ -2046,7 +2072,6 @@ class SimpleTALTemplate(BaseTemplate):
         output = StringIO()
         self.tpl.expand(context, output)
         return output.getvalue()
-
 
 
 class SimpleTemplate(BaseTemplate):
@@ -2230,6 +2255,7 @@ cheetah_template = functools.partial(template, template_adapter=CheetahTemplate)
 jinja2_template = functools.partial(template, template_adapter=Jinja2Template)
 simpletal_template = functools.partial(template, template_adapter=SimpleTALTemplate)
 
+
 def view(tpl_name, **defaults):
     ''' Decorator: renders a template for a handler.
         The handler can control its behavior like that:
@@ -2261,9 +2287,11 @@ simpletal_view = functools.partial(view, template_adapter=SimpleTALTemplate)
 
 
 
+
 ###############################################################################
 # Constants and Globals ########################################################
 ###############################################################################
+
 
 TEMPLATE_PATH = ['./', './views/']
 TEMPLATES = {}
