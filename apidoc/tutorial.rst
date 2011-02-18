@@ -408,7 +408,7 @@ Here is an example for a simple file upload form:
         if name and data:
             raw = data.file.read() # This is dangerous for big files
             filename = data.filename
-            return "Hello %s! Your uploaded %s (%d bytes)." % (name, filename, len(raw))
+            return "Hello %s! You uploaded %s (%d bytes)." % (name, filename, len(raw))
         return "You missed a field."
 
 
