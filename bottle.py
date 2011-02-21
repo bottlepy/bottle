@@ -492,7 +492,7 @@ class Bottle(object):
     def _build_callback(self, config):
         ''' Apply plugins to a route and return a new callable. '''
         wrapped = config['callback']
-        plugins = self.plugins + config.get('apply', [])
+        plugins = self.plugins + config['apply']
         skip    = config['skip']
         try:
             for plugin in reversed(plugins):
@@ -506,8 +506,8 @@ class Bottle(object):
                 if not wrapped: break
                 functools.update_wrapper(wrapped, config['callback'])
             return wrapped
-        except PluginReset: # A plugin may have changed the config dict inplace.
-            return self.build_handler(config) # Apply all plugins again.
+        except RouteReset: # A plugin may have changed the config dict inplace.
+            return self._build_callback(config) # Apply all plugins again.
 
     def get_url(self, routename, **kargs):
         """ Return a string that matches a named route """
@@ -647,7 +647,7 @@ class Bottle(object):
             return callback(**args)
         except HTTPResponse, r:
             return r
-        except PluginReset: # Route reset requested by the callback or a plugin.
+        except RouteReset: # Route reset requested by the callback or a plugin.
             del self.ccache[handle]
             return self.handle(environ) # Try again.
         except (KeyboardInterrupt, SystemExit, MemoryError):
