@@ -105,6 +105,8 @@ Exceptions
 .. autoexception:: HTTPError
    :members:
 
+.. autoexception:: RouteReset
+   :members:
 
 
 The :class:`Bottle` Class
