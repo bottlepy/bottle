@@ -50,11 +50,11 @@ Plugin API
 
 .. class:: Plugin(object)
     
-    Plugins must be callable or implement :meth:`apply`. If :meth:`apply` is defined, it is always preferred over calling the plugin directly. All other methods are optional.
+    Plugins must be callable or implement :meth:`apply`. If :meth:`apply` is defined, it is always preferred over calling the plugin directly. All other methods and attributes are optional.
     
     .. attribute:: name
         
-        Both :meth:`Bottle.uninstall` and the `skip` parameter of :meth:`Bottle.route()` accept a name string to refer to a plugin or plugin type. This works only for plugins that define a name attribute.
+        Both :meth:`Bottle.uninstall` and the `skip` parameter of :meth:`Bottle.route()` accept a name string to refer to a plugin or plugin type. This works only for plugins that have a name attribute.
     
     .. method:: setup(app)
 
@@ -99,9 +99,7 @@ config       Additional keyword arguments passed to the :meth:`Bottle.route`
              plugin configuration and meta-data.
 ===========  =================================================================
 
-.. note::
-
-    While the :meth:`Bottle.route()` decorator accepts multiple rules and methods in a single call, the context dictionary only contains a specific pair. :meth:`Plugin.apply` is called once for each combination of ``rule`` and ``method``, even if they all map to the same route callback.
+The :meth:`Bottle.route()` decorator accepts multiple rules and methods in a single call, but the context dictionary refers to a specific pair only. :meth:`Plugin.apply` is called once for each combination of ``rule`` and ``method``, even if they all map to the same route callback.
    
 Keep in mind that the `config` dictionary is shared between all plugins. It is always a good idea to add a unique prefix or, if your plugin needs a lot of configuration, store it in a separate dictionary within the `config` dictionary. This helps to avoid naming collisions between plugins.
 
