@@ -172,9 +172,9 @@ class TestPluginAPI(tools.ServerTestBase):
 
     def test_apply(self):
         class Plugin(object):
-            def apply(self, func, config):
+            def apply(self, func, cfg):
                 def wrapper(*a, **ka):
-                    return func(*a, test=config['test'], **ka) + '; tail'
+                    return func(*a, test=cfg['config']['test'], **ka) + '; tail'
                 return wrapper
             def __call__(self, func):
                 raise AssertionError("Plugins must not be called "\

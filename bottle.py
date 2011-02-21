@@ -551,7 +551,7 @@ class Bottle(object):
         if 'decorate' in config:
             depr("The 'decorate' parameter was renamed to 'apply'") # 0.9
             plugins += makelist(config.pop('decorate'))
-        if 'template' in config:
+        if 'template' in config: # TODO Make plugin
             depr("The 'template' parameter is no longer used. Add the view() "\
                  "decorator to the 'apply' parameter instead.") # 0.9
             tpl, tplo = config.pop('template'), config.pop('template_opts', {})
@@ -560,16 +560,15 @@ class Bottle(object):
             depr("The no_hooks parameter is no longer used. Add 'hooks' to the"\
                  "list of skipped plugins instead.") # 0.9
             skiplist.append(self._add_hook_wrapper)
-        static = config.pop('static', False) # depr 0.9
-        config.update(apply=plugins, skip=skiplist)
+        static = config.get('static', False) # depr 0.9
 
         def decorator(callback):
             for rule in makelist(path) or yieldroutes(callback):
                 for verb in makelist(method):
                     verb = verb.upper()
-                    cfg = config.copy()
-                    cfg.update(rule=rule, method=verb, callback=callback)
-                    cfg.update(app=self)
+                    cfg = dict(rule=rule, method=verb, callback=callback,
+                               name=name, app=self, config=config,
+                               apply=plugins, skip=skiplist)
                     self.routes.append(cfg)
                     handle = self.routes.index(cfg)
                     self.router.add(rule, verb, handle, name=name, static=static)
