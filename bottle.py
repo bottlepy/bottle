@@ -533,16 +533,14 @@ class Bottle(object):
               methods to listen to. (default: `GET`)
             :param callback: An optional shortcut to avoid the decorator
               syntax. ``route(..., callback=func)`` equals ``route(...)(func)``
-            :param name: The name fir this route. (default: None)
+            :param name: The name for this route. (default: None)
             :param apply: A decorator or plugin or a list of plugins. These are
               applied to the route callback in addition to installed plugins.
             :param skip: A list of plugins, plugin classes or names. Matching
-              plugins are not installed to this route. Set this to ``True`` to
-              skip all plugins.
+              plugins are not installed to this route. ``True`` skips all.
 
             Any additional keyword arguments are stored as route-specific
-            configuration and passed to plugins that implement
-            :meth:`Plugin.apply`.
+            configuration and passed to plugins (see :meth:`Plugin.apply`).
         """
         if callable(path): path, callback = None, path
 
