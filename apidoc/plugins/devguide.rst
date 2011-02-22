@@ -35,7 +35,7 @@ This plugin measures the execution time for each request and adds an appropriate
 
 The last line tells Bottle to install the plugin to the default application. This causes the plugin to be automatically applied to all routes of that application. In other words, ``stopwatch()`` is called once for each route callback and the return value is used as a replacement for the original callback.
 
-Plugins are applied on demand, that is, as soon as a route is requested for the first time. For this to work properly in multi-threaded environments, the plugin needs to be thread-save. This is not a problem most of the time, but keep it in mind.
+Plugins are applied on demand, that is, as soon as a route is requested for the first time. For this to work properly in multi-threaded environments, the plugin needs to be thread-safe. This is not a problem most of the time, but keep it in mind.
 
 Once all plugins are applied to a route, the prepared callback is cached and subsequent requests are handled by the cached version directly. This means that a plugin is usually applied only once to a specific route. That cache, however, is cleared every time the list of installed plugins changes. Your plugin should be able to decorate the same route more than once.
 
@@ -181,7 +181,7 @@ This plugin provides an sqlite3 database connection handle as an additional keyw
             # Replace the route callback with the wrapped one.
             return wrapper
 
-This plugin is actually useful and very similar to the version bundled with Bottle. Not bad for less than 60 lines of code, don't you think? Here is an usage example::
+This plugin is actually useful and very similar to the version bundled with Bottle. Not bad for less than 60 lines of code, don't you think? Here is a usage example::
 
     sqlite = SQLitePlugin(dbfile='/tmp/test.db')
     bottle.install(sqlite)
@@ -202,5 +202,5 @@ This plugin is actually useful and very similar to the version bundled with Bott
         sqlite.dbfile = '/tmp/%s.db' % db
         return "Switched DB to %s.db" % db
 
-The first route needs a database connection and tells the plugin to create a handle by requesting a ``db`` keyword argument. The second route does not need a database and is therefor ignored by the plugin. The third route does expect a 'db' keyword argument, but explicitly skips the sqlite plugin. This way the argument is not overruled by the plugin and still contains the value of the same-named url argument.
+The first route needs a database connection and tells the plugin to create a handle by requesting a ``db`` keyword argument. The second route does not need a database and is therefore ignored by the plugin. The third route does expect a 'db' keyword argument, but explicitly skips the sqlite plugin. This way the argument is not overruled by the plugin and still contains the value of the same-named url argument.
 
