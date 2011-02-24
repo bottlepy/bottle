@@ -444,11 +444,11 @@ class Bottle(object):
             applied to all routes of this application. A plugin may be a simple
             decorator or an object that implements the :class:`Plugin` API.
         '''
-        self.ccache.clear()
         if hasattr(plugin, 'setup'): plugin.setup(self)
         if not callable(plugin) and not hasattr(plugin, 'apply'):
             raise TypeError("Plugins must be callable or implement .apply()")
         self.plugins.append(plugin)
+        self.reset()
         return plugin
 
     def uninstall(self, plugin):
@@ -457,7 +457,6 @@ class Bottle(object):
             Subclasses are not removed. Pass a string to remove all plugins with
             a matching ``name`` attribute. Pass ``True`` to remove all plugins.
             The list of affected plugins is returned. '''
-        self.ccache.clear()
         removed, remove = [], plugin
         for i, plugin in list(enumerate(self.plugins))[::-1]:
             if remove is True or remove is plugin or remove is type(plugin) \
@@ -465,14 +464,21 @@ class Bottle(object):
                 removed.append(plugin)
                 del self.plugins[i]
                 if hasattr(plugin, 'close'): plugin.close()
+        if removed: self.reset()
         return removed
 
+    def reset(self, id=None):
+        ''' Reset all routes (re-apply plugins) and clear all caches. If an ID
+            is given, only that specific route is affected. '''
+        if id is None: self.ccache.clear()
+        else: self.ccache.pop(id, None)
+
     def close(self):
-        ''' Closes the application and all installed plugins. '''
+        ''' Close the application and all installed plugins. '''
         for plugin in self.plugins:
             if hasattr(plugin, 'close'): plugin.close()
         self.stopped = True
-
+    
     def match(self, environ):
         """ Search for a matching route and return a (callback, urlargs) tuple.
             The first element is the associated route callback with plugins
@@ -568,8 +574,8 @@ class Bottle(object):
                                name=name, app=self, config=config,
                                apply=plugins, skip=skiplist)
                     self.routes.append(cfg)
-                    handle = self.routes.index(cfg)
-                    self.router.add(rule, verb, handle, name=name, static=static)
+                    cfg['id'] = self.routes.index(cfg)
+                    self.router.add(rule, verb, cfg['id'], name=name, static=static)
             return callback
 
         return decorator(callback) if callback else decorator

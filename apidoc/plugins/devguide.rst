@@ -97,6 +97,7 @@ app          The associated application object.
 config       Additional keyword arguments passed to the :meth:`Bottle.route`
              decorator are stored in this dictionary. Used for route-specific
              plugin configuration and meta-data.
+id           An internal handle used by bottle to identify a route.
 ===========  =================================================================
 
 The :meth:`Bottle.route()` decorator accepts multiple rules and methods in a single call, but the context dictionary refers to a specific pair only. :meth:`Plugin.apply` is called once for each combination of ``rule`` and ``method``, even if they all map to the same route callback.
