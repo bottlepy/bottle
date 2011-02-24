@@ -397,7 +397,6 @@ class Bottle(object):
         self.ccache = {} # Cache for callbacks with plugins applied.
 
         self.plugins = [] # List of installed plugins.
-        self.plugins.append(self._add_hook_wrapper)
 
         self.mounts = {}
         self.error_handler = {}
@@ -406,9 +405,10 @@ class Bottle(object):
         self.config = config or {}
         self.serve = True
         self.castfilter = []
+        # Default plugins
+        self.hooks = self.install(HooksPlugin())
         if autojson:
             self.install(JSONPlugin())
-        self.hooks = {'before_request': [], 'after_request': []}
 
     def optimize(self, *a, **ka):
         depr("Bottle.optimize() is obsolete.")
@@ -478,7 +478,7 @@ class Bottle(object):
         for plugin in self.plugins:
             if hasattr(plugin, 'close'): plugin.close()
         self.stopped = True
-    
+
     def match(self, environ):
         """ Search for a matching route and return a (callback, urlargs) tuple.
             The first element is the associated route callback with plugins
@@ -563,7 +563,7 @@ class Bottle(object):
         if config.pop('no_hooks', False):
             depr("The no_hooks parameter is no longer used. Add 'hooks' to the"\
                  "list of skipped plugins instead.") # 0.9
-            skiplist.append(self._add_hook_wrapper)
+            skiplist.append('hooks')
         static = config.get('static', False) # depr 0.9
 
         def decorator(callback):
@@ -579,16 +579,6 @@ class Bottle(object):
             return callback
 
         return decorator(callback) if callback else decorator
-
-    def _add_hook_wrapper(self, func):
-        ''' Add hooks to a callable. See #84 '''
-        @functools.wraps(func)
-        def wrapper(*a, **ka):
-            for hook in self.hooks['before_request']: hook()
-            response.output = func(*a, **ka)
-            for hook in self.hooks['after_request']: hook()
-            return response.output
-        return wrapper
 
     def get(self, path=None, method='GET', **options):
         """ Equals :meth:`route`. """
@@ -614,26 +604,19 @@ class Bottle(object):
         return wrapper
 
     def hook(self, name):
-        """ Return a decorator that adds a callback to the specified hook. """
+        """ Return a decorator that attaches a callback to a hook. """
         def wrapper(func):
-            self.add_hook(name, func)
+            self.hooks.add(name, func)
             return func
         return wrapper
 
     def add_hook(self, name, func):
-        ''' Add a callback from a hook. '''
-        if name not in self.hooks:
-            raise ValueError("Unknown hook name %s" % name)
-        if name in ('after_request'):
-            self.hooks[name].insert(0, func)
-        else:
-            self.hooks[name].append(func)
+        depr("Call Bottle.hooks.add() instead.") #0.9
+        self.hooks.add(name, func)
 
     def remove_hook(self, name, func):
-        ''' Remove a callback from a hook. '''
-        if name not in self.hooks:
-            raise ValueError("Unknown hook name %s" % name)
-        self.hooks[name].remove(func)
+        depr("Call Bottle.hooks.remove() instead.") #0.9
+        self.hooks.remove(name, func)
 
     def handle(self, environ, method='GET'):
         """ Execute the first matching route callback and return the result.
@@ -1130,9 +1113,10 @@ class Response(threading.local):
 # Plugins ######################################################################
 ###############################################################################
 
+
 class JSONPlugin(object):
     name = 'json'
-    
+
     def __init__(self, json_dumps=json_dumps):
         self.json_dumps = json_dumps
 
@@ -1144,6 +1128,48 @@ class JSONPlugin(object):
             if isinstance(rv, dict):
                 response.content_type = 'application/json'
                 return dumps(rv)
+            return rv
+        return wrapper
+
+
+
+class HooksPlugin(object):
+    name = 'hooks'
+
+    def __init__(self):
+        self.hooks = {'before_request': [], 'after_request': []}
+        self.app = None
+
+    def _empty(self):
+        return not (self.hooks['before_request'] or self.hooks['after_request'])
+
+    def setup(self, app):
+        self.app = app
+
+    def add(self, name, func):
+        ''' Attach a callback to a hook. '''
+        if name not in self.hooks:
+            raise ValueError("Unknown hook name %s" % name)
+        was_empty = self._empty()
+        self.hooks[name].append(func)
+        if self.app and was_empty and not self._empty(): self.app.reset()
+
+    def remove(self, name, func):
+        ''' Remove a callback from a hook. '''
+        if name not in self.hooks:
+            raise ValueError("Unknown hook name %s" % name)
+        was_empty = self._empty()
+        self.hooks[name].remove(func)
+        if self.app and not was_empty and self._empty(): self.app.reset()
+
+    def apply(self, callback, context):
+        if self._empty(): return callback
+        before_request = self.hooks['before_request']
+        after_request  = self.hooks['after_request']
+        def wrapper(*a, **ka):
+            for hook in before_request: hook()
+            rv = callback(*a, **ka)
+            for hook in after_request[::-1]: hook()
             return rv
         return wrapper
 
