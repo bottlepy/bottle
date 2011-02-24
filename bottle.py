@@ -404,9 +404,9 @@ class Bottle(object):
         self.catchall = catchall
         self.config = config or {}
         self.serve = True
-        self.castfilter = []
         # Default plugins
         self.hooks = self.install(HooksPlugin())
+        self.typefilter = self.install(TypeFilterPlugin())
         if autojson:
             self.install(JSONPlugin())
 
@@ -431,13 +431,8 @@ class Bottle(object):
         self.mounts[script_path] = app
 
     def add_filter(self, ftype, func):
-        ''' Register a new output filter. Whenever bottle hits a handler output
-            matching `ftype`, `func` is applied to it. '''
-        if not isinstance(ftype, type):
-            raise TypeError("Expected type object, got %s" % type(ftype))
-        self.castfilter = [(t, f) for (t, f) in self.castfilter if t != ftype]
-        self.castfilter.append((ftype, func))
-        self.castfilter.sort()
+        depr("Filters are deprecated. Replace any filters with plugins.") #0.9
+        self.typefilter.add(ftype, func)
 
     def install(self, plugin):
         ''' Add a plugin to the list of plugins and prepare it for beeing
@@ -654,10 +649,6 @@ class Bottle(object):
         Support: False, str, unicode, dict, HTTPResponse, HTTPError, file-like,
         iterable of strings and iterable of unicodes
         """
-        # Filtered types (recursive, because they may return anything)
-        for testtype, filterfunc in self.castfilter:
-            if isinstance(out, testtype):
-                return self._cast(filterfunc(out), request, response)
 
         # Empty output is done here
         if not out:
@@ -1172,6 +1163,37 @@ class HooksPlugin(object):
             for hook in after_request[::-1]: hook()
             return rv
         return wrapper
+
+
+
+class TypeFilterPlugin(object):
+    def __init__(self):
+        self.filter = []
+        self.app = None
+
+    def setup(self, app):
+        self.app = app
+
+    def add(self, ftype, func):
+        if not self.filter and app: self.app.reset()
+        if not isinstance(ftype, type):
+            raise TypeError("Expected type object, got %s" % type(ftype))
+        self.filter = [(t, f) for (t, f) in self.filter if t != ftype]
+        self.filter.append((ftype, func))
+
+    def apply(self, callback, context):
+        filter = self.filter
+        if not filter: return callback
+        def wrapper(*a, **ka):
+            rv = callback(*a, **ka)
+            for testtype, filterfunc in filter:
+                if isinstance(rv, testtype):
+                    rv = filterfunc(rv)
+            return rv
+        return wrapper
+
+
+
 
 
 
