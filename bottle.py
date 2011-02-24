@@ -406,8 +406,8 @@ class Bottle(object):
         self.config = config or {}
         self.serve = True
         self.castfilter = []
-        if autojson and json_dumps:
-            self.add_filter(dict, dict2json)
+        if autojson:
+            self.install(JSONPlugin())
         self.hooks = {'before_request': [], 'after_request': []}
 
     def optimize(self, *a, **ka):
@@ -1121,6 +1121,29 @@ class Response(threading.local):
 
 
 ###############################################################################
+# Plugins ######################################################################
+###############################################################################
+
+class JSONPlugin(object):
+    name = 'json'
+    
+    def __init__(self, json_dumps=json_dumps):
+        self.json_dumps = json_dumps
+
+    def apply(self, callback, context):
+        dumps = self.json_dumps
+        if not dumps: return callback
+        def wrapper(*a, **ka):
+            rv = callback(*a, **ka)
+            if isinstance(rv, dict):
+                response.content_type = 'application/json'
+                return dumps(rv)
+            return rv
+        return wrapper
+
+
+
+###############################################################################
 # Common Utilities #############################################################
 ###############################################################################
 
@@ -1256,6 +1279,7 @@ class WSGIFileWrapper(object):
 
 
 def dict2json(d):
+    depr('JSONPlugin is the preferred way to return JSON.') #0.9
     response.content_type = 'application/json'
     return json_dumps(d)
 
