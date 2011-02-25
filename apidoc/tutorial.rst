@@ -321,11 +321,49 @@ Add values to the :attr:`Response.headers` dictionary to add or change response 
 Cookies
 -------------------------------------------------------------------------------
 
-TODO
+A cookie is a piece of text stored in the user's browser. You can access cookies via :meth:`Request.get_cookie` and set new cookies with the :meth:`Response.set_cookie` method::
+
+    @route('/hello')
+    def hello_again(self):
+        if request.get_cookie("visited"):
+            return "Welcome back! Nice to see you again"
+        else:
+            response.set_cookie("visited", "yes")
+            return "Hello there! Nice to meet you"
+
+But there are some gotchas:
+
+* Cookies are limited to 4kb of text in most browsers.
+* Some users configure their browsers to not accept cookies at all. Most search-engines ignore cookies, too. Make sure that your application is still usable without cookies.
+* Cookies are stored at client side and not encrypted in any way. Whatever you store in a cookie, the user can read it. Worth than that, an attacker might be able to steal a user's cookies through `XSS <http://en.wikipedia.org/wiki/HTTP_cookie#Cookie_theft_and_session_hijacking>`_ vulnerabilities on your side. Some viruses are known to read the browser cookies, too. Do not store confidential information in cookies, ever. 
+* Cookies are easily forged by malicious clients. Do not trust cookies.
 
 .. rubric:: Secure Cookies
 
-TODO
+As mentioned above, cookies are easily forged by malicious clients. Bottle can cryptographically sign your cookies to prevent this kind of manipulation. All you have to do is to provide a signature key whenever you read or set a cookie and keep that key a secret. As a result, :meth:`Request.get_cookie` will return ``None`` if the cookie is not signed or the signature keys don't match::
+
+    @route('/login')
+    def login():
+        username = request.forms.get('username')
+        password = request.forms.get('password')
+        if check_user_credentials(username, password):
+            response.set_cookie("account", username, secret='some-secret-key')
+            return "Welcome %s! You are now logged in." % username
+        else:
+            return "Login failed."
+
+    @route('/secure')
+    def secure_area(self):
+        username = request.get_cookie("account", secret='some-secret-key')
+        if username:
+            return "Hello %s. Welcome back." % username
+        else:
+            return "You are not logged in. Access denied."
+
+In addition, bottle automatically pickles and unpickles any data stored to secure cookies. This allows you to store any pickle-able object (not only strings) to cookies, as long as the pickled data does not exceed the 4kb limitation.
+
+.. warning:: Secure cookies are not encrypted (the client can still see the content) and not copy-protected (the client can restore an old cookie). The main intention is to make pickling and unpickling save, not to store secret information at client side.
+
 
 
 
