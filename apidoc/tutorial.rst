@@ -4,7 +4,6 @@
 .. _Apache: http://www.apache.org/
 .. _cherrypy: http://www.cherrypy.org/
 .. _decorator: http://docs.python.org/glossary.html#term-decorator
-.. _fapws3: http://github.com/william-os4y/fapws3
 .. _flup: http://trac.saddi.com/flup
 .. _http_code: http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
 .. _http_method: http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html
@@ -220,6 +219,8 @@ The ordering of this list is significant. You may for example return a subclass 
 
 Bottle uses the `charset` parameter of the ``Content-Type`` header to decide how to encode unicode strings. This header defaults to ``text/html; charset=UTF8`` and can be changed using the :attr:`Response.content_type` attribute or by setting the :attr:`Response.charset` attribute directly. (The :class:`Response` object is described in the section :ref:`tutorial-response`.)
 
+::
+
     from bottle import response
     @route('/iso')
     def get_iso():
@@ -316,7 +317,7 @@ Add values to the :attr:`Response.headers` dictionary to add or change response 
       response.headers['Content-Language'] = 'en'
       return get_wiki_page(page)
 
-.. _tutorial-secure-cookies:
+.. _tutorial-signed-cookies:
 
 Cookies
 -------------------------------------------------------------------------------
@@ -338,7 +339,7 @@ But there are some gotchas:
 * Cookies are stored at client side and not encrypted in any way. Whatever you store in a cookie, the user can read it. Worth than that, an attacker might be able to steal a user's cookies through `XSS <http://en.wikipedia.org/wiki/HTTP_cookie#Cookie_theft_and_session_hijacking>`_ vulnerabilities on your side. Some viruses are known to read the browser cookies, too. Do not store confidential information in cookies, ever. 
 * Cookies are easily forged by malicious clients. Do not trust cookies.
 
-.. rubric:: Secure Cookies
+.. rubric:: Signed Cookies
 
 As mentioned above, cookies are easily forged by malicious clients. Bottle can cryptographically sign your cookies to prevent this kind of manipulation. All you have to do is to provide a signature key whenever you read or set a cookie and keep that key a secret. As a result, :meth:`Request.get_cookie` will return ``None`` if the cookie is not signed or the signature keys don't match::
 
@@ -352,17 +353,17 @@ As mentioned above, cookies are easily forged by malicious clients. Bottle can c
         else:
             return "Login failed."
 
-    @route('/secure')
-    def secure_area(self):
+    @route('/restricted')
+    def restricted_area(self):
         username = request.get_cookie("account", secret='some-secret-key')
         if username:
             return "Hello %s. Welcome back." % username
         else:
             return "You are not logged in. Access denied."
 
-In addition, bottle automatically pickles and unpickles any data stored to secure cookies. This allows you to store any pickle-able object (not only strings) to cookies, as long as the pickled data does not exceed the 4kb limitation.
+In addition, bottle automatically pickles and unpickles any data stored to signed cookies. This allows you to store any pickle-able object (not only strings) to cookies, as long as the pickled data does not exceed the 4kb limitation.
 
-.. warning:: Secure cookies are not encrypted (the client can still see the content) and not copy-protected (the client can restore an old cookie). The main intention is to make pickling and unpickling save, not to store secret information at client side.
+.. warning:: Signed cookies are not encrypted (the client can still see the content) and not copy-protected (the client can restore an old cookie). The main intention is to make pickling and unpickling save, not to store secret information at client side.
 
 
 
@@ -398,7 +399,7 @@ Header are stored in :attr:`Request.header`. The attribute is an instance of :cl
 
 .. rubric:: Cookies
 
-Cookies are stored in :attr:`Request.COOKIES` as a normal dictionary. The :meth:`Request.get_cookie` method allows access to :ref:`tutorial-secure-cookies` as described in a separate section. This example shows a simple cookie-based view counter::
+Cookies are stored in :attr:`Request.COOKIES` as a normal dictionary. The :meth:`Request.get_cookie` method allows access to :ref:`tutorial-signed-cookies` as described in a separate section. This example shows a simple cookie-based view counter::
 
   from bottle import route, request, response
   @route('/counter')
@@ -816,12 +817,6 @@ Glossary
       A function to handle some specific event or situation. In a web
       framework, the application is developed by attaching a handler function
       as callback for each specific URL comprising the application.
-
-   secure cookie
-      Bottle creates signed cookies with objects that can be pickled. A secure
-      cookie will be created automatically when a type that is not a string is
-      used as the value in :meth:`request.set_cookie` and bottle's config
-      includes a `securecookie.key` entry with a salt.
 
    source directory
       The directory which, including its subdirectories, contains all
