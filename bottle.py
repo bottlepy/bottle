@@ -1152,7 +1152,9 @@ class WSGIFileWrapper(object):
 
 def dict2json(d):
     response.content_type = 'application/json'
-    return json_dumps(d)
+    result = json_dumps(d)
+    response.content_length = len(result)
+    return result
 
 
 def abort(code=500, text='Unknown Error: Application stopped.'):
