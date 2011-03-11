@@ -19,9 +19,9 @@
 .. _SimpleCookie: http://docs.python.org/library/cookie.html#morsel-objects
 .. _testing: http://github.com/defnull/bottle/raw/master/bottle.py
 
-========
-Tutorial
-========
+=============
+Documentation
+=============
 
 This tutorial introduces you to the concepts and features of the Bottle web framework. If you have questions not answered here, please check the :doc:`faq` page, file a ticket at the issue_ tracker or send an e-mail to the `mailing list <mailto:bottlepy@googlegroups.com>`_.
 
@@ -517,16 +517,113 @@ Here is an example template::
 
 Templates are cached in memory after compilation. Modifications made to the template files will have no affect until you clear the template cache. Call ``bottle.TEMPLATES.clear()`` to do so. Caching is disabled in debug mode.
 
-
-
-
-
-
 .. highlight:: python
 
+
+
+
+.. _plugins:
+
+Plugins
+================================================================================
+
+.. versionadded:: 0.9
+
+Bottles core features cover most of the common use-cases, but as a micro-framework it has its limits. This is where "Plugins" come into play. They add missing functionality to the framework, integrate third party libraries or just automate some repetitive work.
+
+We have a growing :doc:`/plugins/index` and most plugins are designed to be portable and re-usable across applications. The chances are high that your problem has already been solved and a ready-to-use plugin exists. If not, the :doc:`/plugindev` may help you.
+
+The effects and APIs of plugins are manifold and depend on the specific plugin. The 'sqlite' plugin for example detects callbacks that require a ``db`` keyword argument and creates a fresh database connection object every time the callback is called. This makes it very convenient to use a database::
+
+    from bottle import route, install, template
+    from bottle_sqlite import SQLitePlugin
+    install(SQLitePlugin(dbfile='/tmp/test.db'))
+
+    @route('/show/:post_id')
+    def show(db, post_id):
+        c = db.execute('SELECT title, content FROM posts WHERE id = ?', (int(post_id),))
+        row = c.fetchone()
+        return template('show_post', title=row['title'], text=row['content'])
+
+    @route('/contact')
+    def contact_page():
+        ''' This callback does not need a db connection. Because the 'db'
+            keyword argument is missing, the sqlite plugin ignores this callback
+            completely. '''
+        return template('contact')
+
+Other plugin may populate the thread-save :data:`local` object, change details of the :data:`request` object, filter the data returned by the callback or bypass the callback completely. An "auth" plugin for example could check for a valid session and return a login page instead of calling the original callback. What happens exactly depends on the plugin.
+
+
+Application-wide Installation
+--------------------------------------------------------------------------------
+
+Plugins can be installed application-wide or just to some specific routes that need additional functionality. Most plugins are save to be installed to all routes and are smart enough to not add overhead to callbacks that do not need their functionality.
+
+Let us take the 'sqlite' plugin for example. It only affects route callbacks that need a database connection. Other routes are left alone. Because of this, we can install the plugin application-wide with no additional overhead.
+
+To install a plugin, just call :func:`install` with the plugin as first argument::
+
+    from bottle_sqlite import SQLitePlugin
+    install(SQLitePlugin(dbfile='/tmp/test.db'))
+
+The plugin is not applied to the route callbacks yet. This is delayed to make sure no routes are missed. You can install plugins first and add routes later, if you want to. The order of installed plugins is significant, though. If a plugin requires a database connection, you need to install the database plugin first.
+
+
+.. rubric:: Uninstall Plugins
+
+You can use a name, class or instance to :func:`uninstall` a previously installed plugin::
+
+    sqlite_plugin = SQLitePlugin(dbfile='/tmp/test.db')
+    install(sqlite_plugin)
+
+    uninstall(sqlite_plugin) # uninstall a specific plugin
+    uninstall(SQLitePlugin)  # uninstall all plugins with that type
+    uninstall('sqlite')      # uninstall all plugins with that name
+    uninstall(True)          # uninstall all plugins at once
+
+Plugins can be installed and removed at any time, even at runtime while serving requests. This enables some neat tricks (installing slow debugging or profiling plugins only when needed) but should not be overused. Each time the list of plugins changes, the route cache is flushed and all plugins are re-applied.
+
+.. note::
+    The module-level :func:`install` and :func:`uninstall` functions affect the :ref:`default-app`. To manage plugins for a specific application, use the corresponding methods on the :class:`Bottle` application object.
+
+
+Route-specific Installation
+--------------------------------------------------------------------------------
+
+The ``apply`` parameter of the :func:`route` decorator comes in handy if you want to install plugins to only a small number of routes::
+
+    sqlite_plugin = SQLitePlugin(dbfile='/tmp/test.db')
+
+    @route('/create', apply=[sqlite_plugin])
+    def create(db):
+        db.execute('INSERT INTO ...')
+
+
+Blacklisting Plugins
+--------------------------------------------------------------------------------
+
+You may want to explicitly disable a plugin for a number of routes. The :func:`route` decorator has a ``skip`` parameter for this purpose::
+
+    sqlite_plugin = SQLitePlugin(dbfile='/tmp/test.db')
+    install(sqlite_plugin)
+
+    @route('/open/:db', skip=[sqlite_plugin])
+    def open_db(db):
+        # The 'db' keyword argument is not touched by the plugin this time.
+        if db in ('test', 'test2'):
+            # The plugin handle can be used for runtime configuration, too.
+            sqlite_plugin.dbfile = '/tmp/%s.db' % db
+            return "Database File switched to: /tmp/%s.db" % db
+        abort(404, "No such database.")
+
+The ``skip`` parameter accepts a single value or a list of values. You can use a name, class or instance to identify the plugin that is to be skipped. Set ``skip=True`` to skip all plugins at once.
+
+
+
+
+
 .. _tutorial-debugging:
-
-
 
 
 Development

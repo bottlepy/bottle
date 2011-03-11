@@ -56,25 +56,11 @@ Start here if you want to learn how to use the bottle framework for web developm
 
    tutorial
    stpl
+   api
+   recipes
+   tutorial_app
    faq
 
-API Documentation
-==================
-Looking for a specific function, class or method? These chapters cover all the interfaces provided by the Framework and explain how to use them.
-
-.. toctree::
-   :maxdepth: 2
-
-   api
-
-Tutorials and Resources
-=======================
-
-.. toctree::
-   :maxdepth: 2
-
-   tutorial_app
-   recipes
 
 Development and Contribution
 ============================
@@ -88,6 +74,12 @@ These chapters are intended for developers interested in the bottle development 
    development
    plugindev
 
+
+.. toctree::
+   :hidden:
+
+   plugins/index
+   
 Licence
 ==================
 

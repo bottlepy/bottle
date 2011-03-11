@@ -4,7 +4,7 @@
 Plugin Development Guide
 ========================
 
-This guide explains the plugin API and how to write custom plugins. I suggest reading the :doc:`/plugins/usage` first if you have not done that already. You might also want to have a look at the :doc:`/plugins/list` for some practical examples.
+This guide explains the plugin API and how to write custom plugins. I suggest reading :ref:`plugins` first if you have not done that already. You might also want to have a look at the :doc:`/plugins/index` for some practical examples.
 
 .. note::
 
