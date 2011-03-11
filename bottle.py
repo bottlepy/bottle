@@ -637,12 +637,6 @@ class Bottle(object):
             if not self.catchall: raise
             return HTTPError(500, "Internal Server Error", e, format_exc(10))
 
-        try:
-            return (self.handler or self.build_handler())(**args)
-        except RouteReset:
-            self.reset()
-            return self(**args)
-
     def _cast(self, out, request, response, peek=None):
         """ Try to convert the parameter into something WSGI compatible and set
         correct HTTP headers when possible.
@@ -1063,7 +1057,7 @@ class Response(threading.local):
             Signed cookies may store any pickle-able object and are
             cryptographically signed to prevent manipulation. Keep in mind that
             cookies are limited to 4kb in most browsers.
-            
+
             Warning: Signed cookies are not encrypted (the client can still see
             the content) and not copy-protected (the client can restore an old
             cookie). The main intention is to make pickling and unpickling
