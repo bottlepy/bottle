@@ -4,7 +4,6 @@
 .. _Apache: http://www.apache.org/
 .. _cherrypy: http://www.cherrypy.org/
 .. _decorator: http://docs.python.org/glossary.html#term-decorator
-.. _fapws3: http://github.com/william-os4y/fapws3
 .. _flup: http://trac.saddi.com/flup
 .. _http_code: http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
 .. _http_method: http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html
@@ -35,7 +34,7 @@ This tutorial introduces you to the concepts and features of the Bottle web fram
 * :ref:`tutorial-routing`: Web development starts with binding URLs to code. This section tells you how to do it.
 * :ref:`tutorial-output`: You have to return something to the Browser. Bottle makes it easy for you, supporting more than just plain strings.
 * :ref:`tutorial-request`: Each client request carries a lot of information. HTTP-headers, form data and cookies to name just three. Here is how to use them.
-* :ref:`tutorial-templates`: You don't want to write HTML within your python code, do you? Templates separate code from presentation.
+* :ref:`tutorial-templates`: You don't want to clutter your Python code with HTML fragments, do you? Templates separate code from presentation.
 * :ref:`tutorial-debugging`: These tools and features will help you during development.
 * :ref:`tutorial-deployment`: Get it up and running.
 
@@ -220,6 +219,8 @@ The ordering of this list is significant. You may for example return a subclass 
 
 Bottle uses the `charset` parameter of the ``Content-Type`` header to decide how to encode unicode strings. This header defaults to ``text/html; charset=UTF8`` and can be changed using the :attr:`Response.content_type` attribute or by setting the :attr:`Response.charset` attribute directly. (The :class:`Response` object is described in the section :ref:`tutorial-response`.)
 
+::
+
     from bottle import response
     @route('/iso')
     def get_iso():
@@ -316,16 +317,54 @@ Add values to the :attr:`Response.headers` dictionary to add or change response 
       response.headers['Content-Language'] = 'en'
       return get_wiki_page(page)
 
-.. _tutorial-secure-cookies:
+.. _tutorial-signed-cookies:
 
 Cookies
 -------------------------------------------------------------------------------
 
-TODO
+A cookie is a piece of text stored in the user's browser. You can access cookies via :meth:`Request.get_cookie` and set new cookies with the :meth:`Response.set_cookie` method::
 
-.. rubric:: Secure Cookies
+    @route('/hello')
+    def hello_again(self):
+        if request.get_cookie("visited"):
+            return "Welcome back! Nice to see you again"
+        else:
+            response.set_cookie("visited", "yes")
+            return "Hello there! Nice to meet you"
 
-TODO
+But there are some gotchas:
+
+* Cookies are limited to 4kb of text in most browsers.
+* Some users configure their browsers to not accept cookies at all. Most search-engines ignore cookies, too. Make sure that your application is still usable without cookies.
+* Cookies are stored at client side and not encrypted in any way. Whatever you store in a cookie, the user can read it. Worth than that, an attacker might be able to steal a user's cookies through `XSS <http://en.wikipedia.org/wiki/HTTP_cookie#Cookie_theft_and_session_hijacking>`_ vulnerabilities on your side. Some viruses are known to read the browser cookies, too. Do not store confidential information in cookies, ever. 
+* Cookies are easily forged by malicious clients. Do not trust cookies.
+
+.. rubric:: Signed Cookies
+
+As mentioned above, cookies are easily forged by malicious clients. Bottle can cryptographically sign your cookies to prevent this kind of manipulation. All you have to do is to provide a signature key whenever you read or set a cookie and keep that key a secret. As a result, :meth:`Request.get_cookie` will return ``None`` if the cookie is not signed or the signature keys don't match::
+
+    @route('/login')
+    def login():
+        username = request.forms.get('username')
+        password = request.forms.get('password')
+        if check_user_credentials(username, password):
+            response.set_cookie("account", username, secret='some-secret-key')
+            return "Welcome %s! You are now logged in." % username
+        else:
+            return "Login failed."
+
+    @route('/restricted')
+    def restricted_area(self):
+        username = request.get_cookie("account", secret='some-secret-key')
+        if username:
+            return "Hello %s. Welcome back." % username
+        else:
+            return "You are not logged in. Access denied."
+
+In addition, bottle automatically pickles and unpickles any data stored to signed cookies. This allows you to store any pickle-able object (not only strings) to cookies, as long as the pickled data does not exceed the 4kb limitation.
+
+.. warning:: Signed cookies are not encrypted (the client can still see the content) and not copy-protected (the client can restore an old cookie). The main intention is to make pickling and unpickling save, not to store secret information at client side.
+
 
 
 
@@ -360,7 +399,7 @@ Header are stored in :attr:`Request.header`. The attribute is an instance of :cl
 
 .. rubric:: Cookies
 
-Cookies are stored in :attr:`Request.COOKIES` as a normal dictionary. The :meth:`Request.get_cookie` method allows access to :ref:`tutorial-secure-cookies` as described in a separate section. This example shows a simple cookie-based view counter::
+Cookies are stored in :attr:`Request.COOKIES` as a normal dictionary. The :meth:`Request.get_cookie` method allows access to :ref:`tutorial-signed-cookies` as described in a separate section. This example shows a simple cookie-based view counter::
 
   from bottle import route, request, response
   @route('/counter')
@@ -408,7 +447,7 @@ Here is an example for a simple file upload form:
         if name and data:
             raw = data.file.read() # This is dangerous for big files
             filename = data.filename
-            return "Hello %s! Your uploaded %s (%d bytes)." % (name, filename, len(raw))
+            return "Hello %s! You uploaded %s (%d bytes)." % (name, filename, len(raw))
         return "You missed a field."
 
 
@@ -594,41 +633,65 @@ finally clauses, etc., are not executed after a ``SIGTERM``.
 Deployment
 ================================================================================
 
-Bottle uses the built-in ``wsgiref.SimpleServer`` by default. This non-threading
-HTTP server is perfectly fine for development and early production,
-but may become a performance bottleneck when server load increases.
+Bottle runs on the built-in `wsgiref WSGIServer <http://docs.python.org/library/wsgiref.html#module-wsgiref.simple_server>`_  by default. This non-threading HTTP server is perfectly fine for development and early production, but may become a performance bottleneck when server load increases.
 
 There are three ways to eliminate this bottleneck:
 
-* Use a multi-threaded server adapter
-* Spread the load between multiple bottle instances
-* Do both
+* Use a multi-threaded or asynchronous HTTP server.
+* Spread the load between multiple bottle instances.
+* Do both.
 
 
 
 Multi-Threaded Server
 --------------------------------------------------------------------------------
 
-The easiest way to increase performance is to install a multi-threaded and
-WSGI-capable HTTP server like Paste_, flup_, cherrypy_
-or fapws3_ and use the corresponding bottle server-adapter.
+.. _flup: http://trac.saddi.com/flup
+.. _gae: http://code.google.com/appengine/docs/python/overview.html
+.. _wsgiref: http://docs.python.org/library/wsgiref.html
+.. _cherrypy: http://www.cherrypy.org/
+.. _paste: http://pythonpaste.org/
+.. _rocket: http://pypi.python.org/pypi/rocket
+.. _gunicorn: http://pypi.python.org/pypi/gunicorn
+.. _fapws3: http://www.fapws.org/
+.. _tornado: http://www.tornadoweb.org/
+.. _twisted: http://twistedmatrix.com/
+.. _diesel: http://dieselweb.org/
+.. _meinheld: http://pypi.python.org/pypi/meinheld
+.. _bjoern: http://pypi.python.org/pypi/bjoern
 
-::
+The easiest way to increase performance is to install a multi-threaded or asynchronous WSGI server like paste_ or cherrypy_ and tell bottle to start it instead of the default single-threaded one::
 
-    from bottle import PasteServer, FlupServer, FapwsServer, CherryPyServer
-    bottle.run(server=PasteServer) # Example
-    
-If bottle is missing an adapter for your favorite server or you want to tweak
-the server settings, you may want to manually set up your HTTP server and use
-``bottle.default_app()`` to access your WSGI application.
+    bottle.run(server='paste') # Example
 
-::
+Bottle ships with a lot of ready-to-use adapters for the most common WSGI servers and automates the setup process. Here is an incomplete list:
 
-    def run_custom_paste_server(self, host, port):
-        myapp = bottle.default_app()
-        from paste import httpserver
-        httpserver.serve(myapp, host=host, port=port)
+========  ============  ======================================================
+Name      Homepage      Description
+========  ============  ======================================================
+cgi                     Run as CGI script
+flup      flup_         Run as Fast CGI process
+gae       gae_          Helper for Google App Engine deployments
+wsgiref   wsgiref_      Single-threaded default server
+cherrypy  cherrypy_     Multi-threaded and very stable
+paste     paste_        Multi-threaded, stable, tried and tested
+rocket    rocket_       Multi-threaded
+gunicorn  gunicorn_     Pre-forked, partly written in C
+fapws3    fapws3_       Asynchronous, written in C
+tornado   tornado_      Asynchronous, powers some parts of Facebook
+twisted   twisted_      Asynchronous, well tested
+diesel    diesel_       Asynchronous, based on greenlet
+meinheld  meinheld_     Asynchronous, partly written in C
+bjoern    bjoern_       Asynchronous, very fast and written in C
+auto                    Automatically selects an available server adapter
+========  ============  ======================================================
 
+The full list is available through :data:`server_names`.
+
+If there is no adapter for your favorite server or if you need more control over the server setup, you may want to start the server manually. Refer to the server documentation on how to mount WSGI applications. Here is an example for paste_::
+
+    from paste import httpserver
+    httpserver.serve(bottle.default_app(), host='0.0.0.0', port=80)
 
 
 Multiple Server Processes
@@ -636,7 +699,7 @@ Multiple Server Processes
 
 A single Python process can only utilise one CPU at a time, even if 
 there are more CPU cores available. The trick is to balance the load 
-between multiple independent Python processes to utilise all of your 
+between multiple independent Python processes to utilize all of your 
 CPU cores.
 
 Instead of a single Bottle application server, you start one instance 
@@ -647,42 +710,8 @@ a random Bottle processes, spreading the load between all available
 back end server instances. This way you can use all of your CPU cores and 
 even spread out the load between different physical servers.
 
-But there are a few drawbacks:
-
-* You can't easily share data between multiple Python processes.
-* It takes a lot of memory to run several copies of Python and Bottle at the same time.
-
 One of the fastest load balancers available is Pound_ but most common web servers have a proxy-module that can do the work just fine.
 
-I'll add examples for lighttpd_ and 
-Apache_ web servers soon.
-
-Using WSGI and Middleware
---------------------------------------------------------------------------------
-
-A call to `bottle.default_app()` returns your WSGI application. After applying as many WSGI middleware modules as you like, you can tell 
-`bottle.run()` to use your wrapped application, instead of the default one.
-
-::
-
-    from bottle import default_app, run
-    app = default_app()
-    newapp = YourMiddleware(app)
-    run(app=newapp)
-
-.. rubric: How default_app() works
-
-Bottle creates a single instance of `bottle.Bottle()` and uses it as a default for most of the module-level decorators and the `bottle.run()` routine. 
-`bottle.default_app()` returns (or changes) this default. You may, however, create your own instances of `bottle.Bottle()`.
-
-::
-
-    from bottle import Bottle, run
-    mybottle = Bottle()
-    @mybottle.route('/')
-    def index():
-      return 'default_app'
-    run(app=mybottle)
 
 Apache mod_wsgi
 --------------------------------------------------------------------------------
@@ -701,7 +730,7 @@ File ``/var/www/yourapp/app.wsgi``::
     os.chdir(os.path.dirname(__file__))
     
     import bottle
-    # ... add or import your bottle app code here ...
+    # ... build or import your bottle application here ...
     # Do NOT use bottle.run() with mod_wsgi
     application = bottle.default_app()
 
@@ -726,16 +755,27 @@ The Apache configuration may look like this::
 Google AppEngine
 --------------------------------------------------------------------------------
 
-I didn't test this myself but several Bottle users reported that this 
-works just fine::
+.. versionadded:: 0.9
+
+The ``gae`` adapter completely automates the Google App Engine deployment. It even ensures that a ``main()`` function is present in your ``__main__`` module to enable `App Caching <http://code.google.com/appengine/docs/python/runtime.html#App_Caching>`_ (which drastically improves performance)::
 
     import bottle
-    from google.appengine.ext.webapp import util 
-    # ... add or import your bottle app code here ...
-    # Do NOT use bottle.run() with AppEngine
-    util.run_wsgi_app(bottle.default_app())
+    # ... build or import your bottle application here ...
+    bottle.run(server='gae')
 
+It is always a good idea to let GAE serve static files directly. Here is example ``app.yaml``::
 
+    application: myapp
+    version: 1
+    runtime: python
+    api_version: 1
+
+    handlers:
+    - url: /static
+      static_dir: static
+
+    - url: /.*
+      script: myapp.py
 
 
 Good old CGI
@@ -744,7 +784,7 @@ Good old CGI
 CGI is slow as hell, but it works::
 
     import bottle
-    # ... add or import your bottle app code here ...
+    # ... build or import your bottle application here ...
     bottle.run(server=bottle.CGIServer)
 
 
@@ -777,12 +817,6 @@ Glossary
       A function to handle some specific event or situation. In a web
       framework, the application is developed by attaching a handler function
       as callback for each specific URL comprising the application.
-
-   secure cookie
-      Bottle creates signed cookies with objects that can be pickled. A secure
-      cookie will be created automatically when a type that is not a string is
-      used as the value in :meth:`request.set_cookie` and bottle's config
-      includes a `securecookie.key` entry with a salt.
 
    source directory
       The directory which, including its subdirectories, contains all

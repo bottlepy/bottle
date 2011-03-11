@@ -11,7 +11,7 @@ a built-in HTTP Server and adapters for many third party WSGI/HTTP-server and
 template engines - all in a single file and with no dependencies other than the
 Python Standard Library.
 
-Homepage and documentation: http://bottle.paws.de/
+Homepage and documentation: http://bottlepy.org/
 
 
 Installation and Dependencies
@@ -37,7 +37,7 @@ Example
 Licence (MIT)
 -------------
 
-    Copyright (c) 2010, Marcel Hellkamp.
+    Copyright (c) 2011, Marcel Hellkamp.
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal

@@ -6,7 +6,7 @@ a built-in HTTP Server and adapters for many third party WSGI/HTTP-server and
 template engines - all in a single file and with no dependencies other than the
 Python Standard Library.
 
-Homepage and documentation: http://bottle.paws.de/
+Homepage and documentation: http://bottlepy.org/
 
 Copyright (c) 2011, Marcel Hellkamp.
 License: MIT (see LICENSE.txt for details)
@@ -955,7 +955,7 @@ class Request(threading.local, DictMixin):
 
     @DictProperty('environ', 'bottle.cookies', read_only=True)
     def COOKIES(self):
-        """ Cookies parsed into a dictionary. Secure cookies are NOT decoded
+        """ Cookies parsed into a dictionary. Signed cookies are NOT decoded
             automatically. See :meth:`get_cookie` for details.
         """
         raw_dict = SimpleCookie(self.headers.get('Cookie',''))
@@ -965,7 +965,7 @@ class Request(threading.local, DictMixin):
         return cookies
 
     def get_cookie(self, key, secret=None):
-        """ Return the content of a cookie. To read a `Secure Cookies`, use the
+        """ Return the content of a cookie. To read a `Signed Cookies`, use the
             same `secret` as used to create the cookie (see
             :meth:`Response.set_cookie`). If anything goes wrong, None is
             returned.
@@ -1045,12 +1045,12 @@ class Response(threading.local):
         return self._COOKIES
 
     def set_cookie(self, key, value, secret=None, **kargs):
-        ''' Add a cookie. If the `secret` parameter is set, this creates a
-            `Secure Cookie` (described below).
+        ''' Add a cookie or overwrite an old one. If the `secret` parameter is
+            set, create a `Signed Cookie` (described below).
 
             :param key: the name of the cookie.
             :param value: the value of the cookie.
-            :param secret: required for secure cookies. (default: None)
+            :param secret: required for signed cookies. (default: None)
             :param max_age: maximum age in seconds. (default: None)
             :param expires: a datetime object or UNIX timestamp. (defaut: None)
             :param domain: the domain that is allowed to read the cookie.
@@ -1060,11 +1060,11 @@ class Response(threading.local):
             If neither `expires` nor `max_age` are set (default), the cookie
             lasts only as long as the browser is not closed.
 
-            Secure cookies may store any pickle-able object and are
+            Signed cookies may store any pickle-able object and are
             cryptographically signed to prevent manipulation. Keep in mind that
             cookies are limited to 4kb in most browsers.
-
-            Warning: Secure cookies are not encrypted (the client can still see
+            
+            Warning: Signed cookies are not encrypted (the client can still see
             the content) and not copy-protected (the client can restore an old
             cookie). The main intention is to make pickling and unpickling
             save, not to store secret information at client side.
