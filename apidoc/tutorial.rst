@@ -34,7 +34,7 @@ This tutorial introduces you to the concepts and features of the Bottle web fram
 * :ref:`tutorial-routing`: Web development starts with binding URLs to code. This section tells you how to do it.
 * :ref:`tutorial-output`: You have to return something to the Browser. Bottle makes it easy for you, supporting more than just plain strings.
 * :ref:`tutorial-request`: Each client request carries a lot of information. HTTP-headers, form data and cookies to name just three. Here is how to use them.
-* :ref:`tutorial-templates`: You don't want to write HTML within your python code, do you? Templates separate code from presentation.
+* :ref:`tutorial-templates`: You don't want to clutter your Python code with HTML fragments, do you? Templates separate code from presentation.
 * :ref:`tutorial-debugging`: These tools and features will help you during development.
 * :ref:`tutorial-deployment`: Get it up and running.
 

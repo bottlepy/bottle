@@ -5,7 +5,7 @@ API Reference
 .. module:: bottle
    :platform: Unix, Windows
    :synopsis: WSGI micro framework
-.. moduleauthor:: Marcel Hellkamp <marc@paws.de>
+.. moduleauthor:: Marcel Hellkamp <marc@gsites.de>
 
 This is a mostly auto-generated API. If you are new to bottle, you might find the
 narrative :doc:`tutorial` more helpful. 
