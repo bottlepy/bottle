@@ -52,6 +52,8 @@ class TestRequest(unittest.TestCase):
         self.assertEqual('https://example.com:80/', request.url)
         request.bind({'HTTP_HOST':'example.com', 'PATH_INFO':'/path', 'QUERY_STRING':'1=b&c=d', 'SCRIPT_NAME':'/sp'})
         self.assertEqual('http://example.com/sp/path?1=b&c=d', request.url)
+        request.bind({'HTTP_HOST':'example.com', 'PATH_INFO':'/pa th', 'QUERY_STRING':'1=b b', 'SCRIPT_NAME':'/s p'})
+        self.assertEqual('http://example.com/s p/pa th?1=b b', request.url)
 
     def test_dict_access(self):
         """ Environ: request objects are environment dicts """

@@ -75,9 +75,9 @@ class TestOutputFilter(ServerTestBase):
             print "Warning: No json module installed."
 
     def test_custom(self):
-        self.app.route('/')(lambda: {'a': 1, 'b': 2})
-        self.app.add_filter(dict, lambda x: x.keys())
-        self.assertBody('ab')
+        self.app.route('/')(lambda: 5)
+        self.app.add_filter(int, lambda x: str(x))
+        self.assertBody('5')
 
     def test_generator_callback(self):
         @self.app.route('/')

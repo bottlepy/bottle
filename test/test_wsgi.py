@@ -221,9 +221,9 @@ class TestRouteDecorator(ServerTestBase):
             bottle.request.environ['hooktest'] = 'before'
         @bottle.hook('after_request')
         def hook():
-            if isinstance(bottle.response.output, str):
-                bottle.response.output += '-after'
-        self.assertBody('before-after', '/test')
+            bottle.response.headers['X-Hook'] = 'after'
+        self.assertBody('before', '/test')
+        self.assertHeader('X-Hook', 'after', '/test')
 
     def test_no_hooks(self):
         @bottle.route(no_hooks=True)
@@ -232,19 +232,6 @@ class TestRouteDecorator(ServerTestBase):
         bottle.hook('before_request')(lambda: 1/0)
         bottle.hook('after_request')(lambda: 1/0)
         self.assertBody('nohooks', '/test')
-
-    def test_hook_order(self):
-        @bottle.route()
-        def test(): return bottle.request.environ.get('hooktest','nohooks')
-        @bottle.hook('before_request')
-        def hook(): bottle.request.environ.setdefault('hooktest', []).append('b1')
-        @bottle.hook('before_request')
-        def hook(): bottle.request.environ.setdefault('hooktest', []).append('b2')
-        @bottle.hook('after_request')
-        def hook(): bottle.response.output += 'a1'
-        @bottle.hook('after_request')
-        def hook(): bottle.response.output += 'a2'
-        self.assertBody('b1b2a2a1', '/test')
 
     def test_template(self):
         @bottle.route(template='test {{a}} {{b}}')
