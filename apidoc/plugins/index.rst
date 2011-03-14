@@ -12,8 +12,8 @@ Have a look at :ref:`plugins` for general questions about plugins (installation,
 SQLite Plugin
 ----------------------
 
-* **Autor:** Marcel Hellkamp
-* **Licence:** MIT
+* **Author:** Marcel Hellkamp
+* **License:** MIT
 * **Installation:** Included
 * **Documentation:** :doc:`/plugins/sqlite`
 * **Description:** Provides an sqlite database connection handle to callbacks that request it.
@@ -22,8 +22,8 @@ SQLite Plugin
 Werkzeug Plugin
 ----------------------
 
-* **Autor:** Marcel Hellkamp
-* **Licence:** MIT
+* **Author:** Marcel Hellkamp
+* **License:** MIT
 * **Installation:** ``pip install bottle-werkzeug``
 * **Documentation:** :doc:`/plugins/werkzeug`
 * **Description:** Integrates the "werkzeug" library (alternative request and response objects, advanced debugging middleware and more).
@@ -32,8 +32,8 @@ Werkzeug Plugin
 Profile Plugin
 ----------------------
 
-* **Autor:** Marcel Hellkamp
-* **Licence:** MIT
+* **Author:** Marcel Hellkamp
+* **License:** MIT
 * **Installation:** ``pip install bottle-profile``
 * **Documentation:** :doc:`/plugins/profile`
 * **Description:** This plugin collects profiling data and displays it in the browser.
