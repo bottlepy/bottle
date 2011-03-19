@@ -59,9 +59,9 @@ def run():
         cnew.report(morfs=['bottle.py']+test_files, show_missing=False)
         if 'html' in sys.argv:
             print
-            cnew.html_report(morfs=['bottle.py']+test_files, directory='coverage')
+            cnew.html_report(morfs=['bottle.py']+test_files, directory='../build/coverage')
             print "Coverage report is in %s" % \
-                  os.path.abspath('coverage/index.html')
+                  os.path.abspath('../build/coverage/index.html')
 
     sys.exit((result.errors or result.failures) and 1 or 0)
 

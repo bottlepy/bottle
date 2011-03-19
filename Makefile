@@ -11,7 +11,7 @@ install:
 	python setup.py install
 
 docs:
-	cd apidoc/; $(MAKE) html
+	cd docs/; $(MAKE) html
 
 test:
 	python test/testall.py
