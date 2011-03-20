@@ -54,6 +54,8 @@ class TestRouter(unittest.TestCase):
         add('/anon/:#.#', 'handler', name='anonroute')
         url = build('testroute', test='hello', name='world')
         self.assertEqual('/hello/world/', url)
+        url = build('testroute', test='hello', name='world', q='value')
+        self.assertEqual('/hello/world/?q=value', url)
         self.assertRaises(bottle.RouteBuildError, build, 'test')
         # RouteBuildError: No route found with name 'test'.
         self.assertRaises(bottle.RouteBuildError, build, 'testroute')

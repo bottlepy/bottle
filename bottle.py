@@ -39,7 +39,7 @@ import warnings
 from Cookie import SimpleCookie
 from tempfile import TemporaryFile
 from traceback import format_exc
-from urllib import quote_plus as urlquote
+from urllib import urlencode
 from urlparse import urlunsplit, urljoin
 
 try: from collections import MutableMapping as DictMixin
@@ -293,7 +293,7 @@ class Router(object):
         except KeyError, e:
             raise RouteBuildError(*e.args)
 
-        if args: url += ['?', urlquote(args.iteritems())]
+        if args: url += ['?', urlencode(args)]
         return ''.join(url)
 
     def match(self, environ):
