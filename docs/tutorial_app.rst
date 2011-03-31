@@ -134,7 +134,7 @@ So, in the next step we format the output in a nicer way. But before we do that,
 
 .. rubric:: Debugging and Auto-Reload
 
-Maybe you already noticed that Bottle sends a short error message to the browser in case something within the script is wrong, e.g. the connection to the database is not working. For debugging purposes it is quiet helpful to get more details. This can be easily achieved by adding the following statement to the script::
+Maybe you already noticed that Bottle sends a short error message to the browser in case something within the script is wrong, e.g. the connection to the database is not working. For debugging purposes it is quite helpful to get more details. This can be easily achieved by adding the following statement to the script::
 
     from bottle import run, route, debug
     ...
