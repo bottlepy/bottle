@@ -164,7 +164,7 @@ class TestPluginAPI(tools.ServerTestBase):
     def test_callable(self):
         def plugin(func):
             def wrapper(*a, **ka):
-                return func(*a, test='me', **ka) + '; tail'
+                return func(test='me', *a, **ka) + '; tail'
             return wrapper
         self.app.install(plugin)
         self.assertBody('test:me; tail', '/')
@@ -174,7 +174,7 @@ class TestPluginAPI(tools.ServerTestBase):
         class Plugin(object):
             def apply(self, func, cfg):
                 def wrapper(*a, **ka):
-                    return func(*a, test=cfg['config']['test'], **ka) + '; tail'
+                    return func(test=cfg['config']['test'], *a, **ka) + '; tail'
                 return wrapper
             def __call__(self, func):
                 raise AssertionError("Plugins must not be called "\
