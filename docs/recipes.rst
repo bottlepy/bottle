@@ -6,6 +6,7 @@
 .. _werkzeug: http://werkzeug.pocoo.org/documentation/dev/debug.html
 .. _paste: http://pythonpaste.org/modules/evalexception.html
 .. _pylons: http://pylonshq.com/
+.. _gevent: http://www.gevent.org/
 
 Recipes
 =============
@@ -100,4 +101,26 @@ or add a WSGI middleware that strips trailing slashes from all URLs::
 .. rubric:: Footnotes
 
 .. [1] Because they are. See <http://www.ietf.org/rfc/rfc3986.txt>
+
+Keep-alive requests
+-------------------
+
+Several "push" mechanisms like XHR multipart need the ability to write response data without closing the connection in conjunction with the response header "Connection: keep-alive". WSGI does not easily lend itself to this behavior, but it is still possible to do so in Bottle by using the gevent_ async framework. Here is a sample that works with either the gevent_ HTTP server or the paste_ HTTP server (it may work with others, but I have not tried). Just change ``server='gevent'`` to ``server='paste'`` to use the paste_ server.
+
+    from gevent import monkey; monkey.patch_all()
+
+    import time
+    from bottle import route, run
+    
+    @route('/stream')
+    def stream():
+        yield 'START'
+        time.sleep(3)
+        yield 'MIDDLE'
+        time.sleep(5)
+        yield 'END'
+    
+    run(host='0.0.0.0', port=8080, server='gevent')
+
+If you browse to ``http://localhost:8080/stream``, you should see 'START', 'MIDDLE', and 'END' show up one at a time (rather than waiting 8 seconds to see them all at once).
 
