@@ -1552,7 +1552,8 @@ def make_default_app_wrapper(name):
     return wrapper
 
 
-for name in 'route get post put delete error mount hook'.split():
+for name in '''route get post put delete error mount
+               hook install uninstall'''.split():
     globals()[name] = make_default_app_wrapper(name)
 url = make_default_app_wrapper('get_url')
 del name

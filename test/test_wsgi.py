@@ -337,6 +337,26 @@ class TestDecorators(ServerTestBase):
         self.assertEqual(['/e','/e/:x','/e/:x/:y'],list(bottle.yieldroutes(e)))
 
 
+     
+class TestAppShortcuts(ServerTestBase):
+    def setUp(self):
+        ServerTestBase.setUp(self)
+    
+    def assertWraps(self, test, other):
+        self.assertEqual(test.__doc__, other.__doc__)
+    
+    def test_module_shortcuts(self):
+        for name in '''route get post put delete error mount
+                       hook install uninstall'''.split():
+            short = getattr(bottle, name)
+            original = getattr(bottle.app(), name)            
+            self.assertWraps(short, original)
+
+    def test_module_shortcuts_with_different_name(self):
+        self.assertWraps(bottle.url, bottle.app().get_url)
+
+
+
 class TestAppMounting(ServerTestBase):
     def setUp(self):
         ServerTestBase.setUp(self)
