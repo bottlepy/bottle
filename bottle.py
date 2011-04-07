@@ -414,22 +414,31 @@ class Bottle(object):
     def optimize(self, *a, **ka):
         depr("Bottle.optimize() is obsolete.")
 
-    def mount(self, app, script_path):
-        ''' Mount a Bottle application to a specific URL prefix '''
+    def mount(self, app, prefix, **options):
+        ''' Mount an application to a specific URL prefix. The prefix is added
+            to SCIPT_PATH and removed from PATH_INFO before the sub-application
+            is called.
+
+            :param app: an instance of :class:`Bottle`.
+            :param prefix: path prefix used as a mount-point.
+
+            All other parameters are passed to the underlying :meth:`route` call.
+        '''
         if not isinstance(app, Bottle):
             raise TypeError('Only Bottle instances are supported for now.')
-        script_path = '/'.join(filter(None, script_path.split('/')))
-        path_depth = script_path.count('/') + 1
-        if not script_path:
-            raise TypeError('Empty script_path. Perhaps you want a merge()?')
+        prefix = '/'.join(filter(None, prefix.split('/')))
+        if not prefix:
+            raise TypeError('Empty prefix. Perhaps you want a merge()?')
         for other in self.mounts:
-            if other.startswith(script_path):
+            if other.startswith(prefix):
                 raise TypeError('Conflict with existing mount: %s' % other)
-        @self.route('/%s/:#.*#' % script_path, method="ANY")
+        path_depth = prefix.count('/') + 1
+        options.setdefault('method', 'ANY')
+        self.mounts[prefix] = app
+        @self.route('/%s/:#.*#' % prefix, **options)
         def mountpoint():
             request.path_shift(path_depth)
             return app.handle(request.environ)
-        self.mounts[script_path] = app
 
     def add_filter(self, ftype, func):
         depr("Filters are deprecated. Replace any filters with plugins.") #0.9
