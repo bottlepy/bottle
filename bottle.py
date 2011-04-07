@@ -62,21 +62,22 @@ except ImportError: # pragma: no cover
         except ImportError: # pragma: no cover
             json_dumps = None
 
+NCTextIOWrapper = None
 if sys.version_info >= (3,0,0): # pragma: no cover
     # See Request.POST
     from io import BytesIO
-    from io import TextIOWrapper
-    class NCTextIOWrapper(TextIOWrapper):
-        ''' Garbage collecting an io.TextIOWrapper(buffer) instance closes the
-            wrapped buffer. This subclass keeps it open. '''
-        def close(self): pass
     def touni(x, enc='utf8'):
         """ Convert anything to unicode """
         return str(x, encoding=enc) if isinstance(x, bytes) else str(x)
+    if sys.version_info < (3,2,0):
+        from io import TextIOWrapper
+        class NCTextIOWrapper(TextIOWrapper):
+            ''' Garbage collecting an io.TextIOWrapper(buffer) instance closes
+                the wrapped buffer. This subclass keeps it open. '''
+            def close(self): pass
 else:
     from StringIO import StringIO as BytesIO
     bytes = str
-    NCTextIOWrapper = None
     def touni(x, enc='utf8'):
         """ Convert anything to unicode """
         return x if isinstance(x, unicode) else unicode(str(x), encoding=enc)

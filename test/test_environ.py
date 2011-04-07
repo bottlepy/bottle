@@ -243,13 +243,14 @@ class TestMultipart(unittest.TestCase):
         request.bind(e)
         # File content
         self.assertTrue('file1' in request.POST)
-        self.assertEqual('content1', request.POST['file1'].file.read())
+        cmp = tob('content1') if sys.version_info >= (3,2,0) else 'content1'
+        self.assertEqual(cmp, request.POST['file1'].file.read())
         # File name and meta data
         self.assertTrue('file2' in request.POST)
         self.assertEqual('filename2.py', request.POST['file2'].filename)
         # UTF-8 files
         x = request.POST['file2'].file.read()
-        if sys.version_info >= (3,0,0):
+        if (3,2,0) > sys.version_info >= (3,0,0):
             x = x.encode('ISO-8859-1')
         self.assertEqual(u'ä\nö\rü'.encode('utf8'), x)
         # No file
