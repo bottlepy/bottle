@@ -1,4 +1,6 @@
+PATH := build/python/bin:$(PATH)
 ALLFILES = $(shell echo bottle.py test/*.py test/views/*.tpl)
+
 .PHONY: dist release install docs test coverage html_coverage pylint test_all test_25 test_26 test_27 test_31 test_32 2to3 clean
 
 dist:
@@ -34,13 +36,13 @@ test_27:
 	python2.7 test/testall.py
 
 test_31: 2to3
-	cd build/2to3; python3.1 test/testall.py
+	python3.1 build/2to3/test/testall.py
 
 test_32: 2to3
-	cd build/2to3; python3.2 test/testall.py
+	python3.2 build/2to3/test/testall.py
 
 # If anyne knows a better way, please tell me
-# This buildd missig files in build/2to3 by either copying or 2to3-ing them.
+# This builds missig files in build/2to3 by either copying or 2to3-ing them.
 
 2to3: $(addprefix build/2to3/,$(ALLFILES))
 
