@@ -1708,11 +1708,18 @@ class DieselServer(ServerAdapter):
 
 
 class GeventServer(ServerAdapter):
-    """ Untested. """
+    """ Untested. Options:
+
+        * `monkey` (default: True) fixes the stdlib to use greenthreads.
+        * `fast` (default: False) uses libevent's http server, but has some
+          issues: No streaming, no pipelining, no SSL.
+    """
     def run(self, handler):
-        from gevent import wsgi
-        #from gevent.hub import getcurrent
-        #self.set_context_ident(getcurrent, weakref=True) # see contextlocal
+        from gevent import wsgi as wsgi_fast, pywsgi as wsgi, monkey
+        if self.options.get('monkey', True):
+            monkey.patch_all()
+        if self.options.get('fast', False):
+            wsgi = wsgi_fast
         wsgi.WSGIServer((self.host, self.port), handler).serve_forever()
 
 
