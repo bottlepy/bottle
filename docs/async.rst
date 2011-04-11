@@ -1,9 +1,9 @@
 Primer to Asynchronous Applications
 ===================================
 
-Asynchronous design patterns don't mix well with the synchronous nature of `WSGI <http://www.python.org/dev/peps/pep-3333/>`_. This is why most asynchronous frameworks (tornado, twisted, ...) implement a specialized API to expose their asynchronous features. Bottle is a WSGI framework and shares the synchronous nature of WSGI, but thanks to the awesome `gevent project <http://www.gevent.org/>`_, it is still possible to write asynchronous applications with bottle. This article explain, how to do it.
+Asynchronous design patterns don't mix well with the synchronous nature of `WSGI <http://www.python.org/dev/peps/pep-3333/>`_. This is why most asynchronous frameworks (tornado, twisted, ...) implement a specialized API to expose their asynchronous features. Bottle is a WSGI framework and shares the synchronous nature of WSGI, but thanks to the awesome `gevent project <http://www.gevent.org/>`_, it is still possible to write asynchronous applications with bottle. This article documents the usage of Bottle with Asynchronous WSGI.
 
-The Limits of Asynchronous WSGI
+The Limits of Synchronous WSGI
 -------------------------------
 
 Briefly worded, the `WSGI specification (pep 3333) <http://www.python.org/dev/peps/pep-3333/>`_ defines a request/response circle as follows: The application callable is invoked once for each request and must return a body iterator. The server then iterates over the body and writes each chunk to the socket. As soon as the body iterator is exhausted, the client connection is closed.
@@ -15,9 +15,9 @@ Most servers limit the number of threads to avoid their relatively high overhead
 Greenlets for the rescue
 ------------------------
 
-The cause why most servers limit their worker pools to a relatively low number of concurrent threads is the high overhead involved in switching between and creating new threads. They are cheap compared to processes (forks), but still to expensive to create a new thread for each connection.
+Most servers limit the size of their worker pools to a relatively low number of concurrent threads, due to the high overhead involved in switching between and creating new threads. While threads are cheap compared to processes (forks), they are still expensive to create for each new connection.
 
-The `gevent <http://www.gevent.org/>`_ module adds *greenlets* to the mix. These behave very similar to traditional threads, but are extremely cheap to create. A gevent-based server can spawn thousands of greenlets (one for each connection) with almost no overhead, thus blocking some of them is OK. There are always enough to answer new requests. Most of the problems mentioned above just disappear. If you wait for data, block the greenlet. No harm done.
+The `gevent <http://www.gevent.org/>`_ module adds *greenlets* to the mix. Greenlets behave similar to traditional threads, but are cheap to create. A gevent-based server can spawn thousands of greenlets (one for each connection) with almost no overhead, allowing individual greenlets to block, because new greenlets are always being spawned to answer new requests. 
 
 This makes creating asynchronous applications incredibly easy, because they look and feel like synchronous applications. A gevent-based server is actually not asynchronous, but massively multi-threaded. Here is an example::
 
@@ -36,7 +36,7 @@ This makes creating asynchronous applications incredibly easy, because they look
 
     run(host='0.0.0.0', port=8080, server='gevent')
 
-The first line is important. It causes gevent to monkey-patch most of pythons blocking APIs to not block the current thread, but instead pass the CPU to the next greenlet. It actually replaces python threading with gevent-base pseudo-threads. This is why you can use ``time.sleep()`` as if you were to block a thread. If you don't feel comfortable with monkey-patching python build-ins, you can use the corresponding gevent functions (``gevent.sleep()`` in this case).
+The first line is important. It causes gevent to monkey-patch most of Python's blocking APIs, and prevents blocks in the current thread by instead passing the CPU to the next greenlet. It actually replaces Python's threading with gevent-based pseudo-threads. This is why you can still use ``time.sleep()`` which would normally block a thread. If you don't feel comfortable with monkey-patching python build-ins, you can use the corresponding gevent functions (``gevent.sleep()`` in this case).
 
 If you run this script and point your browser to ``http://localhost:8080/stream``, you should see `START`, `MIDDLE`, and `END` show up one by one (rather than waiting 8 seconds to see them all at once). It works exactly as with normal threads, but now your server can handle thousands of concurrent requests without any problems.
 
@@ -56,9 +56,9 @@ A very common design pattern in asynchronous frameworks (including tornado, twis
 
 The main benefit is that the request handler terminates early. The handling thread can move on and accept an new request while the callbacks continue to write to sockets of previous requests. This is how these frameworks manage to process a lot of concurrent requests with only a small number of OS threads.
 
-With Gevent+WSGI, things are different: First, terminating early has no benefit because we have an unlimited pool of (pseudo)threads to accept new connections. Second, we cannot terminate early because that would closes the socket (as required by WSGI). Third, we must return an iterable to conform to WSGI.
+With Gevent+WSGI, things are different: First, terminating early has no benefit because we have an unlimited pool of (pseudo)threads to accept new connections. Second, we cannot terminate early because that would close the socket (as required by WSGI). Third, we must return an iterable to conform to WSGI.
 
-The solution is not far to seek. All we have to do is to return a body iterable that we can write to asynchronously. With the help of `gevent.queue <http://www.gevent.org/gevent.queue.html>`_, we can *simulate* a detached socket and rewrite the previous example as follows::
+In order to conform to the WSGI standard, all we have to do is to return a body iterable that we can write to asynchronously. With the help of `gevent.queue <http://www.gevent.org/gevent.queue.html>`_, we can *simulate* a detached socket and rewrite the previous example as follows::
 
     @route('/fetch')
     def fetch():
