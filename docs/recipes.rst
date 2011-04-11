@@ -102,10 +102,15 @@ or add a WSGI middleware that strips trailing slashes from all URLs::
 
 .. [1] Because they are. See <http://www.ietf.org/rfc/rfc3986.txt>
 
+
 Keep-alive requests
 -------------------
 
-Several "push" mechanisms like XHR multipart need the ability to write response data without closing the connection in conjunction with the response header "Connection: keep-alive". WSGI does not easily lend itself to this behavior, but it is still possible to do so in Bottle by using the gevent_ async framework. Here is a sample that works with either the gevent_ HTTP server or the paste_ HTTP server (it may work with others, but I have not tried). Just change ``server='gevent'`` to ``server='paste'`` to use the paste_ server.
+.. note::
+
+    For a more detailed explanation, see :doc:`async`.
+
+Several "push" mechanisms like XHR multipart need the ability to write response data without closing the connection in conjunction with the response header "Connection: keep-alive". WSGI does not easily lend itself to this behavior, but it is still possible to do so in Bottle by using the gevent_ async framework. Here is a sample that works with either the gevent_ HTTP server or the paste_ HTTP server (it may work with others, but I have not tried). Just change ``server='gevent'`` to ``server='paste'`` to use the paste_ server::
 
     from gevent import monkey; monkey.patch_all()
 
