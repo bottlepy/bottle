@@ -57,8 +57,18 @@ Start here if you want to learn how to use the bottle framework for web developm
    tutorial
    stpl
    api
-   recipes
+
+
+Knowlage Base
+==============
+A collection of articles, guides and HOWTOs.
+
+.. toctree::
+   :maxdepth: 2
+
    tutorial_app
+   async
+   recipes
    faq
 
 

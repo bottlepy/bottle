@@ -1,4 +1,4 @@
-.. highlight:: python
+﻿.. highlight:: python
 .. currentmodule:: bottle
 
 ===========================
@@ -6,39 +6,40 @@ Release Notes and Changelog
 ===========================
 
 
-Release 0.9 
+Release 0.9
 ===========
 
-This changes are not released yet and are only part of the development documentation.
+.. rubric:: Whats new?
 
-.. rubric:: New Features
+* A brand new plugin-API. See :ref:`plugins` and :doc:`plugindev` for details.
+* The :func:`route` decorator got a lot of new features. See :meth:`Bottle.route` for details.
+* New server adapters for `gevent <http://www.gevent.org/>`_, `meinheld <http://meinheld.org/>`_ and `bjoern <https://github.com/jonashaag/bjoern>`_.
+* Support for SimpleTAL templates.
+* Better runtime exception handling for mako templates in debug mode.
+* Lots of documentation, fixes and small improvements.
 
-* A new hook-API to inject code immediately before or after the execution of handler callbacks.
-* The :meth:`Bottle.route` decorator got a lot of new features. See API documentation for details.
-* The :attr:`Request.headers` dict is now guaranteed to contain native strings but still allows access to the raw data provided by the WSGI environment (see :class:`WSGIHeaderDict`).
+.. rubric:: Performance improvements
 
-.. rubric:: API changes 
+* The :class:`Router` now special-cases ``wsgi.run_once`` environments to speed up CGI.
+* Reduced module load time by ~30% and optimized template parser. See `8ccb2d </commit/8ccb2d>`_, `f72a7c </commit/f72a7c>`_ and `b14b9a </commit/b14b9a>`_ for details.
+* Support for "App Caching" on Google App Engine. See `af93ec </commit/af93ec>`_.
+* Some of the rarely used or deprecated features are now plugins that avoid overhead if the feature is not used.
 
-* :attr:`Request.header` is now :attr:`Request.headers`
-* Route parameter names are now allowed to contain digits. #108
+.. rubric:: API changes
 
-Bugfix Release 0.8.4
-=====================
+This release is mostly backward compatible, but some APIs are marked deprecated now and will be removed for the next release. Most noteworthy:
 
-* Fixed "Using DictMixins with the @view decorator" (Issue #102 and #103)
+* The ``static`` route parameter is deprecated. You can escape wild-cards with a backslash.
+* Type-based output filters are deprecated. They can easily be replaced with plugins.
 
-Bugfix Release 0.8.3
-=====================
 
-* Fixed "Reloading server dies on slow hardware." (Issue #90)
+.. rubric:: Thanks to
 
-Bugfix Release 0.8.2
-=====================
+Thanks to all the people who found bugs, sent patches, spread the word, helped each other on the mailing-list and made this release possible. You are awesome :) Really, you are.
 
-* Added backward compatibility wrappers and deprecation warnings to some of the API changes.
-* Fixed "FileCheckerThread seems to fail on eggs" (Issue #87)
-* Fixed "Bottle.get_url() does not return correct path when SCRIPT_NAME is set." (Issue #83)
+I hope the following (alphabetically sorted) list is complete. If you miss your name on that list (or want your name removed) please :doc:`tell me <contact>`.
 
+    Adam R. Smith, Alexey Borzenkov, 'apheage', 'BillMa', Brandon Gilmore, Branko Vukelic, Damien Degois, David Buxton, Duane Johnson, Frank Murphy, Ian Davis, Itamar Nabriski, 'iurisilvio', Jeff Nichols, Jeremy Kelley, 'joegester', Jonas Haag, 'Karl', 'Kraken', Kyle Fritz, 'm35', 'masklinn', `reddit <http://reddit.com/r/python>`_, Santiago Gala, Sean M. Collins, 'Seth', Sigurd Høgsbro, Stuart Rackham, Sun Ning, Tomás A. Schertel, Tristan Zajonc, 'voltron' and Wieland Hoffmann
 
 Release 0.8
 ===========
