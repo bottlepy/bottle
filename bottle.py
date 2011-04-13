@@ -66,9 +66,9 @@ NCTextIOWrapper = None
 if sys.version_info >= (3,0,0): # pragma: no cover
     # See Request.POST
     from io import BytesIO
-    def touni(x, enc='utf8'):
+    def touni(x, enc='utf8', err='strict'):
         """ Convert anything to unicode """
-        return str(x, encoding=enc) if isinstance(x, bytes) else str(x)
+        return str(x, enc, err) if isinstance(x, bytes) else str(x)
     if sys.version_info < (3,2,0):
         from io import TextIOWrapper
         class NCTextIOWrapper(TextIOWrapper):
@@ -78,9 +78,9 @@ if sys.version_info >= (3,0,0): # pragma: no cover
 else:
     from StringIO import StringIO as BytesIO
     bytes = str
-    def touni(x, enc='utf8'):
+    def touni(x, enc='utf8', err='strict'):
         """ Convert anything to unicode """
-        return x if isinstance(x, unicode) else unicode(str(x), encoding=enc)
+        return x if isinstance(x, unicode) else unicode(str(x), enc, err)
 
 def tob(data, enc='utf8'):
     """ Convert anything to bytes """
@@ -301,7 +301,7 @@ class Router(object):
         ''' Return a (target, url_agrs) tuple or raise HTTPError(404/405). '''
         targets, urlargs = self._match_path(environ)
         if not targets:
-            raise HTTPError(404, "Not found: " + environ['PATH_INFO'])
+            raise HTTPError(404, "Not found: " + repr(environ['PATH_INFO']))
         method = environ['REQUEST_METHOD'].upper()
         if method in targets:
             return targets[method], urlargs
@@ -2393,7 +2393,7 @@ HTTP_CODES[418] = "I'm a teapot" # RFC 2324
 #: The default template used for error pages. Override with @error()
 ERROR_PAGE_TEMPLATE = """
 %try:
-    %from bottle import DEBUG, HTTP_CODES, request
+    %from bottle import DEBUG, HTTP_CODES, request, touni
     %status_name = HTTP_CODES.get(e.status, 'Unknown').title()
     <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
     <html>
@@ -2407,8 +2407,8 @@ ERROR_PAGE_TEMPLATE = """
         </head>
         <body>
             <h1>Error {{e.status}}: {{status_name}}</h1>
-            <p>Sorry, the requested URL <tt>{{request.url}}</tt> caused an error:</p>
-            <pre>{{str(e.output)}}</pre>
+            <p>Sorry, the requested URL <tt>{{repr(request.url)}}</tt> caused an error:</p>
+            <pre>{{e.output}}</pre>
             %if DEBUG and e.exception:
               <h2>Exception:</h2>
               <pre>{{repr(e.exception)}}</pre>

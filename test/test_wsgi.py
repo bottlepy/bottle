@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 import unittest
 import sys, os.path
 import bottle
@@ -77,6 +77,15 @@ class TestWsgi(ServerTestBase):
         def test(): return 1/0
         self.assertStatus(500, '/')
 
+    def test_utf8_url(self):
+        """ WSGI: Exceptions within handler code (HTTP 500) """
+        @bottle.route('/my/:string')
+        def test(string): return string
+        self.assertBody(tob(u'urf8-öäü'), tob(u'/my/urf8-öäü'))
+    
+    def test_utf8_404(self):
+        self.assertStatus(404, tob(u'/not-found/urf8-öäü'))
+        
     def test_503(self):
         """ WSGI: Server stopped (HTTP 503) """
         @bottle.route('/')
@@ -134,6 +143,7 @@ class TestWsgi(ServerTestBase):
         self.assertTrue('a=a' in c)
         self.assertTrue('b=b' in c)
         self.assertTrue('c=c; Path=/' in c)
+
 
 class TestRouteDecorator(ServerTestBase):
     def test_decorators(self):
