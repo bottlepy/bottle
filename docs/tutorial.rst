@@ -25,10 +25,6 @@ Documentation
 
 This tutorial introduces you to the concepts and features of the Bottle web framework. If you have questions not answered here, please check the :doc:`faq` page, file a ticket at the issue_ tracker or send an e-mail to the `mailing list <mailto:bottlepy@googlegroups.com>`_.
 
-.. note::
-
-    This is a copy&paste from the old docs and a work in progress. Handle with care :)
-
 .. rubric:: A quick overview:
 
 * :ref:`tutorial-routing`: Web development starts with binding URLs to code. This section tells you how to do it.
@@ -38,12 +34,33 @@ This tutorial introduces you to the concepts and features of the Bottle web fram
 * :ref:`tutorial-debugging`: These tools and features will help you during development.
 * :ref:`tutorial-deployment`: Get it up and running.
 
+.. _installation:
 
+Installation
+==============================================================================
 
-Getting started
-===================
+Bottle does not depend on any external libraries. You can just download `bottle.py </bottle.py>`_ into your project directory and start coding:
 
-Bottle has no dependencies, so all you need is Python_ (2.5 up to 3.x should work fine) and the :ref:`bottle module <download>` file. Lets start with a very basic "Hello World" example::
+.. code-block:: bash
+
+    $ curl -O http://bottlepy.org/bottle.py
+    $ 2to3 -w bottle.py  # Python 3.x users only!
+
+This will get you the latest development snapshot that includes all the new features. If you prefer a more stable environment, you should stick with a stable release. These are available on `PyPi <http://pypi.python.org/pypi/bottle>`_ and can be installed via :command:`pip` (recommended), :command:`easy_install` or your Linux distributions package manager:
+
+.. code-block:: bash
+
+    $ sudo pip install bottle              # recommended
+    $ sudo easy_install bottle             # alternative to pip
+    $ sudo apt-get install python-bottle   # works for debian, ubuntu, ...
+
+In either way, you'll need Python 2.5 or newer to run bottle applications. If you do not have permissions to install packages system-wide or simply don't want to, I suggest crating a `virtualenv <http://pypi.python.org/pypi/virtualenv>`_ first. 
+ 
+
+A minimal Bottle Application
+==============================================================================
+
+This tutorial assumes you have Bottle either `installed or copied <#installation>`_ into your project directory. Lets start with a very basic "Hello World" example::
 
     from bottle import route, run
     
@@ -53,23 +70,39 @@ Bottle has no dependencies, so all you need is Python_ (2.5 up to 3.x should wor
     
     run(host='localhost', port=8080)
 
+
 Whats happening here?
 
 1. First we import some bottle components. The :func:`route` decorator and the :func:`run` function. 
 2. The :func:`route` :term:`decorator` is used do bind a piece of code to an URL. In this example we want to answer requests to the ``/hello`` URL.
 3. This function is the :term:`handler function` or :term:`callback` for the ``/hello`` route. It is called every time someone requests the ``/hello`` URL and is responsible for generating the page content.
 4. In this example we simply return a string to the browser.
-5. Now it is time to start the actual HTTP server. The default is a development server running on 'localhost' port 8080 and serving requests until you hit :kbd:`Control-c`.
+5. In the last line we start the actual HTTP server. The default is a development server running on 'localhost' port 8080 and serving requests until you hit :kbd:`Control-c`.
 
 This is it. Run this script, visit http://localhost:8080/hello and you will see "Hello World!" in your browser. Of cause this is a very simple example, but it shows the basic concept of how applications are built with bottle. Continue reading and you'll see what else is possible.
+  
+.. rubric:: The Application Object
 
+For the sake of simplicity, most examples in this tutorial use a module-level :func:`route` decorator to bind routes. This decorator adds routes to a global application object that is created automatically in the background. If you prefer a more explicit way to define your application and don't mind the extra typing, you can create a separate application object and use that instead of the global one::
 
-.. note::
-    For the sake of simplicity, most examples in this tutorial use a module-level :func:`route` decorator to bind routes. This decorator adds routes to a global application object that is created automatically in the background. If you prefer a more explicit way to define your application and don't mind the extra typing, you can create a separate application object and use that instead of the global one. The object-oriented approach is further described in the :ref:`default-app` section. Just keep in mind that you have a choice.
+    from bottle import Bottle
     
+    app = Bottle()
+    
+    @app.route('/hello')
+    def hello():
+        return "Hello World!"
+    
+    run(app, host='localhost', port=8080)
+
+The object-oriented approach is further described in the :ref:`default-app` section. Just keep in mind that you have a choice.
+
+
+
+
 .. _tutorial-routing:
 
-Routing
+Request Routing
 ==============================================================================
 
 As you have learned before, *routes* are used to map URLs to callback functions. These functions are executed on every request that matches the route and their return value is returned to the browser. You can add any number of routes to a callback using the :func:`route` decorator.
@@ -172,7 +205,7 @@ Be careful when specifying a relative root-path such as ``root='./static/files'`
 Error Pages
 ------------------------------------------------------------------------------
 
-If anything goes wrong Bottle displays an informative but fairly boring error page. You can override the default error pages using the :func:`error` decorator. It works similar to the :func:`route` decorator but expects an HTTP status code instead of a route::
+If anything goes wrong, Bottle displays an informative but fairly boring error page. You can override the default error pages using the :func:`error` decorator. It works similar to the :func:`route` decorator but expects an HTTP status code instead of a route::
 
   @error(404)
   def error404(error):
