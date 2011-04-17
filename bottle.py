@@ -1359,10 +1359,11 @@ def send_file(*a, **k): #BC 0.6.4
     raise static_file(*a, **k)
 
 
-def static_file(filename, root, guessmime=True, mimetype=None, download=False):
-    """ Opens a file in a safe way and returns a HTTPError object with status
-        code 200, 305, 401 or 404. Sets Content-Type, Content-Length and
-        Last-Modified header. Obeys If-Modified-Since header and HEAD requests.
+def static_file(filename, root, mimetype='auto', guessmime=True, download=False):
+    """ Open a file in a safe way and return :exc:`HTTPResponse` with status
+        code 200, 305, 401 or 404. Set Content-Type, Content-Encoding, 
+        Content-Length and Last-Modified header. Obey If-Modified-Since header
+        and HEAD requests.
     """
     root = os.path.abspath(root) + os.sep
     filename = os.path.abspath(os.path.join(root, filename.strip('/\\')))
@@ -1375,14 +1376,18 @@ def static_file(filename, root, guessmime=True, mimetype=None, download=False):
     if not os.access(filename, os.R_OK):
         return HTTPError(403, "You do not have permission to access this file.")
 
-    if not mimetype and guessmime:
-        header['Content-Type'] = mimetypes.guess_type(filename)[0]
-    else:
-        header['Content-Type'] = mimetype if mimetype else 'text/plain'
+    if not guessmime: #0.9
+       if mimetype == 'auto': mimetype = 'text/plain'
+       depr("To disable mime-type guessing, specify a type explicitly.")
+    if mimetype == 'auto':
+        mimetype, encoding = mimetypes.guess_type(filename)
+        if mimetype: header['Content-Type'] = mimetype
+        if encoding: header['Content-Encoding'] = encoding
+    elif mimetype:
+        header['Content-Type'] = mimetype
 
-    if download == True:
-        download = os.path.basename(filename)
     if download:
+        download = os.path.basename(filename if download == True else download)
         header['Content-Disposition'] = 'attachment; filename="%s"' % download
 
     stats = os.stat(filename)
