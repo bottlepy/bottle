@@ -80,6 +80,15 @@ class TestRequest(unittest.TestCase):
         self.assertTrue('Some-Header' in request.headers)
         self.assertTrue(request.header['Some-Header'] == 'some value')
         self.assertTrue(request.header['Some-Other-Header'] == 'some other value')
+    
+    def test_header_access_special(self):
+        e = {}
+        wsgiref.util.setup_testing_defaults(e)
+        request.bind(e)
+        request['CONTENT_TYPE'] = 'test'
+        request['CONTENT_LENGTH'] = '123'
+        self.assertEqual(request.header['Content-Type'], 'test')
+        self.assertEqual(request.header['Content-Length'], '123')
 
     def test_cookie(self):
         """ Environ: COOKIES """ 

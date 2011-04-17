@@ -1266,13 +1266,19 @@ class WSGIHeaderDict(DictMixin):
         The API will remain stable even on changes to the relevant PEPs.
         Currently PEP 333, 444 and 3333 are supported. (PEP 444 is the only one
         that uses non-native strings.)
-     '''
+    '''
+    #: List of keys that do not have a 'HTTP_' prefix.
+    cgikeys = ('CONTENT_TYPE', 'CONTENT_LENGTH')
 
     def __init__(self, environ):
         self.environ = environ
 
-    def _ekey(self, key): # Translate header field name to environ key.
-        return 'HTTP_' + key.replace('-','_').upper()
+    def _ekey(self, key):
+        ''' Translate header field name to CGI/WSGI environ key. '''
+        key = key.replace('-','_').upper()
+        if key in self.cgikeys:
+            return key
+        return 'HTTP_' + key
 
     def raw(self, key, default=None):
         ''' Return the header value as is (may be bytes or unicode). '''
@@ -1291,6 +1297,8 @@ class WSGIHeaderDict(DictMixin):
         for key in self.environ:
             if key[:5] == 'HTTP_':
                 yield key[5:].replace('_', '-').title()
+            elif key in self.cgikeys:
+                yield key.replace('_', '-').title()
 
     def keys(self): return list(self)
     def __len__(self): return len(list(self))
