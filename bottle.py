@@ -1356,6 +1356,7 @@ def redirect(url, code=303):
 
 def send_file(*a, **k): #BC 0.6.4
     """ Raises the output of static_file(). (deprecated) """
+    depr("Use 'raise static_file()' instead of 'send_file()'.")
     raise static_file(*a, **k)
 
 
@@ -1391,20 +1392,19 @@ def static_file(filename, root, mimetype='auto', guessmime=True, download=False)
         header['Content-Disposition'] = 'attachment; filename="%s"' % download
 
     stats = os.stat(filename)
+    header['Content-Length'] = stats.st_size
     lm = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(stats.st_mtime))
     header['Last-Modified'] = lm
+
     ims = request.environ.get('HTTP_IF_MODIFIED_SINCE')
     if ims:
-        ims = ims.split(";")[0].strip() # IE sends "<date>; length=146"
-        ims = parse_date(ims)
-        if ims is not None and ims >= int(stats.st_mtime):
-            header['Date'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime())
-            return HTTPResponse(status=304, header=header)
-    header['Content-Length'] = stats.st_size
-    if request.method == 'HEAD':
-        return HTTPResponse('', header=header)
-    else:
-        return HTTPResponse(open(filename, 'rb'), header=header)
+        ims = parse_date(ims.split(";")[0].strip())
+    if ims is not None and ims >= int(stats.st_mtime):
+        header['Date'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime())
+        return HTTPResponse(status=304, header=header)
+
+    body = '' if request.method == 'HEAD' else open(filename, 'rb')
+    return HTTPResponse(body, header=header)
 
 
 
@@ -1444,7 +1444,7 @@ def parse_auth(header):
 
 def _lscmp(a, b):
     ''' Compares two strings in a cryptographically save way:
-        Runtime is not affected by a common prefix. '''
+        Runtime is not affected by length of common prefix. '''
     return not sum(0 if x==y else 1 for x, y in zip(a, b)) and len(a) == len(b)
 
 
