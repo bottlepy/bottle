@@ -16,23 +16,19 @@
 {% endblock %}
 
 {% block footer %}
-    <div id="disqus_thread" style="margin: 2em 0;">
-        <center><a href='#'>Load Comments</a></center>
-    </div>
+    <div id="disqus_thread" style="margin: 2em 0;"></div>
     <script type="text/javascript">
       var disqus_shortname = 'bottlepy';
       var disqus_identifier = 'docs_{{pagename}}_{{version}}';
       var disqus_title = '{{title}}';
       //var disqus_url = 'http://example.com/permalink-to-page.html';
-      var disqus_doit = function() {
-        $('#disqus_thread').empty()
+      (function() {
         var dsq = document.createElement('script');
         dsq.type = 'text/javascript';
         dsq.async = true;
         dsq.src = 'http://zodbbook.disqus.com/embed.js';
         document.getElementsByTagName('head')[0].appendChild(dsq);
-      }
-      $("#disqus_thread a").one('click', disqus_doit);
+      })();
     </script>
     <div class="footer">
     &copy; <a href="{{ pathto('index') }}#licence">Copyright</a> {{ copyright|e }} - <a href="{{ pathto('contact') }}">Contact</a><br />
