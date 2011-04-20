@@ -39,8 +39,8 @@ import warnings
 from Cookie import SimpleCookie
 from tempfile import TemporaryFile
 from traceback import format_exc
-from urllib import urlencode
-from urlparse import urlunsplit, urljoin
+from urllib import urlencode, quote as urlquote, unquote as urlunquote
+from urlparse import urlunsplit, urljoin, SplitResult as UrlSplitResult
 
 try: from collections import MutableMapping as DictMixin
 except ImportError: # pragma: no cover
@@ -811,37 +811,42 @@ class Request(threading.local, DictMixin):
             if 'bottle.' + key in self.environ:
                 del self.environ['bottle.' + key]
 
+    @DictProperty('environ', 'bottle.urlparts', read_only=True)
+    def urlparts(self):
+        ''' Return a :cls:`urlparse.SplitResult` tuple that can be used
+            to reconstruct the full URL as requested by the client.
+            The tuple contains: (scheme, host, path, query_string, fragment).
+            The fragment is always empty because it is not visible to the server.
+        '''
+        env = self.environ
+        host = env.get('HTTP_X_FORWARDED_HOST') or env.get('HTTP_HOST', '')
+        http = env.get('wsgi.url_scheme', 'http')
+        port = env.get('SERVER_PORT')
+        if ':' in host: # Overrule SERVER_POST (proxy support)
+            host, port = host.rsplit(':', 1)
+        if not host or host == '127.0.0.1':
+            host = env.get('SERVER_NAME', host)
+        if port and http+port not in ('http80', 'https443'):
+            host += ':' + port
+        spath = self.environ.get('SCRIPT_NAME','').rstrip('/') + '/'
+        rpath = self.path.lstrip('/')
+        path = urlquote(urljoin(spath, rpath))
+        return UrlSplitResult(http, host, path, env.get('QUERY_STRING'), '')
+
     @property
-    def query_string(self):
-        """ The part of the URL following the '?'. """
-        return self.environ.get('QUERY_STRING', '')
+    def url(self):
+        """ Full URL as requested by the client. """
+        return self.urlparts.geturl()
 
     @property
     def fullpath(self):
         """ Request path including SCRIPT_NAME (if present). """
-        spath = self.environ.get('SCRIPT_NAME','').rstrip('/') + '/'
-        rpath = self.path.lstrip('/')
-        return urljoin(spath, rpath)
+        return urlunquote(self.urlparts[2])
 
     @property
-    def url(self):
-        """ Full URL as requested by the client (computed).
-
-            This value is constructed out of different environment variables
-            and includes scheme, host, port, scriptname, path and query string.
-
-            Special characters are NOT escaped.
-        """
-        scheme = self.environ.get('wsgi.url_scheme', 'http')
-        host   = self.environ.get('HTTP_X_FORWARDED_HOST')
-        host   = host or self.environ.get('HTTP_HOST', None)
-        if not host:
-            host = self.environ.get('SERVER_NAME')
-            port = self.environ.get('SERVER_PORT', '80')
-            if (scheme, port) not in (('https','443'), ('http','80')):
-                host += ':' + port
-        parts = (scheme, host, self.fullpath, self.query_string, '')
-        return urlunsplit(parts)
+    def query_string(self):
+        """ The part of the URL following the '?'. """
+        return self.environ.get('QUERY_STRING', '')
 
     @property
     def content_length(self):
@@ -1356,9 +1361,8 @@ def abort(code=500, text='Unknown Error: Application stopped.'):
 
 
 def redirect(url, code=303):
-    """ Aborts execution and causes a 303 redirect """
-    scriptname = request.environ.get('SCRIPT_NAME', '').rstrip('/') + '/'
-    location = urljoin(request.url, urljoin(scriptname, url))
+    """ Aborts execution and causes a 303 redirect. """
+    location = urljoin(request.url, url)
     raise HTTPResponse("", status=code, header=dict(Location=location))
 
 

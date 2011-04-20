@@ -17,6 +17,7 @@ Release 0.9
 * Support for SimpleTAL templates.
 * Better runtime exception handling for mako templates in debug mode.
 * Lots of documentation, fixes and small improvements.
+* A new :data:`Request.urlparts` property.
 
 .. rubric:: Performance improvements
 

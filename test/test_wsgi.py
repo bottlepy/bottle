@@ -81,10 +81,10 @@ class TestWsgi(ServerTestBase):
         """ WSGI: Exceptions within handler code (HTTP 500) """
         @bottle.route('/my/:string')
         def test(string): return string
-        self.assertBody(tob(u'urf8-öäü'), tob(u'/my/urf8-öäü'))
+        self.assertBody(tob(u'urf8-öäü'), '/my/urf8-öäü')
     
     def test_utf8_404(self):
-        self.assertStatus(404, tob(u'/not-found/urf8-öäü'))
+        self.assertStatus(404, '/not-found/urf8-öäü')
         
     def test_503(self):
         """ WSGI: Server stopped (HTTP 503) """

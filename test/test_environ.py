@@ -49,11 +49,11 @@ class TestRequest(unittest.TestCase):
         request.bind({'SERVER_NAME':'example.com', 'SERVER_PORT':'81'})
         self.assertEqual('http://example.com:81/', request.url)
         request.bind({'wsgi.url_scheme':'https', 'SERVER_NAME':'example.com'})
-        self.assertEqual('https://example.com:80/', request.url)
+        self.assertEqual('https://example.com/', request.url)
         request.bind({'HTTP_HOST':'example.com', 'PATH_INFO':'/path', 'QUERY_STRING':'1=b&c=d', 'SCRIPT_NAME':'/sp'})
         self.assertEqual('http://example.com/sp/path?1=b&c=d', request.url)
-        request.bind({'HTTP_HOST':'example.com', 'PATH_INFO':'/pa th', 'QUERY_STRING':'1=b b', 'SCRIPT_NAME':'/s p'})
-        self.assertEqual('http://example.com/s p/pa th?1=b b', request.url)
+        request.bind({'HTTP_HOST':'example.com', 'PATH_INFO':'/pa th', 'SCRIPT_NAME':'/s p'})
+        self.assertEqual('http://example.com/s%20p/pa%20th', request.url)
 
     def test_dict_access(self):
         """ Environ: request objects are environment dicts """
@@ -242,7 +242,92 @@ class TestResponse(unittest.TestCase):
                    if name.title() == 'Set-Cookie']
         self.assertTrue('name=;' in cookies[0])
 
+class TestRedirect(unittest.TestCase):
+   
+    def assertRedirect(self, target, result, query=None, status=303, **args):
+        env = {}
+        for key in args:
+            if key.startswith('wsgi'):
+                args[key.replace('_', '.', 1)] = args[key]
+                del args[key]
+        env.update(args)
+        wsgiref.util.setup_testing_defaults(env)
+        request.bind(env)
+        try:
+            bottle.redirect(target, **(query or {}))
+        except bottle.HTTPResponse, r:
+            self.assertEqual(status, r.status)
+            self.assertTrue(r.headers)
+            self.assertEqual(result, r.headers['Location'])
+                
+    def test_root(self):
+        self.assertRedirect('/', 'http://127.0.0.1/')
+        self.assertRedirect('/test.html', 'http://127.0.0.1/test.html')
+        self.assertRedirect('/test.html', 'http://127.0.0.1/test.html',
+                            PATH_INFO='/some/sub/path/')
+        self.assertRedirect('/test.html', 'http://127.0.0.1/test.html',
+                            PATH_INFO='/some/sub/file.html')
+        self.assertRedirect('/test.html', 'http://127.0.0.1/test.html',
+                            SCRIPT_NAME='/some/sub/path/')
+        self.assertRedirect('/foo/test.html', 'http://127.0.0.1/foo/test.html')
+        self.assertRedirect('/foo/test.html', 'http://127.0.0.1/foo/test.html',
+                            PATH_INFO='/some/sub/file.html')
 
+    def test_relative(self):
+        self.assertRedirect('./', 'http://127.0.0.1/')
+        self.assertRedirect('./test.html', 'http://127.0.0.1/test.html')
+        self.assertRedirect('./test.html', 'http://127.0.0.1/foo/test.html',
+                            PATH_INFO='/foo/')
+        self.assertRedirect('./test.html', 'http://127.0.0.1/foo/test.html',
+                            PATH_INFO='/foo/bar.html')
+        self.assertRedirect('./test.html', 'http://127.0.0.1/foo/test.html',
+                            SCRIPT_NAME='/foo/')
+        self.assertRedirect('./test.html', 'http://127.0.0.1/foo/bar/test.html',
+                            SCRIPT_NAME='/foo/', PATH_INFO='/bar/baz.html')
+        self.assertRedirect('./foo/test.html', 'http://127.0.0.1/foo/test.html')
+        self.assertRedirect('./foo/test.html', 'http://127.0.0.1/bar/foo/test.html',
+                            PATH_INFO='/bar/file.html')
+        self.assertRedirect('../test.html', 'http://127.0.0.1/test.html',
+                            PATH_INFO='/foo/')
+        self.assertRedirect('../test.html', 'http://127.0.0.1/foo/test.html',
+                            PATH_INFO='/foo/bar/')
+        self.assertRedirect('../test.html', 'http://127.0.0.1/test.html',
+                            PATH_INFO='/foo/bar.html')
+        self.assertRedirect('../test.html', 'http://127.0.0.1/test.html',
+                            SCRIPT_NAME='/foo/')
+        self.assertRedirect('../test.html', 'http://127.0.0.1/foo/test.html',
+                            SCRIPT_NAME='/foo/', PATH_INFO='/bar/baz.html')
+        self.assertRedirect('../baz/../test.html', 'http://127.0.0.1/foo/test.html',
+                            PATH_INFO='/foo/bar/')
+      
+    def test_sheme(self):
+        self.assertRedirect('./test.html', 'https://127.0.0.1/test.html',
+                            wsgi_url_scheme='https')
+        self.assertRedirect('./test.html', 'https://127.0.0.1:80/test.html',
+                            wsgi_url_scheme='https', SERVER_PORT='80')
+                            
+    def test_host(self):
+        self.assertRedirect('./test.html', 'http://example.com/test.html',
+                            HTTP_HOST='example.com')
+        self.assertRedirect('./test.html', 'http://example.com/test.html',
+                            HTTP_X_FORWARDED_HOST='example.com')
+        self.assertRedirect('./test.html', 'http://example.com/test.html',
+                            SERVER_NAME='example.com')
+        self.assertRedirect('./test.html', 'http://example.com/test.html',
+                            HTTP_HOST='example.com:80')
+        self.assertRedirect('./test.html', 'http://example.com:81/test.html',
+                            HTTP_HOST='example.com:81')
+        self.assertRedirect('./test.html', 'http://127.0.0.1:81/test.html',
+                            SERVER_PORT='81')
+        self.assertRedirect('./test.html', 'http://example.com:81/test.html',
+                            HTTP_HOST='example.com:81', SERVER_PORT='82')
+
+    def test_specialchars(self):
+        ''' The target URL is not quoted automatically. '''
+        self.assertRedirect('./te st.html',
+                            'http://example.com/a%20a/b%20b/te st.html',
+                            HTTP_HOST='example.com', SCRIPT_NAME='/a a/', PATH_INFO='/b b/')
+                            
 class TestMultipart(unittest.TestCase):
     def test_multipart(self):
         """ Environ: POST (multipart files and multible values per key) """
