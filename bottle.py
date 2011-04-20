@@ -813,7 +813,7 @@ class Request(threading.local, DictMixin):
 
     @DictProperty('environ', 'bottle.urlparts', read_only=True)
     def urlparts(self):
-        ''' Return a :cls:`urlparse.SplitResult` tuple that can be used
+        ''' Return a :class:`urlparse.SplitResult` tuple that can be used
             to reconstruct the full URL as requested by the client.
             The tuple contains: (scheme, host, path, query_string, fragment).
             The fragment is always empty because it is not visible to the server.
