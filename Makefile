@@ -61,5 +61,5 @@ clean:
 	find . -name '*~' -exec rm -f {} +
 	find . -name '._*' -exec rm -f {} +
 	find . -name '.coverage*' -exec rm -f {} +
-	rm -r build/ dist/ MANIFEST 2>/dev/null || true
+	rm -rf build/ dist/ MANIFEST 2>/dev/null || true
 
