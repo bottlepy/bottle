@@ -434,6 +434,7 @@ class Bottle(object):
                 raise TypeError('Conflict with existing mount: %s' % other)
         path_depth = prefix.count('/') + 1
         options.setdefault('method', 'ANY')
+        options.setdefault('skip', True)
         self.mounts[prefix] = app
         @self.route('/%s/:#.*#' % prefix, **options)
         def mountpoint():
