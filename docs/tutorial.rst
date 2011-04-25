@@ -570,6 +570,7 @@ The effects and APIs of plugins are manifold and depend on the specific plugin. 
 
     from bottle import route, install, template
     from bottle_sqlite import SQLitePlugin
+    
     install(SQLitePlugin(dbfile='/tmp/test.db'))
 
     @route('/show/:post_id')
@@ -611,7 +612,7 @@ You can use a name, class or instance to :func:`uninstall` a previously installe
     install(sqlite_plugin)
 
     uninstall(sqlite_plugin) # uninstall a specific plugin
-    uninstall(SQLitePlugin)  # uninstall all plugins with that type
+    uninstall(SQLitePlugin)  # uninstall all plugins of that type
     uninstall('sqlite')      # uninstall all plugins with that name
     uninstall(True)          # uninstall all plugins at once
 
@@ -652,7 +653,27 @@ You may want to explicitly disable a plugin for a number of routes. The :func:`r
 
 The ``skip`` parameter accepts a single value or a list of values. You can use a name, class or instance to identify the plugin that is to be skipped. Set ``skip=True`` to skip all plugins at once.
 
+Plugins and Sub-Applications
+--------------------------------------------------------------------------------
 
+Most plugins are specific to the application they were installed to. Consequently, they should not affect sub-applications mounted with :meth:`Bottle.mount`. Here is an example::
+
+    root = Bottle()
+    root.mount(apps.blog, '/blog')
+    
+    @root.route('/contact', template='contact')
+    def contact():
+        return {'email': 'contact@example.com'}
+    
+    root.install(plugins.WTForms())
+
+Whenever you mount an application, bottle creates a proxy-route on the main-application that relays all requests to the sub-application. Plugins are disabled for this kind of proxy-routes by default. As a result, our (fictional) `WTForms` plugin affects the ``/contact`` route, but does not affect the routes of the ``/blog`` sub-application.
+
+This is a sane default, but of cause you can change it. The following example re-activates all plugins for a specific proxy-route::
+
+    root.mount(apps.blog, '/blog', skip=None)
+
+But there is a snag: The plugin sees the whole sub-application as a single route, namely the proxy-route mentioned above. In order to affect each individual route of the sub-application, you have to install the plugin to the application explicitly.
 
 
 
