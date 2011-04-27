@@ -15,7 +15,7 @@ License: MIT (see LICENSE.txt for details)
 from __future__ import with_statement
 
 __author__ = 'Marcel Hellkamp'
-__version__ = '0.9.dev'
+__version__ = '0.10.dev'
 __license__ = 'MIT'
 
 import base64
