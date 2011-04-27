@@ -3,7 +3,6 @@ import unittest
 import sys
 import imp
 
-
 class TestImportHooks(unittest.TestCase):
     server = 'wsgiref'
 
@@ -12,7 +11,7 @@ class TestImportHooks(unittest.TestCase):
         mod.__file__ = '<virtual %s>' % name
         mod.__dict__.update(**args)
         return mod
-    
+
     def test_direkt_import(self):
         mod = self.make_module('bottle_test')
         import bottle.ext.test
@@ -27,7 +26,7 @@ class TestImportHooks(unittest.TestCase):
         mod = self.make_module('bottle_test', item='value')
         from bottle.ext.test import item
         self.assertEqual(item, 'value')
-    
+
     def test_import_fail(self):
         ''' Test a simple static page with this server adapter. '''
         def test():
