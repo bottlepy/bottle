@@ -24,6 +24,7 @@ import email.utils
 import functools
 import hmac
 import httplib
+import imp
 import itertools
 import mimetypes
 import os
@@ -1115,6 +1116,7 @@ class Response(threading.local):
 ###############################################################################
 
 
+
 class JSONPlugin(object):
     name = 'json'
 
@@ -1201,6 +1203,34 @@ class TypeFilterPlugin(object):
                     rv = filterfunc(rv)
             return rv
         return wrapper
+
+
+#: Not a plugin, but part of the plugin API. TODO: Find a better place.
+class _ImportRedirect(object):
+    def __init__(self, name, impmask):
+        ''' Create a virtual package that redirects imports (see PEP 302). '''
+        self.name = name
+        self.impmask = impmask
+        self.module = sys.modules.setdefault(name, imp.new_module(name))
+        self.module.__dict__.update({'__file__': '<virtual>', '__path__': [],
+                                    '__all__': [], '__loader__': self})
+        sys.meta_path.append(self)
+
+    def find_module(self, fullname, path=None):
+        if '.' not in fullname: return
+        packname, modname = fullname.rsplit('.', 1)
+        if packname != self.name: return
+        return self
+
+    def load_module(self, fullname):
+        if fullname in sys.modules: return sys.modules[fullname]
+        packname, modname = fullname.rsplit('.', 1)
+        realname = self.impmask % modname
+        __import__(realname)
+        module = sys.modules[fullname] = sys.modules[realname]
+        setattr(self.module, modname, module)
+        module.__loader__ = self
+        return module
 
 
 
@@ -1375,7 +1405,7 @@ def send_file(*a, **k): #BC 0.6.4
 
 def static_file(filename, root, mimetype='auto', guessmime=True, download=False):
     """ Open a file in a safe way and return :exc:`HTTPResponse` with status
-        code 200, 305, 401 or 404. Set Content-Type, Content-Encoding, 
+        code 200, 305, 401 or 404. Set Content-Type, Content-Encoding,
         Content-Length and Last-Modified header. Obey If-Modified-Since header
         and HEAD requests.
     """
@@ -1427,6 +1457,7 @@ def static_file(filename, root, mimetype='auto', guessmime=True, download=False)
 ###############################################################################
 # HTTP Utilities and MISC (TODO) ###############################################
 ###############################################################################
+
 
 def debug(mode=True):
     """ Change the debug level.
@@ -2455,3 +2486,7 @@ local = threading.local()
 # BC: 0.6.4 and needed for run()
 app = default_app = AppStack()
 app.push()
+
+#: A virtual package that redirects import statements.
+#: Example: ``import bottle.ext.sqlite`` actually imports `bottle_sqlite`.
+ext = _ImportRedirect(__name__+'.ext', 'bottle_%s').module
