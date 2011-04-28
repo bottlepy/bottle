@@ -15,7 +15,7 @@ test_names = [os.path.basename(name)[:-3] for name in test_files]
 if 'help' in sys.argv or '-h' in sys.argv:
     print
     print "Command line arguments:"
-    print 
+    print
     print "fast: Skip server adapter tests."
     print "verbose: Print tests even if they pass."
     print "coverage: Measure code coverage."

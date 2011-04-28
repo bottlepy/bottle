@@ -10,6 +10,7 @@ import wsgiref
 import wsgiref.simple_server
 import wsgiref.util
 import wsgiref.validate
+import warnings
 
 from StringIO import StringIO
 try:
@@ -27,6 +28,10 @@ def tob(data):
 def tobs(data):
     ''' Transforms bytes or unicode into a byte stream. '''
     return BytesIO(tob(data)) if BytesIO else StringIO(tob(data))
+
+def warn(message):
+    warnings.warn(message, stacklevel=2)
+
 
 class ServerTestBase(unittest.TestCase):
     def setUp(self):
@@ -67,7 +72,7 @@ class ServerTestBase(unittest.TestCase):
             response.close()
             del response
         return result
-        
+
     def postmultipart(self, path, fields, files):
         env = multipart_environ(fields, files)
         return self.urlopen(path, method='POST', env=env)
@@ -97,7 +102,7 @@ class ServerTestBase(unittest.TestCase):
         err = bottle.request.environ['wsgi.errors'].errors.read()
         if search not in err:
             self.fail('The search pattern "%s" is not included in wsgi.error: %s' % (search, err))
-        
+
 def multipart_environ(fields, files):
     boundary = str(uuid.uuid1())
     env = {'REQUEST_METHOD':'POST',
