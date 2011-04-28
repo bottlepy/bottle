@@ -1,4 +1,4 @@
-import sys, os
+import sys, os, socket
 test_root = os.path.dirname(os.path.abspath(__file__))
 os.chdir(test_root)
 sys.path.insert(0, os.path.dirname(test_root))
@@ -21,8 +21,10 @@ if __name__ == '__main__':
     port   = int(sys.argv[2])
     try:
         run(port=port, server=server, quiet=True)
+    except socket.error:
+        sys.exit(1)
     except ImportError:
-        print "Warning: Could not test %s. Import error." % server
+        sys.exit(128)
     except KeyboardInterrupt:
         pass
 
