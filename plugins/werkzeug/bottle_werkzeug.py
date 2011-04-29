@@ -32,7 +32,7 @@ Example::
 
 __autor__ = "Marcel Hellkamp"
 __version__ = '0.1'
-__licence__ = 'MIT'
+__license__ = 'MIT'
 
 import werkzeug
 from werkzeug import *
