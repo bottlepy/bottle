@@ -1,38 +1,7 @@
 #!/usr/bin/env python
 
-"""
-This plugin adds support for :class:`werkzeug.Response`, all kinds of
-:exc:`werkzeug.HTTPException` and provides a thread-local instance of
-:class:`werkzeug.Request`. It basically turns Bottle into Flask.
-
-The plugin instance doubles as a werkzeug module object, so you don't need to
-import werkzeug in your application.
-
-For werkzeug library documentation, see: http://werkzeug.pocoo.org/
-
-Example::
-
-    import bottle
-    from bottle.ext.werkzeug import WerkzeugPlugin
-
-    app = bottle.Bottle()
-    werkzeug = app.install(WerkzeugPlugin())
-    wrequest = werkzueg.request # For the lazy.
-
-    @app.route('/hello/:name')
-    def say_hello(name):
-        greet = {'en':'Hello', 'de':'Hallo', 'fr':'Bonjour'}
-        language = wrequest.accept_language.best_match(greet.keys())
-        if language:
-            return werkzeug.Response('%s %s!' % (greet[language], name))
-        else:
-            raise werkzeug.exceptions.NotAcceptable()
-
-"""
-
 import sys
 import os
-import re
 from distutils.core import setup
 
 try:
@@ -40,15 +9,22 @@ try:
 except ImportError:
     from distutils.command.build_py import build_py
 
+# This ugly hack executes the first few lines of the module file to look up some
+# common variables. We cannot just import the module because it depends on other
+# modules that might not be installed yet.
+filename = os.path.join(os.path.dirname(__file__), 'bottle_werkzeug.py')
+source = open(filename).read().split('### CUT HERE')[0]
+exec(source)
+
 setup(
     name = 'bottle-werkzeug',
-    version = '0.1',
+    version = __version__,
     url = 'http://bottlepy.org/docs/dev/plugin/werkzeug/',
-    description = 'Werkzeug integration for Bottle',
+    description = 'Werkzeug integration for Bottle.',
     long_description = __doc__,
     author = 'Marcel Hellkamp',
     author_email = 'marc@gsites.de',
-    license = 'MIT',
+    license = __license__,
     platforms = 'any',
     py_modules = [
         'bottle_werkzeug'
