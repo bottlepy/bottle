@@ -45,7 +45,7 @@ If you run this script and point your browser to ``http://localhost:8080/stream`
     Some browsers buffer a certain amount of data before they start rendering a
     page. You might need to yield more than a few bytes to see an effect in
     these browsers. Additionally, many browsers have a limit of one concurrent
-    connection per URL. If that is the case, you can use a second browser or a
+    connection per URL. If this is the case, you can use a second browser or a
     benchmark tool (e.g. `ab` or `httperf`) to measure performance.
 
 Event Callbacks
