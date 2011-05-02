@@ -21,7 +21,7 @@ Example::
     @app.route('/hello/:name')
     def say_hello(name):
         greet = {'en':'Hello', 'de':'Hallo', 'fr':'Bonjour'}
-        language = wrequest.accept_language.best_match(greet.keys())
+        language = wrequest.accept_languages.best_match(greet.keys())
         if language:
             return werkzeug.Response('%s %s!' % (greet[language], name))
         else:
@@ -45,7 +45,7 @@ class WerkzeugPlugin(object):
 
     name = 'werkzeug'
 
-    def __init_(self, request_class=werkzeug.Request, **config):
+    def __init__(self, request_class=werkzeug.Request, **config):
         self.request_factory = request_class
         self.config = config
         self.app = None
