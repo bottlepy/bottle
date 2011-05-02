@@ -480,6 +480,10 @@ class Bottle(object):
             caches. If an ID is given, only that specific route is affected. '''
         if id is None: self.ccache.clear()
         else: self.ccache.pop(id, None)
+        if DEBUG:
+            for route in self.routes:
+                if route['id'] not in self.ccache:
+                    self.ccache[route['id']] = self._build_callback(route)
 
     def close(self):
         ''' Close the application and all installed plugins. '''
@@ -584,6 +588,7 @@ class Bottle(object):
                     self.routes.append(cfg)
                     cfg['id'] = self.routes.index(cfg)
                     self.router.add(rule, verb, cfg['id'], name=name, static=static)
+                    if DEBUG: self.ccache[cfg['id']] = self._build_callback(cfg)
             return callback
 
         return decorator(callback) if callback else decorator
@@ -1196,11 +1201,11 @@ class TypeFilterPlugin(object):
         self.app = app
 
     def add(self, ftype, func):
-        if not self.filter and app: self.app.reset()
         if not isinstance(ftype, type):
             raise TypeError("Expected type object, got %s" % type(ftype))
         self.filter = [(t, f) for (t, f) in self.filter if t != ftype]
         self.filter.append((ftype, func))
+        if len(self.filter) == 1 and self.app: self.app.reset()
 
     def apply(self, callback, context):
         filter = self.filter

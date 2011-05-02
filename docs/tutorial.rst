@@ -677,9 +677,6 @@ But there is a snag: The plugin sees the whole sub-application as a single route
 
 
 
-.. _tutorial-debugging:
-
-
 Development
 ================================================================================
 
@@ -726,6 +723,7 @@ Both :func:`app` and :func:`default_app` are instance of :class:`AppStack` and i
     app = default_app.pop()
 
 
+.. _tutorial-debugging:
 
 
 Debug Mode
@@ -743,8 +741,9 @@ In this mode, Bottle is much more verbose and provides helpful debugging informa
 
 Here is an incomplete list of things that change in debug mode:
 
-* A stacktrace is added to the default error page.
-* Templates are not cached anymore.
+* The default error page shows a traceback.
+* Templates are not cached.
+* Plugins are applied immediately.
 
 Just make sure to not use the debug mode on a production server.
 
