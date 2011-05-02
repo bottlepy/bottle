@@ -411,6 +411,7 @@ class Bottle(object):
         self.typefilter = self.install(TypeFilterPlugin())
         if autojson:
             self.install(JSONPlugin())
+        self.install(TemplatePlugin())
 
     def optimize(self, *a, **ka):
         depr("Bottle.optimize() is obsolete.")
@@ -443,7 +444,7 @@ class Bottle(object):
             return app.handle(request.environ)
 
     def add_filter(self, ftype, func):
-        depr("Filters are deprecated. Replace any filters with plugins.") #0.9
+        depr("Filters are deprecated and can be replaced with plugins.") #0.9
         self.typefilter.add(ftype, func)
 
     def install(self, plugin):
@@ -475,8 +476,8 @@ class Bottle(object):
         return removed
 
     def reset(self, id=None):
-        ''' Reset all routes (re-apply plugins) and clear all caches. If an ID
-            is given, only that specific route is affected. '''
+        ''' Reset all routes (force plugins to be re-applied) and clear all
+            caches. If an ID is given, only that specific route is affected. '''
         if id is None: self.ccache.clear()
         else: self.ccache.pop(id, None)
 
@@ -487,11 +488,16 @@ class Bottle(object):
         self.stopped = True
 
     def match(self, environ):
-        """ Search for a matching route and return a (callback, urlargs) tuple.
+        """ (deprecated) Search for a matching route and return a
+            (callback, urlargs) tuple.
             The first element is the associated route callback with plugins
             applied. The second value is a dictionary with parameters extracted
             from the URL. The :class:`Router` raises :exc:`HTTPError` (404/405)
             on a non-match."""
+        depr("This method will change semantics in 0.10.")
+        return self._match(environ)
+        
+    def _match(self, environ):
         handle, args = self.router.match(environ)
         environ['route.handle'] = handle # TODO move to router?
         environ['route.url_args'] = args
@@ -562,14 +568,9 @@ class Bottle(object):
         if 'decorate' in config:
             depr("The 'decorate' parameter was renamed to 'apply'") # 0.9
             plugins += makelist(config.pop('decorate'))
-        if 'template' in config: # TODO Make plugin
-            depr("The 'template' parameter is no longer used. Add the view() "\
-                 "decorator to the 'apply' parameter instead.") # 0.9
-            tpl, tplo = config.pop('template'), config.pop('template_opts', {})
-            plugins.insert(0, view(tpl, **tplo))
         if config.pop('no_hooks', False):
             depr("The no_hooks parameter is no longer used. Add 'hooks' to the"\
-                 "list of skipped plugins instead.") # 0.9
+                 " list of skipped plugins instead.") # 0.9
             skiplist.append('hooks')
         static = config.get('static', False) # depr 0.9
 
@@ -625,18 +626,23 @@ class Bottle(object):
         depr("Call Bottle.hooks.remove() instead.") #0.9
         self.hooks.remove(name, func)
 
-    def handle(self, environ, method='GET'):
-        """ Execute the first matching route callback and return the result.
-            :exc:`HTTPResponse` exceptions are catched and returned. If :attr:`Bottle.catchall` is true, other exceptions are catched as
+    def handle(self, path, method='GET'):
+        """ (deprecated) Execute the first matching route callback and return
+            the result. :exc:`HTTPResponse` exceptions are catched and returned.
+            If :attr:`Bottle.catchall` is true, other exceptions are catched as
             well and returned as :exc:`HTTPError` instances (500).
         """
-        if isinstance(environ, str):
-            depr("Bottle.handle() takes an environ dictionary.") # v0.9
-            environ = {'PATH_INFO': environ, 'REQUEST_METHOD': method.upper()}
+        depr("This method will change semantics in 0.10. Try to avoid it.")
+        if isinstance(path, dict):
+            return self._handle(path)
+        return self._handle({'PATH_INFO': path, 'REQUEST_METHOD': method.upper()})
+        
+    def _handle(self, environ):
         if not self.serve:
+            depr("Bottle.serve will be removed in 0.10.")
             return HTTPError(503, "Server stopped")
         try:
-            callback, args = self.match(environ)
+            callback, args = self._match(environ)
             return callback(**args)
         except HTTPResponse, r:
             return r
@@ -674,7 +680,10 @@ class Bottle(object):
         # HTTPError or HTTPException (recursive, because they may wrap anything)
         if isinstance(out, HTTPError):
             out.apply(response)
-            return self._cast(self.error_handler.get(out.status, repr)(out), request, response)
+            out = self.error_handler.get(out.status, repr)(out)
+            if isinstance(out, HTTPResponse):
+                depr('Error handlers must not return :exc:`HTTPResponse`.') #0.9
+            return self._cast(out, request, response)
         if isinstance(out, HTTPResponse):
             out.apply(response)
             return self._cast(out.output, request, response)
@@ -718,7 +727,7 @@ class Bottle(object):
             environ['bottle.app'] = self
             request.bind(environ)
             response.bind()
-            out = self.handle(environ)
+            out = self._handle(environ)
             out = self._cast(out, request, response)
             # rfc2616 section 4.3
             if response.status in (100, 101, 204, 304) or request.method == 'HEAD':
@@ -1203,6 +1212,26 @@ class TypeFilterPlugin(object):
                     rv = filterfunc(rv)
             return rv
         return wrapper
+
+
+class TemplatePlugin(object):
+    ''' This plugin applies the :func:`view` decorator to all routes with a
+        `template` config parameter. If the parameter is a tuple, the second
+        element must be a dict with additional options (e.g. `template_engine`)
+        or default variables for the template. '''
+    name = 'template'
+
+    def apply(self, callback, context):
+        conf = context['config'].get('template')
+        if isinstance(conf, (tuple, list)) and len(conf) == 2:
+            return view(conf[0], **conf[1])(callback)
+        elif isinstance(conf, str) and 'template_opts' in context['config']:
+            depr('The `template_opts` parameter is deprecated.') #0.9
+            return view(conf, **context['config']['template_opts'])(callback)
+        elif isinstance(conf, str):
+            return view(conf)(callback)
+        else:
+            return callback
 
 
 #: Not a plugin, but part of the plugin API. TODO: Find a better place.
