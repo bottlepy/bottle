@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This plugin adds support for :class:`werkzeug.Response`, all kinds of
 :exc:`werkzeug.HTTPException` and provides a thread-local instance of
@@ -33,6 +32,8 @@ Example::
 __autor__ = "Marcel Hellkamp"
 __version__ = '0.1'
 __license__ = 'MIT'
+
+### CUT HERE (see setup.py)
 
 import werkzeug
 from werkzeug import *
