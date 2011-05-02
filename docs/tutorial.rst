@@ -202,16 +202,21 @@ The :func:`static_file` function is a helper to serve files in a safe and conven
 
 Be careful when specifying a relative root-path such as ``root='./static/files'``. The working directory (``./``) and the project directory are not always the same.
 
+
+.. _tutorial-errorhandling:
+
 Error Pages
 ------------------------------------------------------------------------------
 
-If anything goes wrong, Bottle displays an informative but fairly boring error page. You can override the default error pages using the :func:`error` decorator. It works similar to the :func:`route` decorator but expects an HTTP status code instead of a route::
+If anything goes wrong, Bottle displays an informative but fairly boring error page. You can override the default for a specific HTTP status code with the :func:`error` decorator::
 
   @error(404)
   def error404(error):
       return 'Nothing here, sorry'
 
-The ``error`` parameter passed to the error handler is an instance of :exc:`HTTPError`.
+From now on, `404 File not Found` errors will display a custom error page to the user. The only parameter passed to the error-handler is an instance of :exc:`HTTPError`. Apart from that, an error-handler is quite similar to a regular request callback. You can read from :data:`request`, write to :data:`response` and return any supported data-type except for :exc:`HTTPError` instances.
+
+Error handlers are used only if your application returns or raises an :exc:`HTTPError` exception (:func:`abort` does just that). Changing :attr:`Request.status` or returning :exc:`HTTPResponse` won't trigger the error handler.
 
 
 
