@@ -59,7 +59,7 @@ Start here if you want to learn how to use the bottle framework for web developm
    api
 
 
-Knowlage Base
+Knowledge Base
 ==============
 A collection of articles, guides and HOWTOs.
 
