@@ -203,7 +203,8 @@ latex_logo = "_static/logo_nav.png"
 
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'http://docs.python.org/': None}
+intersphinx_mapping = {'python': ('http://docs.python.org/', None),
+                       'werkzeug': ('http://werkzeug.pocoo.org/docs/', None)}
 
 autodoc_member_order = 'bysource'
 

@@ -1,0 +1,1 @@
+.. include:: ../../plugins/werkzeug/README.rst
