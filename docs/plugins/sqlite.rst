@@ -1,1 +1,1 @@
-.. include:: ../../plugins/sqlite/README.rst
+.. include:: ../../plugins/sqlite/README

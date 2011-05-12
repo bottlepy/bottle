@@ -1,1 +1,1 @@
-.. include:: ../../plugins/werkzeug/README.rst
+.. include:: ../../plugins/werkzeug/README
