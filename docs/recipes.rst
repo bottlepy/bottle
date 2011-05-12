@@ -7,6 +7,8 @@
 .. _paste: http://pythonpaste.org/modules/evalexception.html
 .. _pylons: http://pylonshq.com/
 .. _gevent: http://www.gevent.org/
+.. _compression: https://github.com/defnull/bottle/issues/92
+.. _GzipFilter: http://www.cherrypy.org/wiki/GzipFilter
 
 Recipes
 =============
@@ -129,3 +131,24 @@ Several "push" mechanisms like XHR multipart need the ability to write response 
 
 If you browse to ``http://localhost:8080/stream``, you should see 'START', 'MIDDLE', and 'END' show up one at a time (rather than waiting 8 seconds to see them all at once).
 
+Gzip Compression in Bottle
+--------------------------
+
+.. note::
+   For a detailed discussion, see compression_
+
+A common feature request is for Bottle to support Gzip compression, which speeds up sites by compressing static resources (like CSS and JS files) during a request.
+
+Supporting Gzip compression is not a straightforward proposition, due to a number of corner cases that crop up frequently. A proper Gzip implementation must:
+
+* Compress on the fly and be fast doing so.
+* Do not compress for browsers that don't support it.
+* Do not compress files that are compressed already (images, videos).
+* Do not compress dynamic files.
+* Support two differed compression algorithms (gzip and deflate).
+* Cache compressed files that don't change often.
+* De-validate the cache if one of the files changed anyway.
+* Make sure the cache does not get to big.
+* Do not cache small files because a disk seek would take longer than on-the-fly compression.
+
+Because of these requirements, it is the reccomendation of the Bottle project that Gzip compression is best handled by the WSGI server Bottle runs on top of. WSGI servers such as cherrypy_ provide a GzipFilter_ middleware that can be used to accomplish this.
