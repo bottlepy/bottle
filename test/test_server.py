@@ -56,14 +56,14 @@ class TestServer(unittest.TestCase):
 
     def tearDown(self):
         if self.skip: return
-        for i in range(10):
-            if self.p.poll() != None: break
+
+        if self.p.poll() == None:
             os.kill(self.p.pid, signal.SIGINT)
-            time.sleep(0.1*i)
-        for i in range(10):
-            if self.p.poll() != None: break
-            os.kill(self.p.pid, signal.SIGINT)
-            time.sleep(i)
+            time.sleep(0.5)
+        while self.p.poll() == None:
+            os.kill(self.p.pid, signal.SIGTERM)
+            time.sleep(1)
+
         for stream in (self.p.stdout, self.p.stderr):
             for line in stream:
                 if tob('warning') in line.lower():
