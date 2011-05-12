@@ -9,6 +9,7 @@
 .. _gevent: http://www.gevent.org/
 .. _compression: https://github.com/defnull/bottle/issues/92
 .. _GzipFilter: http://www.cherrypy.org/wiki/GzipFilter
+.. _cherrypy: http://www.cherrypy.org
 
 Recipes
 =============
