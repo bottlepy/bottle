@@ -2155,15 +2155,11 @@ class MakoTemplate(BaseTemplate):
         from mako.lookup import TemplateLookup
         options.update({'input_encoding':self.encoding})
         options.setdefault('format_exceptions', bool(DEBUG))
-        #TODO: This is a hack... https://github.com/defnull/bottle/issues#issue/8
-        mylookup = TemplateLookup(directories=['.']+self.lookup, **options)
+        lookup = TemplateLookup(directories=self.lookup, **options)
         if self.source:
-            self.tpl = Template(self.source, lookup=mylookup, **options)
-        else: #mako cannot guess extentions. We can, but only at top level...
-            name = self.name
-            if not os.path.splitext(name)[1]:
-                name += os.path.splitext(self.filename)[1]
-            self.tpl = mylookup.get_template(name)
+            self.tpl = Template(self.source, lookup=lookup, **options)
+        else:
+            self.tpl = Template(uri=self.name, filename=self.filename, lookup=lookup, **options)
 
     def render(self, *args, **kwargs):
         for dictarg in args: kwargs.update(dictarg)

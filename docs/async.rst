@@ -40,7 +40,13 @@ The first line is important. It causes gevent to monkey-patch most of Python's b
 
 If you run this script and point your browser to ``http://localhost:8080/stream``, you should see `START`, `MIDDLE`, and `END` show up one by one (rather than waiting 8 seconds to see them all at once). It works exactly as with normal threads, but now your server can handle thousands of concurrent requests without any problems.
 
-Just a hint: Some browsers buffer a certain amount of data before they start to render a page. You might need to yield more than a few bytes to see an effect in the browser.
+.. note::
+
+    Some browsers buffer a certain amount of data before they start rendering a
+    page. You might need to yield more than a few bytes to see an effect in
+    these browsers. Additionally, many browsers have a limit of one concurrent
+    connection per URL. If this is the case, you can use a second browser or a
+    benchmark tool (e.g. `ab` or `httperf`) to measure performance.
 
 Event Callbacks
 ---------------
