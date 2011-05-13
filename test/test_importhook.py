@@ -4,7 +4,6 @@ import sys
 import imp
 
 class TestImportHooks(unittest.TestCase):
-    server = 'wsgiref'
 
     def make_module(self, name, **args):
         mod = sys.modules.setdefault(name, imp.new_module(name))

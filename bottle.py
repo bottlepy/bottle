@@ -2186,7 +2186,7 @@ class CheetahTemplate(BaseTemplate):
         self.context.vars.update(kwargs)
         out = str(self.tpl)
         self.context.vars.clear()
-        return [out]
+        return out
 
 
 class Jinja2Template(BaseTemplate):
@@ -2207,7 +2207,7 @@ class Jinja2Template(BaseTemplate):
         for dictarg in args: kwargs.update(dictarg)
         _defaults = self.defaults.copy()
         _defaults.update(kwargs)
-        return self.tpl.render(**_defaults).encode("utf-8")
+        return self.tpl.render(**_defaults)
 
     def loader(self, name):
         fname = self.search(name, self.lookup)
