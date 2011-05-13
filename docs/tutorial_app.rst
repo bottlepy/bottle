@@ -11,7 +11,7 @@
 .. _Flup: http://trac.saddi.com/flup
 .. _Paste: http://pythonpaste.org/
 .. _Apache: http://www.apache.org
-.. _`Bottle documentation`: http://github.com/defnull/bottle/blob/master/docs/docs.md
+.. _`Bottle documentation`: http://bottlepy.org/docs/dev/tutorial.html
 .. _`mod_wsgi`: http://code.google.com/p/modwsgi/
 .. _`json`: http://www.json.org
 
