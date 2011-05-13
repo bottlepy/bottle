@@ -119,7 +119,7 @@ class DictProperty(object):
         return self
 
     def __get__(self, obj, cls):
-        if not obj: return self
+        if obj is None: return self
         key, storage = self.key, getattr(obj, self.attr)
         if key not in storage: storage[key] = self.getter(obj)
         return storage[key]
@@ -835,15 +835,14 @@ class Request(threading.local, DictMixin):
             The fragment is always empty because it is not visible to the server.
         '''
         env = self.environ
-        host = env.get('HTTP_X_FORWARDED_HOST') or env.get('HTTP_HOST', '')
         http = env.get('wsgi.url_scheme', 'http')
-        port = env.get('SERVER_PORT')
-        if ':' in host: # Overrule SERVER_POST (proxy support)
-            host, port = host.rsplit(':', 1)
-        if not host or host == '127.0.0.1':
-            host = env.get('SERVER_NAME', host)
-        if port and http+port not in ('http80', 'https443'):
-            host += ':' + port
+        host = env.get('HTTP_X_FORWARDED_HOST') or env.get('HTTP_HOST')
+        if not host:
+            # HTTP 1.1 requires a Host-header. This is for HTTP/1.0 clients.
+            host = env.get('SERVER_NAME', '127.0.0.1')
+            port = env.get('SERVER_PORT')
+            if port and port != ('80' if http == 'http' else '443'):
+                host += ':' + port
         spath = self.environ.get('SCRIPT_NAME','').rstrip('/') + '/'
         rpath = self.path.lstrip('/')
         path = urlquote(urljoin(spath, rpath))
@@ -852,6 +851,8 @@ class Request(threading.local, DictMixin):
     @property
     def url(self):
         """ Full URL as requested by the client. """
+        if not hasattr(self.urlparts, 'geturl'):
+            print repr(self), repr(self.urlparts)
         return self.urlparts.geturl()
 
     @property

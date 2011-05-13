@@ -242,6 +242,8 @@ class TestResponse(unittest.TestCase):
                    if name.title() == 'Set-Cookie']
         self.assertTrue('name=;' in cookies[0])
 
+
+
 class TestRedirect(unittest.TestCase):
    
     def assertRedirect(self, target, result, query=None, status=303, **args):
@@ -251,7 +253,6 @@ class TestRedirect(unittest.TestCase):
                 args[key.replace('_', '.', 1)] = args[key]
                 del args[key]
         env.update(args)
-        wsgiref.util.setup_testing_defaults(env)
         request.bind(env)
         try:
             bottle.redirect(target, **(query or {}))
@@ -313,8 +314,6 @@ class TestRedirect(unittest.TestCase):
                             HTTP_X_FORWARDED_HOST='example.com')
         self.assertRedirect('./test.html', 'http://example.com/test.html',
                             SERVER_NAME='example.com')
-        self.assertRedirect('./test.html', 'http://example.com/test.html',
-                            HTTP_HOST='example.com:80')
         self.assertRedirect('./test.html', 'http://example.com:81/test.html',
                             HTTP_HOST='example.com:81')
         self.assertRedirect('./test.html', 'http://127.0.0.1:81/test.html',
