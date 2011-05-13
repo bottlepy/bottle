@@ -261,7 +261,7 @@ class TestRedirect(unittest.TestCase):
             self.assertTrue(r.headers)
             self.assertEqual(result, r.headers['Location'])
                 
-    def test_root(self):
+    def test_absolute_path(self):
         self.assertRedirect('/', 'http://127.0.0.1/')
         self.assertRedirect('/test.html', 'http://127.0.0.1/test.html')
         self.assertRedirect('/test.html', 'http://127.0.0.1/test.html',
@@ -274,7 +274,7 @@ class TestRedirect(unittest.TestCase):
         self.assertRedirect('/foo/test.html', 'http://127.0.0.1/foo/test.html',
                             PATH_INFO='/some/sub/file.html')
 
-    def test_relative(self):
+    def test_relative_path(self):
         self.assertRedirect('./', 'http://127.0.0.1/')
         self.assertRedirect('./test.html', 'http://127.0.0.1/test.html')
         self.assertRedirect('./test.html', 'http://127.0.0.1/foo/test.html',
@@ -306,20 +306,30 @@ class TestRedirect(unittest.TestCase):
                             wsgi_url_scheme='https')
         self.assertRedirect('./test.html', 'https://127.0.0.1:80/test.html',
                             wsgi_url_scheme='https', SERVER_PORT='80')
-                            
-    def test_host(self):
-        self.assertRedirect('./test.html', 'http://example.com/test.html',
-                            HTTP_HOST='example.com')
-        self.assertRedirect('./test.html', 'http://example.com/test.html',
-                            HTTP_X_FORWARDED_HOST='example.com')
+
+    def test_host_http_1_0(self):
+        # No HTTP_HOST, just SERVER_NAME and SERVER_PORT.
         self.assertRedirect('./test.html', 'http://example.com/test.html',
                             SERVER_NAME='example.com')
-        self.assertRedirect('./test.html', 'http://example.com:81/test.html',
-                            HTTP_HOST='example.com:81')
         self.assertRedirect('./test.html', 'http://127.0.0.1:81/test.html',
                             SERVER_PORT='81')
+
+    def test_host_http_1_1(self):
+        self.assertRedirect('./test.html', 'http://example.com/test.html',
+                            HTTP_HOST='example.com')
         self.assertRedirect('./test.html', 'http://example.com:81/test.html',
-                            HTTP_HOST='example.com:81', SERVER_PORT='82')
+                            HTTP_HOST='example.com:81')
+        # Trust HTTP_HOST over SERVER_NAME and PORT.
+        self.assertRedirect('./test.html', 'http://example.com:81/test.html',
+                            HTTP_HOST='example.com:81', SERVER_NAME='foobar')
+        self.assertRedirect('./test.html', 'http://example.com:81/test.html',
+                            HTTP_HOST='example.com:81', SERVER_PORT='80')
+
+    def test_host_http_proxy(self):
+        # Trust proxy headers over original header.
+        self.assertRedirect('./test.html', 'http://example.com/test.html',
+                            HTTP_X_FORWARDED_HOST='example.com',
+                            HTTP_HOST='127.0.0.1')
 
     def test_specialchars(self):
         ''' The target URL is not quoted automatically. '''
