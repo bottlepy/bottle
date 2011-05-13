@@ -254,11 +254,8 @@ class Router(object):
         self.static = {}  # Cache for static routes: {path: {method: target}}
         self.dynamic = [] # Cache for dynamic routes. See _compile()
 
-    def add(self, rule, method, target, name=None, static=False):
+    def add(self, rule, method, target, name=None):
         ''' Add a new route or replace the target for an existing route. '''
-        if static:
-            depr("Use a backslash to escape ':' in routes.") # 0.9
-            rule = rule.replace(':','\\:')
 
         if rule in self.routes:
             self.routes[rule][method.upper()] = target
@@ -408,13 +405,9 @@ class Bottle(object):
         self.serve = True
         # Default plugins
         self.hooks = self.install(HooksPlugin())
-        self.typefilter = self.install(TypeFilterPlugin())
         if autojson:
             self.install(JSONPlugin())
         self.install(TemplatePlugin())
-
-    def optimize(self, *a, **ka):
-        depr("Bottle.optimize() is obsolete.")
 
     def mount(self, app, prefix, **options):
         ''' Mount an application to a specific URL prefix. The prefix is added
@@ -442,10 +435,6 @@ class Bottle(object):
         def mountpoint():
             request.path_shift(path_depth)
             return app.handle(request.environ)
-
-    def add_filter(self, ftype, func):
-        depr("Filters are deprecated and can be replaced with plugins.") #0.9
-        self.typefilter.add(ftype, func)
 
     def install(self, plugin):
         ''' Add a plugin to the list of plugins and prepare it for beeing
@@ -569,14 +558,6 @@ class Bottle(object):
 
         plugins = makelist(apply)
         skiplist = makelist(skip)
-        if 'decorate' in config:
-            depr("The 'decorate' parameter was renamed to 'apply'") # 0.9
-            plugins += makelist(config.pop('decorate'))
-        if config.pop('no_hooks', False):
-            depr("The no_hooks parameter is no longer used. Add 'hooks' to the"\
-                 " list of skipped plugins instead.") # 0.9
-            skiplist.append('hooks')
-        static = config.get('static', False) # depr 0.9
 
         def decorator(callback):
             for rule in makelist(path) or yieldroutes(callback):
@@ -587,7 +568,7 @@ class Bottle(object):
                                apply=plugins, skip=skiplist)
                     self.routes.append(cfg)
                     cfg['id'] = self.routes.index(cfg)
-                    self.router.add(rule, verb, cfg['id'], name=name, static=static)
+                    self.router.add(rule, verb, cfg['id'], name=name)
                     if DEBUG: self.ccache[cfg['id']] = self._build_callback(cfg)
             return callback
 
@@ -622,14 +603,6 @@ class Bottle(object):
             self.hooks.add(name, func)
             return func
         return wrapper
-
-    def add_hook(self, name, func):
-        depr("Call Bottle.hooks.add() instead.") #0.9
-        self.hooks.add(name, func)
-
-    def remove_hook(self, name, func):
-        depr("Call Bottle.hooks.remove() instead.") #0.9
-        self.hooks.remove(name, func)
 
     def handle(self, path, method='GET'):
         """ (deprecated) Execute the first matching route callback and return
@@ -683,6 +656,7 @@ class Bottle(object):
             response.headers['Content-Length'] = str(len(out))
             return [out]
         # HTTPError or HTTPException (recursive, because they may wrap anything)
+        # TODO: Handle these explicitly in handle() or make them iterable.
         if isinstance(out, HTTPError):
             out.apply(response)
             out = self.error_handler.get(out.status, repr)(out)
@@ -790,11 +764,6 @@ class Request(threading.local, DictMixin):
         self.path = '/' + environ.get('PATH_INFO', '/').lstrip('/')
         self.method = environ.get('REQUEST_METHOD', 'GET').upper()
 
-    @property
-    def _environ(self):
-        depr("Request._environ renamed to Request.environ")
-        return self.environ
-
     def copy(self):
         ''' Returns a copy of self '''
         return Request(self.environ.copy())
@@ -869,11 +838,6 @@ class Request(threading.local, DictMixin):
     def content_length(self):
         """ Content-Length header as an integer, -1 if not specified """
         return int(self.environ.get('CONTENT_LENGTH', '') or -1)
-
-    @property
-    def header(self):
-        depr("The Request.header property was renamed to Request.headers")
-        return self.headers
 
     @DictProperty('environ', 'bottle.headers', read_only=True)
     def headers(self):
@@ -1022,11 +986,6 @@ class Response(threading.local):
         self.status = 200
         self.headers = HeaderDict()
         self.content_type = 'text/html; charset=UTF-8'
-
-    @property
-    def header(self):
-        depr("Response.header renamed to Response.headers")
-        return self.headers
 
     def copy(self):
         ''' Returns a copy of self. '''
@@ -1415,12 +1374,6 @@ class WSGIFileWrapper(object):
 ###############################################################################
 
 
-def dict2json(d):
-    depr('JSONPlugin is the preferred way to return JSON.') #0.9
-    response.content_type = 'application/json'
-    return json_dumps(d)
-
-
 def abort(code=500, text='Unknown Error: Application stopped.'):
     """ Aborts execution and causes a HTTP error. """
     raise HTTPError(code, text)
@@ -1432,13 +1385,7 @@ def redirect(url, code=303):
     raise HTTPResponse("", status=code, header=dict(Location=location))
 
 
-def send_file(*a, **k): #BC 0.6.4
-    """ Raises the output of static_file(). (deprecated) """
-    depr("Use 'raise static_file()' instead of 'send_file()'.")
-    raise static_file(*a, **k)
-
-
-def static_file(filename, root, mimetype='auto', guessmime=True, download=False):
+def static_file(filename, root, mimetype='auto', download=False):
     """ Open a file in a safe way and return :exc:`HTTPResponse` with status
         code 200, 305, 401 or 404. Set Content-Type, Content-Encoding,
         Content-Length and Last-Modified header. Obey If-Modified-Since header
@@ -1455,9 +1402,6 @@ def static_file(filename, root, mimetype='auto', guessmime=True, download=False)
     if not os.access(filename, os.R_OK):
         return HTTPError(403, "You do not have permission to access this file.")
 
-    if not guessmime: #0.9
-       if mimetype == 'auto': mimetype = 'text/plain'
-       depr("To disable mime-type guessing, specify a type explicitly.")
     if mimetype == 'auto':
         mimetype, encoding = mimetypes.guess_type(filename)
         if mimetype: header['Content-Type'] = mimetype
@@ -1651,11 +1595,6 @@ for name in '''route get post put delete error mount
     globals()[name] = make_default_app_wrapper(name)
 url = make_default_app_wrapper('get_url')
 del name
-
-
-def default():
-    depr("The default() decorator is deprecated. Use @error(404) instead.")
-    return error(404)
 
 
 

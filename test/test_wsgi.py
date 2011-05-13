@@ -194,19 +194,19 @@ class TestRouteDecorator(ServerTestBase):
         self.assertBody('ok', '/test', method='POST')
         self.assertStatus(405, '/test', method='PUT')
 
-    def test_decorate(self):
+    def test_apply(self):
         def revdec(func):
             def wrapper(*a, **ka):
                 return reversed(func(*a, **ka))
             return wrapper
 
         @bottle.route('/nodec')
-        @bottle.route('/dec', decorate=revdec)
+        @bottle.route('/dec', apply=revdec)
         def test(): return '1', '2'
         self.assertBody('21', '/dec')
         self.assertBody('12', '/nodec')
 
-    def test_decorate_list(self):
+    def test_apply_list(self):
         def revdec(func):
             def wrapper(*a, **ka):
                 return reversed(func(*a, **ka))
@@ -216,8 +216,8 @@ class TestRouteDecorator(ServerTestBase):
                 return ''.join(func(*a, **ka)).title()
             return wrapper
 
-        @bottle.route('/revtitle', decorate=[revdec, titledec])
-        @bottle.route('/titlerev', decorate=[titledec, revdec])
+        @bottle.route('/revtitle', apply=[revdec, titledec])
+        @bottle.route('/titlerev', apply=[titledec, revdec])
         def test(): return 'a', 'b', 'c'
         self.assertBody('cbA', '/revtitle')
         self.assertBody('Cba', '/titlerev')
@@ -235,14 +235,6 @@ class TestRouteDecorator(ServerTestBase):
         self.assertBody('before', '/test')
         self.assertHeader('X-Hook', 'after', '/test')
 
-    def test_no_hooks(self):
-        @bottle.route(no_hooks=True)
-        def test():
-            return 'nohooks'
-        bottle.hook('before_request')(lambda: 1/0)
-        bottle.hook('after_request')(lambda: 1/0)
-        self.assertBody('nohooks', '/test')
-
     def test_template(self):
         @bottle.route(template='test {{a}} {{b}}')
         def test(): return dict(a=5, b=6)
@@ -252,11 +244,6 @@ class TestRouteDecorator(ServerTestBase):
         @bottle.route(template='test {{a}} {{b}}', template_opts={'b': 6})
         def test(): return dict(a=5)
         self.assertBody('test 5 6', '/test')
-
-    def test_static(self):
-        @bottle.route('/:foo', static=True)
-        def test(): return 'ok'
-        self.assertBody('ok', '/:foo')
 
     def test_name(self):
         @bottle.route(name='foo')

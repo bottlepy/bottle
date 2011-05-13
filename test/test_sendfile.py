@@ -1,5 +1,5 @@
 import unittest
-from bottle import send_file, static_file, HTTPError, HTTPResponse, request, response, parse_date, Bottle
+from bottle import static_file, HTTPError, HTTPResponse, request, response, parse_date, Bottle
 import wsgiref.util
 import os
 import os.path
@@ -62,8 +62,6 @@ class TestSendFile(unittest.TestCase):
         self.assertTrue(f.headers['Content-Type'] in ('application/x-python-code', 'text/x-python'))
         f = static_file(os.path.basename(__file__), root='./', mimetype='some/type')
         self.assertEqual('some/type', f.headers['Content-Type'])
-        f = static_file(os.path.basename(__file__), root='./', guessmime=False)
-        self.assertEqual('text/plain', f.headers['Content-Type'])
 
     def test_ims(self):
         """ SendFile: If-Modified-Since"""

@@ -78,8 +78,8 @@ class TestRequest(unittest.TestCase):
         request.bind(e)
         request['HTTP_SOME_OTHER_HEADER'] = 'some other value'
         self.assertTrue('Some-Header' in request.headers)
-        self.assertTrue(request.header['Some-Header'] == 'some value')
-        self.assertTrue(request.header['Some-Other-Header'] == 'some other value')
+        self.assertTrue(request.headers['Some-Header'] == 'some value')
+        self.assertTrue(request.headers['Some-Other-Header'] == 'some other value')
     
     def test_header_access_special(self):
         e = {}
@@ -87,8 +87,8 @@ class TestRequest(unittest.TestCase):
         request.bind(e)
         request['CONTENT_TYPE'] = 'test'
         request['CONTENT_LENGTH'] = '123'
-        self.assertEqual(request.header['Content-Type'], 'test')
-        self.assertEqual(request.header['Content-Length'], '123')
+        self.assertEqual(request.headers['Content-Type'], 'test')
+        self.assertEqual(request.headers['Content-Length'], '123')
 
     def test_cookie(self):
         """ Environ: COOKIES """ 
