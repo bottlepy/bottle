@@ -851,8 +851,6 @@ class Request(threading.local, DictMixin):
     @property
     def url(self):
         """ Full URL as requested by the client. """
-        if not hasattr(self.urlparts, 'geturl'):
-            print repr(self), repr(self.urlparts)
         return self.urlparts.geturl()
 
     @property
