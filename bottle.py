@@ -55,13 +55,14 @@ try: import cPickle as pickle
 except ImportError: # pragma: no cover
     import pickle
 
-try: from json import dumps as json_dumps
+try: from json import dumps as json_dumps, loads as json_loads
 except ImportError: # pragma: no cover
-    try: from simplejson import dumps as json_dumps
+    try: from simplejson import dumps as json_dumps, loads as json_loads
     except ImportError: # pragma: no cover
-        try: from django.utils.simplejson import dumps as json_dumps
+        try: from django.utils.simplejson import dumps as json_dumps, loads as json_loads
         except ImportError: # pragma: no cover
             json_dumps = None
+            json_loads = None
 
 NCTextIOWrapper = None
 if sys.version_info >= (3,0,0): # pragma: no cover
@@ -1084,7 +1085,7 @@ class Response(threading.local):
 
 
 ###############################################################################
-# Plugins ######################################################################
+# Plugins #####################################################################
 ###############################################################################
 
 
@@ -1092,13 +1093,22 @@ class Response(threading.local):
 class JSONPlugin(object):
     name = 'json'
 
-    def __init__(self, json_dumps=json_dumps):
+    def __init__(self, json_dumps=json_dumps, json_loads=json_loads):
         self.json_dumps = json_dumps
+        self.json_loads = json_loads
 
     def apply(self, callback, context):
         dumps = self.json_dumps
         if not dumps: return callback
+        
         def wrapper(*a, **ka):
+            # If autojson, automatically parse the request.body and attempt to 
+            # convert it into json
+            try:
+                request.json_body = json_loads(request.body.getvalue())
+            except:
+                pass
+            
             rv = callback(*a, **ka)
             if isinstance(rv, dict):
                 response.content_type = 'application/json'
