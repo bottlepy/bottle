@@ -12,7 +12,7 @@ class FBAuthTest(unittest.TestCase):
 
         @self.app.get('/')
         def test(fb_user):
-            self.assertEqual(fb_user, Nonecd)
+            self.assertEqual(fb_user, None)
         self.app({'PATH_INFO':'/', 'REQUEST_METHOD':'GET'}, lambda x, y: None)
 
     def test_without_keyword(self):
