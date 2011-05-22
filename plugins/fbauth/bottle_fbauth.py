@@ -34,20 +34,24 @@ class FBAuthPlugin(object):
             cookie into a user object of your choosing. If None is specified,
             the cookie is returned directly to the @route (default is None)
             :param fail_without_user: If True, the plugin will call 
-            abort(401, ...) automatically if no user is logged in (default)
+            abort(401, ...) automatically if no user is logged in (default
             is False)
+            :param user_override: For testing purposes, you can provide a fixed 
+            user object to return instead of doing authentication (default is 
+            None)
             :param keyword: fb_user is the default keyword, but an alternative
             can be specified.
     '''
 
     name = 'fbauth'
 
-    def __init__(self, fb_app_id, fb_app_secret, user_resolver=None, fail_without_user=False, keyword='fb_user'):
+    def __init__(self, fb_app_id, fb_app_secret, user_resolver=None, fail_without_user=False, user_override=None, keyword='fb_user'):
          self.app_id = fb_app_id
          self.app_secret = fb_app_secret
-         self.keyword = keyword
          self.resolver = user_resolver
          self.fail_without_user = fail_without_user
+         self.user_override = user_override
+         self.keyword = keyword
          
     def setup(self, app):
         ''' Make sure that other installed plugins don't affect the same
@@ -70,17 +74,22 @@ class FBAuthPlugin(object):
             return callback
 
         def wrapper(*args, **kwargs):
-            fb_user = facebook.get_user_from_cookie(request.COOKIES, 
-                self.app_id, self.app_secret)
             
-            # If fail fast is set, abort the call immediately
-            if self.fail_without_user and not fb_user:
-                abort(401, 'Facebook user not logged in')
+            fb_user = None
+            if self.user_override:
+                fb_user = self.user_override
+            else:
+                fb_user = facebook.get_user_from_cookie(request.COOKIES, 
+                    self.app_id, self.app_secret)
             
-            # If developer has set a custom user resolver, use it 
-            # to resolve the cookie to a real instance
-            if self.resolver and fb_user:
-                fb_user = self.resolver(fb_user)
+                # If fail fast is set, abort the call immediately
+                if self.fail_without_user and not fb_user:
+                    abort(401, 'Facebook user not logged in')
+            
+                # If developer has set a custom user resolver, use it 
+                # to resolve the cookie to a real instance
+                if self.resolver and fb_user:
+                    fb_user = self.resolver(fb_user)
                 
             kwargs[keyword] = fb_user
             
