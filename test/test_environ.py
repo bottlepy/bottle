@@ -222,6 +222,16 @@ class TestRequest(unittest.TestCase):
         self.assertEqual(42, len(request.body.readline()))
         self.assertEqual(42, len(request.body.readline(1024)))
 
+    def test_isajax(self):
+        e = {}
+        wsgiref.util.setup_testing_defaults(e)
+        request.bind(e)
+        self.assertFalse(request.is_ajax)
+        e['HTTP_X_REQUESTED_WITH'] = 'XMLHttpRequest'
+        self.assertTrue(request.is_ajax)
+        
+        
+        
 class TestResponse(unittest.TestCase):
     def setUp(self):
         response.bind()
