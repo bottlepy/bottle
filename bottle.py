@@ -968,7 +968,7 @@ class Request(threading.local, DictMixin):
     def is_ajax(self):
         ''' True if the request was generated using XMLHttpRequest '''
         #TODO: write tests
-        return self.header.get('X-Requested-With') == 'XMLHttpRequest'
+        return self.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
 
 class Response(threading.local):
