@@ -1382,9 +1382,12 @@ class WSGIFileWrapper(object):
 ###############################################################################
 
 
-def abort(code=500, text='Unknown Error: Application stopped.'):
+def abort(code=500, text='Unknown Error: Application stopped.', exception=None):
     """ Aborts execution and causes a HTTP error. """
-    raise HTTPError(code, text)
+    traceback = None
+    if exception: traceback = format_exc(10)
+    
+    raise HTTPError(code, text, exception, traceback)
 
 
 def redirect(url, code=303):
