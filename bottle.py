@@ -1287,6 +1287,10 @@ class HeaderDict(MultiDict):
     def getall(self, key): return self.dict.get(_hkey(key)) or []
     def get(self, key, default=None, index=-1):
         return super(HeaderDict, self).get(_hkey(key), default, index)
+    def filter(self, names):
+        for name in map(_hkey, names):
+            if name in self.dict:
+                del self.dict[name]
 
 
 
