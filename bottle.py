@@ -996,21 +996,36 @@ class Response(threading.local):
     headers = None
 
     def __init__(self):
-        self.bind()
+        self._cookies = None
+        self._code = 200
+        self._status = '200 OK'
+        self.headers = HeaderDict()
+        self.headers['Content-Type'] = 'text/html; charset=UTF-8'
+
+    def set_code(self, code):
+        self._code, self._status = int(code), '%d %s' % (code, HTTP_CODES[code])
+    code = property(lambda self: self._code or 200, set_code, None,
+        ''' The response status code as an integer (default: 200). ''')
+    del set_code
+
+    def set_status(self, value):
+        self._code, self._status = int(value[:3]), value
+    status = property(lambda self: self._status or '200 OK', set_status, None,
+        ''' The response status line as a string (default: '200 OK'). ''')
+    del set_status
+
+    # Make stuff backwards compatible...
+    status, status_line, status_code = code, status, code
 
     def bind(self):
-        """ Resets the Response object to its factory defaults. """
-        self._COOKIES = None
-        self.status = 200
-        self.headers = HeaderDict()
-        self.content_type = 'text/html; charset=UTF-8'
+        ''' Reset to factory defaults. '''
+        self.__init__()
 
     def copy(self):
         ''' Returns a copy of self. '''
         copy = Response()
         copy.status = self.status
         copy.headers = self.headers.copy()
-        copy.content_type = self.content_type
         return copy
 
     def wsgiheader(self):
