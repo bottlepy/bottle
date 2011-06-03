@@ -61,7 +61,8 @@ except ImportError: # pragma: no cover
     except ImportError: # pragma: no cover
         try: from django.utils.simplejson import dumps as json_dumps
         except ImportError: # pragma: no cover
-            json_dumps = None
+            def json_dumps(data):
+                raise ImportError("JSON support requires Python 2.6 or simplejson.")
 
 py3k = sys.version_info >= (3,0,0)
 NCTextIOWrapper = None
