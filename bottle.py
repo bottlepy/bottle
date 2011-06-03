@@ -63,8 +63,10 @@ except ImportError: # pragma: no cover
         except ImportError: # pragma: no cover
             json_dumps = None
 
+py3k = sys.version_info >= (3,0,0)
 NCTextIOWrapper = None
-if sys.version_info >= (3,0,0): # pragma: no cover
+
+if py3k: # pragma: no cover
     # See Request.POST
     from io import BytesIO
     def touni(x, enc='utf8', err='strict'):
@@ -88,7 +90,7 @@ def tob(data, enc='utf8'):
     return data.encode(enc) if isinstance(data, unicode) else bytes(data)
 
 # Convert strings and unicode to native strings
-if sys.version_info >= (3,0,0):
+if  py3k:
     tonat = touni
 else:
     tonat = tob
@@ -1004,18 +1006,19 @@ class Response(threading.local):
 
     def set_code(self, code):
         self._code, self._status = int(code), '%d %s' % (code, HTTP_CODES[code])
-    code = property(lambda self: self._code or 200, set_code, None,
+    status_code = property(lambda self: self._code or 200, set_code, None,
         ''' The response status code as an integer (default: 200). ''')
     del set_code
 
     def set_status(self, value):
         self._code, self._status = int(value[:3]), value
-    status = property(lambda self: self._status or '200 OK', set_status, None,
+    status_line = property(lambda self: self._status or '200 OK', set_status, None,
         ''' The response status line as a string (default: '200 OK'). ''')
     del set_status
 
     # Make stuff backwards compatible...
-    status, status_line, status_code = code, status, code
+    status = status_code # will change to status_line in 0.11
+    #code   = status_code # Added in 0.11
 
     def bind(self):
         ''' Reset to factory defaults. '''
@@ -1043,7 +1046,7 @@ class Response(threading.local):
             self.headers.filter(('allow', 'content-encoding', 'content-language',
                       'content-length', 'content-md5', 'content-range',
                       'content-type', 'last-modified')) # + c-location, expires?
-        return list(self.headers.iteritems())
+        return list(self.headers.iterallitems())
     headerlist = property(wsgiheader)
 
     content_type = HeaderProperty('Content-Type')
@@ -1273,7 +1276,10 @@ class _ImportRedirect(object):
 
 
 class MultiDict(DictMixin):
-    """ A dict that stores multiple values per key. """
+    """ This dict stores multiple values per key, but behaves exactly like a normal
+        dict in that it returns only the newest value for any given key. There are
+        special methods available to access the full list of values.
+    """
 
     def __init__(self, *a, **k):
         self.dict = dict((k, [v]) for k, v in dict(*a, **k).iteritems())
@@ -1283,27 +1289,38 @@ class MultiDict(DictMixin):
     def __delitem__(self, key): del self.dict[key]
     def __getitem__(self, key): return self.dict[key][-1]
     def __setitem__(self, key, value): self.append(key, value)
-    def keys(self): return self.dict.keys()
-    def items(self): return list(self.iteritems())
-
-    def iteritems(self):
-        ''' Iterate over all (key, value) tuples for each value of each key.'''
+    def iterkeys(self): return self.dict.iterkeys()
+    def itervalues(self): return (v[-1] for v in self.dict.itervalues())
+    def iteritems(self): return ((k, v[-1]) for (k, v) in self.dict.iteritems())
+    def iterallitems(self):
         for key, values in self.dict.iteritems():
             for value in values:
                 yield key, value
 
-    def iterallitems(self):
-        depr('Iterating over all items is now the default for MultiDict.iteritems()')
-        return self.iteritems()
-
-    def append(self, key, value): self.dict.setdefault(key, []).append(value)
-    def replace(self, key, value): self.dict[key] = [value]
-    def getall(self, key): return self.dict.get(key) or []
+    # 2to3 is not able to fix these automatically.
+    keys     = iterkeys     if py3k else lambda self: list(self.iterkeys())
+    values   = itervalues   if py3k else lambda self: list(self.itervalues())
+    items    = iteritems    if py3k else lambda self: list(self.iteritems())
+    allitems = iterallitems if py3k else lambda self: list(self.iterallitems())
 
     def get(self, key, default=None, index=-1):
+        ''' Return the current value for a key. The third `index` parameter
+            defaults to -1 (last value). '''
         if key in self.dict or default is KeyError:
             return self.dict[key][index]
         return default
+
+    def append(self, key, value):
+        ''' Add a new value to the list of values for this key. '''
+        self.dict.setdefault(key, []).append(value)
+
+    def replace(self, key, value):
+        ''' Replace the list of values with a single value. '''
+        self.dict[key] = [value]
+
+    def getall(self, key):
+        ''' Return a (possibly empty) list of values for a key. '''
+        return self.dict.get(key) or []
 
 
 def _hkey(s):
@@ -1324,7 +1341,7 @@ class HeaderDict(MultiDict):
     def replace(self, key, value): self.dict[_hkey(key)] = [str(value)]
     def getall(self, key): return self.dict.get(_hkey(key)) or []
     def get(self, key, default=None, index=-1):
-        return super(HeaderDict, self).get(_hkey(key), default, index)
+        return MultiDict.get(self, _hkey(key), default, index)
     def filter(self, names):
         for name in map(_hkey, names):
             if name in self.dict:
