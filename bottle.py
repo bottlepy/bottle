@@ -148,7 +148,23 @@ class lazy_attribute(object): # Does not need configuration -> lower-case name
         setattr(cls, self.__name__, value)
         return value
 
+class HeaderProperty(object):
+    def __init__(self, name, reader=None, writer=str, default=''):
+        self.name, self.reader, self.writer, self.default = name, reader, writer, default
+        self.__doc__ = 'Current value of the %r header.' % name.title()
 
+    def __get__(self, obj, cls):
+        if obj is None: return self
+        value = obj.headers.get(self.name) or self.default
+        return self.reader(value) if self.reader else value
+
+    def __set__(self, obj, value):
+        if self.writer: value = self.writer(value)
+        obj.headers[self.name] = value
+
+    def __delete__(self, obj):
+        if self.name in obj.headers:
+            del obj.headers[self.name]
 
 
 
@@ -975,6 +991,10 @@ class Response(threading.local):
     """ Represents a single HTTP response using thread-local attributes.
     """
 
+    # This attribute is only here to support sphinx autodoc. It is set in __init__, too.
+    #: An instance of :class:`HeaderDict` (case insensitive).
+    headers = None
+
     def __init__(self):
         self.bind()
 
@@ -1009,6 +1029,9 @@ class Response(threading.local):
                      del self.headers[h]
         return list(self.headers.iterallitems())
     headerlist = property(wsgiheader)
+
+    content_type = HeaderProperty('Content-Type')
+    content_length = HeaderProperty('Content-Length', reader=int)
 
     @property
     def charset(self):
@@ -1067,16 +1090,6 @@ class Response(threading.local):
         kwargs['max_age'] = -1
         kwargs['expires'] = 0
         self.set_cookie(key, '', **kwargs)
-
-    def get_content_type(self):
-        """ Current 'Content-Type' header. """
-        return self.headers['Content-Type']
-
-    def set_content_type(self, value):
-        self.headers['Content-Type'] = value
-
-    content_type = property(get_content_type, set_content_type, None,
-                            get_content_type.__doc__)
 
 
 
