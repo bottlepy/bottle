@@ -1015,19 +1015,20 @@ class Response(threading.local):
 
     def wsgiheader(self):
         ''' Returns a wsgi conform list of header/value pairs. '''
-        for c in self.COOKIES.values():
-            if c.OutputString() not in self.headers.getall('Set-Cookie'):
+        # Save cookies as headers. This is delayed to prevent dublicates.
+        if self._cookies:
+            for c in self._cookies.values():
                 self.headers.append('Set-Cookie', c.OutputString())
+            self._cookies.clear()
+        
         # rfc2616 section 10.2.3, 10.3.5
-        if self.status in (204, 304) and 'content-type' in self.headers:
-            del self.headers['content-type']
+        if self.status == 204:
+            self.headers.filter(('content-type',))
         if self.status == 304:
-            for h in ('allow', 'content-encoding', 'content-language',
+            self.headers.filter(('allow', 'content-encoding', 'content-language',
                       'content-length', 'content-md5', 'content-range',
-                      'content-type', 'last-modified'): # + c-location, expires?
-                if h in self.headers:
-                     del self.headers[h]
-        return list(self.headers.iterallitems())
+                      'content-type', 'last-modified')) # + c-location, expires?
+        return list(self.headers.iteritems())
     headerlist = property(wsgiheader)
 
     content_type = HeaderProperty('Content-Type')
@@ -1035,58 +1036,67 @@ class Response(threading.local):
 
     @property
     def charset(self):
-        """ Return the charset specified in the content-type header.
-
-            This defaults to `UTF-8`.
-        """
+        """ Return the charset specified in the content-type header (default: utf8). """
         if 'charset=' in self.content_type:
             return self.content_type.split('charset=')[-1].split(';')[0].strip()
         return 'UTF-8'
 
     @property
     def COOKIES(self):
-        """ A dict-like SimpleCookie instance. Use :meth:`set_cookie` instead. """
-        if not self._COOKIES:
-            self._COOKIES = SimpleCookie()
-        return self._COOKIES
+        """ A dict-like SimpleCookie instance. This should not be used directly.
+            See :meth:`set_cookie`. """
+        depr('The COOKIES dict is deprecated. Use `set_cookie()` instead.') # 0.10
+        if not self._cookies:
+            self._cookies = SimpleCookie()
+        return self._cookies
 
     def set_cookie(self, key, value, secret=None, **kargs):
-        ''' Add a cookie or overwrite an old one. If the `secret` parameter is
+        ''' Create a new cookie or replace an old one. If the `secret` parameter is
             set, create a `Signed Cookie` (described below).
 
             :param key: the name of the cookie.
             :param value: the value of the cookie.
-            :param secret: required for signed cookies. (default: None)
+            :param secret: a signature key required for signed cookies. (default: None)
+            
+            Additionally, this method accepts all RFC 2109 attributes that are supported
+            by :class:`cookie.Morsel`, including:
+            
             :param max_age: maximum age in seconds. (default: None)
-            :param expires: a datetime object or UNIX timestamp. (defaut: None)
+            :param expires: a datetime object or UNIX timestamp. (default: None)
             :param domain: the domain that is allowed to read the cookie.
               (default: current domain)
-            :param path: limits the cookie to a given path (default: /)
+            :param path: limits the cookie to a given path (default: ``/``)
+            :param secure: limit the cookie to HTTPS connections (default: off).
+            :param httponly: prevents client-side javascript to read this cookie
+              (default: off, requires Python 2.6 or newer).
 
-            If neither `expires` nor `max_age` are set (default), the cookie
-            lasts only as long as the browser is not closed.
+            If neither `expires` nor `max_age` is set (default), the cookie will expire
+            at the end of the browser session (as soon as the browser window is closed).
 
-            Signed cookies may store any pickle-able object and are
-            cryptographically signed to prevent manipulation. Keep in mind that
-            cookies are limited to 4kb in most browsers.
+            Signed cookies may store any pickle-able object and are cryptographically
+            signed to prevent manipulation. Keep in mind that cookies are limited to 4kb
+            in most browsers.
 
             Warning: Signed cookies are not encrypted (the client can still see
             the content) and not copy-protected (the client can restore an old
             cookie). The main intention is to make pickling and unpickling
             save, not to store secret information at client side.
         '''
+        if not self._cookies:
+            self._cookies = SimpleCookie()
+
         if secret:
             value = touni(cookie_encode((key, value), secret))
         elif not isinstance(value, basestring):
-            raise TypeError('Secret missing for non-string Cookie.')
+            raise TypeError('Secret key missing for non-string Cookie.')
 
-        self.COOKIES[key] = value
+        self._cookies[key] = value
         for k, v in kargs.iteritems():
-            self.COOKIES[key][k.replace('_', '-')] = v
+            self._cookies[key][k.replace('_', '-')] = v
 
     def delete_cookie(self, key, **kwargs):
         ''' Delete a cookie. Be sure to use the same `domain` and `path`
-            parameters as used to create the cookie. '''
+            settings as used to create the cookie. '''
         kwargs['max_age'] = -1
         kwargs['expires'] = 0
         self.set_cookie(key, '', **kwargs)
