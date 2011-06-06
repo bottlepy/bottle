@@ -10,8 +10,12 @@ API Reference
 This is a mostly auto-generated API. If you are new to bottle, you might find the
 narrative :doc:`tutorial` more helpful. 
 
+
+
+
 Module Contents
 =====================================
+
 The module defines several functions, constants, and an exception.
 
 .. autofunction:: debug
@@ -30,7 +34,6 @@ The module defines several functions, constants, and an exception.
               default_app()
 
     Return the current :ref:`default-app`. Actually, these are callable instances of :class:`AppStack` and implement a stack-like API.
-
 
 
 Routing 
@@ -108,11 +111,13 @@ Exceptions
 
 
 
+
 The :class:`Bottle` Class
 =========================
 
 .. autoclass:: Bottle
    :members:
+
 
 
 
@@ -126,6 +131,13 @@ You usually don't instantiate :class:`Request` yourself, but use the module-leve
 .. autoclass:: Request
    :members:
 
+.. autoclass:: LocalRequest
+   :members:
+
+.. autoclass:: BaseRequest
+   :members:
+
+
 
 
 The :class:`Response` Object
@@ -135,6 +147,13 @@ The :class:`Response` class stores the HTTP status code as well as headers and c
 
 .. autoclass:: Response
    :members:
+
+.. autoclass:: LocalResponse
+   :members:
+
+.. autoclass:: BaseResponse
+   :members:
+
 
 
 

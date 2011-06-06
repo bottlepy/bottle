@@ -171,7 +171,6 @@ class HeaderProperty(object):
 
 
 
-
 ###############################################################################
 # Exceptions and Events ########################################################
 ###############################################################################
@@ -760,9 +759,9 @@ class Bottle(object):
 ###############################################################################
 
 
-class Request(threading.local, DictMixin):
-    """ Represents a single HTTP request using thread-local attributes.
-        The Request object wraps a WSGI environment and can be used as such.
+class BaseRequest(DictMixin):
+    """ A wrapper for WSGI environment dictionaries that adds a lot of
+        convenient access methods and properties. Most of them are read-only.
     """
     def __init__(self, environ=None):
         """ Create a new Request instance.
@@ -986,13 +985,17 @@ class Request(threading.local, DictMixin):
     @property
     def is_ajax(self):
         ''' True if the request was generated using XMLHttpRequest '''
-        #TODO: write tests
         return self.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
+class LocalRequest(BaseRequest, threading.local):
+    ''' A thread-local subclass of :class:`BaseRequest`. '''
+    
+Request = LocalRequest
+    
 
-class Response(threading.local):
-    """ Represents a single HTTP response using thread-local attributes.
-    """
+
+class BaseResponse(object):
+    """ Stores HTTP headers and cookies that are to be sent to the client. """
 
     # This attribute is only here to support sphinx autodoc. It is set in __init__, too.
     #: An instance of :class:`HeaderDict` (case insensitive).
@@ -1120,7 +1123,11 @@ class Response(threading.local):
         kwargs['expires'] = 0
         self.set_cookie(key, '', **kwargs)
 
+class LocalResponse(BaseResponse, threading.local):
+    ''' A thread-local subclass of :class:`BaseResponse`. '''
 
+
+Response = LocalResponse
 
 
 

@@ -5,6 +5,7 @@ import bottle
 from bottle import request, response, tob, tonat, touni
 import tools
 import wsgiref.util
+import threading
 
 class TestRequest(unittest.TestCase):
     def test_path(self):
