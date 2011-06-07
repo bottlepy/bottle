@@ -763,60 +763,156 @@ class BaseRequest(DictMixin):
     """ A wrapper for WSGI environment dictionaries that adds a lot of
         convenient access methods and properties. Most of them are read-only.
     """
-    def __init__(self, environ=None):
-        """ Create a new Request instance.
 
-            You usually don't do this but use the global `bottle.request`
-            instance instead.
-        """
-        self.bind(environ or {},)
+    #: Maximum size of memory buffer for :attr:`body` in bytes.
+    MEMFILE_MAX = 102400
 
-    def bind(self, environ):
-        """ Bind a new WSGI environment.
-
-            This is done automatically for the global `bottle.request`
-            instance on every request.
-        """
-        self.environ = environ
-        # These attributes are used anyway, so it is ok to compute them here
-        self.path = '/' + environ.get('PATH_INFO', '/').lstrip('/')
-        self.method = environ.get('REQUEST_METHOD', 'GET').upper()
+    def __init__(self, environ = None):
+        """ Wrap a WSGI environ dictionary. """
+        #: The wrapped WSGI environ dictionary.
+        self.environ = environ or {}
+        #: The ``PATH_INFO`` value.
+        self.path = '/' + self.environ.get('PATH_INFO', '/').lstrip('/')
+        #: The ``REQUEST_METHOD`` value as an uppercase string.
+        self.method = self.environ.get('REQUEST_METHOD', 'GET').upper()
 
     def copy(self):
-        ''' Returns a copy of self '''
+        ''' Returns a new :class:`Request` instance with a shallow environ copy. '''
         return Request(self.environ.copy())
 
-    def path_shift(self, shift=1):
-        ''' Shift path fragments from PATH_INFO to SCRIPT_NAME and vice versa.
+    @DictProperty('environ', 'bottle.headers', read_only=True)
+    def headers(self):
+        ''' A :class:`WSGIHeaderDict` that provides case-insensitive access to
+            HTTP request headers. '''
+        return WSGIHeaderDict(self.environ)
 
-           :param shift: The number of path fragments to shift. May be negative
-                         to change the shift direction. (default: 1)
-        '''
-        script_name = self.environ.get('SCRIPT_NAME','/')
-        self['SCRIPT_NAME'], self.path = path_shift(script_name, self.path, shift)
-        self['PATH_INFO'] = self.path
+    @DictProperty('environ', 'bottle.cookies', read_only=True)
+    def COOKIES(self):
+        """ Cookies parsed into a dictionary. Signed cookies are NOT decoded
+            automatically. Use :meth:`get_cookie` if possible. """
+        raw_dict = SimpleCookie(self.headers.get('Cookie',''))
+        cookies = {}
+        for cookie in raw_dict.itervalues():
+            cookies[cookie.key] = cookie.value
+        return cookies
 
-    def __getitem__(self, key): return self.environ[key]
-    def __delitem__(self, key): self[key] = ""; del(self.environ[key])
-    def __iter__(self): return iter(self.environ)
-    def __len__(self): return len(self.environ)
-    def keys(self): return self.environ.keys()
-    def __setitem__(self, key, value):
-        """ Shortcut for Request.environ.__setitem__ """
-        self.environ[key] = value
-        todelete = []
-        if key in ('PATH_INFO','REQUEST_METHOD'):
-            self.bind(self.environ)
-        elif key == 'wsgi.input': todelete = ('body','forms','files','params')
-        elif key == 'QUERY_STRING': todelete = ('get','params')
-        elif key.startswith('HTTP_'): todelete = ('headers', 'cookies')
-        for key in todelete:
-            if 'bottle.' + key in self.environ:
-                del self.environ['bottle.' + key]
+    def get_cookie(self, key, secret=None):
+        """ Return the content of a cookie. To read a `Signed Cookie`, use the
+            same `secret` as used to create the cookie (see
+            :meth:`BaseResponse.set_cookie`). If anything goes wrong, None is returned. """
+        value = self.COOKIES.get(key)
+        if secret and value:
+            dec = cookie_decode(value, secret) # (key, value) tuple or None
+            return dec[1] if dec and dec[0] == key else None
+        return value or None
+
+    @DictProperty('environ', 'bottle.get', read_only=True)
+    def GET(self):
+        """ The `QUERY_STRING` parsed into an instance of :class:`MultiDict`. """
+        data = parse_qs(self.query_string, keep_blank_values=True)
+        get = self.environ['bottle.get'] = MultiDict()
+        for key, values in data.iteritems():
+            for value in values:
+                get[key] = value
+        return get
+
+    @DictProperty('environ', 'bottle.post', read_only=True)
+    def POST(self):
+        """ The values from :attr:`forms` and :attr:`files` combined into a single
+            :class:`MultiDict`. Values are either strings (form values) or instances of
+            :class:`cgi.FieldStorage` (file uploads).
+        """
+        post = MultiDict()
+        safe_env = {'QUERY_STRING':''} # Build a safe environment for cgi
+        for key in ('REQUEST_METHOD', 'CONTENT_TYPE', 'CONTENT_LENGTH'):
+            if key in self.environ: safe_env[key] = self.environ[key]
+        if NCTextIOWrapper:
+            fb = NCTextIOWrapper(self.body, encoding='ISO-8859-1', newline='\n')
+        else:
+            fb = self.body
+        data = cgi.FieldStorage(fp=fb, environ=safe_env, keep_blank_values=True)
+        for item in data.list or []:
+            post[item.name] = item if item.filename else item.value
+        return post
+
+    @DictProperty('environ', 'bottle.forms', read_only=True)
+    def forms(self):
+        """ POST form values parsed into an instance of :class:`MultiDict`.
+
+            This property contains form values parsed from an `url-encoded`
+            or `multipart/form-data` encoded POST request body. All values are
+            native strings.
+        """
+        forms = MultiDict()
+        for name, item in self.POST.iterallitems():
+            if not hasattr(item, 'filename'):
+                forms[name] = item
+        return forms
+
+    @DictProperty('environ', 'bottle.files', read_only=True)
+    def files(self):
+        """ File uploads parsed into an instance of :class:`MultiDict`.
+
+            This property contains file uploads parsed from an `multipart/form-data`
+            encoded POST request body. The values are instances of
+            :class:`cgi.FieldStorage`. The most important attributes are:
+
+            filename
+                The filename, if specified; otherwise None; this is the client side
+                filename, *not* the file name on which it is stored (that's a
+                temporary file you don't deal with)
+            file
+                The file(-like) object from which you can read the data.
+            value
+                The value as a *string*; for file uploads, this transparently reads
+                the file every time you request the value. Do not do this on big
+                files.
+        """
+        files = MultiDict()
+        for name, item in self.POST.iterallitems():
+            if hasattr(item, 'filename'):
+                files[name] = item
+        return files
+
+    @DictProperty('environ', 'bottle.params', read_only=True)
+    def params(self):
+        """ A combined :class:`MultiDict` with values from :attr:`forms` and
+            :attr:`GET`. File-uploads are not included. """
+        params = MultiDict()
+        for key, value in self.GET.iterallitems():
+            params[key] = value
+        for key, value in self.forms.iterallitems():
+            params[key] = value
+        return params
+
+    @DictProperty('environ', 'bottle.body', read_only=True)
+    def _body(self):
+        maxread = max(0, self.content_length)
+        stream = self.environ['wsgi.input']
+        body = BytesIO() if maxread < self.MEMFILE_MAX else TemporaryFile(mode='w+b')
+        while maxread > 0:
+            part = stream.read(min(maxread, self.MEMFILE_MAX))
+            if not part: break
+            body.write(part)
+            maxread -= len(part)
+        self.environ['wsgi.input'] = body
+        body.seek(0)
+        return body
+
+    @property
+    def body(self):
+        """ The HTTP request body as a seek-able file-like object. Depending on
+            :attr:`MEMFILE_MAX`, this is either a temporary file or a ByteIO instance.
+            Accessing this property for the first time reads and replaces
+            `environ['wsgi.input']`. Subsequent accesses just do a `seek(0)` on the
+            file object.
+        """
+        self._body.seek(0)
+        return self._body
 
     @DictProperty('environ', 'bottle.urlparts', read_only=True)
     def urlparts(self):
-        ''' Return a :class:`urlparse.SplitResult` tuple that can be used
+        ''' The :class:`urlparse.SplitResult` tuple that can be used
             to reconstruct the full URL as requested by the client.
             The tuple contains: (scheme, host, path, query_string, fragment).
             The fragment is always empty because it is not visible to the server.
@@ -842,7 +938,7 @@ class BaseRequest(DictMixin):
 
     @property
     def fullpath(self):
-        """ Request path including SCRIPT_NAME (if present). """
+        """ Request path including :attr:`script_name` (if present). """
         return urlunquote(self.urlparts[2])
 
     @property
@@ -851,144 +947,69 @@ class BaseRequest(DictMixin):
         return self.environ.get('QUERY_STRING', '')
 
     @property
+    def script_name(self):
+        ''' The leading part of the URI that was removed by a higher level
+            (server or middleware). '''
+        return self.environ.get('SCRIPT_NAME','').rstrip('/') + '/'
+
+    def path_shift(self, shift=1):
+        ''' Shift path segments from :attr:`path` to :attr:`script_name` and vice versa.
+
+           :param shift: The number of path segments to shift. May be negative
+                         to change the shift direction. (default: 1)
+        '''
+        script = self.environ.get('SCRIPT_NAME','/')
+        self['SCRIPT_NAME'], self['PATH_INFO'] = path_shift(script, self.path, shift)
+
+    @property
     def content_length(self):
-        """ Content-Length header as an integer, -1 if not specified """
-        return int(self.environ.get('CONTENT_LENGTH', '') or -1)
-
-    @DictProperty('environ', 'bottle.headers', read_only=True)
-    def headers(self):
-        ''' Request HTTP Headers stored in a :class:`HeaderDict`. '''
-        return WSGIHeaderDict(self.environ)
-
-    @DictProperty('environ', 'bottle.get', read_only=True)
-    def GET(self):
-        """ The QUERY_STRING parsed into an instance of :class:`MultiDict`. """
-        data = parse_qs(self.query_string, keep_blank_values=True)
-        get = self.environ['bottle.get'] = MultiDict()
-        for key, values in data.iteritems():
-            for value in values:
-                get[key] = value
-        return get
-
-    @DictProperty('environ', 'bottle.post', read_only=True)
-    def POST(self):
-        """ The combined values from :attr:`forms` and :attr:`files`. Values are
-            either strings (form values) or instances of
-            :class:`cgi.FieldStorage` (file uploads).
-        """
-        post = MultiDict()
-        safe_env = {'QUERY_STRING':''} # Build a safe environment for cgi
-        for key in ('REQUEST_METHOD', 'CONTENT_TYPE', 'CONTENT_LENGTH'):
-            if key in self.environ: safe_env[key] = self.environ[key]
-        if NCTextIOWrapper:
-            fb = NCTextIOWrapper(self.body, encoding='ISO-8859-1', newline='\n')
-        else:
-            fb = self.body
-        data = cgi.FieldStorage(fp=fb, environ=safe_env, keep_blank_values=True)
-        for item in data.list or []:
-            post[item.name] = item if item.filename else item.value
-        return post
-
-    @DictProperty('environ', 'bottle.forms', read_only=True)
-    def forms(self):
-        """ POST form values parsed into an instance of :class:`MultiDict`.
-
-            This property contains form values parsed from an `url-encoded`
-            or `multipart/form-data` encoded POST request bidy. The values are
-            native strings.
-        """
-        forms = MultiDict()
-        for name, item in self.POST.iterallitems():
-            if not hasattr(item, 'filename'):
-                forms[name] = item
-        return forms
-
-    @DictProperty('environ', 'bottle.files', read_only=True)
-    def files(self):
-        """ File uploads parsed into an instance of :class:`MultiDict`.
-
-            This property contains file uploads parsed from an
-            `multipart/form-data` encoded POST request body. The values are
-            instances of :class:`cgi.FieldStorage`.
-        """
-        files = MultiDict()
-        for name, item in self.POST.iterallitems():
-            if hasattr(item, 'filename'):
-                files[name] = item
-        return files
-
-    @DictProperty('environ', 'bottle.params', read_only=True)
-    def params(self):
-        """ A combined :class:`MultiDict` with values from :attr:`forms` and
-            :attr:`GET`. File-uploads are not included. """
-        params = MultiDict(self.GET)
-        for key, value in self.forms.iterallitems():
-            params[key] = value
-        return params
-
-    @DictProperty('environ', 'bottle.body', read_only=True)
-    def _body(self):
-        """ The HTTP request body as a seekable file-like object.
-
-            This property returns a copy of the `wsgi.input` stream and should
-            be used instead of `environ['wsgi.input']`.
-         """
-        maxread = max(0, self.content_length)
-        stream = self.environ['wsgi.input']
-        body = BytesIO() if maxread < MEMFILE_MAX else TemporaryFile(mode='w+b')
-        while maxread > 0:
-            part = stream.read(min(maxread, MEMFILE_MAX))
-            if not part: break
-            body.write(part)
-            maxread -= len(part)
-        self.environ['wsgi.input'] = body
-        body.seek(0)
-        return body
-
-    @property
-    def body(self):
-        self._body.seek(0)
-        return self._body
-
-    @property
-    def auth(self): #TODO: Tests and docs. Add support for digest. namedtuple?
-        """ HTTP authorization data as a (user, passwd) tuple. (experimental)
-
-            This implementation currently only supports basic auth and returns
-            None on errors.
-        """
-        return parse_auth(self.headers.get('Authorization',''))
-
-    @DictProperty('environ', 'bottle.cookies', read_only=True)
-    def COOKIES(self):
-        """ Cookies parsed into a dictionary. Signed cookies are NOT decoded
-            automatically. See :meth:`get_cookie` for details.
-        """
-        raw_dict = SimpleCookie(self.headers.get('Cookie',''))
-        cookies = {}
-        for cookie in raw_dict.itervalues():
-            cookies[cookie.key] = cookie.value
-        return cookies
-
-    def get_cookie(self, key, secret=None):
-        """ Return the content of a cookie. To read a `Signed Cookies`, use the
-            same `secret` as used to create the cookie (see
-            :meth:`Response.set_cookie`). If anything goes wrong, None is
-            returned.
-        """
-        value = self.COOKIES.get(key)
-        if secret and value:
-            dec = cookie_decode(value, secret) # (key, value) tuple or None
-            return dec[1] if dec and dec[0] == key else None
-        return value or None
+        """ Content-Length header as an integer, -1 if not specified. """
+        return int(self.environ.get('CONTENT_LENGTH') or -1)
 
     @property
     def is_ajax(self):
-        ''' True if the request was generated using XMLHttpRequest '''
+        ''' True if the `X-Requested-With` header equals ``XMLHttpRequest``. '''
         return self.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
+    @property
+    def auth(self): #TODO: Tests and docs. Add support for digest. namedtuple?
+        """ HTTP authorization data as a (user, password) tuple. This implementation
+            currently only supports basic auth and returns None on errors. """
+        return parse_auth(self.headers.get('Authorization',''))
+
+    def __getitem__(self, key): return self.environ[key]
+    def __delitem__(self, key): self[key] = ""; del(self.environ[key])
+    def __iter__(self): return iter(self.environ)
+    def __len__(self): return len(self.environ)
+    def keys(self): return self.environ.keys()
+    def __setitem__(self, key, value):
+        """ Change an environ value and clear all caches that depend on that value. """
+
+        if self.environ.get('bottle.readonly'):
+            raise KeyError('The environ dictionary is read-only.')
+
+        self.environ[key] = value
+        todelete = ()
+
+        if key == 'PATH_INFO':
+            self.path = '/' + value.lstrip('/')
+        elif key == 'REQUEST_METHOD':
+            self.method = value.upper()
+        elif key == 'wsgi.input':
+            todelete = ('bottle.body','bottle.forms','bottle.files','bottle.params')
+        elif key == 'QUERY_STRING':
+            todelete = ('bottle.get','bottle.params')
+        elif key.startswith('HTTP_'):
+            todelete = ('bottle.headers', 'bottle.cookies')
+
+        for key in todelete:
+            self.environ.pop(key, None)
+
 
 class LocalRequest(BaseRequest, threading.local):
     ''' A thread-local subclass of :class:`BaseRequest`. '''
+    def bind(self, environ):
+        self.__init__(environ)
     
 Request = LocalRequest
     
@@ -2474,7 +2495,6 @@ simpletal_view = functools.partial(view, template_adapter=SimpleTALTemplate)
 TEMPLATE_PATH = ['./', './views/']
 TEMPLATES = {}
 DEBUG = False
-MEMFILE_MAX = 1024*100
 
 #: A dict to map HTTP status codes (e.g. 404) to phrases (e.g. 'Not Found')
 HTTP_CODES = httplib.responses
