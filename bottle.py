@@ -1018,32 +1018,33 @@ Request = LocalRequest
 class BaseResponse(object):
     """ Stores HTTP headers and cookies that are to be sent to the client. """
 
-    # This attribute is only here to support sphinx autodoc. It is set in __init__, too.
-    #: An instance of :class:`HeaderDict` (case insensitive).
-    headers = None
+    default_status = 200
+    default_content_type = 'text/html; charset=UTF-8'
 
-    def __init__(self):
+    def __init__(self, body='', status=None, **headers):
         self._cookies = None
-        self._code = 200
-        self._status = '200 OK'
-        self.headers = HeaderDict()
-        self.headers['Content-Type'] = 'text/html; charset=UTF-8'
+        self.status = status or self.default_status
 
-    def set_code(self, code):
-        self._code, self._status = int(code), '%d %s' % (code, HTTP_CODES[code])
-    status_code = property(lambda self: self._code or 200, set_code, None,
-        ''' The response status code as an integer (default: 200). ''')
-    del set_code
+        #: The response body as one of the supported data types.
+        self.body = body
+
+        #: An instance of :class:`HeaderDict` (case insensitive).
+        self.headers = HeaderDict(headers) if headers else HeaderDict()
 
     def set_status(self, value):
-        self._code, self._status = int(value[:3]), value
-    status_line = property(lambda self: self._status or '200 OK', set_status, None,
-        ''' The response status line as a string (default: '200 OK'). ''')
-    del set_status
+        if isinstance(value, int):
+            self._status = value
+            self._reason = HTTP_CODES[value]
+        else:
+            self._status = int(value[:3])
+            self._reason = value[4:]
 
-    # Make stuff backwards compatible...
-    status = status_code # will change to status_line in 0.11
-    #code   = status_code # Added in 0.11
+    status_code = property(lambda self: self._status, set_status, None,
+        ''' The response status code as an integer (e.g. 200). ''')
+    status_line = property(lambda self: '%d %s' % (self._status, self._reason),
+        set_status, None, ''' The response status line as a string (e.g. '200 OK'). ''')
+    status = status_code
+    del set_status
 
     def bind(self):
         ''' Reset to factory defaults. '''
@@ -1063,11 +1064,15 @@ class BaseResponse(object):
             for c in self._cookies.values():
                 self.headers.append('Set-Cookie', c.OutputString())
             self._cookies.clear()
+
+        if 'Content-Type' not in self.headers:
+            self.headers['Content-Type'] = self.default_content_type
         
         # rfc2616 section 10.2.3, 10.3.5
-        if self.status == 204:
+        code = self.status_code
+        if code == 204:
             self.headers.filter(('content-type',))
-        if self.status == 304:
+        if code == 304:
             self.headers.filter(('allow', 'content-encoding', 'content-language',
                       'content-length', 'content-md5', 'content-range',
                       'content-type', 'last-modified')) # + c-location, expires?
