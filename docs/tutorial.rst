@@ -85,7 +85,7 @@ This is it. Run this script, visit http://localhost:8080/hello and you will see 
 
 For the sake of simplicity, most examples in this tutorial use a module-level :func:`route` decorator to bind routes. This decorator adds routes to a global application object that is created automatically in the background. If you prefer a more explicit way to define your application and don't mind the extra typing, you can create a separate application object and use that instead of the global one::
 
-    from bottle import Bottle
+    from bottle import Bottle, run
     
     app = Bottle()
     
