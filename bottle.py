@@ -55,20 +55,21 @@ try: import cPickle as pickle
 except ImportError: # pragma: no cover
     import pickle
 
-try: from json import dumps as json_dumps, loads as json_loads
+try: from json import dumps as json_dumps, loads as json_lds
 except ImportError: # pragma: no cover
-    try: from simplejson import dumps as json_dumps, loads as json_loads
+    try: from simplejson import dumps as json_dumps, loads as json_lds
     except ImportError: # pragma: no cover
-        try: from django.utils.simplejson import dumps as json_dumps, loads as json_loads
+        try: from django.utils.simplejson import dumps as json_dumps, loads as json_lds
         except ImportError: # pragma: no cover
             def json_dumps(data):
                 raise ImportError("JSON support requires Python 2.6 or simplejson.")
-            json_loads = json_dumps
+            json_lds = json_dumps
 
 py3k = sys.version_info >= (3,0,0)
 NCTextIOWrapper = None
 
 if py3k: # pragma: no cover
+    json_loads = lambda s: json_lds(touni(s))
     # See Request.POST
     from io import BytesIO
     def touni(x, enc='utf8', err='strict'):
@@ -81,6 +82,7 @@ if py3k: # pragma: no cover
                 the wrapped buffer. This subclass keeps it open. '''
             def close(self): pass
 else:
+    json_loads = json_lds
     from StringIO import StringIO as BytesIO
     bytes = str
     def touni(x, enc='utf8', err='strict'):
@@ -795,7 +797,7 @@ class BaseRequest(DictMixin):
     def cookies(self):
         """ Cookies parsed into a dictionary. Signed cookies are NOT decoded
             automatically. Use :meth:`get_cookie` if you expect signed cookies. """
-        raw_dict = SimpleCookie(self.headers.get('Cookie',''))
+        raw_dict = SimpleCookie(self.environ.get('HTTP_COOKIE',''))
         cookies = {}
         for cookie in raw_dict.itervalues():
             cookies[cookie.key] = cookie.value
@@ -994,7 +996,7 @@ class BaseRequest(DictMixin):
         ''' True if the request was triggered by a XMLHttpRequest. This only works with
             JavaScript libraries that support the `X-Requested-With` header (most of the
             popular libraries do). '''
-        return self.headers.get('X-Requested-With','').lower() == 'xmlhttprequest'
+        return self.environ.get('HTTP_X_REQUESTED_WITH','').lower() == 'xmlhttprequest'
 
     @property
     def is_ajax(self):
@@ -1008,7 +1010,7 @@ class BaseRequest(DictMixin):
             the password field is None, but the user field is taken from the
             ``REMOTE_USER`` environ variable. This implementation currently supports
             basic (not digest) authentication. On any errors, None is returned. """
-        basic = parse_auth(self.headers.get('Authorization',''))
+        basic = parse_auth(self.environ.get('HTTP_AUTHORIZATION',''))
         if basic: return basic
         ruser = self.environ.get('REMOTE_USER')
         if ruser: return (ruser, None)
@@ -1051,9 +1053,9 @@ class BaseRequest(DictMixin):
         todelete = ()
 
         if key == 'wsgi.input':
-            todelete = ('body','forms','files','params')
+            todelete = ('body', 'forms', 'files', 'params', 'post', 'json')
         elif key == 'QUERY_STRING':
-            todelete = ('get','params')
+            todelete = ('query', 'params')
         elif key.startswith('HTTP_'):
             todelete = ('headers', 'cookies')
 
@@ -1611,9 +1613,10 @@ def parse_auth(header):
     try:
         method, data = header.split(None, 1)
         if method.lower() == 'basic':
-            name, pwd = base64.b64decode(data).split(':', 1)
-            return name, pwd
-    except (KeyError, ValueError, TypeError):
+            #TODO: Add 2to3 save base64[encode/decode] functions.
+            user, pwd = touni(base64.b64decode(tob(data))).split(':',1)
+            return user, pwd
+    except (KeyError, ValueError):
         return None
 
 

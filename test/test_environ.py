@@ -237,7 +237,7 @@ class TestRequest(unittest.TestCase):
         e = {}
         wsgiref.util.setup_testing_defaults(e)
         r = bottle.BaseRequest(e)
-        e['wsgi.input'].write(json_dumps(test))
+        e['wsgi.input'].write(tob(json_dumps(test)))
         e['wsgi.input'].seek(0)
         e['CONTENT_LENGTH'] = str(len(json_dumps(test)))
         self.assertEqual(r.json, None)
@@ -248,7 +248,7 @@ class TestRequest(unittest.TestCase):
         e = {'CONTENT_TYPE': 'application/json'}
         wsgiref.util.setup_testing_defaults(e)
         r = bottle.BaseRequest(e)
-        e['wsgi.input'].write(json_dumps(test))
+        e['wsgi.input'].write(tob(json_dumps(test)))
         e['wsgi.input'].seek(0)
         e['CONTENT_LENGTH'] = str(len(json_dumps(test)))
         self.assertEqual(r.json, None)
@@ -259,7 +259,7 @@ class TestRequest(unittest.TestCase):
         e = {'CONTENT_TYPE': 'application/json'}
         wsgiref.util.setup_testing_defaults(e)
         r = bottle.BaseRequest(e)
-        e['wsgi.input'].write(json_dumps(test))
+        e['wsgi.input'].write(tob(json_dumps(test)))
         e['wsgi.input'].seek(0)
         e['CONTENT_LENGTH'] = str(len(json_dumps(test)))
         self.assertEqual(r.json, test)
@@ -274,7 +274,7 @@ class TestRequest(unittest.TestCase):
 
     def test_auth(self):
         user, pwd = 'marc', 'secret'
-        basic = base64.b64encode('%s:%s' % (user, pwd))
+        basic = touni(base64.b64encode(tob('%s:%s' % (user, pwd))))
         r = bottle.BaseRequest({})
         self.assertEqual(r.auth, None)
         r.environ['HTTP_AUTHORIZATION'] = 'basic %s' % basic
