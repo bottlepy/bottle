@@ -874,7 +874,7 @@ class BaseRequest(DictMixin):
     def json(self):
         ''' If the ``Content-Type`` header is ``application/json``, this property holds
             the parsed content of the request body. Only requests smaller than
-            :attr:`MAX_MEMFILE` are processed to avoid memory exhaustion. '''
+            :attr:`MEMFILE_MAX` are processed to avoid memory exhaustion. '''
         if self.environ.get('CONTENT_TYPE') == 'application/json' \
         and 0 < self.content_length < self.MEMFILE_MAX:
             return json_loads(self.body.read(self.MEMFILE_MAX))
