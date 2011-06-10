@@ -2,7 +2,7 @@
 import unittest
 import sys, os.path
 import bottle
-from bottle import request, response, tob, tonat, touni
+from bottle import request, response, tob, tonat, touni, json_dumps
 import tools
 import wsgiref.util
 import threading
@@ -223,6 +223,46 @@ class TestRequest(unittest.TestCase):
         self.assertEqual(42, len(request.body.read(1024)))
         self.assertEqual(42, len(request.body.readline()))
         self.assertEqual(42, len(request.body.readline(1024)))
+
+    def test_json_empty(self):
+        """ Environ: Request.json property with empty body. """
+        e = {}
+        wsgiref.util.setup_testing_defaults(e)
+        r = bottle.BaseRequest(e)
+        self.assertEqual(r.json, None)
+
+    def test_json_noheader(self):
+        """ Environ: Request.json property with missing content-type header. """
+        test = dict(a=5, b='test', c=[1,2,3])
+        e = {}
+        wsgiref.util.setup_testing_defaults(e)
+        r = bottle.BaseRequest(e)
+        e['wsgi.input'].write(json_dumps(test))
+        e['wsgi.input'].seek(0)
+        e['CONTENT_LENGTH'] = str(len(json_dumps(test)))
+        self.assertEqual(r.json, None)
+
+    def test_json_tobig(self):
+        """ Environ: Request.json property with huge body. """
+        test = dict(a=5, tobig='x' * bottle.BaseRequest.MEMFILE_MAX)
+        e = {'CONTENT_TYPE': 'application/json'}
+        wsgiref.util.setup_testing_defaults(e)
+        r = bottle.BaseRequest(e)
+        e['wsgi.input'].write(json_dumps(test))
+        e['wsgi.input'].seek(0)
+        e['CONTENT_LENGTH'] = str(len(json_dumps(test)))
+        self.assertEqual(r.json, None)
+
+    def test_json_valid(self):
+        """ Environ: Request.json property. """
+        test = dict(a=5, b='test', c=[1,2,3])
+        e = {'CONTENT_TYPE': 'application/json'}
+        wsgiref.util.setup_testing_defaults(e)
+        r = bottle.BaseRequest(e)
+        e['wsgi.input'].write(json_dumps(test))
+        e['wsgi.input'].seek(0)
+        e['CONTENT_LENGTH'] = str(len(json_dumps(test)))
+        self.assertEqual(r.json, test)
 
     def test_isajax(self):
         e = {}

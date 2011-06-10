@@ -55,14 +55,15 @@ try: import cPickle as pickle
 except ImportError: # pragma: no cover
     import pickle
 
-try: from json import dumps as json_dumps
+try: from json import dumps as json_dumps, loads as json_loads
 except ImportError: # pragma: no cover
-    try: from simplejson import dumps as json_dumps
+    try: from simplejson import dumps as json_dumps, loads as json_loads
     except ImportError: # pragma: no cover
-        try: from django.utils.simplejson import dumps as json_dumps
+        try: from django.utils.simplejson import dumps as json_dumps, loads as json_loads
         except ImportError: # pragma: no cover
             def json_dumps(data):
                 raise ImportError("JSON support requires Python 2.6 or simplejson.")
+            json_loads = json_dumps
 
 py3k = sys.version_info >= (3,0,0)
 NCTextIOWrapper = None
@@ -869,6 +870,16 @@ class BaseRequest(DictMixin):
                 files[name] = item
         return files
 
+    @DictProperty('environ', 'bottle.request.json', read_only=True)
+    def json(self):
+        ''' If the ``Content-Type`` header is ``application/json``, this property holds
+            the parsed content of the request body. Only requests smaller than
+            :attr:`MAX_MEMFILE` are processed to avoid memory exhaustion. '''
+        if self.environ.get('CONTENT_TYPE') == 'application/json' \
+        and 0 < self.content_length < self.MEMFILE_MAX:
+            return json_loads(self.body.read(self.MEMFILE_MAX))
+        return None
+
     @DictProperty('environ', 'bottle.request.body', read_only=True)
     def _body(self):
         maxread = max(0, self.content_length)
@@ -979,11 +990,16 @@ class BaseRequest(DictMixin):
         return int(self.environ.get('CONTENT_LENGTH') or -1)
 
     @property
-    def is_ajax(self):
+    def is_xhr(self):
         ''' True if the request was triggered by a XMLHttpRequest. This only works with
             JavaScript libraries that support the `X-Requested-With` header (most of the
             popular libraries do). '''
         return self.headers.get('X-Requested-With','').lower() == 'xmlhttprequest'
+
+    @property
+    def is_ajax(self):
+        ''' Alias for :attr:`ìs_xhr`. "Ajax" is not the right term. '''
+        return self.is_xhr
 
     @property
     def auth(self): #TODO: Tests and docs. Add support for digest. namedtuple?

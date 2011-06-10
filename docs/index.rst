@@ -33,11 +33,13 @@ Bottle is a fast, simple and lightweight WSGI_ micro web-framework for Python_. 
 
   from bottle import route, run
 
-  @route('/:name')
+  @route('/hello/:name')
   def index(name='World'):
       return '<b>Hello %s!</b>' % name
 
   run(host='localhost', port=8080)
+
+Run this script or paste it into a python console, then point your browser to `<http://localhost:8080/hello/world>`_. Thats it.
 
 .. rubric:: Download and Install
 
