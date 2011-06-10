@@ -6,6 +6,7 @@ from bottle import request, response, tob, tonat, touni
 import tools
 import wsgiref.util
 import threading
+import base64
 
 class TestRequest(unittest.TestCase):
     def test_path(self):
@@ -230,9 +231,42 @@ class TestRequest(unittest.TestCase):
         self.assertFalse(request.is_ajax)
         e['HTTP_X_REQUESTED_WITH'] = 'XMLHttpRequest'
         self.assertTrue(request.is_ajax)
-        
-        
-        
+
+    def test_auth(self):
+        user, pwd = 'marc', 'secret'
+        basic = base64.b64encode('%s:%s' % (user, pwd))
+        r = bottle.BaseRequest({})
+        self.assertEqual(r.auth, None)
+        r.environ['HTTP_AUTHORIZATION'] = 'basic %s' % basic
+        self.assertEqual(r.auth, (user, pwd))
+        r.environ['REMOTE_USER'] = user
+        self.assertEqual(r.auth, (user, pwd))
+        del r.environ['HTTP_AUTHORIZATION']
+        self.assertEqual(r.auth, (user, None))
+
+    def test_remote_route(self):
+        ips = ['1.2.3.4', '2.3.4.5', '3.4.5.6']
+        r = bottle.BaseRequest({})
+        self.assertEqual(r.remote_route, [])
+        r.environ['HTTP_X_FORWARDED_FOR'] = ', '.join(ips)
+        self.assertEqual(r.remote_route, ips)
+        r.environ['REMOTE_ADDR'] = ips[1]
+        self.assertEqual(r.remote_route, ips)
+        del r.environ['HTTP_X_FORWARDED_FOR']
+        self.assertEqual(r.remote_route, [ips[1]])
+
+    def test_remote_addr(self):
+        ips = ['1.2.3.4', '2.3.4.5', '3.4.5.6']
+        r = bottle.BaseRequest({})
+        self.assertEqual(r.remote_addr, None)
+        r.environ['HTTP_X_FORWARDED_FOR'] = ', '.join(ips)
+        self.assertEqual(r.remote_addr, ips[0])
+        r.environ['REMOTE_ADDR'] = ips[1]
+        self.assertEqual(r.remote_addr, ips[0])
+        del r.environ['HTTP_X_FORWARDED_FOR']
+        self.assertEqual(r.remote_addr, ips[1])
+
+
 class TestResponse(unittest.TestCase):
     def setUp(self):
         response.bind()

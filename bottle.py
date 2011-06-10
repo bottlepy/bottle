@@ -158,8 +158,8 @@ class HeaderProperty(object):
 
     def __get__(self, obj, cls):
         if obj is None: return self
-        value = obj.headers.get(self.name) or self.default
-        return self.reader(value) if self.reader else value
+        value = obj.headers.get(self.name)
+        return self.reader(value) if (value and self.reader) else (value or self.default)
 
     def __set__(self, obj, value):
         if self.writer: value = self.writer(value)
@@ -923,10 +923,9 @@ class BaseRequest(DictMixin):
 
     @property
     def url(self):
-        """ The full request URI. If your app lives behind a reverse proxy or load
-            balancer and you get confusing results, make sure that the
-            ``X-Forwarded-Host`` header is set correctly.
-        """
+        """ The full request URI including hostname and scheme. If your app lives behind
+            a reverse proxy or load balancer and you get confusing results, make sure
+            that the ``X-Forwarded-Host`` header is set correctly. """
         return self.urlparts.geturl()
 
     @DictProperty('environ', 'bottle.request.urlparts', read_only=True)
@@ -974,22 +973,51 @@ class BaseRequest(DictMixin):
 
     @property
     def content_length(self):
-        """ Content-Length header as an integer, -1 if not specified. """
+        ''' The request body length as an integer. The client is responsible to set this
+            header. Otherwise, the real length of the body is unknown and -1 is returned.
+            In this case, :attr:`body` will be empty. '''
         return int(self.environ.get('CONTENT_LENGTH') or -1)
 
     @property
     def is_ajax(self):
-        ''' True if the ``X-Requested-With`` header equals ``XMLHttpRequest``. '''
-        return self.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        ''' True if the request was triggered by a XMLHttpRequest. This only works with
+            JavaScript libraries that support the `X-Requested-With` header (most of the
+            popular libraries do). '''
+        return self.headers.get('X-Requested-With','').lower() == 'xmlhttprequest'
 
     @property
     def auth(self): #TODO: Tests and docs. Add support for digest. namedtuple?
-        """ HTTP authorization data as a (user, password) tuple. This implementation
-            currently only supports basic auth and returns None on errors. """
-        return parse_auth(self.headers.get('Authorization',''))
+        """ HTTP authentication data as a (user, password) tuple. If the authentication
+            happened at a higher level (e.g. in the front web-server or a middleware),
+            the password field is None, but the user field is taken from the
+            ``REMOTE_USER`` environ variable. This implementation currently supports
+            basic (not digest) authentication. On any errors, None is returned. """
+        basic = parse_auth(self.headers.get('Authorization',''))
+        if basic: return basic
+        ruser = self.environ.get('REMOTE_USER')
+        if ruser: return (ruser, None)
+        return None
+
+    @property
+    def remote_route(self):
+        """ A list of all IPs that were involved in this request, starting with the
+            client IP and followed by zero or more proxies. This does only work if all
+            proxies support the ```X-Forwarded-For`` header. Note that this information
+            can be forged by malicious clients. """
+        proxy = self.environ.get('HTTP_X_FORWARDED_FOR')
+        if proxy: return [ip.strip() for ip in proxy.split(',')]
+        remote = self.environ.get('REMOTE_ADDR')
+        return [remote] if remote else []
+
+    @property
+    def remote_addr(self):
+        """ The client IP as a string. Note that this information can be forged by
+            malicious clients. """
+        route = self.remote_route
+        return route[0] if route else None
 
     def copy(self):
-        ''' Returns a new :class:`Request` with a shallow copy of :attr:`environ`. '''
+        ''' Return a new :class:`Request` with a shallow copy of :attr:`environ`. '''
         return Request(self.environ.copy())
 
     def __getitem__(self, key): return self.environ[key]
