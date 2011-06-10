@@ -761,54 +761,61 @@ class Bottle(object):
 
 class BaseRequest(DictMixin):
     """ A wrapper for WSGI environment dictionaries that adds a lot of
-        convenient access methods and properties. Most of them are read-only.
-    """
+        convenient access methods and properties. Most of them are read-only. """
 
     #: Maximum size of memory buffer for :attr:`body` in bytes.
     MEMFILE_MAX = 102400
 
-    def __init__(self, environ = None):
+    def __init__(self, environ):
         """ Wrap a WSGI environ dictionary. """
-        #: The wrapped WSGI environ dictionary.
-        self.environ = environ or {}
-        #: The ``PATH_INFO`` value.
-        self.path = '/' + self.environ.get('PATH_INFO', '/').lstrip('/')
-        #: The ``REQUEST_METHOD`` value as an uppercase string.
-        self.method = self.environ.get('REQUEST_METHOD', 'GET').upper()
+        #: The wrapped WSGI environ dictionary. This is the only real attribute. All
+        #: other attributes actually are read-only properties.
+        self.environ = environ
+        environ['bottle.request'] = self
 
-    def copy(self):
-        ''' Returns a new :class:`Request` instance with a shallow environ copy. '''
-        return Request(self.environ.copy())
+    @property
+    def path(self):
+        ''' The value of ``PATH_INFO`` with exactly one prefixed slash (to fix broken
+            clients and avoid the "empty path" edge case). ''' 
+        return '/' + self.environ.get('PATH_INFO','').lstrip('/')
 
-    @DictProperty('environ', 'bottle.headers', read_only=True)
+    @property
+    def method(self):
+        ''' The ``REQUEST_METHOD`` value as an uppercase string (default: GET). '''
+        return self.environ.get('REQUEST_METHOD', 'GET').upper()
+
+    @DictProperty('environ', 'bottle.request.headers', read_only=True)
     def headers(self):
         ''' A :class:`WSGIHeaderDict` that provides case-insensitive access to
             HTTP request headers. '''
         return WSGIHeaderDict(self.environ)
 
-    @DictProperty('environ', 'bottle.cookies', read_only=True)
-    def COOKIES(self):
+    @DictProperty('environ', 'bottle.request.cookies', read_only=True)
+    def cookies(self):
         """ Cookies parsed into a dictionary. Signed cookies are NOT decoded
-            automatically. Use :meth:`get_cookie` if possible. """
+            automatically. Use :meth:`get_cookie` if you expect signed cookies. """
         raw_dict = SimpleCookie(self.headers.get('Cookie',''))
         cookies = {}
         for cookie in raw_dict.itervalues():
             cookies[cookie.key] = cookie.value
         return cookies
 
-    def get_cookie(self, key, secret=None):
-        """ Return the content of a cookie. To read a `Signed Cookie`, use the
-            same `secret` as used to create the cookie (see
-            :meth:`BaseResponse.set_cookie`). If anything goes wrong, None is returned. """
-        value = self.COOKIES.get(key)
+    def get_cookie(self, key, default=None, secret=None):
+        """ Return the content of a cookie. To read a `Signed Cookie`, the `secret` must
+            match the one used to create the cookie (see :meth:`BaseResponse.set_cookie`).
+            If anything goes wrong (missing cookie or wrong signature), return a default
+            value. """
+        value = self.cookies.get(key)
         if secret and value:
             dec = cookie_decode(value, secret) # (key, value) tuple or None
-            return dec[1] if dec and dec[0] == key else None
-        return value or None
+            return dec[1] if dec and dec[0] == key else default
+        return value or default
 
-    @DictProperty('environ', 'bottle.get', read_only=True)
-    def GET(self):
-        """ The `QUERY_STRING` parsed into an instance of :class:`MultiDict`. """
+    @DictProperty('environ', 'bottle.request.query', read_only=True)
+    def query(self):
+        ''' The :attr:`query_string` parsed into a :class:`MultiDict`. These values are
+            sometimes called "URL arguments" or "GET parameters", but not to be confused
+            with "URL wildcards" as they are provided by the :class:`Router`. '''
         data = parse_qs(self.query_string, keep_blank_values=True)
         get = self.environ['bottle.get'] = MultiDict()
         for key, values in data.iteritems():
@@ -816,45 +823,33 @@ class BaseRequest(DictMixin):
                 get[key] = value
         return get
 
-    @DictProperty('environ', 'bottle.post', read_only=True)
-    def POST(self):
-        """ The values from :attr:`forms` and :attr:`files` combined into a single
-            :class:`MultiDict`. Values are either strings (form values) or instances of
-            :class:`cgi.FieldStorage` (file uploads).
-        """
-        post = MultiDict()
-        safe_env = {'QUERY_STRING':''} # Build a safe environment for cgi
-        for key in ('REQUEST_METHOD', 'CONTENT_TYPE', 'CONTENT_LENGTH'):
-            if key in self.environ: safe_env[key] = self.environ[key]
-        if NCTextIOWrapper:
-            fb = NCTextIOWrapper(self.body, encoding='ISO-8859-1', newline='\n')
-        else:
-            fb = self.body
-        data = cgi.FieldStorage(fp=fb, environ=safe_env, keep_blank_values=True)
-        for item in data.list or []:
-            post[item.name] = item if item.filename else item.value
-        return post
-
-    @DictProperty('environ', 'bottle.forms', read_only=True)
+    @DictProperty('environ', 'bottle.request.forms', read_only=True)
     def forms(self):
-        """ POST form values parsed into an instance of :class:`MultiDict`.
-
-            This property contains form values parsed from an `url-encoded`
-            or `multipart/form-data` encoded POST request body. All values are
-            native strings.
-        """
+        """ Form values parsed from an `url-encoded` or `multipart/form-data` encoded
+            POST or PUT request body. The result is retuned as a :class:`MultiDict`. All
+            keys and values are strings. File uploads are stored separately in
+            :attr:`files`. """
         forms = MultiDict()
         for name, item in self.POST.iterallitems():
             if not hasattr(item, 'filename'):
                 forms[name] = item
         return forms
 
-    @DictProperty('environ', 'bottle.files', read_only=True)
-    def files(self):
-        """ File uploads parsed into an instance of :class:`MultiDict`.
+    @DictProperty('environ', 'bottle.request.params', read_only=True)
+    def params(self):
+        """ A :class:`MultiDict` with the combined values of :attr:`query` and
+            :attr:`forms`. File uploads are stored separately in :attr:`files`. """
+        params = MultiDict()
+        for key, value in self.query.iterallitems():
+            params[key] = value
+        for key, value in self.forms.iterallitems():
+            params[key] = value
+        return params
 
-            This property contains file uploads parsed from an `multipart/form-data`
-            encoded POST request body. The values are instances of
+    @DictProperty('environ', 'bottle.request.files', read_only=True)
+    def files(self):
+        """ File uploads parsed from an `url-encoded` or `multipart/form-data` encoded
+            POST or PUT request body. The values are instances of
             :class:`cgi.FieldStorage`. The most important attributes are:
 
             filename
@@ -874,18 +869,7 @@ class BaseRequest(DictMixin):
                 files[name] = item
         return files
 
-    @DictProperty('environ', 'bottle.params', read_only=True)
-    def params(self):
-        """ A combined :class:`MultiDict` with values from :attr:`forms` and
-            :attr:`GET`. File-uploads are not included. """
-        params = MultiDict()
-        for key, value in self.GET.iterallitems():
-            params[key] = value
-        for key, value in self.forms.iterallitems():
-            params[key] = value
-        return params
-
-    @DictProperty('environ', 'bottle.body', read_only=True)
+    @DictProperty('environ', 'bottle.request.body', read_only=True)
     def _body(self):
         maxread = max(0, self.content_length)
         stream = self.environ['wsgi.input']
@@ -902,21 +886,54 @@ class BaseRequest(DictMixin):
     @property
     def body(self):
         """ The HTTP request body as a seek-able file-like object. Depending on
-            :attr:`MEMFILE_MAX`, this is either a temporary file or a ByteIO instance.
-            Accessing this property for the first time reads and replaces
-            `environ['wsgi.input']`. Subsequent accesses just do a `seek(0)` on the
-            file object.
-        """
+            :attr:`MEMFILE_MAX`, this is either a temporary file or a :class:`io.BytesIO`
+            instance. Accessing this property for the first time reads and replaces
+            the ``wsgi.input`` environ variable. Subsequent accesses just do a `seek(0)`
+            on the file object. """
         self._body.seek(0)
         return self._body
 
-    @DictProperty('environ', 'bottle.urlparts', read_only=True)
+    #: An alias for :attr:`query`.
+    GET = query
+
+    @DictProperty('environ', 'bottle.request.post', read_only=True)
+    def POST(self):
+        """ The values of :attr:`forms` and :attr:`files` combined into a single
+            :class:`MultiDict`. Values are either strings (form values) or instances of
+            :class:`cgi.FieldStorage` (file uploads).
+        """
+        post = MultiDict()
+        safe_env = {'QUERY_STRING':''} # Build a safe environment for cgi
+        for key in ('REQUEST_METHOD', 'CONTENT_TYPE', 'CONTENT_LENGTH'):
+            if key in self.environ: safe_env[key] = self.environ[key]
+        if NCTextIOWrapper:
+            fb = NCTextIOWrapper(self.body, encoding='ISO-8859-1', newline='\n')
+        else:
+            fb = self.body
+        data = cgi.FieldStorage(fp=fb, environ=safe_env, keep_blank_values=True)
+        for item in data.list or []:
+            post[item.name] = item if item.filename else item.value
+        return post
+
+    @property
+    def COOKIES(self):
+        ''' Alias for :attr:`cookies` (deprecated). '''
+        depr('BaseRequest.COOKIES was renamed to BaseRequest.cookies (lowercase).')
+        return self.cookies
+
+    @property
+    def url(self):
+        """ The full request URI. If your app lives behind a reverse proxy or load
+            balancer and you get confusing results, make sure that the
+            ``X-Forwarded-Host`` header is set correctly.
+        """
+        return self.urlparts.geturl()
+
+    @DictProperty('environ', 'bottle.request.urlparts', read_only=True)
     def urlparts(self):
-        ''' The :class:`urlparse.SplitResult` tuple that can be used
-            to reconstruct the full URL as requested by the client.
-            The tuple contains: (scheme, host, path, query_string, fragment).
-            The fragment is always empty because it is not visible to the server.
-        '''
+        ''' The :attr:`url` string as a :class:`urlparse.SplitResult` tuple. The tuple
+            contains (scheme, host, path, query_string and fragment), but the fragment is
+            always empty because it is not visible to the server. '''
         env = self.environ
         http = env.get('wsgi.url_scheme', 'http')
         host = env.get('HTTP_X_FORWARDED_HOST') or env.get('HTTP_HOST')
@@ -926,30 +943,24 @@ class BaseRequest(DictMixin):
             port = env.get('SERVER_PORT')
             if port and port != ('80' if http == 'http' else '443'):
                 host += ':' + port
-        spath = self.environ.get('SCRIPT_NAME','').rstrip('/') + '/'
-        rpath = self.path.lstrip('/')
-        path = urlquote(urljoin(spath, rpath))
+        path = urlquote(self.fullpath)
         return UrlSplitResult(http, host, path, env.get('QUERY_STRING'), '')
-
-    @property
-    def url(self):
-        """ Full URL as requested by the client. """
-        return self.urlparts.geturl()
 
     @property
     def fullpath(self):
         """ Request path including :attr:`script_name` (if present). """
-        return urlunquote(self.urlparts[2])
+        return urljoin(self.script_name, self.path.lstrip('/'))
 
     @property
     def query_string(self):
-        """ The part of the URL following the '?'. """
+        """ The raw :attr:`query` part of the URL (everything in between ``?`` and ``#``)
+            as a string. """
         return self.environ.get('QUERY_STRING', '')
 
     @property
     def script_name(self):
-        ''' The leading part of the URI that was removed by a higher level
-            (server or middleware). '''
+        ''' The leading part of the URI that was removed by a higher level (server or
+            middleware). '''
         return self.environ.get('SCRIPT_NAME','').rstrip('/') + '/'
 
     def path_shift(self, shift=1):
@@ -968,7 +979,7 @@ class BaseRequest(DictMixin):
 
     @property
     def is_ajax(self):
-        ''' True if the `X-Requested-With` header equals ``XMLHttpRequest``. '''
+        ''' True if the ``X-Requested-With`` header equals ``XMLHttpRequest``. '''
         return self.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
     @property
@@ -976,6 +987,10 @@ class BaseRequest(DictMixin):
         """ HTTP authorization data as a (user, password) tuple. This implementation
             currently only supports basic auth and returns None on errors. """
         return parse_auth(self.headers.get('Authorization',''))
+
+    def copy(self):
+        ''' Returns a new :class:`Request` with a shallow copy of :attr:`environ`. '''
+        return Request(self.environ.copy())
 
     def __getitem__(self, key): return self.environ[key]
     def __delitem__(self, key): self[key] = ""; del(self.environ[key])
@@ -985,31 +1000,27 @@ class BaseRequest(DictMixin):
     def __setitem__(self, key, value):
         """ Change an environ value and clear all caches that depend on that value. """
 
-        if self.environ.get('bottle.readonly'):
+        if self.environ.get('bottle.request.readonly'):
             raise KeyError('The environ dictionary is read-only.')
 
         self.environ[key] = value
         todelete = ()
 
-        if key == 'PATH_INFO':
-            self.path = '/' + value.lstrip('/')
-        elif key == 'REQUEST_METHOD':
-            self.method = value.upper()
-        elif key == 'wsgi.input':
-            todelete = ('bottle.body','bottle.forms','bottle.files','bottle.params')
+        if key == 'wsgi.input':
+            todelete = ('body','forms','files','params')
         elif key == 'QUERY_STRING':
-            todelete = ('bottle.get','bottle.params')
+            todelete = ('get','params')
         elif key.startswith('HTTP_'):
-            todelete = ('bottle.headers', 'bottle.cookies')
+            todelete = ('headers', 'cookies')
 
         for key in todelete:
-            self.environ.pop(key, None)
+            self.environ.pop('bottle.request.'+key, None)
 
 
 class LocalRequest(BaseRequest, threading.local):
     ''' A thread-local subclass of :class:`BaseRequest`. '''
-    def bind(self, environ):
-        self.__init__(environ)
+    def __init__(self): pass
+    bind = BaseRequest.__init__
 
 Request = LocalRequest
 
