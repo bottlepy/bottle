@@ -507,7 +507,7 @@ class Bottle(object):
             on a non-match."""
         depr("This method will change semantics in 0.10.")
         return self._match(environ)
-        
+
     def _match(self, environ):
         handle, args = self.router.match(environ)
         environ['route.handle'] = handle # TODO move to router?
@@ -632,7 +632,7 @@ class Bottle(object):
         if isinstance(path, dict):
             return self._handle(path)
         return self._handle({'PATH_INFO': path, 'REQUEST_METHOD': method.upper()})
-        
+
     def _handle(self, environ):
         if not self.serve:
             depr("Bottle.serve will be removed in 0.10.")
@@ -1010,9 +1010,9 @@ class LocalRequest(BaseRequest, threading.local):
     ''' A thread-local subclass of :class:`BaseRequest`. '''
     def bind(self, environ):
         self.__init__(environ)
-    
+
 Request = LocalRequest
-    
+
 
 
 class BaseResponse(object):
@@ -1067,7 +1067,7 @@ class BaseResponse(object):
 
         if 'Content-Type' not in self.headers:
             self.headers['Content-Type'] = self.default_content_type
-        
+
         # rfc2616 section 10.2.3, 10.3.5
         code = self.status_code
         if code == 204:
@@ -1105,10 +1105,10 @@ class BaseResponse(object):
             :param key: the name of the cookie.
             :param value: the value of the cookie.
             :param secret: a signature key required for signed cookies. (default: None)
-            
+
             Additionally, this method accepts all RFC 2109 attributes that are supported
             by :class:`cookie.Morsel`, including:
-            
+
             :param max_age: maximum age in seconds. (default: None)
             :param expires: a datetime object or UNIX timestamp. (default: None)
             :param domain: the domain that is allowed to read the cookie.
