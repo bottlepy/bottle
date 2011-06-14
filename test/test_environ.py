@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+''' Tests for the BaseRequest and BaseResponse objects and their subclasses. '''
+
 import unittest
 import sys, os.path
 import bottle
@@ -8,25 +10,47 @@ import wsgiref.util
 import threading
 import base64
 
+from bottle import BaseRequest, BaseResponse
+
 class TestRequest(unittest.TestCase):
     def test_path(self):
-        """ Environ: PATH_INFO """ 
-        t = dict()
-        t[''] = '/'
-        t['bla'] = '/bla'
-        t['bla/'] = '/bla/'
-        t['/bla'] = '/bla'
-        t['/bla/'] = '/bla/'
-        for k, v in t.iteritems():
-            request.bind({'PATH_INFO': k})
-            self.assertEqual(v, request.path)
-        request.bind({})
-        self.assertEqual('/', request.path)
+        """ PATH_INFO normalization. """
+        # Legal paths
+        tests = [('', '/'), ('x','/x'), ('x/', '/x/'), ('/x', '/x'), ('/x/', '/x/')]
+        for raw, norm in tests:
+            self.assertEqual(norm, BaseRequest({'PATH_INFO': raw}).path)
+        # Strange paths
+        tests = [('///', '/'), ('//x','/x')]
+        for raw, norm in tests:
+            self.assertEqual(norm, BaseRequest({'PATH_INFO': raw}).path)
+        # No path at all
+        self.assertEqual('/', BaseRequest({}).path)
+
+    def test_method(self):
+        self.assertEqual(BaseRequest({}).method, 'GET')
+        self.assertEqual(BaseRequest({'REQUEST_METHOD':'GET'}).method, 'GET')
+        self.assertEqual(BaseRequest({'REQUEST_METHOD':'GeT'}).method, 'GET')
+        self.assertEqual(BaseRequest({'REQUEST_METHOD':'get'}).method, 'GET')
+        self.assertEqual(BaseRequest({'REQUEST_METHOD':'POst'}).method, 'POST')
+        self.assertEqual(BaseRequest({'REQUEST_METHOD':'FanTASY'}).method, 'FANTASY')
+
+    def test_script_name(self):
+        """ SCRIPT_NAME normalization. """
+        # Legal paths
+        tests = [('', '/'), ('x','/x/'), ('x/', '/x/'), ('/x', '/x/'), ('/x/', '/x/')]
+        for raw, norm in tests:
+            self.assertEqual(norm, BaseRequest({'SCRIPT_NAME': raw}).script_name)
+        # Strange paths
+        tests = [('///', '/'), ('///x///','/x/')]
+        for raw, norm in tests:
+            self.assertEqual(norm, BaseRequest({'SCRIPT_NAME': raw}).script_name)
+        # No path at all
+        self.assertEqual('/', BaseRequest({}).script_name)
 
     def test_pathshift(self):
-        """ Environ: Request.path_shift() """
+        """ Request.path_shift() """
         def test_shift(s, p, c):
-            request.bind({'SCRIPT_NAME': s, 'PATH_INFO': p})
+            request = BaseRequest({'SCRIPT_NAME': s, 'PATH_INFO': p})
             request.path_shift(c)
             return [request['SCRIPT_NAME'], request.path]
         self.assertEqual(['/a/b', '/c/d'], test_shift('/a/b', '/c/d', 0))
@@ -44,24 +68,26 @@ class TestRequest(unittest.TestCase):
         
     def test_url(self):
         """ Environ: URL building """
-        request.bind({'HTTP_HOST':'example.com'})
+        request = BaseRequest({'HTTP_HOST':'example.com'})
         self.assertEqual('http://example.com/', request.url)
-        request.bind({'SERVER_NAME':'example.com'})
+        request = BaseRequest({'SERVER_NAME':'example.com'})
         self.assertEqual('http://example.com/', request.url)
-        request.bind({'SERVER_NAME':'example.com', 'SERVER_PORT':'81'})
+        request = BaseRequest({'SERVER_NAME':'example.com', 'SERVER_PORT':'81'})
         self.assertEqual('http://example.com:81/', request.url)
-        request.bind({'wsgi.url_scheme':'https', 'SERVER_NAME':'example.com'})
+        request = BaseRequest({'wsgi.url_scheme':'https', 'SERVER_NAME':'example.com'})
         self.assertEqual('https://example.com/', request.url)
-        request.bind({'HTTP_HOST':'example.com', 'PATH_INFO':'/path', 'QUERY_STRING':'1=b&c=d', 'SCRIPT_NAME':'/sp'})
+        request = BaseRequest({'HTTP_HOST':'example.com', 'PATH_INFO':'/path',
+                               'QUERY_STRING':'1=b&c=d', 'SCRIPT_NAME':'/sp'})
         self.assertEqual('http://example.com/sp/path?1=b&c=d', request.url)
-        request.bind({'HTTP_HOST':'example.com', 'PATH_INFO':'/pa th', 'SCRIPT_NAME':'/s p'})
+        request = BaseRequest({'HTTP_HOST':'example.com', 'PATH_INFO':'/pa th',
+                               'SCRIPT_NAME':'/s p'})
         self.assertEqual('http://example.com/s%20p/pa%20th', request.url)
 
     def test_dict_access(self):
         """ Environ: request objects are environment dicts """
         e = {}
         wsgiref.util.setup_testing_defaults(e)
-        request.bind(e)
+        request = BaseRequest(e)
         self.assertEqual(list(request), e.keys())
         self.assertEqual(len(request), len(e))
         for k, v in e.iteritems():
@@ -72,12 +98,17 @@ class TestRequest(unittest.TestCase):
         del request['PATH_INFO']
         self.assertTrue('PATH_INFO' not in request)
 
+    def test_readonly_environ(self):
+        request = BaseRequest({'bottle.request.readonly':True})
+        def test(): request['x']='y'
+        self.assertRaises(KeyError, test)
+
     def test_header_access(self):
         """ Environ: Request objects decode headers """
         e = {}
         wsgiref.util.setup_testing_defaults(e)
         e['HTTP_SOME_HEADER'] = 'some value'
-        request.bind(e)
+        request = BaseRequest(e)
         request['HTTP_SOME_OTHER_HEADER'] = 'some other value'
         self.assertTrue('Some-Header' in request.headers)
         self.assertTrue(request.headers['Some-Header'] == 'some value')
@@ -86,33 +117,33 @@ class TestRequest(unittest.TestCase):
     def test_header_access_special(self):
         e = {}
         wsgiref.util.setup_testing_defaults(e)
-        request.bind(e)
+        request = BaseRequest(e)
         request['CONTENT_TYPE'] = 'test'
         request['CONTENT_LENGTH'] = '123'
         self.assertEqual(request.headers['Content-Type'], 'test')
         self.assertEqual(request.headers['Content-Length'], '123')
 
-    def test_cookie(self):
-        """ Environ: COOKIES """ 
+    def test_cookie_dict(self):
+        """ Environ: Cookie dict """ 
         t = dict()
-        t['a=a'] = {'a': 'a'}
+        t['a=a']      = {'a': 'a'}
         t['a=a; b=b'] = {'a': 'a', 'b':'b'}
         t['a=a; a=b'] = {'a': 'b'}
         for k, v in t.iteritems():
-            request.bind({'HTTP_COOKIE': k})
-            self.assertEqual(v, request.COOKIES)
+            request = BaseRequest({'HTTP_COOKIE': k})
+            for n in v:
+                self.assertEqual(v[n], request.cookies[n])
+                self.assertEqual(v[n], request.get_cookie(n))
 
     def test_get(self):
         """ Environ: GET data """ 
-        e = {}
-        e['QUERY_STRING'] = 'a=a&a=1&b=b&c=c'
-        request.bind(e)
-        self.assertTrue('a' in request.GET)
-        self.assertTrue('b' in request.GET)
-        self.assertEqual(['a','1'], request.GET.getall('a'))
-        self.assertEqual(['b'], request.GET.getall('b'))
-        self.assertEqual('1', request.GET['a'])
-        self.assertEqual('b', request.GET['b'])
+        request = BaseRequest({'QUERY_STRING':'a=a&a=1&b=b&c=c'})
+        self.assertTrue('a' in request.query)
+        self.assertTrue('b' in request.query)
+        self.assertEqual(['a','1'], request.query.getall('a'))
+        self.assertEqual(['b'], request.query.getall('b'))
+        self.assertEqual('1', request.query['a'])
+        self.assertEqual('b', request.query['b'])
         
     def test_post(self):
         """ Environ: POST data """ 
@@ -123,7 +154,7 @@ class TestRequest(unittest.TestCase):
         e['wsgi.input'].seek(0)
         e['CONTENT_LENGTH'] = str(len(sq))
         e['REQUEST_METHOD'] = "POST"
-        request.bind(e)
+        request = BaseRequest(e)
         self.assertTrue('a' in request.POST)
         self.assertTrue('b' in request.POST)
         self.assertEqual(['a','1'], request.POST.getall('a'))
@@ -141,7 +172,7 @@ class TestRequest(unittest.TestCase):
         e['wsgi.input'].seek(0)
         e['CONTENT_LENGTH'] = str(len(sq))
         e['REQUEST_METHOD'] = "POST"
-        request.bind(e)
+        request = BaseRequest(e)
         self.assertEqual('', request.POST['foobar'])
 
     def test_body_noclose(self):
@@ -153,7 +184,7 @@ class TestRequest(unittest.TestCase):
         e['wsgi.input'].seek(0)
         e['CONTENT_LENGTH'] = str(len(sq))
         e['REQUEST_METHOD'] = "POST"
-        request.bind(e)
+        request = BaseRequest(e)
         self.assertEqual(sq, request.body.read())
         request.POST # This caused a body.close() with Python 3.x
         self.assertEqual(sq, request.body.read())
@@ -167,12 +198,12 @@ class TestRequest(unittest.TestCase):
         e['CONTENT_LENGTH'] = '7'
         e['QUERY_STRING'] = 'a=a&c=g'
         e['REQUEST_METHOD'] = "POST"
-        request.bind(e)
+        request = BaseRequest(e)
         self.assertEqual(['a','b','c'], sorted(request.params.keys()))
         self.assertEqual('p', request.params['c'])
 
     def test_getpostleak(self):
-        """ Environ: GET and POST sh0uld not leak into each other """ 
+        """ Environ: GET and POST should not leak into each other """ 
         e = {}
         wsgiref.util.setup_testing_defaults(e)
         e['wsgi.input'].write(u'b=b'.encode('utf8'))
@@ -180,7 +211,7 @@ class TestRequest(unittest.TestCase):
         e['CONTENT_LENGTH'] = '3'
         e['QUERY_STRING'] = 'a=a'
         e['REQUEST_METHOD'] = "POST"
-        request.bind(e)
+        request = BaseRequest(e)
         self.assertEqual(['a'], request.GET.keys())
         self.assertEqual(['b'], request.POST.keys())
 
@@ -191,7 +222,7 @@ class TestRequest(unittest.TestCase):
         e['wsgi.input'].write(u'abc'.encode('utf8'))
         e['wsgi.input'].seek(0)
         e['CONTENT_LENGTH'] = str(3)
-        request.bind(e)
+        request = BaseRequest(e)
         self.assertEqual(u'abc'.encode('utf8'), request.body.read())
         self.assertEqual(u'abc'.encode('utf8'), request.body.read(3))
         self.assertEqual(u'abc'.encode('utf8'), request.body.readline())
@@ -204,7 +235,7 @@ class TestRequest(unittest.TestCase):
         e['wsgi.input'].write((u'x'*1024*1000).encode('utf8'))
         e['wsgi.input'].seek(0)
         e['CONTENT_LENGTH'] = str(1024*1000)
-        request.bind(e)
+        request = BaseRequest(e)
         self.assertTrue(hasattr(request.body, 'fileno'))        
         self.assertEqual(1024*1000, len(request.body.read()))
         self.assertEqual(1024, len(request.body.read(1024)))
@@ -218,64 +249,93 @@ class TestRequest(unittest.TestCase):
         e['wsgi.input'].write((u'x'*1024).encode('utf8'))
         e['wsgi.input'].seek(0)
         e['CONTENT_LENGTH'] = '42'
-        request.bind(e)
+        request = BaseRequest(e)
         self.assertEqual(42, len(request.body.read()))
         self.assertEqual(42, len(request.body.read(1024)))
         self.assertEqual(42, len(request.body.readline()))
         self.assertEqual(42, len(request.body.readline(1024)))
 
+    def test_multipart(self):
+        """ Environ: POST (multipart files and multible values per key) """
+        fields = [('field1','value1'), ('field2','value2'), ('field2','value3')]
+        files = [('file1','filename1.txt','content1'), ('file2','filename2.py',u'ä\nö\rü')]
+        e = tools.multipart_environ(fields=fields, files=files)
+        request = BaseRequest(e)
+        # File content
+        self.assertTrue('file1' in request.POST)
+        self.assertTrue('file1' in request.files)
+        self.assertTrue('file1' not in request.forms)
+        cmp = tob('content1') if sys.version_info >= (3,2,0) else 'content1'
+        self.assertEqual(cmp, request.POST['file1'].file.read())
+        # File name and meta data
+        self.assertTrue('file2' in request.POST)
+        self.assertTrue('file2' in request.files)
+        self.assertTrue('file2' not in request.forms)
+        self.assertEqual('filename2.py', request.POST['file2'].filename)
+        # UTF-8 files
+        x = request.POST['file2'].file.read()
+        if (3,2,0) > sys.version_info >= (3,0,0):
+            x = x.encode('ISO-8859-1')
+        self.assertEqual(u'ä\nö\rü'.encode('utf8'), x)
+        # No file
+        self.assertTrue('file3' not in request.POST)
+        self.assertTrue('file3' not in request.files)
+        self.assertTrue('file3' not in request.forms)
+        # Field (single)
+        self.assertEqual('value1', request.POST['field1'])
+        self.assertTrue('field1' not in request.files)
+        self.assertEqual('value1', request.forms['field1'])
+        # Field (multi)
+        self.assertEqual(2, len(request.POST.getall('field2')))
+        self.assertEqual(['value2', 'value3'], request.POST.getall('field2'))
+        self.assertEqual(['value2', 'value3'], request.forms.getall('field2'))
+        self.assertTrue('field2' not in request.files)
+
     def test_json_empty(self):
         """ Environ: Request.json property with empty body. """
-        e = {}
-        wsgiref.util.setup_testing_defaults(e)
-        r = bottle.BaseRequest(e)
-        self.assertEqual(r.json, None)
+        self.assertEqual(BaseRequest({}).json, None)
 
     def test_json_noheader(self):
         """ Environ: Request.json property with missing content-type header. """
         test = dict(a=5, b='test', c=[1,2,3])
         e = {}
         wsgiref.util.setup_testing_defaults(e)
-        r = bottle.BaseRequest(e)
         e['wsgi.input'].write(tob(json_dumps(test)))
         e['wsgi.input'].seek(0)
         e['CONTENT_LENGTH'] = str(len(json_dumps(test)))
-        self.assertEqual(r.json, None)
+        self.assertEqual(BaseRequest(e).json, None)
 
     def test_json_tobig(self):
         """ Environ: Request.json property with huge body. """
         test = dict(a=5, tobig='x' * bottle.BaseRequest.MEMFILE_MAX)
         e = {'CONTENT_TYPE': 'application/json'}
         wsgiref.util.setup_testing_defaults(e)
-        r = bottle.BaseRequest(e)
         e['wsgi.input'].write(tob(json_dumps(test)))
         e['wsgi.input'].seek(0)
         e['CONTENT_LENGTH'] = str(len(json_dumps(test)))
-        self.assertEqual(r.json, None)
+        self.assertEqual(BaseRequest(e).json, None)
 
     def test_json_valid(self):
         """ Environ: Request.json property. """
         test = dict(a=5, b='test', c=[1,2,3])
         e = {'CONTENT_TYPE': 'application/json'}
         wsgiref.util.setup_testing_defaults(e)
-        r = bottle.BaseRequest(e)
         e['wsgi.input'].write(tob(json_dumps(test)))
         e['wsgi.input'].seek(0)
         e['CONTENT_LENGTH'] = str(len(json_dumps(test)))
-        self.assertEqual(r.json, test)
+        self.assertEqual(BaseRequest(e).json, test)
 
     def test_isajax(self):
         e = {}
         wsgiref.util.setup_testing_defaults(e)
-        request.bind(e)
-        self.assertFalse(request.is_ajax)
+        self.assertFalse(BaseRequest(e.copy()).is_ajax)
         e['HTTP_X_REQUESTED_WITH'] = 'XMLHttpRequest'
-        self.assertTrue(request.is_ajax)
+        self.assertTrue(BaseRequest(e.copy()).is_ajax)
 
     def test_auth(self):
         user, pwd = 'marc', 'secret'
         basic = touni(base64.b64encode(tob('%s:%s' % (user, pwd))))
-        r = bottle.BaseRequest({})
+        r = BaseRequest({})
         self.assertEqual(r.auth, None)
         r.environ['HTTP_AUTHORIZATION'] = 'basic %s' % basic
         self.assertEqual(r.auth, (user, pwd))
@@ -286,7 +346,7 @@ class TestRequest(unittest.TestCase):
 
     def test_remote_route(self):
         ips = ['1.2.3.4', '2.3.4.5', '3.4.5.6']
-        r = bottle.BaseRequest({})
+        r = BaseRequest({})
         self.assertEqual(r.remote_route, [])
         r.environ['HTTP_X_FORWARDED_FOR'] = ', '.join(ips)
         self.assertEqual(r.remote_route, ips)
@@ -297,7 +357,7 @@ class TestRequest(unittest.TestCase):
 
     def test_remote_addr(self):
         ips = ['1.2.3.4', '2.3.4.5', '3.4.5.6']
-        r = bottle.BaseRequest({})
+        r = BaseRequest({})
         self.assertEqual(r.remote_addr, None)
         r.environ['HTTP_X_FORWARDED_FOR'] = ', '.join(ips)
         self.assertEqual(r.remote_addr, ips[0])
@@ -308,10 +368,86 @@ class TestRequest(unittest.TestCase):
 
 
 class TestResponse(unittest.TestCase):
-    def setUp(self):
-        response.bind()
+
+    def test_set_status(self):
+        rs = BaseResponse()
+
+        rs.status = 200
+        self.assertEqual(rs.status, 200)
+        self.assertEqual(rs.status_code, 200)
+        self.assertEqual(rs.status_line, '200 OK')
+
+        rs.status = 999
+        self.assertEqual(rs.status, 999)
+        self.assertEqual(rs.status_code, 999)
+        self.assertEqual(rs.status_line, '999 Unknown')
+
+        rs.status = 404
+        self.assertEqual(rs.status, 404)
+        self.assertEqual(rs.status_code, 404)
+        self.assertEqual(rs.status_line, '404 Not Found')
+
+        def test(): rs.status = -200
+        self.assertRaises(ValueError, test)
+        self.assertEqual(rs.status, 404) # last value
+        self.assertEqual(rs.status_code, 404) # last value
+        self.assertEqual(rs.status_line, '404 Not Found') # last value
+
+        def test(): rs.status = 5
+        self.assertRaises(ValueError, test)
+        self.assertEqual(rs.status, 404) # last value
+        self.assertEqual(rs.status_code, 404) # last value
+        self.assertEqual(rs.status_line, '404 Not Found') # last value
+
+        rs.status = '999 Who knows?' # Illegal, but acceptable three digit code
+        self.assertEqual(rs.status, 999)
+        self.assertEqual(rs.status_code, 999)
+        self.assertEqual(rs.status_line, '999 Who knows?')
+
+        rs.status = '404 Brain not Found' # Custom reason
+        self.assertEqual(rs.status, 404)
+        self.assertEqual(rs.status_code, 404)
+        self.assertEqual(rs.status_line, '404 Brain not Found')
+
+        def test(): rs.status = '5 Illegal Code'
+        self.assertRaises(ValueError, test)
+        self.assertEqual(rs.status, 404) # last value
+        self.assertEqual(rs.status_code, 404) # last value
+        self.assertEqual(rs.status_line, '404 Brain not Found') # last value
+
+        def test(): rs.status = '-99 Illegal Code'
+        self.assertRaises(ValueError, test)
+        self.assertEqual(rs.status, 404) # last value
+        self.assertEqual(rs.status_code, 404) # last value
+        self.assertEqual(rs.status_line, '404 Brain not Found') # last value
+
+        def test(): rs.status = '1000 Illegal Code'
+        self.assertRaises(ValueError, test)
+        self.assertEqual(rs.status, 404) # last value
+        self.assertEqual(rs.status_code, 404) # last value
+        self.assertEqual(rs.status_line, '404 Brain not Found') # last value
+
+        def test(): rs.status = '555' # No reason
+        self.assertRaises(ValueError, test)
+        self.assertEqual(rs.status, 404) # last value
+        self.assertEqual(rs.status_code, 404) # last value
+        self.assertEqual(rs.status_line, '404 Brain not Found') # last value
+
+    def test_content_type(self):
+        rs = BaseResponse()
+        rs.content_type = 'test/some'
+        self.assertEquals('test/some', rs.headers.get('Content-Type')) 
+
+    def test_charset(self):
+        rs = BaseResponse()
+        self.assertEqual(rs.charset, 'UTF-8')
+        rs.content_type = 'text/html; charset=latin9'
+        self.assertEqual(rs.charset, 'latin9')
+        rs.content_type = 'text/html'
+        self.assertEqual(rs.charset, 'UTF-8')
 
     def test_set_cookie(self):
+        response = BaseResponse()
         response.set_cookie('name', 'value', max_age=5)
         response.set_cookie('name2', 'value 2', path='/foo')
         cookies = [value for name, value in response.wsgiheader()
@@ -321,6 +457,7 @@ class TestResponse(unittest.TestCase):
         self.assertTrue(cookies[1], 'name2="value 2"; Path=/foo')
 
     def test_delete_cookie(self):
+        response = BaseResponse()
         response.set_cookie('name', 'value')
         response.delete_cookie('name')
         cookies = [value for name, value in response.wsgiheader()
@@ -422,34 +559,6 @@ class TestRedirect(unittest.TestCase):
                             'http://example.com/a%20a/b%20b/te st.html',
                             HTTP_HOST='example.com', SCRIPT_NAME='/a a/', PATH_INFO='/b b/')
                             
-class TestMultipart(unittest.TestCase):
-    def test_multipart(self):
-        """ Environ: POST (multipart files and multible values per key) """
-        fields = [('field1','value1'), ('field2','value2'), ('field2','value3')]
-        files = [('file1','filename1.txt','content1'), ('file2','filename2.py',u'ä\nö\rü')]
-        e = tools.multipart_environ(fields=fields, files=files)
-        request.bind(e)
-        # File content
-        self.assertTrue('file1' in request.POST)
-        cmp = tob('content1') if sys.version_info >= (3,2,0) else 'content1'
-        self.assertEqual(cmp, request.POST['file1'].file.read())
-        # File name and meta data
-        self.assertTrue('file2' in request.POST)
-        self.assertEqual('filename2.py', request.POST['file2'].filename)
-        # UTF-8 files
-        x = request.POST['file2'].file.read()
-        if (3,2,0) > sys.version_info >= (3,0,0):
-            x = x.encode('ISO-8859-1')
-        self.assertEqual(u'ä\nö\rü'.encode('utf8'), x)
-        # No file
-        self.assertTrue('file3' not in request.POST)
-        # Field (single)
-        self.assertEqual('value1', request.POST['field1'])
-        # Field (multi)
-        self.assertEqual(2, len(request.POST.getall('field2')))
-        self.assertEqual(['value2', 'value3'], request.POST.getall('field2'))
-
-
 class TestWSGIHeaderDict(unittest.TestCase):
     def setUp(self):
         self.env = {}
