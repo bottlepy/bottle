@@ -39,7 +39,7 @@ import warnings
 
 from Cookie import SimpleCookie
 from tempfile import TemporaryFile
-from traceback import format_exc
+from traceback import format_exc, print_exc
 from urllib import urlencode, quote as urlquote, unquote as urlunquote
 from urlparse import urlunsplit, urljoin, SplitResult as UrlSplitResult
 
@@ -652,7 +652,9 @@ class Bottle(object):
             raise
         except Exception, e:
             if not self.catchall: raise
-            return HTTPError(500, "Internal Server Error", e, format_exc(10))
+            stacktrace = format_exc(10)
+            environ['wsgi.errors'].write(stacktrace)
+            return HTTPError(500, "Internal Server Error", e, stacktrace)
 
     def _cast(self, out, request, response, peek=None):
         """ Try to convert the parameter into something WSGI compatible and set
