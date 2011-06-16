@@ -1710,8 +1710,10 @@ class CherryPyServer(ServerAdapter):
     def run(self, handler): # pragma: no cover
         from cherrypy import wsgiserver
         server = wsgiserver.CherryPyWSGIServer((self.host, self.port), handler)
-        server.start()
-
+        try:
+            server.start()
+        finally:
+            server.stop()
 
 class PasteServer(ServerAdapter):
     def run(self, handler): # pragma: no cover
