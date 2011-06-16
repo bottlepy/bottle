@@ -1778,6 +1778,9 @@ class ServerAdapter(object):
     def run(self, handler): # pragma: no cover
         pass
 
+    def stop(self):
+        pass
+
     def __repr__(self):
         args = ', '.join(['%s=%s'%(k,repr(v)) for k, v in self.options.items()])
         return "%s(%s)" % (self.__class__.__name__, args)
@@ -1812,8 +1815,11 @@ class WSGIRefServer(ServerAdapter):
 class CherryPyServer(ServerAdapter):
     def run(self, handler): # pragma: no cover
         from cherrypy import wsgiserver
-        server = wsgiserver.CherryPyWSGIServer((self.host, self.port), handler)
-        server.start()
+        self.server = wsgiserver.CherryPyWSGIServer((self.host, self.port), handler)
+        self.server.start()
+
+    def stop(self):
+        self.server.stop()
 
 
 class PasteServer(ServerAdapter):
@@ -2083,7 +2089,7 @@ def run(app=None, server='wsgiref', host='127.0.0.1', port=8080,
         else:
             server.run(app)
     except KeyboardInterrupt:
-        pass
+        server.stop()
     if not server.quiet and not os.environ.get('BOTTLE_CHILD'):
         print "Shutting down..."
 
