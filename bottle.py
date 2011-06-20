@@ -344,7 +344,7 @@ class Router(object):
             match = combined.match(path)
             if not match: continue
             gpat, match = rules[match.lastindex - 1]
-            return match, gpat.match(path).groupdict() if gpat else {}
+            return match, gpat(path).groupdict() if gpat else {}
         # Lazy-check if we are really in a warm state. If yes, stop here.
         if self.static or self.dynamic or not self.routes: return None, {}
         # Cold state: We have not compiled any rules yet. Do so and try again.
@@ -375,7 +375,7 @@ class Router(object):
                 continue
             gpat = self._compile_pattern(rule)
             fpat = re.sub(r'(\\*)(\(\?P<[^>]*>|\((?!\?))', fpat_sub, gpat.pattern)
-            gpat = gpat if gpat.groupindex else None
+            gpat = gpat.match if gpat.groupindex else None
             try:
                 combined = '%s|(%s)' % (self.dynamic[-1][0].pattern, fpat)
                 self.dynamic[-1] = (re.compile(combined), self.dynamic[-1][1])
@@ -665,7 +665,7 @@ class Bottle(object):
 
         # Empty output is done here
         if not out:
-            response.headers['Content-Length'] = 0
+            response['Content-Length'] = 0
             return []
         # Join lists of byte or unicode strings. Mixed lists are NOT supported
         if isinstance(out, (tuple, list))\
@@ -676,7 +676,7 @@ class Bottle(object):
             out = out.encode(response.charset)
         # Byte Strings are just returned
         if isinstance(out, bytes):
-            response.headers['Content-Length'] = str(len(out))
+            response['Content-Length'] = len(out)
             return [out]
         # HTTPError or HTTPException (recursive, because they may wrap anything)
         # TODO: Handle these explicitly in handle() or make them iterable.
@@ -729,14 +729,13 @@ class Bottle(object):
             environ['bottle.app'] = self
             request.bind(environ)
             response.bind()
-            out = self._handle(environ)
-            out = self._cast(out, request, response)
+            out = self._cast(self._handle(environ), request, response)
             # rfc2616 section 4.3
-            if response.status in (100, 101, 204, 304) or request.method == 'HEAD':
+            if response.status_code in (100, 101, 204, 304)\
+            or request.method == 'HEAD':
                 if hasattr(out, 'close'): out.close()
                 out = []
-            status = '%d %s' % (response.status, HTTP_CODES[response.status])
-            start_response(status, response.headerlist)
+            start_response(response.status_line, list(response.iter_headers()))
             return out
         except (KeyboardInterrupt, SystemExit, MemoryError):
             raise
@@ -1077,71 +1076,120 @@ Request = LocalRequest
 
 
 
+def _hkey(s):
+    return s.title().replace('_','-')
+
 class BaseResponse(object):
-    """ Stores HTTP headers and cookies that are to be sent to the client. """
+    """ A storage class for HTTP headers and cookies that are to be sent to the
+        client. You can access headers via a case-insensitive dict-like API, but
+        only parts of the dict API are implemented.
+    """
 
     default_status = 200
     default_content_type = 'text/html; charset=UTF-8'
+    
+    #: Header blacklist for specific response codes
+    #: (rfc2616 section 10.2.3 and 10.3.5)
+    bad_headers = {
+        204: set(('Content-Type',)),
+        304: set(('Allow', 'Content-Encoding', 'Content-Language',
+                  'Content-Length', 'Content-Range', 'Content-Type',
+                  'Content-Md5', 'Last-Modified'))}
 
     def __init__(self, body='', status=None, **headers):
-        self._cookies = None
-        self.status = status or self.default_status
-
+        #: The HTTP status code as an integer (e.g. 404).
+        #: Do not change it directly, see :attr:`status`.
+        self.status_code = None
+        #: The HTTP status line as a string (e.g. "404 Not Found").
+        #: Do not change it directly, see :attr:`status`.
+        self.status_line = None
         #: The response body as one of the supported data types.
         self.body = body
-
-        #: An instance of :class:`HeaderDict` (case insensitive).
-        self.headers = HeaderDict(headers) if headers else HeaderDict()
-
-    def set_status(self, status):
-        if isinstance(status, int):
-            code, reason = status, HTTP_CODES.get(status)
-        else:
-            code, reason = status.split(None, 1)
-            code, reason = int(code), reason.strip()
-        if not 100 <= code <= 999: raise ValueError('Status code out of range.')
-        self._status = code
-        self._reason = reason or 'Unknown'
-
-    status_code = property(lambda self: self._status, set_status, None,
-        ''' The response status code as an integer (e.g. 200). ''')
-    status_line = property(lambda self: '%d %s' % (self._status, self._reason),
-        set_status, None, ''' The response status line as a string (e.g. '200 OK'). ''')
-    status = status_code
-    del set_status
-
-    def bind(self):
-        ''' Reset to factory defaults. '''
-        self.__init__()
+        self._cookies = None
+        self._headers = {'Content-Type': [self.default_content_type]}
+        self.status = status or self.default_status
+        
+    bind = __init__
 
     def copy(self):
         ''' Returns a copy of self. '''
         copy = Response()
         copy.status = self.status
-        copy.headers = self.headers.copy()
+        copy._headers = dict((k, v[:]) for (k, v) in self._headers.items())
         return copy
 
-    def wsgiheader(self):
-        ''' Returns a wsgi conform list of header/value pairs. '''
-        # Save cookies as headers. This is delayed to prevent dublicates.
+    def _set_status(self, status):
+        if isinstance(status, int):
+            code, status = status, _HTTP_STATUS_LINES.get(status)
+        elif ' ' in status:
+            status = status.strip()
+            code   = int(status.split()[0])
+        else:
+            raise ValueError('String status line without a reason phrase.')
+        if not 100 <= code <= 999: raise ValueError('Status code out of range.')
+        self.status_code = code
+        self.status_line = status or ('%d Unknown' % code)
+
+    status = property(lambda self: self.status_code, _set_status, None, 
+        ''' A writeable property to change the HTTP response status. It accepts
+            either a numeric code (100-999) or a string with a custom reason
+            phrase (e.g. "404 Brain not found"). Both :data:`status_line` and
+            :data:`status_line` are updates accordingly. The return value is
+            always a numeric code. ''')
+    del _set_status
+
+    @property
+    def headers(self):
+        ''' An instance of :class:`HeaderDict`, a case-insensitive dict-like
+            view on the response headers. '''
+        self.__dict__['headers'] = hdict = HeaderDict()
+        hdict.dict = self._headers
+        return hdict
+
+    def __contains__(self, name): return _hkey(name) in self._headers
+    def __delitem__(self, name):  del self._headers[_hkey(name)]
+    def __getitem__(self, name):  return self._headers[_hkey(name)][-1]
+    def __setitem__(self, name, value): self._headers[_hkey(name)] = [str(value)]
+
+    def get_header(self, name, default=None):
+        ''' Return the value of a previously defined header. If there is no
+            header with that name, return a default value. '''
+        return self._headers.get(_hkey(name), [default])[-1]
+
+    def set_header(self, name, value, append=False):
+        ''' Create a new response header, replacing any previously defined
+            headers with the same name. This equals ``response[name] = value``.
+
+            :param append: Do not delete previously defined headers. This can
+                           result in two (or more) headers having the same name.
+        '''
+        if append:
+            self._headers.setdefault(_hkey(name), []).append(str(value))
+        else:
+            self._headers[_hkey(name)] = [str(value)]
+        
+    def iter_headers(self):
+        ''' Yield (header, value) tuples, skipping headers that are not
+            allowed with the current response status code. '''
+        headers = self._headers.iteritems()
+        bad_headers = self.bad_headers.get(self.status_code)
+        if bad_headers:
+            headers = (h for h in headers if h[0] not in bad_headers)
+        for name, values in headers:
+            for value in values:
+                yield name, value
         if self._cookies:
             for c in self._cookies.values():
-                self.headers.append('Set-Cookie', c.OutputString())
-            self._cookies.clear()
+                yield 'Set-Cookie', c.OutputString()
+                
+    def wsgiheader(self):
+        depr('The wsgiheader method is deprecated. See headerlist.') #0.10
+        return self.headerlist
 
-        if 'Content-Type' not in self.headers:
-            self.headers['Content-Type'] = self.default_content_type
-
-        # rfc2616 section 10.2.3, 10.3.5
-        code = self.status_code
-        if code == 204:
-            self.headers.filter(('content-type',))
-        if code == 304:
-            self.headers.filter(('allow', 'content-encoding', 'content-language',
-                      'content-length', 'content-md5', 'content-range',
-                      'content-type', 'last-modified')) # + c-location, expires?
-        return list(self.headers.iterallitems())
-    headerlist = property(wsgiheader)
+    @property
+    def headerlist(self):
+        ''' WSGI conform list of (header, value) tuples. '''
+        return list(self.iter_headers())
 
     content_type = HeaderProperty('Content-Type')
     content_length = HeaderProperty('Content-Length', reader=int)
@@ -1421,15 +1469,14 @@ class MultiDict(DictMixin):
         return self.dict.get(key) or []
 
 
-def _hkey(s):
-    return s.title().replace('_','-')
-
 class HeaderDict(MultiDict):
     """ A case-insensitive version of :class:`MultiDict` that defaults to
         replace the old value instead of appending it. """
 
-    def __init__(self, *a, **k):
-        self.dict = dict((_hkey(k), [str(v)]) for k, v in dict(*a, **k).iteritems())
+    def __init__(self, *a, **ka):
+        self.dict = {}
+        if a or ka: self.update(*a, **ka)
+
     def __contains__(self, key): return _hkey(key) in self.dict
     def __delitem__(self, key): del self.dict[_hkey(key)]
     def __getitem__(self, key): return self.dict[_hkey(key)][-1]
@@ -2571,6 +2618,7 @@ DEBUG = False
 #: A dict to map HTTP status codes (e.g. 404) to phrases (e.g. 'Not Found')
 HTTP_CODES = httplib.responses
 HTTP_CODES[418] = "I'm a teapot" # RFC 2324
+_HTTP_STATUS_LINES = dict((k, '%d %s'%(k,v)) for (k,v) in HTTP_CODES.iteritems())
 
 #: The default template used for error pages. Override with @error()
 ERROR_PAGE_TEMPLATE = """

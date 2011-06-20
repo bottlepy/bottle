@@ -404,6 +404,11 @@ class TestResponse(unittest.TestCase):
         self.assertEqual(rs.status_code, 999)
         self.assertEqual(rs.status_line, '999 Who knows?')
 
+        rs.status = 555 # Strange code
+        self.assertEqual(rs.status, 555)
+        self.assertEqual(rs.status_code, 555)
+        self.assertEqual(rs.status_line, '555 Unknown')
+
         rs.status = '404 Brain not Found' # Custom reason
         self.assertEqual(rs.status, 404)
         self.assertEqual(rs.status_code, 404)
@@ -463,6 +468,48 @@ class TestResponse(unittest.TestCase):
         cookies = [value for name, value in response.wsgiheader()
                    if name.title() == 'Set-Cookie']
         self.assertTrue('name=;' in cookies[0])
+
+    def test_set_header(self):
+        response = BaseResponse()
+        response['x-test'] = 'foo'
+        headers = [value for name, value in response.wsgiheader()
+                   if name.title() == 'X-Test']
+        self.assertEqual(['foo'], headers)
+        self.assertEqual('foo', response['x-test'])
+
+        response['X-Test'] = 'bar'
+        headers = [value for name, value in response.wsgiheader()
+                   if name.title() == 'X-Test']
+        self.assertEqual(['bar'], headers)
+        self.assertEqual('bar', response['x-test'])
+        
+    def test_append_header(self):
+        response = BaseResponse()
+        response.set_header('x-test', 'foo')
+        headers = [value for name, value in response.wsgiheader()
+                   if name.title() == 'X-Test']
+        self.assertEqual(['foo'], headers)
+        self.assertEqual('foo', response['x-test'])
+
+        response.set_header('X-Test', 'bar', True)
+        headers = [value for name, value in response.wsgiheader()
+                   if name.title() == 'X-Test']
+        self.assertEqual(['foo', 'bar'], headers)
+        self.assertEqual('bar', response['x-test'])
+
+    def test_delete_header(self):
+        response = BaseResponse()
+        response['x-test'] = 'foo'
+        self.assertEqual('foo', response['x-test'])
+        del response['X-tESt']
+        self.assertRaises(KeyError, lambda: response['x-test'])
+
+    def test_non_string_header(self):
+        response = BaseResponse()
+        response['x-test'] = 5
+        self.assertEqual('5', response['x-test'])
+        response['x-test'] = None
+        self.assertEqual('None', response['x-test'])
 
 
 
