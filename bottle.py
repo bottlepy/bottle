@@ -441,7 +441,7 @@ class Bottle(object):
         @self.route('/%s/:#.*#' % prefix, **options)
         def mountpoint():
             request.path_shift(path_depth)
-            return app.handle(request.environ)
+            return app._handle(request.environ)
 
     def add_filter(self, ftype, func):
         depr("Filters are deprecated and can be replaced with plugins.") #0.9
@@ -653,7 +653,7 @@ class Bottle(object):
             return r
         except RouteReset: # Route reset requested by the callback or a plugin.
             del self.ccache[handle]
-            return self.handle(environ) # Try again.
+            return self._handle(environ) # Try again.
         except (KeyboardInterrupt, SystemExit, MemoryError):
             raise
         except Exception, e:
