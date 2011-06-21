@@ -765,27 +765,27 @@ class Bottle(object):
 
 class BaseRequest(DictMixin):
     """ A wrapper for WSGI environment dictionaries that adds a lot of
-        convenient access methods and properties. Most of them are read-only. """
+        convenient access methods and properties. Most of them are read-only."""
 
     #: Maximum size of memory buffer for :attr:`body` in bytes.
     MEMFILE_MAX = 102400
 
     def __init__(self, environ):
         """ Wrap a WSGI environ dictionary. """
-        #: The wrapped WSGI environ dictionary. This is the only real attribute. All
-        #: other attributes actually are read-only properties.
+        #: The wrapped WSGI environ dictionary. This is the only real attribute.
+        #: All other attributes actually are read-only properties.
         self.environ = environ
         environ['bottle.request'] = self
 
     @property
     def path(self):
-        ''' The value of ``PATH_INFO`` with exactly one prefixed slash (to fix broken
-            clients and avoid the "empty path" edge case). ''' 
+        ''' The value of ``PATH_INFO`` with exactly one prefixed slash (to fix
+            broken clients and avoid the "empty path" edge case). ''' 
         return '/' + self.environ.get('PATH_INFO','').lstrip('/')
 
     @property
     def method(self):
-        ''' The ``REQUEST_METHOD`` value as an uppercase string (default: GET). '''
+        ''' The ``REQUEST_METHOD`` value as an uppercase string. '''
         return self.environ.get('REQUEST_METHOD', 'GET').upper()
 
     @DictProperty('environ', 'bottle.request.headers', read_only=True)
@@ -796,8 +796,8 @@ class BaseRequest(DictMixin):
 
     @DictProperty('environ', 'bottle.request.cookies', read_only=True)
     def cookies(self):
-        """ Cookies parsed into a dictionary. Signed cookies are NOT decoded
-            automatically. Use :meth:`get_cookie` if you expect signed cookies. """
+        """ Cookies parsed into a dictionary. Signed cookies are NOT decoded.
+            Use :meth:`get_cookie` if you expect signed cookies. """
         raw_dict = SimpleCookie(self.environ.get('HTTP_COOKIE',''))
         cookies = {}
         for cookie in raw_dict.itervalues():
@@ -805,10 +805,10 @@ class BaseRequest(DictMixin):
         return cookies
 
     def get_cookie(self, key, default=None, secret=None):
-        """ Return the content of a cookie. To read a `Signed Cookie`, the `secret` must
-            match the one used to create the cookie (see :meth:`BaseResponse.set_cookie`).
-            If anything goes wrong (missing cookie or wrong signature), return a default
-            value. """
+        """ Return the content of a cookie. To read a `Signed Cookie`, the
+            `secret` must match the one used to create the cookie (see
+            :meth:`BaseResponse.set_cookie`). If anything goes wrong (missing
+            cookie or wrong signature), return a default value. """
         value = self.cookies.get(key)
         if secret and value:
             dec = cookie_decode(value, secret) # (key, value) tuple or None
@@ -817,9 +817,10 @@ class BaseRequest(DictMixin):
 
     @DictProperty('environ', 'bottle.request.query', read_only=True)
     def query(self):
-        ''' The :attr:`query_string` parsed into a :class:`MultiDict`. These values are
-            sometimes called "URL arguments" or "GET parameters", but not to be confused
-            with "URL wildcards" as they are provided by the :class:`Router`. '''
+        ''' The :attr:`query_string` parsed into a :class:`MultiDict`. These
+            values are sometimes called "URL arguments" or "GET parameters", but
+            not to be confused with "URL wildcards" as they are provided by the
+            :class:`Router`. '''
         data = parse_qs(self.query_string, keep_blank_values=True)
         get = self.environ['bottle.get'] = MultiDict()
         for key, values in data.iteritems():
@@ -829,10 +830,10 @@ class BaseRequest(DictMixin):
 
     @DictProperty('environ', 'bottle.request.forms', read_only=True)
     def forms(self):
-        """ Form values parsed from an `url-encoded` or `multipart/form-data` encoded
-            POST or PUT request body. The result is retuned as a :class:`MultiDict`. All
-            keys and values are strings. File uploads are stored separately in
-            :attr:`files`. """
+        """ Form values parsed from an `url-encoded` or `multipart/form-data`
+            encoded POST or PUT request body. The result is retuned as a
+            :class:`MultiDict`. All keys and values are strings. File uploads
+            are stored separately in :attr:`files`. """
         forms = MultiDict()
         for name, item in self.POST.iterallitems():
             if not hasattr(item, 'filename'):
@@ -842,7 +843,7 @@ class BaseRequest(DictMixin):
     @DictProperty('environ', 'bottle.request.params', read_only=True)
     def params(self):
         """ A :class:`MultiDict` with the combined values of :attr:`query` and
-            :attr:`forms`. File uploads are stored separately in :attr:`files`. """
+            :attr:`forms`. File uploads are stored in :attr:`files`. """
         params = MultiDict()
         for key, value in self.query.iterallitems():
             params[key] = value
@@ -852,20 +853,20 @@ class BaseRequest(DictMixin):
 
     @DictProperty('environ', 'bottle.request.files', read_only=True)
     def files(self):
-        """ File uploads parsed from an `url-encoded` or `multipart/form-data` encoded
-            POST or PUT request body. The values are instances of
+        """ File uploads parsed from an `url-encoded` or `multipart/form-data`
+            encoded POST or PUT request body. The values are instances of
             :class:`cgi.FieldStorage`. The most important attributes are:
 
             filename
-                The filename, if specified; otherwise None; this is the client side
-                filename, *not* the file name on which it is stored (that's a
-                temporary file you don't deal with)
+                The filename, if specified; otherwise None; this is the client
+                side filename, *not* the file name on which it is stored (that's
+                a temporary file you don't deal with)
             file
                 The file(-like) object from which you can read the data.
             value
-                The value as a *string*; for file uploads, this transparently reads
-                the file every time you request the value. Do not do this on big
-                files.
+                The value as a *string*; for file uploads, this transparently
+                reads the file every time you request the value. Do not do this
+                on big files.
         """
         files = MultiDict()
         for name, item in self.POST.iterallitems():
@@ -875,9 +876,10 @@ class BaseRequest(DictMixin):
 
     @DictProperty('environ', 'bottle.request.json', read_only=True)
     def json(self):
-        ''' If the ``Content-Type`` header is ``application/json``, this property holds
-            the parsed content of the request body. Only requests smaller than
-            :attr:`MEMFILE_MAX` are processed to avoid memory exhaustion. '''
+        ''' If the ``Content-Type`` header is ``application/json``, this
+            property holds the parsed content of the request body. Only requests
+            smaller than :attr:`MEMFILE_MAX` are processed to avoid memory
+            exhaustion. '''
         if self.environ.get('CONTENT_TYPE') == 'application/json' \
         and 0 < self.content_length < self.MEMFILE_MAX:
             return json_loads(self.body.read(self.MEMFILE_MAX))
@@ -900,10 +902,10 @@ class BaseRequest(DictMixin):
     @property
     def body(self):
         """ The HTTP request body as a seek-able file-like object. Depending on
-            :attr:`MEMFILE_MAX`, this is either a temporary file or a :class:`io.BytesIO`
-            instance. Accessing this property for the first time reads and replaces
-            the ``wsgi.input`` environ variable. Subsequent accesses just do a `seek(0)`
-            on the file object. """
+            :attr:`MEMFILE_MAX`, this is either a temporary file or a
+            :class:`io.BytesIO` instance. Accessing this property for the first
+            time reads and replaces the ``wsgi.input`` environ variable.
+            Subsequent accesses just do a `seek(0)` on the file object. """
         self._body.seek(0)
         return self._body
 
@@ -913,8 +915,8 @@ class BaseRequest(DictMixin):
     @DictProperty('environ', 'bottle.request.post', read_only=True)
     def POST(self):
         """ The values of :attr:`forms` and :attr:`files` combined into a single
-            :class:`MultiDict`. Values are either strings (form values) or instances of
-            :class:`cgi.FieldStorage` (file uploads).
+            :class:`MultiDict`. Values are either strings (form values) or
+            instances of :class:`cgi.FieldStorage` (file uploads).
         """
         post = MultiDict()
         safe_env = {'QUERY_STRING':''} # Build a safe environment for cgi
@@ -937,16 +939,18 @@ class BaseRequest(DictMixin):
 
     @property
     def url(self):
-        """ The full request URI including hostname and scheme. If your app lives behind
-            a reverse proxy or load balancer and you get confusing results, make sure
-            that the ``X-Forwarded-Host`` header is set correctly. """
+        """ The full request URI including hostname and scheme. If your app
+            lives behind a reverse proxy or load balancer and you get confusing
+            results, make sure that the ``X-Forwarded-Host`` header is set
+            correctly. """
         return self.urlparts.geturl()
 
     @DictProperty('environ', 'bottle.request.urlparts', read_only=True)
     def urlparts(self):
-        ''' The :attr:`url` string as a :class:`urlparse.SplitResult` tuple. The tuple
-            contains (scheme, host, path, query_string and fragment), but the fragment is
-            always empty because it is not visible to the server. '''
+        ''' The :attr:`url` string as an :class:`urlparse.SplitResult` tuple.
+            The tuple contains (scheme, host, path, query_string and fragment),
+            but the fragment is always empty because it is not visible to the
+            server. '''
         env = self.environ
         http = env.get('wsgi.url_scheme', 'http')
         host = env.get('HTTP_X_FORWARDED_HOST') or env.get('HTTP_HOST')
@@ -966,21 +970,22 @@ class BaseRequest(DictMixin):
 
     @property
     def query_string(self):
-        """ The raw :attr:`query` part of the URL (everything in between ``?`` and ``#``)
-            as a string. """
+        """ The raw :attr:`query` part of the URL (everything in between ``?``
+            and ``#``) as a string. """
         return self.environ.get('QUERY_STRING', '')
 
     @property
     def script_name(self):
-        ''' The initial portion of the URL's `path` that was removed by a higher level
-            (server or routing middleware) before the application was called. This
-            property returns an empty string, or a path with leading and tailing slashes.
-        '''
+        ''' The initial portion of the URL's `path` that was removed by a higher
+            level (server or routing middleware) before the application was
+            called. This property returns an empty string, or a path with
+            leading and tailing slashes. '''
         script_name = self.environ.get('SCRIPT_NAME', '').strip('/')
         return '/' + script_name + '/' if script_name else '/'
 
     def path_shift(self, shift=1):
-        ''' Shift path segments from :attr:`path` to :attr:`script_name` and vice versa.
+        ''' Shift path segments from :attr:`path` to :attr:`script_name` and
+            vice versa.
 
            :param shift: The number of path segments to shift. May be negative
                          to change the shift direction. (default: 1)
@@ -990,30 +995,32 @@ class BaseRequest(DictMixin):
 
     @property
     def content_length(self):
-        ''' The request body length as an integer. The client is responsible to set this
-            header. Otherwise, the real length of the body is unknown and -1 is returned.
-            In this case, :attr:`body` will be empty. '''
+        ''' The request body length as an integer. The client is responsible to
+            set this header. Otherwise, the real length of the body is unknown
+            and -1 is returned. In this case, :attr:`body` will be empty. '''
         return int(self.environ.get('CONTENT_LENGTH') or -1)
 
     @property
     def is_xhr(self):
-        ''' True if the request was triggered by a XMLHttpRequest. This only works with
-            JavaScript libraries that support the `X-Requested-With` header (most of the
-            popular libraries do). '''
-        return self.environ.get('HTTP_X_REQUESTED_WITH','').lower() == 'xmlhttprequest'
+        ''' True if the request was triggered by a XMLHttpRequest. This only
+            works with JavaScript libraries that support the `X-Requested-With`
+            header (most of the popular libraries do). '''
+        requested_with = self.environ.get('HTTP_X_REQUESTED_WITH','')
+        return requested_with.lower() == 'xmlhttprequest'
 
     @property
     def is_ajax(self):
-        ''' Alias for :attr:`ìs_xhr`. "Ajax" is not the right term. '''
+        ''' Alias for :attr:`is_xhr`. "Ajax" is not the right term. '''
         return self.is_xhr
 
     @property
     def auth(self): #TODO: Tests and docs. Add support for digest. namedtuple?
-        """ HTTP authentication data as a (user, password) tuple. If the authentication
-            happened at a higher level (e.g. in the front web-server or a middleware),
-            the password field is None, but the user field is taken from the
-            ``REMOTE_USER`` environ variable. This implementation currently supports
-            basic (not digest) authentication. On any errors, None is returned. """
+        """ HTTP authentication data as a (user, password) tuple. If the
+            authentication happened at a higher level (e.g. in the front
+            web-server or a middleware), the password field is None, but the
+            user field is taken from the ``REMOTE_USER`` environ variable. This
+            implementation currently supports basic (not digest) authentication
+            only. On any errors, None is returned. """
         basic = parse_auth(self.environ.get('HTTP_AUTHORIZATION',''))
         if basic: return basic
         ruser = self.environ.get('REMOTE_USER')
@@ -1022,10 +1029,10 @@ class BaseRequest(DictMixin):
 
     @property
     def remote_route(self):
-        """ A list of all IPs that were involved in this request, starting with the
-            client IP and followed by zero or more proxies. This does only work if all
-            proxies support the ```X-Forwarded-For`` header. Note that this information
-            can be forged by malicious clients. """
+        """ A list of all IPs that were involved in this request, starting with
+            the client IP and followed by zero or more proxies. This does only
+            work if all proxies support the ```X-Forwarded-For`` header. Note
+            that this information can be forged by malicious clients. """
         proxy = self.environ.get('HTTP_X_FORWARDED_FOR')
         if proxy: return [ip.strip() for ip in proxy.split(',')]
         remote = self.environ.get('REMOTE_ADDR')
@@ -1033,13 +1040,13 @@ class BaseRequest(DictMixin):
 
     @property
     def remote_addr(self):
-        """ The client IP as a string. Note that this information can be forged by
-            malicious clients. """
+        """ The client IP as a string. Note that this information can be forged
+            by malicious clients. """
         route = self.remote_route
         return route[0] if route else None
 
     def copy(self):
-        ''' Return a new :class:`Request` with a shallow copy of :attr:`environ`. '''
+        """ Return a new :class:`Request` with a shallow :attr:`environ` copy. """
         return Request(self.environ.copy())
 
     def __getitem__(self, key): return self.environ[key]
@@ -1048,7 +1055,7 @@ class BaseRequest(DictMixin):
     def __len__(self): return len(self.environ)
     def keys(self): return self.environ.keys()
     def __setitem__(self, key, value):
-        """ Change an environ value and clear all caches that depend on that value. """
+        """ Change an environ value and clear all caches that depend on it. """
 
         if self.environ.get('bottle.request.readonly'):
             raise KeyError('The environ dictionary is read-only.')
@@ -1216,10 +1223,10 @@ class BaseResponse(object):
 
             :param key: the name of the cookie.
             :param value: the value of the cookie.
-            :param secret: a signature key required for signed cookies. (default: None)
+            :param secret: a signature key required for signed cookies.
 
-            Additionally, this method accepts all RFC 2109 attributes that are supported
-            by :class:`cookie.Morsel`, including:
+            Additionally, this method accepts all RFC 2109 attributes that are
+            supported by :class:`cookie.Morsel`, including:
 
             :param max_age: maximum age in seconds. (default: None)
             :param expires: a datetime object or UNIX timestamp. (default: None)
@@ -1230,12 +1237,13 @@ class BaseResponse(object):
             :param httponly: prevents client-side javascript to read this cookie
               (default: off, requires Python 2.6 or newer).
 
-            If neither `expires` nor `max_age` is set (default), the cookie will expire
-            at the end of the browser session (as soon as the browser window is closed).
+            If neither `expires` nor `max_age` is set (default), the cookie will
+            expire at the end of the browser session (as soon as the browser
+            window is closed).
 
-            Signed cookies may store any pickle-able object and are cryptographically
-            signed to prevent manipulation. Keep in mind that cookies are limited to 4kb
-            in most browsers.
+            Signed cookies may store any pickle-able object and are
+            cryptographically signed to prevent manipulation. Keep in mind that
+            cookies are limited to 4kb in most browsers.
 
             Warning: Signed cookies are not encrypted (the client can still see
             the content) and not copy-protected (the client can restore an old
@@ -1422,9 +1430,9 @@ class _ImportRedirect(object):
 
 
 class MultiDict(DictMixin):
-    """ This dict stores multiple values per key, but behaves exactly like a normal
-        dict in that it returns only the newest value for any given key. There are
-        special methods available to access the full list of values.
+    """ This dict stores multiple values per key, but behaves exactly like a
+        normal dict in that it returns only the newest value for any given key.
+        There are special methods available to access the full list of values.
     """
 
     def __init__(self, *a, **k):
@@ -2393,7 +2401,8 @@ class SimpleTALTemplate(BaseTemplate):
 
 
 class SimpleTemplate(BaseTemplate):
-    blocks = ('if','elif','else','try','except','finally','for','while','with','def','class')
+    blocks = ('if', 'elif', 'else', 'try', 'except', 'finally', 'for', 'while',
+              'with', 'def', 'class')
     dedent_blocks = ('elif', 'else', 'except', 'finally')
 
     @lazy_attribute
@@ -2631,13 +2640,15 @@ ERROR_PAGE_TEMPLATE = """
             <title>Error {{e.status}}: {{status_name}}</title>
             <style type="text/css">
               html {background-color: #eee; font-family: sans;}
-              body {background-color: #fff; border: 1px solid #ddd; padding: 15px; margin: 15px;}
+              body {background-color: #fff; border: 1px solid #ddd;
+                    padding: 15px; margin: 15px;}
               pre {background-color: #eee; border: 1px solid #ddd; padding: 5px;}
             </style>
         </head>
         <body>
             <h1>Error {{e.status}}: {{status_name}}</h1>
-            <p>Sorry, the requested URL <tt>{{repr(request.url)}}</tt> caused an error:</p>
+            <p>Sorry, the requested URL <tt>{{repr(request.url)}}</tt>
+               caused an error:</p>
             <pre>{{e.output}}</pre>
             %if DEBUG and e.exception:
               <h2>Exception:</h2>
@@ -2650,7 +2661,8 @@ ERROR_PAGE_TEMPLATE = """
         </body>
     </html>
 %except ImportError:
-    <b>ImportError:</b> Could not generate the error page. Please add bottle to sys.path
+    <b>ImportError:</b> Could not generate the error page. Please add bottle to
+    the import path.
 %end
 """
 
