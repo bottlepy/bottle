@@ -455,7 +455,7 @@ class Bottle(object):
         @self.route('/%s/:#.*#' % prefix, **options)
         def mountpoint():
             request.path_shift(path_depth)
-            return app.handle(request.environ)
+            return app._handle(request.environ)
 
     def install(self, plugin):
         ''' Add a plugin to the list of plugins and prepare it for beeing
@@ -647,7 +647,7 @@ class Bottle(object):
             return r
         except RouteReset: # Route reset requested by the callback or a plugin.
             del self.ccache[handle]
-            return self.handle(environ) # Try again.
+            return self._handle(environ) # Try again.
         except (KeyboardInterrupt, SystemExit, MemoryError):
             raise
         except Exception, e:
