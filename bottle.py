@@ -2211,7 +2211,7 @@ def _reloader_observer(server, app, interval):
             environ['BOTTLE_CHILD'] = 'true'
             environ['BOTTLE_LOCKFILE'] = lockfile
             # under buildout dont see eggs without proper PYTHONPATH
-            environ['PYTHONPATH'] = ':'.join(sys.path)
+            environ['PYTHONPATH'] = os.pathsep.join(sys.path)
             p = subprocess.Popen(args, env=environ)
             while p.poll() is None: # Busy wait...
                 os.utime(lockfile, None) # I am alive!
