@@ -1014,13 +1014,13 @@ class BaseRequest(DictMixin):
         return self.is_xhr
 
     @property
-    def auth(self): #TODO: Tests and docs. Add support for digest. namedtuple?
-        """ HTTP authentication data as a (user, password) tuple. If the
-            authentication happened at a higher level (e.g. in the front
-            web-server or a middleware), the password field is None, but the
-            user field is taken from the ``REMOTE_USER`` environ variable. This
+    def auth(self):
+        """ HTTP authentication data as a (user, password) tuple. This
             implementation currently supports basic (not digest) authentication
-            only. On any errors, None is returned. """
+            only. If the authentication happened at a higher level (e.g. in the
+            front web-server or a middleware), the password field is None, but
+            the user field is looked up from the ``REMOTE_USER`` environ
+            variable. On any errors, None is returned. """
         basic = parse_auth(self.environ.get('HTTP_AUTHORIZATION',''))
         if basic: return basic
         ruser = self.environ.get('REMOTE_USER')
@@ -1087,9 +1087,11 @@ def _hkey(s):
     return s.title().replace('_','-')
 
 class BaseResponse(object):
-    """ A storage class for HTTP headers and cookies that are to be sent to the
-        client. You can access headers via a case-insensitive dict-like API, but
-        only parts of the dict API are implemented.
+    """ Storage class for a response body as well as headers and cookies.
+    
+        This class does support dict-like case-insensitive item-access to
+        headers, but is NOT a dict. Most notably, iterating over a response
+        yields parts of the body and not the headers.
     """
 
     default_status = 200
@@ -1115,8 +1117,9 @@ class BaseResponse(object):
         self._cookies = None
         self._headers = {'Content-Type': [self.default_content_type]}
         self.status = status or self.default_status
-        
-    bind = __init__
+        if headers:
+            for name, value in headers.items():
+                self[name] = value
 
     def copy(self):
         ''' Returns a copy of self. '''
@@ -1124,6 +1127,13 @@ class BaseResponse(object):
         copy.status = self.status
         copy._headers = dict((k, v[:]) for (k, v) in self._headers.items())
         return copy
+
+    def __iter__(self):
+        return iter(self.body)
+
+    def close(self):
+        if hasattr(self.body, 'close'):
+            self.body.close()
 
     def _set_status(self, status):
         if isinstance(status, int):
@@ -1174,7 +1184,7 @@ class BaseResponse(object):
             self._headers.setdefault(_hkey(name), []).append(str(value))
         else:
             self._headers[_hkey(name)] = [str(value)]
-        
+
     def iter_headers(self):
         ''' Yield (header, value) tuples, skipping headers that are not
             allowed with the current response status code. '''
@@ -1188,7 +1198,7 @@ class BaseResponse(object):
         if self._cookies:
             for c in self._cookies.values():
                 yield 'Set-Cookie', c.OutputString()
-                
+
     def wsgiheader(self):
         depr('The wsgiheader method is deprecated. See headerlist.') #0.10
         return self.headerlist
@@ -1217,7 +1227,7 @@ class BaseResponse(object):
             self._cookies = SimpleCookie()
         return self._cookies
 
-    def set_cookie(self, key, value, secret=None, **kargs):
+    def set_cookie(self, key, value, secret=None, **options):
         ''' Create a new cookie or replace an old one. If the `secret` parameter is
             set, create a `Signed Cookie` (described below).
 
@@ -1259,7 +1269,7 @@ class BaseResponse(object):
             raise TypeError('Secret key missing for non-string Cookie.')
 
         self._cookies[key] = value
-        for k, v in kargs.iteritems():
+        for k, v in options.iteritems():
             self._cookies[key][k.replace('_', '-')] = v
 
     def delete_cookie(self, key, **kwargs):
@@ -1271,7 +1281,7 @@ class BaseResponse(object):
 
 class LocalResponse(BaseResponse, threading.local):
     ''' A thread-local subclass of :class:`BaseResponse`. '''
-
+    bind = BaseResponse.__init__
 
 Response = LocalResponse
 
