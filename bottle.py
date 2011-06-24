@@ -39,9 +39,9 @@ import warnings
 
 from Cookie import SimpleCookie
 from tempfile import TemporaryFile
-from traceback import format_exc, print_exc
-from urllib import urlencode, quote as urlquote, unquote as urlunquote
-from urlparse import urlunsplit, urljoin, SplitResult as UrlSplitResult
+from traceback import format_exc
+from urllib import urlencode, quote as urlquote
+from urlparse import urljoin, SplitResult as UrlSplitResult
 
 try: from collections import MutableMapping as DictMixin
 except ImportError: # pragma: no cover
@@ -646,7 +646,7 @@ class Bottle(object):
         except HTTPResponse, r:
             return r
         except RouteReset: # Route reset requested by the callback or a plugin.
-            del self.ccache[handle]
+            del self.ccache[environ['route.handle']]
             return self._handle(environ) # Try again.
         except (KeyboardInterrupt, SystemExit, MemoryError):
             raise
@@ -1976,11 +1976,10 @@ class GeventServer(ServerAdapter):
           issues: No streaming, no pipelining, no SSL.
     """
     def run(self, handler):
-        from gevent import wsgi as wsgi_fast, pywsgi as wsgi, monkey
+        from gevent import wsgi as wsgi_fast, pywsgi, monkey
         if self.options.get('monkey', True):
             monkey.patch_all()
-        if self.options.get('fast', False):
-            wsgi = wsgi_fast
+        wsgi = wsgi_fast if self.options.get('fast') else pywsgi
         wsgi.WSGIServer((self.host, self.port), handler).serve_forever()
 
 
