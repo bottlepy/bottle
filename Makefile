@@ -1,13 +1,13 @@
 PATH := build/python/bin:$(PATH)
+VERSION = $(shell python setup.py --version)
 ALLFILES = $(shell echo bottle.py test/*.py test/views/*.tpl)
 
-.PHONY: dist release install docs test coverage html_coverage pylint test_all test_25 test_26 test_27 test_31 test_32 2to3 clean
+.PHONY: release install docs test test_all test_25 test_26 test_27 test_31 test_32 2to3 clean
 
-dist:
-	python setup.py sdist
-
-release:
-	python setup.py release sdist upload
+release: test_all
+	python setup.py --version | egrep -q -v '[a-zA-Z]' # Fail on dev/rc versions
+	git -a -m "Release of $(VERSION)" $(VERSION) # Fail on existing tags
+	python setup.py sdist register upload # Release to pypi
 
 install:
 	python setup.py install
@@ -17,12 +17,6 @@ docs:
 
 test:
 	python test/testall.py
-
-coverage:
-	python test/testall.py coverage
-
-html_coverage:
-	python test/testall.py coverage html
 
 test_all: test_25 test_26 test_27 test_31 test_32
 
