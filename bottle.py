@@ -1684,7 +1684,10 @@ class CGIServer(ServerAdapter):
     quiet = True
     def run(self, handler): # pragma: no cover
         from wsgiref.handlers import CGIHandler
-        CGIHandler().run(handler) # Just ignore host and port here
+        def fixed_environ(environ, start_response):
+            environ.setdefault('PATH_INFO', '')
+            return handler(environ, start_response)
+        CGIHandler().run(fixed_environ)
 
 
 class FlupFCGIServer(ServerAdapter):
