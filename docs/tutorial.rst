@@ -482,7 +482,7 @@ Here is an example for a simple file upload form:
     def do_upload():
         name = request.forms.get('name')
         data = request.files.get('data')
-        if name and data:
+        if name and data.file:
             raw = data.file.read() # This is dangerous for big files
             filename = data.filename
             return "Hello %s! You uploaded %s (%d bytes)." % (name, filename, len(raw))
