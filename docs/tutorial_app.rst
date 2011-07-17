@@ -45,7 +45,7 @@ We will end up with an application with the following pages and functionality:
 
  * start page ``http://localhost:8080/todo``
  * adding new items to the list: ``http://localhost:8080/new``
- * page for editing items: ``http://localhost:8080/edit/:no`` 
+ * page for editing items: ``http://localhost:8080/edit/:no``
  * validating data assigned by dynamic routes with the @validate decorator
  * catching errors
 
@@ -75,6 +75,7 @@ First, we need to create the database we use later on. To do so, save the follow
     con.execute("INSERT INTO todo (task,status) VALUES ('Visit the Python website',1)")
     con.execute("INSERT INTO todo (task,status) VALUES ('Test various editors for and check the syntax highlighting',1)")
     con.execute("INSERT INTO todo (task,status) VALUES ('Choose your favorite WSGI-Framework',0)")
+    con.commit()
 
 This generates a database-file `todo.db` with tables called ``todo`` and three columns ``id``, ``task``, and ``status``. ``id`` is a unique id for each row, which is used later on to reference the rows. The column ``task`` holds the text which describes the task, it can be max 100 characters long. Finally, the column ``status`` is used to mark a task as open (value 1) or closed (value 0).
 
@@ -95,7 +96,7 @@ So, after understanding the concept of routes, let's create the first one. The g
 
     import sqlite3
     from bottle import route, run
-    
+
     @route('/todo')
     def todo_list():
         conn = sqlite3.connect('todo.db')
@@ -103,9 +104,9 @@ So, after understanding the concept of routes, let's create the first one. The g
         c.execute("SELECT id, task FROM todo WHERE status LIKE '1'")
         result = c.fetchall()
         return str(result)
-    
+
     run()
-    
+
 Save the code a ``todo.py``, preferably in the same directory as the file ``todo.db``. Otherwise, you need to add the path to ``todo.db`` in the ``sqlite3.connect()`` statement.
 
 Let's have a look what we just did: We imported the necessary module ``sqlite3`` to access to SQLite database and from Bottle we imported ``route`` and ``run``. The ``run()`` statement simply starts the web server included in Bottle. By default, the web server serves the pages on localhost and port 8080. Furthermore, we imported ``route``, which is the function responsible for Bottle's routing. As you can see, we defined one function, ``todo_list()``, with a few lines of code reading from the database. The important point is the `decorator statement`_ ``@route('/todo')`` right before the ``def todo_list()`` statement. By doing this, we bind this function to the route ``/todo``, so every time the browsers calls ``http://localhost:8080/todo``, Bottle returns the result of the function ``todo_list()``. That is how routing within bottle works.
@@ -116,7 +117,7 @@ Actually you can bind more than one route to a function. So the following code::
     @route('/my_todo_list')
     def todo_list():
         ...
-        
+
 will work fine, too. What will not work is to bind one route to more than one function.
 
 What you will see in the browser is what is returned, thus the value given by the ``return`` statement. In this example, we need to convert ``result`` in to a string by ``str()``, as Bottle expects a string or a list of strings from the return statement. But here, the result of the database query is a list of tuples, which is the standard defined by the `Python DB API`_.
@@ -124,7 +125,7 @@ What you will see in the browser is what is returned, thus the value given by th
 Now, after understanding the little script above, it is time to execute it and watch the result yourself. Remember that on Linux- / Unix-based systems the file ``todo.py`` needs to be executable first. Then, just run ``python todo.py`` and call the page ``http://localhost:8080/todo`` in your browser. In case you made no mistake writing the script, the output should look like this::
 
     [(2, u'Visit the Python website'), (3, u'Test various editors for and check the syntax highlighting')]
-    
+
 If so - congratulations! You are now a successful user of Bottle. In case it did not work and you need to make some changes to the script, remember to stop Bottle serving the page, otherwise the revised version will not be loaded.
 
 Actually, the output is not really exciting nor nice to read. It is the raw result returned from the SQL query.
@@ -155,7 +156,7 @@ A further quiet nice feature is auto-reloading, which is enabled by modifying th
 ::
 
     run(reloader=True)
-    
+
 This will automatically detect changes to the script and reload the new version once it is called again, without the need to stop and start the server.
 
 Again, the feature is mainly supposed to be used while development, not on productive systems.
@@ -180,7 +181,7 @@ To include the template in our example, just add the following lines::
     output = template('make_table', rows=result)
     return output
     ...
-    
+
 So we do here two things: first, we import ``template`` from Bottle in order to be able to use templates. Second, we assign the output of the template ``make_table`` to the variable ``output``, which is then returned. In addition to calling the template, we assign ``result``, which we received from the database query, to the variable ``rows``, which is later on used within the template. If necessary, you can assign more than one variable / value to a template.
 
 Templates always return a list of strings, thus there is no need to convert anything. Of course, we can save one line of code by writing ``return template('make_table', rows=result)``, which gives exactly the same result as above.
@@ -192,8 +193,8 @@ Now it is time to write the corresponding template, which looks like this::
     <table border="1">
     %for row in rows:
       <tr>
-      %for r in row:
-        <td>{{r}}</td>
+      %for col in row:
+        <td>{{col}}</td>
       %end
       </tr>
     %end
@@ -220,23 +221,23 @@ To do so, we first add a new route to our script and tell the route that it shou
     ...
     return template('make_table', rows=result)
     ...
-    
+
     @route('/new', method='GET')
     def new_item():
-    
+
         new = request.GET.get('task', '').strip()
-        
+
         conn = sqlite3.connect('todo.db')
         c = conn.cursor()
-        
+
         c.execute("INSERT INTO todo (task,status) VALUES (?,?)", (new,1))
         new_id = c.lastrowid
 
         conn.commit()
         c.close()
-        
+
         return '<p>The new task was inserted into the database, the ID is %s</p>' % new_id
-       
+
 To access GET (or POST) data, we need to import ``request`` from Bottle. To assign the actual data to a variable, we use the statement ``request.GET.get('task','').strip()`` statement, where ``task`` is the name of the GET data we want to access. That's all. If your GET data has more than one variable, multiple ``request.GET.get()`` statements can be used and assigned to other variables.
 
 The rest of this piece of code is just processing of the gained data: writing to the database, retrieve the corresponding id from the database and generate the output.
@@ -248,19 +249,19 @@ The code needs to be extended to::
     ...
     @route('/new', method='GET')
     def new_item():
-    
+
     if request.GET.get('save','').strip():
-        
+
         new = request.GET.get('task', '').strip()
         conn = sqlite3.connect('todo.db')
         c = conn.cursor()
-        
+
         c.execute("INSERT INTO todo (task,status) VALUES (?,?)", (new,1))
         new_id = c.lastrowid
 
         conn.commit()
         c.close()
-        
+
         return '<p>The new task was inserted into the database, the ID is %s</p>' % new_id
     else:
         return template('new_task.tpl')
@@ -273,7 +274,7 @@ The code needs to be extended to::
     <input type="text" size="100" maxlength="100" name="task">
     <input type="submit" name="save" value="save">
     </form>
-    
+
 That's all. As you can see, the template is plain HTML this time.
 
 Now we are able to extend our to do list.
@@ -285,12 +286,12 @@ By the way, if you prefer to use POST data: this works exactly the same way, jus
 
 The last point to do is to enable editing of existing items.
 
-By using only the routes we know so far it is possible, but may be quite tricky. But Bottle knows something called "dynamic routes", which makes this task quiet easy.
+By using only the routes we know so far it is possible, but may be quite tricky. But Bottle knows something called "dynamic routes", which makes this task quite easy.
 
 The basic statement for a dynamic route looks like this::
 
     @route('/myroute/:something')
-    
+
 The key point here is the colon. This tells Bottle to accept for ``:something`` any string up to the next slash. Furthermore, the value of ``something`` will be passed to the function assigned to that route, so the data can be processed within the function.
 
 For our ToDo list, we will create a route ``@route('/edit/:no)``, where ``no`` is the id of the item to edit.
@@ -299,28 +300,28 @@ The code looks like this::
 
     @route('/edit/:no', method='GET')
     def edit_item(no):
-    
+
         if request.GET.get('save','').strip():
             edit = request.GET.get('task','').strip()
             status = request.GET.get('status','').strip()
-            
+
             if status == 'open':
                 status = 1
             else:
                 status = 0
-            
+
             conn = sqlite3.connect('todo.db')
             c = conn.cursor()
             c.execute("UPDATE todo SET task = ?, status = ? WHERE id LIKE ?", (edit, status, no))
             conn.commit()
-            
+
             return '<p>The item number %s was successfully updated</p>' % no
         else:
             conn = sqlite3.connect('todo.db')
             c = conn.cursor()
             c.execute("SELECT task FROM todo WHERE id LIKE ?", (str(no)))
             cur_data = c.fetchone()
-            
+
             return template('edit_task', old=cur_data, no=no)
 
 It is basically pretty much the same what we already did above when adding new items, like using ``GET`` data etc. The main addition here is using the dynamic route ``:no``, which here passes the number to the corresponding function. As you can see, ``no`` is used within the function to access the right row of data within the database.
@@ -342,14 +343,14 @@ The template ``edit_task.tpl`` called within the function looks like this::
 
 Again, this template is a mix of Python statements and HTML, as already explained above.
 
-A last word on dynamic routes: you can even use a regular expression for a dynamic route. But this topic is not discussed further here.
+A last word on dynamic routes: you can even use a regular expression for a dynamic route, as demonstrated later.
 
 
 .. rubric:: Validating Dynamic Routes
 
 Using dynamic routes is fine, but for many cases it makes sense to validate the dynamic part of the route. For example, we expect an integer number in our route for editing above. But if a float, characters or so are received, the Python interpreter throws an exception, which is not what we want.
 
-For those cases, Bottle offers the ``@valdiate`` decorator, which validates the "input" prior to passing it to the function. In order to apply the validator, extend the code as follows::
+For those cases, Bottle offers the ``@validate`` decorator, which validates the "input" prior to passing it to the function. In order to apply the validator, extend the code as follows::
 
     from bottle import route, run, debug, template, request, validate
     ...
@@ -357,7 +358,7 @@ For those cases, Bottle offers the ``@valdiate`` decorator, which validates the 
     @validate(no=int)
     def edit_item(no):
     ...
-    
+
 At first, we imported ``validate`` from the Bottle framework, than we apply the @validate-decorator. Right here, we validate if ``no`` is an integer. Basically, the validation works with all types of data like floats, lists etc.
 
 Save the code and call the page again using a "403 forbidden" value for ``:no``, e.g. a float. You will receive not an exception, but a "403 - Forbidden" error, saying that an integer was expected.
@@ -390,7 +391,7 @@ Of course, this example is somehow artificially constructed - it would be easier
 Sometimes it may become necessary to associate a route not to a Python function, but just return a static file. So if you have for example a help page for your application, you may want to return this page as plain HTML. This works as follows::
 
     from bottle import route, run, debug, template, request, validate, send_file
-    
+
     @route('/help')
     def help():
         send_file('help.html', root='/path/to/file')
@@ -408,10 +409,10 @@ So, let's assume we want to return the data generated in the regular expression 
     def show_json(json):
         conn = sqlite3.connect('todo.db')
         c = conn.cursor()
-        c.execute("SELECT task FROM todo WHERE id LIKE ?", (item))
+        c.execute("SELECT task FROM todo WHERE id LIKE ?", (json))
         result = c.fetchall()
         c.close()
-        
+
         if not result:
             return {'task':'This item number does not exist!'}
         else:
@@ -428,11 +429,11 @@ The next step may is to catch the error with Bottle itself, to keep away any typ
 In our case, we want to catch a 403 error. The code is as follows::
 
     from bottle import error
-    
+
     @error(403)
     def mistake(code):
         return 'The parameter you passed has the wrong format!'
-        
+
 So, at first we need to import ``error`` from Bottle and define a route by ``error(403)``, which catches all "403 forbidden" errors. The function "mistake" is assigned to that. Please note that ``error()`` always passes the error-code to the function - even if you do not need it. Thus, the function always needs to accept one argument, otherwise it will not work.
 
 Again, you can assign more than one error-route to a function, or catch various errors with one function each. So this code::
@@ -441,13 +442,13 @@ Again, you can assign more than one error-route to a function, or catch various 
     @error(403)
     def mistake(code):
         return 'There is something wrong!'
-        
+
 works fine, the following one as well::
 
     @error(403)
     def mistake403(code):
         return 'The parameter you passed has the wrong format!'
-    
+
     @error(404)
     def mistake404(code):
         return 'Sorry, this page does not exist!'
@@ -462,27 +463,27 @@ The following chapter give a short introduction how to adapt Bottle for larger p
 Server Setup
 ================================
 
-So far, we used the standard server used by Bottle, which is the `WSGI reference Server`_ shipped along with Python. Although this server is perfectly suitable for development purposes, it is not really suitable for larger applications. But before we have a look at the alternatives, let's have a look how to tweak the setting of the standard server first
+So far, we used the standard server used by Bottle, which is the `WSGI reference Server`_ shipped along with Python. Although this server is perfectly suitable for development purposes, it is not really suitable for larger applications. But before we have a look at the alternatives, let's have a look how to tweak the settings of the standard server first.
 
 
 .. rubric:: Running Bottle on a different port and IP
 
-As standard, Bottle servse the pages on the IP adress 127.0.0.1, also known as ``localhost``, and on port ``8080``. To modify the setting is pretty simple, as additional parameters can be passed to Bottle's ``run()`` function to change the port and the address.
+As standard, Bottle serves the pages on the IP adress 127.0.0.1, also known as ``localhost``, and on port ``8080``. To modify the setting is pretty simple, as additional parameters can be passed to Bottle's ``run()`` function to change the port and the address.
 
 To change the port, just add ``port=portnumber`` to the run command. So, for example::
 
     run(port=80)
-    
+
 would make Bottle listen to port 80.
 
 To change the IP address where Bottle is listening::
 
     run(host='123.45.67.89')
-    
+
 Of course, both parameters can be combined, like::
 
    run(port=80, host='123.45.67.89')
-    
+
 The ``port`` and ``host`` parameter can also be applied when Bottle is running with a different server, as shown in the following section.
 
 
@@ -492,12 +493,12 @@ As said above, the standard server is perfectly suitable for development, person
 
 But Bottle has already various adapters to multi-threaded servers on board, which perform better on higher load. Bottle supports Cherrypy_, Fapws3_, Flup_ and Paste_.
 
-If you want to run for example Bottle with the past server, use the following code::
+If you want to run for example Bottle with the Paste server, use the following code::
 
     from bottle import PasteServer
     ...
-    run(server=PasterServer)
-    
+    run(server=PasteServer)
+
 This works exactly the same way with ``FlupServer``, ``CherryPyServer`` and ``FapwsServer``.
 
 
@@ -509,19 +510,19 @@ We assume that your Apache server is up and running and mod_wsgi is working fine
 
 Bottle brings an adapter for mod_wsgi with it, so serving your application is an easy task.
 
-In the following example, we assume that you want to make your application "ToDO list" accessible through ``http://www.mypage.com/todo`` and your code, templates and SQLite database are stored in the path ``/var/www/todo``.
+In the following example, we assume that you want to make your application "ToDo list" accessible through ``http://www.mypage.com/todo`` and your code, templates and SQLite database are stored in the path ``/var/www/todo``.
 
 When you run your application via mod_wsgi, it is imperative to remove the ``run()`` statement from your code, otherwise it won't work here.
 
 After that, create a file called ``adapter.wsgi`` with the following content::
 
     import sys, os, bottle
-    
+
     sys.path = ['/var/www/todo/'] + sys.path
     os.chdir(os.path.dirname(__file__))
-    
+
     import todo # This loads your application
-    
+
     application = bottle.default_app()
 
 and save it in the same path, ``/var/www/todo``. Actually the name of the file can be anything, as long as the extension is ``.wsgi``. The name is only used to reference the file from your virtual host.
@@ -530,10 +531,10 @@ Finally, we need to add a virtual host to the Apache configuration, which looks 
 
     <VirtualHost *>
         ServerName mypage.com
-        
+
         WSGIDaemonProcess todo user=www-data group=www-data processes=1 threads=5
         WSGIScriptAlias / /var/www/todo/adapter.wsgi
-        
+
         <Directory /var/www/todo>
             WSGIProcessGroup todo
             WSGIApplicationGroup %{GLOBAL}
@@ -541,13 +542,13 @@ Finally, we need to add a virtual host to the Apache configuration, which looks 
             Allow from all
         </Directory>
     </VirtualHost>
-        
+
 After restarting the server, your ToDo list should be accessible at ``http://www.mypage.com/todo``
 
 Final Words
 =========================
 
-Now we are at the end of this introduction and tutorial to Bottle. We learned about the basic concepts of Bottle and wrote a first application using the Bottle framework. In addition to that, we saw how to adapt Bottle for large task and servr Bottle through an Apache web server with mod_wsgi.
+Now we are at the end of this introduction and tutorial to Bottle. We learned about the basic concepts of Bottle and wrote a first application using the Bottle framework. In addition to that, we saw how to adapt Bottle for large tasks and serve Bottle through an Apache web server with mod_wsgi.
 
 As said in the introduction, this tutorial is not showing all shades and possibilities of Bottle. What we skipped here is e.g. receiving file objects and streams and how to handle authentication data. Furthermore, we did not show how templates can be called from within another template. For an introduction into those points, please refer to the full `Bottle documentation`_ .
 
@@ -590,7 +591,7 @@ Main code for the application ``todo.py``::
 
             conn.commit()
             c.close()
-              
+
             return '<p>The new task was inserted into the database, the ID is %s</p>' % new_id
 
         else:
@@ -608,12 +609,12 @@ Main code for the application ``todo.py``::
                 status = 1
             else:
                 status = 0
-        
+
             conn = sqlite3.connect('todo.db')
             c = conn.cursor()
             c.execute("UPDATE todo SET task = ?, status = ? WHERE id LIKE ?", (edit,status,no))
             conn.commit()
-        
+
             return '<p>The item number %s was successfully updated</p>' %no
 
         else:
@@ -621,23 +622,23 @@ Main code for the application ``todo.py``::
             c = conn.cursor()
             c.execute("SELECT task FROM todo WHERE id LIKE ?", (str(no)))
             cur_data = c.fetchone()
-            
+
             return template('edit_task', old = cur_data, no = no)
 
     @route('/item:item#[1-9]+#')
     def show_item(item):
-        
+
             conn = sqlite3.connect('todo.db')
             c = conn.cursor()
             c.execute("SELECT task FROM todo WHERE id LIKE ?", (item))
             result = c.fetchall()
             c.close()
-                
+
             if not result:
                 return 'This item number does not exist!'
             else:
                 return 'Task: %s' %result[0]
-                
+
     @route('/help')
     def help():
 
@@ -645,13 +646,13 @@ Main code for the application ``todo.py``::
 
     @route('/json:json#[1-9]+#')
     def show_json(json):
-        
+
         conn = sqlite3.connect('todo.db')
         c = conn.cursor()
         c.execute("SELECT task FROM todo WHERE id LIKE ?", (json))
         result = c.fetchall()
         c.close()
-                
+
         if not result:
             return {'task':'This item number does not exist!'}
         else:
@@ -667,10 +668,10 @@ Main code for the application ``todo.py``::
         return 'Sorry, this page does not exist!'
 
 
-    debug(True)  
+    debug(True)
     run(reloader=True)
     #remember to remove reloader=True and debug(True) when you move your application from development to a productive environment
-    
+
 Template ``make_table.tpl``::
 
     %#template to generate a HTML table from a list of tuples (or list of lists, or tuple of tuples or ...)
@@ -678,8 +679,8 @@ Template ``make_table.tpl``::
     <table border="1">
     %for row in rows:
       <tr>
-      %for r in row:
-        <td>{{r}}</td>
+      %for col in row:
+        <td>{{col}}</td>
       %end
       </tr>
     %end
@@ -699,13 +700,12 @@ Template ``edit_task.tpl``::
     <br/>
     <input type="submit" name="save" value="save">
     </form>
-    
+
 Template ``new_task.tpl``::
 
     %#template for the form for a new task
     <p>Add a new task to the ToDo list:</p>
     <form action="/new" method="GET">
-    <input type="text" size="100" maxlenght="100" name="task">
+    <input type="text" size="100" maxlength="100" name="task">
     <input type="submit" name="save" value="save">
     </form>
-
