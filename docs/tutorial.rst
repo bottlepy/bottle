@@ -79,7 +79,7 @@ Whats happening here?
 4. In this example we simply return a string to the browser.
 5. In the last line we start the actual HTTP server. The default is a development server running on 'localhost' port 8080 and serving requests until you hit :kbd:`Control-c`.
 
-This is it. Run this script, visit http://localhost:8080/hello and you will see "Hello World!" in your browser. Of cause this is a very simple example, but it shows the basic concept of how applications are built with Bottle. Continue reading and you'll see what else is possible.
+This is it. Run this script, visit http://localhost:8080/hello and you will see "Hello World!" in your browser. Of course this is a very simple example, but it shows the basic concept of how applications are built with Bottle. Continue reading and you'll see what else is possible.
   
 .. rubric:: The Application Object
 
