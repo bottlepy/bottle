@@ -74,6 +74,18 @@ class TestOutputFilter(ServerTestBase):
         except ImportError:
             warn("Skipping JSON tests.")
 
+    def test_json_serialization_error(self):
+        """
+        Verify that 500 errors serializing dictionaries don't return
+        content-type application/json
+        """
+        self.app.route('/')(lambda: {'a': set()})
+        try:
+            self.assertStatus(500)
+            self.assertHeader('Content-Type','text/html; charset=UTF-8')
+        except ImportError:
+            warn("Skipping JSON tests.")
+
     def test_generator_callback(self):
         @self.app.route('/')
         def test():
