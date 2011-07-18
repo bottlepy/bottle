@@ -1477,6 +1477,9 @@ class MultiDict(DictMixin):
             return self.dict[key][index]
         return default
 
+    #: Alias for :meth:`get` to mimic other multi-dict APIs (Django)
+    getone = get
+
     def append(self, key, value):
         ''' Add a new value to the list of values for this key. '''
         self.dict.setdefault(key, []).append(value)
