@@ -1307,10 +1307,10 @@ class JSONPlugin(object):
             rv = callback(*a, **ka)
             if isinstance(rv, dict):
                 #Attempt to serialize, raises exception on failure
-                json = dumps(rv)
+                json_response = dumps(rv)
                 #Set content type only if serialization succesful
                 response.content_type = 'application/json'
-                return json
+                return json_response
             return rv
         return wrapper
 
