@@ -1,6 +1,6 @@
 ﻿# -*- coding: utf-8 -*-
 import unittest
-import sys
+import sys, os
 import imp
 
 class TestImportHooks(unittest.TestCase):
@@ -33,5 +33,12 @@ class TestImportHooks(unittest.TestCase):
             import bottle.ext.doesnotexist
         self.assertRaises(ImportError, test)
 
+    def test_ext_isfile(self):
+        ''' The virtual module needs a valid __file__ attribute.
+            If not, the Google app engine development server crashes on windows.
+        '''
+        from bottle import ext
+        self.assertTrue(os.path.isfile(ext.__file__))
+        
 if __name__ == '__main__': #pragma: no cover
     unittest.main()
