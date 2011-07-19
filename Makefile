@@ -4,9 +4,9 @@ ALLFILES = $(shell echo bottle.py test/*.py test/views/*.tpl)
 
 .PHONY: release install docs test test_all test_25 test_26 test_27 test_31 test_32 2to3 clean
 
-release: test_all
+release: test
 	python setup.py --version | egrep -q -v '[a-zA-Z]' # Fail on dev/rc versions
-	git -a -m "Release of $(VERSION)" $(VERSION) # Fail on existing tags
+	git tag -a -m "Release of $(VERSION)" $(VERSION) # Fail on existing tags
 	python setup.py sdist register upload # Release to pypi
 
 install:
