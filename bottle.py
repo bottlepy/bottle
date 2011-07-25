@@ -463,7 +463,7 @@ class Bottle(object):
             return app._handle(request.environ)
 
     def install(self, plugin):
-        ''' Add a plugin to the list of plugins and prepare it for beeing
+        ''' Add a plugin to the list of plugins and prepare it for being
             applied to all routes of this application. A plugin may be a simple
             decorator or an object that implements the :class:`Plugin` API.
         '''
@@ -475,11 +475,10 @@ class Bottle(object):
         return plugin
 
     def uninstall(self, plugin):
-        ''' Uninstall plugins. Pass an instance to remove a specific plugin.
-            Pass a type object to remove all plugins that match that type.
-            Subclasses are not removed. Pass a string to remove all plugins with
-            a matching ``name`` attribute. Pass ``True`` to remove all plugins.
-            The list of affected plugins is returned. '''
+        ''' Uninstall plugins. Pass an instance to remove a specific plugin, a type
+            object to remove all plugins that match that type, a string to remove
+            all plugins with a matching ``name`` attribute or ``True`` to remove all
+            plugins. Return the list of removed plugins. '''
         removed, remove = [], plugin
         for i, plugin in list(enumerate(self.plugins))[::-1]:
             if remove is True or remove is plugin or remove is type(plugin) \
