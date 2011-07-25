@@ -40,8 +40,13 @@ import warnings
 from Cookie import SimpleCookie
 from tempfile import TemporaryFile
 from traceback import format_exc
-from urllib import urlencode, quote as urlquote, unquote as urlunquote
 from urlparse import urlunsplit, urljoin, SplitResult as UrlSplitResult
+
+# Workaround for a bug in some versions of lib2to3 (fixed on CPython 2.7 and 3.2)
+import urllib
+urlencode = urllib.urlencode
+urlquote = urllib.quote
+urlunquote = urllib.unquote
 
 try: from collections import MutableMapping as DictMixin
 except ImportError: # pragma: no cover
