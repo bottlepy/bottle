@@ -817,7 +817,7 @@ Multi-Threaded Server
 
 The easiest way to increase performance is to install a multi-threaded or asynchronous WSGI server like paste_ or cherrypy_ and tell Bottle to start it instead of the default single-threaded one::
 
-    bottle.run(server='paste') # Example
+    bottle.run(server=bottle.PasteServer) # Example using paste
 
 Bottle ships with a lot of ready-to-use adapters for the most common WSGI servers and automates the setup process. Here is an incomplete list:
 
@@ -843,7 +843,7 @@ auto                    Automatically selects an available server adapter
 
 The full list is available through :data:`server_names`.
 
-If there is no adapter for your favorite server or if you need more control over the server setup, you may want to start the server manually. Refer to the server documentation on how to mount WSGI applications. Here is an example for paste_::
+If there is no adapter for your favorite server or if you need more control over the server setup, you may want to start the server manually. Refer to the server documentation on how to mount WSGI applications. Here is an example for paste_ without the PasteServer adapter::
 
     from paste import httpserver
     httpserver.serve(bottle.default_app(), host='0.0.0.0', port=80)
