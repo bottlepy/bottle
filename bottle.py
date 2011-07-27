@@ -1871,9 +1871,8 @@ class CGIServer(ServerAdapter):
 class FlupFCGIServer(ServerAdapter):
     def run(self, handler): # pragma: no cover
         import flup.server.fcgi
-        kwargs = {'bindAddress':(self.host, self.port)}
-        kwargs.update(self.options) # allow to override bindAddress and others
-        flup.server.fcgi.WSGIServer(handler, **kwargs).run()
+        self.options.setdefault('bindAddress', (self.host, self.port))
+        flup.server.fcgi.WSGIServer(handler, **self.options).run()
 
 
 class WSGIRefServer(ServerAdapter):
@@ -1896,6 +1895,7 @@ class CherryPyServer(ServerAdapter):
         finally:
             server.stop()
 
+
 class PasteServer(ServerAdapter):
     def run(self, handler): # pragma: no cover
         from paste import httpserver
@@ -1904,6 +1904,7 @@ class PasteServer(ServerAdapter):
             handler = TransLogger(handler)
         httpserver.serve(handler, host=self.host, port=str(self.port),
                          **self.options)
+
 
 class MeinheldServer(ServerAdapter):
     def run(self, handler):
@@ -1989,9 +1990,9 @@ class GeventServer(ServerAdapter):
           issues: No streaming, no pipelining, no SSL.
     """
     def run(self, handler):
-        from gevent import wsgi as wsgi_fast, pywsgi, monkey
+        from gevent import wsgi as wsgi_fast, pywsgi, monkey, local
         if self.options.get('monkey', True):
-            monkey.patch_all()
+            if not threading.local is local.local: monkey.patch_all()
         wsgi = wsgi_fast if self.options.get('fast') else pywsgi
         wsgi.WSGIServer((self.host, self.port), handler).serve_forever()
 
@@ -2014,8 +2015,7 @@ class EventletServer(ServerAdapter):
 
 
 class RocketServer(ServerAdapter):
-    """ Untested. As requested in issue 63
-        https://github.com/defnull/bottle/issues/#issue/63 """
+    """ Untested. """
     def run(self, handler):
         from rocket import Rocket
         server = Rocket((self.host, self.port), 'wsgi', { 'wsgi_app' : handler })
@@ -2023,7 +2023,7 @@ class RocketServer(ServerAdapter):
 
 
 class BjoernServer(ServerAdapter):
-    """ Screamingly fast server written in C: https://github.com/jonashaag/bjoern """
+    """ Fast server written in C: https://github.com/jonashaag/bjoern """
     def run(self, handler):
         from bjoern import run
         run(handler, self.host, self.port)
