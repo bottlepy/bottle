@@ -118,7 +118,8 @@ The :class:`Bottle` Class
 .. autoclass:: Bottle
    :members:
 
-
+.. autoclass:: Route
+    :members:
 
 
 The :class:`Request` Object

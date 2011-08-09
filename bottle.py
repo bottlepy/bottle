@@ -401,6 +401,87 @@ class Router(object):
         return re.compile('^%s$'%out)
 
 
+class Route(object):
+    ''' This class wraps a route callback along with route specific metadata and
+        configuration and applies Plugins on demand. '''
+
+    def __init__(self, app, rule, method, callback, name=None,
+                 plugins=None, skiplist=None, **config):
+        #: The application this route was installed to.
+        self.app = app
+        #: The path-rule string (e.g. ``/wiki/:page``).
+        self.rule = rule
+        #: The HTTP method as a string (e.g. ``GET``).
+        self.method = method
+        #: The original callback with no plugins applied. Useful for introspection.
+        self.callback = callback
+        #: The name of the route (if specified) or ``None``.
+        self.name = name or None
+        #: A list of route-specific plugins (see :meth:`Bottle.route`).
+        self.plugins = plugins or []
+        #: A list of plugins to not apply to this route (see :meth:`Bottle.route`).
+        self.skiplist = skiplist or []
+        #: Additional keyword arguments passed to the :meth:`Bottle.route`
+        #: decorator are stored in this dictionary. Used for route-specific
+        #: plugin configuration and meta-data.
+        self.config = config
+
+    def __call__(self, *a, **ka):
+        depr("Some APIs changed to return Route() instances instead of"\
+             " callables. Make sure to use the Route.call method and not to"\
+             " call Route instances directly.")
+        return self.call(*a, **ka)
+
+    @cached_property
+    def call(self):
+        ''' The route callback with all plugins applied. This property is
+            created on demand.'''
+        return self._make_callback()
+
+    def reset(self):
+        ''' Forget any cached values. The next time :attr:`call` is accessed,
+            all plugins are re-applied. '''
+        self.__dict__.pop('call', None)
+
+    def prepare(self):
+        ''' Do all on-demand work immediately (useful for debugging).'''
+        self.call
+
+    @property
+    def _context(self):
+        depr('Switch to Plugin API v2 and access the Route object directly.')
+        return dict(rule=self.rule, method=self.method, callback=self.callback,
+                    name=self.name, app=self.app, config=self.config,
+                    apply=self.plugins, skip=self.skiplist)
+
+    def _runtime_reset(self, func):
+        def wrapped(*a, **ka):
+            try:
+                return func(*a, **ka)
+            except RouteReset:
+                self.reset() # Clear applied plugins.
+                return self.call(*a, **ka) # Try again.
+        return wrapped
+
+    def _make_callback(self):
+        try:
+            plugins = [self._runtime_reset] + self.app.plugins + self.plugins
+            callback = self.callback
+            for plugin in reversed(plugins):
+                if True in self.skiplist: break
+                if plugin in self.skiplist or type(plugin) in self.skiplist \
+                or getattr(plugin, 'name', True) in self.skiplist: continue
+                ctx = self if getattr(plugin, 'api', 1) > 1 else self._context
+                if hasattr(plugin, 'apply'):
+                    callback = plugin.apply(callback, ctx)
+                else:
+                    callback = plugin(callback)
+                functools.update_wrapper(callback, self.callback)
+            return callback
+        except RouteReset: # Try again with changed configuration.
+            return self._make_callback()
+
+
 
 
 
@@ -417,10 +498,8 @@ class Bottle(object):
         """ Create a new bottle instance.
             You usually don't do that. Use `bottle.app.push()` instead.
         """
-        self.routes = [] # List of installed routes including metadata.
-        self.router = Router() # Maps requests to self.route indices.
-        self.ccache = {} # Cache for callbacks with plugins applied.
-
+        self.routes = [] # List of installed :class:`Route` instances.
+        self.router = Router() # Maps requests to :class:`Route` instances.
         self.plugins = [] # List of installed plugins.
 
         self.mounts = {}
@@ -489,15 +568,16 @@ class Bottle(object):
         if removed: self.reset()
         return removed
 
-    def reset(self, id=None):
+    def reset(self, route=None):
         ''' Reset all routes (force plugins to be re-applied) and clear all
-            caches. If an ID is given, only that specific route is affected. '''
-        if id is None: self.ccache.clear()
-        else: self.ccache.pop(id, None)
+            caches. If an ID or route object is given, only that specific route
+            is affected. '''
+        if route is None: routes = self.routes
+        elif isinstance(route, Route): routes = [route]
+        else: routes = [self.routes[route]]
+        for route in routes: route.reset()
         if DEBUG:
-            for route in self.routes:
-                if route['id'] not in self.ccache:
-                    self.ccache[route['id']] = self._build_callback(route)
+            for route in routes: route.prepare()
 
     def close(self):
         ''' Close the application and all installed plugins. '''
@@ -506,45 +586,13 @@ class Bottle(object):
         self.stopped = True
 
     def match(self, environ):
-        """ (deprecated) Search for a matching route and return a
-            (callback, urlargs) tuple.
-            The first element is the associated route callback with plugins
-            applied. The second value is a dictionary with parameters extracted
-            from the URL. The :class:`Router` raises :exc:`HTTPError` (404/405)
-            on a non-match."""
-        depr("This method will change semantics in 0.10.")
-        return self._match(environ)
-
-    def _match(self, environ):
-        handle, args = self.router.match(environ)
-        environ['route.handle'] = handle # TODO move to router?
+        """ Search for a matching route and return a (:class:`Route` , urlargs)
+            tuple. The second value is a dictionary with parameters extracted
+            from the URL. Raise :exc:`HTTPError` (404/405) on a non-match."""
+        route, args = self.router.match(environ)
+        environ['route.handle'] = environ['bottle.route'] = route
         environ['route.url_args'] = args
-        try:
-            return self.ccache[handle], args
-        except KeyError:
-            config = self.routes[handle]
-            callback = self.ccache[handle] = self._build_callback(config)
-            return callback, args
-
-    def _build_callback(self, config):
-        ''' Apply plugins to a route and return a new callable. '''
-        wrapped = config['callback']
-        plugins = self.plugins + config['apply']
-        skip    = config['skip']
-        try:
-            for plugin in reversed(plugins):
-                if True in skip: break
-                if plugin in skip or type(plugin) in skip: continue
-                if getattr(plugin, 'name', True) in skip: continue
-                if hasattr(plugin, 'apply'):
-                    wrapped = plugin.apply(wrapped, config)
-                else:
-                    wrapped = plugin(wrapped)
-                if not wrapped: break
-                functools.update_wrapper(wrapped, config['callback'])
-            return wrapped
-        except RouteReset: # A plugin may have changed the config dict inplace.
-            return self._build_callback(config) # Apply all plugins again.
+        return route, args
 
     def get_url(self, routename, **kargs):
         """ Return a string that matches a named route """
@@ -580,23 +628,18 @@ class Bottle(object):
             configuration and passed to plugins (see :meth:`Plugin.apply`).
         """
         if callable(path): path, callback = None, path
-
         plugins = makelist(apply)
         skiplist = makelist(skip)
-
         def decorator(callback):
             for rule in makelist(path) or yieldroutes(callback):
                 for verb in makelist(method):
                     verb = verb.upper()
-                    cfg = dict(rule=rule, method=verb, callback=callback,
-                               name=name, app=self, config=config,
-                               apply=plugins, skip=skiplist)
-                    self.routes.append(cfg)
-                    cfg['id'] = self.routes.index(cfg)
-                    self.router.add(rule, verb, cfg['id'], name=name)
-                    if DEBUG: self.ccache[cfg['id']] = self._build_callback(cfg)
+                    route = Route(self, rule, verb, callback, name=name,
+                                  plugins=plugins, skiplist=skiplist, **config)
+                    self.routes.append(route)
+                    self.router.add(rule, verb, route, name=name)
+                    if DEBUG: route.prepare()
             return callback
-
         return decorator(callback) if callback else decorator
 
     def get(self, path=None, method='GET', **options):
@@ -645,13 +688,10 @@ class Bottle(object):
             depr("Bottle.serve will be removed in 0.10.")
             return HTTPError(503, "Server stopped")
         try:
-            callback, args = self._match(environ)
-            return callback(**args)
+            route, args = self.match(environ)
+            return route.call(**args)
         except HTTPResponse, r:
             return r
-        except RouteReset: # Route reset requested by the callback or a plugin.
-            del self.ccache[environ['route.handle']]
-            return self._handle(environ) # Try again.
         except (KeyboardInterrupt, SystemExit, MemoryError):
             raise
         except Exception, e:

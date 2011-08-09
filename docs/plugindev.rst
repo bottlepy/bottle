@@ -1,5 +1,6 @@
 .. module:: bottle
 
+
 ========================
 Plugin Development Guide
 ========================
@@ -10,12 +11,13 @@ This guide explains the plugin API and how to write custom plugins. I suggest re
 
     This is a draft. If you see any errors or find that a specific part is not explained clear enough, please tell the `mailing-list <mailto:bottlepy@googlegroups.com>`_ or file a `bug report <https://github.com/defnull/bottle/issues>`_.
 
+
 How Plugins Work: The Basics
 ============================
 
-The plugin API builds on the concept of `decorators <http://docs.python.org/glossary.html#term-decorator>`_. To put it briefly, a plugin is a decorator that is applied to every single route of an application. Any decorator that can be applied to a route callback doubles as a plugin.
+The plugin API builds on the concept of `decorators <http://docs.python.org/glossary.html#term-decorator>`_. To put it briefly, a plugin is a decorator that is applied to every single route callback of an application. Any decorator that can be applied to a route callback doubles as a plugin.
 
-Of course, this is a simplification. Plugins can do a lot more than just decorating route callbacks, but it is a good starting point. Lets have a look at some code::
+Of course, this is just a simplification. Plugins can do a lot more than just decorating route callbacks, but it is a good starting point. Lets have a look at some code::
 
     from bottle import response, install
     import time
@@ -23,10 +25,10 @@ Of course, this is a simplification. Plugins can do a lot more than just decorat
     def stopwatch(callback):
         def wrapper(*args, **kargs):
             start = time.time()
-            rv = callback(*args, **kwargs)
+            body = callback(*args, **kwargs)
             end = time.time()
             response.headers['X-Exec-Time'] = str(end - start)
-            return rv
+            return body
         return wrapper
 
     bottle.install(stopwatch)
@@ -42,76 +44,91 @@ Once all plugins are applied to a route, the prepared callback is cached and sub
 The decorator API is quite limited, though. You don't know anything about the route being decorated or the associated application object and have no way to efficiently store data that is shared among all routes. But fear not! Plugins are not limited to just decorator functions. Bottle accepts anything as a plugin as long as it is callable or implements an extended API. This API is described below and gives you a lot of control over the whole process.
 
 
-
 Plugin API
 ==========
 
 :class:`Plugin` is not a real class (you cannot import it from :mod:`bottle`) but an interface that plugins are expected to implement. Bottle accepts any object of any type as a plugin, as long as it conforms to the following API.
 
 .. class:: Plugin(object)
-    
+
     Plugins must be callable or implement :meth:`apply`. If :meth:`apply` is defined, it is always preferred over calling the plugin directly. All other methods and attributes are optional.
-    
+
     .. attribute:: name
-        
+
         Both :meth:`Bottle.uninstall` and the `skip` parameter of :meth:`Bottle.route()` accept a name string to refer to a plugin or plugin type. This works only for plugins that have a name attribute.
-    
+
+    .. attribute:: api
+
+        The Plugin API is still evolving. This integer attribute tells bottle which version to use. If it is missing, bottle defaults to the first version. The current version is ``2``. See :ref:`plugin-changelog` for details.
+
     .. method:: setup(app)
 
         Called as soon as the plugin is installed to an application (see :meth:`Bottle.install`). The only parameter is the associated application object. This method is *not* called on plugins that are applied directly to routes via the :meth:`Bottle.route()` decorator.
 
     .. method:: __call__(callback)
-        
+
         As long as :meth:`apply` is not defined, the plugin itself is used as a decorator and applied directly to each route callback. The only parameter is the callback to decorate. Whatever is returned by this method replaces the original callback. If there is no need to wrap or replace a given callback, just return the unmodified callback parameter.
-        
-    .. method:: apply(callback, context)
-    
-        If defined, this method is used instead of :meth:`__call__` to decorate route callbacks. The additional context parameter is a dictionary that contains any keyword arguments passed to the :meth:`Bottle.route()` decorator, as well as some additional meta-information about the route being decorated. See :ref:`route-context` for details.
+
+    .. method:: apply(callback, route)
+
+        If defined, this method is used in favor of :meth:`__call__` to decorate route callbacks. The additional context parameter is an instance of :class:`Route` and provides meta-information about the current route. See :ref:`route-context` for details.
 
     .. method:: close()
-    
+
         Called immediately before the plugin is uninstalled or the application is closed (see :meth:`Bottle.uninstall` or :meth:`Bottle.close`). This method is *not* called on plugins that are applied directly to routes via the :func:`route` decorator.
 
 
+.. _plugin-changelog:
+
+Plugin API changes
+------------------
+
+The Plugin API is still evolving and changed with Bottle 0.10 to address certain issues with the route context dictionary. To ensure backwards compatibility with 0.9 Plugins, we added an optional :attr:`Plugin.api` attribute to tell bottle which API to use. The API differences are summarized here.
+
+* **Bottle 0.9 API 1** (:attr:`Plugin.api` not present)
+
+  * Original Plugin API as described in the 0.9 docs.
+
+* **Bottle 0.10 API 2** (:attr:`Plugin.api` equals 2)
+
+  * The `context` parameter of the :meth:`Plugin.apply` method is now an instance of :class:`Route` instead of a context dictionary.
 
 .. _route-context:
 
-Route Context
-=============
 
-The route context dictionary stores meta-information about a specific route. It is passed to :meth:`Plugin.apply` along with the route callback and contains the following values:
+The Route Context
+=================
+
+The :class:`Route` instance passed to :meth:`Plugin.apply` provides detailed informations about the current route. The most important attributes are summarized here:
 
 ===========  =================================================================
-Key          Description
+Attribute    Description
 ===========  =================================================================
-rule         The rule string (e.g. ``/wiki/:page``) as it is passed to the
-             router.
-method       An uppercase HTTP method string (e.g. ``GET``).
-callback     The original callback with no plugins or wrappers applied. Useful
-             for introspection.
+app          The application object this route was installed to.
+rule         The rule string (e.g. ``/wiki/:page``).
+method       The HTTP method as a string (e.g. ``GET``).
+callback     The original callback with no plugins applied. Useful for
+             introspection.
 name         The name of the route (if specified) or ``None``.
-apply        A list of route-specific plugins (see :meth:`Bottle.route`).
-skip         A list of plugins to not apply to this route
-             (see :meth:`Bottle.route`).
-app          The associated application object.
+plugins      A list of route-specific plugins. These are applied in addition to
+             the application-wide plugins. (see
+             :meth:`Bottle.route`).
+skiplist     A list of plugins to not apply to this route (again, see
+             :meth:`Bottle.route`).
 config       Additional keyword arguments passed to the :meth:`Bottle.route`
              decorator are stored in this dictionary. Used for route-specific
-             plugin configuration and meta-data.
-id           An internal handle used by bottle to identify a route.
+             configuration and meta-data.
 ===========  =================================================================
 
-The :meth:`Bottle.route()` decorator accepts multiple rules and methods in a single call, but the context dictionary refers to a specific pair only. :meth:`Plugin.apply` is called once for each combination of ``rule`` and ``method``, even if they all map to the same route callback.
-   
-Keep in mind that the `config` dictionary is shared between all plugins. It is always a good idea to add a unique prefix or, if your plugin needs a lot of configuration, store it in a separate dictionary within the `config` dictionary. This helps to avoid naming collisions between plugins.
-
-Manipulating the Context Dictionary
------------------------------------
-
-While the :ref:`route context dictionary <route-context>` is mutable, changes may have unpredictable effects on other plugins. It is most likely a bad idea to monkey-patch a broken configuration instead of providing a helpful error message and let the user fix it properly.
-
-In some rare cases, however, it might be justifiable to break this rule. After you made your changes to the context dictionary, raise :exc:`RouteReset` as an exception. This removes the current route from the callback cache and causes all plugins to be re-applied. The router is not updated, however. Changes to `rule` or `method` values have no effect on the router, but only on plugins. This may change in the future, though.
+For your plugin, :attr:`Route.config` is probably the most important attribute. Keep in mind that this dictionary is local to the route, but shared between all plugins. It is always a good idea to add a unique prefix or, if your plugin needs a lot of configuration, store it in a separate dictionary within the `config` dictionary. This helps to avoid naming collisions between plugins.
 
 
+Runtime manipulation of routes
+------------------------------
+
+While some :class:`Route` attributes are mutable, changes may have unwanted effects on other plugins. It is most likely a bad idea to monkey-patch a broken configuration instead of providing a helpful error message and let the user fix the problem.
+
+In some rare cases, however, it might be justifiable to break this rule. After you made your changes to the :class:`Route` instance, the callable or the application itself, raise :exc:`RouteReset` as an exception. This removes the current route from the cache and causes all plugins to be re-applied. The router is not updated, however. Changes to `rule` or `method` values have no effect on the router, but only on plugins. This may change in the future, though.
 
 Plugin Example: SQLitePlugin
 ============================
@@ -130,6 +147,7 @@ This plugin provides an sqlite3 database connection handle as an additional keyw
         settings on a per-route basis. '''
 
         name = 'sqlite'
+        api = 2
 
         def __init__(self, dbfile=':memory:', autocommit=True, dictrows=True,
                      keyword='db'):
@@ -137,7 +155,7 @@ This plugin provides an sqlite3 database connection handle as an additional keyw
              self.autocommit = autocommit
              self.dictrows = dictrows
              self.keyword = keyword
-        
+
         def setup(self, app):
             ''' Make sure that other installed plugins don't affect the same
                 keyword argument.'''
@@ -149,18 +167,18 @@ This plugin provides an sqlite3 database connection handle as an additional keyw
 
         def apply(self, callback, context):
             # Override global configuration with route-specific values.
-            conf = context['config'].get('sqlite') or {}
+            conf = context.config.get('sqlite') or {}
             dbfile = conf.get('dbfile', self.dbfile)
             autocommit = conf.get('autocommit', self.autocommit)
             dictrows = conf.get('dictrows', self.dictrows)
             keyword = conf.get('keyword', self.keyword)
-            
+
             # Test if the original callback accepts a 'db' keyword.
             # Ignore it if it does not need a database handle.
-            args = inspect.getargspec(context['callback'])[0]
+            args = inspect.getargspec(context.callback)[0]
             if keyword not in args:
                 return callback
-            
+
             def wrapper(*args, **kwargs):
                 # Connect to the database
                 db = sqlite3.connect(dbfile)
@@ -186,7 +204,7 @@ This plugin is actually useful and very similar to the version bundled with Bott
 
     sqlite = SQLitePlugin(dbfile='/tmp/test.db')
     bottle.install(sqlite)
-    
+
     @route('/show/:page')
     def show(page, db):
         row = db.execute('SELECT * from pages where name=?', page).fetchone()
