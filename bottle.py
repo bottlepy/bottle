@@ -147,6 +147,7 @@ class DictProperty(object):
 def cached_property(func):
     ''' A property that, if accessed, replaces itself with the computed
         value. Subsequent accesses won't call the getter again. '''
+    #TODO: Make "del obj.attr" reset the property.
     return DictProperty('__dict__')(func)
 
 class lazy_attribute(object): # Does not need configuration -> lower-case name
@@ -160,23 +161,8 @@ class lazy_attribute(object): # Does not need configuration -> lower-case name
         setattr(cls, self.__name__, value)
         return value
 
-class HeaderProperty(object):
-    def __init__(self, name, reader=None, writer=str, default=''):
-        self.name, self.reader, self.writer, self.default = name, reader, writer, default
-        self.__doc__ = 'Current value of the %r header.' % name.title()
 
-    def __get__(self, obj, cls):
-        if obj is None: return self
-        value = obj.headers.get(self.name)
-        return self.reader(value) if (value and self.reader) else (value or self.default)
 
-    def __set__(self, obj, value):
-        if self.writer: value = self.writer(value)
-        obj.headers[self.name] = value
-
-    def __delete__(self, obj):
-        if self.name in obj.headers:
-            del obj.headers[self.name]
 
 
 
@@ -189,6 +175,8 @@ class BottleException(Exception):
     """ A base class for exceptions used by bottle. """
     pass
 
+
+#TODO: These should subclass BaseRequest
 
 class HTTPResponse(BottleException):
     """ Used to break execution and immediately finish the response """
@@ -1119,18 +1107,28 @@ class BaseRequest(DictMixin):
             self.environ.pop('bottle.request.'+key, None)
 
 
-class LocalRequest(BaseRequest, threading.local):
-    ''' A thread-local subclass of :class:`BaseRequest`. '''
-    def __init__(self): pass
-    bind = BaseRequest.__init__
-
-
-Request = LocalRequest
-
-
-
 def _hkey(s):
     return s.title().replace('_','-')
+
+
+class HeaderProperty(object):
+    def __init__(self, name, reader=None, writer=str, default=''):
+        self.name, self.reader, self.writer, self.default = name, reader, writer, default
+        self.__doc__ = 'Current value of the %r header.' % name.title()
+
+    def __get__(self, obj, cls):
+        if obj is None: return self
+        value = obj.headers.get(self.name)
+        return self.reader(value) if (value and self.reader) else (value or self.default)
+
+    def __set__(self, obj, value):
+        if self.writer: value = self.writer(value)
+        obj.headers[self.name] = value
+
+    def __delete__(self, obj):
+        if self.name in obj.headers:
+            del obj.headers[self.name]
+
 
 class BaseResponse(object):
     """ Storage class for a response body as well as headers and cookies.
@@ -1325,11 +1323,21 @@ class BaseResponse(object):
         kwargs['expires'] = 0
         self.set_cookie(key, '', **kwargs)
 
+
+class LocalRequest(BaseRequest, threading.local):
+    ''' A thread-local subclass of :class:`BaseRequest`. '''
+    def __init__(self): pass
+    bind = BaseRequest.__init__
+
+
 class LocalResponse(BaseResponse, threading.local):
     ''' A thread-local subclass of :class:`BaseResponse`. '''
     bind = BaseResponse.__init__
 
-Response = LocalResponse
+Response = LocalResponse # BC 0.9
+Request  = LocalRequest  # BC 0.9
+
+
 
 
 
@@ -1337,7 +1345,6 @@ Response = LocalResponse
 ###############################################################################
 # Plugins ######################################################################
 ###############################################################################
-
 
 
 class JSONPlugin(object):
@@ -1359,7 +1366,6 @@ class JSONPlugin(object):
                 return json_response
             return rv
         return wrapper
-
 
 
 class HooksPlugin(object):
@@ -1401,7 +1407,6 @@ class HooksPlugin(object):
             for hook in after_request[::-1]: hook()
             return rv
         return wrapper
-
 
 
 class TypeFilterPlugin(object):
@@ -1561,7 +1566,6 @@ class HeaderDict(MultiDict):
         for name in map(_hkey, names):
             if name in self.dict:
                 del self.dict[name]
-
 
 
 class WSGIHeaderDict(DictMixin):
@@ -1823,10 +1827,6 @@ def path_shift(script_name, path_info, shift=1):
     if path_info.endswith('/') and pathlist: new_path_info += '/'
     return new_script_name, new_path_info
 
-
-
-# Decorators
-#TODO: Replace default_app() with app()
 
 def validate(**vkargs):
     """
@@ -2551,7 +2551,7 @@ class SimpleTemplate(BaseTemplate):
                 line = line.split('%',1)[1].lstrip() # Full line following the %
                 cline = self.split_comment(line).strip()
                 cmd = re.split(r'[^a-zA-Z0-9_]', cline)[0]
-                flush() ##encodig (TODO: why?)
+                flush() # You are actually reading this? Good luck, it's a mess :)
                 if cmd in self.blocks or multiline:
                     cmd = multiline or cmd
                     dedent = cmd in self.dedent_blocks # "else:"
