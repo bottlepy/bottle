@@ -15,7 +15,7 @@ This guide explains the plugin API and how to write custom plugins. I suggest re
 How Plugins Work: The Basics
 ============================
 
-The plugin API builds on the concept of `decorators <http://docs.python.org/glossary.html#term-decorator>`_. To put it briefly, a plugin is a decorator that is applied to every single route callback of an application. Any decorator that can be applied to a route callback doubles as a plugin.
+The plugin API builds on the concept of `decorators <http://docs.python.org/glossary.html#term-decorator>`_. To put it briefly, a plugin is a decorator applied to every single route callback of an application.
 
 Of course, this is just a simplification. Plugins can do a lot more than just decorating route callbacks, but it is a good starting point. Lets have a look at some code::
 
@@ -23,7 +23,7 @@ Of course, this is just a simplification. Plugins can do a lot more than just de
     import time
 
     def stopwatch(callback):
-        def wrapper(*args, **kargs):
+        def wrapper(*args, **kawrgs):
             start = time.time()
             body = callback(*args, **kwargs)
             end = time.time()
@@ -37,9 +37,9 @@ This plugin measures the execution time for each request and adds an appropriate
 
 The last line tells Bottle to install the plugin to the default application. This causes the plugin to be automatically applied to all routes of that application. In other words, ``stopwatch()`` is called once for each route callback and the return value is used as a replacement for the original callback.
 
-Plugins are applied on demand, that is, as soon as a route is requested for the first time. For this to work properly in multi-threaded environments, the plugin needs to be thread-safe. This is not a problem most of the time, but keep it in mind.
+Plugins are applied on demand, that is, as soon as a route is requested for the first time. For this to work properly in multi-threaded environments, the plugin should be thread-safe. This is not a problem most of the time, but keep it in mind.
 
-Once all plugins are applied to a route, the prepared callback is cached and subsequent requests are handled by the cached version directly. This means that a plugin is usually applied only once to a specific route. That cache, however, is cleared every time the list of installed plugins changes. Your plugin should be able to decorate the same route more than once.
+Once all plugins are applied to a route, the wrapped callback is cached and subsequent requests are handled by the cached version directly. This means that a plugin is usually applied only once to a specific route. That cache, however, is cleared every time the list of installed plugins changes. Your plugin should be able to decorate the same route more than once.
 
 The decorator API is quite limited, though. You don't know anything about the route being decorated or the associated application object and have no way to efficiently store data that is shared among all routes. But fear not! Plugins are not limited to just decorator functions. Bottle accepts anything as a plugin as long as it is callable or implements an extended API. This API is described below and gives you a lot of control over the whole process.
 
@@ -61,21 +61,24 @@ Plugin API
 
         The Plugin API is still evolving. This integer attribute tells bottle which version to use. If it is missing, bottle defaults to the first version. The current version is ``2``. See :ref:`plugin-changelog` for details.
 
-    .. method:: setup(app)
+    .. method:: setup(self, app)
 
-        Called as soon as the plugin is installed to an application (see :meth:`Bottle.install`). The only parameter is the associated application object. This method is *not* called on plugins that are applied directly to routes via the :meth:`Bottle.route()` decorator.
+        Called as soon as the plugin is installed to an application (see :meth:`Bottle.install`). The only parameter is the associated application object.
 
-    .. method:: __call__(callback)
+    .. method:: __call__(self, callback)
 
         As long as :meth:`apply` is not defined, the plugin itself is used as a decorator and applied directly to each route callback. The only parameter is the callback to decorate. Whatever is returned by this method replaces the original callback. If there is no need to wrap or replace a given callback, just return the unmodified callback parameter.
 
-    .. method:: apply(callback, route)
+    .. method:: apply(self, callback, route)
 
-        If defined, this method is used in favor of :meth:`__call__` to decorate route callbacks. The additional context parameter is an instance of :class:`Route` and provides meta-information about the current route. See :ref:`route-context` for details.
+        If defined, this method is used in favor of :meth:`__call__` to decorate route callbacks. The additional `route` parameter is an instance of :class:`Route` and provides a lot of meta-information and context for that route. See :ref:`route-context` for details.
 
-    .. method:: close()
+    .. method:: close(self)
 
-        Called immediately before the plugin is uninstalled or the application is closed (see :meth:`Bottle.uninstall` or :meth:`Bottle.close`). This method is *not* called on plugins that are applied directly to routes via the :func:`route` decorator.
+        Called immediately before the plugin is uninstalled or the application is closed (see :meth:`Bottle.uninstall` or :meth:`Bottle.close`).
+
+
+Both :meth:`Plugin.setup` and :meth:`Plugin.close` are *not* called for plugins that are applied directly to a route via the :meth:`Bottle.route()` decorator, but only for plugins installed to an application.
 
 
 .. _plugin-changelog:
@@ -99,20 +102,19 @@ The Plugin API is still evolving and changed with Bottle 0.10 to address certain
 The Route Context
 =================
 
-The :class:`Route` instance passed to :meth:`Plugin.apply` provides detailed informations about the current route. The most important attributes are summarized here:
+The :class:`Route` instance passed to :meth:`Plugin.apply` provides detailed informations about the associated route. The most important attributes are summarized here:
 
 ===========  =================================================================
 Attribute    Description
 ===========  =================================================================
-app          The application object this route was installed to.
+app          The application object this route is installed to.
 rule         The rule string (e.g. ``/wiki/:page``).
 method       The HTTP method as a string (e.g. ``GET``).
 callback     The original callback with no plugins applied. Useful for
              introspection.
 name         The name of the route (if specified) or ``None``.
 plugins      A list of route-specific plugins. These are applied in addition to
-             the application-wide plugins. (see
-             :meth:`Bottle.route`).
+             application-wide plugins. (see :meth:`Bottle.route`).
 skiplist     A list of plugins to not apply to this route (again, see
              :meth:`Bottle.route`).
 config       Additional keyword arguments passed to the :meth:`Bottle.route`
@@ -120,15 +122,28 @@ config       Additional keyword arguments passed to the :meth:`Bottle.route`
              configuration and meta-data.
 ===========  =================================================================
 
-For your plugin, :attr:`Route.config` is probably the most important attribute. Keep in mind that this dictionary is local to the route, but shared between all plugins. It is always a good idea to add a unique prefix or, if your plugin needs a lot of configuration, store it in a separate dictionary within the `config` dictionary. This helps to avoid naming collisions between plugins.
+For your plugin, :attr:`Route.config` is probably the most important attribute. Keep in mind that this dictionary is local to the route, but shared between all plugins. It is always a good idea to add a unique prefix or, if your plugin needs a lot of configuration, store it in a separate namespace within the `config` dictionary. This helps to avoid naming collisions between plugins.
 
 
-Runtime manipulation of routes
-------------------------------
+Changing the :class:`Route` object
+----------------------------------
 
-While some :class:`Route` attributes are mutable, changes may have unwanted effects on other plugins. It is most likely a bad idea to monkey-patch a broken configuration instead of providing a helpful error message and let the user fix the problem.
+While some :class:`Route` attributes are mutable, changes may have unwanted effects on other plugins. It is most likely a bad idea to monkey-patch a broken route instead of providing a helpful error message and let the user fix the problem.
 
-In some rare cases, however, it might be justifiable to break this rule. After you made your changes to the :class:`Route` instance, the callable or the application itself, raise :exc:`RouteReset` as an exception. This removes the current route from the cache and causes all plugins to be re-applied. The router is not updated, however. Changes to `rule` or `method` values have no effect on the router, but only on plugins. This may change in the future, though.
+In some rare cases, however, it might be justifiable to break this rule. After you made your changes to the :class:`Route` instance, raise :exc:`RouteReset` as an exception. This removes the current route from the cache and causes all plugins to be re-applied. The router is not updated, however. Changes to `rule` or `method` values have no effect on the router, but only on plugins. This may change in the future, though.
+
+
+Runtime optimizations
+=====================
+
+Once all plugins are applied to a route, the wrapped route callback is cached to speed up subsequent requests. If the behavior of your plugin depends on configuration, and you want to be able to change that configuration at runtime, you need to read the configuration on each request. Easy enough.
+
+For performance reasons, however, it might be worthwhile to choose a different wrapper based on current needs, work with closures, or enable or disable a plugin at runtime. Let's take the built-in HooksPlugin as an example: If no hooks are installed, the plugin removes itself from all affected routes and has virtaully no overhead. As soon as you install the first hook, the plugin activates itself and takes effect again.
+
+To achieve this, you need control over the callback cache: :meth:`Route.reset` clears the cache for a single route and :meth:`Bottle.reset` clears all caches for all routes of an application at once. On the next request, all plugins are re-applied to the route as if it were requested for the first time.
+
+Both methods won't affect the current request if called from within a route callback, of cause. To force a restart of the current request, raise :exc:`RouteReset` as an exception.
+
 
 Plugin Example: SQLitePlugin
 ============================
