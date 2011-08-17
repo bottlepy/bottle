@@ -41,6 +41,7 @@ from Cookie import SimpleCookie
 from tempfile import TemporaryFile
 from traceback import format_exc
 from urlparse import urljoin, SplitResult as UrlSplitResult
+from types import MethodType
 
 # Workaround for a bug in some versions of lib2to3 (fixed on CPython 2.7 and 3.2)
 import urllib
@@ -590,8 +591,6 @@ class Bottle(object):
             tuple. The second value is a dictionary with parameters extracted
             from the URL. Raise :exc:`HTTPError` (404/405) on a non-match."""
         route, args = self.router.match(environ)
-        environ['route.handle'] = environ['bottle.route'] = route
-        environ['route.url_args'] = args
         return route, args
 
     def get_url(self, routename, **kargs):
@@ -689,6 +688,8 @@ class Bottle(object):
             return HTTPError(503, "Server stopped")
         try:
             route, args = self.match(environ)
+            environ['route.handle'] = environ['bottle.route'] = route
+            environ['route.url_args'] = args
             return route.call(**args)
         except HTTPResponse, r:
             return r
@@ -1122,6 +1123,7 @@ class LocalRequest(BaseRequest, threading.local):
     ''' A thread-local subclass of :class:`BaseRequest`. '''
     def __init__(self): pass
     bind = BaseRequest.__init__
+
 
 Request = LocalRequest
 
