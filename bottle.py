@@ -1760,6 +1760,18 @@ def cookie_is_encoded(data):
     return bool(data.startswith(tob('!')) and tob('?') in data)
 
 
+def html_escape(string):
+    ''' Escape HTML special characters ``&<>`` and quotes ``'"``. '''
+    return string.replace('&','&amp;').replace('<','&lt;').replace('>','&gt;')\
+                 .replace('"','&quot;').replace("'",'&#039;')
+
+
+def html_quote(string):
+    ''' Escape and quote a string to be used as an HTTP attribute.'''
+    return '"%s"' % html_escape(string).replace('\n','%#10;')\
+                    .replace('\r','&#13;').replace('\t','&#9;')
+
+
 def yieldroutes(func):
     """ Return a generator for routes that match the signature (name, args)
     of the func parameter. This may yield more than one route if the function
@@ -2446,7 +2458,7 @@ class SimpleTemplate(BaseTemplate):
              |\#.*                        # Comments
             )''', re.VERBOSE)
 
-    def prepare(self, escape_func=cgi.escape, noescape=False):
+    def prepare(self, escape_func=html_escape, noescape=False):
         self.cache = {}
         enc = self.encoding
         self._str = lambda x: touni(x, enc)
