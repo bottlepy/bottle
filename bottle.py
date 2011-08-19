@@ -1149,8 +1149,8 @@ class BaseResponse(object):
     default_status = 200
     default_content_type = 'text/html; charset=UTF-8'
 
-    #: Header blacklist for specific response codes
-    #: (rfc2616 section 10.2.3 and 10.3.5)
+    # Header blacklist for specific response codes
+    # (rfc2616 section 10.2.3 and 10.3.5)
     bad_headers = {
         204: set(('Content-Type',)),
         304: set(('Allow', 'Content-Encoding', 'Content-Language',
@@ -1159,10 +1159,10 @@ class BaseResponse(object):
 
     def __init__(self, body='', status=None, **headers):
         #: The HTTP status code as an integer (e.g. 404).
-        #: Do not change it directly, see :attr:`status`.
+        #: Do not change the value manually, use :attr:`status` instead.
         self.status_code = None
         #: The HTTP status line as a string (e.g. "404 Not Found").
-        #: Do not change it directly, see :attr:`status`.
+        #: Do not change the value manually, use :attr:`status` instead.
         self.status_line = None
         #: The response body as one of the supported data types.
         self.body = body
@@ -1203,7 +1203,7 @@ class BaseResponse(object):
         ''' A writeable property to change the HTTP response status. It accepts
             either a numeric code (100-999) or a string with a custom reason
             phrase (e.g. "404 Brain not found"). Both :data:`status_line` and
-            :data:`status_line` are updates accordingly. The return value is
+            :data:`status_code` are updates accordingly. The return value is
             always a numeric code. ''')
     del _set_status
 
