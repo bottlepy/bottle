@@ -144,11 +144,21 @@ class DictProperty(object):
         if self.read_only: raise AttributeError("Read-Only property.")
         del getattr(obj, self.attr)[self.key]
 
-def cached_property(func):
-    ''' A property that, if accessed, replaces itself with the computed
-        value. Subsequent accesses won't call the getter again. '''
-    #TODO: Make "del obj.attr" reset the property.
-    return DictProperty('__dict__')(func)
+class CachedProperty(object):
+    ''' A property that is only computed once per instance and then replaces
+        itself with an ordinary attribute. Deleting the attribute resets the
+        property. '''
+
+    def __init__(self, func):
+        self.func = func
+
+    def __get__(self, obj, cls):
+        if obj is None: return self
+        value = obj.__dict__[self.func.__name__] = self.func(obj)
+        return value
+
+cached_property = CachedProperty
+
 
 class lazy_attribute(object): # Does not need configuration -> lower-case name
     ''' A property that caches itself to the class object. '''
