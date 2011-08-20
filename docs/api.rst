@@ -8,7 +8,7 @@ API Reference
 .. moduleauthor:: Marcel Hellkamp <marc@gsites.de>
 
 This is a mostly auto-generated API. If you are new to bottle, you might find the
-narrative :doc:`tutorial` more helpful. 
+narrative :doc:`tutorial` more helpful.
 
 
 
@@ -21,6 +21,8 @@ The module defines several functions, constants, and an exception.
 .. autofunction:: debug
 
 .. autofunction:: run
+
+.. autofunction:: load
 
 .. autofunction:: load_app
 
@@ -36,7 +38,7 @@ The module defines several functions, constants, and an exception.
     Return the current :ref:`default-app`. Actually, these are callable instances of :class:`AppStack` and implement a stack-like API.
 
 
-Routing 
+Routing
 -------------------
 
 Bottle maintains a stack of :class:`Bottle` instances (see :func:`app` and :class:`AppStack`) and uses the top of the stack as a *default application* for some of the module-level functions and decorators.
@@ -50,7 +52,7 @@ Bottle maintains a stack of :class:`Bottle` instances (see :func:`app` and :clas
 
    Decorator to install a route to the current default application. See :meth:`Bottle.route` for details.
 
-   
+
 .. function:: error(...)
 
    Decorator to install an error handler to the current default application. See :meth:`Bottle.error` for details.
@@ -161,11 +163,11 @@ The :class:`Response` class stores the HTTP status code as well as headers and c
 Templates
 =========
 
-All template engines supported by :mod:`bottle` implement the :class:`BaseTemplate` API. This way it is possible to switch and mix template engines without changing the application code at all. 
+All template engines supported by :mod:`bottle` implement the :class:`BaseTemplate` API. This way it is possible to switch and mix template engines without changing the application code at all.
 
 .. autoclass:: BaseTemplate
    :members:
-   
+
    .. automethod:: __init__
 
 .. autofunction:: view

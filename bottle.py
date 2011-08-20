@@ -2052,7 +2052,6 @@ class AutoServer(ServerAdapter):
             except ImportError:
                 pass
 
-
 server_names = {
     'cgi': CGIServer,
     'flup': FlupFCGIServer,
@@ -2083,49 +2082,30 @@ server_names = {
 ###############################################################################
 
 
-def _load(target, **vars):
-    """ Fetch something from a module. The exact behaviour depends on the the
-        target string:
+def load(target, **namespace):
+    """ Import a module or fetch an object from a module.
 
-        If the target is a valid python import path (e.g. `package.module`),
-        the rightmost part is returned as a module object.
-        If the target contains a colon (e.g. `package.module:var`) the module
-        variable specified after the colon is returned.
-        If the part after the colon contains any non-alphanumeric characters
-        (e.g. `package.module:func(var)`) the result of the expression
-        is returned. The expression has access to keyword arguments supplied
-        to this function.
+        * ``package.module`` returns `module` as a module object.
+        * ``pack.mod:name`` returns the module variable `name` from `pack.mod`.
+        * ``pack.mod:func()`` calls `pack.mod.func()` and returns the result.
 
-        Example::
-        >>> _load('bottle')
-        <module 'bottle' from 'bottle.py'>
-        >>> _load('bottle:Bottle')
-        <class 'bottle.Bottle'>
-        >>> _load('bottle:cookie_encode(v, secret)', v='foo', secret='bar')
-        '!F+hN4dQxaDJ4QxxaZ+Z3jw==?gAJVA2Zvb3EBLg=='
-
+        The last form accepts not only function calls, but any type of
+        expression. Keyword arguments passed to this function are available as
+        local variables. Example: ``import_string('re:compile(x)', x='[a-z]')``
     """
     module, target = target.split(":", 1) if ':' in target else (target, None)
-    if module not in sys.modules:
-        __import__(module)
-    if not target:
-        return sys.modules[module]
-    if target.isalnum():
-        return getattr(sys.modules[module], target)
+    if module not in sys.modules: __import__(module)
+    if not target: return sys.modules[module]
+    if target.isalnum(): return getattr(sys.modules[module], target)
     package_name = module.split('.')[0]
-    vars[package_name] = sys.modules[package_name]
-    return eval('%s.%s' % (module, target), vars)
+    namespace[package_name] = sys.modules[package_name]
+    return eval('%s.%s' % (module, target), namespace)
 
 
 def load_app(target):
-    """ Load a bottle application based on a target string and return the
-        application object.
-
-        If the target is an import path (e.g. package.module), the application
-        stack is used to isolate the routes defined in that module.
-        If the target contains a colon (e.g. package.module:myapp) the
-        module variable specified after the colon is returned instead.
-    """
+    """ Load a bottle application from a module and make sure that the import
+        does not affect the current default application, but returns a separate
+        application object. See :func:`load` for details. """
     tmp = app.push() # Create a new "default application"
     rv = _load(target) # Import the target module
     app.remove(tmp) # Remove the temporary added default application
