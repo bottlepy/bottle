@@ -396,7 +396,7 @@ class Route(object):
 
     def __init__(self, app, rule, method, callback, name=None,
                  plugins=None, skiplist=None, **config):
-        #: The application this route was installed to.
+        #: The application this route is installed to.
         self.app = app
         #: The path-rule string (e.g. ``/wiki/:page``).
         self.rule = rule
@@ -424,7 +424,7 @@ class Route(object):
     @cached_property
     def call(self):
         ''' The route callback with all plugins applied. This property is
-            created on demand.'''
+            created on demand and then cached to speed ub subsequent requests.'''
         return self._make_callback()
 
     def reset(self):
@@ -443,32 +443,27 @@ class Route(object):
                     name=self.name, app=self.app, config=self.config,
                     apply=self.plugins, skip=self.skiplist)
 
-    def _runtime_reset(self, func):
-        def wrapped(*a, **ka):
-            try:
-                return func(*a, **ka)
-            except RouteReset:
-                self.reset() # Clear applied plugins.
-                return self.call(*a, **ka) # Try again.
-        return wrapped
+    def all_plugins(self):
+        ''' Return a list of all Plugins that affect this route. '''
+        return [] if True in self.skiplist else [p for p\
+          in reversed(self.app.plugins + self.plugins)\
+          if p not in self.skiplist and type(p) not in self.skiplist\
+            and getattr(p, 'name', True) not in self.skiplist]
 
     def _make_callback(self):
-        try:
-            plugins = [self._runtime_reset] + self.app.plugins + self.plugins
-            callback = self.callback
-            for plugin in reversed(plugins):
-                if True in self.skiplist: break
-                if plugin in self.skiplist or type(plugin) in self.skiplist \
-                or getattr(plugin, 'name', True) in self.skiplist: continue
-                ctx = self if getattr(plugin, 'api', 1) > 1 else self._context
+        callback = self.callback
+        for plugin in self.all_plugins():
+            try:
                 if hasattr(plugin, 'apply'):
-                    callback = plugin.apply(callback, ctx)
+                    api = getattr(plugin, 'api', 1)
+                    context = self if api > 1 else self._context
+                    callback = plugin.apply(callback, context)
                 else:
                     callback = plugin(callback)
-                functools.update_wrapper(callback, self.callback)
-            return callback
-        except RouteReset: # Try again with changed configuration.
-            return self._make_callback()
+            except RouteReset: # Try again with changed configuration.
+                return self._make_callback()
+            functools.update_wrapper(callback, self.callback)
+        return callback
 
 
 
@@ -681,6 +676,9 @@ class Bottle(object):
             return route.call(**args)
         except HTTPResponse, r:
             return r
+        except RouteReset:
+            route.reset()
+            return self._handle(environ)
         except (KeyboardInterrupt, SystemExit, MemoryError):
             raise
         except Exception, e:
