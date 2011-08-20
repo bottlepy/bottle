@@ -1407,33 +1407,6 @@ class HooksPlugin(object):
         return wrapper
 
 
-class TypeFilterPlugin(object):
-    def __init__(self):
-        self.filter = []
-        self.app = None
-
-    def setup(self, app):
-        self.app = app
-
-    def add(self, ftype, func):
-        if not isinstance(ftype, type):
-            raise TypeError("Expected type object, got %s" % type(ftype))
-        self.filter = [(t, f) for (t, f) in self.filter if t != ftype]
-        self.filter.append((ftype, func))
-        if len(self.filter) == 1 and self.app: self.app.reset()
-
-    def apply(self, callback, context):
-        filter = self.filter
-        if not filter: return callback
-        def wrapper(*a, **ka):
-            rv = callback(*a, **ka)
-            for testtype, filterfunc in filter:
-                if isinstance(rv, testtype):
-                    rv = filterfunc(rv)
-            return rv
-        return wrapper
-
-
 class TemplatePlugin(object):
     ''' This plugin applies the :func:`view` decorator to all routes with a
         `template` config parameter. If the parameter is a tuple, the second
