@@ -516,7 +516,7 @@ class TestResponse(unittest.TestCase):
 class TestRedirect(unittest.TestCase):
    
     def assertRedirect(self, target, result, query=None, status=303, **args):
-        env = {}
+        env = {'SERVER_PROTOCOL':'HTTP/1.1'}
         for key in args:
             if key.startswith('wsgi'):
                 args[key.replace('_', '.', 1)] = args[key]
@@ -579,9 +579,11 @@ class TestRedirect(unittest.TestCase):
     def test_host_http_1_0(self):
         # No HTTP_HOST, just SERVER_NAME and SERVER_PORT.
         self.assertRedirect('./test.html', 'http://example.com/test.html',
-                            SERVER_NAME='example.com')
+                            SERVER_NAME='example.com',
+                            SERVER_PROTOCOL='HTTP/1.0', status=302)
         self.assertRedirect('./test.html', 'http://127.0.0.1:81/test.html',
-                            SERVER_PORT='81')
+                            SERVER_PORT='81',
+                            SERVER_PROTOCOL='HTTP/1.0', status=302)
 
     def test_host_http_1_1(self):
         self.assertRedirect('./test.html', 'http://example.com/test.html',

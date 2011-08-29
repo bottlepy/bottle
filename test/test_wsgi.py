@@ -53,7 +53,6 @@ class TestWsgi(ServerTestBase):
         bottle.status = 304
         for h, v in bottle.response.headerlist:
             self.assertFalse(h.lower() in bad, "Header %s not deleted" % h)
-            
 
     def test_anymethod(self):
         self.assertStatus(404, '/any')
@@ -110,8 +109,9 @@ class TestWsgi(ServerTestBase):
         """ WSGI: redirect (HTTP 303) """
         @bottle.route('/')
         def test(): bottle.redirect('/yes')
-        self.assertStatus(303, '/')
-        self.assertHeader('Location', 'http://127.0.0.1/yes', '/')
+        env = {'SERVER_PROTOCOL':'HTTP/1.1'}
+        self.assertStatus(303, '/', env=env)
+        self.assertHeader('Location', 'http://127.0.0.1/yes', '/', env=env)
 
     def test_generator_callback(self):
         @bottle.route('/yield')
