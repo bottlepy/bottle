@@ -1642,12 +1642,15 @@ def abort(code=500, text='Unknown Error: Application stopped.'):
     raise HTTPError(code, text)
 
 
-def redirect(url, code=303):
+def redirect(url, code=None):
     """ Aborts execution and causes a 303 or 302 redirect, depending on
         the HTTP protocol version.
     """
-    if request['SERVER_PROTOCOL'] == "HTTP/1.0":
-        code=302
+    if code is None:
+        if request['SERVER_PROTOCOL'] == "HTTP/1.0":
+            code=302
+        else:
+            code=303
     location = urljoin(request.url, url)
     raise HTTPResponse("", status=code, header=dict(Location=location))
 
