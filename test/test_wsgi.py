@@ -81,17 +81,9 @@ class TestWsgi(ServerTestBase):
         @bottle.route('/my/:string')
         def test(string): return string
         self.assertBody(tob(u'urf8-öäü'), '/my/urf8-öäü')
-    
+
     def test_utf8_404(self):
         self.assertStatus(404, '/not-found/urf8-öäü')
-        
-    def test_503(self):
-        """ WSGI: Server stopped (HTTP 503) """
-        @bottle.route('/')
-        def test(): return 'bla'
-        self.assertStatus(200, '/')
-        bottle.app().serve = False
-        self.assertStatus(503, '/')
 
     def test_401(self):
         """ WSGI: abort(401, '') (HTTP 401) """
@@ -334,19 +326,19 @@ class TestDecorators(ServerTestBase):
         self.assertEqual(['/e','/e/:x','/e/:x/:y'],list(bottle.yieldroutes(e)))
 
 
-     
+
 class TestAppShortcuts(ServerTestBase):
     def setUp(self):
         ServerTestBase.setUp(self)
-    
+
     def assertWraps(self, test, other):
         self.assertEqual(test.__doc__, other.__doc__)
-    
+
     def test_module_shortcuts(self):
         for name in '''route get post put delete error mount
                        hook install uninstall'''.split():
             short = getattr(bottle, name)
-            original = getattr(bottle.app(), name)            
+            original = getattr(bottle.app(), name)
             self.assertWraps(short, original)
 
     def test_module_shortcuts_with_different_name(self):
@@ -358,7 +350,7 @@ class TestAppMounting(ServerTestBase):
     def setUp(self):
         ServerTestBase.setUp(self)
         self.subapp = bottle.Bottle()
-    
+
     def test_basicmounting(self):
         bottle.app().mount(self.subapp, '/test')
         self.assertStatus(404, '/')
@@ -377,6 +369,6 @@ class TestAppMounting(ServerTestBase):
         self.assertBody('bar', '/test/test/bar')
 
 
-    
+
 if __name__ == '__main__': #pragma: no cover
     unittest.main()

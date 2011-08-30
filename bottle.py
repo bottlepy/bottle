@@ -501,7 +501,6 @@ class Bottle(object):
         #: If true, most exceptions are catched and returned as :exc:`HTTPError`
         self.catchall = catchall
         self.config = config or {}
-        self.serve = True
         # Default plugins
         self.hooks = self.install(HooksPlugin())
         if autojson:
@@ -676,9 +675,6 @@ class Bottle(object):
         return self._handle({'PATH_INFO': path, 'REQUEST_METHOD': method.upper()})
 
     def _handle(self, environ):
-        if not self.serve:
-            depr("Bottle.serve will be removed in 0.10.")
-            return HTTPError(503, "Server stopped")
         try:
             route, args = self.match(environ)
             environ['route.handle'] = environ['bottle.route'] = route
