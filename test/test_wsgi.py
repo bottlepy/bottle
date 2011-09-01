@@ -101,9 +101,16 @@ class TestWsgi(ServerTestBase):
         """ WSGI: redirect (HTTP 303) """
         @bottle.route('/')
         def test(): bottle.redirect('/yes')
+        @bottle.route('/one')
+        def test2(): bottle.redirect('/yes',305)
         env = {'SERVER_PROTOCOL':'HTTP/1.1'}
         self.assertStatus(303, '/', env=env)
         self.assertHeader('Location', 'http://127.0.0.1/yes', '/', env=env)
+        env = {'SERVER_PROTOCOL':'HTTP/1.0'}
+        self.assertStatus(302, '/', env=env)
+        self.assertHeader('Location', 'http://127.0.0.1/yes', '/', env=env)
+        self.assertStatus(305, '/one', env=env)
+        self.assertHeader('Location', 'http://127.0.0.1/yes', '/one', env=env)
 
     def test_generator_callback(self):
         @bottle.route('/yield')
