@@ -1110,6 +1110,8 @@ class BaseRequest(DictMixin):
         for key in todelete:
             self.environ.pop('bottle.request.'+key, None)
 
+    def __repr__(self):
+        return '<%s: %s %s>' % (self.__class__.__name__, self.method, self.url)
 
 def _hkey(s):
     return s.title().replace('_','-')
