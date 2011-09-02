@@ -2459,7 +2459,7 @@ class SimpleTemplate(BaseTemplate):
              |\#.*                        # Comments
             )''', re.VERBOSE)
 
-    def prepare(self, escape_func=html_escape, noescape=False):
+    def prepare(self, escape_func=html_escape, noescape=False, **kwargs):
         self.cache = {}
         enc = self.encoding
         self._str = lambda x: touni(x, enc)

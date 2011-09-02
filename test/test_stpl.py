@@ -214,6 +214,10 @@ class TestSimpleTemplate(unittest.TestCase):
             return dict(var='middle')
         self.assertEqual(u'start middle end', test())
 
+    def test_global_config(self):
+        SimpleTemplate.global_config('meh', 1)
+        t = SimpleTemplate(u'anything')
+        self.assertEqual(u'anything', t.render())
 
 if __name__ == '__main__': #pragma: no cover
     unittest.main()
