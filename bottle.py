@@ -1591,8 +1591,8 @@ class WSGIHeaderDict(DictMixin):
             elif key in self.cgikeys:
                 yield key.replace('_', '-').title()
 
-    def keys(self): return list(self)
-    def __len__(self): return len(list(self))
+    def keys(self): return [x for x in self]
+    def __len__(self): return len(self.keys())
     def __contains__(self, key): return self._ekey(key) in self.environ
 
 

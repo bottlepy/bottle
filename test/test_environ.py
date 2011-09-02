@@ -613,6 +613,9 @@ class TestWSGIHeaderDict(unittest.TestCase):
         self.env = {}
         self.headers = bottle.WSGIHeaderDict(self.env)
 
+    def test_empty(self):
+        self.assertEqual(0, len(bottle.WSGIHeaderDict({})))
+
     def test_native(self):
         self.env['HTTP_TEST_HEADER'] = 'foobar'
         self.assertEqual(self.headers['Test-header'], 'foobar')
