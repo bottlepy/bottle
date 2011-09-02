@@ -44,6 +44,7 @@ class SQLitePlugin(object):
     settings on a per-route basis. '''
 
     name = 'sqlite'
+    api  = 2
 
     def __init__(self, dbfile=':memory:', autocommit=True, dictrows=True,
                  keyword='db'):
@@ -61,9 +62,9 @@ class SQLitePlugin(object):
                 raise PluginError("Found another sqlite plugin with "\
                 "conflicting settings (non-unique keyword).")
 
-    def apply(self, callback, context):
+    def apply(self, callback, route):
         # Override global configuration with route-specific values.
-        conf = context['config'].get('sqlite') or {}
+        conf = route.config.get('sqlite') or {}
         dbfile = conf.get('dbfile', self.dbfile)
         autocommit = conf.get('autocommit', self.autocommit)
         dictrows = conf.get('dictrows', self.dictrows)
@@ -71,7 +72,7 @@ class SQLitePlugin(object):
 
         # Test if the original callback accepts a 'db' keyword.
         # Ignore it if it does not need a database handle.
-        args = inspect.getargspec(context['callback'])[0]
+        args = inspect.getargspec(route.callback)[0]
         if keyword not in args:
             return callback
 

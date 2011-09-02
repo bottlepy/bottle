@@ -50,13 +50,14 @@ class WerkzeugDebugger(DebuggedApplication):
             return DebuggedApplication.__call__(self, environ, start_response)
         return self.app(environ, start_response)
 
-            
+
 class WerkzeugPlugin(object):
     """ This plugin adds support for :class:`werkzeug.Response`, all kinds of
         :module:`werkzeug.exceptions` and provides a thread-local instance of
         :class:`werkzeug.Request`. It basically turns Bottle into Flask. """
 
     name = 'werkzeug'
+    api  = 2
 
     def __init__(self, evalex=False, request_class=werkzeug.Request,
                        debugger_class=WerkzeugDebugger):
@@ -71,7 +72,7 @@ class WerkzeugPlugin(object):
             app.wsgi = self.debugger_class(app.wsgi, evalex=self.evalex)
             app.catchall = False
 
-    def apply(self, callback, context):
+    def apply(self, callback, route):
         def wrapper(*a, **ka):
             environ = bottle.request.environ
             bottle.local.werkzueg_request = self.request_class(environ)
@@ -89,7 +90,7 @@ class WerkzeugPlugin(object):
         ''' Return a local proxy to the current :class:`werkzeug.Request`
             instance.'''
         return werkzeug.LocalProxy(lambda: bottle.local.werkzueg_request)
-    
+
     def __getattr__(self, name):
         ''' Convenient access to werkzeug module contents. '''
         return getattr(werkzeug, name)

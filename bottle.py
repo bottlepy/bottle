@@ -1355,6 +1355,7 @@ Request  = LocalRequest  # BC 0.9
 
 class JSONPlugin(object):
     name = 'json'
+    api  = 2
 
     def __init__(self, json_dumps=json_dumps):
         self.json_dumps = json_dumps
@@ -1376,6 +1377,7 @@ class JSONPlugin(object):
 
 class HooksPlugin(object):
     name = 'hooks'
+    api  = 2
 
     def __init__(self):
         self.hooks = {'before_request': [], 'after_request': []}
@@ -1421,14 +1423,15 @@ class TemplatePlugin(object):
         element must be a dict with additional options (e.g. `template_engine`)
         or default variables for the template. '''
     name = 'template'
+    api  = 2
 
-    def apply(self, callback, context):
-        conf = context['config'].get('template')
+    def apply(self, callback, route):
+        conf = route.config.get('template')
         if isinstance(conf, (tuple, list)) and len(conf) == 2:
             return view(conf[0], **conf[1])(callback)
-        elif isinstance(conf, str) and 'template_opts' in context['config']:
+        elif isinstance(conf, str) and 'template_opts' in route.config:
             depr('The `template_opts` parameter is deprecated.') #0.9
-            return view(conf, **context['config']['template_opts'])(callback)
+            return view(conf, **route.config['template_opts'])(callback)
         elif isinstance(conf, str):
             return view(conf)(callback)
         else:
