@@ -2281,7 +2281,7 @@ class TemplateError(HTTPError):
 
 class BaseTemplate(object):
     """ Base class and minimal API for template adapters """
-    extentions = ['tpl','html','thtml','stpl']
+    extensions = ['tpl','html','thtml','stpl']
     settings = {} #used in prepare()
     defaults = {} #used in render()
 
@@ -2320,7 +2320,7 @@ class BaseTemplate(object):
             fname = os.path.join(spath, name)
             if os.path.isfile(fname):
                 return fname
-            for ext in cls.extentions:
+            for ext in cls.extensions:
                 if os.path.isfile('%s.%s' % (fname, ext)):
                     return '%s.%s' % (fname, ext)
 
