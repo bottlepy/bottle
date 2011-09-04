@@ -1352,6 +1352,7 @@ Request  = LocalRequest  # BC 0.9
 # Plugins ######################################################################
 ###############################################################################
 
+class PluginError(BottleException): pass
 
 class JSONPlugin(object):
     name = 'json'
@@ -2328,6 +2329,7 @@ class BaseTemplate(object):
     def global_config(cls, key, *args):
         ''' This reads or sets the global settings stored in class.settings. '''
         if args:
+            cls.settings = cls.settings.copy() # Make settings local to class
             cls.settings[key] = args[0]
         else:
             return cls.settings[key]
