@@ -854,12 +854,12 @@ class BaseRequest(DictMixin):
 
     @DictProperty('environ', 'bottle.request.query', read_only=True)
     def query(self):
-        ''' The :attr:`query_string` parsed into a :class:`MultiDict`. These
+        ''' The :attr:`query_string` parsed into a :class:`FormsDict`. These
             values are sometimes called "URL arguments" or "GET parameters", but
             not to be confused with "URL wildcards" as they are provided by the
             :class:`Router`. '''
         data = parse_qs(self.query_string, keep_blank_values=True)
-        get = self.environ['bottle.get'] = MultiDict()
+        get = self.environ['bottle.get'] = FormsDict()
         for key, values in data.iteritems():
             for value in values:
                 get[key] = value
@@ -869,9 +869,9 @@ class BaseRequest(DictMixin):
     def forms(self):
         """ Form values parsed from an `url-encoded` or `multipart/form-data`
             encoded POST or PUT request body. The result is retuned as a
-            :class:`MultiDict`. All keys and values are strings. File uploads
+            :class:`FormsDict`. All keys and values are strings. File uploads
             are stored separately in :attr:`files`. """
-        forms = MultiDict()
+        forms = FormsDict()
         for name, item in self.POST.iterallitems():
             if not hasattr(item, 'filename'):
                 forms[name] = item
@@ -879,9 +879,9 @@ class BaseRequest(DictMixin):
 
     @DictProperty('environ', 'bottle.request.params', read_only=True)
     def params(self):
-        """ A :class:`MultiDict` with the combined values of :attr:`query` and
+        """ A :class:`FormsDict` with the combined values of :attr:`query` and
             :attr:`forms`. File uploads are stored in :attr:`files`. """
-        params = MultiDict()
+        params = FormsDict()
         for key, value in self.query.iterallitems():
             params[key] = value
         for key, value in self.forms.iterallitems():
@@ -905,7 +905,7 @@ class BaseRequest(DictMixin):
                 reads the file every time you request the value. Do not do this
                 on big files.
         """
-        files = MultiDict()
+        files = FormsDict()
         for name, item in self.POST.iterallitems():
             if hasattr(item, 'filename'):
                 files[name] = item
@@ -952,10 +952,10 @@ class BaseRequest(DictMixin):
     @DictProperty('environ', 'bottle.request.post', read_only=True)
     def POST(self):
         """ The values of :attr:`forms` and :attr:`files` combined into a single
-            :class:`MultiDict`. Values are either strings (form values) or
+            :class:`FormsDict`. Values are either strings (form values) or
             instances of :class:`cgi.FieldStorage` (file uploads).
         """
-        post = MultiDict()
+        post = FormsDict()
         safe_env = {'QUERY_STRING':''} # Build a safe environment for cgi
         for key in ('REQUEST_METHOD', 'CONTENT_TYPE', 'CONTENT_LENGTH'):
             if key in self.environ: safe_env[key] = self.environ[key]
@@ -1504,11 +1504,21 @@ class MultiDict(DictMixin):
     items    = iteritems    if py3k else lambda self: list(self.iteritems())
     allitems = iterallitems if py3k else lambda self: list(self.iterallitems())
 
-    def get(self, key, default=None, index=-1):
-        ''' Return the current value for a key. The third `index` parameter
-            defaults to -1 (last value). '''
-        if key in self.dict or default is KeyError:
-            return self.dict[key][index]
+    def get(self, key, default=None, index=-1, type=None):
+        ''' Return the most recent value for a key.
+
+            :param default: The default value to be returned if the key is not
+                   present or the type conversion fails.
+            :param index: An index for the list of available values.
+            :param type: If defined, this callable is used to cast the value
+                    into a specific type. Exception are suppressed and result in
+                    the default value to be returned.
+        '''
+        try:
+            val = self.dict[key][index]
+            return type(val) if type else val
+        except Exception, e:
+            pass
         return default
 
     #: Alias for :meth:`get` to mimic other multi-dict APIs (Django)
@@ -1526,6 +1536,11 @@ class MultiDict(DictMixin):
         ''' Return a (possibly empty) list of values for a key. '''
         return self.dict.get(key) or []
 
+class FormsDict(MultiDict):
+    ''' A :class:`MultiDict` with attribute-like access to form values.
+        Missing attributes are always `None`. '''
+    def __getattr__(self, name):
+        return self.get(name, None)
 
 class HeaderDict(MultiDict):
     """ A case-insensitive version of :class:`MultiDict` that defaults to

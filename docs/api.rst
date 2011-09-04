@@ -85,6 +85,9 @@ Data Structures
 .. autoclass:: HeaderDict
    :members:
 
+.. autoclass:: FormsDict
+   :members:
+
 .. autoclass:: WSGIHeaderDict
    :members:
 
