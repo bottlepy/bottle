@@ -2435,7 +2435,6 @@ class EZTTemplate(BaseTemplate):
         if base_format is None:
             base_format = ezt.FORMAT_HTML
         self.template = ezt.Template(compress_whitespace=compress_whitespace)
-        print 'parsing!'
         if self.source:
             self.template.parse(self.source, base_format)
         else:
