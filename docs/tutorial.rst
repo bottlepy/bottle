@@ -46,21 +46,21 @@ Bottle does not depend on any external libraries. You can just download `bottle.
     $ curl -O http://bottlepy.org/bottle.py
     $ 2to3 -w bottle.py  # Python 3.x users only!
 
-This will get you the latest development snapshot that includes all the new features. If you prefer a more stable environment, you should stick with a stable release. These are available on `PyPi <http://pypi.python.org/pypi/bottle>`_ and can be installed via :command:`pip` (recommended), :command:`easy_install` or your Linux distributions package manager:
+This will get you the latest development snapshot that includes all the new features. If you prefer a more stable environment, you should stick with the stable releases. These are available on `PyPi <http://pypi.python.org/pypi/bottle>`_ and can be installed via :command:`pip` (recommended), :command:`easy_install` or your package manager:
 
 .. code-block:: bash
 
     $ sudo pip install bottle              # recommended
-    $ sudo easy_install bottle             # alternative to pip
+    $ sudo easy_install bottle             # alternative without pip
     $ sudo apt-get install python-bottle   # works for debian, ubuntu, ...
 
-In either way, you'll need Python 2.5 or newer to run bottle applications. If you do not have permissions to install packages system-wide or simply don't want to, I suggest crating a `virtualenv <http://pypi.python.org/pypi/virtualenv>`_ first. 
+In either way, you'll need Python 2.5 or newer to run bottle applications. If you do not have permissions to install packages system-wide or simply don't want to, create a `virtualenv <http://pypi.python.org/pypi/virtualenv>`_ first. 
  
 
 A minimal Bottle Application
 ==============================================================================
 
-This tutorial assumes you have Bottle either `installed or copied <#installation>`_ into your project directory. Lets start with a very basic "Hello World" example::
+This tutorial assumes you have Bottle either :ref:`installed or copied <installation>` into your project directory. Lets start with a very basic "Hello World" example::
 
     from bottle import route, run
     
@@ -74,16 +74,17 @@ This tutorial assumes you have Bottle either `installed or copied <#installation
 Whats happening here?
 
 1. First we import some Bottle components. The :func:`route` decorator and the :func:`run` function. 
-2. The :func:`route` :term:`decorator` is used do bind a piece of code to an URL. In this example we want to answer requests to the ``/hello`` URL.
+2. The :func:`route` :term:`decorator` is used do bind a piece of code to an URL. In this example we want to answer requests to ``/hello``.
 3. This function is the :term:`handler function` or :term:`callback` for the ``/hello`` route. It is called every time someone requests the ``/hello`` URL and is responsible for generating the page content.
-4. In this example we simply return a string to the browser.
+4. For now, we just return a simple string to the browser.
 5. In the last line we start the actual HTTP server. The default is a development server running on 'localhost' port 8080 and serving requests until you hit :kbd:`Control-c`.
 
 This is it. Run this script, visit http://localhost:8080/hello and you will see "Hello World!" in your browser. Of course this is a very simple example, but it shows the basic concept of how applications are built with Bottle. Continue reading and you'll see what else is possible.
-  
+
+
 .. rubric:: The Application Object
 
-For the sake of simplicity, most examples in this tutorial use a module-level :func:`route` decorator to bind routes. This decorator adds routes to a global application object that is created automatically in the background. If you prefer a more explicit way to define your application and don't mind the extra typing, you can create a separate application object and use that instead of the global one::
+For the sake of simplicity, most examples in this tutorial use a module-level :func:`route` decorator to bind routes. This decorator adds routes to a global application object that is created for you automatically. If you prefer a more explicit way to define your application and don't mind the extra typing, you can create a separate application object and use that instead of the global one::
 
     from bottle import Bottle, run
     
@@ -105,9 +106,7 @@ The object-oriented approach is further described in the :ref:`default-app` sect
 Request Routing
 ==============================================================================
 
-As you have learned before, *routes* are used to map URLs to callback functions. These functions are executed on every request that matches the route and their return value is returned to the browser. You can add any number of routes to a callback using the :func:`route` decorator.
-
-::
+As you have learned before, applications consist of *routes* that map *URLs* to *callback functions*. These callbacks are executed once for each request that matches the route. The return value is sent to the client. You can add any number of routes to a callback simply by applying the :func:`route` decorator::
 
     from bottle import route
     
