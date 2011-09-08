@@ -788,6 +788,7 @@ class Bottle(object):
             return [tob(err)]
 
     def __call__(self, environ, start_response):
+        ''' Each instance of :class:'Bottle' is a WSGI application. '''
         return self.wsgi(environ, start_response)
 
 
