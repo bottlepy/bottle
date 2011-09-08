@@ -1226,15 +1226,15 @@ class BaseResponse(object):
 
     def set_header(self, name, value, append=False):
         ''' Create a new response header, replacing any previously defined
-            headers with the same name. This equals ``response[name] = value``.
-
-            :param append: Do not delete previously defined headers. This can
-                           result in two (or more) headers having the same name.
-        '''
+            headers with the same name. '''
         if append:
-            self._headers.setdefault(_hkey(name), []).append(str(value))
+            self.add_header(name, value)
         else:
             self._headers[_hkey(name)] = [str(value)]
+
+    def add_header(self, name, value):
+        ''' Add an additional response header, not removing duplicates. '''
+        self._headers.setdefault(_hkey(name), []).append(str(value))
 
     def iter_headers(self):
         ''' Yield (header, value) tuples, skipping headers that are not
