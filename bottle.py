@@ -1321,6 +1321,7 @@ class BaseResponse(object):
         elif not isinstance(value, basestring):
             raise TypeError('Secret key missing for non-string Cookie.')
 
+        if len(value) > 4096: raise ValueError('Cookie value to long.')
         self._cookies[key] = value
         for k, v in options.iteritems():
             self._cookies[key][k.replace('_', '-')] = v
