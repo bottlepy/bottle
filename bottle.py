@@ -1330,6 +1330,12 @@ class BaseResponse(object):
         kwargs['expires'] = 0
         self.set_cookie(key, '', **kwargs)
 
+    def __repr__(self):
+        out = ''
+        for name, value in self.headerlist:
+            out += '%s: %s\n' % (name.title(), value.strip())
+        return out
+
 
 class LocalRequest(BaseRequest, threading.local):
     ''' A thread-local subclass of :class:`BaseRequest`. '''
