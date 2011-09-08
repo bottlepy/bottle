@@ -501,8 +501,9 @@ class Bottle(object):
         #: If true, most exceptions are catched and returned as :exc:`HTTPError`
         self.catchall = catchall
         self.config = config or {}
-        # Default plugins
-        self.hooks = self.install(HooksPlugin())
+        #: An instance of :class:`HooksPlugin`. Empty by default.
+        self.hooks = HooksPlugin()
+        self.install(self.hooks)
         if autojson:
             self.install(JSONPlugin())
         self.install(TemplatePlugin())
@@ -571,6 +572,7 @@ class Bottle(object):
         for route in routes: route.reset()
         if DEBUG:
             for route in routes: route.prepare()
+        self.hooks.trigger('app_reset')
 
     def close(self):
         ''' Close the application and all installed plugins. '''
@@ -1387,8 +1389,10 @@ class HooksPlugin(object):
     name = 'hooks'
     api  = 2
 
+    _names = 'before_request', 'after_request', 'app_reset'
+
     def __init__(self):
-        self.hooks = {'before_request': [], 'after_request': []}
+        self.hooks = dict((name, []) for name in self._names)
         self.app = None
 
     def _empty(self):
@@ -1399,28 +1403,29 @@ class HooksPlugin(object):
 
     def add(self, name, func):
         ''' Attach a callback to a hook. '''
-        if name not in self.hooks:
-            raise ValueError("Unknown hook name %s" % name)
         was_empty = self._empty()
-        self.hooks[name].append(func)
+        self.hooks.setdefault(name, []).append(func)
         if self.app and was_empty and not self._empty(): self.app.reset()
 
     def remove(self, name, func):
         ''' Remove a callback from a hook. '''
-        if name not in self.hooks:
-            raise ValueError("Unknown hook name %s" % name)
         was_empty = self._empty()
-        self.hooks[name].remove(func)
+        if name in self.hooks and func in self.hooks[name]:
+            self.hooks[name].remove(func)
         if self.app and not was_empty and self._empty(): self.app.reset()
 
+    def trigger(self, name, *a, **ka):
+        ''' Trigger a hook and return a list of results. '''
+        hooks = self.hooks[name]
+        if ka.pop('reversed', False): hooks = hooks[::-1]
+        return [hook(*a, **ka) for hook in hooks]
+    
     def apply(self, callback, context):
         if self._empty(): return callback
-        before_request = self.hooks['before_request']
-        after_request  = self.hooks['after_request']
         def wrapper(*a, **ka):
-            for hook in before_request: hook()
+            self.trigger('before_request')
             rv = callback(*a, **ka)
-            for hook in after_request[::-1]: hook()
+            self.trigger('after_request', reversed=True)
             return rv
         return wrapper
 
