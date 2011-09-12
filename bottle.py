@@ -625,6 +625,8 @@ class Bottle(object):
         plugins = makelist(apply)
         skiplist = makelist(skip)
         def decorator(callback):
+            # TODO: Documentation and tests
+            if isinstance(callback, basestring): callback = load(callback)
             for rule in makelist(path) or yieldroutes(callback):
                 for verb in makelist(method):
                     verb = verb.upper()
