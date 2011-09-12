@@ -390,13 +390,13 @@ Of course, this example is somehow artificially constructed - it would be easier
 
 Sometimes it may become necessary to associate a route not to a Python function, but just return a static file. So if you have for example a help page for your application, you may want to return this page as plain HTML. This works as follows::
 
-    from bottle import route, run, debug, template, request, validate, send_file
+    from bottle import route, run, debug, template, request, validate, static_file
 
     @route('/help')
     def help():
-        send_file('help.html', root='/path/to/file')
+        static_file('help.html', root='/path/to/file')
 
-At first, we need to import ``send_file`` from Bottle. As you can see, the ``send_file`` statement replaces the ``return`` statement. It takes at least two arguments: the name of the file to be returned and the path to the file. Even if the file is in the same directory as your application, the path needs to be stated. But in this case, you can use ``'.'`` as a path, too. Bottle guesses the MIME-type of the file automatically, but in case you like to state it explicitly, add a third argument to ``send_file``, which would be here ``mimetype='text/html'``. ``send_file`` works with any type of route, including the dynamic ones.
+At first, we need to import ``static_file`` from Bottle. As you can see, the ``static_file`` statement replaces the ``return`` statement. It takes at least two arguments: the name of the file to be returned and the path to the file. Even if the file is in the same directory as your application, the path needs to be stated. But in this case, you can use ``'.'`` as a path, too. Bottle guesses the MIME-type of the file automatically, but in case you like to state it explicitly, add a third argument to ``static_file``, which would be here ``mimetype='text/html'``. ``static_file`` works with any type of route, including the dynamic ones.
 
 
 .. rubric:: Returning JSON Data
@@ -560,7 +560,7 @@ As the ToDo list example was developed piece by piece, here is the complete list
 Main code for the application ``todo.py``::
 
     import sqlite3
-    from bottle import route, run, debug, template, request, validate, send_file, error
+    from bottle import route, run, debug, template, request, validate, static_file, error
 
     # only needed when you run Bottle on mod_wsgi
     from bottle import default_app
@@ -642,7 +642,7 @@ Main code for the application ``todo.py``::
     @route('/help')
     def help():
 
-        send_file('help.html', root='.')
+        static_file('help.html', root='.')
 
     @route('/json:json#[1-9]+#')
     def show_json(json):
