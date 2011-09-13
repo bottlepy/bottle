@@ -2165,7 +2165,7 @@ def load_app(target):
         does not affect the current default application, but returns a separate
         application object. See :func:`load` for details. """
     tmp = app.push() # Create a new "default application"
-    rv = _load(target) # Import the target module
+    rv = load(target) # Import the target module
     app.remove(tmp) # Remove the temporary added default application
     return rv if isinstance(rv, Bottle) else tmp
 
