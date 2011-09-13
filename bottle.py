@@ -41,7 +41,6 @@ from Cookie import SimpleCookie
 from tempfile import TemporaryFile
 from traceback import format_exc
 from urlparse import urljoin, SplitResult as UrlSplitResult
-from types import MethodType
 
 # Workaround for a bug in some versions of lib2to3 (fixed on CPython 2.7 and 3.2)
 import urllib
