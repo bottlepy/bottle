@@ -453,11 +453,15 @@ class Route(object):
                     apply=self.plugins, skip=self.skiplist)
 
     def all_plugins(self):
-        ''' Return a list of all Plugins that affect this route. '''
-        return [] if True in self.skiplist else [p for p\
-          in reversed(self.app.plugins + self.plugins)\
-          if p not in self.skiplist and type(p) not in self.skiplist\
-            and getattr(p, 'name', True) not in self.skiplist]
+        ''' Yield all Plugins affecting this route. '''
+        unique = set()
+        for p in reversed(self.app.plugins + self.plugins):
+            if True in self.skiplist: break
+            name = getattr(p, 'name', False)
+            if name and (name in self.skiplist or name in unique): continue
+            if p in self.skiplist or type(p) in self.skiplist: continue
+            if name: unique.add(name)
+            yield p
 
     def _make_callback(self):
         callback = self.callback
@@ -2162,7 +2166,7 @@ def load(target, **namespace):
 def load_app(target):
     """ Load a bottle application from a module and make sure that the import
         does not affect the current default application, but returns a separate
-        application object. See :func:`load` for details. """
+        application object. See :func:`load` for the target parameter. """
     tmp = app.push() # Create a new "default application"
     rv = load(target) # Import the target module
     app.remove(tmp) # Remove the temporary added default application
