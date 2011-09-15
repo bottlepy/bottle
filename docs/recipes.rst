@@ -153,3 +153,29 @@ Supporting Gzip compression is not a straightforward proposition, due to a numbe
 * Do not cache small files because a disk seek would take longer than on-the-fly compression.
 
 Because of these requirements, it is the reccomendation of the Bottle project that Gzip compression is best handled by the WSGI server Bottle runs on top of. WSGI servers such as cherrypy_ provide a GzipFilter_ middleware that can be used to accomplish this.
+
+
+Using the hooks plugin
+----------------------
+
+For example, if you want to allow Cross-Origin Resource Sharing for
+the content returned by all of your URL, you can use the hook
+decorator and setup a callback function::
+
+    from bottle import hook, response, route
+
+    @hook('after_request')
+    def enable_cors():
+        response.headers['Access-Control-Allow-Origin'] = '*'
+
+    @route('/foo')
+    def say_foo():
+        return 'foo!'
+
+    @route('/bar')
+    def say_bar():
+        return {'type': 'friendly', 'content': 'Hi!'}
+
+You can also use the ``before_callback`` to take an action before
+every function gets called.
+
