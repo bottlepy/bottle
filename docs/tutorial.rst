@@ -555,7 +555,7 @@ The :func:`view` decorator allows you to return a dictionary with the template v
 
 .. highlight:: html+django
 
-The template syntax is a very thin layer around the Python language. It's main purpose is to ensure correct indentation of blocks, so you can format your template without worrying about indentation. Follow the link for a full syntax description: :doc:`stpl`
+The template syntax is a very thin layer around the Python language. Its main purpose is to ensure correct indentation of blocks, so you can format your template without worrying about indentation. Follow the link for a full syntax description: :doc:`stpl`
 
 Here is an example template::
 
