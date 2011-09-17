@@ -11,7 +11,7 @@ a built-in HTTP Server and adapters for many third party WSGI/HTTP-server and
 template engines - all in a single file and with no dependencies other than the
 Python Standard Library.
 
-Homepage and documentation: http://bottle.paws.de/
+Homepage and documentation: http://bottlepy.org/
 License: MIT (see LICENSE.txt)
 
 Installation and Dependencies
