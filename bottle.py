@@ -2079,7 +2079,7 @@ class GunicornServer(ServerAdapter):
         config = {'bind': "%s:%d" % (self.host, int(self.port)), 'workers': 4}
 
         class GunicornApplication(Application):
-            def init(_self, parser, opts, args):
+            def init(self, parser, opts, args):
                 return config
 
             def load(self):
