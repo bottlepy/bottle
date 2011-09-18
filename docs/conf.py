@@ -141,6 +141,13 @@ html_sidebars = {
     '**':    ['localtoc.html', 'relations.html', 'sourcelink.html', 'donation.html', 'searchbox.html']
 }
 
+html_context = {
+    'releases': [('dev', 'development'),
+                 ('0.9', 'stable'),
+                 ('0.8', 'old stable')
+                ]
+}
+
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
 #html_additional_pages = {}

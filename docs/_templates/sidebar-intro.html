@@ -1,6 +1,10 @@
 <p>
-  This is the documentation of Bottle, a fast, simple and lightweight WSGI micro web-framework for Python.
+   Bottle is a fast, simple and lightweight WSGI micro web-framework for Python.
 </p>
+{% if 'dev' in release %}
+<p>This documentation is for Bottle <b>{{release}}</b>, which is
+  not released yet. The current stable release is <a href="http://bottlepy.org/docs/{{releases[1][0]}}/"><b>Bottle {{releases[1][0]}}</b></a>.</p>
+{% endif %}
 <h3>Some Links</h3>
 <ul>
   <li><a target="_blank" href="https://github.com/defnull/bottle/issues">Issue Tracker</a></li>
@@ -20,9 +24,9 @@
 <p>Browse the sources at <a href="https://github.com/defnull/bottle">GitHub</a>.</p>
 <h3>Other Releases</h3>
 <ul>
-  <li><a href="http://bottlepy.org/docs/dev/">Bottle dev (development)</a></li>
-  <li><a href="http://bottlepy.org/docs/0.9/">Bottle 0.9 (stable)</a></li>
-  <li><a href="http://bottlepy.org/docs/0.8/">Bottle 0.8 (oldstable)</a></li>
+  {% for v, name in releases %}
+  <li><a href="http://bottlepy.org/docs/{{v}}/">Bottle {{v}} ({{name}})</a></li>
+  {% endfor %}
 </ul>
 
 
