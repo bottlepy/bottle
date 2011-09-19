@@ -2074,11 +2074,18 @@ class GeventServer(ServerAdapter):
 class GunicornServer(ServerAdapter):
     """ Untested. """
     def run(self, handler):
-        from gunicorn.arbiter import Arbiter
-        from gunicorn.config import Config
-        handler.cfg = Config({'bind': "%s:%d" % (self.host, self.port), 'workers': 4})
-        arbiter = Arbiter(handler)
-        arbiter.run()
+        from gunicorn.app.base import Application
+
+        config = {'bind': "%s:%d" % (self.host, int(self.port)), 'workers': 4}
+
+        class GunicornApplication(Application):
+            def init(self, parser, opts, args):
+                return config
+
+            def load(self):
+                return handler
+
+        GunicornApplication().run()
 
 
 class EventletServer(ServerAdapter):
