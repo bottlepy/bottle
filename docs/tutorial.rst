@@ -607,7 +607,7 @@ The effects and APIs of plugins are manifold and depend on the specific plugin. 
             completely. '''
         return template('contact')
 
-Other plugin may populate the thread-save :data:`local` object, change details of the :data:`request` object, filter the data returned by the callback or bypass the callback completely. An "auth" plugin for example could check for a valid session and return a login page instead of calling the original callback. What happens exactly depends on the plugin.
+Other plugin may populate the thread-safe :data:`local` object, change details of the :data:`request` object, filter the data returned by the callback or bypass the callback completely. An "auth" plugin for example could check for a valid session and return a login page instead of calling the original callback. What happens exactly depends on the plugin.
 
 
 Application-wide Installation

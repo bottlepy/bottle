@@ -2770,13 +2770,13 @@ ERROR_PAGE_TEMPLATE = """
 %end
 """
 
-#: A thread-save instance of :class:`Request` representing the `current` request.
+#: A thread-safe instance of :class:`Request` representing the `current` request.
 request = Request()
 
-#: A thread-save instance of :class:`Response` used to build the HTTP response.
+#: A thread-safe instance of :class:`Response` used to build the HTTP response.
 response = Response()
 
-#: A thread-save namepsace. Not used by Bottle.
+#: A thread-safe namespace. Not used by Bottle.
 local = threading.local()
 
 # Initialize app stack (create first empty Bottle app)
