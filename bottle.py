@@ -1641,13 +1641,13 @@ class ConfigDict(dict):
         bonus, attribute access to missing keys result in a new ConfigDict. '''
 
     def __getattr__(self, key):
-        if key in self: return self[key]
-        return self.setdefault(key, ConfigDict())
+        return self[key] if key in self else self.setdefault(key, ConfigDict())
 
     def __setattr__(self, key, value):
+        if hasattr(dict, key):
+            raise AttributeError('Read-only attribute.')
         if key in self and self[key] and isinstance(self[key], ConfigDict):
-            msg = 'Cannot overwrite non-empty namespace attribute.'
-            raise AttributeError(msg)
+            raise AttributeError('Non-empty namespace attribute.')
         self[key] = value
 
     def __delattr__(self, key):
