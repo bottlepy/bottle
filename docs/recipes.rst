@@ -99,7 +99,7 @@ or add a WSGI middleware that strips trailing slashes from all URLs::
     
     app = bottle.app()
     myapp = StripPathMiddleware(app)
-    bottle.run(app=appmy)
+    bottle.run(app=myapp)
 
 .. rubric:: Footnotes
 
