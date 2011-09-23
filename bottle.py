@@ -476,7 +476,7 @@ class Route(object):
                     callback = plugin(callback)
             except RouteReset: # Try again with changed configuration.
                 return self._make_callback()
-            if type(callback) is types.FunctionType:
+            if isinstance(callback, types.FunctionType):
               functools.update_wrapper(callback, self.callback)
         return callback
 
