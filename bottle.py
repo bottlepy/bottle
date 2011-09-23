@@ -35,6 +35,7 @@ import tempfile
 import thread
 import threading
 import time
+import types
 import warnings
 
 from Cookie import SimpleCookie
@@ -475,7 +476,8 @@ class Route(object):
                     callback = plugin(callback)
             except RouteReset: # Try again with changed configuration.
                 return self._make_callback()
-            functools.update_wrapper(callback, self.callback)
+            if type(callback) is types.FunctionType:
+              functools.update_wrapper(callback, self.callback)
         return callback
 
 
