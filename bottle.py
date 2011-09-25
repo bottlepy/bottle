@@ -2670,15 +2670,6 @@ class SimpleTemplate(BaseTemplate):
         self.execute(stdout, kwargs)
         return ''.join(stdout)
 
-class ShpamlTemplate(SimpleTemplate):
-    extensions = ['tpl','html','thtml','stpl','shpaml']
-    def prepare(self, escape_func=html_escape, noescape=False, **kwargs):
-        from shpaml import convert_text
-        if self.source:
-            self.source = convert_text(self.source)
-        else:
-            self.source = convert_text(open(self.filename).read())
-        super(ShpamlTemplate,self).prepare(escape_func,noescape,**kwargs)
 
 def template(*args, **kwargs):
     '''
@@ -2708,7 +2699,6 @@ mako_template = functools.partial(template, template_adapter=MakoTemplate)
 cheetah_template = functools.partial(template, template_adapter=CheetahTemplate)
 jinja2_template = functools.partial(template, template_adapter=Jinja2Template)
 simpletal_template = functools.partial(template, template_adapter=SimpleTALTemplate)
-shpaml_template = functools.partial(template, template_adapter=ShpamlTemplate)
 
 
 def view(tpl_name, **defaults):
@@ -2737,7 +2727,6 @@ mako_view = functools.partial(view, template_adapter=MakoTemplate)
 cheetah_view = functools.partial(view, template_adapter=CheetahTemplate)
 jinja2_view = functools.partial(view, template_adapter=Jinja2Template)
 simpletal_view = functools.partial(view, template_adapter=SimpleTALTemplate)
-shpaml_view = functools.partial(view, template_adapter=ShpamlTemplate)
 
 
 
