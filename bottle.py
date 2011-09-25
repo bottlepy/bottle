@@ -2658,10 +2658,9 @@ class SimpleTemplate(BaseTemplate):
         eval(self.co, env)
         if '_rebase' in env:
             subtpl, rargs = env['_rebase']
-            subtpl = self.__class__(name=subtpl, lookup=self.lookup)
             rargs['_base'] = _stdout[:] #copy stdout
             del _stdout[:] # clear stdout
-            return subtpl.execute(_stdout, rargs)
+            return self.subtemplate(subtpl,_stdout,rargs)
         return env
 
     def render(self, *args, **kwargs):
