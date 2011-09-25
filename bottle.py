@@ -926,7 +926,7 @@ class BaseRequest(DictMixin):
             property holds the parsed content of the request body. Only requests
             smaller than :attr:`MEMFILE_MAX` are processed to avoid memory
             exhaustion. '''
-        if self.environ.get('CONTENT_TYPE') == 'application/json' \
+        if 'application/json' in self.environ.get('CONTENT_TYPE', '') \
         and 0 < self.content_length < self.MEMFILE_MAX:
             return json_loads(self.body.read(self.MEMFILE_MAX))
         return None

@@ -318,7 +318,7 @@ class TestRequest(unittest.TestCase):
     def test_json_valid(self):
         """ Environ: Request.json property. """
         test = dict(a=5, b='test', c=[1,2,3])
-        e = {'CONTENT_TYPE': 'application/json'}
+        e = {'CONTENT_TYPE': 'application/json; charset=UTF-8'}
         wsgiref.util.setup_testing_defaults(e)
         e['wsgi.input'].write(tob(json_dumps(test)))
         e['wsgi.input'].seek(0)
