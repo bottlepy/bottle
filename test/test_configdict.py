@@ -33,24 +33,34 @@ class TestConfigDict(unittest.TestCase):
         self.assertEqual(6, c['test'])
         del c.test
         self.assertTrue('test' not in c)
+        self.assertEqual(None, c.test)
 
     def test_namespaces(self):
-        """ Access to a non-existent attribute creates a new namespace. """
+        """ Access to a non-existent uppercase attribute creates a new namespace. """
         c = ConfigDict()
-        self.assertEqual(c.__class__, c.d.e.__class__)
-        c.d.e.f = 5
-        self.assertEqual(5, c.d.e.f)
-        self.assertTrue('f' in c.d.e)
-        self.assertTrue('e' in c.d)
-        self.assertTrue('d' in c)
-        self.assertTrue('f' not in c)
+        self.assertEqual(c.__class__, c.Name.Space.__class__)
+        c.Name.Space.value = 5
+        self.assertEqual(5, c.Name.Space.value)
+        self.assertTrue('value' in c.Name.Space)
+        self.assertTrue('Space' in c.Name)
+        self.assertTrue('Name' in c)
+        self.assertTrue('value' not in c)
         # Overwriting namespaces is not allowed.
-        self.assertRaises(AttributeError, lambda: setattr(c, 'd', 5))
+        self.assertRaises(AttributeError, lambda: setattr(c, 'Name', 5))
         # Overwriting methods defined on dict is not allowed.
         self.assertRaises(AttributeError, lambda: setattr(c, 'keys', 5))
         # but not with the dict API:
-        c['d'] = 5
-        self.assertEquals(5, c.d)
+        c['Name'] = 5
+        self.assertEquals(5, c.Name)
+
+    def test_call(self):
+        """ Calling updates and returns the dict. """
+        c = ConfigDict()
+        self.assertEqual(c, c(a=1))
+        self.assertTrue('a' in c)
+        self.assertEqual(1, c.a)
+
+
 
 
    

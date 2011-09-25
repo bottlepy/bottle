@@ -1637,11 +1637,22 @@ class WSGIHeaderDict(DictMixin):
 
 
 class ConfigDict(dict):
-    ''' Subclass of dict that adds attribute-like access to its values. As a
-        bonus, attribute access to missing keys result in a new ConfigDict. '''
+    ''' A dict-subclass with some extras: You can access keys like attributes.
+        Uppercase attributes create new ConfigDicts and act as name-spaces.
+        Other missing attributes return None. Calling a ConfigDict updates its
+        values and returns itself.
+
+        >>> cfg = ConfigDict()
+        >>> cfg.Namespace.value = 5
+        >>> cfg.OtherNamespace(a=1, b=2)
+        >>> cfg
+        {'Namespace': {'value': 5}, 'OtherNamespace': {'a': 1, 'b': 2}}
+    '''
 
     def __getattr__(self, key):
-        return self[key] if key in self else self.setdefault(key, ConfigDict())
+        if key in self: return self[key]
+        if key[0].isupper(): return self.setdefault(key, ConfigDict())
+        return
 
     def __setattr__(self, key, value):
         if hasattr(dict, key):
@@ -1652,6 +1663,10 @@ class ConfigDict(dict):
 
     def __delattr__(self, key):
         if key in self: del self[key]
+
+    def __call__(self, *a, **ka):
+        for key, value in dict(*a, **ka).iteritems(): setattr(self, key, value)
+        return self
 
 
 class AppStack(list):
