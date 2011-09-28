@@ -137,7 +137,7 @@ A more complex scenario involves chained rebases and multiple content blocks. Th
   %def rightblock():
     Right block content.
   %end
-  %rebase columns left=leftblock, right=rightblock, title=title
+  %rebase columns leftblock=leftblock, rightblock=rightblock, title=title
 
 The ``columns.tpl`` base-template uses the two callables to render the content of the left and right column. It then wraps itself with the ``layout.tpl`` template defined earlier::
 
