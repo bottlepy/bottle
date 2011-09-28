@@ -613,7 +613,7 @@ Other plugin may populate the thread-safe :data:`local` object, change details o
 Application-wide Installation
 --------------------------------------------------------------------------------
 
-Plugins can be installed application-wide or just to some specific routes that need additional functionality. Most plugins are save to be installed to all routes and are smart enough to not add overhead to callbacks that do not need their functionality.
+Plugins can be installed application-wide or just to some specific routes that need additional functionality. Most plugins can safely be installed to all routes and are smart enough to not add overhead to callbacks that do not need their functionality.
 
 Let us take the 'sqlite' plugin for example. It only affects route callbacks that need a database connection. Other routes are left alone. Because of this, we can install the plugin application-wide with no additional overhead.
 
