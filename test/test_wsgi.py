@@ -282,6 +282,15 @@ class TestDecorators(ServerTestBase):
         self.assertInBody('401: Unauthorized', '/tpl')
         self.assertStatus(401, '/tpl')
 
+    def test_view_plugin(self):
+        """ WSGI: Test view-decorator with plugin keyword."""
+        @bottle.route('/tpl')
+        @bottle.view('stpl_simple')
+        def test(plugin_keyword):
+            return dict(var='var')
+        self.assertInBody('start var end', '/tpl')
+        self.assertStatus(200, '/tpl')
+
     def test_validate(self):
         """ WSGI: Test validate-decorator"""
         @bottle.route('/:var')
