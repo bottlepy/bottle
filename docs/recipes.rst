@@ -10,6 +10,7 @@
 .. _compression: https://github.com/defnull/bottle/issues/92
 .. _GzipFilter: http://www.cherrypy.org/wiki/GzipFilter
 .. _cherrypy: http://www.cherrypy.org
+.. _heroku: http://heroku.com
 
 Recipes
 =============
@@ -179,3 +180,23 @@ decorator and setup a callback function::
 You can also use the ``before_callback`` to take an action before
 every function gets called.
 
+
+Using Bottle with Heroku
+------------------------
+
+Heroku_, a popular cloud application platform now provides support
+for running Python applications on their infastructure. 
+
+This recipe is based upon the `Heroku Quickstart <http://devcenter.heroku.com/articles/quickstart>`_, with Bottle specific code replacing the `Write Your App <http://devcenter.heroku.com/articles/python#write_your_app>`_ section of the `Getting Started with Python on Heroku/Cedar <http://devcenter.heroku.com/articles/python>`_ guide::
+
+    import os
+    from bottle import route, run
+
+    @route("/")
+    def hello_world():
+            return "Hello World!"
+
+    run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
+Heroku's app stack passes the port that the application needs to
+listen on for requests, using the `os.environ` dictionary.
