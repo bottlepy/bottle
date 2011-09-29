@@ -429,7 +429,7 @@ In addition, Bottle automatically pickles and unpickles any data stored to signe
 
 .. _tutorial-request:
 
-Accessing Request Data
+Request Data
 ==============================================================================
 
 Bottle provides access to HTTP related meta-data such as cookies, headers and POST form data through a global ``request`` object. This object always contains information about the *current* request, as long as it is accessed from within a callback function. This works even in multi-threaded environments where multiple requests are handled at the same time. For details on how a global object can be thread-safe, see :doc:`contextlocal`.
@@ -439,9 +439,25 @@ Bottle provides access to HTTP related meta-data such as cookies, headers and PO
 
 The full API and feature list is described in the API section (see :class:`Request`), but the most common use cases and features are covered here, too.
 
-.. rubric:: HTTP Header
 
-Header are stored in :attr:`Request.header`. The attribute is an instance of :class:`HeaderDict` which is basically a dictionary with case-insensitive keys::
+Cookies
+--------------------------------------------------------------------------------
+
+Cookies are stored in :attr:`BaseRequest.cookies` as a :class:`FormsDict`. The :meth:`BaseRequest.get_cookie` method allows access to :ref:`tutorial-signed-cookies` as described in a separate section. This example shows a simple cookie-based view counter::
+
+  from bottle import route, request, response
+  @route('/counter')
+  def counter():
+      count = int( request.cookies.get('counter', '0') )
+      count += 1
+      response.set_cookie('counter', str(count))
+      return 'You visited this page %d times' % count
+
+
+HTTP Headers
+--------------------------------------------------------------------------------
+
+All HTTP headers sent by the client (e.g. ``Referer``, ``Agent`` or ``Accept-Language``) are stored in a :class:`HeaderDict` and accessible through :attr:`BaseRequest.headers`. A :class:`HeaderDict` is basically a dictionary with case-insensitive keys::
 
   from bottle import route, request
   @route('/is_ajax')
@@ -451,36 +467,26 @@ Header are stored in :attr:`Request.header`. The attribute is an instance of :cl
       else:
           return 'This is a normal request'
 
-.. rubric:: Cookies
 
-Cookies are stored in :attr:`Request.COOKIES` as a normal dictionary. The :meth:`Request.get_cookie` method allows access to :ref:`tutorial-signed-cookies` as described in a separate section. This example shows a simple cookie-based view counter::
+Query Variables
+--------------------------------------------------------------------------------
 
-  from bottle import route, request, response
-  @route('/counter')
-  def counter():
-      count = int( request.COOKIES.get('counter', '0') )
-      count += 1
-      response.set_cookie('counter', str(count))
-      return 'You visited this page %d times' % count
-
-
-.. rubric:: Query Strings
-
-The query string (as in ``/forum?id=1&page=5``) is commonly used to transmit a small number of key/value pairs to the server. You can use the :attr:`Request.GET` dictionary to access these values and the :attr:`Request.query_string` attribute to get the whole string.
+The query string (as in ``/forum?id=1&page=5``) is commonly used to transmit a small number of key/value pairs to the server. You can use the :attr:`BaseRequest.query` (a :class:`FormsDict`) to access these values and the :attr:`BaseRequest.query_string` attribute to get the whole string. 
 
 ::
 
   from bottle import route, request, response
   @route('/forum')
   def display_forum():
-      forum_id = request.GET.get('id')
-      page = request.GET.get('page', '1')
+      forum_id = request.query.id
+      page = request.query.page or '1'
       return 'Forum ID: %s (page %s)' % (forum_id, page)
 
 
-.. rubric:: POST Form Data and File Uploads
+POST Form Data and File Uploads
+-------------------------------
 
-The request body of POST and PUT requests may contain form data encoded in various formats. Use the :attr:`Request.forms` attribute (a :class:`MultiDict`) to access normal POST form fields. File uploads are stored separately in :attr:`Request.files` as :class:`cgi.FieldStorage` instances. The :attr:`Request.body` attribute holds a file object with the raw body data.
+The request body of ``POST`` and ``PUT`` requests may contain form data encoded in various formats. The :attr:`BaseRequest.forms` dictionary contains parsed textual form fields, :attr:`BaseRequest.files` stores file uploads and :attr:`BaseRequest.POST` combines both dictionaries into one. All three are :class:`FormsDict` instances and created on demand. File uploads are saved as special :class:`cgi.FieldStorage` objects along with some meta-data. Finally, you can access the raw body data as a file-like object via :attr:`BaseRequest.body`.
 
 Here is an example for a simple file upload form:
 
@@ -505,11 +511,10 @@ Here is an example for a simple file upload form:
         return "You missed a field."
 
 
-.. rubric:: WSGI environment
+WSGI Environment
+--------------------------------------------------------------------------------
 
-The :class:`Request` object stores the WSGI environment dictionary in :attr:`Request.environ` and allows dict-like access to its values. See the `WSGI specification`_ for details. 
-
-::
+Each :class:`BaseRequest` instance wraps a WSGI environment dictionary. The original is stored in :attr:`BaseRequest.environ`, but the request object itself behaves like a dictionary, too. Most of the interesting data is exposed through special methods or attributes, but if you want to access `WSGI environ variables <WSGI specification>`_ directly, you can do so::
 
   @route('/my_ip')
   def show_ip():
@@ -517,11 +522,6 @@ The :class:`Request` object stores the WSGI environment dictionary in :attr:`Req
       # or ip = request.get('REMOTE_ADDR')
       # or ip = request['REMOTE_ADDR']
       return "Your IP is: %s" % ip
-
-
-
-
-
 
 
 
