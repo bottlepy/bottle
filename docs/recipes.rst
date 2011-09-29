@@ -187,7 +187,12 @@ Using Bottle with Heroku
 Heroku_, a popular cloud application platform now provides support
 for running Python applications on their infastructure. 
 
-This recipe is based upon the `Heroku Quickstart <http://devcenter.heroku.com/articles/quickstart>`_, with Bottle specific code replacing the `Write Your App <http://devcenter.heroku.com/articles/python#write_your_app>`_ section of the `Getting Started with Python on Heroku/Cedar <http://devcenter.heroku.com/articles/python>`_ guide::
+This recipe is based upon the `Heroku Quickstart 
+<http://devcenter.heroku.com/articles/quickstart>`_, 
+with Bottle specific code replacing the 
+`Write Your App <http://devcenter.heroku.com/articles/python#write_your_app>`_ 
+section of the `Getting Started with Python on Heroku/Cedar 
+<http://devcenter.heroku.com/articles/python>`_ guide::
 
     import os
     from bottle import route, run
