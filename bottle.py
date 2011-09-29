@@ -842,13 +842,10 @@ class BaseRequest(DictMixin):
 
     @DictProperty('environ', 'bottle.request.cookies', read_only=True)
     def cookies(self):
-        """ Cookies parsed into a dictionary. Signed cookies are NOT decoded.
-            Use :meth:`get_cookie` if you expect signed cookies. """
-        raw_dict = SimpleCookie(self.environ.get('HTTP_COOKIE',''))
-        cookies = {}
-        for cookie in raw_dict.itervalues():
-            cookies[cookie.key] = cookie.value
-        return cookies
+        """ Cookies parsed into a :class:`FormsDict`. Signed cookies are NOT
+            decoded. Use :meth:`get_cookie` if you expect signed cookies. """
+        cookies = SimpleCookie(self.environ.get('HTTP_COOKIE',''))
+        return FormsDict((c.key, c.value) for c in cookies.itervalues())
 
     def get_cookie(self, key, default=None, secret=None):
         """ Return the content of a cookie. To read a `Signed Cookie`, the
@@ -1024,8 +1021,8 @@ class BaseRequest(DictMixin):
     def script_name(self):
         ''' The initial portion of the URL's `path` that was removed by a higher
             level (server or routing middleware) before the application was
-            called. This property returns an empty string, or a path with
-            leading and tailing slashes. '''
+            called. This script path is returned with leading and tailing
+            slashes. '''
         script_name = self.environ.get('SCRIPT_NAME', '').strip('/')
         return '/' + script_name + '/' if script_name else '/'
 
@@ -1557,10 +1554,28 @@ class MultiDict(DictMixin):
 
 
 class FormsDict(MultiDict):
-    ''' A :class:`MultiDict` with attribute-like access to form values.
-        Missing attributes are always `None`. '''
-    def __getattr__(self, name):
-        return self.get(name, None)
+    ''' This :class:`MultiDict` subclass is used to store request form data.
+        Additionally to the normal dict-like item access methods (which return
+        unmodified data as native strings), this container also supports
+        attribute-like access to its values. Attribues are automatiically de- or
+        recoded to match :attr:`input_encoding` (default: 'utf8'). Missing
+        attributes default to ``None``. '''
+
+    #: Encoding used for attribute values.
+    input_encoding = 'utf8'
+    
+    def getunicode(self, name, default=None, encoding=None):
+        value, enc = self.get(name, default), encoding or self.input_encoding
+        try:
+            if isinstance(value, bytes): # Python 2 WSGI
+                return value.decode(enc)
+            elif isinstance(value, unicode): # Python 3 WSGI
+                return value.encode('latin1').decode(enc)
+            return value
+        except UnicodeError, e:
+            return default
+    
+    __getattr__ = getunicode
 
 
 class HeaderDict(MultiDict):
