@@ -2235,10 +2235,14 @@ def load_app(target):
     """ Load a bottle application from a module and make sure that the import
         does not affect the current default application, but returns a separate
         application object. See :func:`load` for the target parameter. """
-    tmp = app.push() # Create a new "default application"
-    rv = load(target) # Import the target module
-    app.remove(tmp) # Remove the temporary added default application
-    return rv if isinstance(rv, Bottle) else tmp
+    global NORUN; NORUN, nr_old = True, NORUN
+    try:
+        tmp = app.push() # Create a new "default application"
+        rv = load(target) # Import the target module
+        app.remove(tmp) # Remove the temporary added default application
+        return rv if isinstance(rv, Bottle) else tmp
+    finally:
+        NORUN = nr_old
 
 
 def run(app=None, server='wsgiref', host='127.0.0.1', port=8080,
@@ -2259,6 +2263,7 @@ def run(app=None, server='wsgiref', host='127.0.0.1', port=8080,
         :param quiet: Suppress output to stdout and stderr? (default: False)
         :param options: Options passed to the server adapter.
      """
+    if NORUN: return
     app = app or default_app()
     if isinstance(app, basestring):
         app = load_app(app)
@@ -2767,6 +2772,7 @@ simpletal_view = functools.partial(view, template_adapter=SimpleTALTemplate)
 TEMPLATE_PATH = ['./', './views/']
 TEMPLATES = {}
 DEBUG = False
+NORUN = False # If set, run() does nothing. Used by load_app()
 
 #: A dict to map HTTP status codes (e.g. 404) to phrases (e.g. 'Not Found')
 HTTP_CODES = httplib.responses
