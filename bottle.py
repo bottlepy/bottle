@@ -499,7 +499,6 @@ class Bottle(object):
         self.router = Router() # Maps requests to :class:`Route` instances.
         self.plugins = [] # List of installed plugins.
 
-        self.mounts = {}
         self.error_handler = {}
         #: If true, most exceptions are catched and returned as :exc:`HTTPError`
         self.catchall = catchall
@@ -511,33 +510,44 @@ class Bottle(object):
             self.install(JSONPlugin())
         self.install(TemplatePlugin())
 
-    def mount(self, app, prefix, **options):
-        ''' Mount an application to a specific URL prefix. The prefix is added
-            to SCIPT_PATH and removed from PATH_INFO before the sub-application
-            is called.
+    def mount(self, prefix, app, **options):
+        ''' Mount an application (:class:`Bottle` or plain WSGI) to a specific
+            URL prefix. Example::
 
-            :param app: an instance of :class:`Bottle`.
-            :param prefix: path prefix used as a mount-point.
+                root_app.mount('/admin/', admin_app)
+
+            :param prefix: path prefix or `mount-point`. If it ends in a slash,
+                that slash is mandatory.
+            :param app: an instance of :class:`Bottle` or a WSGI application.
 
             All other parameters are passed to the underlying :meth:`route` call.
         '''
-        if not isinstance(app, Bottle):
-            raise TypeError('Only Bottle instances are supported for now.')
-        prefix = '/'.join(filter(None, prefix.split('/')))
-        if not prefix:
-            raise TypeError('Empty prefix. Perhaps you want a merge()?')
-        for other in self.mounts:
-            if other.startswith(prefix):
-                raise TypeError('Conflict with existing mount: %s' % other)
-        path_depth = prefix.count('/') + 1
-        options.setdefault('method', 'ANY')
+        if isinstance(app, basestring):
+            prefix, app = app, prefix
+            depr('Parameter order of Bottle.mount() changed.') # 0.10
+
+        parts = filter(None, prefix.split('/'))
+        if not parts: raise ValueError('Empty path prefix.')
+        path_depth = len(parts)
         options.setdefault('skip', True)
-        self.mounts[prefix] = app
-        @self.route('/%s/:#.*#' % prefix, **options)
+        options.setdefault('method', 'ANY')
+
+        @self.route('/%s/:#.*#' % '/'.join(parts), **options)
         def mountpoint():
-            request.path_shift(path_depth)
-            # TODO: This sucks. Make it better.
-            return app._cast(app._handle(request.environ), request, response)
+            try:
+                request.path_shift(path_depth)
+                rs = BaseResponse([], 200)
+                def start_response(status, header):
+                    rs.status = status
+                    [rs.add_header(name, value) for name, value in header]
+                    return lambda x: out.append(x)
+                rs.body.extend(app(request.environ, start_response))
+                return HTTPResponse(rs.body, rs.status, rs.headers)
+            finally:
+                request.path_shift(-path_depth)
+
+        if not prefix.endswith('/'):
+            self.route('/' + '/'.join(parts), callback=mountpoint, **options)
 
     def install(self, plugin):
         ''' Add a plugin to the list of plugins and prepare it for being
@@ -1423,7 +1433,7 @@ class HooksPlugin(object):
         hooks = self.hooks[name]
         if ka.pop('reversed', False): hooks = hooks[::-1]
         return [hook(*a, **ka) for hook in hooks]
-    
+
     def apply(self, callback, context):
         if self._empty(): return callback
         def wrapper(*a, **ka):
@@ -1563,7 +1573,7 @@ class FormsDict(MultiDict):
 
     #: Encoding used for attribute values.
     input_encoding = 'utf8'
-    
+
     def getunicode(self, name, default=None, encoding=None):
         value, enc = self.get(name, default), encoding or self.input_encoding
         try:
@@ -1574,7 +1584,7 @@ class FormsDict(MultiDict):
             return value
         except UnicodeError, e:
             return default
-    
+
     __getattr__ = getunicode
 
 
