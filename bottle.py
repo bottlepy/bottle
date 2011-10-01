@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 Bottle is a fast and simple micro-framework for small web applications. It
@@ -2826,5 +2827,28 @@ app.push()
 #: A virtual package that redirects import statements.
 #: Example: ``import bottle.ext.sqlite`` actually imports `bottle_sqlite`.
 ext = _ImportRedirect(__name__+'.ext', 'bottle_%s').module
+
+def main():
+    from optparse import OptionParser
+    parser = OptionParser(usage="usage: %prog [options] package.module:application")
+    learn = parser.add_option
+    learn("-b", "--bind", metavar="ADDRESS", help="bind socket to ADDRESS.")
+    learn("-s", "--server", help="use SERVER as backend. (default: wsgiref)")
+    learn("-p", "--plugin", action="append", help="install additinal plugin/s.")
+    learn("--debug", action="store_true", help="start server in debug mode.")
+    learn("--reload", action="store_true", help="auto-reload on file changes.")
+    (opt, args) = parser.parse_args()
+    sys.path.insert(0, '.')
+    sys.modules.setdefault('bottle', sys.modules['__main__'])
+    app = load_app(args[-1])
+    if opt.bind and ':' in opt.bind: host, port = opt.bind.rsplit(':', 1)
+    else: host, port = opt.bind or 'localhost', 8080
+    for plugin in opt.plugin or []: app.install(plugin)
+    debug(opt.debug)
+    run(app, host=host, port=port, server=opt.server or 'wsgiref',
+        reloader=opt.reload)
+
+if __name__ == '__main__':
+    main()
 
 # THE END
