@@ -2684,7 +2684,8 @@ class SimpleTemplate(BaseTemplate):
         env = self.defaults.copy()
         env.update({'_stdout': _stdout, '_printlist': _stdout.extend,
                '_include': self.subtemplate, '_str': self._str,
-               '_escape': self._escape})
+               '_escape': self._escape, 'get': env.get,
+               'setdefault': env.setdefault, 'defined': env.__contains__})
         env.update(kwargs)
         eval(self.co, env)
         if '_rebase' in env:

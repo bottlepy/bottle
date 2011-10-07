@@ -160,6 +160,21 @@ class TestSimpleTemplate(unittest.TestCase):
         result=u'+base+\n+main+\n!1234!\n+include+\n-main-\n+include+\n-base-\n'
         self.assertEqual(result, t.render(content='1234'))
 
+    def test_get(self):
+        t = SimpleTemplate(source='{{get("x", "default")}}')
+        self.assertEqual('1234', t.render(x='1234'))
+        self.assertEqual('default', t.render())
+
+    def test_setdefault(self):
+        t = SimpleTemplate(source='%setdefault("x", "default")\n{{x}}')
+        self.assertEqual('1234', t.render(x='1234'))
+        self.assertEqual('default', t.render())
+
+    def test_defnied(self):
+        t = SimpleTemplate(source='{{x if defined("x") else "no"}}')
+        self.assertEqual('yes', t.render(x='yes'))
+        self.assertEqual('no', t.render())
+
     def test_notfound(self):
         """ Templates: Unavailable templates"""
         self.assertRaises(TemplateError, SimpleTemplate, name="abcdef")
