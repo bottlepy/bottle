@@ -2837,20 +2837,29 @@ ext = _ImportRedirect(__name__+'.ext', 'bottle_%s').module
 def main():
     from optparse import OptionParser
     parser = OptionParser(usage="usage: %prog [options] package.module:application")
-    learn = parser.add_option
-    learn("-b", "--bind", metavar="ADDRESS", help="bind socket to ADDRESS.")
-    learn("-s", "--server", help="use SERVER as backend. (default: wsgiref)")
-    learn("-p", "--plugin", action="append", help="install additinal plugin/s.")
-    learn("--debug", action="store_true", help="start server in debug mode.")
-    learn("--reload", action="store_true", help="auto-reload on file changes.")
-    (opt, args) = parser.parse_args()
-    sys.path.insert(0, '.')
-    sys.modules.setdefault('bottle', sys.modules['__main__'])
-    app = load_app(args[-1])
-    if opt.bind and ':' in opt.bind: host, port = opt.bind.rsplit(':', 1)
-    else: host, port = opt.bind or 'localhost', 8080
-    for plugin in opt.plugin or []: app.install(plugin)
+    add = parser.add_option
+    add("-b", "--bind", metavar="ADDRESS", help="bind socket to ADDRESS.")
+    add("-s", "--server", help="use SERVER as backend. (default: wsgiref)")
+    add("-p", "--plugin", action="append", help="install additinal plugin/s.")
+    add("--debug", action="store_true", help="start server in debug mode.")
+    add("--reload", action="store_true", help="auto-reload on file changes.")
+    opt, args = parser.parse_args()
     debug(opt.debug)
+
+    if len(args) != 1: parser.error('No application specified.')
+
+    try:
+        sys.path.insert(0, '.')
+        sys.modules.setdefault('bottle', sys.modules['__main__'])
+        app = load_app(args[0])
+        for plugin in opt.plugin or []: app.install(plugin)
+    except (AttributeError, ImportError), e:
+        parser.error(e.args[0])
+
+    if opt.bind and ':' in opt.bind: host, port = opt.bind.rsplit(':', 1)
+    else:                            host, port = opt.bind or 'localhost', 8080
+    if not app.routes: parser.error('App does not define any routes.')
+    if opt.server not in server_names: parser.error('Unknown server backend.')
     run(app, host=host, port=port, server=opt.server or 'wsgiref',
         reloader=opt.reload)
 
