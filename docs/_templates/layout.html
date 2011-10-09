@@ -5,13 +5,25 @@
     <link rel="image_src" type="image/png" href="{{ pathto('_static/logo_reddit.png', 1) }}" />
     <script type="application/javascript" src="{{ pathto('_static/default.js', 1) }}"></script>
     {% if pagename == 'index' -%}
-    <meta name="description" content="Bottle is a fast, simple and lightweight WSGI micro web-framework for Python." /> 
+    <meta name="description" content="Bottle is a fast, simple and lightweight WSGI micro web-framework for Python." />
     {% endif %}
     {{ super() }}
 {% endblock %}
 
 {% block rootrellink %}
     <li><a href="/">Project Home</a> &raquo;</li>
+    {{ super() }}
+{% endblock %}
+
+{% block sidebar %}
+    {% if 'dev' in release %}
+    <p>
+      This documentation is for Bottle <b>{{release}}</b>, which is
+      not released yet. The current stable release is
+      <a href="http://bottlepy.org/docs/{{releases[1][0]}}/">
+      <b>Bottle {{releases[1][0]}}</b></a>.
+    </p>
+    {% endif %}
     {{ super() }}
 {% endblock %}
 
