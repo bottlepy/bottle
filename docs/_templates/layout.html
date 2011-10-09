@@ -15,18 +15,6 @@
     {{ super() }}
 {% endblock %}
 
-{% block sidebar %}
-    {% if 'dev' in release %}
-    <p>
-      This documentation is for Bottle <b>{{release}}</b>, which is
-      not released yet. The current stable release is
-      <a href="http://bottlepy.org/docs/{{releases[1][0]}}/">
-      <b>Bottle {{releases[1][0]}}</b></a>.
-    </p>
-    {% endif %}
-    {{ super() }}
-{% endblock %}
-
 {% block footer %}
     <div id="disqus_thread" style="margin: 2em 0;"></div>
     <script type="text/javascript">
