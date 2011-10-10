@@ -32,7 +32,8 @@ Python is a very powerful language but its whitespace-aware syntax makes it diff
 
    The :class:`SimpleTemplate` syntax compiles directly to python bytecode and is executed on each :meth:`SimpleTemplate.render` call. Do not render untrusted templates! They may contain and execute harmful python code.
 
-.. rubric:: Inline Statements
+Inline Statements
+-----------------
 
 You already learned the use of the ``{{...}}`` statement from the "Hello World!" example above, but there is more: any python statement is allowed within the curly brackets as long as it returns a string or something that has a string representation::
 
@@ -52,7 +53,8 @@ The contained python statement is executed at render-time and has access to all 
 
 .. highlight:: html+django
 
-.. rubric:: Embedded python code
+Embedded python code
+--------------------
 
 The ``%`` character marks a line of python code. The only difference between this and real python code is that you have to explicitly close blocks with an ``%end`` statement. In return you can align the code with the surrounding template and don't have to worry about correct indentation of blocks. The *SimpleTemplate* parser handles that for you. Lines *not* starting with a ``%`` are rendered as text as usual::
 
@@ -68,7 +70,8 @@ The ``%`` character is only recognised if it is the first non-whitespace charact
   %% This text-line starts with '%'
   %%% This text-line starts with '%%'
 
-.. rubric:: Suppressing line breaks
+Suppressing line breaks
+-----------------------
 
 You can suppress the line break in front of a code-line by adding a double backslash at the end of the line::
 
@@ -82,7 +85,8 @@ This template produces the following output::
 
   <span>nobreak</span>
 
-.. rubric:: The ``%include`` Statement
+The ``%include`` Statement
+--------------------------
 
 You can include other templates using the ``%include sub_template [kwargs]`` statement. The ``sub_template`` parameter specifies the name or path of the template to be included. The rest of the line is interpreted as a comma-separated list of ``key=statement`` pairs similar to keyword arguments in function calls. They are passed to the sub-template analogous to a :meth:`SimpleTemplate.render` call. The ``**kwargs`` syntax for passing a dict is allowed too::
 
@@ -90,7 +94,8 @@ You can include other templates using the ``%include sub_template [kwargs]`` sta
   <p>Hello World</p>
   %include foother_template
 
-.. rubric:: The ``%rebase`` Statement
+The ``%rebase`` Statement
+-------------------------
 
 The ``%rebase base_template [kwargs]`` statement causes ``base_template`` to be rendered instead of the original template. The base-template then includes the original template using an empty ``%include`` statement and has access to all variables specified by ``kwargs``. This way it is possible to wrap a template with another template or to simulate the inheritance feature found in some other template engines.
 
@@ -171,6 +176,44 @@ Lets see how ``block_content.tpl`` renders:
   </body>
   </html>
 
+Namespace Functions
+-------------------
+
+Accessing undefined variables in a template raises :exc:`NameError` and
+stops rendering immediately. This is standard python behavior and nothing new,
+but vanilla python lacks an easy way to check the availability of a variable.
+This quickly gets annoying if you want to support flexible inputs or use the
+same template in different situations. SimpleTemplate helps you out here: The
+following three functions are defined in the default namespace and accessible
+from anywhere within a template:
+
+.. currentmodule:: stpl
+
+.. function:: defined(name)
+
+    Return True if the variable is defined in the current template namespace,
+    False otherwise.
+
+.. function:: get(name, default=None)
+
+    Return the variable, or a default value.
+
+.. function:: setdefault(name, default)
+
+    If the variable is not defined, create it with the given default value.
+    Return the variable.
+
+Here is an example that uses all three functions to implement optional template
+variables in different ways::
+
+    % setdefault('text', 'No Text')
+    <h1>{{get('title', 'No Title')}}</h1>
+    <p> {{ text }} </p>
+    % if defined('author'):
+      <p>By {{ author }}</p>
+    % end
+
+.. currentmodule:: bottle
 
 
 :class:`SimpleTemplate` API
