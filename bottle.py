@@ -2133,11 +2133,12 @@ class GeventServer(ServerAdapter):
 
 
 class GunicornServer(ServerAdapter):
-    """ Untested. """
+    """ Untested. See http://gunicorn.org/configure.html for options. """
     def run(self, handler):
         from gunicorn.app.base import Application
 
-        config = {'bind': "%s:%d" % (self.host, int(self.port)), 'workers': 4}
+        config = {'bind': "%s:%d" % (self.host, int(self.port))}
+        config.update(self.options)
 
         class GunicornApplication(Application):
             def init(self, parser, opts, args):
