@@ -434,7 +434,7 @@ class Route(object):
     @cached_property
     def call(self):
         ''' The route callback with all plugins applied. This property is
-            created on demand and then cached to speed ub subsequent requests.'''
+            created on demand and then cached to speed up subsequent requests.'''
         return self._make_callback()
 
     def reset(self):
