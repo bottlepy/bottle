@@ -5,6 +5,39 @@
 Release Notes and Changelog
 ===========================
 
+Release 0.10
+============
+
+Not released yet.
+
+* Plugin API v2
+
+  * To use the new API, set :attr:`Plugin.api` to ``2``.
+  * :meth:`Plugin.apply` receives a :class:`Route` object instead of a context dictionary as second parameter. The new object offers some additional information and may be extended in the future.
+  * Plugin names are considered unique now. The topmost plugin with a given name on a given route is installed, all other plugins with the same name are silently ignored.
+
+* The Request/Response Objects
+
+  * Added :attr:`BaseRequest.json`, :attr:`BaseRequest.remote_route`, :attr:`BaseRequest.remote_addr`, :attr:`BaseRequest.query` and :attr:`BaseRequest.script_name`.
+  * Added :attr:`BaseResponse.status_line` and :attr:`BaseResponse.status_code` attributes. In future releases, :attr:`BaseResponse.status` will return a string (e.g. ``200 OK``) instead of an integer to match the API of other common frameworks. To make the transition as smooth as possible, you should use the verbose attributes from now on.
+  * Replaced :class:`MultiDict` with a specialized :class:`FormsDict` in many places. The new dict implementation allows attribute access and handles unicode form values transparently.
+
+* Templates
+
+  * Added three new functions to the SimpleTemplate default namespace that handle undefined variables: :func:`stpl.defined`, :func:`stpl.get` and :func:`stpl.setdefault`.
+  * The default escape function for SimpleTemplate now additionally escapes single and double quotes.
+
+* Oher changes
+
+  * Added command line interface to load applications and start servers.
+  * Introduced a :class:`ConfigDict` that makes accessing configuration a lot easier (attribute access and auto-expanding namespaces).
+  * Added support for raw WSGI applications to :meth:`Bottle.mount`.
+  * :meth:`Bottle.mount` parameter order changed.
+  * :meth:`Bottle.route` now accpets an import string for the ``callback`` parameter.
+  * Dropped Gunicorn 0.8 support. Current supported version is 0.13.
+  * Added custom options to Gunicorn server.
+  * Finally dropped support for type filters. Replace with a custom plugin of needed.
+
 
 Release 0.9
 ===========
