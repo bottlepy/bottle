@@ -787,11 +787,11 @@ class Bottle(object):
             response.bind()
             out = self._cast(self._handle(environ), request, response)
             # rfc2616 section 4.3
-            if response.status_code in (100, 101, 204, 304)\
+            if response._status_code in (100, 101, 204, 304)\
             or request.method == 'HEAD':
                 if hasattr(out, 'close'): out.close()
                 out = []
-            start_response(response.status_line, list(response.iter_headers()))
+            start_response(response._status_line, list(response.iter_headers()))
             return out
         except (KeyboardInterrupt, SystemExit, MemoryError):
             raise
@@ -1173,13 +1173,8 @@ class BaseResponse(object):
                   'Content-Md5', 'Last-Modified'))}
 
     def __init__(self, body='', status=None, **headers):
-        #: The HTTP status code as an integer (e.g. 404).
-        #: Do not change the value manually, use :attr:`status` instead.
-        self.status_code = None
-        #: The HTTP status line as a string (e.g. "404 Not Found").
-        #: Do not change the value manually, use :attr:`status` instead.
-        self.status_line = None
-        #: The response body as one of the supported data types.
+        self._status_line = None
+        self._status_code = None
         self.body = body
         self._cookies = None
         self._headers = {'Content-Type': [self.default_content_type]}
@@ -1202,6 +1197,16 @@ class BaseResponse(object):
         if hasattr(self.body, 'close'):
             self.body.close()
 
+    @property
+    def status_line(self):
+        ''' The HTTP status line as a string (e.g. ``404 Not Found``).'''
+        return self._status_line
+
+    @property
+    def status_code(self):
+        ''' The HTTP status code as an integer (e.g. 404).'''
+        return self._status_code
+
     def _set_status(self, status):
         if isinstance(status, int):
             code, status = status, _HTTP_STATUS_LINES.get(status)
@@ -1211,16 +1216,21 @@ class BaseResponse(object):
         else:
             raise ValueError('String status line without a reason phrase.')
         if not 100 <= code <= 999: raise ValueError('Status code out of range.')
-        self.status_code = code
-        self.status_line = status or ('%d Unknown' % code)
+        self._status_code = code
+        self._status_line = status or ('%d Unknown' % code)
 
-    status = property(lambda self: self.status_code, _set_status, None,
+    def _get_status(self):
+        depr('BaseReuqest.status will change to return a string in 0.11. Use'\
+             'status_line and status_code to make sure.') #0.10
+        return self._status_code
+
+    status = property(_get_status, _set_status, None,
         ''' A writeable property to change the HTTP response status. It accepts
             either a numeric code (100-999) or a string with a custom reason
             phrase (e.g. "404 Brain not found"). Both :data:`status_line` and
             :data:`status_code` are updates accordingly. The return value is
             always a numeric code. ''')
-    del _set_status
+    del _get_status, _set_status
 
     @property
     def headers(self):
