@@ -2789,6 +2789,10 @@ NORUN = False # If set, run() does nothing. Used by load_app()
 #: A dict to map HTTP status codes (e.g. 404) to phrases (e.g. 'Not Found')
 HTTP_CODES = httplib.responses
 HTTP_CODES[418] = "I'm a teapot" # RFC 2324
+HTTP_CODES[428] = "Precondition Required"
+HTTP_CODES[429] = "Too Many Requests"
+HTTP_CODES[431] = "Request Header Fields Too Large"
+HTTP_CODES[511] = "Network Authentication Required"
 _HTTP_STATUS_LINES = dict((k, '%d %s'%(k,v)) for (k,v) in HTTP_CODES.iteritems())
 
 #: The default template used for error pages. Override with @error()
