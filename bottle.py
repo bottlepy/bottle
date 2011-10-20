@@ -1847,6 +1847,7 @@ def _lscmp(a, b):
 
 def cookie_encode(data, key):
     ''' Encode and sign a pickle-able object. Return a (byte) string '''
+    key = key.encode()
     msg = base64.b64encode(pickle.dumps(data, -1))
     sig = base64.b64encode(hmac.new(key, msg).digest())
     return tob('!') + sig + tob('?') + msg
@@ -1855,6 +1856,7 @@ def cookie_encode(data, key):
 def cookie_decode(data, key):
     ''' Verify and decode an encoded string. Return an object or None.'''
     data = tob(data)
+    key = key.encode()
     if cookie_is_encoded(data):
         sig, msg = data.split(tob('?'), 1)
         if _lscmp(sig[1:], base64.b64encode(hmac.new(key, msg).digest())):
