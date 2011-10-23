@@ -54,8 +54,8 @@ This will get you the latest development snapshot that includes all the new feat
     $ sudo easy_install bottle             # alternative without pip
     $ sudo apt-get install python-bottle   # works for debian, ubuntu, ...
 
-In either way, you'll need Python 2.5 or newer to run bottle applications. If you do not have permissions to install packages system-wide or simply don't want to, create a `virtualenv <http://pypi.python.org/pypi/virtualenv>`_ first. 
- 
+In either way, you'll need Python 2.5 or newer to run bottle applications. If you do not have permissions to install packages system-wide or simply don't want to, create a `virtualenv <http://pypi.python.org/pypi/virtualenv>`_ first.
+
 
 A minimal Bottle Application
 ==============================================================================
@@ -63,17 +63,17 @@ A minimal Bottle Application
 This tutorial assumes you have Bottle either :ref:`installed or copied <installation>` into your project directory. Lets start with a very basic "Hello World" example::
 
     from bottle import route, run
-    
+
     @route('/hello')
     def hello():
         return "Hello World!"
-    
+
     run(host='localhost', port=8080)
 
 
 Whats happening here?
 
-1. First we import some Bottle components. The :func:`route` decorator and the :func:`run` function. 
+1. First we import some Bottle components. The :func:`route` decorator and the :func:`run` function.
 2. The :func:`route` :term:`decorator` is used do bind a piece of code to an URL. In this example we want to answer requests to ``/hello``.
 3. This function is the :term:`handler function` or :term:`callback` for the ``/hello`` route. It is called every time someone requests the ``/hello`` URL and is responsible for generating the page content.
 4. For now, we just return a simple string to the browser.
@@ -87,13 +87,13 @@ This is it. Run this script, visit http://localhost:8080/hello and you will see 
 For the sake of simplicity, most examples in this tutorial use a module-level :func:`route` decorator to bind routes. This decorator adds routes to a global application object that is created for you automatically. If you prefer a more explicit way to define your application and don't mind the extra typing, you can create a separate application object and use that instead of the global one::
 
     from bottle import Bottle, run
-    
+
     app = Bottle()
-    
+
     @app.route('/hello')
     def hello():
         return "Hello World!"
-    
+
     run(app, host='localhost', port=8080)
 
 The object-oriented approach is further described in the :ref:`default-app` section. Just keep in mind that you have a choice.
@@ -109,12 +109,12 @@ Request Routing
 As you have learned before, applications consist of *routes* that map *URLs* to *callback functions*. These callbacks are executed once for each request that matches the route. The return value is sent to the client. You can add any number of routes to a callback simply by applying the :func:`route` decorator::
 
     from bottle import route
-    
+
     @route('/')
     @route('/index.html')
     def index():
         return "<a href='/hello'>Go to Hello World page</a>"
-    
+
     @route('/hello')
     def hello():
         return "Hello World!"
@@ -134,15 +134,30 @@ Bottle has a special syntax to add wildcards to a route and allow a single route
     def hello(name):
         return "Hello %s!" % name
 
-This dynamic route will match ``/hello/alice`` as well as ``/hello/bob``. Each URL fragment covered by a wildcard is passed to the callback function as a keyword argument so you can use the information in your application.
-
-Normal wildcards match everything up to the next slash. You can add a regular expression to change that::
+This dynamic route will match ``/hello/alice`` as well as ``/hello/bob``. Each URL fragment covered by a wildcard is passed to the callback function as a keyword argument so you can use the information in your application. Normal wildcards consume everything up to the next slash. You can add a regular expression to change the default behavior::
 
     @route('/object/:id#[0-9]+#')
     def view_object(id):
         return "Object ID: %d" % int(id)
 
-As you can see, the keyword argument contains a string even if the wildcard is configured to only match digits. You have to explicitly cast it into an integer if you need to.
+Here are some example to demonstrate the use of wildcards:
+
+========================   ======================  ========================
+Route                      URL                     URL Arguments
+========================   ======================  ========================
+``/hello/:name``           ``/hello/world``        name='world'
+``/hello/:name``           ``/hello/world/``       `No match`
+``/hello/:name``           ``/hello/``             `No match`
+``/hello/:name#.*#``       ``/hello/``             name='' `(empty string)`
+``/hello/:name#.*#``       ``/hello/world/``       name='world/'
+``/:image.png``            ``/logo.png``           image='logo'
+``/:image#.+\.png#``       ``/img/logo.png``       image='img/logo.png'
+``/:action/:id#[0-9]+#``   ``/save/15``            action='save', id='15'
+``/:action/:id#[0-9]+#``   ``/save/xyz``           `No match`
+``/blog/:y-:m-:d``         ``/blog/2000-05-06``    y='2000', m='05', d='06'
+========================   ======================  ========================
+
+As you can see, all extracted URL arguments are strings even if some wildcards are configured to only match digits. If you need a specific type, you may check and convert the value in your callback function.
 
 HTTP Request Methods
 ------------------------------------------------------------------------------
@@ -173,7 +188,7 @@ The POST method is commonly used for HTML form submission. This example shows ho
         else:
             return "<p>Login failed</p>"
 
-In this example the ``/login`` URL is bound to two distinct callbacks, one for GET requests and another for POST requests. The first one displays a HTML form to the user. The second callback is invoked on a form submission and checks the login credentials the user entered into the form. The use of :attr:`Request.forms` is further described in the :ref:`tutorial-request` section. 
+In this example the ``/login`` URL is bound to two distinct callbacks, one for GET requests and another for POST requests. The first one displays a HTML form to the user. The second callback is invoked on a form submission and checks the login credentials the user entered into the form. The use of :attr:`Request.forms` is further described in the :ref:`tutorial-request` section.
 
 .. rubric:: Automatic Fallbacks
 
@@ -233,7 +248,7 @@ Dictionaries
     As mentioned above, Python dictionaries (or subclasses thereof) are automatically transformed into JSON strings and returned to the browser with the ``Content-Type`` header set to ``application/json``. This makes it easy to implement json-based APIs. Data formats other than json are supported too. See the :ref:`tutorial-output-filter` to learn more.
 
 Empty Strings, ``False``, ``None`` or other non-true values:
-    These produce an empty output with ``Content-Length`` header set to 0. 
+    These produce an empty output with ``Content-Length`` header set to 0.
 
 Unicode strings
     Unicode strings (or iterables yielding unicode strings) are automatically encoded with the codec specified in the ``Content-Type`` header (utf8 by default) and then treated as normal byte strings (see below).
@@ -249,7 +264,7 @@ File objects
 
 Iterables and generators
     You are allowed to use ``yield`` within your callbacks or return an iterable, as long as the iterable yields byte strings, unicode strings, :exc:`HTTPError` or :exc:`HTTPResponse` instances. Nested iterables are not supported, sorry. Please note that the HTTP status code and the headers are sent to the browser as soon as the iterable yields its first non-empty value. Changing these later has no effect.
-  
+
 The ordering of this list is significant. You may for example return a subclass of :class:`str` with a ``read()`` method. It is still treated as a string instead of a file, because strings are handled first.
 
 .. rubric:: Changing the Default Encoding
@@ -284,7 +299,7 @@ You can directly return file objects, but :func:`static_file` is the recommended
     @route('/images/:filename#.*\.png#')
     def send_image(filename):
         return static_file(filename, root='/path/to/image/files', mimetype='image/png')
-    
+
     @route('/static/:filename')
     def send_static(filename):
         return static_file(filename, root='/path/to/static/files')
@@ -435,7 +450,7 @@ Request Data
 Bottle provides access to HTTP related meta-data such as cookies, headers and POST form data through a global ``request`` object. This object always contains information about the *current* request, as long as it is accessed from within a callback function. This works even in multi-threaded environments where multiple requests are handled at the same time. For details on how a global object can be thread-safe, see :doc:`contextlocal`.
 
 .. note::
-  Bottle stores most of the parsed HTTP meta-data in :class:`MultiDict` instances. These behave like normal dictionaries but are able to store multiple values per key. The standard dictionary access methods will only return a single value. Use the :meth:`MultiDict.getall` method do receive a (possibly empty) list of all values for a specific key. The :class:`HeaderDict` class inherits from :class:`MultiDict` and  additionally uses case insensitive keys. 
+  Bottle stores most of the parsed HTTP meta-data in :class:`MultiDict` instances. These behave like normal dictionaries but are able to store multiple values per key. The standard dictionary access methods will only return a single value. Use the :meth:`MultiDict.getall` method do receive a (possibly empty) list of all values for a specific key. The :class:`HeaderDict` class inherits from :class:`MultiDict` and  additionally uses case insensitive keys.
 
 The full API and feature list is described in the API section (see :class:`Request`), but the most common use cases and features are covered here, too.
 
@@ -471,7 +486,7 @@ All HTTP headers sent by the client (e.g. ``Referer``, ``Agent`` or ``Accept-Lan
 Query Variables
 --------------------------------------------------------------------------------
 
-The query string (as in ``/forum?id=1&page=5``) is commonly used to transmit a small number of key/value pairs to the server. You can use the :attr:`BaseRequest.query` (a :class:`FormsDict`) to access these values and the :attr:`BaseRequest.query_string` attribute to get the whole string. 
+The query string (as in ``/forum?id=1&page=5``) is commonly used to transmit a small number of key/value pairs to the server. You can use the :attr:`BaseRequest.query` (a :class:`FormsDict`) to access these values and the :attr:`BaseRequest.query_string` attribute to get the whole string.
 
 ::
 
@@ -591,7 +606,7 @@ The effects and APIs of plugins are manifold and depend on the specific plugin. 
 
     from bottle import route, install, template
     from bottle_sqlite import SQLitePlugin
-    
+
     install(SQLitePlugin(dbfile='/tmp/test.db'))
 
     @route('/show/:post_id')
@@ -681,11 +696,11 @@ Most plugins are specific to the application they were installed to. Consequentl
 
     root = Bottle()
     root.mount(apps.blog, '/blog')
-    
+
     @root.route('/contact', template='contact')
     def contact():
         return {'email': 'contact@example.com'}
-    
+
     root.install(plugins.WTForms())
 
 Whenever you mount an application, Bottle creates a proxy-route on the main-application that relays all requests to the sub-application. Plugins are disabled for this kind of proxy-routes by default. As a result, our (fictional) `WTForms` plugin affects the ``/contact`` route, but does not affect the routes of the ``/blog`` sub-application.
@@ -718,7 +733,7 @@ Bottle maintains a global stack of :class:`Bottle` instances and uses the top of
 This is very convenient for small applications and saves you some typing, but also means that, as soon as your module is imported, routes are installed to the global application. To avoid this kind of import side-effects, Bottle offers a second, more explicit way to build applications::
 
     app = Bottle()
-    
+
     @app.route('/')
     def hello():
         return 'Hello World'
@@ -771,31 +786,31 @@ Just make sure to not use the debug mode on a production server.
 Auto Reloading
 --------------------------------------------------------------------------------
 
-During development, you have to restart the server a lot to test your 
-recent changes. The auto reloader can do this for you. Every time you 
-edit a module file, the reloader restarts the server process and loads 
-the newest version of your code. 
+During development, you have to restart the server a lot to test your
+recent changes. The auto reloader can do this for you. Every time you
+edit a module file, the reloader restarts the server process and loads
+the newest version of your code.
 
 ::
 
     from bottle import run
     run(reloader=True)
 
-How it works: the main process will not start a server, but spawn a new 
-child process using the same command line arguments used to start the 
-main process. All module-level code is executed at least twice! Be 
+How it works: the main process will not start a server, but spawn a new
+child process using the same command line arguments used to start the
+main process. All module-level code is executed at least twice! Be
 careful.
 
-The child process will have ``os.environ['BOTTLE_CHILD']`` set to ``True`` 
-and start as a normal non-reloading app server. As soon as any of the 
-loaded modules changes, the child process is terminated and re-spawned by 
-the main process. Changes in template files will not trigger a reload. 
+The child process will have ``os.environ['BOTTLE_CHILD']`` set to ``True``
+and start as a normal non-reloading app server. As soon as any of the
+loaded modules changes, the child process is terminated and re-spawned by
+the main process. Changes in template files will not trigger a reload.
 Please use debug mode to deactivate template caching.
 
 The reloading depends on the ability to stop the child process. If you are
-running on Windows or any other operating system not supporting 
-``signal.SIGINT`` (which raises ``KeyboardInterrupt`` in Python), 
-``signal.SIGTERM`` is used to kill the child. Note that exit handlers and 
+running on Windows or any other operating system not supporting
+``signal.SIGINT`` (which raises ``KeyboardInterrupt`` in Python),
+``signal.SIGTERM`` is used to kill the child. Note that exit handlers and
 finally clauses, etc., are not executed after a ``SIGTERM``.
 
 
@@ -868,17 +883,17 @@ If there is no adapter for your favorite server or if you need more control over
 Multiple Server Processes
 --------------------------------------------------------------------------------
 
-A single Python process can only utilise one CPU at a time, even if 
-there are more CPU cores available. The trick is to balance the load 
-between multiple independent Python processes to utilize all of your 
+A single Python process can only utilise one CPU at a time, even if
+there are more CPU cores available. The trick is to balance the load
+between multiple independent Python processes to utilize all of your
 CPU cores.
 
-Instead of a single Bottle application server, you start one instance 
-of your server for each CPU core available using different local port 
-(localhost:8080, 8081, 8082, ...). Then a high performance load 
-balancer acts as a reverse proxy and forwards each new requests to 
-a random Bottle processes, spreading the load between all available 
-back end server instances. This way you can use all of your CPU cores and 
+Instead of a single Bottle application server, you start one instance
+of your server for each CPU core available using different local port
+(localhost:8080, 8081, 8082, ...). Then a high performance load
+balancer acts as a reverse proxy and forwards each new requests to
+a random Bottle processes, spreading the load between all available
+back end server instances. This way you can use all of your CPU cores and
 even spread out the load between different physical servers.
 
 One of the fastest load balancers available is Pound_ but most common web servers have a proxy-module that can do the work just fine.
@@ -887,19 +902,19 @@ One of the fastest load balancers available is Pound_ but most common web server
 Apache mod_wsgi
 --------------------------------------------------------------------------------
 
-Instead of running your own HTTP server from within Bottle, you can 
-attach Bottle applications to an `Apache server`_ using 
+Instead of running your own HTTP server from within Bottle, you can
+attach Bottle applications to an `Apache server`_ using
 mod_wsgi_ and Bottle's WSGI interface.
 
-All you need is an ``app.wsgi`` file that provides an 
-``application`` object. This object is used by mod_wsgi to start your 
+All you need is an ``app.wsgi`` file that provides an
+``application`` object. This object is used by mod_wsgi to start your
 application and should be a WSGI-compatible Python callable.
 
 File ``/var/www/yourapp/app.wsgi``::
 
     # Change working directory so relative paths (and template lookup) work again
     os.chdir(os.path.dirname(__file__))
-    
+
     import bottle
     # ... build or import your bottle application here ...
     # Do NOT use bottle.run() with mod_wsgi
@@ -909,10 +924,10 @@ The Apache configuration may look like this::
 
     <VirtualHost *>
         ServerName example.com
-        
+
         WSGIDaemonProcess yourapp user=www-data group=www-data processes=1 threads=5
         WSGIScriptAlias / /var/www/yourapp/app.wsgi
-        
+
         <Directory /var/www/yourapp>
             WSGIProcessGroup yourapp
             WSGIApplicationGroup %{GLOBAL}
@@ -971,7 +986,7 @@ Glossary
 
    callback
       Programmer code that is to be called when some external action happens.
-      In the context of web frameworks, the mapping between URL paths and 
+      In the context of web frameworks, the mapping between URL paths and
       application code is often achieved by specifying a callback function
       for each URL.
 
