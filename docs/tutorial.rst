@@ -85,7 +85,7 @@ Of course this is a very simple example, but it shows the basic concept of how a
 The `Default Application`
 ------------------------------------------------------------------------------
 
-For the sake of simplicity, most examples in this tutorial use a module-level :func:`route` decorator to define routes. This adds routes to a global "default application", an instance of :class:`Bottle` that is automatically created the first time you call :func:`route`. Several other module-level decorators or functions relate to this default application, but if you prefer a more object oriented approach and don't mind the extra typing, you can create a separate application object and use that instead of the global default::
+For the sake of simplicity, most examples in this tutorial use a module-level :func:`route` decorator to define routes. This adds routes to a global "default application", an instance of :class:`Bottle` that is automatically created the first time you call :func:`route`. Several other module-level decorators and functions relate to this default application, but if you prefer a more object oriented approach and don't mind the extra typing, you can create a separate application object and use that instead of the global one::
 
     from bottle import Bottle, run
 
@@ -113,7 +113,7 @@ In the last chapter we built a very simple web application with only a single ro
     def hello():
         return "Hello World!"
 
-The :func:`route` decorator links an URL path to a callback function, and adds a new route to the :ref:`default application <tutorial-default>`. An application with just one route is kind of boring, though. Let's create some more::
+The :func:`route` decorator links an URL path to a callback function, and adds a new route to the :ref:`default application <tutorial-default>`. An application with just one route is kind of boring, though. Let's add some more::
 
     @route('/')
     @route('/hello/:name')
@@ -141,14 +141,14 @@ Each URL fragment covered by a wildcard is passed to the callback function as a 
     def blog(year, month, day):
         ...
 
-As mentioned above, normal wildcards consume any characters but the slash (``/``) when compared to a request URL. This corresponds to :regexp:`([^/]+)` as a regular expression. If you expect a specific type of information (e.g. a year or a numeric ID), you can customize the pattern and narrow down the range of accepted URLs as follows::
+As mentioned above, normal wildcards consume any characters but the slash (``/``) if they are matched against a request URL. This corresponds to :regexp:`([^/]+)` as a regular expression. If you expect a specific type of information (e.g. a year or a numeric ID), you can customize the pattern and narrow down the range of accepted URLs as follows::
 
     @route('/archive/:year#[0-9]{4}#')
     def arcive(year):
         year = int(year)
         ...
 
-The custom regular pattern is enclosed in two hash characters (``#``). Please note that, even if the wildcard now only matches digits, all keyword arguments remain strings. If you need a different type, you have to check and convert the value explicitly in your callback function.
+The custom regular pattern is enclosed in two hash characters (``#``). Please note that, even if the wildcard now only matches digits, the keyword argument is still a string. If you need a different type, you have to check and convert the value explicitly in your callback function.
 
 Here are some more example to demonstrate the use of wildcards:
 
@@ -198,9 +198,9 @@ The POST method is commonly used for HTML form submission. This example shows ho
 
 In this example the ``/login`` URL is linked to two distinct callbacks, one for GET requests and another for POST requests. The first one displays a HTML form to the user. The second callback is invoked on a form submission and checks the login credentials the user entered into the form. The use of :attr:`Request.forms` is further described in the :ref:`tutorial-request` section.
 
-.. rubric:: HEAD and ANY Methods
+.. rubric:: Special Methods: HEAD and ANY
 
-The special HEAD method is used to ask for the response identical to the one that would correspond to a GET request, but without the response body. This is useful for retrieving meta-information about a resource without having to download the entire document. Bottle handles these requests automatically by falling back to the corresponding GET route and cutting off the request body, if present. You don't have to specify any HEAD routes yourself.
+The HEAD method is used to ask for the response identical to the one that would correspond to a GET request, but without the response body. This is useful for retrieving meta-information about a resource without having to download the entire document. Bottle handles these requests automatically by falling back to the corresponding GET route and cutting off the request body, if present. You don't have to specify any HEAD routes yourself.
 
 Additionally, the non-standard ANY method works as a low priority fallback: Routes that listen to ANY will match requests regardless of their HTTP method but only if no other more specific route is defined. This is helpful for *proxy-routes* that redirect requests to more specific sub-applications.
 
@@ -247,10 +247,10 @@ Error handlers are used only if your application returns or raises an :exc:`HTTP
 
 
 
-Detail: Routing Order
+Implementation Detail: Routing Order
 ------------------------------------------------------------------------------
 
-With the power of wildcards and regular expressions, it is possible to define overlapping routes. If multiple routes match the same URL, things get a bit tricky. To fully understand what happens in this case, you need to know in which order routes are checked by the router.
+With the power of wildcards and regular expressions it is possible to define overlapping routes. If multiple routes match the same URL, things get a bit tricky. To fully understand what happens in this case, you need to know in which order routes are checked by the router.
 
 First you should know that routes are grouped by their path rule. Two routes with the same path rule but different methods are grouped together and the first route determines the position of both routes. Fully identical routes (same path rule and method) replace previously defined routes, but keep the position of their predecessor.
 
