@@ -23,7 +23,7 @@
 Tutorial
 ========
 
-This tutorial introduces you to the concepts and features of the Bottle web framework. If you have questions not answered here, please check the :doc:`faq` page, file a ticket at the issue_ tracker or send an e-mail to the `mailing list <mailto:bottlepy@googlegroups.com>`_.
+This tutorial introduces you to the concepts and features of the Bottle web framework. If you have questions not answered here, please check the :doc:`faq` page, file a ticket at the issue_ tracker or send an e-mail to our `mailing list <mailto:bottlepy@googlegroups.com>`_.
 
 .. rubric:: A quick overview:
 
@@ -57,10 +57,10 @@ This will get you the latest development snapshot that includes all the new feat
 In either way, you'll need Python 2.5 or newer to run bottle applications. If you do not have permissions to install packages system-wide or simply don't want to, create a `virtualenv <http://pypi.python.org/pypi/virtualenv>`_ first.
 
 
-A minimal Bottle Application
+Quickstart: "Hello World"
 ==============================================================================
 
-This tutorial assumes you have Bottle either :ref:`installed or copied <installation>` into your project directory. Lets start with a very basic "Hello World" example::
+This tutorial assumes you have Bottle either :ref:`installed <installation>` or copied into your project directory. Lets start with a very basic "Hello World" example::
 
     from bottle import route, run
 
@@ -70,21 +70,22 @@ This tutorial assumes you have Bottle either :ref:`installed or copied <installa
 
     run(host='localhost', port=8080)
 
+This is it. Run this script, visit http://localhost:8080/hello and you will see "Hello World!" in your browser. Here is how it works:
 
-Whats happening here?
+The :func:`route` decorator binds a piece of code to an URL path. In this case, we link the ``/hello`` URL to the ``hello()`` function. This is called a `route` (hence the decorator name) and is the most important concept of this framework. You can define as many routes as you want. Whenever a browser requests an URL, the associated function is called and the return value is sent back to the browser. Its as simple as that.
 
-1. First we import some Bottle components. The :func:`route` decorator and the :func:`run` function.
-2. The :func:`route` :term:`decorator` is used do bind a piece of code to an URL. In this example we want to answer requests to ``/hello``.
-3. This function is the :term:`handler function` or :term:`callback` for the ``/hello`` route. It is called every time someone requests the ``/hello`` URL and is responsible for generating the page content.
-4. For now, we just return a simple string to the browser.
-5. In the last line we start the actual HTTP server. The default is a development server running on 'localhost' port 8080 and serving requests until you hit :kbd:`Control-c`.
+The :func:`run` call in the last line starts a built-in development server that runs on `localhost` port 8080 and serves requests until you hit :kbd:`Control-c`. You can switch the server backend later, but for now a development server is all we need. It requires no setup at all and is an incredibly painless way to get your application up and running for local tests.
 
-This is it. Run this script, visit http://localhost:8080/hello and you will see "Hello World!" in your browser. Of course this is a very simple example, but it shows the basic concept of how applications are built with Bottle. Continue reading and you'll see what else is possible.
+Of course this is a very simple example, but it shows the basic concept of how applications are built with Bottle. Continue reading and you'll see what else is possible.
 
 
-.. rubric:: The Application Object
 
-For the sake of simplicity, most examples in this tutorial use a module-level :func:`route` decorator to bind routes. This decorator adds routes to a global application object that is created for you automatically. If you prefer a more explicit way to define your application and don't mind the extra typing, you can create a separate application object and use that instead of the global one::
+.. _tutorial-default:
+
+The `Default Application`
+------------------------------------------------------------------------------
+
+For the sake of simplicity, most examples in this tutorial use a module-level :func:`route` decorator to define routes. This adds routes to a global "default application", an instance of :class:`Bottle` that is automatically created the first time you call :func:`route`. Several other module-level decorators or functions relate to this default application, but if you prefer a more object oriented approach and don't mind the extra typing, you can create a separate application object and use that instead of the global default::
 
     from bottle import Bottle, run
 
@@ -106,41 +107,50 @@ The object-oriented approach is further described in the :ref:`default-app` sect
 Request Routing
 ==============================================================================
 
-As you have learned before, applications consist of *routes* that map *URLs* to *callback functions*. These callbacks are executed once for each request that matches the route. The return value is sent to the client. You can add any number of routes to a callback simply by applying the :func:`route` decorator::
-
-    from bottle import route
-
-    @route('/')
-    @route('/index.html')
-    def index():
-        return "<a href='/hello'>Go to Hello World page</a>"
+In the last chapter we built a very simple web application with only a single route. Here is the routing part of the "Hello World" example again::
 
     @route('/hello')
     def hello():
         return "Hello World!"
 
-As you can see, URLs and routes have nothing to do with actual files on the web server. Routes are unique names for your callbacks, nothing more and nothing less. All URLs not covered by a route are answered with a "404 Page not found" error page.
+The :func:`route` decorator links an URL path to a callback function, and adds a new route to the :ref:`default application <tutorial-default>`. An application with just one route is kind of boring, though. Let's create some more::
+
+    @route('/')
+    @route('/hello/:name')
+    def greet(name='Stranger'):
+        return 'Hello %s, how are you?' % name
+
+This example demonstrates two important things: You can bind more than one route to a single callback, and you can add wildcards to URLs and extract parts of the URL as keyword arguments.
 
 
 
 .. _tutorial-dynamic-routes:
 
 Dynamic Routes
-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
-Bottle has a special syntax to add wildcards to a route and allow a single route to match a wide range of URLs. These *dynamic routes* are often used by blogs or wikis to create nice looking and meaningful URLs such as ``/archive/2010/04/21`` or ``/wiki/Page_Title``. Why? Because `cool URIs don't change <http://www.w3.org/Provider/Style/URI>`_. Let's add a ``:name`` wildcard to our last example::
+Routes with wildcards are called `dynamic routes` (as opposed to `static routes`) and match more than one URL at the same time. Wildcards start with a colon followed by a name and they match anything but the slash character. For example, the route ``/hello/:name`` accepts requests for ``/hello/alice`` as well as ``/hello/bob`` and any other URL that starts with ``/hello/`` followed by a name.
 
-    @route('/hello/:name')
-    def hello(name):
-        return "Hello %s!" % name
+Each URL fragment covered by a wildcard is passed to the callback function as a keyword argument. Nice looking and meaningful URLs such as ``/blog/2010/04/21`` or ``/wiki/Page_Title`` are implemented this way. Here are some more examples along with the URLs they'd match::
 
-This dynamic route will match ``/hello/alice`` as well as ``/hello/bob``. Each URL fragment covered by a wildcard is passed to the callback function as a keyword argument so you can use the information in your application. Normal wildcards consume everything up to the next slash. You can add a regular expression to change the default behavior::
+    @route('/:action/:user')          # matches /follow/defnull
+    def api(action, user):
+        ...
 
-    @route('/object/:id#[0-9]+#')
-    def view_object(id):
-        return "Object ID: %d" % int(id)
+    @route('/blog/:year-:month-:day') # matches /blog/2010-04-21
+    def blog(year, month, day):
+        ...
 
-Here are some example to demonstrate the use of wildcards:
+As mentioned above, normal wildcards consume any characters but the slash (``/``) when compared to a request URL. This corresponds to :regexp:`([^/]+)` as a regular expression. If you expect a specific type of information (e.g. a year or a numeric ID), you can customize the pattern and narrow down the range of accepted URLs as follows::
+
+    @route('/archive/:year#[0-9]{4}#')
+    def arcive(year):
+        year = int(year)
+        ...
+
+The custom regular pattern is enclosed in two hash characters (``#``). Please note that, even if the wildcard now only matches digits, all keyword arguments remain strings. If you need a different type, you have to check and convert the value explicitly in your callback function.
+
+Here are some more example to demonstrate the use of wildcards:
 
 ========================   ======================  ========================
 Route                      URL                     URL Arguments
@@ -157,29 +167,26 @@ Route                      URL                     URL Arguments
 ``/blog/:y-:m-:d``         ``/blog/2000-05-06``    y='2000', m='05', d='06'
 ========================   ======================  ========================
 
-As you can see, all extracted URL arguments are strings even if some wildcards are configured to only match digits. If you need a specific type, you may check and convert the value in your callback function.
 
 HTTP Request Methods
 ------------------------------------------------------------------------------
 
 .. __: http_method_
 
-The HTTP protocol defines several `request methods`__ (sometimes referred to as "verbs") for different tasks. GET is the default for all routes with no other method specified. These routes will match GET requests only. To handle other methods such as POST, PUT or DELETE, you may add a ``method`` keyword argument to the :func:`route` decorator or use one of the four alternative decorators: :func:`get`, :func:`post`, :func:`put` or :func:`delete`.
+The HTTP protocol defines several `request methods`__ (sometimes referred to as "verbs") for different tasks. GET is the default for all routes with no other method specified. These routes will match GET requests only. To handle other methods such as POST, PUT or DELETE, add a ``method`` keyword argument to the :func:`route` decorator or use one of the four alternative decorators: :func:`get`, :func:`post`, :func:`put` or :func:`delete`.
 
 The POST method is commonly used for HTML form submission. This example shows how to handle a login form using POST::
 
     from bottle import get, post, request
 
-    #@route('/login')
-    @get('/login')
+    @get('/login') # or @route('/login')
     def login_form():
         return '''<form method="POST">
                     <input name="name"     type="text" />
                     <input name="password" type="password" />
                   </from>'''
 
-    #@route('/login', method='POST')
-    @post('/login')
+    @post('/login') # or @route('/login', method='POST')
     def login_submit():
         name     = request.forms.get('name')
         password = request.forms.get('password')
@@ -188,9 +195,9 @@ The POST method is commonly used for HTML form submission. This example shows ho
         else:
             return "<p>Login failed</p>"
 
-In this example the ``/login`` URL is bound to two distinct callbacks, one for GET requests and another for POST requests. The first one displays a HTML form to the user. The second callback is invoked on a form submission and checks the login credentials the user entered into the form. The use of :attr:`Request.forms` is further described in the :ref:`tutorial-request` section.
+In this example the ``/login`` URL is linked to two distinct callbacks, one for GET requests and another for POST requests. The first one displays a HTML form to the user. The second callback is invoked on a form submission and checks the login credentials the user entered into the form. The use of :attr:`Request.forms` is further described in the :ref:`tutorial-request` section.
 
-.. rubric:: Automatic Fallbacks
+.. rubric:: HEAD and ANY Methods
 
 The special HEAD method is used to ask for the response identical to the one that would correspond to a GET request, but without the response body. This is useful for retrieving meta-information about a resource without having to download the entire document. Bottle handles these requests automatically by falling back to the corresponding GET route and cutting off the request body, if present. You don't have to specify any HEAD routes yourself.
 
