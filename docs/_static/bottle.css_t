@@ -63,6 +63,23 @@ div.body {
   line-height: 1.4em;
 }
 
+div.body h2 {
+  background-color: {{ color_border }};
+  color: {{ textcolor_border }};
+  margin: 2em -15px 1em -30px;
+  padding: 7px 15px 5px 15px;
+  border-top-left-radius: 15px;
+  -moz-border-radius-topleft: 15px;
+  -webkit-border-top-left-radius: 15px;
+  border-bottom-left-radius: 15px;
+  -moz-border-radius-bottomleft: 15px;
+  -webkit-border-bottom-left-radius: 15px;
+}
+
+div.body h2 a {
+  color: {{ linkcolor_border }};
+}
+
 a {
   color: {{ linkcolor_document }};
   text-decoration: none;
