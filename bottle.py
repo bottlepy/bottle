@@ -1686,9 +1686,9 @@ class ConfigDict(dict):
     '''
 
     def __getattr__(self, key):
-        if key in self: return self[key]
-        if key[0].isupper(): return self.setdefault(key, ConfigDict())
-        return
+        if key not in self and key[0].isupper():
+            self[key] = ConfigDict()
+        return self.get(key)
 
     def __setattr__(self, key, value):
         if hasattr(dict, key):
