@@ -168,6 +168,7 @@ Route                      URL                     URL Arguments
 ========================   ======================  ========================
 
 
+
 HTTP Request Methods
 ------------------------------------------------------------------------------
 
@@ -205,6 +206,8 @@ Additionally, the non-standard ANY method works as a low priority fallback: Rout
 
 To sum it up: HEAD requests fall back to GET routes and all requests fall back to ANY routes, but only if there is no matching route for the original request method. It's as simple as that.
 
+
+
 Routing Static Files
 ------------------------------------------------------------------------------
 
@@ -224,6 +227,8 @@ The :func:`static_file` function is a helper to serve files in a safe and conven
 Be careful when specifying a relative root-path such as ``root='./static/files'``. The working directory (``./``) and the project directory are not always the same.
 
 
+
+
 .. _tutorial-errorhandling:
 
 Error Pages
@@ -238,6 +243,29 @@ If anything goes wrong, Bottle displays an informative but fairly boring error p
 From now on, `404 File not Found` errors will display a custom error page to the user. The only parameter passed to the error-handler is an instance of :exc:`HTTPError`. Apart from that, an error-handler is quite similar to a regular request callback. You can read from :data:`request`, write to :data:`response` and return any supported data-type except for :exc:`HTTPError` instances.
 
 Error handlers are used only if your application returns or raises an :exc:`HTTPError` exception (:func:`abort` does just that). Changing :attr:`Request.status` or returning :exc:`HTTPResponse` won't trigger the error handler.
+
+
+
+
+Detail: Routing Order
+------------------------------------------------------------------------------
+
+With the power of wildcards and regular expressions, it is possible to define overlapping routes. If multiple routes match the same URL, things get a bit tricky. To fully understand what happens in this case, you need to know in which order routes are checked by the router.
+
+First you should know that routes are grouped by their path rule. Two routes with the same path rule but different methods are grouped together and the first route determines the position of both routes. Fully identical routes (same path rule and method) replace previously defined routes, but keep the position of their predecessor.
+
+Static routes are checked first. This is mostly for performance reasons and can be switched off, but is currently the default. If no static route matches the request, the dynamic routes are checked in the order they were defined. The first hit ends the search. If no rule matched, a "404 Page not found" error is returned.
+
+In a second step, the request method is checked. If no exact match is found, and the request method is HEAD, the router checks for a GET route. Otherwise, it checks for an ANY route. If that fails too, a "405 Method not allowed" error is returned.
+
+Here is an example where this might bite you::
+
+    @route('/:action/:name', method='GET')
+    @route('/save/:name', method='POST')
+
+The second route will never hit. Even POST requests don't arrive at the second route because the request method is checked in a separate step. The router stops at the first route which matches the request path, then checks for a valid request method, can't find one and raises a 405 error.
+
+Sounds complicated, and it is. That is the price for performance. It is best to avoid ambiguous routes at all and choose unique prefixes for each route. This implementation detail may change in the future, though. We are working on it.
 
 
 

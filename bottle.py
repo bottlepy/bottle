@@ -272,16 +272,17 @@ class Router(object):
     def syntax(cls):
         return re.compile(r'(?<!\\):([a-zA-Z_][a-zA-Z_0-9]*)?(?:#(.*?)#)?')
 
-    def __init__(self):
+    def __init__(self, strict=False):
         self.routes = {}  # A {rule: {method: target}} mapping
         self.rules  = []  # An ordered list of rules
         self.named  = {}  # A name->(rule, build_info) mapping
         self.static = {}  # Cache for static routes: {path: {method: target}}
         self.dynamic = [] # Cache for dynamic routes. See _compile()
+        #: If true, static routes are no longer checked first.
+        self.strict_order = strict
 
     def add(self, rule, method, target, name=None):
         ''' Add a new route or replace the target for an existing route. '''
-
         if rule in self.routes:
             self.routes[rule][method.upper()] = target
         else:
@@ -374,7 +375,7 @@ class Router(object):
             return m.group(0) if len(m.group(1)) % 2 else m.group(1) + '(?:'
         for rule in self.rules:
             target = self.routes[rule]
-            if not self.syntax.search(rule):
+            if not self.syntax.search(rule) and not self.strict_order:
                 self.static[rule.replace('\\:',':')] = target
                 continue
             gpat = self._compile_pattern(rule)
