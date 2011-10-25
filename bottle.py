@@ -851,6 +851,10 @@ class BaseRequest(DictMixin):
         ''' A :class:`WSGIHeaderDict` that provides case-insensitive access to
             HTTP request headers. '''
         return WSGIHeaderDict(self.environ)
+    
+    def get_header(self, name, default=None):
+        ''' Return the value of a request header, or a given default value. '''
+        return self.headers.get(name, default)
 
     @DictProperty('environ', 'bottle.request.cookies', read_only=True)
     def cookies(self):
