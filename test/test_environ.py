@@ -452,14 +452,34 @@ class TestResponse(unittest.TestCase):
         self.assertEqual(rs.charset, 'UTF-8')
 
     def test_set_cookie(self):
-        response = BaseResponse()
-        response.set_cookie('name', 'value', max_age=5)
-        response.set_cookie('name2', 'value 2', path='/foo')
-        cookies = [value for name, value in response.wsgiheader()
+        r = BaseResponse()
+        r.set_cookie('name1', 'value', max_age=5)
+        r.set_cookie('name2', 'value 2', path='/foo')
+        cookies = [value for name, value in r.headerlist
                    if name.title() == 'Set-Cookie']
         cookies.sort()
-        self.assertTrue(cookies[0], 'name=value; Max-Age=5')
-        self.assertTrue(cookies[1], 'name2="value 2"; Path=/foo')
+        self.assertEqual(cookies[0], 'name1=value; Max-Age=5')
+        self.assertEqual(cookies[1], 'name2="value 2"; Path=/foo')
+
+    def test_set_cookie_maxage(self):
+        import datetime
+        r = BaseResponse()
+        r.set_cookie('name1', 'value', max_age=5)
+        r.set_cookie('name2', 'value', max_age=datetime.timedelta(days=1))
+        cookies = sorted([value for name, value in r.headerlist
+                   if name.title() == 'Set-Cookie'])
+        self.assertEqual(cookies[0], 'name1=value; Max-Age=5')
+        self.assertEqual(cookies[1], 'name2=value; Max-Age=86400')
+
+    def test_set_cookie_expires(self):
+        import datetime
+        r = BaseResponse()
+        r.set_cookie('name1', 'value', expires=42)
+        r.set_cookie('name2', 'value', expires=datetime.datetime(1970,1,1,0,0,43))
+        cookies = sorted([value for name, value in r.headerlist
+                   if name.title() == 'Set-Cookie'])
+        self.assertEqual(cookies[0], 'name1=value; expires=Thu, 01 Jan 1970 00:00:42 GMT')
+        self.assertEqual(cookies[1], 'name2=value; expires=Thu, 01 Jan 1970 00:00:43 GMT')
 
     def test_delete_cookie(self):
         response = BaseResponse()

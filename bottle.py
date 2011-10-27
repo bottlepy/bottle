@@ -39,6 +39,7 @@ import time
 import warnings
 
 from Cookie import SimpleCookie
+from datetime import date as datedate, datetime, timedelta
 from tempfile import TemporaryFile
 from traceback import format_exc
 from urlparse import urljoin, SplitResult as UrlSplitResult
@@ -851,7 +852,7 @@ class BaseRequest(DictMixin):
         ''' A :class:`WSGIHeaderDict` that provides case-insensitive access to
             HTTP request headers. '''
         return WSGIHeaderDict(self.environ)
-    
+
     def get_header(self, name, default=None):
         ''' Return the value of a request header, or a given default value. '''
         return self.headers.get(name, default)
@@ -1309,11 +1310,11 @@ class BaseResponse(object):
             self._cookies = SimpleCookie()
         return self._cookies
 
-    def set_cookie(self, key, value, secret=None, **options):
+    def set_cookie(self, name, value, secret=None, **options):
         ''' Create a new cookie or replace an old one. If the `secret` parameter is
             set, create a `Signed Cookie` (described below).
 
-            :param key: the name of the cookie.
+            :param name: the name of the cookie.
             :param value: the value of the cookie.
             :param secret: a signature key required for signed cookies.
 
@@ -1346,14 +1347,24 @@ class BaseResponse(object):
             self._cookies = SimpleCookie()
 
         if secret:
-            value = touni(cookie_encode((key, value), secret))
+            value = touni(cookie_encode((name, value), secret))
         elif not isinstance(value, basestring):
             raise TypeError('Secret key missing for non-string Cookie.')
 
         if len(value) > 4096: raise ValueError('Cookie value to long.')
-        self._cookies[key] = value
-        for k, v in options.iteritems():
-            self._cookies[key][k.replace('_', '-')] = v
+        self._cookies[name] = value
+
+        for key, value in options.iteritems():
+            if key == 'max_age':
+                if isinstance(value, timedelta):
+                    value = value.seconds + value.days * 24 * 3600
+            if key == 'expires':
+                if isinstance(value, (datedate, datetime)):
+                    value = value.timetuple()
+                elif isinstance(value, (int, float)):
+                    value = time.gmtime(value)
+                value = time.strftime("%a, %d %b %Y %H:%M:%S GMT", value)
+            self._cookies[name][key.replace('_', '-')] = value
 
     def delete_cookie(self, key, **kwargs):
         ''' Delete a cookie. Be sure to use the same `domain` and `path`
