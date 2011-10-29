@@ -2158,6 +2158,25 @@ class GeventServer(ServerAdapter):
         wsgi.WSGIServer((self.host, self.port), handler).serve_forever()
 
 
+class SocketIOServer(ServerAdapter):
+    """ Untested. Options:
+
+        * `monkey` (default: True) fixes the stdlib to use greenthreads.
+        * `policy_server` (default: False) enables Flash sockets.
+        * `namespace` (default: 'socket.io') url namespace to use
+            scheme://host/namespace/protocolversion/transportid/sessionid/(?query)
+    """
+    def run(self, handler):
+        from socketio import SocketIOServer
+        from gevent import monkey, local
+        if self.options.get('monkey', True):
+            if not threading.local is local.local: monkey.patch_all()
+        namespace = self.options.get('namespace', 'socket.io')
+        policy_server = self.options.get('policy_server', False)
+        SocketIOServer((self.host, self.port), handler, namespace=namespace,
+                         policy_server=policy_server).serve_forever()
+
+
 class GunicornServer(ServerAdapter):
     """ Untested. See http://gunicorn.org/configure.html for options. """
     def run(self, handler):
@@ -2223,6 +2242,7 @@ server_names = {
     'gunicorn': GunicornServer,
     'eventlet': EventletServer,
     'gevent': GeventServer,
+    'socketio': SocketIOServer,
     'rocket': RocketServer,
     'bjoern' : BjoernServer,
     'auto': AutoServer,
