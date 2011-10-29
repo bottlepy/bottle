@@ -105,6 +105,9 @@ class TestGunicornServer(TestServer):
 class TestGeventServer(TestServer):
     server = 'gevent'
 
+class TestSocketIOServer(TestServer):
+    server = 'socketio'
+
 class TestEventletServer(TestServer):
     server = 'eventlet'
 
