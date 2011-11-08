@@ -120,7 +120,6 @@ def makelist(data):
     elif data: return [data]
     else: return []
 
-
 class DictProperty(object):
     ''' Property that maps to a key in a local dict-like attribute. '''
     def __init__(self, attr, key=None, read_only=False):
@@ -233,14 +232,13 @@ class RouteReset(BottleException):
     """ If raised by a plugin or request handler, the route is reset and all
         plugins are re-applied. """
 
+class RouterUnknownModeError(RouteError): pass
 
 class RouteSyntaxError(RouteError):
     """ The route parser found something not supported by this router """
 
-
 class RouteBuildError(RouteError):
     """ The route could not been built """
-
 
 class Router(object):
     ''' A Router is an ordered collection of route->target pairs. It is used to
@@ -250,81 +248,153 @@ class Router(object):
         and a HTTP method.
 
         The path-rule is either a static path (e.g. `/contact`) or a dynamic
-        path that contains wildcards (e.g. `/wiki/:page`). By default, wildcards
-        consume characters up to the next slash (`/`). To change that, you may
-        add a regular expression pattern (e.g. `/wiki/:page#[a-z]+#`).
-
-        For performance reasons, static routes (rules without wildcards) are
-        checked first. Dynamic routes are searched in order. Try to avoid
-        ambiguous or overlapping rules.
-
-        The HTTP method string matches only on equality, with two exceptions:
-          * ´GET´ routes also match ´HEAD´ requests if there is no appropriate
-            ´HEAD´ route installed.
-          * ´ANY´ routes do match if there is no other suitable route installed.
-
-        An optional ``name`` parameter is used by :meth:`build` to identify
-        routes.
+        path that contains wildcards (e.g. `/wiki/<page>`). The wildcard syntax
+        and details on the matching order are described in docs:`routing`.
     '''
 
-    default = '[^/]+'
-
-    @lazy_attribute
-    def syntax(cls):
-        return re.compile(r'(?<!\\):([a-zA-Z_][a-zA-Z_0-9]*)?(?:#(.*?)#)?')
+    default_pattern = '[^/]+'
+    #: Sorry for the mess. It works. Trust me.
+    rule_syntax = re.compile('(\\\\*)'\
+        '(?:(?::([a-zA-Z_][a-zA-Z_0-9]*)?()(?:#(.*?)#)?)'\
+          '|(?:<([a-zA-Z_][a-zA-Z_0-9]*)?(?::([a-zA-Z_]*)'\
+            '(?::((?:\\\\.|[^\\\\>]+)+)?)?)?>))')
 
     def __init__(self, strict=False):
-        self.routes = {}  # A {rule: {method: target}} mapping
-        self.rules  = []  # An ordered list of rules
-        self.named  = {}  # A name->(rule, build_info) mapping
-        self.static = {}  # Cache for static routes: {path: {method: target}}
-        self.dynamic = [] # Cache for dynamic routes. See _compile()
+        self.rules    = {} # A {rule: Rule} mapping
+        self.builder  = {} # A rule/name->build_info mapping
+        self.static   = {} # Cache for static routes: {path: {method: target}}
+        self.dynamic  = [] # Cache for dynamic routes. See _compile()
         #: If true, static routes are no longer checked first.
         self.strict_order = strict
+        self.modes = {'re': self.re_filter, 'int': self.int_filter,
+                      'float': self.re_filter, 'path': self.path_filter}
+
+    def re_filter(self, conf):
+        return conf or self.default_pattern, None, None
+
+    def int_filter(self, conf):
+        return r'-?\d+', int, lambda x: str(int(x))
+
+    def float_filter(self, conf):
+        return r'-?\d*\.\d+', float, lambda x: str(float(x))
+
+    def path_filter(self, conf):
+        return r'.*?', None, None
+    
+    def add_filter(self, name, func):
+        ''' Add a filter. The provided function is called with the configuration
+        string as parameter and must return a (regexp, to_python, to_url) tuple.
+        The first element is a string, the last two are callables or None. '''
+        self.modes[name] = func
+    
+    def parse_rule(self, rule):
+        ''' Parses a rule into a (name, mode, conf) token stream. If mode is
+            None, name contains a static rule part. '''
+        offset, prefix = 0, ''
+        for match in self.rule_syntax.finditer(rule):
+            prefix += rule[offset:match.start()]
+            g = match.groups()
+            if len(g[0])%2: # Escaped wildcard
+                print prefix, offset, g[0]
+                prefix += match.group(0)[len(g[0]):]
+                offset = match.end()
+                continue
+            if prefix: yield prefix, None, None
+            name, mode, conf = g[1:4] if not g[2] is None else g[4:7]
+            if not mode: mode = 'default'
+            yield name, mode, conf or None
+            offset, prefix = match.end(), ''
+        if offset <= len(rule) or prefix:
+            yield prefix+rule[offset:], None, None
 
     def add(self, rule, method, target, name=None):
         ''' Add a new route or replace the target for an existing route. '''
-        if rule in self.routes:
-            self.routes[rule][method.upper()] = target
-        else:
-            self.routes[rule] = {method.upper(): target}
-            self.rules.append(rule)
-            if self.static or self.dynamic: # Clear precompiler cache.
-                self.static, self.dynamic = {}, {}
-        if name:
-            self.named[name] = (rule, None)
+        if rule in self.rules:
+            self.rules[rule][method] = target
+            if name: self.builder[name] = self.builder[rule]
+            return
 
-    def build(self, _name, *anon, **args):
-        ''' Return a string that matches a named route. Use keyword arguments
-            to fill out named wildcards. Remaining arguments are appended as a
-            query string. Raises RouteBuildError or KeyError.'''
-        if _name not in self.named:
-            raise RouteBuildError("No route with that name.", _name)
-        rule, pairs = self.named[_name]
-        if not pairs:
-            token = self.syntax.split(rule)
-            parts = [p.replace('\\:',':') for p in token[::3]]
-            names = token[1::3]
-            if len(parts) > len(names): names.append(None)
-            pairs = zip(parts, names)
-            self.named[_name] = (rule, pairs)
+        target = self.rules[rule] = {method: target}
+
+        # Build pattern and other structures for dynamic routes
+        anons = 0      # Number of anonymous wildcards
+        pattern = ''   # Regular expression  pattern
+        filters = []   # Lists of wildcard input filters
+        builder = []   # Data structure for the URL builder
+        is_static = True
+        for key, mode, conf in self.parse_rule(rule):
+            if mode:
+                is_static = False
+                mask, in_filter, out_filter = self.modes[mode](conf)
+                if key:
+                    pattern += '(?P<%s>%s)' % (key, mask)
+                else:
+                    pattern += '(?:%s)' % mask
+                    key = 'anon%d' % anons; anons += 1
+                if in_filter: filters.append((key, in_filter))
+                builder.append((key, out_filter or str))
+            elif key:
+                pattern += re.escape(key)
+                builder.append((None, key))
+        self.builder[rule] = builder
+        if name: self.builder[name] = builder
+
+        if is_static and not self.strict_order:
+            self.static[self.build(rule)] = target
+            return
+
+        def fpat_sub(m):
+            return m.group(0) if len(m.group(1)) % 2 else m.group(1) + '(?:'
+        flat_pattern = re.sub(r'(\\*)(\(\?P<[^>]*>|\((?!\?))', fpat_sub, pattern)
+
         try:
-            anon = list(anon)
-            url = [s if k is None
-                   else s+str(args.pop(k)) if k else s+str(anon.pop())
-                   for s, k in pairs]
-        except IndexError:
-            msg = "Not enough arguments to fill out anonymous wildcards."
-            raise RouteBuildError(msg)
-        except KeyError, e:
-            raise RouteBuildError(*e.args)
+            re_match = re.compile('^(%s)$' % pattern).match
+        except re.error, e:
+            raise RouteSyntaxError("Could not add Route: %s (%s)" % (rule, e))
 
-        if args: url += ['?', urlencode(args)]
-        return ''.join(url)
+        def match(path):
+            """ Return an url-argument dictionary. """
+            url_args = re_match(path).groupdict()
+            for name, wildcard_filter in filters:
+                try:
+                    url_args[name] = wildcard_filter(url_args[name])
+                except ValueError:
+                    raise HTTPError(400, 'Path has wrong format.')
+            return url_args
+
+        try:
+            combined = '%s|(^%s$)' % (self.dynamic[-1][0].pattern, flat_pattern)
+            self.dynamic[-1] = (re.compile(combined), self.dynamic[-1][1])
+            self.dynamic[-1][1].append((match, target))
+        except (AssertionError, IndexError), e: # AssertionError: Too many groups
+            self.dynamic.append((re.compile('(^%s$)' % flat_pattern),
+                                [(match, target)]))
+        return match
+
+    def build(self, _name, *anons, **query):
+        ''' Build an URL by filling the wildcards in a rule. '''
+        builder = self.builder.get(_name)
+        if not builder: raise RouteBuildError("No route with that name.", _name)
+        try:
+            for i, value in enumerate(anons): query['anon%d'%i] = value
+            url = ''.join([f(query.pop(n)) if n else f for (n,f) in builder])
+            return url if not query else url+'?'+urlencode(query)
+        except KeyError, e:
+            raise RouteBuildError('Missing URL argument: %r' % e.args[0])
 
     def match(self, environ):
-        ''' Return a (target, url_agrs) tuple or raise HTTPError(404/405). '''
-        targets, urlargs = self._match_path(environ)
+        ''' Return a (target, url_agrs) tuple or raise HTTPError(400/404/405). '''
+        path, targets, urlargs = environ['PATH_INFO'] or '/', None, {}
+        if path in self.static:
+            targets = self.static[path]
+        else:
+            for combined, rules in self.dynamic:
+                match = combined.match(path)
+                if not match: continue
+                getargs, targets = rules[match.lastindex - 1]
+                urlargs = getargs(path) if getargs else {}
+                break
+
         if not targets:
             raise HTTPError(404, "Not found: " + repr(environ['PATH_INFO']))
         method = environ['REQUEST_METHOD'].upper()
@@ -340,71 +410,14 @@ class Router(object):
         raise HTTPError(405, "Method not allowed.",
                         header=[('Allow',",".join(allowed))])
 
-    def _match_path(self, environ):
-        ''' Optimized PATH_INFO matcher. '''
-        path = environ['PATH_INFO'] or '/'
-        # Assume we are in a warm state. Search compiled rules first.
-        match = self.static.get(path)
-        if match: return match, {}
-        for combined, rules in self.dynamic:
-            match = combined.match(path)
-            if not match: continue
-            gpat, match = rules[match.lastindex - 1]
-            return match, gpat(path).groupdict() if gpat else {}
-        # Lazy-check if we are really in a warm state. If yes, stop here.
-        if self.static or self.dynamic or not self.routes: return None, {}
-        # Cold state: We have not compiled any rules yet. Do so and try again.
-        if not environ.get('wsgi.run_once'):
-            self._compile()
-            return self._match_path(environ)
-        # For run_once (CGI) environments, don't compile. Just check one by one.
-        epath = path.replace(':','\\:') # Turn path into its own static rule.
-        match = self.routes.get(epath) # This returns static rule only.
-        if match: return match, {}
-        for rule in self.rules:
-            #: Skip static routes to reduce re.compile() calls.
-            if rule.count(':') < rule.count('\\:'): continue
-            match = self._compile_pattern(rule).match(path)
-            if match: return self.routes[rule], match.groupdict()
-        return None, {}
-
-    def _compile(self):
-        ''' Prepare static and dynamic search structures. '''
-        self.static = {}
-        self.dynamic = []
-        def fpat_sub(m):
-            return m.group(0) if len(m.group(1)) % 2 else m.group(1) + '(?:'
-        for rule in self.rules:
-            target = self.routes[rule]
-            if not self.syntax.search(rule) and not self.strict_order:
-                self.static[rule.replace('\\:',':')] = target
-                continue
-            gpat = self._compile_pattern(rule)
-            fpat = re.sub(r'(\\*)(\(\?P<[^>]*>|\((?!\?))', fpat_sub, gpat.pattern)
-            gpat = gpat.match if gpat.groupindex else None
-            try:
-                combined = '%s|(%s)' % (self.dynamic[-1][0].pattern, fpat)
-                self.dynamic[-1] = (re.compile(combined), self.dynamic[-1][1])
-                self.dynamic[-1][1].append((gpat, target))
-            except (AssertionError, IndexError), e: # AssertionError: Too many groups
-                self.dynamic.append((re.compile('(^%s$)'%fpat),
-                                    [(gpat, target)]))
-            except re.error, e:
-                raise RouteSyntaxError("Could not add Route: %s (%s)" % (rule, e))
-
-    def _compile_pattern(self, rule):
-        ''' Return a regular expression with named groups for each wildcard. '''
-        out = ''
-        for i, part in enumerate(self.syntax.split(rule)):
-            if i%3 == 0:   out += re.escape(part.replace('\\:',':'))
-            elif i%3 == 1: out += '(?P<%s>' % part if part else '(?:'
-            else:          out += '%s)' % (part or '[^/]+')
-        return re.compile('^%s$'%out)
 
 
 class Route(object):
     ''' This class wraps a route callback along with route specific metadata and
-        configuration and applies Plugins on demand. '''
+        configuration and applies Plugins on demand. It is also responsible for
+        turing an URL path rule into a regular expression usable by the Router.
+    '''
+
 
     def __init__(self, app, rule, method, callback, name=None,
                  plugins=None, skiplist=None, **config):
@@ -504,8 +517,8 @@ class Bottle(object):
 
         self.error_handler = {}
         #: If true, most exceptions are catched and returned as :exc:`HTTPError`
-        self.catchall = catchall
         self.config = ConfigDict(config or {})
+        self.catchall = catchall
         #: An instance of :class:`HooksPlugin`. Empty by default.
         self.hooks = HooksPlugin()
         self.install(self.hooks)
@@ -2264,11 +2277,11 @@ def load_app(target):
         application object. See :func:`load` for the target parameter. """
     global NORUN; NORUN, nr_old = True, NORUN
     try:
-        tmp = app.push() # Create a new "default application"
+        tmp = default_app.push() # Create a new "default application"
         rv = load(target) # Import the target module
-        app.remove(tmp) # Remove the temporary added default application
         return rv if isinstance(rv, Bottle) else tmp
     finally:
+        default_app.remove(tmp) # Remove the temporary added default application
         NORUN = nr_old
 
 
@@ -2292,12 +2305,9 @@ def run(app=None, server='wsgiref', host='127.0.0.1', port=8080,
      """
     if NORUN: return
     app = app or default_app()
-    if isinstance(app, basestring):
-        app = load_app(app)
-    if isinstance(server, basestring):
-        server = server_names.get(server)
-    if isinstance(server, type):
-        server = server(host=host, port=port, **kargs)
+    if isinstance(app, basestring):    app = load_app(app)
+    if isinstance(server, basestring): server = server_names.get(server)
+    if isinstance(server, type):       server = server(host=host, port=port, **kargs)
     if not isinstance(server, ServerAdapter):
         raise RuntimeError("Server must be a subclass of ServerAdapter")
     server.quiet = server.quiet or quiet

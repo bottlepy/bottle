@@ -34,6 +34,22 @@ class TestRouter(unittest.TestCase):
         self.assertMatches('/:#anon#/match', '/anon/match') # Anon wildcards
         self.assertRaises(bottle.HTTPError, self.match, '//no/m/at/ch/')
 
+    def testNeewSyntax(self):
+        self.assertMatches('/static', '/static')
+        self.assertMatches('/\\<its>/<:re:.+>/<test>/<name:re:[a-z]+>/',
+                           '/<its>/a/cruel/world/',
+                           test='cruel', name='world')
+        self.assertMatches('/<test>', '/test', test='test') # No tail
+        self.assertMatches('<test>/', 'test/', test='test') # No head
+        self.assertMatches('/<test>/', '/test/', test='test') # Middle
+        self.assertMatches('<test>', 'test', test='test') # Full wildcard
+        self.assertMatches('/<:re:anon>/match', '/anon/match') # Anon wildcards
+        self.assertRaises(bottle.HTTPError, self.match, '//no/m/at/ch/')
+
+    def testIntFilter(self):
+        self.assertMatches('/object/<id:int>', '/object/567', id=567)
+        self.assertRaises(bottle.HTTPError, self.match, '/object/abc')
+
     def testWildcardNames(self):
         self.assertMatches('/alpha/:abc', '/alpha/alpha', abc='alpha')
         self.assertMatches('/alnum/:md5', '/alnum/sha1', md5='sha1')
@@ -60,9 +76,10 @@ class TestRouter(unittest.TestCase):
         # RouteBuildError: No route found with name 'test'.
         self.assertRaises(bottle.RouteBuildError, build, 'testroute')
         # RouteBuildError: Missing parameter 'test' in route 'testroute'
-        #self.assertRaises(bottle.RouteBuildError, build, 'testroute', test='hello', name='1234')
-        # RouteBuildError: Parameter 'name' does not match pattern for route 'testroute': '[a-z]+'
-        #self.assertRaises(bottle.RouteBuildError, build, 'anonroute')
+        self.assertRaises(bottle.RouteBuildError, build, 'anonroute')
+        # RouteBuildError: Anonymous pattern found. Can't generate the route 'anonroute'.
+        url = build('anonroute', 'world')
+        self.assertEqual('/anon/world', url)
         # RouteBuildError: Anonymous pattern found. Can't generate the route 'anonroute'.
 
     def test_method(self):
@@ -71,6 +88,7 @@ class TestRouter(unittest.TestCase):
 
 
 class TestRouterInCGIMode(TestRouter):
+    ''' Makes no sense since the default route does not optimize CGI anymore.'''
     CGI = True
 
 

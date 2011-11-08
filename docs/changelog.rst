@@ -27,6 +27,10 @@ Not released yet.
   * Added three new functions to the SimpleTemplate default namespace that handle undefined variables: :func:`stpl.defined`, :func:`stpl.get` and :func:`stpl.setdefault`.
   * The default escape function for SimpleTemplate now additionally escapes single and double quotes.
 
+* Routing
+  * A new route syntax (e.g. ``/object/<id:int>``) and support for route wildcard filters.
+  * Four new wildcard filters: `int`, `float`, `path` and `re`.
+
 * Oher changes
 
   * Added command line interface to load applications and start servers.

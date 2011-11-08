@@ -116,11 +116,11 @@ In the last chapter we built a very simple web application with only a single ro
 The :func:`route` decorator links an URL path to a callback function, and adds a new route to the :ref:`default application <tutorial-default>`. An application with just one route is kind of boring, though. Let's add some more::
 
     @route('/')
-    @route('/hello/:name')
+    @route('/hello/<name>')
     def greet(name='Stranger'):
         return 'Hello %s, how are you?' % name
 
-This example demonstrates two important things: You can bind more than one route to a single callback, and you can add wildcards to URLs and extract parts of the URL as keyword arguments.
+This example demonstrates two things: You can bind more than one route to a single callback, and you can add wildcards to URLs and access them via keyword arguments.
 
 
 
@@ -129,44 +129,59 @@ This example demonstrates two important things: You can bind more than one route
 Dynamic Routes
 -------------------------------------------------------------------------------
 
-Routes with wildcards are called `dynamic routes` (as opposed to `static routes`) and match more than one URL at the same time. Wildcards start with a colon followed by a name and they match anything but the slash character. For example, the route ``/hello/:name`` accepts requests for ``/hello/alice`` as well as ``/hello/bob`` and any other URL that starts with ``/hello/`` followed by a name.
+Routes that contain wildcards are called `dynamic routes` (as opposed to `static routes`) and match more than one URL at the same time. A simple wildcard consists of a name enclosed in angle brackets (e.g. ``<name>``) and accepts one or more characters up to the next slash (``/``). For example, the route ``/hello/<name>`` accepts requests for ``/hello/alice`` as well as ``/hello/bob``, but not for ``/hello``, ``/hello/`` or ``/hello/mr/smith``.
 
-Each URL fragment covered by a wildcard is passed to the callback function as a keyword argument. Nice looking and meaningful URLs such as ``/blog/2010/04/21`` or ``/wiki/Page_Title`` are implemented this way. Here are some more examples along with the URLs they'd match::
+Each wildcard passes the covered part of the URL as a keyword argument to the request callback. You can use them right away and implement RESTful, nice looking and meaningful URLs with ease. Here are some other examples along with the URLs they'd match::
 
-    @route('/:action/:user')          # matches /follow/defnull
-    def api(action, user):
+    @route('/wiki/<pagename>')            # matches /wiki/Learning_Python
+    def show_wiki_page(pagename)):
         ...
 
-    @route('/blog/:year-:month-:day') # matches /blog/2010-04-21
-    def blog(year, month, day):
+    @route('/<action>/<user>')            # matches /follow/defnull
+    def user_api(action, user):
         ...
 
-As mentioned above, normal wildcards consume any characters but the slash (``/``) if they are matched against a request URL. This corresponds to :regexp:`([^/]+)` as a regular expression. If you expect a specific type of information (e.g. a year or a numeric ID), you can customize the pattern and narrow down the range of accepted URLs as follows::
+.. versionadded:: 0.10
 
-    @route('/archive/:year#[0-9]{4}#')
-    def arcive(year):
-        year = int(year)
-        ...
+Filters are used to define more specific wildcards, and/or transform the covered part of the URL before it is passed to the callback. A filtered wildcard is declared as ``<name:filter>`` or ``<name:filter:config>``. The syntax for the optional config part depends on the filter used.
 
-The custom regular pattern is enclosed in two hash characters (``#``). Please note that, even if the wildcard now only matches digits, the keyword argument is still a string. If you need a different type, you have to check and convert the value explicitly in your callback function.
+The following filters are implemented by default and more may be added:
 
-Here are some more example to demonstrate the use of wildcards:
+* **:int** matches (signed) digits only and converts the value to integer.
+* **:float** similar to :int but for decimal numbers.
+* **:path** matches all characters including the slash character in a non-greedy way and can be used to match more than one path segment.
+* **:re** allows you to specify a custom regular expression in the config field. The matched value is not modified.
 
-========================   ======================  ========================
-Route                      URL                     URL Arguments
-========================   ======================  ========================
-``/hello/:name``           ``/hello/world``        name='world'
-``/hello/:name``           ``/hello/world/``       `No match`
-``/hello/:name``           ``/hello/``             `No match`
-``/hello/:name#.*#``       ``/hello/``             name='' `(empty string)`
-``/hello/:name#.*#``       ``/hello/world/``       name='world/'
-``/:image.png``            ``/logo.png``           image='logo'
-``/:image#.+\.png#``       ``/img/logo.png``       image='img/logo.png'
-``/:action/:id#[0-9]+#``   ``/save/15``            action='save', id='15'
-``/:action/:id#[0-9]+#``   ``/save/xyz``           `No match`
-``/blog/:y-:m-:d``         ``/blog/2000-05-06``    y='2000', m='05', d='06'
-========================   ======================  ========================
+Let's have a look at some practical examples::
 
+    @route('/object/<id:int>')
+    def callback(id):
+        assert isinstance(id, int)
+
+    @route('/show/<name:re:[a-z]+>')
+    def callback(name):
+        assert name.isalpha()
+
+    @route('/static/<path:path>')
+    def callback(path):
+        return static_file(path, ...)
+
+You can add your own filters as well. See :doc:`Routing` for details.
+
+.. versionchanged:: 0.10
+
+The new rule syntax was introduce in **Bottle 0.10** to simplify some common use cases, but the old syntax still works and you can find lot code examples still using it. The differences are best described by example:
+
+=================== ====================
+Old Syntax          New Syntax
+=================== ====================
+``:name``           ``<name>``
+``:name#regexp#``   ``<name:re:regexp>``
+``:#regexp#``       ``<:re:regexp>``
+``:##``             ``<:re>``
+=================== ====================
+
+Try to avoid the old syntax in future projects if you can. It is not deprecated for now, but will be eventually.
 
 
 HTTP Request Methods
@@ -214,15 +229,15 @@ Routing Static Files
 Static files such as images or css files are not served automatically. You have to add a route and a callback to control which files get served and where to find them::
 
   from bottle import static_file
-  @route('/static/:filename')
+  @route('/static/<filename>')
   def server_static(filename):
       return static_file(filename, root='/path/to/your/static/files')
 
-The :func:`static_file` function is a helper to serve files in a safe and convenient way (see :ref:`tutorial-static-files`). This example is limited to files directly within the ``/path/to/your/static/files`` directory because the ``:filename`` wildcard won't match a path with a slash in it. To serve files in subdirectories too, we can loosen the wildcard a bit::
+The :func:`static_file` function is a helper to serve files in a safe and convenient way (see :ref:`tutorial-static-files`). This example is limited to files directly within the ``/path/to/your/static/files`` directory because the ``<filename>`` wildcard won't match a path with a slash in it. To serve files in subdirectories, change the wildcard to use the `path` filter::
 
-  @route('/static/:path#.+#')
-  def server_static(path):
-      return static_file(path, root='/path/to/your/static/files')
+  @route('/static/<filepath:path>')
+  def server_static(filepath):
+      return static_file(filepath, root='/path/to/your/static/files')
 
 Be careful when specifying a relative root-path such as ``root='./static/files'``. The working directory (``./``) and the project directory are not always the same.
 
@@ -245,27 +260,6 @@ From now on, `404 File not Found` errors will display a custom error page to the
 Error handlers are used only if your application returns or raises an :exc:`HTTPError` exception (:func:`abort` does just that). Changing :attr:`Request.status` or returning :exc:`HTTPResponse` won't trigger the error handler.
 
 
-
-
-Implementation Detail: Routing Order
-------------------------------------------------------------------------------
-
-With the power of wildcards and regular expressions it is possible to define overlapping routes. If multiple routes match the same URL, things get a bit tricky. To fully understand what happens in this case, you need to know in which order routes are checked by the router.
-
-First you should know that routes are grouped by their path rule. Two routes with the same path rule but different methods are grouped together and the first route determines the position of both routes. Fully identical routes (same path rule and method) replace previously defined routes, but keep the position of their predecessor.
-
-Static routes are checked first. This is mostly for performance reasons and can be switched off, but is currently the default. If no static route matches the request, the dynamic routes are checked in the order they were defined. The first hit ends the search. If no rule matched, a "404 Page not found" error is returned.
-
-In a second step, the request method is checked. If no exact match is found, and the request method is HEAD, the router checks for a GET route. Otherwise, it checks for an ANY route. If that fails too, a "405 Method not allowed" error is returned.
-
-Here is an example where this might bite you::
-
-    @route('/:action/:name', method='GET')
-    @route('/save/:name', method='POST')
-
-The second route will never hit. Even POST requests don't arrive at the second route because the request method is checked in a separate step. The router stops at the first route which matches the request path, then checks for a valid request method, can't find one and raises a 405 error.
-
-Sounds complicated, and it is. That is the price for performance. It is best to avoid ambiguous routes at all and choose unique prefixes for each route. This implementation detail may change in the future, though. We are working on it.
 
 
 
@@ -331,11 +325,11 @@ You can directly return file objects, but :func:`static_file` is the recommended
 ::
 
     from bottle import static_file
-    @route('/images/:filename#.*\.png#')
+    @route('/images/<filename:re:.*\.png>#')
     def send_image(filename):
         return static_file(filename, root='/path/to/image/files', mimetype='image/png')
 
-    @route('/static/:filename')
+    @route('/static/<filename:path>')
     def send_static(filename):
         return static_file(filename, root='/path/to/static/files')
 
@@ -345,7 +339,7 @@ You can raise the return value of :func:`static_file` as an exception if you rea
 
 Most browsers try to open downloaded files if the MIME type is known and assigned to an application (e.g. PDF files). If this is not what you want, you can force a download-dialog and even suggest a filename to the user::
 
-    @route('/download/:filename')
+    @route('/download/<filename:path>')
     def download(filename):
         return static_file(filename, root='/path/to/static/files', download=filename)
 
@@ -397,7 +391,7 @@ The `HTTP status code <http_code>`_ controls the behavior of the browser and def
 
 Response headers such as ``Cache-Control`` or ``Location`` are defined via :meth:`Response.set_header`. This method takes two parameters, a header name and a value. The name part is case-insensitive::
 
-  @route('/wiki/:page')
+  @route('/wiki/<page>')
   def wiki(page):
       response.set_header('Content-Language', 'en')
       ...
@@ -587,7 +581,7 @@ Templates
 Bottle comes with a fast and powerful built-in template engine called :doc:`stpl`. To render a template you can use the :func:`template` function or the :func:`view` decorator. All you have to do is to provide the name of the template and the variables you want to pass to the template as keyword arguments. Here’s a simple example of how to render a template::
 
     @route('/hello')
-    @route('/hello/:name')
+    @route('/hello/<name>')
     def hello(name='World'):
         return template('hello_template', name=name)
 
@@ -596,7 +590,7 @@ This will load the template file ``hello_template.tpl`` and render it with the `
 The :func:`view` decorator allows you to return a dictionary with the template variables instead of calling :func:`template`::
 
     @route('/hello')
-    @route('/hello/:name')
+    @route('/hello/<name>')
     @view('hello_template')
     def hello(name='World'):
         return dict(name=name)
@@ -644,9 +638,9 @@ The effects and APIs of plugins are manifold and depend on the specific plugin. 
 
     install(SQLitePlugin(dbfile='/tmp/test.db'))
 
-    @route('/show/:post_id')
+    @route('/show/<post_id:int>')
     def show(db, post_id):
-        c = db.execute('SELECT title, content FROM posts WHERE id = ?', (int(post_id),))
+        c = db.execute('SELECT title, content FROM posts WHERE id = ?', (post_id,))
         row = c.fetchone()
         return template('show_post', title=row['title'], text=row['content'])
 
@@ -713,7 +707,7 @@ You may want to explicitly disable a plugin for a number of routes. The :func:`r
     sqlite_plugin = SQLitePlugin(dbfile='/tmp/test.db')
     install(sqlite_plugin)
 
-    @route('/open/:db', skip=[sqlite_plugin])
+    @route('/open/<db>', skip=[sqlite_plugin])
     def open_db(db):
         # The 'db' keyword argument is not touched by the plugin this time.
         if db in ('test', 'test2'):

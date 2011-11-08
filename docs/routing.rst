@@ -1,0 +1,111 @@
+================================================================================
+Request Routing
+================================================================================
+
+Bottle uses a powerful routing engine to find the right callback for each request. The :ref:`tutorial <tutorial-routing>` shows you the basics. This document covers advanced techniques and rule mechanics in detail.
+
+Rule Syntax
+--------------------------------------------------------------------------------
+
+The :class:`Router` distinguishes between two basic types of routes: **static routes** (e.g. ``/contact``) and **dynamic routes** (e.g. ``/hello/<name>``). A route that contains one or more *wildcards* it is considered dynamic. All other routes are static.
+
+.. versionchanged:: 0.10
+
+The simplest form of a wildcard consists of a name enclosed in angle brackets (e.g. ``<name>``). The name should be unique for a given route and form a valid python identifier (alphanumeric, staring with a letter). This is because wildcards are used as keyword arguments for the request callback later.
+
+Each wildcard matches one or more characters, but stops at the first slash (``/``). This equals a regular expression of ``[^/]+`` and ensures that only one path segment is matched and routes with more than one wildcard stay unambiguous.
+
+The rule ``/<action>/<item>`` matches as follows:
+
+============ =========================================
+Path         Result
+============ =========================================
+/save/123    ``{'action': 'save', 'item': '123'}``
+/save/123/   `No Match`
+/save/       `No Match`
+//123        `No Match`
+============ =========================================
+
+You can change the exact behaviour in many ways using filters. This is described in the next section.
+
+Wildcard Filters
+--------------------------------------------------------------------------------
+
+.. versionadded:: 0.10
+
+Filters are used to define more specific wildcards, and/or transform the matched part of the URL before it is passed to the callback. A filtered wildcard is declared as ``<name:filter>`` or ``<name:filter:config>``. The syntax for the optional config part depends on the filter used.
+
+The following standard filters are implemented:
+
+* **:int** matches (signed) digits and converts the value to integer.
+* **:float** similar to :int but for decimal numbers.
+* **:path** matches all characters including the slash character in a non-greedy way and may be used to match more than one path segment.
+* **:re[:exp]** allows you to specify a custom regular expression in the config field. The matched value is not modified.
+
+You can add your own filters to the router. All you need is a function that returns three elements: A regular expression string, a callable to convert the URL fragment to a python value, and a callable that does the opposite. The filter function is called with the configuration string as the only parameter and may parse it as needed::
+
+    app = Bottle()
+
+    def list_filter(config):
+        ''' Matches a comma separated list of numbers. '''
+        delimiter = config or ','
+        regexp = r'\d+(%s\d)*' % re.escape(delimiter)
+
+        def to_python(match):
+            return map(int, match.split(delimiter))
+        
+        def to_url(numbers):
+            return delimiter.join(map(str, numbers))
+        
+        return regexp, to_python, to_user
+
+    app.router.add_filter('list', list_filter)
+
+    @app.route('/follow/<ids:list>')
+    def follow_users(ids):
+        for id in ids:
+            ...
+
+
+Legacy Syntax
+--------------------------------------------------------------------------------
+
+.. versionchanged:: 0.10
+
+The new rule syntax was introduce in **Bottle 0.10** to simplify some common use cases, but the old syntax still works and you can find lot code examples still using it. The differences are best described by example:
+
+=================== ====================
+Old Syntax          New Syntax
+=================== ====================
+``:name``           ``<name>``
+``:name#regexp#``   ``<name:re:regexp>``
+``:#regexp#``       ``<:re:regexp>``
+``:##``             ``<:re>``
+=================== ====================
+
+Try to avoid the old syntax in future projects if you can. It is not deprecated for now, but will be eventually.
+
+
+Routing Order
+--------------------------------------------------------------------------------
+
+With the power of wildcards and regular expressions it is possible to define overlapping routes. If multiple routes match the same URL, things get a bit tricky. To fully understand what happens in this case, you need to know in which order routes are checked by the router.
+
+First you should know that routes are grouped by their path rule. Two routes with the same path rule but different methods are grouped together and the first route determines the position of both routes. Fully identical routes (same path rule and method) replace previously defined routes, but keep the position of their predecessor.
+
+Static routes are checked first. This is mostly for performance reasons and can be switched off, but is currently the default. If no static route matches the request, the dynamic routes are checked in the order they were defined. The first hit ends the search. If no rule matched, a "404 Page not found" error is returned.
+
+In a second step, the request method is checked. If no exact match is found, and the request method is HEAD, the router checks for a GET route. Otherwise, it checks for an ANY route. If that fails too, a "405 Method not allowed" error is returned.
+
+Here is an example where this might bite you::
+
+    @route('/:action/:name', method='GET')
+    @route('/save/:name', method='POST')
+
+The second route will never hit. Even POST requests don't arrive at the second route because the request method is checked in a separate step. The router stops at the first route which matches the request path, then checks for a valid request method, can't find one and raises a 405 error.
+
+Sounds complicated, and it is. That is the price for performance. It is best to avoid ambiguous routes at all and choose unique prefixes for each route. This implementation detail may change in the future, though. We are working on it.
+
+
+        
+
