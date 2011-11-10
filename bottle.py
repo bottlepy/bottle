@@ -1965,6 +1965,7 @@ def validate(**vkargs):
     Validates and manipulates keyword arguments by user defined callables.
     Handles ValueError and missing arguments by raising HTTPError(403).
     """
+    dept('Use route wildcard filters instead.')
     def decorator(func):
         def wrapper(**kargs):
             for key, value in vkargs.iteritems():
