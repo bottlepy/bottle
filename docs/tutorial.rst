@@ -200,7 +200,7 @@ The POST method is commonly used for HTML form submission. This example shows ho
         return '''<form method="POST">
                     <input name="name"     type="text" />
                     <input name="password" type="password" />
-                  </from>'''
+                  </form>'''
 
     @post('/login') # or @route('/login', method='POST')
     def login_submit():
