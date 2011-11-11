@@ -100,17 +100,12 @@ def tob(data, enc='utf8'):
     """ Convert anything to bytes """
     return data.encode(enc) if isinstance(data, unicode) else bytes(data)
 
-# Convert strings and unicode to native strings
-if  py3k:
-    tonat = touni
-else:
-    tonat = tob
+tonat = touni if py3k else tob
 tonat.__doc__ = """ Convert anything to native strings """
 
 
 # Backward compatibility
-def depr(message, critical=False):
-    if critical: raise DeprecationWarning(message)
+def depr(message):
     warnings.warn(message, DeprecationWarning, stacklevel=3)
 
 
@@ -253,6 +248,7 @@ class Router(object):
     '''
 
     default_pattern = '[^/]+'
+    default_filter   = 're'
     #: Sorry for the mess. It works. Trust me.
     rule_syntax = re.compile('(\\\\*)'\
         '(?:(?::([a-zA-Z_][a-zA-Z_0-9]*)?()(?:#(.*?)#)?)'\
@@ -266,8 +262,8 @@ class Router(object):
         self.dynamic  = [] # Cache for dynamic routes. See _compile()
         #: If true, static routes are no longer checked first.
         self.strict_order = strict
-        self.modes = {'re': self.re_filter, 'int': self.int_filter,
-                      'float': self.re_filter, 'path': self.path_filter}
+        self.filters = {'re': self.re_filter, 'int': self.int_filter,
+                        'float': self.re_filter, 'path': self.path_filter}
 
     def re_filter(self, conf):
         return conf or self.default_pattern, None, None
@@ -285,10 +281,10 @@ class Router(object):
         ''' Add a filter. The provided function is called with the configuration
         string as parameter and must return a (regexp, to_python, to_url) tuple.
         The first element is a string, the last two are callables or None. '''
-        self.modes[name] = func
+        self.filters[name] = func
     
     def parse_rule(self, rule):
-        ''' Parses a rule into a (name, mode, conf) token stream. If mode is
+        ''' Parses a rule into a (name, filter, conf) token stream. If mode is
             None, name contains a static rule part. '''
         offset, prefix = 0, ''
         for match in self.rule_syntax.finditer(rule):
@@ -300,9 +296,9 @@ class Router(object):
                 offset = match.end()
                 continue
             if prefix: yield prefix, None, None
-            name, mode, conf = g[1:4] if not g[2] is None else g[4:7]
-            if not mode: mode = 'default'
-            yield name, mode, conf or None
+            name, filtr, conf = g[1:4] if not g[2] is None else g[4:7]
+            if not filtr: filtr = self.default_filter
+            yield name, filtr, conf or None
             offset, prefix = match.end(), ''
         if offset <= len(rule) or prefix:
             yield prefix+rule[offset:], None, None
@@ -325,7 +321,7 @@ class Router(object):
         for key, mode, conf in self.parse_rule(rule):
             if mode:
                 is_static = False
-                mask, in_filter, out_filter = self.modes[mode](conf)
+                mask, in_filter, out_filter = self.filters[mode](conf)
                 if key:
                     pattern += '(?P<%s>%s)' % (key, mask)
                 else:
@@ -1965,7 +1961,7 @@ def validate(**vkargs):
     Validates and manipulates keyword arguments by user defined callables.
     Handles ValueError and missing arguments by raising HTTPError(403).
     """
-    dept('Use route wildcard filters instead.')
+    depr('Use route wildcard filters instead.')
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kargs):

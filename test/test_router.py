@@ -34,7 +34,7 @@ class TestRouter(unittest.TestCase):
         self.assertMatches('/:#anon#/match', '/anon/match') # Anon wildcards
         self.assertRaises(bottle.HTTPError, self.match, '//no/m/at/ch/')
 
-    def testNeewSyntax(self):
+    def testNewSyntax(self):
         self.assertMatches('/static', '/static')
         self.assertMatches('/\\<its>/<:re:.+>/<test>/<name:re:[a-z]+>/',
                            '/<its>/a/cruel/world/',
@@ -45,6 +45,13 @@ class TestRouter(unittest.TestCase):
         self.assertMatches('<test>', 'test', test='test') # Full wildcard
         self.assertMatches('/<:re:anon>/match', '/anon/match') # Anon wildcards
         self.assertRaises(bottle.HTTPError, self.match, '//no/m/at/ch/')
+
+    def testValueErrorInFilter(self):
+        self.r.add_filter('test', lambda x: ('.*', int, int))
+
+        self.assertMatches('/int/<i:test>', '/int/5', i=5) # No tail
+        self.assertRaises(bottle.HTTPError, self.match, '/int/noint')
+
 
     def testIntFilter(self):
         self.assertMatches('/object/<id:int>', '/object/567', id=567)
@@ -64,23 +71,40 @@ class TestRouter(unittest.TestCase):
         self.assertRaises(Exception, self.assertMatches, '/:bug#(#/', '/foo/')
 
     def testBuild(self):
-        add = self.add
-        build = self.r.build
+        add, build = self.add, self.r.build
         add('/:test/:name#[a-z]+#/', 'handler', name='testroute')
-        add('/anon/:#.#', 'handler', name='anonroute')
+
         url = build('testroute', test='hello', name='world')
         self.assertEqual('/hello/world/', url)
+
         url = build('testroute', test='hello', name='world', q='value')
         self.assertEqual('/hello/world/?q=value', url)
+
+        # RouteBuildError: Missing URL argument: 'test'
         self.assertRaises(bottle.RouteBuildError, build, 'test')
-        # RouteBuildError: No route found with name 'test'.
-        self.assertRaises(bottle.RouteBuildError, build, 'testroute')
-        # RouteBuildError: Missing parameter 'test' in route 'testroute'
+
+    def testBuildAnon(self):
+        add, build = self.add, self.r.build
+        add('/anon/:#.#', 'handler', name='anonroute')
+
+        url = build('anonroute', 'hello')
+        self.assertEqual('/anon/hello', url)
+
+        url = build('anonroute', 'hello', q='value')
+        self.assertEqual('/anon/hello?q=value', url)
+
+        # RouteBuildError: Missing URL argument: anon0.
         self.assertRaises(bottle.RouteBuildError, build, 'anonroute')
-        # RouteBuildError: Anonymous pattern found. Can't generate the route 'anonroute'.
-        url = build('anonroute', 'world')
-        self.assertEqual('/anon/world', url)
-        # RouteBuildError: Anonymous pattern found. Can't generate the route 'anonroute'.
+
+    def testBuildFilter(self):
+        add, build = self.add, self.r.build
+        add('/int/<:int>', 'handler', name='introute')
+
+        url = build('introute', '5')
+        self.assertEqual('/int/5', url)
+
+        # RouteBuildError: Missing URL argument: anon0.
+        self.assertRaises(ValueError, build, 'introute', 'hello')
 
     def test_method(self):
         #TODO Test method handling. This is done in the router now.
