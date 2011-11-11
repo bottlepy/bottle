@@ -291,7 +291,6 @@ class Router(object):
             prefix += rule[offset:match.start()]
             g = match.groups()
             if len(g[0])%2: # Escaped wildcard
-                print prefix, offset, g[0]
                 prefix += match.group(0)[len(g[0]):]
                 offset = match.end()
                 continue
