@@ -84,6 +84,10 @@ except ImportError: # pragma: no cover
 py3k = sys.version_info >= (3,0,0)
 NCTextIOWrapper = None
 
+if sys.version_info < (2,6,0):
+    msg = "Python 2.5 support may be dropped in future versions of Bottle."
+    warnings.warn(msg, DeprecationWarning)
+
 if py3k: # pragma: no cover
     json_loads = lambda s: json_lds(touni(s))
     # See Request.POST
@@ -124,6 +128,7 @@ def makelist(data):
     elif data: return [data]
     else: return []
 
+
 class DictProperty(object):
     ''' Property that maps to a key in a local dict-like attribute. '''
     def __init__(self, attr, key=None, read_only=False):
@@ -147,6 +152,7 @@ class DictProperty(object):
     def __delete__(self, obj):
         if self.read_only: raise AttributeError("Read-Only property.")
         del getattr(obj, self.attr)[self.key]
+
 
 class CachedProperty(object):
     ''' A property that is only computed once per instance and then replaces
