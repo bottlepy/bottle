@@ -479,7 +479,10 @@ Request Data
 Bottle provides access to HTTP related meta-data such as cookies, headers and POST form data through a global ``request`` object. This object always contains information about the *current* request, as long as it is accessed from within a callback function. This works even in multi-threaded environments where multiple requests are handled at the same time. For details on how a global object can be thread-safe, see :doc:`contextlocal`.
 
 .. note::
-  Bottle stores most of the parsed HTTP meta-data in :class:`MultiDict` instances. These behave like normal dictionaries but are able to store multiple values per key. The standard dictionary access methods will only return a single value. Use the :meth:`MultiDict.getall` method do receive a (possibly empty) list of all values for a specific key. The :class:`HeaderDict` class inherits from :class:`MultiDict` and  additionally uses case insensitive keys.
+
+    Bottle stores most of the parsed HTTP meta-data in :class:`FormsDict` instances. These behave like normal dictionaries, but have some additional features: All values in the dictionary are available as attributes. These virtual attributes always return a unicode string, even if the value is missing. In that case, the string is empty.
+
+    :class:`FormsDict` is a subclass of :class:`MultiDict` and can store more than one value per key. The standard dictionary access methods will only return a single value, but the :meth:`MultiDict.getall` method returns a (possibly empty) list of all values for a specific key.
 
 The full API and feature list is described in the API section (see :class:`Request`), but the most common use cases and features are covered here, too.
 
@@ -487,7 +490,7 @@ The full API and feature list is described in the API section (see :class:`Reque
 Cookies
 --------------------------------------------------------------------------------
 
-Cookies are stored in :attr:`BaseRequest.cookies` as a :class:`FormsDict`. The :meth:`BaseRequest.get_cookie` method allows access to :ref:`tutorial-signed-cookies` as described in a separate section. This example shows a simple cookie-based view counter::
+Cookies are stored in :attr:`BaseRequest.cookies` as a :class:`FormsDict`. The :meth:`BaseRequest.get_cookie` method allows access to :ref:`signed cookies <tutorial-signed-cookies>` as described in a separate section. This example shows a simple cookie-based view counter::
 
   from bottle import route, request, response
   @route('/counter')
@@ -501,7 +504,7 @@ Cookies are stored in :attr:`BaseRequest.cookies` as a :class:`FormsDict`. The :
 HTTP Headers
 --------------------------------------------------------------------------------
 
-All HTTP headers sent by the client (e.g. ``Referer``, ``Agent`` or ``Accept-Language``) are stored in a :class:`HeaderDict` and accessible through :attr:`BaseRequest.headers`. A :class:`HeaderDict` is basically a dictionary with case-insensitive keys::
+All HTTP headers sent by the client (e.g. ``Referer``, ``Agent`` or ``Accept-Language``) are stored in a :class:`WSGIHeaderDict` and accessible through :attr:`BaseRequest.headers`. A :class:`WSGIHeaderDict` is basically a dictionary with case-insensitive keys::
 
   from bottle import route, request
   @route('/is_ajax')
@@ -546,9 +549,9 @@ Here is an example for a simple file upload form:
     from bottle import route, request
     @route('/upload', method='POST')
     def do_upload():
-        name = request.forms.get('name')
-        data = request.files.get('data')
-        if name and data.file:
+        name = request.forms.name
+        data = request.files.data
+        if name and data and data.file:
             raw = data.file.read() # This is dangerous for big files
             filename = data.filename
             return "Hello %s! You uploaded %s (%d bytes)." % (name, filename, len(raw))
