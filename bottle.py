@@ -19,18 +19,16 @@ __author__ = 'Marcel Hellkamp'
 __version__ = '0.10.dev'
 __license__ = 'MIT'
 
-import sys
-
+# The gevent server adapter needs to patch some modules before they are imported
 if __name__ == '__main__':
-    # This needs to happen before thread(ing) is imported.
-    from optparse import OptionParser
-    parser = OptionParser()
+    import optparse
+    parser = optparse.OptionParser()
     parser.add_option("-s", "--server")
-    opt, args = parser.parse_args()
-    if opt.server.startswith('gevent'):
-        from gevent import monkey
-        monkey.patch_all()
+    if parser.parse_args()[0].server.startswith('gevent'):
+        import gevent.monkey
+        gevent.monkey.patch_all()
 
+import sys
 import base64
 import cgi
 import email.utils
@@ -2122,9 +2120,7 @@ class FapwsServer(ServerAdapter):
 class TornadoServer(ServerAdapter):
     """ The super hyped asynchronous server by facebook. Untested. """
     def run(self, handler): # pragma: no cover
-        import tornado.wsgi
-        import tornado.httpserver
-        import tornado.ioloop
+        import tornado.wsgi, tornado.httpserver, tornado.ioloop
         container = tornado.wsgi.WSGIContainer(handler)
         server = tornado.httpserver.HTTPServer(container)
         server.listen(port=self.port)
@@ -2584,7 +2580,6 @@ class SimpleTALTemplate(BaseTemplate):
 
     def render(self, *args, **kwargs):
         from simpletal import simpleTALES
-        from StringIO import StringIO
         for dictarg in args: kwargs.update(dictarg)
         # TODO: maybe reuse a context instead of always creating one
         context = simpleTALES.Context()
@@ -2887,7 +2882,7 @@ app.push()
 ext = _ImportRedirect(__name__+'.ext', 'bottle_%s').module
 
 if __name__ == '__main__':
-    parser = OptionParser(usage="usage: %prog [options] package.module:app")
+    parser = optparse.OptionParser(usage="usage: %prog [options] package.module:app")
     add = parser.add_option
     add("-b", "--bind", metavar="ADDRESS", help="bind socket to ADDRESS.")
     add("-s", "--server", default='wsgiref', help="use SERVER as backend.")
