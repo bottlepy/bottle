@@ -56,7 +56,7 @@ import warnings
 from Cookie import SimpleCookie
 from datetime import date as datedate, datetime, timedelta
 from tempfile import TemporaryFile
-from traceback import format_exc
+from traceback import format_exc, print_exc
 from urlparse import urljoin, SplitResult as UrlSplitResult
 
 # Workaround for a bug in some versions of lib2to3 (fixed on CPython 2.7 and 3.2)
@@ -2302,9 +2302,8 @@ def load_app(target):
         default_app.remove(tmp) # Remove the temporary added default application
         NORUN = nr_old
 
-
 def run(app=None, server='wsgiref', host='127.0.0.1', port=8080,
-        interval=1, reloader=False, quiet=False, **kargs):
+        interval=1, reloader=False, quiet=False, plugins=None, **kargs):
     """ Start a server instance. This method blocks until the server terminates.
 
         :param app: WSGI application or target string supported by
@@ -2322,111 +2321,114 @@ def run(app=None, server='wsgiref', host='127.0.0.1', port=8080,
         :param options: Options passed to the server adapter.
      """
     if NORUN: return
-    app = app or default_app()
-    if isinstance(app, basestring):    app = load_app(app)
-    if isinstance(server, basestring): server = server_names.get(server)
-    if isinstance(server, type):       server = server(host=host, port=port, **kargs)
-    if not isinstance(server, ServerAdapter):
-        raise RuntimeError("Server must be a subclass of ServerAdapter")
-    server.quiet = server.quiet or quiet
-    if not server.quiet and not os.environ.get('BOTTLE_CHILD'):
-        print "Bottle server starting up (using %s)..." % repr(server)
-        print "Listening on http://%s:%d/" % (server.host, server.port)
-        print "Use Ctrl-C to quit."
-        print
+    if reloader and not os.environ.get('BOTTLE_CHILD'):
+        try:
+            fd, lockfile = tempfile.mkstemp(prefix='bottle.', suffix='.lock')
+            os.close(fd) # We only need this file to exist. We never write to it
+            while os.path.exists(lockfile):
+                args = [sys.executable] + sys.argv
+                environ = os.environ.copy()
+                environ['BOTTLE_CHILD'] = 'true'
+                environ['BOTTLE_LOCKFILE'] = lockfile
+                p = subprocess.Popen(args, env=environ)
+                while p.poll() is None: # Busy wait...
+                    os.utime(lockfile, None) # I am alive!
+                    time.sleep(interval)
+                if p.poll() != 3:
+                    if os.path.exists(lockfile): os.unlink(lockfile)
+                    sys.exit(p.poll())
+        except KeyboardInterrupt:
+            pass
+        finally:
+            if os.path.exists(lockfile):
+                os.unlink(lockfile)
+        return
+
+    stderr = sys.stderr.write
+
     try:
+        app = app or default_app()
+        if isinstance(app, basestring):
+            app = load_app(app)
+        if not callable(app):
+            raise ValueError("Application is not callable: %r" % app)
+
+        for plugin in plugins or []:
+            app.install(plugin)
+
+        if server in server_names:
+            server = server_names.get(server)
+        if isinstance(server, basestring):
+            server = load(server)
+        if isinstance(server, type):
+            server = server(host=host, port=port, **kargs)
+        if not isinstance(server, ServerAdapter):
+            raise ValueError("Unknown or unsupported server: %r" % server)
+
+        server.quiet = server.quiet or quiet
+        if not server.quiet:
+            stderr("Bottle server starting up (using %s)...\n" % repr(server))
+            stderr("Listening on http://%s:%d/\n" % (server.host, server.port))
+            stderr("Hit Ctrl-C to quit.\n\n")
+
         if reloader:
-            interval = min(interval, 1)
-            if os.environ.get('BOTTLE_CHILD'):
-                _reloader_child(server, app, interval)
-            else:
-                _reloader_observer(server, app, interval)
+            lockfile = os.environ.get('BOTTLE_LOCKFILE')
+            bgcheck = FileCheckerThread(lockfile, interval)
+            with bgcheck:
+                server.run(app)
+            if bgcheck.status == 'reload':
+                sys.exit(3)
         else:
             server.run(app)
     except KeyboardInterrupt:
         pass
-    if not server.quiet and not os.environ.get('BOTTLE_CHILD'):
-        print "Shutting down..."
+    except (SyntaxError, ImportError):
+        if not reloader: raise
+        if not getattr(server, 'quiet', False): print_exc()
+        sys.exit(3)
+    finally:
+        if not getattr(server, 'quiet', False): stderr('Shutdown...\n')
 
 
 class FileCheckerThread(threading.Thread):
-    ''' Thread that periodically checks for changed module files. '''
+    ''' Interrupt main-thread as soon as a changed module file is detected,
+        the lockfile gets deleted or gets to old. '''
 
     def __init__(self, lockfile, interval):
         threading.Thread.__init__(self)
         self.lockfile, self.interval = lockfile, interval
-        #1: lockfile to old; 2: lockfile missing
-        #3: module file changed; 5: external exit
-        self.status = 0
+        #: Is one of 'reload', 'error' or 'exit'
+        self.status = None
 
     def run(self):
         exists = os.path.exists
         mtime = lambda path: os.stat(path).st_mtime
         files = dict()
+
         for module in sys.modules.values():
             path = getattr(module, '__file__', '')
             if path[-4:] in ('.pyo', '.pyc'): path = path[:-1]
             if path and exists(path): files[path] = mtime(path)
+
         while not self.status:
+            if not exists(self.lockfile)\
+            or mtime(self.lockfile) < time.time() - self.interval - 5:
+                self.status = 'error'
+                thread.interrupt_main()
             for path, lmtime in files.iteritems():
                 if not exists(path) or mtime(path) > lmtime:
-                    self.status = 3
-            if not exists(self.lockfile):
-                self.status = 2
-            elif mtime(self.lockfile) < time.time() - self.interval - 5:
-                self.status = 1
-            if not self.status:
-                time.sleep(self.interval)
-        if self.status != 5:
-            thread.interrupt_main()
-
-
-def _reloader_child(server, app, interval):
-    ''' Start the server and check for modified files in a background thread.
-        As soon as an update is detected, KeyboardInterrupt is thrown in
-        the main thread to exit the server loop. The process exists with status
-        code 3 to request a reload by the observer process. If the lockfile
-        is not modified in 2*interval second or missing, we assume that the
-        observer process died and exit with status code 1 or 2.
-    '''
-    lockfile = os.environ.get('BOTTLE_LOCKFILE')
-    bgcheck = FileCheckerThread(lockfile, interval)
-    try:
-        bgcheck.start()
-        server.run(app)
-    except KeyboardInterrupt:
-        pass
-    bgcheck.status, status = 5, bgcheck.status
-    bgcheck.join() # bgcheck.status == 5 --> silent exit
-    if status: sys.exit(status)
-
-
-def _reloader_observer(server, app, interval):
-    ''' Start a child process with identical commandline arguments and restart
-        it as long as it exists with status code 3. Also create a lockfile and
-        touch it (update mtime) every interval seconds.
-    '''
-    fd, lockfile = tempfile.mkstemp(prefix='bottle-reloader.', suffix='.lock')
-    os.close(fd) # We only need this file to exist. We never write to it
-    try:
-        while os.path.exists(lockfile):
-            args = [sys.executable] + sys.argv
-            environ = os.environ.copy()
-            environ['BOTTLE_CHILD'] = 'true'
-            environ['BOTTLE_LOCKFILE'] = lockfile
-            p = subprocess.Popen(args, env=environ)
-            while p.poll() is None: # Busy wait...
-                os.utime(lockfile, None) # I am alive!
-                time.sleep(interval)
-            if p.poll() != 3:
-                if os.path.exists(lockfile): os.unlink(lockfile)
-                sys.exit(p.poll())
-            elif not server.quiet:
-                print "Reloading server..."
-    except KeyboardInterrupt:
-        pass
-    if os.path.exists(lockfile): os.unlink(lockfile)
-
+                    self.status = 'reload'
+                    thread.interrupt_main()
+                    break
+            time.sleep(self.interval)
+    
+    def __enter__(self):
+        self.start()
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if not self.status: self.status = 'exit' # silent exit
+        self.join()
+        return issubclass(exc_type, KeyboardInterrupt)
 
 
 
@@ -2900,16 +2902,13 @@ if __name__ == '__main__':
     try:
         sys.path.insert(0, '.')
         sys.modules.setdefault('bottle', sys.modules['__main__'])
-        app = load_app(args[0])
-        for plugin in opt.plugin or []: app.install(plugin)
     except (AttributeError, ImportError), e:
         parser.error(e.args[0])
 
-    if opt.server not in server_names: parser.error('Unknown server backend.')
     if opt.bind and ':' in opt.bind: host, port = opt.bind.rsplit(':', 1)
     else: host, port = opt.bind or 'localhost', 8080
 
     debug(opt.debug)
-    run(app, host=host, port=port, server=opt.server, reloader=opt.reload)
+    run(args[0], host=host, port=port, server=opt.server, reloader=opt.reload, plugins=opt.plugin)
 
 # THE END
