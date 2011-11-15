@@ -25,6 +25,7 @@ if __name__ == '__main__':
     from optparse import OptionParser
     _cmd_parser = OptionParser(usage="usage: %prog [options] package.module:app")
     _opt = _cmd_parser.add_option
+    _opt("--version", action="store_true", help="show version number.")
     _opt("-b", "--bind", metavar="ADDRESS", help="bind socket to ADDRESS.")
     _opt("-s", "--server", default='wsgiref', help="use SERVER as backend.")
     _opt("-p", "--plugin", action="append", help="install additinal plugin/s.")
@@ -2897,7 +2898,10 @@ ext = _ImportRedirect(__name__+'.ext', 'bottle_%s').module
 
 if __name__ == '__main__':
     opt, args, parser = _cmd_options, _cmd_args, _cmd_parser
-    if not args: parser.error('No application specified.')
+    if opt.version:
+        print 'Bottle', __version__; sys.exit(0)
+    if not args:
+        parser.error('No application specified.')
 
     try:
         sys.path.insert(0, '.')
@@ -2905,8 +2909,10 @@ if __name__ == '__main__':
     except (AttributeError, ImportError), e:
         parser.error(e.args[0])
 
-    if opt.bind and ':' in opt.bind: host, port = opt.bind.rsplit(':', 1)
-    else: host, port = opt.bind or 'localhost', 8080
+    if opt.bind and ':' in opt.bind:
+        host, port = opt.bind.rsplit(':', 1)
+    else:
+        host, port = (opt.bind or 'localhost'), 8080
 
     debug(opt.debug)
     run(args[0], host=host, port=port, server=opt.server, reloader=opt.reload, plugins=opt.plugin)
