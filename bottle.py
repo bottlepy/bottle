@@ -15,7 +15,7 @@ License: MIT (see LICENSE.txt for details)
 from __future__ import with_statement
 
 __author__ = 'Marcel Hellkamp'
-__version__ = '0.9.6'
+__version__ = '0.9.7'
 __license__ = 'MIT'
 
 import base64
@@ -2294,7 +2294,7 @@ class SimpleTemplate(BaseTemplate):
         ptrbuffer = [] # Buffer for printable strings and token tuple instances
         codebuffer = [] # Buffer for generated python code
         multiline = dedent = oneline = False
-        template = self.source if self.source else open(self.filename).read()
+        template = self.source or open(self.filename, 'rb').read()
 
         def yield_tokens(line):
             for i, part in enumerate(re.split(r'\{\{(.*?)\}\}', line)):
