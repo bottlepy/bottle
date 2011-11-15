@@ -12,14 +12,14 @@ class TestFormsDict(unittest.TestCase):
         self.assertEqual(u'äöü', d.py3)
 
     def test_attr_missing(self):
-        """ FomsDict.attribute returs None on missing keys. """
+        """ FomsDict.attribute returs u'' on missing keys. """
         d = FormsDict()
-        self.assertEqual(None, d.missing)
+        self.assertEqual(u'', d.missing)
 
     def test_attr_unicode_error(self):
-        """ FomsDict.attribute returs None on UnicodeError. """
+        """ FomsDict.attribute returs u'' on UnicodeError. """
         d = FormsDict(latin=u'äöü'.encode('latin1'))
-        self.assertEqual(None, d.latin)
+        self.assertEqual(u'', d.latin)
         d.input_encoding = 'latin1'
         self.assertEqual(u'äöü', d.latin)
 

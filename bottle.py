@@ -19,6 +19,18 @@ __author__ = 'Marcel Hellkamp'
 __version__ = '0.10.dev'
 __license__ = 'MIT'
 
+import sys
+
+if __name__ == '__main__':
+    # This needs to happen before thread(ing) is imported.
+    from optparse import OptionParser
+    parser = OptionParser()
+    parser.add_option("-s", "--server")
+    opt, args = parser.parse_args()
+    if opt.server.startswith('gevent'):
+        from gevent import monkey
+        monkey.patch_all()
+
 import base64
 import cgi
 import email.utils
@@ -31,7 +43,6 @@ import mimetypes
 import os
 import re
 import subprocess
-import sys
 import tempfile
 import thread
 import threading
@@ -1582,9 +1593,6 @@ class MultiDict(DictMixin):
             pass
         return default
 
-    #: Alias for :meth:`get` to mimic other multi-dict APIs (Django)
-    getone = get
-
     def append(self, key, value):
         ''' Add a new value to the list of values for this key. '''
         self.dict.setdefault(key, []).append(value)
@@ -1597,6 +1605,11 @@ class MultiDict(DictMixin):
         ''' Return a (possibly empty) list of values for a key. '''
         return self.dict.get(key) or []
 
+    #: Aliases for WTForms to mimic other multi-dict APIs (Django)
+    getone = get
+    getlist = getall
+
+
 
 class FormsDict(MultiDict):
     ''' This :class:`MultiDict` subclass is used to store request form data.
@@ -1604,7 +1617,7 @@ class FormsDict(MultiDict):
         unmodified data as native strings), this container also supports
         attribute-like access to its values. Attribues are automatiically de- or
         recoded to match :attr:`input_encoding` (default: 'utf8'). Missing
-        attributes default to ``None``. '''
+        attributes default to an empty string. '''
 
     #: Encoding used for attribute values.
     input_encoding = 'utf8'
@@ -1620,7 +1633,7 @@ class FormsDict(MultiDict):
         except UnicodeError, e:
             return default
 
-    __getattr__ = getunicode
+    def __getattr__(self, name): return self.getunicode(name, default=u'')
 
 
 class HeaderDict(MultiDict):
@@ -2873,19 +2886,16 @@ app.push()
 #: Example: ``import bottle.ext.sqlite`` actually imports `bottle_sqlite`.
 ext = _ImportRedirect(__name__+'.ext', 'bottle_%s').module
 
-def main():
-    from optparse import OptionParser
-    parser = OptionParser(usage="usage: %prog [options] package.module:application")
+if __name__ == '__main__':
+    parser = OptionParser(usage="usage: %prog [options] package.module:app")
     add = parser.add_option
     add("-b", "--bind", metavar="ADDRESS", help="bind socket to ADDRESS.")
-    add("-s", "--server", help="use SERVER as backend. (default: wsgiref)")
+    add("-s", "--server", default='wsgiref', help="use SERVER as backend.")
     add("-p", "--plugin", action="append", help="install additinal plugin/s.")
     add("--debug", action="store_true", help="start server in debug mode.")
     add("--reload", action="store_true", help="auto-reload on file changes.")
     opt, args = parser.parse_args()
-    debug(opt.debug)
-
-    if len(args) != 1: parser.error('No application specified.')
+    if not args: parser.error('No application specified.')
 
     try:
         sys.path.insert(0, '.')
@@ -2895,14 +2905,11 @@ def main():
     except (AttributeError, ImportError), e:
         parser.error(e.args[0])
 
-    if opt.bind and ':' in opt.bind: host, port = opt.bind.rsplit(':', 1)
-    else:                            host, port = opt.bind or 'localhost', 8080
-    if not app.routes: parser.error('App does not define any routes.')
     if opt.server not in server_names: parser.error('Unknown server backend.')
-    run(app, host=host, port=port, server=opt.server or 'wsgiref',
-        reloader=opt.reload)
+    if opt.bind and ':' in opt.bind: host, port = opt.bind.rsplit(':', 1)
+    else: host, port = opt.bind or 'localhost', 8080
 
-if __name__ == '__main__':
-    main()
+    debug(opt.debug)
+    run(app, host=host, port=port, server=opt.server, reloader=opt.reload)
 
 # THE END
