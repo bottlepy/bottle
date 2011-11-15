@@ -24,17 +24,15 @@ __license__ = 'MIT'
 if __name__ == '__main__':
     from optparse import OptionParser
     _cmd_parser = OptionParser(usage="usage: %prog [options] package.module:app")
-    _a = _cmd_parser.add_option
-    _a("-b", "--bind", metavar="ADDRESS", help="bind socket to ADDRESS.")
-    _a("-s", "--server", default='wsgiref', help="use SERVER as backend.")
-    _a("-p", "--plugin", action="append", help="install additinal plugin/s.")
-    _a("--debug", action="store_true", help="start server in debug mode.")
-    _a("--reload", action="store_true", help="auto-reload on file changes.")
+    _opt = _cmd_parser.add_option
+    _opt("-b", "--bind", metavar="ADDRESS", help="bind socket to ADDRESS.")
+    _opt("-s", "--server", default='wsgiref', help="use SERVER as backend.")
+    _opt("-p", "--plugin", action="append", help="install additinal plugin/s.")
+    _opt("--debug", action="store_true", help="start server in debug mode.")
+    _opt("--reload", action="store_true", help="auto-reload on file changes.")
     _cmd_options, _cmd_args = _cmd_parser.parse_args()
-    del _a
     if _cmd_options.server and _cmd_options.server.startswith('gevent'):
-        import gevent.monkey
-        gevent.monkey.patch_all()
+        import gevent.monkey; gevent.monkey.patch_all()
 
 import sys
 import base64
@@ -1258,7 +1256,7 @@ class BaseResponse(object):
 
     def _get_status(self):
         depr('BaseReuqest.status will change to return a string in 0.11. Use'\
-             'status_line and status_code to make sure.') #0.10
+             ' status_line and status_code to make sure.') #0.10
         return self._status_code
 
     status = property(_get_status, _set_status, None,
