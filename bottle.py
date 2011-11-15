@@ -561,9 +561,9 @@ class Bottle(object):
                 rs = BaseResponse([], 200)
                 def start_response(status, header):
                     rs.status = status
-                    [rs.add_header(name, value) for name, value in header]
-                    return lambda x: out.append(x)
-                rs.body.extend(app(request.environ, start_response))
+                    for name, value in header: rs.add_header(name, value)
+                    return rs.body.append
+                rs.body = itertools.chain(rs.body, app(request.environ, start_response))
                 return HTTPResponse(rs.body, rs.status, rs.headers)
             finally:
                 request.path_shift(-path_depth)
