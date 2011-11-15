@@ -2637,7 +2637,7 @@ class SimpleTemplate(BaseTemplate):
         ptrbuffer = [] # Buffer for printable strings and token tuple instances
         codebuffer = [] # Buffer for generated python code
         multiline = dedent = oneline = False
-        template = self.source if self.source else open(self.filename).read()
+        template = self.source if self.source else open(self.filename, 'rb').read()
 
         def yield_tokens(line):
             for i, part in enumerate(re.split(r'\{\{(.*?)\}\}', line)):
