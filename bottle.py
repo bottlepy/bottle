@@ -20,11 +20,19 @@ __version__ = '0.10.dev'
 __license__ = 'MIT'
 
 # The gevent server adapter needs to patch some modules before they are imported
+# This is why we parse the commandline parameters here but handle them later
 if __name__ == '__main__':
-    import optparse
-    parser = optparse.OptionParser()
-    parser.add_option("-s", "--server")
-    if parser.parse_args()[0].server.startswith('gevent'):
+    from optparse import OptionParser
+    _cmd_parser = OptionParser(usage="usage: %prog [options] package.module:app")
+    _a = _cmd_parser.add_option
+    _a("-b", "--bind", metavar="ADDRESS", help="bind socket to ADDRESS.")
+    _a("-s", "--server", default='wsgiref', help="use SERVER as backend.")
+    _a("-p", "--plugin", action="append", help="install additinal plugin/s.")
+    _a("--debug", action="store_true", help="start server in debug mode.")
+    _a("--reload", action="store_true", help="auto-reload on file changes.")
+    _cmd_options, _cmd_args = _cmd_parser.parse_args()
+    del _a
+    if _cmd_options.server and _cmd_options.server.startswith('gevent'):
         import gevent.monkey
         gevent.monkey.patch_all()
 
@@ -2888,14 +2896,7 @@ app.push()
 ext = _ImportRedirect(__name__+'.ext', 'bottle_%s').module
 
 if __name__ == '__main__':
-    parser = optparse.OptionParser(usage="usage: %prog [options] package.module:app")
-    add = parser.add_option
-    add("-b", "--bind", metavar="ADDRESS", help="bind socket to ADDRESS.")
-    add("-s", "--server", default='wsgiref', help="use SERVER as backend.")
-    add("-p", "--plugin", action="append", help="install additinal plugin/s.")
-    add("--debug", action="store_true", help="start server in debug mode.")
-    add("--reload", action="store_true", help="auto-reload on file changes.")
-    opt, args = parser.parse_args()
+    opt, args, parser = _cmd_options, _cmd_args, _cmd_parser
     if not args: parser.error('No application specified.')
 
     try:
