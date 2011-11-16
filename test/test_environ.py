@@ -373,68 +373,68 @@ class TestResponse(unittest.TestCase):
         rs = BaseResponse()
 
         rs.status = 200
-        self.assertEqual(rs.status, 200)
+        self.assertEqual(rs.status, rs.status_line)
         self.assertEqual(rs.status_code, 200)
         self.assertEqual(rs.status_line, '200 OK')
 
         rs.status = 999
-        self.assertEqual(rs.status, 999)
+        self.assertEqual(rs.status, rs.status_line)
         self.assertEqual(rs.status_code, 999)
         self.assertEqual(rs.status_line, '999 Unknown')
 
         rs.status = 404
-        self.assertEqual(rs.status, 404)
+        self.assertEqual(rs.status, rs.status_line)
         self.assertEqual(rs.status_code, 404)
         self.assertEqual(rs.status_line, '404 Not Found')
 
         def test(): rs.status = -200
         self.assertRaises(ValueError, test)
-        self.assertEqual(rs.status, 404) # last value
+        self.assertEqual(rs.status, rs.status_line) # last value
         self.assertEqual(rs.status_code, 404) # last value
         self.assertEqual(rs.status_line, '404 Not Found') # last value
 
         def test(): rs.status = 5
         self.assertRaises(ValueError, test)
-        self.assertEqual(rs.status, 404) # last value
+        self.assertEqual(rs.status, rs.status_line) # last value
         self.assertEqual(rs.status_code, 404) # last value
         self.assertEqual(rs.status_line, '404 Not Found') # last value
 
         rs.status = '999 Who knows?' # Illegal, but acceptable three digit code
-        self.assertEqual(rs.status, 999)
+        self.assertEqual(rs.status, rs.status_line)
         self.assertEqual(rs.status_code, 999)
         self.assertEqual(rs.status_line, '999 Who knows?')
 
         rs.status = 555 # Strange code
-        self.assertEqual(rs.status, 555)
+        self.assertEqual(rs.status, rs.status_line)
         self.assertEqual(rs.status_code, 555)
         self.assertEqual(rs.status_line, '555 Unknown')
 
         rs.status = '404 Brain not Found' # Custom reason
-        self.assertEqual(rs.status, 404)
+        self.assertEqual(rs.status, rs.status_line)
         self.assertEqual(rs.status_code, 404)
         self.assertEqual(rs.status_line, '404 Brain not Found')
 
         def test(): rs.status = '5 Illegal Code'
         self.assertRaises(ValueError, test)
-        self.assertEqual(rs.status, 404) # last value
+        self.assertEqual(rs.status, rs.status_line) # last value
         self.assertEqual(rs.status_code, 404) # last value
         self.assertEqual(rs.status_line, '404 Brain not Found') # last value
 
         def test(): rs.status = '-99 Illegal Code'
         self.assertRaises(ValueError, test)
-        self.assertEqual(rs.status, 404) # last value
+        self.assertEqual(rs.status, rs.status_line) # last value
         self.assertEqual(rs.status_code, 404) # last value
         self.assertEqual(rs.status_line, '404 Brain not Found') # last value
 
         def test(): rs.status = '1000 Illegal Code'
         self.assertRaises(ValueError, test)
-        self.assertEqual(rs.status, 404) # last value
+        self.assertEqual(rs.status, rs.status_line) # last value
         self.assertEqual(rs.status_code, 404) # last value
         self.assertEqual(rs.status_line, '404 Brain not Found') # last value
 
         def test(): rs.status = '555' # No reason
         self.assertRaises(ValueError, test)
-        self.assertEqual(rs.status, 404) # last value
+        self.assertEqual(rs.status, rs.status_line) # last value
         self.assertEqual(rs.status_code, 404) # last value
         self.assertEqual(rs.status_line, '404 Brain not Found') # last value
 

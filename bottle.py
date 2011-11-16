@@ -35,24 +35,9 @@ if __name__ == '__main__':
     if _cmd_options.server and _cmd_options.server.startswith('gevent'):
         import gevent.monkey; gevent.monkey.patch_all()
 
-import sys
-import base64
-import cgi
-import email.utils
-import functools
-import hmac
-import httplib
-import imp
-import itertools
-import mimetypes
-import os
-import re
-import subprocess
-import tempfile
-import thread
-import threading
-import time
-import warnings
+import base64, cgi, email.utils, functools, hmac, httplib, imp, itertools, \
+       mimetypes, os, re, subprocess, sys, tempfile, thread, threading, time, \
+       urllib, warnings
 
 from Cookie import SimpleCookie
 from datetime import date as datedate, datetime, timedelta
@@ -61,10 +46,7 @@ from traceback import format_exc, print_exc
 from urlparse import urljoin, SplitResult as UrlSplitResult
 
 # Workaround for a bug in some versions of lib2to3 (fixed on CPython 2.7 and 3.2)
-import urllib
-urlencode = urllib.urlencode
-urlquote = urllib.quote
-urlunquote = urllib.unquote
+urlencode, urlquote, urlunquote = urllib.urlencode, urllib.quote, urllib.unquote
 
 try: from collections import MutableMapping as DictMixin
 except ImportError: # pragma: no cover
@@ -251,11 +233,14 @@ class RouteReset(BottleException):
 
 class RouterUnknownModeError(RouteError): pass
 
+
 class RouteSyntaxError(RouteError):
     """ The route parser found something not supported by this router """
 
+
 class RouteBuildError(RouteError):
     """ The route could not been built """
+
 
 class Router(object):
     ''' A Router is an ordered collection of route->target pairs. It is used to
@@ -428,13 +413,11 @@ class Router(object):
                         header=[('Allow',",".join(allowed))])
 
 
-
 class Route(object):
     ''' This class wraps a route callback along with route specific metadata and
         configuration and applies Plugins on demand. It is also responsible for
         turing an URL path rule into a regular expression usable by the Router.
     '''
-
 
     def __init__(self, app, rule, method, callback, name=None,
                  plugins=None, skiplist=None, **config):
@@ -575,7 +558,7 @@ class Bottle(object):
                     for name, value in header: rs.add_header(name, value)
                     return rs.body.append
                 rs.body = itertools.chain(rs.body, app(request.environ, start_response))
-                return HTTPResponse(rs.body, rs.status, rs.headers)
+                return HTTPResponse(rs.body, rs.status_code, rs.headers)
             finally:
                 request.path_shift(-path_depth)
 
@@ -1255,16 +1238,14 @@ class BaseResponse(object):
         self._status_line = status or ('%d Unknown' % code)
 
     def _get_status(self):
-        depr('BaseReuqest.status will change to return a string in 0.11. Use'\
-             ' status_line and status_code to make sure.') #0.10
-        return self._status_code
+        return self._status_line
 
     status = property(_get_status, _set_status, None,
         ''' A writeable property to change the HTTP response status. It accepts
             either a numeric code (100-999) or a string with a custom reason
             phrase (e.g. "404 Brain not found"). Both :data:`status_line` and
-            :data:`status_code` are updates accordingly. The return value is
-            always a numeric code. ''')
+            :data:`status_code` are updated accordingly. The return value is
+            always a status string. ''')
     del _get_status, _set_status
 
     @property
@@ -1301,7 +1282,7 @@ class BaseResponse(object):
         ''' Yield (header, value) tuples, skipping headers that are not
             allowed with the current response status code. '''
         headers = self._headers.iteritems()
-        bad_headers = self.bad_headers.get(self.status_code)
+        bad_headers = self.bad_headers.get(self._status_code)
         if bad_headers:
             headers = [h for h in headers if h[0] not in bad_headers]
         for name, values in headers:
