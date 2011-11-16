@@ -2297,7 +2297,7 @@ def load_app(target):
     try:
         tmp = default_app.push() # Create a new "default application"
         rv = load(target) # Import the target module
-        return rv if isinstance(rv, Bottle) else tmp
+        return rv if callable(rv) else tmp
     finally:
         default_app.remove(tmp) # Remove the temporary added default application
         NORUN = nr_old
