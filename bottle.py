@@ -631,8 +631,7 @@ class Bottle(object):
         """ Search for a matching route and return a (:class:`Route` , urlargs)
             tuple. The second value is a dictionary with parameters extracted
             from the URL. Raise :exc:`HTTPError` (404/405) on a non-match."""
-        route, args = self.router.match(environ)
-        return route, args
+        return self.router.match(environ)
 
     def get_url(self, routename, **kargs):
         """ Return a string that matches a named route """
@@ -727,7 +726,7 @@ class Bottle(object):
 
     def _handle(self, environ):
         try:
-            route, args = self.match(environ)
+            route, args = self.router.match(environ)
             environ['route.handle'] = environ['bottle.route'] = route
             environ['route.url_args'] = args
             return route.call(**args)
@@ -1304,7 +1303,7 @@ class BaseResponse(object):
         headers = self._headers.iteritems()
         bad_headers = self.bad_headers.get(self.status_code)
         if bad_headers:
-            headers = (h for h in headers if h[0] not in bad_headers)
+            headers = [h for h in headers if h[0] not in bad_headers]
         for name, values in headers:
             for value in values:
                 yield name, value
