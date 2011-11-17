@@ -76,6 +76,10 @@ div.body h2 {
   -webkit-border-bottom-left-radius: 15px;
 }
 
+div.body h3 {
+  margin: 2em 0 1em 0;
+}
+
 div.body h2 a {
   color: {{ linkcolor_border }};
 }
@@ -92,12 +96,10 @@ a:hover {
 
 /* Notes and Codes */
 
-pre, div.admonition {
-  background: #fafafa;
-  margin: 20px -15px;
-  padding: 10px 30px;
-  border-top: 1px solid #ccc;
-  border-bottom: 1px solid #ccc;
+pre {
+  background-color: {{ color_body }};
+  margin: 1em 2em;
+  padding: 0.5em;
 }
 
 dd pre, dd div.admonition {
@@ -110,6 +112,18 @@ div.admonition p.last {
   margin-bottom: 0;
 }
 
+div.admonition {
+  border: 1px solid {{ color_border }};
+  margin: 1em 2em;
+  padding: 0.5em;
+  font-size: 0.9em;
+  line-height: 1.3em;
+}
+
+div.admonition p.admonition-title {
+  margin: 0;
+}
+
 div.admonition p.admonition-title:after {
   content:":";
 }
@@ -119,7 +133,7 @@ div.warning {
 }
 
 div.note {
-  background-color: #ffd;
+  background-color: #ffc;
 }
 
 div.highlight {
@@ -132,9 +146,8 @@ pre {
 }
 
 code, tt.docutils {
-  border: 1px dotted #ddd;
-  background-color: #eee;
-  font-size: 85%;
+  font-size: 0.9em;
+  padding: 0 0.2em;
 }
 
 tt.xref {
