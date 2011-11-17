@@ -493,6 +493,9 @@ class Route(object):
                 return self._make_callback()
             functools.update_wrapper(callback, self.callback)
         return callback
+    
+    def __repr__(self):
+        return '<%s %r %r>' % (self.method, self.rule, self.callback)
 
 
 
