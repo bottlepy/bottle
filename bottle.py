@@ -2882,22 +2882,23 @@ ext = _ImportRedirect(__name__+'.ext', 'bottle_%s').module
 if __name__ == '__main__':
     opt, args, parser = _cmd_options, _cmd_args, _cmd_parser
     if opt.version:
-        print 'Bottle', __version__; sys.exit(0)
+        print 'Bottle', __version__
+        sys.exit(0)
     if not args:
         parser.error('No application specified.')
 
-    try:
-        sys.path.insert(0, '.')
-        sys.modules.setdefault('bottle', sys.modules['__main__'])
-    except (AttributeError, ImportError), e:
-        parser.error(e.args[0])
-
-    if opt.bind and ':' in opt.bind:
-        host, port = opt.bind.rsplit(':', 1)
-    else:
-        host, port = (opt.bind or 'localhost'), 8080
-
     debug(opt.debug)
-    run(args[0], host=host, port=port, server=opt.server, reloader=opt.reload, plugins=opt.plugin)
+    sys.path.insert(0, '.')
+    sys.modules.setdefault('bottle', sys.modules['__main__'])
+
+    host, port = (opt.bind or 'localhost'), 8080
+    if ':' in host:
+        host, port = host.rsplit(':', 1)
+
+    run(args[0], host=host, port=port, server=opt.server,
+        reloader=opt.reload, plugins=opt.plugin)
+
+
+
 
 # THE END
