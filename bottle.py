@@ -2093,13 +2093,23 @@ del name
 
 class ServerAdapter(object):
     quiet = False
-    def __init__(self, host='127.0.0.1', port=8080, **config):
-        self.options = config
+    def __init__(self, host='127.0.0.1', port=8080, unroot=False, **config):
         self.host = host
         self.port = int(port)
+        self.priv = ('nobody', 'nobody') if unroot is True else unroot 
+        self.options = config
 
     def run(self, handler): # pragma: no cover
         pass
+    
+    def drop_privileges(self):
+        if not self.priv: return
+        if os.getuid() != 0: return
+        uid, gid = self.priv
+        import pwd, grp # Lookup uid/gid by name
+        if not isinstance(uid, int): uid = pwd.getpwnam(uid).pw_uid
+        if not isinstance(gid, int): gid = grp.getgrnam(gid).gr_gid
+        os.setgroups([]); os.setgid(gid); os.setuid(uid); os.umask(077)
 
     def __repr__(self):
         args = ', '.join(['%s=%s'%(k,repr(v)) for k, v in self.options.items()])
@@ -2131,6 +2141,7 @@ class WSGIRefServer(ServerAdapter):
                 def log_request(*args, **kw): pass
             self.options['handler_class'] = QuietHandler
         srv = make_server(self.host, self.port, handler, **self.options)
+        self.drop_privileges()
         srv.serve_forever()
 
 
