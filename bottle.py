@@ -123,6 +123,10 @@ def tob(data, enc='utf8'):
 tonat = touni if py3k else tob
 tonat.__doc__ = """ Convert anything to native strings """
 
+def try_update_wrapper(wrapper, wrapped, *a, **ka):
+    try: # Bug: functools breaks if wrapper is an instane method
+        functools.update_wrapper(wrapper, wrapped, *a, **ka)
+    except AttributeError: pass
 
 # Backward compatibility
 def depr(message):
@@ -508,7 +512,8 @@ class Route(object):
                     callback = plugin(callback)
             except RouteReset: # Try again with changed configuration.
                 return self._make_callback()
-            functools.update_wrapper(callback, self.callback)
+            if not callback is self.callback:
+                try_update_wrapper(callback, self.callback)
         return callback
 
 
