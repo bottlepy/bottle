@@ -182,6 +182,15 @@ class TestPluginAPI(tools.ServerTestBase):
         self.app.install(Plugin())
         self.assertBody('test:plugin.cfg; tail', '/')
 
+    def test_instance_method_wrapper(self):
+        class Plugin(object):
+            api=2
+            def apply(self, callback, route):
+                return self.b
+            def b(self): return "Hello"
+        self.app.install(Plugin())
+        self.assertBody('Hello', '/')
+
     def test_setup(self):
         class Plugin(object):
             def __call__(self, func): return func
