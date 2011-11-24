@@ -1,3 +1,6 @@
+<p>
+   Bottle is a fast, simple and lightweight WSGI micro web-framework for Python.
+</p>
 <h3>Some Links</h3>
 <ul>
   <li><a target="_blank" href="https://github.com/defnull/bottle/issues">Issue Tracker</a></li>
@@ -19,7 +22,11 @@
 <h3>Other Releases</h3>
 <ul>
   {% for v, name in releases %}
-  <li><a href="http://bottlepy.org/docs/{{v}}/">Bottle {{v}} ({{name}})</a></li>
+    {% if v == version %}
+      <li><b>Bottle {{v}}</b> ({{name}})</li>
+    {% else %}
+      <li><a href="http://bottlepy.org/docs/{{v}}/">Bottle {{v}}</a> ({{name}})</li>
+  {% endif %}
   {% endfor %}
 </ul>
 

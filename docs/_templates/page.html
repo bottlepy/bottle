@@ -1,0 +1,9 @@
+{% extends "!page.html" %}
+
+{% block body %}
+  {% if 'dev' in release or 'rc' in release %}
+  <p style='font-size: 0.75em; color: darkred'><b>Warning:</b> This is a preview for <b>Bottle-{{release}}</b>, which is
+    not released yet. Switch to the latest <a href="http://bottlepy.org/docs/stable/"><b>stable release</b></a>?</p>
+  {% endif %}
+  {{ super() }}
+{% endblock %}
