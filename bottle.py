@@ -77,6 +77,12 @@ if sys.version_info < (2,6,0):
     msg = "Python 2.5 support may be dropped in future versions of Bottle."
     warnings.warn(msg, DeprecationWarning)
 
+def _e():
+    return sys.exc_info()[1]
+
+_stdout = sys.stdout.write
+_stderr = sys.stderr.write
+
 if py3k: # pragma: no cover
     json_loads = lambda s: json_lds(touni(s))
     # See Request.POST
@@ -355,8 +361,8 @@ class Router(object):
 
         try:
             re_match = re.compile('^(%s)$' % pattern).match
-        except re.error, e:
-            raise RouteSyntaxError("Could not add Route: %s (%s)" % (rule, e))
+        except re.error:
+            raise RouteSyntaxError("Could not add Route: %s (%s)" % (rule, _e()))
 
         def match(path):
             """ Return an url-argument dictionary. """
@@ -372,7 +378,7 @@ class Router(object):
             combined = '%s|(^%s$)' % (self.dynamic[-1][0].pattern, flat_pattern)
             self.dynamic[-1] = (re.compile(combined), self.dynamic[-1][1])
             self.dynamic[-1][1].append((match, target))
-        except (AssertionError, IndexError), e: # AssertionError: Too many groups
+        except (AssertionError, IndexError): # AssertionError: Too many groups
             self.dynamic.append((re.compile('(^%s$)' % flat_pattern),
                                 [(match, target)]))
         return match
@@ -385,8 +391,8 @@ class Router(object):
             for i, value in enumerate(anons): query['anon%d'%i] = value
             url = ''.join([f(query.pop(n)) if n else f for (n,f) in builder])
             return url if not query else url+'?'+urlencode(query)
-        except KeyError, e:
-            raise RouteBuildError('Missing URL argument: %r' % e.args[0])
+        except KeyError:
+            raise RouteBuildError('Missing URL argument: %r' % _e().args[0])
 
     def match(self, environ):
         ''' Return a (target, url_agrs) tuple or raise HTTPError(400/404/405). '''
@@ -721,18 +727,18 @@ class Bottle(object):
             environ['route.handle'] = environ['bottle.route'] = route
             environ['route.url_args'] = args
             return route.call(**args)
-        except HTTPResponse, r:
-            return r
+        except HTTPResponse:
+            return _e()
         except RouteReset:
             route.reset()
             return self._handle(environ)
         except (KeyboardInterrupt, SystemExit, MemoryError):
             raise
-        except Exception, e:
+        except Exception:
             if not self.catchall: raise
             stacktrace = format_exc(10)
             environ['wsgi.errors'].write(stacktrace)
-            return HTTPError(500, "Internal Server Error", e, stacktrace)
+            return HTTPError(500, "Internal Server Error", _e(), stacktrace)
 
     def _cast(self, out, request, response, peek=None):
         """ Try to convert the parameter into something WSGI compatible and set
@@ -783,13 +789,14 @@ class Bottle(object):
                 first = out.next()
         except StopIteration:
             return self._cast('', request, response)
-        except HTTPResponse, e:
-            first = e
-        except Exception, e:
-            first = HTTPError(500, 'Unhandled exception', e, format_exc(10))
-            if isinstance(e, (KeyboardInterrupt, SystemExit, MemoryError))\
-            or not self.catchall:
-                raise
+        except HTTPResponse:
+            first = _e()
+        except (KeyboardInterrupt, SystemExit, MemoryError):
+            raise
+        except Exception:
+            if self.catchall: raise
+            first = HTTPError(500, 'Unhandled exception', _e(), format_exc(10))
+
         # These are the inner types allowed in iterator or generator objects.
         if isinstance(first, HTTPResponse):
             return self._cast(first, request, response)
@@ -817,12 +824,12 @@ class Bottle(object):
             return out
         except (KeyboardInterrupt, SystemExit, MemoryError):
             raise
-        except Exception, e:
+        except Exception:
             if not self.catchall: raise
             err = '<h1>Critical error while processing request: %s</h1>' \
                   % environ.get('PATH_INFO', '/')
             if DEBUG:
-                err += '<h2>Error:</h2>\n<pre>%s</pre>\n' % repr(e)
+                err += '<h2>Error:</h2>\n<pre>%s</pre>\n' % repr(_e())
                 err += '<h2>Traceback:</h2>\n<pre>%s</pre>\n' % format_exc(10)
             environ['wsgi.errors'].write(err) #TODO: wsgi.error should not get html
             start_response('500 INTERNAL SERVER ERROR', [('Content-Type', 'text/html')])
@@ -1588,7 +1595,7 @@ class MultiDict(DictMixin):
         try:
             val = self.dict[key][index]
             return type(val) if type else val
-        except Exception, e:
+        except Exception:
             pass
         return default
 
@@ -1629,10 +1636,11 @@ class FormsDict(MultiDict):
             elif isinstance(value, unicode): # Python 3 WSGI
                 return value.encode('latin1').decode(enc)
             return value
-        except UnicodeError, e:
+        except UnicodeError:
             return default
 
-    def __getattr__(self, name): return self.getunicode(name, default=u'')
+    def __getattr__(self, name):
+        return self.getunicode(name, default=unicode())
 
 
 class HeaderDict(MultiDict):
@@ -2108,8 +2116,8 @@ class FapwsServer(ServerAdapter):
         evwsgi.start(self.host, port)
         # fapws3 never releases the GIL. Complain upstream. I tried. No luck.
         if 'BOTTLE_CHILD' in os.environ and not self.quiet:
-            print "WARNING: Auto-reloading does not work with Fapws3."
-            print "         (Fapws3 breaks python thread support)"
+            _stderr("WARNING: Auto-reloading does not work with Fapws3.\n")
+            _stderr("         (Fapws3 breaks python thread support)\n")
         evwsgi.set_base_module(base)
         def app(environ, start_response):
             environ['wsgi.multiprocess'] = False
@@ -2333,8 +2341,6 @@ def run(app=None, server='wsgiref', host='127.0.0.1', port=8080,
                 os.unlink(lockfile)
         return
 
-    stderr = sys.stderr.write
-
     try:
         app = app or default_app()
         if isinstance(app, basestring):
@@ -2356,9 +2362,9 @@ def run(app=None, server='wsgiref', host='127.0.0.1', port=8080,
 
         server.quiet = server.quiet or quiet
         if not server.quiet:
-            stderr("Bottle server starting up (using %s)...\n" % repr(server))
-            stderr("Listening on http://%s:%d/\n" % (server.host, server.port))
-            stderr("Hit Ctrl-C to quit.\n\n")
+            _stderr("Bottle server starting up (using %s)...\n" % repr(server))
+            _stderr("Listening on http://%s:%d/\n" % (server.host, server.port))
+            _stderr("Hit Ctrl-C to quit.\n\n")
 
         if reloader:
             lockfile = os.environ.get('BOTTLE_LOCKFILE')
@@ -2887,7 +2893,7 @@ ext = _ImportRedirect(__name__+'.ext', 'bottle_%s').module
 if __name__ == '__main__':
     opt, args, parser = _cmd_options, _cmd_args, _cmd_parser
     if opt.version:
-        print 'Bottle', __version__
+        _stdout('Bottle %s\n'%__version__)
         sys.exit(0)
     if not args:
         parser.error('No application specified.')
