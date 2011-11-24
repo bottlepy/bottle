@@ -505,7 +505,7 @@ class Route(object):
             except RouteReset: # Try again with changed configuration.
                 return self._make_callback()
             if not callback is self.callback:
-                try_update_wrapper(callback, self.callback)
+                update_wrapper(callback, self.callback)
         return callback
     
     def __repr__(self):
@@ -797,7 +797,7 @@ class Bottle(object):
         except (KeyboardInterrupt, SystemExit, MemoryError):
             raise
         except Exception:
-            if self.catchall: raise
+            if not self.catchall: raise
             first = HTTPError(500, 'Unhandled exception', _e(), format_exc(10))
 
         # These are the inner types allowed in iterator or generator objects.
@@ -1564,26 +1564,32 @@ class MultiDict(DictMixin):
     """
 
     def __init__(self, *a, **k):
-        self.dict = dict((k, [v]) for k, v in dict(*a, **k).items())
+        self.dict = dict((k, [v]) for (k, v) in dict(*a, **k).items())
+
     def __len__(self): return len(self.dict)
     def __iter__(self): return iter(self.dict)
     def __contains__(self, key): return key in self.dict
     def __delitem__(self, key): del self.dict[key]
     def __getitem__(self, key): return self.dict[key][-1]
     def __setitem__(self, key, value): self.append(key, value)
-    def iterkeys(self): return self.dict.iterkeys()
-    def itervalues(self): return (v[-1] for v in self.dict.itervalues())
-    def iteritems(self): return ((k, v[-1]) for (k, v) in self.dict.items())
-    def iterallitems(self):
-        for key, values in self.dict.items():
-            for value in values:
-                yield key, value
+    def keys(self): return self.dict.keys()
 
-    # 2to3 is not able to fix these automatically.
-    keys     = iterkeys     if py3k else lambda self: list(self.iterkeys())
-    values   = itervalues   if py3k else lambda self: list(self.itervalues())
-    items    = iteritems    if py3k else lambda self: list(self.iteritems())
-    allitems = iterallitems if py3k else lambda self: list(self.iterallitems())
+    if py3k:
+        def values(self): return (v[-1] for v in self.dict.values())
+        def items(self): return ((k, v[-1]) for k, v in self.dict.items())
+        def allitems(self):
+            return ((k, v) for k, vl in self.dict.items() for v in vl)
+    else:
+        def values(self): return [v[-1] for v in self.dict.values()]
+        def items(self): return [(k, v[-1]) for k, v in self.dict.items()]
+        def iterkeys(self): return self.dict.iterkeys()
+        def itervalues(self): return (v[-1] for v in self.dict.itervalues())
+        def iteritems(self):
+            return ((k, v[-1]) for k, v in self.dict.iteritems())
+        def iterallitems(self):
+            return ((k, v) for k, vl in self.dict.iteritems() for v in vl)
+        def allitems(self):
+            return [(k, v) for k, vl in self.dict.iteritems() for v in vl]
 
     def get(self, key, default=None, index=-1, type=None):
         ''' Return the most recent value for a key.
