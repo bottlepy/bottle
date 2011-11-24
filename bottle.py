@@ -94,6 +94,7 @@ else:
         warnings.warn(msg, DeprecationWarning)
         from cgi import parse_qs
         from UserDict import DictMixin
+        def next(it): return it.next()
         bytes = str
     else: # 2.6, 2.7
         from urlparse import parse_qs
@@ -787,9 +788,9 @@ class Bottle(object):
         # Handle Iterables. We peek into them to detect their inner type.
         try:
             out = iter(out)
-            first = out.next()
+            first = next(out)
             while not first:
-                first = out.next()
+                first = next(out)
         except StopIteration:
             return self._cast('', request, response)
         except HTTPResponse:
