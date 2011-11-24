@@ -1,5 +1,5 @@
 <p>
-  This is the documentation of Bottle, a fast, simple and lightweight WSGI micro web-framework for Python.
+   Bottle is a fast, simple and lightweight WSGI micro web-framework for Python.
 </p>
 <h3>Some Links</h3>
 <ul>
@@ -7,7 +7,9 @@
   <li><a target="_blank" href="http://pypi.python.org/pypi/bottle">Bottle @ PyPI</a></li>
   <li><a target="_blank" href="https://github.com/defnull/bottle">Bottle @ GitHub</a></li>
   <li><a target="_blank" href="http://groups.google.de/group/bottlepy">Bottle @ Google Groups</a></li>
+  <li><a target="_blank" href="https://plus.google.com/b/104025895326575643538/104025895326575643538/posts">Bottle @ Google plus</a></li>
   <li><a target="_blank" href="http://twitter.com/bottlepy">Bottle @ Twitter</a></li>
+  <li><a target="_blank" href="http://webchat.freenode.net/?channels=bottlepy">Bottle @ Freenode (Chat)</a></li>
 </ul>
 <h3>Installation</h3>
 <p>Install Bottle with <code>pip&nbsp;install&nbsp;bottle</code> or download the source package at <a href="http://pypi.python.org/pypi/bottle">PyPI</a>.</p>
@@ -19,9 +21,13 @@
 <p>Browse the sources at <a href="https://github.com/defnull/bottle">GitHub</a>.</p>
 <h3>Other Releases</h3>
 <ul>
-  <li><a href="http://bottlepy.org/docs/dev/">Bottle dev (development)</a></li>
-  <li><a href="http://bottlepy.org/docs/0.9/">Bottle 0.9 (stable)</a></li>
-  <li><a href="http://bottlepy.org/docs/0.8/">Bottle 0.8 (oldstable)</a></li>
+  {% for v, name in releases %}
+    {% if v == version %}
+      <li><b>Bottle {{v}}</b> ({{name}})</li>
+    {% else %}
+      <li><a href="http://bottlepy.org/docs/{{v}}/">Bottle {{v}}</a> ({{name}})</li>
+  {% endif %}
+  {% endfor %}
 </ul>
 
 
