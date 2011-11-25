@@ -88,9 +88,9 @@ class TestRequest(unittest.TestCase):
         e = {}
         wsgiref.util.setup_testing_defaults(e)
         request = BaseRequest(e)
-        self.assertEqual(list(request), e.keys())
+        self.assertEqual(list(request), list(e.keys()))
         self.assertEqual(len(request), len(e))
-        for k, v in e.iteritems():
+        for k, v in e.items():
             self.assertTrue(k in request)
             self.assertEqual(request[k], v)
             request[k] = 'test'
@@ -129,7 +129,7 @@ class TestRequest(unittest.TestCase):
         t['a=a']      = {'a': 'a'}
         t['a=a; b=b'] = {'a': 'a', 'b':'b'}
         t['a=a; a=b'] = {'a': 'b'}
-        for k, v in t.iteritems():
+        for k, v in t.items():
             request = BaseRequest({'HTTP_COOKIE': k})
             for n in v:
                 self.assertEqual(v[n], request.cookies[n])
@@ -147,7 +147,7 @@ class TestRequest(unittest.TestCase):
         
     def test_post(self):
         """ Environ: POST data """ 
-        sq = u'a=a&a=1&b=b&c=&d'.encode('utf8')
+        sq = 'a=a&a=1&b=b&c=&d'.encode('utf8')
         e = {}
         wsgiref.util.setup_testing_defaults(e)
         e['wsgi.input'].write(sq)
@@ -165,7 +165,7 @@ class TestRequest(unittest.TestCase):
         self.assertEqual('', request.POST['d'])
 
     def test_bodypost(self):
-        sq = u'foobar'.encode('utf8')
+        sq = 'foobar'.encode('utf8')
         e = {}
         wsgiref.util.setup_testing_defaults(e)
         e['wsgi.input'].write(sq)
@@ -177,7 +177,7 @@ class TestRequest(unittest.TestCase):
 
     def test_body_noclose(self):
         """ Test that the body file handler is not closed after request.POST """
-        sq = u'a=a&a=1&b=b&c=&d'.encode('utf8')
+        sq = 'a=a&a=1&b=b&c=&d'.encode('utf8')
         e = {}
         wsgiref.util.setup_testing_defaults(e)
         e['wsgi.input'].write(sq)
@@ -206,33 +206,33 @@ class TestRequest(unittest.TestCase):
         """ Environ: GET and POST should not leak into each other """ 
         e = {}
         wsgiref.util.setup_testing_defaults(e)
-        e['wsgi.input'].write(u'b=b'.encode('utf8'))
+        e['wsgi.input'].write('b=b'.encode('utf8'))
         e['wsgi.input'].seek(0)
         e['CONTENT_LENGTH'] = '3'
         e['QUERY_STRING'] = 'a=a'
         e['REQUEST_METHOD'] = "POST"
         request = BaseRequest(e)
-        self.assertEqual(['a'], request.GET.keys())
-        self.assertEqual(['b'], request.POST.keys())
+        self.assertEqual(['a'], list(request.GET.keys()))
+        self.assertEqual(['b'], list(request.POST.keys()))
 
     def test_body(self):
         """ Environ: Request.body should behave like a file object factory """ 
         e = {}
         wsgiref.util.setup_testing_defaults(e)
-        e['wsgi.input'].write(u'abc'.encode('utf8'))
+        e['wsgi.input'].write('abc'.encode('utf8'))
         e['wsgi.input'].seek(0)
         e['CONTENT_LENGTH'] = str(3)
         request = BaseRequest(e)
-        self.assertEqual(u'abc'.encode('utf8'), request.body.read())
-        self.assertEqual(u'abc'.encode('utf8'), request.body.read(3))
-        self.assertEqual(u'abc'.encode('utf8'), request.body.readline())
-        self.assertEqual(u'abc'.encode('utf8'), request.body.readline(3))
+        self.assertEqual('abc'.encode('utf8'), request.body.read())
+        self.assertEqual('abc'.encode('utf8'), request.body.read(3))
+        self.assertEqual('abc'.encode('utf8'), request.body.readline())
+        self.assertEqual('abc'.encode('utf8'), request.body.readline(3))
 
     def test_bigbody(self):
         """ Environ: Request.body should handle big uploads using files """
         e = {}
         wsgiref.util.setup_testing_defaults(e)
-        e['wsgi.input'].write((u'x'*1024*1000).encode('utf8'))
+        e['wsgi.input'].write(('x'*1024*1000).encode('utf8'))
         e['wsgi.input'].seek(0)
         e['CONTENT_LENGTH'] = str(1024*1000)
         request = BaseRequest(e)
@@ -246,7 +246,7 @@ class TestRequest(unittest.TestCase):
         """ Environ: Request.body should truncate to Content-Length bytes """
         e = {}
         wsgiref.util.setup_testing_defaults(e)
-        e['wsgi.input'].write((u'x'*1024).encode('utf8'))
+        e['wsgi.input'].write(('x'*1024).encode('utf8'))
         e['wsgi.input'].seek(0)
         e['CONTENT_LENGTH'] = '42'
         request = BaseRequest(e)
@@ -258,7 +258,7 @@ class TestRequest(unittest.TestCase):
     def test_multipart(self):
         """ Environ: POST (multipart files and multible values per key) """
         fields = [('field1','value1'), ('field2','value2'), ('field2','value3')]
-        files = [('file1','filename1.txt','content1'), ('file2','filename2.py',u'ä\nö\rü')]
+        files = [('file1','filename1.txt','content1'), ('file2','filename2.py','ä\nö\rü')]
         e = tools.multipart_environ(fields=fields, files=files)
         request = BaseRequest(e)
         # File content
@@ -276,7 +276,7 @@ class TestRequest(unittest.TestCase):
         x = request.POST['file2'].file.read()
         if (3,2,0) > sys.version_info >= (3,0,0):
             x = x.encode('ISO-8859-1')
-        self.assertEqual(u'ä\nö\rü'.encode('utf8'), x)
+        self.assertEqual('ä\nö\rü'.encode('utf8'), x)
         # No file
         self.assertTrue('file3' not in request.POST)
         self.assertTrue('file3' not in request.files)
@@ -545,7 +545,7 @@ class TestRedirect(unittest.TestCase):
         request.bind(env)
         try:
             bottle.redirect(target, **(query or {}))
-        except bottle.HTTPResponse, r:
+        except bottle.HTTPResponse as r:
             self.assertEqual(status, r.status)
             self.assertTrue(r.headers)
             self.assertEqual(result, r.headers['Location'])

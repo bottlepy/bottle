@@ -64,10 +64,10 @@ py25 = py <  (2,6,0)
 # Workaround for the missing "as" keyword in py3k.
 def _e(): return sys.exc_info()[1]
 
-# Workaround for the "print is a keyword/function" dilemma .
+# Workaround for the "print is a keyword/function" dilemma.
 _stdout, _stderr = sys.stdout.write, sys.stderr.write
 
-# Lots of import and builtin differences.
+# Lots of stdlib and builtin differences.
 if py3k:
     import http.client as httplib
     import _thread as thread
@@ -81,7 +81,7 @@ if py3k:
     unicode = str
     json_loads = lambda s: json_lds(touni(s))
     callable = lambda x: hasattr(x, '__call__')
-else:
+else: # 2.x
     import httplib
     import thread
     from urlparse import urljoin, SplitResult as UrlSplitResult
@@ -211,7 +211,7 @@ class HTTPResponse(BottleException):
 
     def apply(self, response):
         if self.headers:
-            for key, value in self.headers.iterallitems():
+            for key, value in self.headers.allitems():
                 response.headers[key] = value
         response.status = self.status
 
@@ -807,8 +807,9 @@ class Bottle(object):
         if isinstance(first, bytes):
             return itertools.chain([first], out)
         if isinstance(first, unicode):
-            return itertools.imap(lambda x: x.encode(response.charset),
-                                  itertools.chain([first], out))
+            return map(lambda x: x.encode(response.charset),
+                itertools.chain([first], out))
+
         return self._cast(HTTPError(500, 'Unsupported response type: %s'\
                                          % type(first)), request, response)
 
@@ -926,7 +927,7 @@ class BaseRequest(DictMixin):
             :class:`FormsDict`. All keys and values are strings. File uploads
             are stored separately in :attr:`files`. """
         forms = FormsDict()
-        for name, item in self.POST.iterallitems():
+        for name, item in self.POST.allitems():
             if not hasattr(item, 'filename'):
                 forms[name] = item
         return forms
@@ -936,9 +937,9 @@ class BaseRequest(DictMixin):
         """ A :class:`FormsDict` with the combined values of :attr:`query` and
             :attr:`forms`. File uploads are stored in :attr:`files`. """
         params = FormsDict()
-        for key, value in self.query.iterallitems():
+        for key, value in self.query.allitems():
             params[key] = value
-        for key, value in self.forms.iterallitems():
+        for key, value in self.forms.allitems():
             params[key] = value
         return params
 
@@ -960,7 +961,7 @@ class BaseRequest(DictMixin):
                 on big files.
         """
         files = FormsDict()
-        for name, item in self.POST.iterallitems():
+        for name, item in self.POST.allitems():
             if hasattr(item, 'filename'):
                 files[name] = item
         return files
@@ -1649,8 +1650,8 @@ class FormsDict(MultiDict):
         except UnicodeError:
             return default
 
-    def __getattr__(self, name):
-        return self.getunicode(name, default=unicode())
+    def __getattr__(self, name, default=unicode()):
+        return self.getunicode(name, default=default)
 
 
 class HeaderDict(MultiDict):
@@ -2309,6 +2310,7 @@ def load_app(target):
         default_app.remove(tmp) # Remove the temporary added default application
         NORUN = nr_old
 
+
 def run(app=None, server='wsgiref', host='127.0.0.1', port=8080,
         interval=1, reloader=False, quiet=False, plugins=None, **kargs):
     """ Start a server instance. This method blocks until the server terminates.
@@ -2581,9 +2583,9 @@ class Jinja2Template(BaseTemplate):
 
     def loader(self, name):
         fname = self.search(name, self.lookup)
-        if fname:
-            with open(fname, "rb") as f:
-                return f.read().decode(self.encoding)
+        if not fname: return
+        with open(fname, "rb") as f:
+            return f.read().decode(self.encoding)
 
 
 class SimpleTALTemplate(BaseTemplate):

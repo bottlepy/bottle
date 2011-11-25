@@ -36,19 +36,19 @@ class TestMakoTemplate(unittest.TestCase):
 
     def test_template_shortcut(self):
         result = mako_template('start ${var} end', var='middle')
-        self.assertEqual(u'start middle end', result)
+        self.assertEqual('start middle end', result)
 
     def test_view_decorator(self):
         @mako_view('start ${var} end')
         def test():
             return dict(var='middle')
-        self.assertEqual(u'start middle end', test())
+        self.assertEqual('start middle end', test())
 
 
 try:
   import mako
 except ImportError:
-  print "WARNING: No Mako template support. Skipping tests."
+  print("WARNING: No Mako template support. Skipping tests.")
   del TestMakoTemplate
 
 if __name__ == '__main__': #pragma: no cover

@@ -8,10 +8,10 @@ class TestMultiDict(unittest.TestCase):
         d['key'], m['key'] = 'value', 'value'
         d['k2'], m['k2'] = 'v1', 'v1'
         d['k2'], m['k2'] = 'v2', 'v2'
-        self.assertEqual(d.keys(), m.keys())
-        self.assertEqual(d.values(), m.values())
-        self.assertEqual(list(d.iterkeys()), list(m.iterkeys()))
-        self.assertEqual(list(d.itervalues()), list(m.itervalues()))
+        self.assertEqual(list(d.keys()), list(m.keys()))
+        self.assertEqual(list(d.values()), list(m.values()))
+        self.assertEqual(list(d.keys()), list(m.keys()))
+        self.assertEqual(list(d.values()), list(m.values()))
         self.assertEqual(d.get('key'), m.get('key'))
         self.assertEqual(d.get('cay'), m.get('cay'))
         self.assertEqual(list(iter(d)), list(iter(m)))
@@ -27,7 +27,7 @@ class TestMultiDict(unittest.TestCase):
         m['a'] = 6
         self.assertEqual([5, 6], m.getall('a'))
         self.assertEqual([], m.getall('b'))
-        self.assertEqual([('a', 5), ('a', 6)], list(m.iterallitems()))
+        self.assertEqual([('a', 5), ('a', 6)], list(m.allitems()))
    
     def test_isheader(self):
         """ HeaderDict replaces by default and title()s its keys """
@@ -36,7 +36,7 @@ class TestMultiDict(unittest.TestCase):
         self.assertEqual(['6'], m.getall('abc_def'))
         m.append('abc_def', 7)
         self.assertEqual(['6', '7'], m.getall('abc_def'))
-        self.assertEqual([('Abc-Def', '6'), ('Abc-Def', '7')], list(m.iterallitems()))
+        self.assertEqual([('Abc-Def', '6'), ('Abc-Def', '7')], list(m.allitems()))
     
     def test_headergetbug(self):
         ''' Assure HeaderDict.get() to be case insensitive '''

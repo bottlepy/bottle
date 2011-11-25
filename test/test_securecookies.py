@@ -4,7 +4,7 @@ from tools import tob
 
 class TestSecureCookies(unittest.TestCase):
     def setUp(self):
-        self.data = dict(a=5, b=u'unicode', c=[1,2,3,4,tob('bytestring')])
+        self.data = dict(a=5, b='unicode', c=[1,2,3,4,tob('bytestring')])
         self.key = tob('secret')
 
     def testDeEncode(self):
@@ -21,7 +21,7 @@ class TestSecureCookies(unittest.TestCase):
 
 class TestSecureCookiesInBottle(unittest.TestCase):
     def setUp(self):
-        self.data = dict(a=5, b=u'unicode', c=[1,2,3,4,tob('bytestring')])
+        self.data = dict(a=5, b='unicode', c=[1,2,3,4,tob('bytestring')])
         self.secret = tob('secret')
         bottle.app.push()
         bottle.response.bind()

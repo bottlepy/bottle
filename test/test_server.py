@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import unittest
 import bottle
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import time
 from tools import tob
 import sys
@@ -20,7 +20,7 @@ def ping(server, port):
         s.connect((server, port))
         s.close()
         return True
-    except socket.error, e:
+    except socket.error as e:
         return False
 
 class TestServer(unittest.TestCase):
@@ -37,7 +37,7 @@ class TestServer(unittest.TestCase):
             cmd += sys.argv[1:] # pass cmdline arguments to subprocesses
             self.p = Popen(cmd, stdout=PIPE, stderr=PIPE)
             # Wait for the socket to accept connections
-            for i in xrange(100):
+            for i in range(100):
                 time.sleep(0.1)
                 # Accepts connections?
                 if ping('127.0.0.1', port): return
@@ -73,8 +73,8 @@ class TestServer(unittest.TestCase):
 
     def fetch(self, url):
         try:
-            return urllib2.urlopen('http://127.0.0.1:%d/%s' % (self.port, url)).read()
-        except Exception, e:
+            return urllib.request.urlopen('http://127.0.0.1:%d/%s' % (self.port, url)).read()
+        except Exception as e:
             return repr(e)
 
     def test_simple(self):

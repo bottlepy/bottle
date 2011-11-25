@@ -1,9 +1,9 @@
 import unittest
 import sys, os.path
 import bottle
-import urllib2
-from StringIO import StringIO
-import thread
+import urllib.request, urllib.error, urllib.parse
+from io import StringIO
+import _thread
 import time
 from tools import ServerTestBase
 from bottle import tob, touni, tonat, Bottle
