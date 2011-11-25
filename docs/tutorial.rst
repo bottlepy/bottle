@@ -44,7 +44,6 @@ Bottle does not depend on any external libraries. You can just download `bottle.
 .. code-block:: bash
 
     $ curl -O http://bottlepy.org/bottle.py
-    $ 2to3 -w bottle.py  # Python 3.x users only!
 
 This will get you the latest development snapshot that includes all the new features. If you prefer a more stable environment, you should stick with the stable releases. These are available on `PyPi <http://pypi.python.org/pypi/bottle>`_ and can be installed via :command:`pip` (recommended), :command:`easy_install` or your package manager:
 

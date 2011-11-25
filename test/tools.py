@@ -10,28 +10,16 @@ import wsgiref
 import wsgiref.simple_server
 import wsgiref.util
 import wsgiref.validate
-import warnings
+from warnings import warn
 
-from StringIO import StringIO
-try:
-    from io import BytesIO
-except:
-    BytesIO = None
-    pass
 import mimetypes
 import uuid
 
-def tob(data):
-    ''' Transforms bytes or unicode into bytes. '''
-    return data.encode('utf8') if isinstance(data, unicode) else data
+from bottle import tob, touni, tonat, BytesIO
 
 def tobs(data):
     ''' Transforms bytes or unicode into a byte stream. '''
-    return BytesIO(tob(data)) if BytesIO else StringIO(tob(data))
-
-def warn(message):
-    warnings.warn(message, stacklevel=2)
-
+    return BytesIO(tob(data))
 
 class ServerTestBase(unittest.TestCase):
     def setUp(self):

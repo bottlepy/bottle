@@ -47,7 +47,7 @@ Run this script or paste it into a python console, then point your browser to `<
 
 .. __: https://github.com/defnull/bottle/raw/master/bottle.py
 
-Install the latest stable release via PyPi_ (``easy_install -U bottle``) or download `bottle.py`__ (unstable) into your project directory. There are no hard [1]_ dependencies other than the Python standard library. Bottle runs with **Python 2.5+ and 3.x** (using 2to3)
+Install the latest stable release via PyPi_ (``easy_install -U bottle``) or download `bottle.py`__ (unstable) into your project directory. There are no hard [1]_ dependencies other than the Python standard library. Bottle runs with **Python 2.5+ and 3.x**
 
 User's Guide
 ===============

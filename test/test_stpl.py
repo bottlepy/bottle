@@ -1,34 +1,36 @@
 # -*- coding: utf-8 -*-
 import unittest
-from bottle import SimpleTemplate, TemplateError, view, template
+from bottle import SimpleTemplate, TemplateError, view, template, touni, tob
 
 class TestSimpleTemplate(unittest.TestCase):
+    def assertRenders(self, tpl, to, *args, **vars):
+        if isinstance(tpl, basestring):
+            tpl = SimpleTemplate(tpl)
+        self.assertEqual(touni(to), tpl.render(*args, **vars))
+
     def test_string(self):
         """ Templates: Parse string"""
-        t = SimpleTemplate('start {{var}} end').render(var='var')
-        self.assertEqual(u'start var end', t)
-        t = SimpleTemplate('start {{self}} end').render({'self':'var'}) # "self" cannot be used as a kwarg
-        self.assertEqual(u'start var end', t)
+        self.assertRenders('start {{var}} end', 'start var end', var='var')
+    
+    def test_self_as_variable_name(self):
+        self.assertRenders('start {{self}} end', 'start var end', {'self':'var'})
 
     def test_file(self):
-        """ Templates: Parse file"""
-        t = SimpleTemplate(name='./views/stpl_simple.tpl').render(var='var')
-        self.assertEqual(u'start var end\n', t)
+        t = SimpleTemplate(name='./views/stpl_simple.tpl')
+        self.assertRenders(t, 'start var end\n', var='var')
 
     def test_name(self):
-        """ Templates: Lookup by name """
-        t = SimpleTemplate(name='stpl_simple', lookup=['./views/']).render(var='var')
-        self.assertEqual(u'start var end\n', t)
+        t = SimpleTemplate(name='stpl_simple', lookup=['./views/'])
+        self.assertRenders(t, 'start var end\n', var='var')
 
     def test_unicode(self):
-        """ Templates: Unicode variables """
-        t = SimpleTemplate('start {{var}} end').render(var=u'äöü')
-        self.assertEqual(u'start äöü end', t)
+        self.assertRenders('start {{var}} end', 'start äöü end', var=touni('äöü'))
+        self.assertRenders('start {{var}} end', 'start äöü end', var=tob('äöü'))
 
     def test_unicode_code(self):
         """ Templates: utf8 code in file"""
-        t = SimpleTemplate(name='./views/stpl_unicode.tpl').render(var='äöü')
-        self.assertEqual(u'start ñç äöü end\n', t)
+        t = SimpleTemplate(name='./views/stpl_unicode.tpl')
+        self.assertRenders(t, 'start ñç äöü end\n', var=touni('äöü'))
 
     def test_import(self):
         """ Templates: import statement"""
