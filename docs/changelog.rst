@@ -28,6 +28,7 @@ Not released yet.
   * The default escape function for SimpleTemplate now additionally escapes single and double quotes.
 
 * Routing
+
   * A new route syntax (e.g. ``/object/<id:int>``) and support for route wildcard filters.
   * Four new wildcard filters: `int`, `float`, `path` and `re`.
 
