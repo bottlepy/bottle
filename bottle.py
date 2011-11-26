@@ -211,7 +211,7 @@ class HTTPResponse(BottleException):
 
     def apply(self, response):
         if self.headers:
-            for key, value in self.headers.iterallitems():
+            for key, value in self.headers.allitems():
                 response.headers[key] = value
         response.status = self.status
 
@@ -926,7 +926,7 @@ class BaseRequest(DictMixin):
             :class:`FormsDict`. All keys and values are strings. File uploads
             are stored separately in :attr:`files`. """
         forms = FormsDict()
-        for name, item in self.POST.iterallitems():
+        for name, item in self.POST.allitems():
             if not hasattr(item, 'filename'):
                 forms[name] = item
         return forms
@@ -936,9 +936,9 @@ class BaseRequest(DictMixin):
         """ A :class:`FormsDict` with the combined values of :attr:`query` and
             :attr:`forms`. File uploads are stored in :attr:`files`. """
         params = FormsDict()
-        for key, value in self.query.iterallitems():
+        for key, value in self.query.allitems():
             params[key] = value
-        for key, value in self.forms.iterallitems():
+        for key, value in self.forms.allitems():
             params[key] = value
         return params
 
@@ -960,7 +960,7 @@ class BaseRequest(DictMixin):
                 on big files.
         """
         files = FormsDict()
-        for name, item in self.POST.iterallitems():
+        for name, item in self.POST.allitems():
             if hasattr(item, 'filename'):
                 files[name] = item
         return files
@@ -1886,7 +1886,6 @@ def parse_auth(header):
     try:
         method, data = header.split(None, 1)
         if method.lower() == 'basic':
-            #TODO: Add 2to3 save base64[encode/decode] functions.
             user, pwd = touni(base64.b64decode(tob(data))).split(':',1)
             return user, pwd
     except (KeyError, ValueError):
