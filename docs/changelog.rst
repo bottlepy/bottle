@@ -5,10 +5,9 @@
 Release Notes and Changelog
 ===========================
 
-Release 0.10
-============
 
-Not released yet.
+Release 0.10
+==============
 
 * Plugin API v2
 
@@ -45,7 +44,7 @@ Not released yet.
 
 
 Release 0.9
-===========
+============
 
 .. rubric:: Whats new?
 
@@ -72,16 +71,8 @@ This release is mostly backward compatible, but some APIs are marked deprecated 
 * Type-based output filters are deprecated. They can easily be replaced with plugins.
 
 
-.. rubric:: Thanks to
-
-Thanks to all the people who found bugs, sent patches, spread the word, helped each other on the mailing-list and made this release possible. You are awesome :) Really, you are.
-
-I hope the following (alphabetically sorted) list is complete. If you miss your name on that list (or want your name removed) please :doc:`tell me <contact>`.
-
-    Adam R. Smith, Alexey Borzenkov, 'apheage', 'BillMa', Brandon Gilmore, Branko Vukelic, Damien Degois, David Buxton, Duane Johnson, Frank Murphy, Ian Davis, Itamar Nabriski, 'iurisilvio', Jeff Nichols, Jeremy Kelley, 'joegester', Jonas Haag, 'Karl', 'Kraken', Kyle Fritz, 'm35', 'masklinn', `reddit <http://reddit.com/r/python>`_, Santiago Gala, Sean M. Collins, 'Seth', Sigurd Høgsbro, Stuart Rackham, Sun Ning, Tomás A. Schertel, Tristan Zajonc, 'voltron' and Wieland Hoffmann
-
 Release 0.8
-===========
+============
 
 .. rubric:: API changes 
 
@@ -118,3 +109,70 @@ This is an incomplete list of new features and improved functionality.
 * The :class:`SimpleTemplate` engine got full unicode support.
 * Lots of non-critical bugfixes.
 
+
+Contributors
+============
+
+Thanks to all the people who found bugs, sent patches, spread the word, helped each other on the mailing-list and made this project possible. You are awesome :) Really, you are.
+
+I hope the following (alphabetically sorted) list is complete. If you miss your name on that list (or want your name removed) please :doc:`tell me <contact>`.
+
+  * acasajus
+  * Adam R. Smith
+  * Alexey Borzenkov
+  * Alexis Daboville
+  * Anton I. Sipos
+  * Anton Kolechkin
+  * apexi200sx
+  * apheage
+  * BillMa
+  * Brad Greenlee
+  * Brandon Gilmore
+  * Branko Vukelic
+  * Brian Sierakowski
+  * Brian Wickman
+  * Carl Scharenberg
+  * Damien Degois
+  * David Buxton
+  * Duane Johnson
+  * fcamel
+  * Frank Murphy
+  * Frederic Junod
+  * goldfaber3012
+  * Greg Milby
+  * gstein
+  * Ian Davis
+  * Itamar Nabriski
+  * Iuri de Silvio
+  * Jaimie Murdock
+  * Jeff Nichols
+  * Jeremy Kelley
+  * joegester
+  * Johannes Krampf
+  * Jonas Haag
+  * Joshua Roesslein
+  * Karl
+  * Kraken
+  * Kyle Fritz
+  * m35
+  * Marcos Neves
+  * masklinn
+  * Michael Labbe
+  * Michael Soulier
+  * `reddit <http://reddit.com/r/python>`_
+  * Robert Rollins
+  * rogererens
+  * rwxrwx
+  * Santiago Gala
+  * Sean M. Collins
+  * Sean M. Collins
+  * Sebastian Wollrath
+  * Seth
+  * Sigurd Høgsbro
+  * Stuart Rackham
+  * Sun Ning
+  * Tomás A. Schertel
+  * Tristan Zajonc
+  * voltron
+  * Wieland Hoffmann
+  * zombat
