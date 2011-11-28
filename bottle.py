@@ -2892,7 +2892,9 @@ if __name__ == '__main__':
         print 'Bottle', __version__
         sys.exit(0)
     if not args:
-        parser.error('No application specified.')
+        parser.print_help()
+        print '\nError: No application specified.\n'
+        sys.exit(1)
 
     debug(opt.debug)
     sys.path.insert(0, '.')
