@@ -813,6 +813,8 @@ class Bottle(object):
             or request.method == 'HEAD':
                 if hasattr(out, 'close'): out.close()
                 out = []
+            if isinstance(response._status_line, unicode):
+              response._status_line = str(response._status_line)
             start_response(response._status_line, list(response.iter_headers()))
             return out
         except (KeyboardInterrupt, SystemExit, MemoryError):
