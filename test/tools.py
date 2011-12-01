@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import bottle
 import threading
-import urllib
-import urllib2
+import urllib.request, urllib.parse, urllib.error
+import urllib.request, urllib.error, urllib.parse
 import sys
 import time
 import unittest
@@ -12,7 +12,7 @@ import wsgiref.util
 import wsgiref.validate
 import warnings
 
-from StringIO import StringIO
+from io import StringIO
 try:
     from io import BytesIO
 except:
@@ -23,7 +23,7 @@ import uuid
 
 def tob(data):
     ''' Transforms bytes or unicode into bytes. '''
-    return data.encode('utf8') if isinstance(data, unicode) else data
+    return data.encode('utf8') if isinstance(data, str) else data
 
 def tobs(data):
     ''' Transforms bytes or unicode into a byte stream. '''

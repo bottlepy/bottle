@@ -13,7 +13,7 @@ class TestOutputFilter(ServerTestBase):
         self.assertBody('test')
 
     def test_bytearray(self):
-        self.app.route('/')(lambda: map(tob, ['t', 'e', 'st']))
+        self.app.route('/')(lambda: list(map(tob, ['t', 'e', 'st'])))
         self.assertBody('test')
 
     def test_tuple(self):
@@ -48,23 +48,23 @@ class TestOutputFilter(ServerTestBase):
         self.assertBody('test')
 
     def test_unicode(self):
-        self.app.route('/')(lambda: u'äöüß')
-        self.assertBody(u'äöüß'.encode('utf8'))
+        self.app.route('/')(lambda: 'äöüß')
+        self.assertBody('äöüß'.encode('utf8'))
 
-        self.app.route('/')(lambda: [u'äö',u'üß'])
-        self.assertBody(u'äöüß'.encode('utf8'))
+        self.app.route('/')(lambda: ['äö','üß'])
+        self.assertBody('äöüß'.encode('utf8'))
 
         @self.app.route('/')
         def test5():
             bottle.response.content_type='text/html; charset=iso-8859-15'
-            return u'äöüß'
-        self.assertBody(u'äöüß'.encode('iso-8859-15'))
+            return 'äöüß'
+        self.assertBody('äöüß'.encode('iso-8859-15'))
 
         @self.app.route('/')
         def test5():
             bottle.response.content_type='text/html'
-            return u'äöüß'
-        self.assertBody(u'äöüß'.encode('utf8'))
+            return 'äöüß'
+        self.assertBody('äöüß'.encode('utf8'))
 
     def test_json(self):
         self.app.route('/')(lambda: {'a': 1})
@@ -134,8 +134,8 @@ class TestOutputFilter(ServerTestBase):
     def test_unicode_generator_callback(self):
         @self.app.route('/')
         def test():
-            yield u'äöüß'
-        self.assertBody(u'äöüß'.encode('utf8')) 
+            yield 'äöüß'
+        self.assertBody('äöüß'.encode('utf8')) 
         
     def test_invalid_generator_callback(self):
         @self.app.route('/')
