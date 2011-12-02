@@ -143,8 +143,8 @@ html_sidebars = {
 
 html_context = {
     'releases': [('dev', 'development'),
-                 ('0.9', 'stable'),
-                 ('0.8', 'old stable')
+                 ('0.10', 'stable'),
+                 ('0.9', 'old stable')
                 ]
 }
 

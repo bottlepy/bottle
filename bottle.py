@@ -28,7 +28,7 @@ if __name__ == '__main__':
     _opt("--version", action="store_true", help="show version number.")
     _opt("-b", "--bind", metavar="ADDRESS", help="bind socket to ADDRESS.")
     _opt("-s", "--server", default='wsgiref', help="use SERVER as backend.")
-    _opt("-p", "--plugin", action="append", help="install additinal plugin/s.")
+    _opt("-p", "--plugin", action="append", help="install additional plugin/s.")
     _opt("--debug", action="store_true", help="start server in debug mode.")
     _opt("--reload", action="store_true", help="auto-reload on file changes.")
     _cmd_options, _cmd_args = _cmd_parser.parse_args()
@@ -826,6 +826,8 @@ class Bottle(object):
             or request.method == 'HEAD':
                 if hasattr(out, 'close'): out.close()
                 out = []
+            if isinstance(response._status_line, unicode):
+              response._status_line = str(response._status_line)
             start_response(response._status_line, list(response.iter_headers()))
             return out
         except (KeyboardInterrupt, SystemExit, MemoryError):
@@ -2913,7 +2915,9 @@ if __name__ == '__main__':
         _stdout('Bottle %s\n'%__version__)
         sys.exit(0)
     if not args:
-        parser.error('No application specified.')
+        parser.print_help()
+        print '\nError: No application specified.\n'
+        sys.exit(1)
 
     debug(opt.debug)
     sys.path.insert(0, '.')
