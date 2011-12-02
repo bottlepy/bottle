@@ -2,10 +2,6 @@
 import unittest
 import sys, os.path
 import bottle
-import urllib2
-from StringIO import StringIO
-import thread
-import time
 from tools import ServerTestBase
 from bottle import tob, touni, tonat
 
@@ -80,7 +76,7 @@ class TestWsgi(ServerTestBase):
         """ WSGI: Exceptions within handler code (HTTP 500) """
         @bottle.route('/my/:string')
         def test(string): return string
-        self.assertBody(tob(u'urf8-öäü'), '/my/urf8-öäü')
+        self.assertBody(tob('urf8-öäü'), '/my/urf8-öäü')
 
     def test_utf8_404(self):
         self.assertStatus(404, '/not-found/urf8-öäü')

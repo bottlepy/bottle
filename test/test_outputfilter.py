@@ -3,7 +3,7 @@
 
 import unittest
 import bottle
-from tools import ServerTestBase, tob, tobs, warn
+from tools import ServerTestBase, tob, tobs, warn, touni
 
 class TestOutputFilter(ServerTestBase):
     ''' Tests for WSGI functionality, routing and output casting (decorators) '''
@@ -48,23 +48,23 @@ class TestOutputFilter(ServerTestBase):
         self.assertBody('test')
 
     def test_unicode(self):
-        self.app.route('/')(lambda: u'äöüß')
-        self.assertBody(u'äöüß'.encode('utf8'))
+        self.app.route('/')(lambda: touni('äöüß'))
+        self.assertBody(touni('äöüß').encode('utf8'))
 
-        self.app.route('/')(lambda: [u'äö',u'üß'])
-        self.assertBody(u'äöüß'.encode('utf8'))
+        self.app.route('/')(lambda: [touni('äö'), touni('üß')])
+        self.assertBody(touni('äöüß').encode('utf8'))
 
         @self.app.route('/')
         def test5():
             bottle.response.content_type='text/html; charset=iso-8859-15'
-            return u'äöüß'
-        self.assertBody(u'äöüß'.encode('iso-8859-15'))
+            return touni('äöüß')
+        self.assertBody(touni('äöüß').encode('iso-8859-15'))
 
         @self.app.route('/')
         def test5():
             bottle.response.content_type='text/html'
-            return u'äöüß'
-        self.assertBody(u'äöüß'.encode('utf8'))
+            return touni('äöüß')
+        self.assertBody(touni('äöüß').encode('utf8'))
 
     def test_json(self):
         self.app.route('/')(lambda: {'a': 1})
@@ -134,8 +134,8 @@ class TestOutputFilter(ServerTestBase):
     def test_unicode_generator_callback(self):
         @self.app.route('/')
         def test():
-            yield u'äöüß'
-        self.assertBody(u'äöüß'.encode('utf8')) 
+            yield touni('äöüß')
+        self.assertBody(touni('äöüß').encode('utf8')) 
         
     def test_invalid_generator_callback(self):
         @self.app.route('/')

@@ -1,10 +1,4 @@
-import unittest
-import sys, os.path
 import bottle
-import urllib2
-from StringIO import StringIO
-import thread
-import time
 from tools import ServerTestBase
 from bottle import tob, touni, tonat, Bottle
 

@@ -10,9 +10,7 @@ class TestConfigDict(unittest.TestCase):
         d['k2'], m['k2'] = 'v1', 'v1'
         d['k2'], m['k2'] = 'v2', 'v2'
         self.assertEqual(d.keys(), m.keys())
-        self.assertEqual(d.values(), m.values())
-        self.assertEqual(list(d.iterkeys()), list(m.iterkeys()))
-        self.assertEqual(list(d.itervalues()), list(m.itervalues()))
+        self.assertEqual(list(d.values()), list(m.values()))
         self.assertEqual(d.get('key'), m.get('key'))
         self.assertEqual(d.get('cay'), m.get('cay'))
         self.assertEqual(list(iter(d)), list(iter(m)))
@@ -51,7 +49,7 @@ class TestConfigDict(unittest.TestCase):
         self.assertRaises(AttributeError, lambda: setattr(c, 'keys', 5))
         # but not with the dict API:
         c['Name'] = 5
-        self.assertEquals(5, c.Name)
+        self.assertEqual(5, c.Name)
 
     def test_call(self):
         """ Calling updates and returns the dict. """

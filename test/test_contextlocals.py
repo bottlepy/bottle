@@ -20,25 +20,25 @@ class TestThreadLocals(unittest.TestCase):
 
         def run():
             bottle.request.bind(e2)
-            self.assertEquals(bottle.request.path, '/t2')
+            self.assertEqual(bottle.request.path, '/t2')
 
         bottle.request.bind(e1)
-        self.assertEquals(bottle.request.path, '/t1')
+        self.assertEqual(bottle.request.path, '/t1')
         run_thread(run)
-        self.assertEquals(bottle.request.path, '/t1')
+        self.assertEqual(bottle.request.path, '/t1')
 
     def test_response(self):
 
         def run():
             bottle.response.bind()
             bottle.response.content_type='test/thread'
-            self.assertEquals(bottle.response.headers['Content-Type'], 'test/thread')
+            self.assertEqual(bottle.response.headers['Content-Type'], 'test/thread')
 
         bottle.response.bind()
         bottle.response.content_type='test/main'
-        self.assertEquals(bottle.response.headers['Content-Type'], 'test/main')
+        self.assertEqual(bottle.response.headers['Content-Type'], 'test/main')
         run_thread(run)
-        self.assertEquals(bottle.response.headers['Content-Type'], 'test/main')
+        self.assertEqual(bottle.response.headers['Content-Type'], 'test/main')
 
 
 if __name__ == '__main__': #pragma: no cover

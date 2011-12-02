@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 import bottle
 import threading
-import urllib
-import urllib2
 import sys
 import time
 import unittest
@@ -23,7 +21,7 @@ def tobs(data):
 
 class ServerTestBase(unittest.TestCase):
     def setUp(self):
-        ''' Create a new Bottle app set it as default_app and register it to urllib2 '''
+        ''' Create a new Bottle app set it as default_app '''
         self.port = 8080
         self.host = 'localhost'
         self.app = bottle.app.push()

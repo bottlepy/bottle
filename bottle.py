@@ -81,12 +81,14 @@ if py3k:
     unicode = str
     json_loads = lambda s: json_lds(touni(s))
     callable = lambda x: hasattr(x, '__call__')
+    imap = map
 else: # 2.x
     import httplib
     import thread
     from urlparse import urljoin, SplitResult as UrlSplitResult
     from urllib import urlencode, quote as urlquote, unquote as urlunquote
     from Cookie import SimpleCookie
+    from itertools import imap
     import cPickle as pickle
     from StringIO import StringIO as BytesIO
     if py25:
@@ -807,7 +809,7 @@ class Bottle(object):
         if isinstance(first, bytes):
             return itertools.chain([first], out)
         if isinstance(first, unicode):
-            return itertools.imap(lambda x: x.encode(response.charset),
+            return imap(lambda x: x.encode(response.charset),
                                   itertools.chain([first], out))
         return self._cast(HTTPError(500, 'Unsupported response type: %s'\
                                          % type(first)), request, response)
@@ -1580,6 +1582,11 @@ class MultiDict(DictMixin):
         def items(self): return ((k, v[-1]) for k, v in self.dict.items())
         def allitems(self):
             return ((k, v) for k, vl in self.dict.items() for v in vl)
+        iterkeys = keys
+        itervalues = values
+        iteritems = items
+        iterallitems = allitems
+
     else:
         def values(self): return [v[-1] for v in self.dict.values()]
         def items(self): return [(k, v[-1]) for k, v in self.dict.items()]

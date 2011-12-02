@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import unittest
 import bottle
-import urllib2
 import time
 from tools import tob
 import sys
@@ -10,6 +9,12 @@ import signal
 import socket
 from subprocess import Popen, PIPE
 import tools
+from bottle import _e
+
+try:
+    from urllib.request import urlopen
+except:
+    from urllib2 import urlopen
 
 serverscript = os.path.join(os.path.dirname(__file__), 'servertest.py')
 
@@ -20,7 +25,7 @@ def ping(server, port):
         s.connect((server, port))
         s.close()
         return True
-    except socket.error, e:
+    except socket.error:
         return False
 
 class TestServer(unittest.TestCase):
@@ -37,7 +42,7 @@ class TestServer(unittest.TestCase):
             cmd += sys.argv[1:] # pass cmdline arguments to subprocesses
             self.p = Popen(cmd, stdout=PIPE, stderr=PIPE)
             # Wait for the socket to accept connections
-            for i in xrange(100):
+            for i in range(100):
                 time.sleep(0.1)
                 # Accepts connections?
                 if ping('127.0.0.1', port): return
@@ -73,9 +78,9 @@ class TestServer(unittest.TestCase):
 
     def fetch(self, url):
         try:
-            return urllib2.urlopen('http://127.0.0.1:%d/%s' % (self.port, url)).read()
-        except Exception, e:
-            return repr(e)
+            return urlopen('http://127.0.0.1:%d/%s' % (self.port, url)).read()
+        except Exception:
+            return repr(_e())
 
     def test_simple(self):
         ''' Test a simple static page with this server adapter. '''
