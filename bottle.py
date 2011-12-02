@@ -2246,7 +2246,7 @@ class BjoernServer(ServerAdapter):
 
 class AutoServer(ServerAdapter):
     """ Untested. """
-    adapters = [PasteServer, CherryPyServer, TwistedServer, WSGIRefServer]
+    adapters = [PasteServer, TwistedServer, CherryPyServer, WSGIRefServer]
     def run(self, handler):
         for sa in self.adapters:
             try:
