@@ -2401,7 +2401,7 @@ def run(app=None, server='wsgiref', host='127.0.0.1', port=8080,
         if not getattr(server, 'quiet', False): print_exc()
         sys.exit(3)
     finally:
-        if not getattr(server, 'quiet', False): stderr('Shutdown...\n')
+        if not getattr(server, 'quiet', False): _stderr('Shutdown...\n')
 
 
 class FileCheckerThread(threading.Thread):
