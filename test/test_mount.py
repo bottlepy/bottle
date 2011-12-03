@@ -1,6 +1,6 @@
 import bottle
 from tools import ServerTestBase
-from bottle import tob, touni, tonat, Bottle
+from bottle import Bottle
 
 class TestAppMounting(ServerTestBase):
     def setUp(self):

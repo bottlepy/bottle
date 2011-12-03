@@ -1,7 +1,7 @@
 #coding: utf-8
 import unittest
 import bottle
-from tools import tob, touni
+from bottle import tob, touni
 
 class TestSecureCookies(unittest.TestCase):
     def setUp(self):

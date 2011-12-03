@@ -13,7 +13,7 @@ from warnings import warn
 import mimetypes
 import uuid
 
-from bottle import tob, touni, tonat, BytesIO
+from bottle import tob, BytesIO
 
 def tobs(data):
     ''' Transforms bytes or unicode into a byte stream. '''
