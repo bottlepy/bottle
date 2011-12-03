@@ -1,6 +1,6 @@
 import unittest
 from tools import warn
-from bottle import MakoTemplate, mako_template, mako_view
+from bottle import MakoTemplate, mako_template, mako_view, touni
 
 class TestMakoTemplate(unittest.TestCase):
     def test_string(self):

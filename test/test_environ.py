@@ -4,7 +4,7 @@
 import unittest
 import sys, os.path
 import bottle
-from bottle import request, response, tob, tonat, touni, json_dumps, _e
+from bottle import request, response, tob, touni, json_dumps, _e
 import tools
 import wsgiref.util
 import threading

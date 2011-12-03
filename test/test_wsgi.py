@@ -3,7 +3,7 @@ import unittest
 import sys, os.path
 import bottle
 from tools import ServerTestBase
-from bottle import tob, touni, tonat
+from bottle import tob
 
 class TestWsgi(ServerTestBase):
     ''' Tests for WSGI functionality, routing and output casting (decorators) '''
