@@ -5,6 +5,13 @@
 Release Notes and Changelog
 ===========================
 
+Release 0.11
+==============
+
+.. warning: Not released yet.
+
+* Support for partial downloads (``Range`` header) in :func:`static_file`.
+* Native support for Python 2.x and 3.x syntax. No need to run 2to3 anymore.
 
 Release 0.10
 ==============
