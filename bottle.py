@@ -1785,17 +1785,17 @@ class AppStack(list):
 
 class WSGIFileWrapper(object):
 
-   def __init__(self, fp, buffer_size=1024*64):
-       self.fp, self.buffer_size = fp, buffer_size
-       for attr in ('fileno', 'close', 'read', 'readlines'):
-           if hasattr(fp, attr): setattr(self, attr, getattr(fp, attr))
+    def __init__(self, fp, buffer_size=1024*64):
+        self.fp, self.buffer_size = fp, buffer_size
+        for attr in ('fileno', 'close', 'read', 'readlines', 'tell', 'seek'):
+            if hasattr(fp, attr): setattr(self, attr, getattr(fp, attr))
 
-   def __iter__(self):
-       read, buff = self.fp.read, self.buffer_size
-       while True:
-           part = read(buff)
-           if not part: break
-           yield part
+    def __iter__(self):
+        buff, read = self.buffer_size, self.read
+        while True:
+            part = read(buff)
+            if not part: return
+            yield part
 
 
 
@@ -1819,6 +1819,16 @@ def redirect(url, code=None):
         code = 303 if request.get('SERVER_PROTOCOL') == "HTTP/1.1" else 302
     location = urljoin(request.url, url)
     raise HTTPResponse("", status=code, header=dict(Location=location))
+
+
+def _file_iter_range(fp, offset, bytes, maxread=1024*1024):
+    ''' Yield chunks from a range in a file. No chunk is bigger than maxread.'''
+    fp.seek(offset)
+    while bytes > 0:
+        part = fp.read(min(bytes, maxread))
+        if not part: break
+        bytes -= len(part)
+        yield part
 
 
 def static_file(filename, root, mimetype='auto', download=False):
@@ -1850,7 +1860,7 @@ def static_file(filename, root, mimetype='auto', download=False):
         header['Content-Disposition'] = 'attachment; filename="%s"' % download
 
     stats = os.stat(filename)
-    header['Content-Length'] = stats.st_size
+    header['Content-Length'] = clen = stats.st_size
     lm = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(stats.st_mtime))
     header['Last-Modified'] = lm
 
@@ -1862,6 +1872,18 @@ def static_file(filename, root, mimetype='auto', download=False):
         return HTTPResponse(status=304, header=header)
 
     body = '' if request.method == 'HEAD' else open(filename, 'rb')
+
+    header["Accept-Ranges"] = "bytes"
+    ranges = request.environ.get('HTTP_RANGE')
+    if 'HTTP_RANGE' in request.environ:
+        ranges = list(parse_range_header(request.environ['HTTP_RANGE'], clen))
+        if not ranges:
+            return HTTPError(416, "Requested Range Not Satisfiable")
+        offset, end = ranges[0]
+        header["Content-Range"] = "bytes %d-%d/%d" % (offset, end-1, clen)
+        header["Content-Length"] = str(end-offset)
+        if body: body = _file_iter_range(body, offset, end-offset)
+        return HTTPResponse(body, header=header, status=206)
     return HTTPResponse(body, header=header)
 
 
@@ -1900,6 +1922,23 @@ def parse_auth(header):
     except (KeyError, ValueError):
         return None
 
+def parse_range_header(header, maxlen=0):
+    ''' Yield (start, end) ranges parsed from a HTTP Range header. Skip
+        unsatisfiable ranges. The end index is non-inclusive.'''
+    if not header or header[:6] != 'bytes=': return
+    ranges = [r.split('-', 1) for r in header[6:].split(',') if '-' in r]
+    for start, end in ranges:
+        try:
+            if not start:  # bytes=-100    -> last 100 bytes
+                start, end = max(0, maxlen-int(end)), maxlen
+            elif not end:  # bytes=100-    -> all but the first 99 bytes
+                start, end = int(start), maxlen
+            else:          # bytes=100-200 -> bytes 100-200 (inclusive)
+                start, end = int(start), min(int(end)+1, maxlen)
+            if 0 <= start < end <= maxlen:
+                yield start, end
+        except ValueError:
+            pass
 
 def _lscmp(a, b):
     ''' Compares two strings in a cryptographically save way:
