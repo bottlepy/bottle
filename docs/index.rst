@@ -99,7 +99,7 @@ License
 
 Code and documentation are available according to the MIT License:
 
-.. include:: ../LICENSE.txt
+.. include:: ../LICENSE
   :literal:
 
 The Bottle logo however is *NOT* covered by that license. It is allowed to
