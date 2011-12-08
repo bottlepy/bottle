@@ -2093,19 +2093,19 @@ del name
 
 class ServerAdapter(object):
     quiet = False
-    def __init__(self, host='127.0.0.1', port=8080, unroot=False, **config):
+    def __init__(self, host='127.0.0.1', port=8080, user=False, group=False, **config):
         self.host = host
         self.port = int(port)
-        self.priv = ('nobody', 'nobody') if unroot is True else unroot 
+        self.priv = (user, group)
         self.options = config
 
     def run(self, handler): # pragma: no cover
         pass
     
     def drop_privileges(self):
-        if not self.priv: return
-        if os.getuid() != 0: return
         uid, gid = self.priv
+        if not uid and not gid: return
+        if os.getuid() != 0: raise OSError("Only root can drop privileges.")
         import pwd, grp # Lookup uid/gid by name
         if not isinstance(uid, int): uid = pwd.getpwnam(uid).pw_uid
         if not isinstance(gid, int): gid = grp.getgrnam(gid).gr_gid
@@ -2128,7 +2128,7 @@ class CGIServer(ServerAdapter):
 
 class FlupFCGIServer(ServerAdapter):
     def run(self, handler): # pragma: no cover
-        import flup.server.fcgi
+        import flup.server.fcgis
         self.options.setdefault('bindAddress', (self.host, self.port))
         flup.server.fcgi.WSGIServer(handler, **self.options).run()
 
@@ -2149,6 +2149,7 @@ class CherryPyServer(ServerAdapter):
     def run(self, handler): # pragma: no cover
         from cherrypy import wsgiserver
         server = wsgiserver.CherryPyWSGIServer((self.host, self.port), handler)
+        self.drop_privileges()
         try:
             server.start()
         finally:
@@ -2169,6 +2170,7 @@ class MeinheldServer(ServerAdapter):
     def run(self, handler):
         from meinheld import server
         server.listen((self.host, self.port))
+        self.drop_privileges()
         server.run(handler)
 
 
@@ -2191,6 +2193,7 @@ class FapwsServer(ServerAdapter):
             environ['wsgi.multiprocess'] = False
             return handler(environ, start_response)
         evwsgi.wsgi_cb(('', app))
+        self.drop_privileges()
         evwsgi.run()
 
 
@@ -2201,6 +2204,7 @@ class TornadoServer(ServerAdapter):
         container = tornado.wsgi.WSGIContainer(handler)
         server = tornado.httpserver.HTTPServer(container)
         server.listen(port=self.port)
+        self.drop_privileges()
         tornado.ioloop.IOLoop.instance().start()
 
 
@@ -2228,6 +2232,7 @@ class TwistedServer(ServerAdapter):
         reactor.addSystemEventTrigger('after', 'shutdown', thread_pool.stop)
         factory = server.Site(wsgi.WSGIResource(reactor, thread_pool, handler))
         reactor.listenTCP(self.port, factory, interface=self.host)
+        self.drop_privileges()
         reactor.run()
 
 
@@ -2236,6 +2241,7 @@ class DieselServer(ServerAdapter):
     def run(self, handler):
         from diesel.protocols.wsgi import WSGIApplication
         app = WSGIApplication(handler, port=self.port)
+        self.drop_privileges()
         app.run()
 
 
@@ -2251,7 +2257,9 @@ class GeventServer(ServerAdapter):
         if self.options.get('monkey', True):
             if not threading.local is local.local: monkey.patch_all()
         wsgi = wsgi_fast if self.options.get('fast') else pywsgi
-        wsgi.WSGIServer((self.host, self.port), handler).serve_forever()
+        server = wsgi.WSGIServer((self.host, self.port), handler)
+        self.drop_privileges()
+        server.serve_forever()
 
 
 class GunicornServer(ServerAdapter):
@@ -2276,7 +2284,9 @@ class EventletServer(ServerAdapter):
     """ Untested """
     def run(self, handler):
         from eventlet import wsgi, listen
-        wsgi.server(listen((self.host, self.port)), handler)
+        sock = listen((self.host, self.port))
+        self.drop_privileges()
+        wsgi.server(sock, handler)
 
 
 class RocketServer(ServerAdapter):
@@ -2284,6 +2294,7 @@ class RocketServer(ServerAdapter):
     def run(self, handler):
         from rocket import Rocket
         server = Rocket((self.host, self.port), 'wsgi', { 'wsgi_app' : handler })
+        listen((self.host, self.port))
         server.start()
 
 
