@@ -286,7 +286,7 @@ class Router(object):
         #: If true, static routes are no longer checked first.
         self.strict_order = strict
         self.filters = {'re': self.re_filter, 'int': self.int_filter,
-                        'float': self.re_filter, 'path': self.path_filter}
+                        'float': self.float_filter, 'path': self.path_filter}
 
     def re_filter(self, conf):
         return conf or self.default_pattern, None, None
@@ -295,7 +295,7 @@ class Router(object):
         return r'-?\d+', int, lambda x: str(int(x))
 
     def float_filter(self, conf):
-        return r'-?\d*\.\d+', float, lambda x: str(float(x))
+        return r'-?[\d.]+', float, lambda x: str(float(x))
 
     def path_filter(self, conf):
         return r'.*?', None, None
