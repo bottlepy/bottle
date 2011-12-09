@@ -57,6 +57,15 @@ class TestRouter(unittest.TestCase):
         self.assertMatches('/object/<id:int>', '/object/567', id=567)
         self.assertRaises(bottle.HTTPError, self.match, '/object/abc')
 
+    def testFloatFilter(self):
+        self.assertMatches('/object/<id:float>', '/object/1', id=1)
+        self.assertMatches('/object/<id:float>', '/object/1.1', id=1.1)
+        self.assertMatches('/object/<id:float>', '/object/.1', id=0.1)
+        self.assertMatches('/object/<id:float>', '/object/1.', id=1)
+        self.assertRaises(bottle.HTTPError, self.match, '/object/abc')
+        self.assertRaises(bottle.HTTPError, self.match, '/object/')
+        self.assertRaises(bottle.HTTPError, self.match, '/object/.')
+
     def testWildcardNames(self):
         self.assertMatches('/alpha/:abc', '/alpha/alpha', abc='alpha')
         self.assertMatches('/alnum/:md5', '/alnum/sha1', md5='sha1')
