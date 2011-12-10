@@ -66,6 +66,10 @@ class TestRouter(unittest.TestCase):
         self.assertRaises(bottle.HTTPError, self.match, '/object/')
         self.assertRaises(bottle.HTTPError, self.match, '/object/.')
 
+    def testPathFilter(self):
+        self.assertMatches('/<id:path>/:f', '/a/b', id='a', f='b')
+        self.assertMatches('/<id:path>', '/a', id='a')
+
     def testWildcardNames(self):
         self.assertMatches('/alpha/:abc', '/alpha/alpha', abc='alpha')
         self.assertMatches('/alnum/:md5', '/alnum/sha1', md5='sha1')
