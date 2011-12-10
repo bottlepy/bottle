@@ -28,8 +28,8 @@ This tutorial introduces you to the concepts and features of the Bottle web fram
 .. rubric:: A quick overview:
 
 * :ref:`tutorial-routing`: Web development starts with binding URLs to code. This section tells you how to do it.
-* :ref:`tutorial-output`: You have to return something to the Browser. Bottle makes it easy for you, supporting more than just plain strings.
-* :ref:`tutorial-request`: Each client request carries a lot of information. HTTP-headers, form data and cookies to name just three. Here is how to use them.
+* :ref:`tutorial-output`: You have to return something to the browser. Bottle makes it easy for you, supporting more than just plain strings.
+* :ref:`tutorial-request`: Each client request carries a lot of information. HTTP headers, form data and cookies to name just three. Here is how to use them.
 * :ref:`tutorial-templates`: You don't want to clutter your Python code with HTML fragments, do you? Templates separate code from presentation.
 * :ref:`tutorial-debugging`: These tools and features will help you during development.
 * :ref:`tutorial-deployment`: Get it up and running.
@@ -53,13 +53,13 @@ This will get you the latest development snapshot that includes all the new feat
     $ sudo easy_install bottle             # alternative without pip
     $ sudo apt-get install python-bottle   # works for debian, ubuntu, ...
 
-In either way, you'll need Python 2.5 or newer to run bottle applications. If you do not have permissions to install packages system-wide or simply don't want to, create a `virtualenv <http://pypi.python.org/pypi/virtualenv>`_ first.
+Either way, you'll need Python 2.5 or newer to run bottle applications. If you do not have permissions to install packages system-wide or simply don't want to, create a `virtualenv <http://pypi.python.org/pypi/virtualenv>`_ first.
 
 
 Quickstart: "Hello World"
 ==============================================================================
 
-This tutorial assumes you have Bottle either :ref:`installed <installation>` or copied into your project directory. Lets start with a very basic "Hello World" example::
+This tutorial assumes you have Bottle either :ref:`installed <installation>` or copied into your project directory. Let's start with a very basic "Hello World" example::
 
     from bottle import route, run
 
@@ -130,7 +130,7 @@ Dynamic Routes
 
 Routes that contain wildcards are called `dynamic routes` (as opposed to `static routes`) and match more than one URL at the same time. A simple wildcard consists of a name enclosed in angle brackets (e.g. ``<name>``) and accepts one or more characters up to the next slash (``/``). For example, the route ``/hello/<name>`` accepts requests for ``/hello/alice`` as well as ``/hello/bob``, but not for ``/hello``, ``/hello/`` or ``/hello/mr/smith``.
 
-Each wildcard passes the covered part of the URL as a keyword argument to the request callback. You can use them right away and implement RESTful, nice looking and meaningful URLs with ease. Here are some other examples along with the URLs they'd match::
+Each wildcard passes the covered part of the URL as a keyword argument to the request callback. You can use them right away and implement RESTful, nice-looking and meaningful URLs with ease. Here are some other examples along with the URLs they'd match::
 
     @route('/wiki/<pagename>')            # matches /wiki/Learning_Python
     def show_wiki_page(pagename)):
@@ -169,7 +169,7 @@ You can add your own filters as well. See :doc:`Routing` for details.
 
 .. versionchanged:: 0.10
 
-The new rule syntax was introduce in **Bottle 0.10** to simplify some common use cases, but the old syntax still works and you can find lot code examples still using it. The differences are best described by example:
+The new rule syntax was introduced in **Bottle 0.10** to simplify some common use cases, but the old syntax still works and you can find lot code examples still using it. The differences are best described by example:
 
 =================== ====================
 Old Syntax          New Syntax
@@ -276,7 +276,7 @@ Dictionaries
     As mentioned above, Python dictionaries (or subclasses thereof) are automatically transformed into JSON strings and returned to the browser with the ``Content-Type`` header set to ``application/json``. This makes it easy to implement json-based APIs. Data formats other than json are supported too. See the :ref:`tutorial-output-filter` to learn more.
 
 Empty Strings, ``False``, ``None`` or other non-true values:
-    These produce an empty output with ``Content-Length`` header set to 0.
+    These produce an empty output with the ``Content-Length`` header set to 0.
 
 Unicode strings
     Unicode strings (or iterables yielding unicode strings) are automatically encoded with the codec specified in the ``Content-Type`` header (utf8 by default) and then treated as normal byte strings (see below).
@@ -319,7 +319,7 @@ In some rare cases the Python encoding names differ from the names supported by 
 Static Files
 --------------------------------------------------------------------------------
 
-You can directly return file objects, but :func:`static_file` is the recommended way to serve static files. It automatically guesses a mime-type, adds a ``Last-Modified`` header, restricts paths to a ``root`` directory for security reasons and generates appropriate error responses (401 on permission errors, 404 on missing files). It even supports the ``If-Modified-Since`` header and eventually generates a ``304 Not modified`` response. You can pass a custom mimetype to disable mimetype guessing.
+You can directly return file objects, but :func:`static_file` is the recommended way to serve static files. It automatically guesses a mime-type, adds a ``Last-Modified`` header, restricts paths to a ``root`` directory for security reasons and generates appropriate error responses (401 on permission errors, 404 on missing files). It even supports the ``If-Modified-Since`` header and eventually generates a ``304 Not Modified`` response. You can pass a custom mimetype to disable mimetype guessing.
 
 ::
 
@@ -336,7 +336,7 @@ You can raise the return value of :func:`static_file` as an exception if you rea
 
 .. rubric:: Forced Download
 
-Most browsers try to open downloaded files if the MIME type is known and assigned to an application (e.g. PDF files). If this is not what you want, you can force a download-dialog and even suggest a filename to the user::
+Most browsers try to open downloaded files if the MIME type is known and assigned to an application (e.g. PDF files). If this is not what you want, you can force a download dialog and even suggest a filename to the user::
 
     @route('/download/<filename:path>')
     def download(filename):
@@ -380,11 +380,11 @@ All exceptions other than :exc:`HTTPResponse` or :exc:`HTTPError` will result in
 The :class:`Response` Object
 --------------------------------------------------------------------------------
 
-Response meta-data such as the HTTP status code, response header and cookies are stored in an object called :data:`response` up to the point where they are transmitted to the browser. You can manipulate these meta-data directly or use the predefined helper methods to do so. The full API and feature list is described in the API section (see :class:`Response`), but the most common use cases and features are covered here, too.
+Response metadata such as the HTTP status code, response headers and cookies are stored in an object called :data:`response` up to the point where they are transmitted to the browser. You can manipulate these metadata directly or use the predefined helper methods to do so. The full API and feature list is described in the API section (see :class:`Response`), but the most common use cases and features are covered here, too.
 
 .. rubric:: Status Code
 
-The `HTTP status code <http_code>`_ controls the behavior of the browser and defaults to ``200 OK``. In most scenarios you won't need to set the :attr:`Response.status` attribute manually, but use the :func:`abort` helper or return an :exc:`HTTPResponse` instance with the appropriate status code. Any integer is allowed but only the codes defined by the `HTTP specification <http_code>`_ will have an effect other than confusing the browser and breaking standards.
+The `HTTP status code <http_code>`_ controls the behavior of the browser and defaults to ``200 OK``. In most scenarios you won't need to set the :attr:`Response.status` attribute manually, but use the :func:`abort` helper or return an :exc:`HTTPResponse` instance with the appropriate status code. Any integer is allowed, but codes other than the ones defined by the `HTTP specification <http_code>`_ will only confuse the browser and break standards.
 
 .. rubric:: Response Header
 
@@ -395,7 +395,7 @@ Response headers such as ``Cache-Control`` or ``Location`` are defined via :meth
       response.set_header('Content-Language', 'en')
       ...
 
-Most headers are exclusive, meaning that only one header per name is send to the client. Some special headers however are allowed to appear more than once in a response. To add an additional header, use :meth:`Response.add_header` instead of :meth:`Response.set_header`::
+Most headers are unique, meaning that only one header per name is send to the client. Some special headers however are allowed to appear more than once in a response. To add an additional header, use :meth:`Response.add_header` instead of :meth:`Response.set_header`::
 
     response.set_header('Set-Cookie', 'name=value')
     response.add_header('Set-Cookie', 'name2=value2')
@@ -408,7 +408,7 @@ Please not that this is just an example. If you want to work with cookies, read 
 Cookies
 -------------------------------------------------------------------------------
 
-A cookie is a named piece of text stored in the user's browser cache. You can access previously defined cookies via :meth:`Request.get_cookie` and set new cookies with :meth:`Response.set_cookie`::
+A cookie is a named piece of text stored in the user's browser profile. You can access previously defined cookies via :meth:`Request.get_cookie` and set new cookies with :meth:`Response.set_cookie`::
 
     @route('/hello')
     def hello_again(self):
@@ -420,8 +420,8 @@ A cookie is a named piece of text stored in the user's browser cache. You can ac
 
 The :meth:`Response.set_cookie` method accepts a number of additional keyword arguments that control the cookies lifetime and behavior. Some of the most common settings are described here:
 
-* **max_age:**    Maximum age in seconds. (default: None)
-* **expires:**    A datetime object or UNIX timestamp. (default: None)
+* **max_age:**    Maximum age in seconds. (default: ``None``)
+* **expires:**    A datetime object or UNIX timestamp. (default: ``None``)
 * **domain:**     The domain that is allowed to read the cookie. (default: current domain)
 * **path:**       Limit the cookie to a given path (default: ``/``)
 * **secure:**     Limit the cookie to HTTPS connections (default: off).
@@ -429,9 +429,9 @@ The :meth:`Response.set_cookie` method accepts a number of additional keyword ar
 
 If neither `expires` nor `max_age` is set, the cookie expires at the end of the browser session or as soon as the browser window is closed. There are some other gotchas you should consider when using cookies:
 
-* Cookies are limited to 4kb of text in most browsers.
-* Some users configure their browsers to not accept cookies at all. Most search-engines ignore cookies, too. Make sure that your application still works without cookies.
-* Cookies are stored at client side and not encrypted in any way. Whatever you store in a cookie, the user can read it. Worth than that, an attacker might be able to steal a user's cookies through `XSS <http://en.wikipedia.org/wiki/HTTP_cookie#Cookie_theft_and_session_hijacking>`_ vulnerabilities on your side. Some viruses are known to read the browser cookies, too. Do not store confidential information in cookies, ever.
+* Cookies are limited to 4 KB of text in most browsers.
+* Some users configure their browsers to not accept cookies at all. Most search engines ignore cookies too. Make sure that your application still works without cookies.
+* Cookies are stored at client side and are not encrypted in any way. Whatever you store in a cookie, the user can read it. Worse than that, an attacker might be able to steal a user's cookies through `XSS <http://en.wikipedia.org/wiki/HTTP_cookie#Cookie_theft_and_session_hijacking>`_ vulnerabilities on your side. Some viruses are known to read the browser cookies, too. Thus, never store confidential information in cookies.
 * Cookies are easily forged by malicious clients. Do not trust cookies.
 
 .. _tutorial-signed-cookies:
@@ -458,7 +458,7 @@ As mentioned above, cookies are easily forged by malicious clients. Bottle can c
         else:
             return "You are not logged in. Access denied."
 
-In addition, Bottle automatically pickles and unpickles any data stored to signed cookies. This allows you to store any pickle-able object (not only strings) to cookies, as long as the pickled data does not exceed the 4kb limit.
+In addition, Bottle automatically pickles and unpickles any data stored to signed cookies. This allows you to store any pickle-able object (not only strings) to cookies, as long as the pickled data does not exceed the 4 KB limit.
 
 .. warning:: Signed cookies are not encrypted (the client can still see the content) and not copy-protected (the client can restore an old cookie). The main intention is to make pickling and unpickling safe and prevent manipulation, not to store secret information at client side.
 
@@ -475,11 +475,11 @@ In addition, Bottle automatically pickles and unpickles any data stored to signe
 Request Data
 ==============================================================================
 
-Bottle provides access to HTTP related meta-data such as cookies, headers and POST form data through a global ``request`` object. This object always contains information about the *current* request, as long as it is accessed from within a callback function. This works even in multi-threaded environments where multiple requests are handled at the same time. For details on how a global object can be thread-safe, see :doc:`contextlocal`.
+Bottle provides access to HTTP-related metadata such as cookies, headers and POST form data through a global ``request`` object. This object always contains information about the *current* request, as long as it is accessed from within a callback function. This works even in multi-threaded environments where multiple requests are handled at the same time. For details on how a global object can be thread-safe, see :doc:`contextlocal`.
 
 .. note::
 
-    Bottle stores most of the parsed HTTP meta-data in :class:`FormsDict` instances. These behave like normal dictionaries, but have some additional features: All values in the dictionary are available as attributes. These virtual attributes always return a unicode string, even if the value is missing. In that case, the string is empty.
+    Bottle stores most of the parsed HTTP metadata in :class:`FormsDict` instances. These behave like normal dictionaries, but have some additional features: All values in the dictionary are available as attributes. These virtual attributes always return a unicode string, even if the value is missing. In that case, the string is empty.
 
     :class:`FormsDict` is a subclass of :class:`MultiDict` and can store more than one value per key. The standard dictionary access methods will only return a single value, but the :meth:`MultiDict.getall` method returns a (possibly empty) list of all values for a specific key.
 
@@ -532,7 +532,7 @@ The query string (as in ``/forum?id=1&page=5``) is commonly used to transmit a s
 POST Form Data and File Uploads
 -------------------------------
 
-The request body of ``POST`` and ``PUT`` requests may contain form data encoded in various formats. The :attr:`BaseRequest.forms` dictionary contains parsed textual form fields, :attr:`BaseRequest.files` stores file uploads and :attr:`BaseRequest.POST` combines both dictionaries into one. All three are :class:`FormsDict` instances and created on demand. File uploads are saved as special :class:`cgi.FieldStorage` objects along with some meta-data. Finally, you can access the raw body data as a file-like object via :attr:`BaseRequest.body`.
+The request body of ``POST`` and ``PUT`` requests may contain form data encoded in various formats. The :attr:`BaseRequest.forms` dictionary contains parsed textual form fields, :attr:`BaseRequest.files` stores file uploads and :attr:`BaseRequest.POST` combines both dictionaries into one. All three are :class:`FormsDict` instances and are created on demand. File uploads are saved as special :class:`cgi.FieldStorage` objects along with some metadata. Finally, you can access the raw body data as a file-like object via :attr:`BaseRequest.body`.
 
 Here is an example for a simple file upload form:
 
