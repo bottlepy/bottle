@@ -611,6 +611,10 @@ class Bottle(object):
         if removed: self.reset()
         return removed
 
+    def run(self, **kwargs):
+        ''' Calls :func:`run` with the same parameters. '''
+        run(self, **kwargs)
+
     def reset(self, route=None):
         ''' Reset all routes (force plugins to be re-applied) and clear all
             caches. If an ID or route object is given, only that specific route
