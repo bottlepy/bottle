@@ -525,12 +525,11 @@ class Route(object):
 
 
 class Bottle(object):
-    """ WSGI application """
+    """ Each Bottle object represents a single, distinct web application and
+        consists of routes, callbacks, plugins and configuration. Instances are 
+        callable WSGI applications. """
 
     def __init__(self, catchall=True, autojson=True, config=None):
-        """ Create a new bottle instance.
-            You usually don't do that. Use `bottle.app.push()` instead.
-        """
         self.routes = [] # List of installed :class:`Route` instances.
         self.router = Router() # Maps requests to :class:`Route` instances.
         self.plugins = [] # List of installed plugins.
