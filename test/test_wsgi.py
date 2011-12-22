@@ -76,6 +76,11 @@ class TestWsgi(ServerTestBase):
         def test(): return 1/0
         self.assertStatus(500, '/')
 
+    def test_500_unicode(self):
+        @bottle.route('/')
+        def test(): raise Exception(touni('Unicode äöüß message.'))
+        self.assertStatus(500, '/')
+
     def test_utf8_url(self):
         """ WSGI: Exceptions within handler code (HTTP 500) """
         @bottle.route('/my/:string')
