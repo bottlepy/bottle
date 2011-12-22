@@ -192,7 +192,7 @@ class HTTPError(HTTPResponse):
         self.traceback = traceback
 
     def __repr__(self):
-        return template(ERROR_PAGE_TEMPLATE, e=self)
+        return tonat(template(ERROR_PAGE_TEMPLATE, e=self))
 
 
 
