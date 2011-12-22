@@ -2361,9 +2361,10 @@ def load_app(target):
         default_app.remove(tmp) # Remove the temporary added default application
         NORUN = nr_old
 
-
+_debug = debug
 def run(app=None, server='wsgiref', host='127.0.0.1', port=8080,
-        interval=1, reloader=False, quiet=False, plugins=None, **kargs):
+        interval=1, reloader=False, quiet=False, plugins=None,
+        debug=False, **kargs):
     """ Start a server instance. This method blocks until the server terminates.
 
         :param app: WSGI application or target string supported by
@@ -2405,6 +2406,7 @@ def run(app=None, server='wsgiref', host='127.0.0.1', port=8080,
         return
 
     try:
+        _debug(debug)
         app = app or default_app()
         if isinstance(app, basestring):
             app = load_app(app)
@@ -2963,7 +2965,6 @@ if __name__ == '__main__':
         _stderr('\nError: No application specified.\n')
         sys.exit(1)
 
-    debug(opt.debug)
     sys.path.insert(0, '.')
     sys.modules.setdefault('bottle', sys.modules['__main__'])
 
@@ -2972,7 +2973,7 @@ if __name__ == '__main__':
         host, port = host.rsplit(':', 1)
 
     run(args[0], host=host, port=port, server=opt.server,
-        reloader=opt.reload, plugins=opt.plugin)
+        reloader=opt.reload, plugins=opt.plugin, debug=opt.debug)
 
 
 
