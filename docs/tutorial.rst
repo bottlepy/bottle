@@ -411,7 +411,7 @@ Cookies
 A cookie is a named piece of text stored in the user's browser profile. You can access previously defined cookies via :meth:`Request.get_cookie` and set new cookies with :meth:`Response.set_cookie`::
 
     @route('/hello')
-    def hello_again(self):
+    def hello_again():
         if request.get_cookie("visited"):
             return "Welcome back! Nice to see you again"
         else:
@@ -451,7 +451,7 @@ As mentioned above, cookies are easily forged by malicious clients. Bottle can c
             return "Login failed."
 
     @route('/restricted')
-    def restricted_area(self):
+    def restricted_area():
         username = request.get_cookie("account", secret='some-secret-key')
         if username:
             return "Hello %s. Welcome back." % username
