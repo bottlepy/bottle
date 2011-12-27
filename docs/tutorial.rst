@@ -23,16 +23,7 @@
 Tutorial
 ========
 
-This tutorial introduces you to the concepts and features of the Bottle web framework. If you have questions not answered here, please check the :doc:`faq` page, file a ticket at the issue_ tracker or send an e-mail to our `mailing list <mailto:bottlepy@googlegroups.com>`_.
-
-.. rubric:: A quick overview:
-
-* :ref:`tutorial-routing`: Web development starts with binding URLs to code. This section tells you how to do it.
-* :ref:`tutorial-output`: You have to return something to the browser. Bottle makes it easy for you, supporting more than just plain strings.
-* :ref:`tutorial-request`: Each client request carries a lot of information. HTTP headers, form data and cookies to name just three. Here is how to use them.
-* :ref:`tutorial-templates`: You don't want to clutter your Python code with HTML fragments, do you? Templates separate code from presentation.
-* :ref:`tutorial-debugging`: These tools and features will help you during development.
-* :ref:`tutorial-deployment`: Get it up and running.
+This tutorial introduces you to the concepts and features of the Bottle web framework and covers basic and advanced topics alike. You can read it from start to end, or use it as a refecence later on. The automatically generated :doc:`api` may be interesting for you, too. It covers more details, but explains less than this tutorial. Solutions for the most common questions can be found in our :doc:`recipes` collection or on the :doc:`faq` page. If you need any help, join our `mailing list <mailto:bottlepy@googlegroups.com>`_ or visit us in our `IRC channel <http://webchat.freenode.net/?channels=bottlepy>`_.
 
 .. _installation:
 
@@ -43,7 +34,7 @@ Bottle does not depend on any external libraries. You can just download `bottle.
 
 .. code-block:: bash
 
-    $ curl -O http://bottlepy.org/bottle.py
+    $ wget http://bottlepy.org/bottle.py
 
 This will get you the latest development snapshot that includes all the new features. If you prefer a more stable environment, you should stick with the stable releases. These are available on `PyPi <http://pypi.python.org/pypi/bottle>`_ and can be installed via :command:`pip` (recommended), :command:`easy_install` or your package manager:
 
@@ -53,7 +44,23 @@ This will get you the latest development snapshot that includes all the new feat
     $ sudo easy_install bottle             # alternative without pip
     $ sudo apt-get install python-bottle   # works for debian, ubuntu, ...
 
-Either way, you'll need Python 2.5 or newer to run bottle applications. If you do not have permissions to install packages system-wide or simply don't want to, create a `virtualenv <http://pypi.python.org/pypi/virtualenv>`_ first.
+Either way, you'll need Python 2.5 or newer (including 3.x) to run bottle applications. If you do not have permissions to install packages system-wide or simply don't want to, create a `virtualenv <http://pypi.python.org/pypi/virtualenv>`_ first:
+
+.. code-block:: bash
+
+    $ virtualenv develop              # Create virtual environment
+    $ source develop/bin/activate     # Change default python to virtual one
+    (develop)$ pip install -U bottle  # Install bottle to virtual environment
+
+Or, if virtualenv is not installed on your system:
+
+.. code-block:: bash
+
+    $ wget https://raw.github.com/pypa/virtualenv/master/virtualenv.py
+    $ python virtualenv.py develop    # Create virtual environment
+    $ source develop/bin/activate     # Change default python to virtual one
+    (develop)$ pip install -U bottle  # Install bottle to virtual environment
+
 
 
 Quickstart: "Hello World"
