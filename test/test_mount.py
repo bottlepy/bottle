@@ -54,5 +54,23 @@ class TestAppMounting(ServerTestBase):
         self.assertBody('WSGI /test/bar', '/test/test/bar')
 
 
+class TestAppMerging(ServerTestBase):
+    def setUp(self):
+        ServerTestBase.setUp(self)
+        self.subapp = bottle.Bottle()
+        @self.subapp.route('/')
+        @self.subapp.route('/test/:test')
+        def test(test='foo'):
+            return test
+
+    def test_merge(self):
+        self.app.merge(self.subapp)
+        self.assertStatus(200, '/')
+        self.assertBody('foo', '/')
+        self.assertStatus(200, '/test/bar')
+        self.assertBody('bar', '/test/bar')
+
+
+
 if __name__ == '__main__': #pragma: no cover
     unittest.main()

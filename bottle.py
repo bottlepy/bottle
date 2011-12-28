@@ -584,6 +584,16 @@ class Bottle(object):
         if not prefix.endswith('/'):
             self.route('/' + '/'.join(parts), callback=mountpoint, **options)
 
+    def merge(self, routes):
+        ''' Merge the routes of another :cls:`Bottle` application or a list of
+            :class:`Route` objects into this application. The routes keep their
+            'owner', meaning that the :data:`Route.app` attribute is not
+            changed. '''
+        if isinstance(routes, Bottle):
+            routes = routes.routes
+        for route in routes:
+            self.add_route(route)
+
     def install(self, plugin):
         ''' Add a plugin to the list of plugins and prepare it for being
             applied to all routes of this application. A plugin may be a simple
