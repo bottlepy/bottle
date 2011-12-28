@@ -645,6 +645,13 @@ class Bottle(object):
         location = self.router.build(routename, **kargs).lstrip('/')
         return urljoin(urljoin('/', scriptname), location)
 
+    def add_route(self, route):
+        ''' Add a route object, but do not change the :data:`Route.app`
+            attribute.'''
+        self.routes.append(route)
+        self.router.add(route.rule, route.method, route, name=route.name)
+        if DEBUG: route.prepare()
+
     def route(self, path=None, method='GET', callback=None, name=None,
               apply=None, skip=None, **config):
         """ A decorator to bind a function to a request URL. Example::
@@ -683,9 +690,7 @@ class Bottle(object):
                     verb = verb.upper()
                     route = Route(self, rule, verb, callback, name=name,
                                   plugins=plugins, skiplist=skiplist, **config)
-                    self.routes.append(route)
-                    self.router.add(rule, verb, route, name=name)
-                    if DEBUG: route.prepare()
+                    self.add_route(route)
             return callback
         return decorator(callback) if callback else decorator
 
