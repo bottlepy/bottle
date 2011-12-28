@@ -70,9 +70,9 @@ try: from collections import MutableMapping as DictMixin
 except ImportError: # pragma: no cover
     from UserDict import DictMixin
 
-try: from urlparse import parse_qs
+try: from urlparse import parse_qsl
 except ImportError: # pragma: no cover
-    from cgi import parse_qs
+    from cgi import parse_qsl
 
 try: import cPickle as pickle
 except ImportError: # pragma: no cover
@@ -864,6 +864,8 @@ class BaseRequest(DictMixin):
 
     #: Maximum size of memory buffer for :attr:`body` in bytes.
     MEMFILE_MAX = 102400
+    #: Maximum number pr GET or POST parameters per request
+    MAX_PARAMS  = 100
 
     def __init__(self, environ):
         """ Wrap a WSGI environ dictionary. """
@@ -898,7 +900,8 @@ class BaseRequest(DictMixin):
         """ Cookies parsed into a :class:`FormsDict`. Signed cookies are NOT
             decoded. Use :meth:`get_cookie` if you expect signed cookies. """
         cookies = SimpleCookie(self.environ.get('HTTP_COOKIE',''))
-        return FormsDict((c.key, c.value) for c in cookies.itervalues())
+        cookies = list(cookies.values())[:self.MAX_PARAMS]
+        return FormsDict((c.key, c.value) for c in cookies)
 
     def get_cookie(self, key, default=None, secret=None):
         """ Return the content of a cookie. To read a `Signed Cookie`, the
@@ -917,11 +920,10 @@ class BaseRequest(DictMixin):
             values are sometimes called "URL arguments" or "GET parameters", but
             not to be confused with "URL wildcards" as they are provided by the
             :class:`Router`. '''
-        data = parse_qs(self.query_string, keep_blank_values=True)
+        pairs = parse_qsl(self.query_string, keep_blank_values=True)
         get = self.environ['bottle.get'] = FormsDict()
-        for key, values in data.iteritems():
-            for value in values:
-                get[key] = value
+        for key, value in pairs[:self.MAX_PARAMS]:
+            get[key] = value
         return get
 
     @DictProperty('environ', 'bottle.request.forms', read_only=True)
@@ -1023,7 +1025,7 @@ class BaseRequest(DictMixin):
         else:
             fb = self.body
         data = cgi.FieldStorage(fp=fb, environ=safe_env, keep_blank_values=True)
-        for item in data.list or []:
+        for item in (data.list or [])[:self.MAX_PARAMS]:
             post[item.name] = item if item.filename else item.value
         return post
 
