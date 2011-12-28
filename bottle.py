@@ -71,7 +71,7 @@ _stdout, _stderr = sys.stdout.write, sys.stderr.write
 if py3k:
     import http.client as httplib
     import _thread as thread
-    from urllib.parse import urljoin, parse_qs, SplitResult as UrlSplitResult
+    from urllib.parse import urljoin, parse_qsl, SplitResult as UrlSplitResult
     from urllib.parse import urlencode, quote as urlquote, unquote as urlunquote
     from http.cookies import SimpleCookie
     from collections import MutableMapping as DictMixin
@@ -94,12 +94,12 @@ else: # 2.x
     if py25:
         msg = "Python 2.5 support may be dropped in future versions of Bottle."
         warnings.warn(msg, DeprecationWarning)
-        from cgi import parse_qs
+        from cgi import parse_qsl
         from UserDict import DictMixin
         def next(it): return it.next()
         bytes = str
     else: # 2.6, 2.7
-        from urlparse import parse_qs
+        from urlparse import parse_qsl
         from collections import MutableMapping as DictMixin
     json_loads = json_lds
 
@@ -883,6 +883,8 @@ class BaseRequest(DictMixin):
 
     #: Maximum size of memory buffer for :attr:`body` in bytes.
     MEMFILE_MAX = 102400
+    #: Maximum number pr GET or POST parameters per request
+    MAX_PARAMS  = 100
 
     def __init__(self, environ):
         """ Wrap a WSGI environ dictionary. """
@@ -917,7 +919,8 @@ class BaseRequest(DictMixin):
         """ Cookies parsed into a :class:`FormsDict`. Signed cookies are NOT
             decoded. Use :meth:`get_cookie` if you expect signed cookies. """
         cookies = SimpleCookie(self.environ.get('HTTP_COOKIE',''))
-        return FormsDict((c.key, c.value) for c in cookies.values())
+        cookies = list(cookies.values())[:self.MAX_PARAMS]
+        return FormsDict((c.key, c.value) for c in cookies)
 
     def get_cookie(self, key, default=None, secret=None):
         """ Return the content of a cookie. To read a `Signed Cookie`, the
@@ -936,11 +939,10 @@ class BaseRequest(DictMixin):
             values are sometimes called "URL arguments" or "GET parameters", but
             not to be confused with "URL wildcards" as they are provided by the
             :class:`Router`. '''
-        data = parse_qs(self.query_string, keep_blank_values=True)
+        pairs = parse_qsl(self.query_string, keep_blank_values=True)
         get = self.environ['bottle.get'] = FormsDict()
-        for key, values in data.items():
-            for value in values:
-                get[key] = value
+        for key, value in pairs[:self.MAX_PARAMS]:
+            get[key] = value
         return get
 
     @DictProperty('environ', 'bottle.request.forms', read_only=True)
@@ -1042,7 +1044,7 @@ class BaseRequest(DictMixin):
         else:
             fb = self.body
         data = cgi.FieldStorage(fp=fb, environ=safe_env, keep_blank_values=True)
-        for item in data.list or []:
+        for item in (data.list or [])[:self.MAX_PARAMS]:
             post[item.name] = item if item.filename else item.value
         return post
 
