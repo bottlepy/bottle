@@ -2664,10 +2664,11 @@ class Jinja2Template(BaseTemplate):
 
 
 class SimpleTALTemplate(BaseTemplate):
-    ''' Untested! '''
+    ''' Deprecated, do not use. '''
     def prepare(self, **options):
+        depr('The SimpleTAL template handler is deprecated'\
+             ' and will be removed in 0.12')
         from simpletal import simpleTAL
-        # TODO: add option to load METAL files during render
         if self.source:
             self.tpl = simpleTAL.compileHTMLTemplate(self.source)
         else:
@@ -2677,7 +2678,6 @@ class SimpleTALTemplate(BaseTemplate):
     def render(self, *args, **kwargs):
         from simpletal import simpleTALES
         for dictarg in args: kwargs.update(dictarg)
-        # TODO: maybe reuse a context instead of always creating one
         context = simpleTALES.Context()
         for k,v in self.defaults.items():
             context.addGlobal(k, v)
