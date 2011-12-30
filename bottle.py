@@ -2094,6 +2094,9 @@ def auth_basic(check, realm="private", text="Access denied"):
     return decorator
 
 
+# Shortcuts for common Bottle methods.
+# They all refer to the current default application.
+
 def make_default_app_wrapper(name):
     ''' Return a callable that relays calls to the current default app. '''
     @functools.wraps(getattr(Bottle, name))
@@ -2101,12 +2104,18 @@ def make_default_app_wrapper(name):
         return getattr(app(), name)(*a, **ka)
     return wrapper
 
+route     = make_default_app_wrapper('route')
+get       = make_default_app_wrapper('get')
+post      = make_default_app_wrapper('post')
+put       = make_default_app_wrapper('put')
+delete    = make_default_app_wrapper('delete')
+error     = make_default_app_wrapper('error')
+mount     = make_default_app_wrapper('mount')
+hook      = make_default_app_wrapper('hook')
+install   = make_default_app_wrapper('install')
+uninstall = make_default_app_wrapper('uninstall')
+url       = make_default_app_wrapper('get_url')
 
-for name in '''route get post put delete error mount
-               hook install uninstall'''.split():
-    globals()[name] = make_default_app_wrapper(name)
-url = make_default_app_wrapper('get_url')
-del name
 
 
 
