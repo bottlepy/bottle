@@ -893,6 +893,11 @@ class BaseRequest(DictMixin):
         self.environ = environ
         environ['bottle.request'] = self
 
+    @DictProperty('environ', 'bottle.app', read_only=True)
+    def app(self):
+        ''' Bottle application handling this request. '''
+        raise AttributeError('This request is not connected to an application.')
+
     @property
     def path(self):
         ''' The value of ``PATH_INFO`` with exactly one prefixed slash (to fix

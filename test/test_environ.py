@@ -13,6 +13,14 @@ import base64
 from bottle import BaseRequest, BaseResponse
 
 class TestRequest(unittest.TestCase):
+
+    def test_app(self):
+        e = {}
+        r = BaseRequest(e)
+        self.assertRaises(AttributeError, lambda: r.app)
+        e.update({'bottle.app': 5})
+        self.assertEqual(r.app, 5)
+
     def test_path(self):
         """ PATH_INFO normalization. """
         # Legal paths
