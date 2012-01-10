@@ -2299,7 +2299,6 @@ class GunicornServer(ServerAdapter):
 
 class EventletServer(ServerAdapter):
     """ Untested """
-    quiet = False
     def run(self, handler):
         from eventlet import wsgi, listen
         try:
