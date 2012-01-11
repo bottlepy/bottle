@@ -2473,12 +2473,15 @@ def run(app=None, server='wsgiref', host='127.0.0.1', port=8080,
             server.run(app)
     except KeyboardInterrupt:
         pass
-    except (SyntaxError, ImportError):
+    except (SystemExit, MemoryError):
+        raise
+    except:
         if not reloader: raise
-        if not getattr(server, 'quiet', False): print_exc()
+        if not getattr(server, 'quiet', quiet):
+            print_exc()
+        time.sleep(interval)
         sys.exit(3)
-    finally:
-        if not getattr(server, 'quiet', False): _stderr('Shutdown...\n')
+
 
 
 class FileCheckerThread(threading.Thread):
