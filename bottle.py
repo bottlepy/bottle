@@ -299,13 +299,13 @@ class Router(object):
 
     def path_filter(self, conf):
         return r'.*?', None, None
-    
+
     def add_filter(self, name, func):
         ''' Add a filter. The provided function is called with the configuration
         string as parameter and must return a (regexp, to_python, to_url) tuple.
         The first element is a string, the last two are callables or None. '''
         self.filters[name] = func
-    
+
     def parse_rule(self, rule):
         ''' Parses a rule into a (name, filter, conf) token stream. If mode is
             None, name contains a static rule part. '''
@@ -510,7 +510,7 @@ class Route(object):
             if not callback is self.callback:
                 update_wrapper(callback, self.callback)
         return callback
-    
+
     def __repr__(self):
         return '<%s %r %r>' % (self.method, self.rule, self.callback)
 
@@ -526,7 +526,7 @@ class Route(object):
 
 class Bottle(object):
     """ Each Bottle object represents a single, distinct web application and
-        consists of routes, callbacks, plugins and configuration. Instances are 
+        consists of routes, callbacks, plugins and configuration. Instances are
         callable WSGI applications. """
 
     def __init__(self, catchall=True, autojson=True, config=None):
@@ -2301,7 +2301,12 @@ class EventletServer(ServerAdapter):
     """ Untested """
     def run(self, handler):
         from eventlet import wsgi, listen
-        wsgi.server(listen((self.host, self.port)), handler)
+        try:
+            wsgi.server(listen((self.host, self.port)), handler,
+                        log_output=(not self.quiet))
+        except TypeError:
+            # Fallback, if we have old version of eventlet
+            wsgi.server(listen((self.host, self.port)), handler)
 
 
 class RocketServer(ServerAdapter):
@@ -2515,10 +2520,10 @@ class FileCheckerThread(threading.Thread):
                     thread.interrupt_main()
                     break
             time.sleep(self.interval)
-    
+
     def __enter__(self):
         self.start()
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         if not self.status: self.status = 'exit' # silent exit
         self.join()
