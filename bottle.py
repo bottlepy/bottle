@@ -750,6 +750,9 @@ class Bottle(object):
             route, args = self.router.match(environ)
             environ['route.handle'] = environ['bottle.route'] = route
             environ['route.url_args'] = args
+            environ['bottle.app'] = self
+            request.bind(environ)
+            response.bind()
             return route.call(**args)
         except HTTPResponse:
             return _e()
@@ -764,7 +767,7 @@ class Bottle(object):
             environ['wsgi.errors'].write(stacktrace)
             return HTTPError(500, "Internal Server Error", _e(), stacktrace)
 
-    def _cast(self, out, request, response, peek=None):
+    def _cast(self, out, peek=None):
         """ Try to convert the parameter into something WSGI compatible and set
         correct HTTP headers when possible.
         Support: False, str, unicode, dict, HTTPResponse, HTTPError, file-like,
@@ -793,10 +796,10 @@ class Bottle(object):
             out = self.error_handler.get(out.status, repr)(out)
             if isinstance(out, HTTPResponse):
                 depr('Error handlers must not return :exc:`HTTPResponse`.') #0.9
-            return self._cast(out, request, response)
+            return self._cast(out)
         if isinstance(out, HTTPResponse):
             out.apply(response)
-            return self._cast(out.output, request, response)
+            return self._cast(out.output)
 
         # File-like objects.
         if hasattr(out, 'read'):
@@ -812,7 +815,7 @@ class Bottle(object):
             while not first:
                 first = next(out)
         except StopIteration:
-            return self._cast('', request, response)
+            return self._cast('')
         except HTTPResponse:
             first = _e()
         except (KeyboardInterrupt, SystemExit, MemoryError):
@@ -823,22 +826,19 @@ class Bottle(object):
 
         # These are the inner types allowed in iterator or generator objects.
         if isinstance(first, HTTPResponse):
-            return self._cast(first, request, response)
+            return self._cast(first)
         if isinstance(first, bytes):
             return itertools.chain([first], out)
         if isinstance(first, unicode):
             return imap(lambda x: x.encode(response.charset),
                                   itertools.chain([first], out))
         return self._cast(HTTPError(500, 'Unsupported response type: %s'\
-                                         % type(first)), request, response)
+                                         % type(first)))
 
     def wsgi(self, environ, start_response):
         """ The bottle WSGI-interface. """
         try:
-            environ['bottle.app'] = self
-            request.bind(environ)
-            response.bind()
-            out = self._cast(self._handle(environ), request, response)
+            out = self._cast(self._handle(environ))
             # rfc2616 section 4.3
             if response._status_code in (100, 101, 204, 304)\
             or request.method == 'HEAD':
