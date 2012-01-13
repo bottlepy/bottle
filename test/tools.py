@@ -8,12 +8,14 @@ import wsgiref
 import wsgiref.simple_server
 import wsgiref.util
 import wsgiref.validate
-from warnings import warn
 
 import mimetypes
 import uuid
 
 from bottle import tob, BytesIO
+
+def warn(msg):
+    sys.stderr.write('WARNING: %s\n' % msg.strip())
 
 def tobs(data):
     ''' Transforms bytes or unicode into a byte stream. '''

@@ -149,7 +149,6 @@ class TestOutputFilter(ServerTestBase):
         """ WSGI: Cookies """
         @bottle.route('/cookie')
         def test():
-            bottle.response.COOKIES['a']="a"
             bottle.response.set_cookie('b', 'b')
             bottle.response.set_cookie('c', 'c', path='/')
             return 'hello'
@@ -158,7 +157,6 @@ class TestOutputFilter(ServerTestBase):
         except:
             c = self.urlopen('/cookie')['header'].get('Set-Cookie', '').split(',')
             c = [x.strip() for x in c]
-        self.assertTrue('a=a' in c)
         self.assertTrue('b=b' in c)
         self.assertTrue('c=c; Path=/' in c)
 

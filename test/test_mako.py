@@ -49,7 +49,7 @@ class TestMakoTemplate(unittest.TestCase):
 try:
   import mako
 except ImportError:
-  warn("WARNING: No Mako template support. Skipping tests.")
+  warn("No Mako template support. Skipping tests.")
   del TestMakoTemplate
 
 if __name__ == '__main__': #pragma: no cover

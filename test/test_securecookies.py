@@ -31,7 +31,7 @@ class TestSecureCookiesInBottle(unittest.TestCase):
         bottle.app.pop()
 
     def get_pairs(self):
-        for k, v in bottle.response.wsgiheader():
+        for k, v in bottle.response.headerlist:
             if k == 'Set-Cookie':
                 key, value = v.split(';')[0].split('=', 1)
                 yield key.lower().strip(), value.strip()

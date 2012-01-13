@@ -510,20 +510,20 @@ class TestResponse(unittest.TestCase):
         response = BaseResponse()
         response.set_cookie('name', 'value')
         response.delete_cookie('name')
-        cookies = [value for name, value in response.wsgiheader()
+        cookies = [value for name, value in response.headerlist
                    if name.title() == 'Set-Cookie']
         self.assertTrue('name=;' in cookies[0])
 
     def test_set_header(self):
         response = BaseResponse()
         response['x-test'] = 'foo'
-        headers = [value for name, value in response.wsgiheader()
+        headers = [value for name, value in response.headerlist
                    if name.title() == 'X-Test']
         self.assertEqual(['foo'], headers)
         self.assertEqual('foo', response['x-test'])
 
         response['X-Test'] = 'bar'
-        headers = [value for name, value in response.wsgiheader()
+        headers = [value for name, value in response.headerlist
                    if name.title() == 'X-Test']
         self.assertEqual(['bar'], headers)
         self.assertEqual('bar', response['x-test'])
@@ -531,13 +531,13 @@ class TestResponse(unittest.TestCase):
     def test_append_header(self):
         response = BaseResponse()
         response.set_header('x-test', 'foo')
-        headers = [value for name, value in response.wsgiheader()
+        headers = [value for name, value in response.headerlist
                    if name.title() == 'X-Test']
         self.assertEqual(['foo'], headers)
         self.assertEqual('foo', response['x-test'])
 
         response.set_header('X-Test', 'bar', True)
-        headers = [value for name, value in response.wsgiheader()
+        headers = [value for name, value in response.headerlist
                    if name.title() == 'X-Test']
         self.assertEqual(['foo', 'bar'], headers)
         self.assertEqual('bar', response['x-test'])

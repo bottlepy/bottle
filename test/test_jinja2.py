@@ -64,7 +64,7 @@ class TestJinja2Template(unittest.TestCase):
 try:
   import jinja2
 except ImportError:
-  warn("WARNING: No Jinja2 template support. Skipping tests.")
+  warn("No Jinja2 template support. Skipping tests.")
   del TestJinja2Template
 
 if __name__ == '__main__': #pragma: no cover

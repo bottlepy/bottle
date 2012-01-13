@@ -131,7 +131,6 @@ class TestWsgi(ServerTestBase):
         """ WSGI: Cookies """
         @bottle.route('/cookie')
         def test():
-            bottle.response.COOKIES['a']="a"
             bottle.response.set_cookie('b', 'b')
             bottle.response.set_cookie('c', 'c', path='/')
             return 'hello'
@@ -140,7 +139,6 @@ class TestWsgi(ServerTestBase):
         except:
             c = self.urlopen('/cookie')['header'].get('Set-Cookie', '').split(',')
             c = [x.strip() for x in c]
-        self.assertTrue('a=a' in c)
         self.assertTrue('b=b' in c)
         self.assertTrue('c=c; Path=/' in c)
 
@@ -282,17 +280,6 @@ class TestDecorators(ServerTestBase):
         self.assertInBody('The cake is a lie!', '/tpl')
         self.assertInBody('401: Unauthorized', '/tpl')
         self.assertStatus(401, '/tpl')
-
-    def test_validate(self):
-        """ WSGI: Test validate-decorator"""
-        @bottle.route('/:var')
-        @bottle.route('/')
-        @bottle.validate(var=int)
-        def test(var): return 'x' * var
-        self.assertStatus(403,'/noint')
-        self.assertStatus(403,'/')
-        self.assertStatus(200,'/5')
-        self.assertBody('xxx', '/3')
 
     def test_truncate_body(self):
         """ WSGI: Some HTTP status codes must not be used with a response-body """
