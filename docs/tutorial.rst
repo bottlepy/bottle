@@ -140,7 +140,7 @@ Routes that contain wildcards are called `dynamic routes` (as opposed to `static
 Each wildcard passes the covered part of the URL as a keyword argument to the request callback. You can use them right away and implement RESTful, nice-looking and meaningful URLs with ease. Here are some other examples along with the URLs they'd match::
 
     @route('/wiki/<pagename>')            # matches /wiki/Learning_Python
-    def show_wiki_page(pagename)):
+    def show_wiki_page(pagename):
         ...
 
     @route('/<action>/<user>')            # matches /follow/defnull
