@@ -2705,6 +2705,31 @@ class SimpleTALTemplate(BaseTemplate):
         return output.getvalue()
 
 
+class EZTTemplate(BaseTemplate):
+    def prepare(self, compress_whitespace=True, base_format=None, **options):
+        import ezt
+        if base_format is None:
+            base_format = ezt.FORMAT_HTML
+        self.template = ezt.Template(compress_whitespace=compress_whitespace)
+        if self.source:
+            self.template.parse(self.source, base_format)
+        else:
+            self.template.parse_file(self.filename, base_format)
+
+    def render(self, *args, **kwargs):
+        try:
+            import cStringIO as StringIO
+        except ImportError:
+            import StringIO
+        for dictarg in args:
+            kwargs.update(dictarg)
+        data = self.defaults.copy()
+        data.update(kwargs)
+        buffer = StringIO.StringIO()
+        self.template.generate(buffer, data)
+        return buffer.getvalue()
+
+
 class SimpleTemplate(BaseTemplate):
     blocks = ('if', 'elif', 'else', 'try', 'except', 'finally', 'for', 'while',
               'with', 'def', 'class')
@@ -2886,6 +2911,7 @@ mako_template = functools.partial(template, template_adapter=MakoTemplate)
 cheetah_template = functools.partial(template, template_adapter=CheetahTemplate)
 jinja2_template = functools.partial(template, template_adapter=Jinja2Template)
 simpletal_template = functools.partial(template, template_adapter=SimpleTALTemplate)
+ezt_template = functools.partial(template, template_adapter=EZTTemplate)
 
 
 def view(tpl_name, **defaults):
@@ -2914,6 +2940,7 @@ mako_view = functools.partial(view, template_adapter=MakoTemplate)
 cheetah_view = functools.partial(view, template_adapter=CheetahTemplate)
 jinja2_view = functools.partial(view, template_adapter=Jinja2Template)
 simpletal_view = functools.partial(view, template_adapter=SimpleTALTemplate)
+ezt_view = functools.partial(view, template_adapter=EZTTemplate)
 
 
 
