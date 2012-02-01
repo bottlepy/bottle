@@ -96,9 +96,11 @@ These changes may break compatibility with previous versions.
 * The :class:`SimpleTemplate` engine returns unicode strings instead of lists of byte strings.
 * ``bottle.optimize()`` and the automatic route optimization is obsolete.
 * Some functions and attributes were renamed:
+
   * :attr:`Request._environ` is now :attr:`Request.environ`
   * :attr:`Response.header` is now :attr:`Response.headers`
   * :func:`default_app` is obsolete. Use :func:`app` instead.
+
 * The default :func:`redirect` code changed from 307 to 303.
 * Removed support for ``@default``. Use ``@error(404)`` instead.
 
