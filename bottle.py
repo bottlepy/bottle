@@ -2420,6 +2420,7 @@ def run(app=None, server='wsgiref', host='127.0.0.1', port=8080,
     if NORUN: return
     if reloader and not os.environ.get('BOTTLE_CHILD'):
         try:
+            lockfile = None
             fd, lockfile = tempfile.mkstemp(prefix='bottle.', suffix='.lock')
             os.close(fd) # We only need this file to exist. We never write to it
             while os.path.exists(lockfile):
