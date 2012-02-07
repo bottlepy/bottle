@@ -1566,24 +1566,62 @@ class HooksPlugin(object):
 
 
 class TemplatePlugin(object):
-    ''' This plugin applies the :func:`view` decorator to all routes with a
-        `template` config parameter. If the parameter is a tuple, the second
-        element must be a dict with additional options (e.g. `template_engine`)
-        or default variables for the template. '''
+    ''' This plugin renders templates for all routes with a `template`
+        parameter if the route callback returns a dictionary.
+
+        Application config values (and their default values):
+        - app.config.Templates.adapter   = SimpleTemplate
+        - app.config.Templates.path      = []
+        - app.config.Templates.defaults  = {}
+
+        Example::
+            @app.route(..., template='template_name')
+            def callback():
+                return dict(key='value')
+    '''
+
     name = 'template'
     api  = 2
 
+    def __init__(self):
+        self.cache   = {}
+    
+    def setup(self, app):
+        self.app = app
+
     def apply(self, callback, route):
-        conf = route.config.get('template')
+        conf = route.config.template
         if isinstance(conf, (tuple, list)) and len(conf) == 2:
-            return view(conf[0], **conf[1])(callback)
-        elif isinstance(conf, str) and 'template_opts' in route.config:
-            depr('The `template_opts` parameter is deprecated.') #0.9
-            return view(conf, **route.config['template_opts'])(callback)
+            name, defaults = conf
         elif isinstance(conf, str):
-            return view(conf)(callback)
+            name, defaults = conf, {}
         else:
             return callback
+
+        def wrapper(*args, **kwargs):
+            result = callback(*args, **kwargs)
+            if isinstance(result, (dict, DictMixin)):
+                tplvars = defaults.copy()
+                tplvars.update(result)
+                return self.render(name, route, tplvars)
+            return result
+
+        return wrapper
+
+    def render(self, name, route, tplvars):
+        if name not in self.cache or DEBUG:
+            app_conf = route.app.config.Template
+            adapter = app_conf.get('adapter', SimpleTemplate)
+            options = app_conf.get('options', {}).copy()
+            options['path'] = app_conf.get('path', TEMPLATE_PATH)
+            defaults = app_conf.get('defaults', {}).copy()
+            if "\n" in name or "{" in name or "%" in name or '$' in name:
+                self.cache[name] = adapter(source=name, **options)
+            else:
+                self.cache[name] = adapter(name=name, **options)
+            if not self.cache[name]:
+                raise TemplateError('Template not found.')
+        return self.cache[name].render(defaults, tplvars)
 
 
 #: Not a plugin, but part of the plugin API. TODO: Find a better place.

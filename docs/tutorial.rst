@@ -74,21 +74,45 @@ This tutorial assumes you have Bottle either :ref:`installed <installation>` or 
     def hello():
         return "Hello World!"
 
-    run(host='localhost', port=8080, debug=True)
+    run(host='localhost', port=8080)
 
 This is it. Run this script, visit http://localhost:8080/hello and you will see "Hello World!" in your browser. Here is how it works:
 
 The :func:`route` decorator binds a piece of code to an URL path. In this case, we link the ``/hello`` URL to the ``hello()`` function. This is called a `route` (hence the decorator name) and is the most important concept of this framework. You can define as many routes as you want. Whenever a browser requests an URL, the associated function is called and the return value is sent back to the browser. Its as simple as that.
 
-The :func:`run` call in the last line starts a built-in development server. It runs on `localhost` port 8080 and serves requests until you hit :kbd:`Control-c`. You can switch the server backend later, but for now a development server is all we need. It requires no setup at all and is an incredibly painless way to get your application up and running for local tests.
-
-The :ref:`tutorial-debugging` is very helpful during early development, but should be switched off for public applications. Keep that in mind.
+The :func:`run` call in the last line starts a built-in development server. It runs on `localhost` port 8080 and serves requests until you hit :kbd:`Control-c`. You can switch the server backend and change the settings later, but for now a development server is all we need. It requires no setup at all and is an incredibly painless way to get your application up and running for local tests.
 
 Of course this is a very simple example, but it shows the basic concept of how applications are built with Bottle. Continue reading and you'll see what else is possible.
 
+External Access
+------------------------------------------------------------------------------
+
+The example above starts the server on ``localhost``, which means that it is only available as a local service. If you are testing on a remote machine or want to make your project publicly available, change the host parameter to ``0.0.0.0``. This tells the server to listen on all interfaces and public IPs.
+
+.. _tutorial-debugging:
+
+Debug Mode and Code Reloading
+------------------------------------------------------------------------------
+
+There are two features that make development a whole lot easier:
+
+*  ``debug=True`` turns Bottle into verbose mode and provides helpful debugging information whenever an error occurs. It also disables some optimizations that might get in your way and adds some checks that warn you about possible misconfiguration.
+
+*  ``reloader=True`` enables code reloading. Every time you edit a source file, the reloader restarts the server process and loads the newest version of your code. This is very helpful but has some side-effects. Please read :ref:`reloading` first.
+
+Please note that both features slow down the server and debug mode exposes sensitive information (stack traces) to the user. You should never use these on a public server::
+
+    import sys
+    if name == '__main__':
+        if '--debug' in sys.args:
+            run(host='localhost', port=8080, debug=True, reloader=True)
+        else:
+            run(host='0.0.0.0', port=80)
+
+
 .. _tutorial-default:
 
-The `Default Application`
+Working with the `Default Application`
 ------------------------------------------------------------------------------
 
 For the sake of simplicity, most examples in this tutorial use a module-level :func:`route` decorator to define routes. This adds routes to a global "default application", an instance of :class:`Bottle` that is automatically created the first time you call :func:`route`. Several other module-level decorators and functions relate to this default application, but if you prefer a more object oriented approach and don't mind the extra typing, you can create a separate application object and use that instead of the global one::
@@ -351,6 +375,72 @@ Most browsers try to open downloaded files if the MIME type is known and assigne
 
 If the ``download`` parameter is just ``True``, the original filename is used.
 
+
+
+
+.. _tutorial-templates:
+
+Templates
+------------------------------------------------------------------------------
+
+Bottle comes with a fast built-in template engine and support for many third-party engines including Jinja2 and Mako. No matter which engine you choose, the API to render templates is always the same::
+
+    @route('/hello/<name>', template='hello')
+    def hello(name='World'):
+        return {'name': name}
+
+The ``template`` route parameter names the template to render and the dictionary returned by the callback defines the template variables. On each request, the template is rendered with the provided variables and the result is sent to the browser. If you want to choose a template at runtime, you can explicitly call the :func:`template` function and return the result::
+
+    from bottle import template
+
+    @route('/hello/<name>')
+    def hello(name='World'):
+        return template('hello', {'name': name})
+
+Instead of a template name, you can also provide a full template file path, or the template itself as a source string. The latter is particularly useful for small applications and allows you to bundle templates with your application in a single file::
+
+    tpldb = {}
+    tpldb['hello'] = '<h1>Hello {{name}}!</h1>'
+
+    @route('/hello/<name>')
+    def hello(name='World', template=tpldb['hello']):
+        return {'name': name}
+
+
+.. versionchanged: 0.11
+
+Bottle looks for templates in ``./views/`` or any other folder found in the global ``bottle.TEMPLATE_PATH`` list. Starting with Bottle 0.11, application-specific settings are supported, too::
+
+    app = Bottle()
+    app.config.Template.path    = ['some/app/specific/lookup/path/']
+    app.config.Template.engine  = bottle.Jinja2Template
+    app.config.Template.options = {'globals': {'powered_by': 'Bottle'} }
+
+This only affects the ``template`` keyword parameter and does not work with the :func:`template` function, but might in future versions.
+
+.. rubric:: Template Syntax
+
+.. highlight:: html+django
+
+The syntax of the build-in template engine is a very thin layer around the Python language. Its main purpose is to ensure correct indentation of blocks, so you can format your template without worrying about indentation.
+
+Here is an example template::
+
+    %if name == 'World':
+        <h1>Hello {{name}}!</h1>
+        <p>This is a test.</p>
+    %else:
+        <h1>Hello {{name.title()}}!</h1>
+        <p>How are you?</p>
+    %end
+
+Follow the link for a full syntax description: :doc:`stpl`. For details on the other template engines, please see their respective documentation.
+
+.. highlight:: python
+
+
+
+
 .. _tutorial-error:
 
 HTTP Errors and Redirects
@@ -382,18 +472,24 @@ You may provide a different HTTP status code as a second parameter.
 All exceptions other than :exc:`HTTPResponse` or :exc:`HTTPError` will result in a ``500 Internal Server Error`` response, so they won't crash your WSGI server. You can turn off this behavior to handle exceptions in your middleware by setting ``bottle.app().catchall`` to ``False``.
 
 
+
+
+
+
 .. _tutorial-response:
 
 The :class:`Response` Object
---------------------------------------------------------------------------------
+==============================================================================
 
 Response metadata such as the HTTP status code, response headers and cookies are stored in an object called :data:`response` up to the point where they are transmitted to the browser. You can manipulate these metadata directly or use the predefined helper methods to do so. The full API and feature list is described in the API section (see :class:`Response`), but the most common use cases and features are covered here, too.
 
-.. rubric:: Status Code
+Status Code
+-------------------------------------------------------------------------------
 
 The `HTTP status code <http_code>`_ controls the behavior of the browser and defaults to ``200 OK``. In most scenarios you won't need to set the :attr:`Response.status` attribute manually, but use the :func:`abort` helper or return an :exc:`HTTPResponse` instance with the appropriate status code. Any integer is allowed, but codes other than the ones defined by the `HTTP specification <http_code>`_ will only confuse the browser and break standards.
 
-.. rubric:: Response Header
+Response Header
+-------------------------------------------------------------------------------
 
 Response headers such as ``Cache-Control`` or ``Location`` are defined via :meth:`Response.set_header`. This method takes two parameters, a header name and a value. The name part is case-insensitive::
 
@@ -479,7 +575,7 @@ In addition, Bottle automatically pickles and unpickles any data stored to signe
 
 .. _tutorial-request:
 
-Request Data
+The :class:`Request` Object
 ==============================================================================
 
 Bottle provides access to HTTP-related metadata such as cookies, headers and POST form data through a global ``request`` object. This object always contains information about the *current* request, as long as it is accessed from within a callback function. This works even in multi-threaded environments where multiple requests are handled at the same time. For details on how a global object can be thread-safe, see :doc:`contextlocal`.
@@ -576,55 +672,6 @@ Each :class:`BaseRequest` instance wraps a WSGI environment dictionary. The orig
       # or ip = request['REMOTE_ADDR']
       return "Your IP is: %s" % ip
 
-
-
-
-
-
-
-.. _tutorial-templates:
-
-Templates
-================================================================================
-
-Bottle comes with a fast and powerful built-in template engine called :doc:`stpl`. To render a template you can use the :func:`template` function or the :func:`view` decorator. All you have to do is to provide the name of the template and the variables you want to pass to the template as keyword arguments. Here’s a simple example of how to render a template::
-
-    @route('/hello')
-    @route('/hello/<name>')
-    def hello(name='World'):
-        return template('hello_template', name=name)
-
-This will load the template file ``hello_template.tpl`` and render it with the ``name`` variable set. Bottle will look for templates in the ``./views/`` folder or any folder specified in the ``bottle.TEMPLATE_PATH`` list.
-
-The :func:`view` decorator allows you to return a dictionary with the template variables instead of calling :func:`template`::
-
-    @route('/hello')
-    @route('/hello/<name>')
-    @view('hello_template')
-    def hello(name='World'):
-        return dict(name=name)
-
-.. rubric:: Syntax
-
-.. highlight:: html+django
-
-The template syntax is a very thin layer around the Python language. Its main purpose is to ensure correct indentation of blocks, so you can format your template without worrying about indentation. Follow the link for a full syntax description: :doc:`stpl`
-
-Here is an example template::
-
-    %if name == 'World':
-        <h1>Hello {{name}}!</h1>
-        <p>This is a test.</p>
-    %else:
-        <h1>Hello {{name.title()}}!</h1>
-        <p>How are you?</p>
-    %end
-
-.. rubric:: Caching
-
-Templates are cached in memory after compilation. Modifications made to the template files will have no affect until you clear the template cache. Call ``bottle.TEMPLATES.clear()`` to do so. Caching is disabled in debug mode.
-
-.. highlight:: python
 
 
 
@@ -797,32 +844,10 @@ Both :func:`app` and :func:`default_app` are instance of :class:`AppStack` and i
     app = default_app.pop()
 
 
-.. _tutorial-debugging:
+.. _reloading:
 
-
-Debug Mode
---------------------------------------------------------------------------------
-
-During early development, the debug mode can be very helpful.
-
-.. highlight:: python
-
-::
-
-    bottle.debug(True)
-
-In this mode, Bottle is much more verbose and provides helpful debugging information whenever an error occurs. It also disables some optimisations that might get in your way and adds some checks that warn you about possible misconfiguration.
-
-Here is an incomplete list of things that change in debug mode:
-
-* The default error page shows a traceback.
-* Templates are not cached.
-* Plugins are applied immediately.
-
-Just make sure to not use the debug mode on a production server.
-
-Auto Reloading
---------------------------------------------------------------------------------
+Code Reloading
+------------------------------------------------------------------------------
 
 During development, you have to restart the server a lot to test your
 recent changes. The auto reloader can do this for you. Every time you

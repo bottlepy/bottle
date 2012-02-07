@@ -239,7 +239,7 @@ class TestRouteDecorator(ServerTestBase):
         self.assertBody('test 5 6', '/test')
 
     def test_template_opts(self):
-        @bottle.route(template='test {{a}} {{b}}', template_opts={'b': 6})
+        @bottle.route(template=('test {{a}} {{b}}', {'b': 6}))
         def test(): return dict(a=5)
         self.assertBody('test 5 6', '/test')
 
