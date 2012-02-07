@@ -877,7 +877,7 @@ class Bottle(object):
 ###############################################################################
 
 
-class BaseRequest(DictMixin):
+class BaseRequest(object):
     """ A wrapper for WSGI environment dictionaries that adds a lot of
         convenient access methods and properties. Most of them are read-only."""
 
@@ -1171,6 +1171,7 @@ class BaseRequest(DictMixin):
         """ Return a new :class:`Request` with a shallow :attr:`environ` copy. """
         return Request(self.environ.copy())
 
+    def get(self, value, default=None): return self.environ.get(value, default)
     def __getitem__(self, key): return self.environ[key]
     def __delitem__(self, key): self[key] = ""; del(self.environ[key])
     def __iter__(self): return iter(self.environ)
@@ -1243,9 +1244,9 @@ class BaseResponse(object):
     def __init__(self, body='', status=None, **headers):
         self._status_line = None
         self._status_code = None
-        self.body = body
         self._cookies = None
         self._headers = {'Content-Type': [self.default_content_type]}
+        self.body = body
         self.status = status or self.default_status
         if headers:
             for name, value in headers.items():
@@ -1439,16 +1440,43 @@ class BaseResponse(object):
             out += '%s: %s\n' % (name.title(), value.strip())
         return out
 
+#: Thread-local storage for :class:`LocalRequest` and :class:`LocalResponse`
+#: attributes.
+_lctx = threading.local()
 
-class LocalRequest(BaseRequest, threading.local):
-    ''' A thread-local subclass of :class:`BaseRequest`. '''
+def local_property(name, doc=None):
+
+    return property(
+        lambda self: getattr(_lctx, name),
+        lambda self, value: setattr(_lctx, name, value),
+        lambda self: delattr(_lctx, name),
+        doc or ('Thread-local property stored in :data:`_lctx.%s` ' % name)
+    )
+
+class LocalRequest(BaseRequest):
+    ''' A thread-local subclass of :class:`BaseRequest` with a different
+        set of attribues for each thread. There is usually only one global
+        instance of this class (:data:`request`). If accessed during a
+        request/response cycle, this instance always refers to the *current*
+        request (even on a multithreaded server). '''
     def __init__(self): pass
     bind = BaseRequest.__init__
+    environ = local_property('request_environ')
 
 
-class LocalResponse(BaseResponse, threading.local):
-    ''' A thread-local subclass of :class:`BaseResponse`. '''
+class LocalResponse(BaseResponse):
+    ''' A thread-local subclass of :class:`BaseResponse` with a different
+        set of attribues for each thread. There is usually only one global
+        instance of this class (:data:`response`). Its attributes are used
+        to build the HTTP response at the end of the request/response cycle.
+    '''
+    def __init__(self): pass
     bind = BaseResponse.__init__
+    _status_line = local_property('response_status_line')
+    _status_code = local_property('response_status_code')
+    _cookies     = local_property('response_cookies')
+    _headers     = local_property('response_headers')
+    body         = local_property('response_body')
 
 Response = LocalResponse # BC 0.9
 Request  = LocalRequest  # BC 0.9
@@ -2977,11 +3005,14 @@ ERROR_PAGE_TEMPLATE = """
 %end
 """
 
-#: A thread-safe instance of :class:`Request` representing the `current` request.
-request = Request()
+#: A thread-safe instance of :class:`LocalRequest`. If accessed from within a 
+#: request callback, this instance always refers to the *current* request
+#: (even on a multithreaded server).
+request = LocalRequest()
 
-#: A thread-safe instance of :class:`Response` used to build the HTTP response.
-response = Response()
+#: A thread-safe instance of :class:`LocalResponse`. It is used to change the
+#: HTTP response for the *current* request.
+response = LocalResponse()
 
 #: A thread-safe namespace. Not used by Bottle.
 local = threading.local()
