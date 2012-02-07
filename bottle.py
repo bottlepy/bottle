@@ -535,8 +535,8 @@ class Bottle(object):
         self.plugins = [] # List of installed plugins.
 
         self.error_handler = {}
-        #: If true, most exceptions are catched and returned as :exc:`HTTPError`
         self.config = ConfigDict(config or {})
+        #: If true, most exceptions are catched and returned as :exc:`HTTPError`
         self.catchall = catchall
         #: An instance of :class:`HooksPlugin`. Empty by default.
         self.hooks = HooksPlugin()
@@ -728,7 +728,13 @@ class Bottle(object):
         return wrapper
 
     def hook(self, name):
-        """ Return a decorator that attaches a callback to a hook. """
+        """ Return a decorator that attaches a callback to a hook. Three hooks
+            are currently implemented:
+
+            - before_request: Executed once before each request
+            - after_request: Executed once after each request
+            - app_reset: Called whenever :meth:`reset` is called.
+        """
         def wrapper(func):
             self.hooks.add(name, func)
             return func
