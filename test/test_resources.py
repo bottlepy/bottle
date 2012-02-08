@@ -67,4 +67,5 @@ class TestAppMounting(ServerTestBase):
 
 
 if __name__ == '__main__': #pragma: no cover
+	import unittest
     unittest.main()
