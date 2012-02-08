@@ -64,3 +64,7 @@ class TestAppMounting(ServerTestBase):
 		self.assertEqual(None, app.find_resource('notexist.txt'))
 		self.assertEqual(__file__,
 					     app.find_resource(os.path.basename(__file__)))
+
+
+if __name__ == '__main__': #pragma: no cover
+    unittest.main()
