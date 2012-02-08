@@ -527,23 +527,93 @@ class Route(object):
 class Bottle(object):
     """ Each Bottle object represents a single, distinct web application and
         consists of routes, callbacks, plugins and configuration. Instances are
-        callable WSGI applications. """
+        callable WSGI applications.
 
-    def __init__(self, catchall=True, autojson=True, config=None):
-        self.routes = [] # List of installed :class:`Route` instances.
-        self.router = Router() # Maps requests to :class:`Route` instances.
-        self.plugins = [] # List of installed plugins.
+        :param resources: A path or list of paths, see
+                          :meth:`add_resource_path` for details on resources.
+        :param catchall: If true (default), handle all exceptions. Turn off to
+                         let debugging middleware handle exceptions.
+    """
 
-        self.error_handler = {}
-        self.config = ConfigDict(config or {})
+    def __init__(self, resources=None, catchall=True, autojson=True):
+        # Resource management
+        #: A list of search paths for application specific resources. You
+        #: should change this directly but use :meth:`add_resource_path`. 
+        self.resource_path = []
+        for p in makelist(resources):
+            self.add_resource_path(p)
+        self._lookup_cache = {}
+
         #: If true, most exceptions are catched and returned as :exc:`HTTPError`
         self.catchall = catchall
-        #: An instance of :class:`HooksPlugin`. Empty by default.
+
+        #: A :cls:`ConfigDict` for app specific configuration.
+        self.config = ConfigDict()
+        self.config.autojson = autojson
+
+        self.routes = [] # List of installed :class:`Route` instances.
+        self.router = Router() # Maps requests to :class:`Route` instances.
+        self.error_handler = {}
+
+        # Core plugins
+        self.plugins = [] # List of installed plugins.
         self.hooks = HooksPlugin()
         self.install(self.hooks)
-        if autojson:
+        if self.config.autojson:
             self.install(JSONPlugin())
         self.install(TemplatePlugin())
+
+    def add_resource_path(self, path, root='./', prepend=False):
+        ''' Add a path to the :attr:`resource_path` list.
+
+            The path is turned into an absolute and normalized form. If it
+            points to a file, only the directory part is used. Tip: `__file__`
+            adds your current module folder to the list.
+
+            The path is joined with the `root` parameter. This comes in handy
+            if you resources live in a sub-folder::
+
+                app.add_resource_path('./resources/', __file__)
+
+            The :attr:`resource_path` list is usually searched in order. With
+            `prepent=True` the path is added at the beginning of the list
+            and overrides other resources.
+        '''
+        path = os.path.dirname(os.path.abspath(os.path.join(root, path)))
+        if path not in self.resource_path:
+            if prepend:
+                self.resource_path.insert(0, path)
+            else:
+                self.resource_path.append(path)
+        self._lookup_cache.clear()
+
+    def find_resource(self, name):
+        ''' Search for a resource and return an absolute filename, or `None`.
+
+            The :attr:`resource_path` list is searched in order.
+            Lookups are cached (debug mode disables caching). 
+        '''
+        if name not in self._lookup_cache or DEBUG:
+            for path in self.resource_path:
+                fname = os.path.join(path, name)
+                if os.path.exists(fname):
+                    self._lookup_cache[name] = fname
+                    return fname
+            self._lookup_cache[name] = None
+        return self._lookup_cache[name]
+
+    def open_resource(self, name, mode='rb', *args, **kwargs):
+        ''' Return the resource as an opened file object, or raise IOError.
+
+            The :attr:`resource_path` list is searched in order.
+            Lookups are cached (debug mode disables caching). 
+        '''
+        if mode not in ('r', 'rb'):
+            raise IOError('Resources are read-only.')
+        fname = self.find_resource(name)
+        if not fname:
+            raise IOError("Resource %r not found." % name)
+        return open(name, mode=mode, *args, **kwargs)
 
     def mount(self, prefix, app, **options):
         ''' Mount an application (:class:`Bottle` or plain WSGI) to a specific
