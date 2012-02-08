@@ -540,9 +540,9 @@ class Bottle(object):
         #: A list of search paths for application specific resources. You
         #: should change this directly but use :meth:`add_resource_path`. 
         self.resource_path = []
+        self._lookup_cache = {}
         for p in makelist(resources):
             self.add_resource_path(p)
-        self._lookup_cache = {}
 
         #: If true, most exceptions are catched and returned as :exc:`HTTPError`
         self.catchall = catchall
@@ -579,7 +579,9 @@ class Bottle(object):
             `prepent=True` the path is added at the beginning of the list
             and overrides other resources.
         '''
-        path = os.path.dirname(os.path.abspath(os.path.join(root, path)))
+        root = os.path.abspath(os.path.dirname(root))
+        path = os.path.abspath(os.path.join(root, os.path.dirname(path)))
+        path += os.sep
         if path not in self.resource_path:
             if prepend:
                 self.resource_path.insert(0, path)
