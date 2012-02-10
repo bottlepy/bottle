@@ -16,7 +16,7 @@ License: MIT (see LICENSE.txt for details)
 from __future__ import with_statement
 
 __author__ = 'Marcel Hellkamp'
-__version__ = '0.10.7'
+__version__ = '0.10.8'
 __license__ = 'MIT'
 
 # The gevent server adapter needs to patch some modules before they are imported
