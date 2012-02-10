@@ -580,7 +580,7 @@ class Bottle(object):
                     for name, value in header: rs.add_header(name, value)
                     return rs.body.append
                 rs.body = itertools.chain(rs.body, app(request.environ, start_response))
-                return HTTPResponse(rs.body, rs.status, rs.headers)
+                return HTTPResponse(rs.body, rs.status_code, rs.headers)
             finally:
                 request.path_shift(-path_depth)
 
@@ -1264,7 +1264,7 @@ class BaseResponse(object):
         self._status_line = status or ('%d Unknown' % code)
 
     def _get_status(self):
-        depr('BaseReuqest.status will change to return a string in 0.11. Use'\
+        depr('BaseRequest.status will change to return a string in 0.11. Use'\
              ' status_line and status_code to make sure.') #0.10
         return self._status_code
 
