@@ -538,12 +538,12 @@ class Bottle(object):
         self.config = ConfigDict(config or {})
         #: If true, most exceptions are catched and returned as :exc:`HTTPError`
         self.catchall = catchall
-        #: An instance of :class:`HooksPlugin`. Empty by default.
+        #: The installed :class:`HooksPlugin`.
         self.hooks = HooksPlugin()
         self.install(self.hooks)
-        if autojson:
-            self.install(JSONPlugin())
-        self.install(TemplatePlugin())
+        if autojson: self.install(JSONPlugin())
+        #: The installed :class:`TemplatePlugin`.
+        self.templates = self.install(TemplatePlugin())
 
     def mount(self, prefix, app, **options):
         ''' Mount an application (:class:`Bottle` or plain WSGI) to a specific
@@ -1566,13 +1566,9 @@ class HooksPlugin(object):
 
 
 class TemplatePlugin(object):
-    ''' This plugin renders templates for all routes with a `template`
-        parameter if the route callback returns a dictionary.
-
-        Application config values (and their default values):
-        - app.config.Templates.adapter   = SimpleTemplate
-        - app.config.Templates.path      = []
-        - app.config.Templates.defaults  = {}
+    ''' This plugin renders dictionaries returned by route callbacks into
+        the specified template. Routes without a `template` parameter are
+        ignored.
 
         Example::
             @app.route(..., template='template_name')
@@ -1584,14 +1580,77 @@ class TemplatePlugin(object):
     api  = 2
 
     def __init__(self):
-        self.cache   = {}
-    
+        self.cache = {}
+
+    @property
+    def globals(self):
+        ''' Global namespace for all templates. '''
+        return self._conf.setdefault('view_globals', {})
+
+    @property
+    def options(self):
+        ''' Template settings. Possible values depend on the adapter used. '''
+        return self._conf.setdefault('view_options', {})
+
+    @property
+    def adapter(self):
+        ''' Template adapter class to use. (default: :cls:`SimpleTemplate`) '''
+        return self._conf.setdefault('view_adapter', SimpleTemplate)
+
+    @property
+    def lookup_path(self):
+        ''' List of template lookup paths. '''
+        return self._conf.setdefault('view_path')
+
+    @property
+    def lookup_masks(self):
+        ''' List of format strings that are used to turn template names into
+            a real filenames. (default: ``['%s.tpl', '%s.html']``) '''
+        return self._conf.setdefault('view_masks', ['%s.tpl', '%s.html'])
+
+    def add_path(self, path, root='./'):
+        ''' Helper to add a path to the :attr:`path` list. Example::
+
+                app.views.add_path('./views/', __file__)
+        ''' 
+        if os.path.isfile(root):
+            root = os.path.dirname(root)
+        path = os.path.abspath(os.path.join(root, path))
+        self.lookup_path.append(path)
+
+    def lookup(self, name):
+        if os.path.isfile(name): return name
+        for path in self.lookup_paths:
+            for mask in self.lookup_masks:
+                fname = os.path.join(path, mask % name)
+                if os.path.isfile(fname):
+                    return fname
+
+    def render(self, name, tplvars):
+        if name not in self.cache or DEBUG:
+            if "\n" in name or "{" in name or "%" in name or '$' in name:
+                tpl = self.adapter(source=name, **self.options)
+            else:
+                filename = self.lookup(name)
+                if filename:
+                    tpl = self.adapter(filename=filename, **self.options)
+                else:
+                    depr('Template not found in normal lookup path. Note that'\
+                         ' the TEMPLATE_PATH global is deprecated.') #0.11
+                    tpl = self.adapter(name=name, **self.options)
+            if not tpl:
+                raise TemplateError('Template not found.')
+            self.cache[name] = tpl
+        return self.cache[name].render(self.globals, tplvars)
+
     def setup(self, app):
         self.app = app
+        self._conf = app.config
 
     def apply(self, callback, route):
         conf = route.config.template
         if isinstance(conf, (tuple, list)) and len(conf) == 2:
+            depr('Passing a tuple as template parameter is deprecated.') #0.11
             name, defaults = conf
         elif isinstance(conf, str):
             name, defaults = conf, {}
@@ -1603,25 +1662,10 @@ class TemplatePlugin(object):
             if isinstance(result, (dict, DictMixin)):
                 tplvars = defaults.copy()
                 tplvars.update(result)
-                return self.render(name, route, tplvars)
+                return self.render(name, tplvars)
             return result
 
         return wrapper
-
-    def render(self, name, route, tplvars):
-        if name not in self.cache or DEBUG:
-            app_conf = route.app.config.Template
-            adapter = app_conf.get('adapter', SimpleTemplate)
-            options = app_conf.get('options', {}).copy()
-            options['path'] = app_conf.get('path', TEMPLATE_PATH)
-            defaults = app_conf.get('defaults', {}).copy()
-            if "\n" in name or "{" in name or "%" in name or '$' in name:
-                self.cache[name] = adapter(source=name, **options)
-            else:
-                self.cache[name] = adapter(name=name, **options)
-            if not self.cache[name]:
-                raise TemplateError('Template not found.')
-        return self.cache[name].render(defaults, tplvars)
 
 
 #: Not a plugin, but part of the plugin API. TODO: Find a better place.
