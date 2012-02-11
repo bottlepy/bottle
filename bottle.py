@@ -2694,11 +2694,12 @@ class SimpleTemplate(BaseTemplate):
             lineno += 1
             line = line if isinstance(line, unicode)\
                         else unicode(line, encoding=self.encoding)
+            sline = line.lstrip()
             if lineno <= 2:
                 m = re.search(r"%.*coding[:=]\s*([-\w\.]+)", line)
                 if m: self.encoding = m.group(1)
                 if m: line = line.replace('coding','coding (removed)')
-            if line.strip()[:2].count('%') == 1:
+            if sline and sline[0] == '%' and sline[:2] != '%%':
                 line = line.split('%',1)[1].lstrip() # Full line following the %
                 cline = self.split_comment(line).strip()
                 cmd = re.split(r'[^a-zA-Z0-9_]', cline)[0]
