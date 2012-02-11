@@ -29,8 +29,8 @@ class TestFormsDict(unittest.TestCase):
         d = FormsDict(py2=data, py3=data.decode('latin1'))
         d = d.decode()
         self.assertFalse(d.recode_unicode)
-        self.assertEqual(unicode, type(list(d.keys())[0]))
-        self.assertEqual(unicode, type(list(d.values())[0]))
+        self.assertTrue(hasattr(list(d.keys())[0], 'encode'))
+        self.assertTrue(hasattr(list(d.values())[0], 'encode'))
 
 if __name__ == '__main__': #pragma: no cover
     unittest.main()
