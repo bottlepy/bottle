@@ -753,12 +753,12 @@ class Bottle(object):
 
     def _handle(self, environ):
         try:
-            route, args = self.router.match(environ)
-            environ['route.handle'] = environ['bottle.route'] = route
-            environ['route.url_args'] = args
             environ['bottle.app'] = self
             request.bind(environ)
             response.bind()
+            route, args = self.router.match(environ)
+            environ['route.handle'] = environ['bottle.route'] = route
+            environ['route.url_args'] = args
             return route.call(**args)
         except HTTPResponse:
             return _e()
