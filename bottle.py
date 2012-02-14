@@ -2104,8 +2104,14 @@ def path_shift(script_name, path_info, shift=1):
         empty = 'SCRIPT_NAME' if shift < 0 else 'PATH_INFO'
         raise AssertionError("Cannot shift. Nothing left from %s" % empty)
     new_script_name = '/' + '/'.join(scriptlist)
-    new_path_info = '/' + '/'.join(pathlist)
-    if path_info.endswith('/') and pathlist: new_path_info += '/'
+    if pathlist:
+        new_path_info = '/' + '/'.join(pathlist)
+        if path_info.endswith('/'):
+            new_path_info += '/'
+    elif path_info.endswith('/'):
+        new_path_info = '/'
+    else:
+        new_path_info = ''
     return new_script_name, new_path_info
 
 
