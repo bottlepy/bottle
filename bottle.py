@@ -753,12 +753,12 @@ class Bottle(object):
 
     def _handle(self, environ):
         try:
-            route, args = self.router.match(environ)
-            environ['route.handle'] = environ['bottle.route'] = route
-            environ['route.url_args'] = args
             environ['bottle.app'] = self
             request.bind(environ)
             response.bind()
+            route, args = self.router.match(environ)
+            environ['route.handle'] = environ['bottle.route'] = route
+            environ['route.url_args'] = args
             return route.call(**args)
         except HTTPResponse:
             return _e()
@@ -1783,22 +1783,38 @@ class FormsDict(MultiDict):
     ''' This :class:`MultiDict` subclass is used to store request form data.
         Additionally to the normal dict-like item access methods (which return
         unmodified data as native strings), this container also supports
-        attribute-like access to its values. Attribues are automatiically de- or
-        recoded to match :attr:`input_encoding` (default: 'utf8'). Missing
+        attribute-like access to its values. Attributes are automatically de-
+        or recoded to match :attr:`input_encoding` (default: 'utf8'). Missing
         attributes default to an empty string. '''
 
     #: Encoding used for attribute values.
     input_encoding = 'utf8'
+    #: If true (default), unicode strings are first encoded with `latin1`
+    #: and then decoded to match :attr:`input_encoding`.
+    recode_unicode = True
+
+    def _fix(self, s, encoding=None):
+        if isinstance(s, unicode) and self.recode_unicode: # Python 3 WSGI
+            s = s.encode('latin1')
+        if isinstance(s, bytes): # Python 2 WSGI
+            return s.decode(encoding or self.input_encoding)
+        return s
+
+    def decode(self, encoding=None):
+        ''' Returns a copy with all keys and values de- or recoded to match
+            :attr:`input_encoding`. Some libraries (e.g. WTForms) want a
+            unicode dictionary. '''
+        copy = FormsDict()
+        enc = copy.input_encoding = encoding or self.input_encoding
+        copy.recode_unicode = False
+        for key, value in self.allitems():
+            copy.append(self._fix(key, enc), self._fix(value, enc))
+        return copy
 
     def getunicode(self, name, default=None, encoding=None):
-        value, enc = self.get(name, default), encoding or self.input_encoding
         try:
-            if isinstance(value, bytes): # Python 2 WSGI
-                return value.decode(enc)
-            elif isinstance(value, unicode): # Python 3 WSGI
-                return value.encode('latin1').decode(enc)
-            return value
-        except UnicodeError:
+            return self._fix(self[name], encoding)
+        except (UnicodeError, KeyError):
             return default
 
     def __getattr__(self, name, default=unicode()):
@@ -2901,11 +2917,12 @@ class SimpleTemplate(BaseTemplate):
             lineno += 1
             line = line if isinstance(line, unicode)\
                         else unicode(line, encoding=self.encoding)
+            sline = line.lstrip()
             if lineno <= 2:
                 m = re.search(r"%.*coding[:=]\s*([-\w\.]+)", line)
                 if m: self.encoding = m.group(1)
                 if m: line = line.replace('coding','coding (removed)')
-            if line.strip()[:2].count('%') == 1:
+            if sline and sline[0] == '%' and sline[:2] != '%%':
                 line = line.split('%',1)[1].lstrip() # Full line following the %
                 cline = self.split_comment(line).strip()
                 cmd = re.split(r'[^a-zA-Z0-9_]', cline)[0]
