@@ -543,7 +543,7 @@ class Bottle(object):
         self.install(self.hooks)
         if autojson: self.install(JSONPlugin())
         #: The installed :class:`TemplatePlugin`.
-        self.templates = self.install(TemplatePlugin())
+        self.views = self.install(TemplatePlugin())
 
     def mount(self, prefix, app, **options):
         ''' Mount an application (:class:`Bottle` or plain WSGI) to a specific
@@ -1583,32 +1583,6 @@ class TemplatePlugin(object):
         #: Cache for precompiled templates
         self.cache = {}
 
-    @property
-    def globals(self):
-        ''' Global namespace for all templates. '''
-        return self._conf.setdefault('view_globals', {})
-
-    @property
-    def options(self):
-        ''' Template settings. Possible values depend on the adapter used. '''
-        return self._conf.setdefault('view_options', {})
-
-    @property
-    def adapter(self):
-        ''' Template adapter class to use. (default: :cls:`SimpleTemplate`) '''
-        return self._conf.setdefault('view_adapter', SimpleTemplate)
-
-    @property
-    def lookup_path(self):
-        ''' List of template lookup paths. '''
-        return self._conf.setdefault('view_path')
-
-    @property
-    def lookup_masks(self):
-        ''' List of format strings that are used to turn template names into
-            a real filenames. (default: ``['%s.tpl', '%s.html']``) '''
-        return self._conf.setdefault('view_masks', ['%s.tpl', '%s.html'])
-
     def add_path(self, path, root='./'):
         ''' Helper to add a path to the :attr:`path` list. Example::
 
@@ -1646,7 +1620,11 @@ class TemplatePlugin(object):
 
     def setup(self, app):
         self.app = app
-        self._conf = app.config
+        self.globals = app.config.setdefault('view_globals', {})
+        self.options = app.config.setdefault('view_options', {})
+        self.adapter = app.config.setdefault('view_adapter', SimpleTemplate)
+        self.lookup_path = app.config.setdefault('view_path', [])
+        self.lookup_masks = app.config.setdefault('view_masks', [])
 
     def apply(self, callback, route):
         conf = route.config.template
