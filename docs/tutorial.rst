@@ -375,72 +375,6 @@ Most browsers try to open downloaded files if the MIME type is known and assigne
 
 If the ``download`` parameter is just ``True``, the original filename is used.
 
-
-
-
-.. _tutorial-templates:
-
-Templates
-------------------------------------------------------------------------------
-
-Bottle comes with a fast built-in template engine and support for many third-party engines including Jinja2 and Mako. No matter which engine you choose, the API to render templates is always the same::
-
-    @route('/hello/<name>', template='hello')
-    def hello(name='World'):
-        return {'name': name}
-
-The ``template`` route parameter names the template to render and the dictionary returned by the callback defines the template variables. On each request, the template is rendered with the provided variables and the result is sent to the browser. If you want to choose a template at runtime, you can explicitly call the :func:`template` function and return the result::
-
-    from bottle import template
-
-    @route('/hello/<name>')
-    def hello(name='World'):
-        return template('hello', {'name': name})
-
-Instead of a template name, you can also provide a full template file path, or the template itself as a source string. The latter is particularly useful for small applications and allows you to bundle templates with your application in a single file::
-
-    tpldb = {}
-    tpldb['hello'] = '<h1>Hello {{name}}!</h1>'
-
-    @route('/hello/<name>')
-    def hello(name='World', template=tpldb['hello']):
-        return {'name': name}
-
-
-.. versionchanged: 0.11
-
-Bottle looks for templates in ``./views/`` or any other folder found in the global ``bottle.TEMPLATE_PATH`` list. Starting with Bottle 0.11, application-specific settings are supported, too::
-
-    app = Bottle()
-    app.config.Template.path    = ['some/app/specific/lookup/path/']
-    app.config.Template.engine  = bottle.Jinja2Template
-    app.config.Template.options = {'globals': {'powered_by': 'Bottle'} }
-
-This only affects the ``template`` keyword parameter and does not work with the :func:`template` function, but might in future versions.
-
-.. rubric:: Template Syntax
-
-.. highlight:: html+django
-
-The syntax of the build-in template engine is a very thin layer around the Python language. Its main purpose is to ensure correct indentation of blocks, so you can format your template without worrying about indentation.
-
-Here is an example template::
-
-    %if name == 'World':
-        <h1>Hello {{name}}!</h1>
-        <p>This is a test.</p>
-    %else:
-        <h1>Hello {{name.title()}}!</h1>
-        <p>How are you?</p>
-    %end
-
-Follow the link for a full syntax description: :doc:`stpl`. For details on the other template engines, please see their respective documentation.
-
-.. highlight:: python
-
-
-
-
 .. _tutorial-error:
 
 HTTP Errors and Redirects
@@ -470,6 +404,89 @@ You may provide a different HTTP status code as a second parameter.
 .. rubric:: Other Exceptions
 
 All exceptions other than :exc:`HTTPResponse` or :exc:`HTTPError` will result in a ``500 Internal Server Error`` response, so they won't crash your WSGI server. You can turn off this behavior to handle exceptions in your middleware by setting ``bottle.app().catchall`` to ``False``.
+
+
+
+
+
+
+.. _tutorial-templates:
+
+Templates
+==============================================================================
+
+Bottle comes with a fast built-in template engine and support for many third-party engines including Jinja2 and Mako. No matter which engine you choose, the API to render templates is always the same::
+
+    @route('/hello/<name>', template='hello')
+    def hello(name='World'):
+        return {'name': name}
+
+The ``template`` route parameter names the template to render and the dictionary returned by the callback defines the template variables. On each request, the template is rendered with the provided variables and the result is sent to the browser. If you want to choose a template at runtime, you can pass `True` and name the template within the returned dictionary::
+
+    @route('/hello/<name>', template=True)
+    def hello(name='World'):
+        return {'template': 'hello', 'name': name}
+
+Instead of a template name, you can also provide a full template file path, or the template itself as a source string. The latter is particularly useful for small applications and allows you to bundle templates with your application in a single file::
+
+    hello_tpl = '<h1>Hello {{name}}!</h1>'
+
+    @route('/hello/<name>')
+    def hello(name='World', template=hello_tpl):
+        return {'name': name}
+
+Template Syntax
+------------------------------------------------------------------------------
+
+.. highlight:: html+django
+
+The build-in template engine syntax is a very thin layer around the Python language. Its main purpose is to ensure correct indentation of blocks, so you can format your template without worrying about indentation.
+
+Here is an example template::
+
+    %if name == 'World':
+        <h1>Hello {{name}}!</h1>
+        <p>This is a test.</p>
+    %else:
+        <h1>Hello {{name.title()}}!</h1>
+        <p>How are you?</p>
+    %end
+
+Follow the link for a full syntax description: :doc:`stpl`. For details on the other template engines, please see their respective documentation.
+
+.. highlight:: python
+
+Template Lookup and Configuration
+------------------------------------------------------------------------------
+
+Bottle looks for templates in all folders specified in ``bottle.TEMPLATE_PATH`` and adds ``.tpl`` to the name if it can't find a direct match. The path list defaults to ``['./', './views/']`` and is searched in order.
+
+.. versionchanged: 0.11
+
+Starting with Bottle 0.11 you can configure templates on a per-application basis::
+
+    app = Bottle() # or app = default_app()
+
+    #: Add a new absolute path to the list of lookup paths.
+    app.views.path.append('/some/app/specific/lookup/path/')
+
+    #: Add a path relative to the location of your module file.
+    app.views.add_path('./data/views/', __file__)
+
+    #: Add an additional format string that is used to turn template names
+    #: into real filenames.
+    app.views.masks.append('%.thtml')
+
+    #: Define some global variables that should be available in all templates.
+    app.views.globals['some_variable'] = some_value
+
+    #: Use a different template engine for this application.
+    app.views.adapter = bottle.Jinja2Template
+
+    #: Configure the adapter with engine-specific settings.
+    app.views.options['some_setting'] = some_value
+
+These only affects the ``template`` keyword parameter and does not work with the old :func:`template` functions. This may change in the future, though. 
 
 
 
