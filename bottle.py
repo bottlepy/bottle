@@ -1595,8 +1595,8 @@ class TemplatePlugin(object):
 
     def lookup(self, name):
         if os.path.isfile(name): return name
-        for path in self.lookup_paths:
-            for mask in self.lookup_masks:
+        for path in self.lookup_path:
+            for mask in ['%s', '%s.tpl'] + self.lookup_masks:
                 fname = os.path.join(path, mask % name)
                 if os.path.isfile(fname):
                     return fname
