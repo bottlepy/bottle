@@ -48,7 +48,7 @@ class TestAppMounting(ServerTestBase):
             return 'WSGI ' + environ['PATH_INFO']
         self.app.mount('/test', app)
         self.assertStatus(200, '/test/')
-        self.assertBody('WSGI /', '/test')
+        self.assertBody('WSGI ', '/test')
         self.assertBody('WSGI /', '/test/')
         self.assertHeader('X-Test', 'WSGI', '/test/')
         self.assertBody('WSGI /test/bar', '/test/test/bar')
