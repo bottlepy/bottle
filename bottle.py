@@ -2837,7 +2837,7 @@ class SimpleTemplate(BaseTemplate):
                         else unicode(line, encoding=self.encoding)
             sline = line.lstrip()
             if lineno <= 2:
-                m = re.search(r"%.*coding[:=]\s*([-\w\.]+)", line)
+                m = re.search(r"%.*coding[:=]\s*([-\w.]+)", line)
                 if m: self.encoding = m.group(1)
                 if m: line = line.replace('coding','coding (removed)')
             if sline and sline[0] == '%' and sline[:2] != '%%':
