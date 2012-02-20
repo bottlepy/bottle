@@ -3064,9 +3064,9 @@ _HTTP_STATUS_LINES = dict((k, '%d %s'%(k,v)) for (k,v) in HTTP_CODES.items())
 
 #: The default template used for error pages. Override with @error()
 ERROR_PAGE_TEMPLATE = """
-%try:
-    %from bottle import DEBUG, HTTP_CODES, request, touni
-    %status_name = HTTP_CODES.get(e.status, 'Unknown').title()
+%%try:
+    %%from %s import DEBUG, HTTP_CODES, request, touni
+    %%status_name = HTTP_CODES.get(e.status, 'Unknown').title()
     <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
     <html>
         <head>
@@ -3083,21 +3083,21 @@ ERROR_PAGE_TEMPLATE = """
             <p>Sorry, the requested URL <tt>{{repr(request.url)}}</tt>
                caused an error:</p>
             <pre>{{e.output}}</pre>
-            %if DEBUG and e.exception:
+            %%if DEBUG and e.exception:
               <h2>Exception:</h2>
               <pre>{{repr(e.exception)}}</pre>
-            %end
-            %if DEBUG and e.traceback:
+            %%end
+            %%if DEBUG and e.traceback:
               <h2>Traceback:</h2>
               <pre>{{e.traceback}}</pre>
-            %end
+            %%end
         </body>
     </html>
-%except ImportError:
+%%except ImportError:
     <b>ImportError:</b> Could not generate the error page. Please add bottle to
     the import path.
-%end
-"""
+%%end
+""" % __name__
 
 #: A thread-safe instance of :class:`LocalRequest`. If accessed from within a
 #: request callback, this instance always refers to the *current* request
