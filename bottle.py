@@ -2894,11 +2894,10 @@ class SimpleTemplate(BaseTemplate):
 
         for line in template.splitlines(True):
             lineno += 1
-            line = line if isinstance(line, unicode)\
-                        else unicode(line, encoding=self.encoding)
+            line = touni(line, self.encoding)
             sline = line.lstrip()
             if lineno <= 2:
-                m = re.search(r"%.*coding[:=]\s*([-\w\.]+)", line)
+                m = re.match(r"%\s*#.*coding[:=]\s*([-\w.]+)", sline)
                 if m: self.encoding = m.group(1)
                 if m: line = line.replace('coding','coding (removed)')
             if sline and sline[0] == '%' and sline[:2] != '%%':

@@ -205,6 +205,11 @@ class TestSimpleTemplate(unittest.TestCase):
         self.assertEqual(touni('\n\nöäü?@€'), t.render())
         self.assertEqual(t.encoding, 'utf8')
 
+    def test_coding_stress(self):
+        self.assertRenders('%a=1\n%coding=a\nok', 'ok')
+        self.assertRenders('a %coding:b', 'a %coding:b')
+        self.assertRenders(' % #coding:utf-8', '')
+
     def test_template_shortcut(self):
         result = template('start {{var}} end', var='middle')
         self.assertEqual(touni('start middle end'), result)
