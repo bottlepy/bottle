@@ -17,6 +17,9 @@ Have a look at :ref:`plugins` for general questions about plugins (installation,
 `Bottle-Hotqueue <http://pypi.python.org/pypi/bottle-hotqueue/>`_
 	FIFO Queue for Bottle built upon redis
 
+`Macaron <http://nobrin.github.com/macaron/webapp.html>`_
+	Macaron is an object-relational mapper (ORM) for SQLite.
+
 `Bottle-Memcache <http://pypi.python.org/pypi/bottle-memcache/>`_
 	Memcache integration for Bottle.
 
