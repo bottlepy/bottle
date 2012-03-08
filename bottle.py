@@ -298,7 +298,7 @@ class Router(object):
         return r'-?[\d.]+', float, lambda x: str(float(x))
 
     def path_filter(self, conf):
-        return r'.*?', None, None
+        return r'.+?', None, None
 
     def add_filter(self, name, func):
         ''' Add a filter. The provided function is called with the configuration
