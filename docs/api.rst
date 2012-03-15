@@ -98,6 +98,8 @@ Data Structures
 
       Return the current default application and remove it from the stack.
 
+.. autoclass:: ResourceManager
+   :members:
 
 Exceptions
 ---------------

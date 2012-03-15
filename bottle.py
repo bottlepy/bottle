@@ -526,26 +526,19 @@ class Route(object):
 
 class Bottle(object):
     """ Each Bottle object represents a single, distinct web application and
-        consists of routes, callbacks, plugins and configuration. Instances are
-        callable WSGI applications.
+        consists of routes, callbacks, plugins, resources and configuration.
+        Instances are callable WSGI applications.
 
-        :param resources: A path or list of paths, see
-                          :meth:`add_resource_path` for details on resources.
         :param catchall: If true (default), handle all exceptions. Turn off to
                          let debugging middleware handle exceptions.
     """
 
-    def __init__(self, resources=None, catchall=True, autojson=True):
-        # Resource management
-        #: A list of search paths for application specific resources. You
-        #: should change this directly but use :meth:`add_resource_path`. 
-        self.resource_path = []
-        self._lookup_cache = {}
-        for p in makelist(resources):
-            self.add_resource_path(p)
-
+    def __init__(self, catchall=True, autojson=True):
         #: If true, most exceptions are catched and returned as :exc:`HTTPError`
         self.catchall = catchall
+
+        #: A :cls:`ResourceManager` for application files
+        self.resources = ResourceManager()
 
         #: A :cls:`ConfigDict` for app specific configuration.
         self.config = ConfigDict()
@@ -563,59 +556,6 @@ class Bottle(object):
             self.install(JSONPlugin())
         self.install(TemplatePlugin())
 
-    def add_resource_path(self, path, root='./', prepend=False):
-        ''' Add a path to the :attr:`resource_path` list.
-
-            The path is turned into an absolute and normalized form. If it
-            points to a file, only the directory part is used. Tip: `__file__`
-            adds your current module folder to the list.
-
-            The path is joined with the `root` parameter. This comes in handy
-            if you resources live in a sub-folder::
-
-                app.add_resource_path('./resources/', __file__)
-
-            The :attr:`resource_path` list is usually searched in order. With
-            `prepent=True` the path is added at the beginning of the list
-            and overrides other resources.
-        '''
-        root = os.path.abspath(os.path.dirname(root))
-        path = os.path.abspath(os.path.join(root, os.path.dirname(path)))
-        path += os.sep
-        if path not in self.resource_path:
-            if prepend:
-                self.resource_path.insert(0, path)
-            else:
-                self.resource_path.append(path)
-        self._lookup_cache.clear()
-
-    def find_resource(self, name):
-        ''' Search for a resource and return an absolute filename, or `None`.
-
-            The :attr:`resource_path` list is searched in order.
-            Lookups are cached (debug mode disables caching). 
-        '''
-        if name not in self._lookup_cache or DEBUG:
-            for path in self.resource_path:
-                fname = os.path.join(path, name)
-                if os.path.exists(fname):
-                    self._lookup_cache[name] = fname
-                    return fname
-            self._lookup_cache[name] = None
-        return self._lookup_cache[name]
-
-    def open_resource(self, name, mode='rb', *args, **kwargs):
-        ''' Return the resource as an opened file object, or raise IOError.
-
-            The :attr:`resource_path` list is searched in order.
-            Lookups are cached (debug mode disables caching). 
-        '''
-        if mode not in ('r', 'rb'):
-            raise IOError('Resources are read-only.')
-        fname = self.find_resource(name)
-        if not fname:
-            raise IOError("Resource %r not found." % name)
-        return open(name, mode=mode, *args, **kwargs)
 
     def mount(self, prefix, app, **options):
         ''' Mount an application (:class:`Bottle` or plain WSGI) to a specific
@@ -1931,6 +1871,99 @@ class WSGIFileWrapper(object):
             yield part
 
 
+class ResourceManager(object):
+    ''' This class manages a list of search paths and helps to find and open
+        aplication-bound resources (files). '''
+
+    #: Callable used to open files. Defaults to the ``open()`` built-in.
+    opener = open
+
+    #: The base path used to resolve relative search paths. It works as a
+    #: default for :meth:`add_path`.
+    base = './'
+
+    #: Controls which lookups are cached. One of 'all', 'found' or 'none'.
+    cachemode = 'all'
+
+    def __init__(self):
+        #: A list of search paths. See :meth:`add_path` for details.
+        self.path = []
+        #: A list of file masks. See :meth:`add_mask` for details.
+        self.mask = ['%s']
+        #: A cache for resolved paths. `res.cache.clear()`` clears the cache.
+        self.cache = {}
+
+    def add_path(self, path, base=None, index=None):
+        ''' Add a path to the :attr:`path` list.
+
+            The path is turned into an absolute and normalized form. If it
+            looks like a file (not ending in `/`), the filename is stripped
+            off. The path is not required to exist.
+
+            Relative paths are joined with `base` or :attr:`self.base`, which
+            defaults to the current working directory. This comes in handy if
+            you resources live in a sub-folder of your module or package::
+
+                res.add_path('./resources/', __file__)
+
+            The :attr:`path` list is searched in order and new paths are
+            added to the end of the list. The *index* parameter can change
+            the position (e.g. ``0`` to prepend). Adding a path twice moves it
+            to the new position.
+        '''
+        base = os.path.abspath(os.path.dirname(base or self.base))
+        path = os.path.abspath(os.path.join(base, os.path.dirname(path)))
+        path += os.sep
+        if path in self.path:
+            self.path.remove(path)
+        if index is None:
+            self.path.append(path)
+        else:
+            self.path.insert(index, path)
+        self.cache.clear()
+
+    def add_mask(self, mask, index=None):
+        ''' Add a new format string to the :attr:`mask` list.
+
+            Masks are used to turn resource names into actual filenames. The
+            mask string must contain exactly one occurence of ``%s``, which
+            is replaced by the supplied resource name on lookup. This can be
+            used to auto-append file extentions (e.g. ``%s.ext``).
+        '''
+        if index is None:
+            self.masks.append(mask)
+        else:
+            self.masks.insert(index, mask)
+        self.cache.clear()
+
+    def get(self, name):
+        ''' Search for a resource and return an absolute file path, or `None`.
+
+            The :attr:`path` list is searched in order. For each path, the
+            :attr:`mask` entries are tried in order. The first path that points
+            to an existing file is returned. Symlinks are followed. The result
+            is cached to speed up future lookups. '''
+        if name not in self.cache or DEBUG:
+            for path in self.path:
+                for mask in self.mask:
+                    fpath = os.path.join(path, mask%name)
+                    if os.path.isfile(fpath):
+                        if self.cachemode in ('all', 'found'):
+                            self.cache[name] = fpath
+                        return fpath
+            if self.cachemode == 'all':
+                self.cache[name] = None
+        return self.cache[name]
+
+    def open(self, name, *args, **kwargs):
+        ''' Find a resource and return an opened file object, or raise IOError.
+
+            Additional parameters are passed to the :attr:`opener` function, 
+            which defaults to the ``open()`` built-in.
+        '''
+        fname = self.find(name)
+        if not fname: raise IOError("Resource %r not found." % name)
+        return self.opener(name, *args, **kwargs)
 
 
 

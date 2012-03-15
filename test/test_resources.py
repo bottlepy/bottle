@@ -1,71 +1,70 @@
 import bottle
 from tools import ServerTestBase
-from bottle import Bottle
+from bottle import ResourceManager
 import os.path
+import unittest
 
-class TestAppMounting(ServerTestBase):
-	def test_path_normalize(self):
-		tests = ('/foo/bar/', '/foo/bar/baz', '/foo/baz/../bar/blub')
-		for test in tests:
-			app = bottle.Bottle(resources=test)
-			self.assertEqual(app.resource_path, ['/foo/bar/'])
+class TestResouceManager(unittest.TestCase):
 
-		for test in tests:
-			app = bottle.Bottle()
-			app.add_resource_path(test)
-			self.assertEqual(app.resource_path, ['/foo/bar/'])
+    def test_path_normalize(self):
+        tests = ('/foo/bar/', '/foo/bar/baz', '/foo/baz/../bar/blub')
+        for test in tests:
+            rm = ResourceManager()
+            rm.add_path(test)
+            self.assertEqual(rm.path, ['/foo/bar/'])
 
-	def test_path_absolutize(self):
-		tests = ('./foo/bar/', './foo/bar/baz', './foo/baz/../bar/blub')
-		abspath = os.path.abspath('./foo/bar/') + os.sep
-		for test in tests:
-			app = bottle.Bottle(resources=test)
-			self.assertEqual(app.resource_path, [abspath])
+    def test_path_absolutize(self):
+        tests = ('./foo/bar/', './foo/bar/baz', './foo/baz/../bar/blub')
+        abspath = os.path.abspath('./foo/bar/') + os.sep
+        for test in tests:
+            rm = ResourceManager()
+            rm.add_path(test)
+            self.assertEqual(rm.path, [abspath])
 
-		for test in tests:
-			app = bottle.Bottle()
-			app.add_resource_path(test)
-			self.assertEqual(app.resource_path, [abspath])
+        for test in tests:
+            rm = ResourceManager()
+            rm.add_path(test[2:])
+            self.assertEqual(rm.path, [abspath])
 
-		for test in tests:
-			app = bottle.Bottle()
-			app.add_resource_path(test[2:])
-			self.assertEqual(app.resource_path, [abspath])
+    def test_path_unique(self):
+        tests = ('/foo/bar/', '/foo/bar/baz', '/foo/baz/../bar/blub')
+        rm = ResourceManager()
+        [rm.add_path(test) for test in tests]
+        self.assertEqual(rm.path, ['/foo/bar/'])
 
-	def test_path_unique(self):
-		tests = ('/foo/bar/', '/foo/bar/baz', '/foo/baz/../bar/blub')
-		app = bottle.Bottle(resources=tests)
-		self.assertEqual(app.resource_path, ['/foo/bar/'])
+    def test_root_path(self):
+        tests = ('/foo/bar/', '/foo/bar/baz', '/foo/baz/../bar/blub')
+        for test in tests:
+            rm = ResourceManager()
+            rm.add_path('./baz/', test)
+            self.assertEqual(rm.path, ['/foo/bar/baz/'])
 
-	def test_root_path(self):
-		tests = ('/foo/bar/', '/foo/bar/baz', '/foo/baz/../bar/blub')
-		for test in tests:
-			app = bottle.Bottle()
-			app.add_resource_path('./baz/', test)
-			self.assertEqual(app.resource_path, ['/foo/bar/baz/'])
+        for test in tests:
+            rm = ResourceManager()
+            rm.add_path('baz/', test)
+            self.assertEqual(rm.path, ['/foo/bar/baz/'])
 
-		for test in tests:
-			app = bottle.Bottle()
-			app.add_resource_path('baz/', test)
-			self.assertEqual(app.resource_path, ['/foo/bar/baz/'])
+    def test_path_order(self):
+        rm = ResourceManager()
+        rm.add_path('/middle/')
+        rm.add_path('/first/', index=0)
+        rm.add_path('/last/')
+        self.assertEqual(rm.path, ['/first/', '/middle/', '/last/'])
 
-	def test_path_order(self):
-		app = bottle.Bottle()
-		app.add_resource_path('/middle/')
-		app.add_resource_path('/first/', prepend=True)
-		app.add_resource_path('/last/')
-		self.assertEqual(app.resource_path, ['/first/', '/middle/', '/last/'])
+    def test_find(self):
+        rm = ResourceManager()
+        rm.add_path('/first/')
+        rm.add_path(__file__)
+        rm.add_path('/last/')
+        self.assertEqual(None, rm.find('notexist.txt'))
+        self.assertEqual(__file__, rm.find(os.path.basename(__file__)))
 
-	def test_find(self):
-		app = bottle.Bottle()
-		app.add_resource_path('/first/')
-		app.add_resource_path(__file__)
-		app.add_resource_path('/last/')
-		self.assertEqual(None, app.find_resource('notexist.txt'))
-		self.assertEqual(__file__,
-					     app.find_resource(os.path.basename(__file__)))
+    def test_open(self):
+        rm = ResourceManager()
+        rm.add_path(__file__)
+        fp = rm.open(os.path.basename(__file__))
+        self.assertEqual(fp.read(), open(__file__).read())
 
 
 if __name__ == '__main__': #pragma: no cover
-	import unittest
     unittest.main()
