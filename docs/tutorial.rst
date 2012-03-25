@@ -257,6 +257,7 @@ Error Pages
 
 If anything goes wrong, Bottle displays an informative but fairly boring error page. You can override the default for a specific HTTP status code with the :func:`error` decorator::
 
+  from bottle import error
   @error(404)
   def error404(error):
       return 'Nothing here, sorry'
