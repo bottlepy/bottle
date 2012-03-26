@@ -23,6 +23,15 @@ class TestFormsDict(unittest.TestCase):
         d.input_encoding = 'latin1'
         self.assertEqual(touni('äöü'), d.latin)
 
+    def test_decode_method(self):
+        """ FomsDict.attribute returs u'' on UnicodeError. """
+        data = tob('äöü')
+        d = FormsDict(py2=data, py3=data.decode('latin1'))
+        d = d.decode()
+        self.assertFalse(d.recode_unicode)
+        self.assertTrue(hasattr(list(d.keys())[0], 'encode'))
+        self.assertTrue(hasattr(list(d.values())[0], 'encode'))
+
 if __name__ == '__main__': #pragma: no cover
     unittest.main()
 

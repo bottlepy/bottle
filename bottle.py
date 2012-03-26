@@ -298,7 +298,7 @@ class Router(object):
         return r'-?[\d.]+', float, lambda x: str(float(x))
 
     def path_filter(self, conf):
-        return r'.*?', None, None
+        return r'.+?', None, None
 
     def add_filter(self, name, func):
         ''' Add a filter. The provided function is called with the configuration
@@ -765,12 +765,12 @@ class Bottle(object):
 
     def _handle(self, environ):
         try:
-            route, args = self.router.match(environ)
-            environ['route.handle'] = environ['bottle.route'] = route
-            environ['route.url_args'] = args
             environ['bottle.app'] = self
             request.bind(environ)
             response.bind()
+            route, args = self.router.match(environ)
+            environ['route.handle'] = environ['bottle.route'] = route
+            environ['route.url_args'] = args
             return route.call(**args)
         except HTTPResponse:
             return _e()
@@ -1713,22 +1713,38 @@ class FormsDict(MultiDict):
     ''' This :class:`MultiDict` subclass is used to store request form data.
         Additionally to the normal dict-like item access methods (which return
         unmodified data as native strings), this container also supports
-        attribute-like access to its values. Attribues are automatiically de- or
-        recoded to match :attr:`input_encoding` (default: 'utf8'). Missing
+        attribute-like access to its values. Attributes are automatically de-
+        or recoded to match :attr:`input_encoding` (default: 'utf8'). Missing
         attributes default to an empty string. '''
 
     #: Encoding used for attribute values.
     input_encoding = 'utf8'
+    #: If true (default), unicode strings are first encoded with `latin1`
+    #: and then decoded to match :attr:`input_encoding`.
+    recode_unicode = True
+
+    def _fix(self, s, encoding=None):
+        if isinstance(s, unicode) and self.recode_unicode: # Python 3 WSGI
+            s = s.encode('latin1')
+        if isinstance(s, bytes): # Python 2 WSGI
+            return s.decode(encoding or self.input_encoding)
+        return s
+
+    def decode(self, encoding=None):
+        ''' Returns a copy with all keys and values de- or recoded to match
+            :attr:`input_encoding`. Some libraries (e.g. WTForms) want a
+            unicode dictionary. '''
+        copy = FormsDict()
+        enc = copy.input_encoding = encoding or self.input_encoding
+        copy.recode_unicode = False
+        for key, value in self.allitems():
+            copy.append(self._fix(key, enc), self._fix(value, enc))
+        return copy
 
     def getunicode(self, name, default=None, encoding=None):
-        value, enc = self.get(name, default), encoding or self.input_encoding
         try:
-            if isinstance(value, bytes): # Python 2 WSGI
-                return value.decode(enc)
-            elif isinstance(value, unicode): # Python 3 WSGI
-                return value.encode('latin1').decode(enc)
-            return value
-        except UnicodeError:
+            return self._fix(self[name], encoding)
+        except (UnicodeError, KeyError):
             return default
 
     def __getattr__(self, name, default=unicode()):
@@ -2322,6 +2338,12 @@ class CherryPyServer(ServerAdapter):
             server.stop()
 
 
+class WaitressServer(ServerAdapter):
+    def run(self, handler):
+        from waitress import serve
+        serve(handler, host=self.host, port=self.port)
+
+
 class PasteServer(ServerAdapter):
     def run(self, handler): # pragma: no cover
         from paste import httpserver
@@ -2468,7 +2490,7 @@ class BjoernServer(ServerAdapter):
 
 class AutoServer(ServerAdapter):
     """ Untested. """
-    adapters = [PasteServer, TwistedServer, CherryPyServer, WSGIRefServer]
+    adapters = [WaitressServer, PasteServer, TwistedServer, CherryPyServer, WSGIRefServer]
     def run(self, handler):
         for sa in self.adapters:
             try:
@@ -2480,6 +2502,7 @@ server_names = {
     'cgi': CGIServer,
     'flup': FlupFCGIServer,
     'wsgiref': WSGIRefServer,
+    'waitress': WaitressServer,
     'cherrypy': CherryPyServer,
     'paste': PasteServer,
     'fapws3': FapwsServer,
@@ -2925,13 +2948,13 @@ class SimpleTemplate(BaseTemplate):
 
         for line in template.splitlines(True):
             lineno += 1
-            line = line if isinstance(line, unicode)\
-                        else unicode(line, encoding=self.encoding)
+            line = touni(line, self.encoding)
+            sline = line.lstrip()
             if lineno <= 2:
-                m = re.search(r"%.*coding[:=]\s*([-\w\.]+)", line)
+                m = re.match(r"%\s*#.*coding[:=]\s*([-\w.]+)", sline)
                 if m: self.encoding = m.group(1)
                 if m: line = line.replace('coding','coding (removed)')
-            if line.strip()[:2].count('%') == 1:
+            if sline and sline[0] == '%' and sline[:2] != '%%':
                 line = line.split('%',1)[1].lstrip() # Full line following the %
                 cline = self.split_comment(line).strip()
                 cmd = re.split(r'[^a-zA-Z0-9_]', cline)[0]
