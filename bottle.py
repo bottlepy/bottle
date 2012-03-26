@@ -1873,19 +1873,21 @@ class WSGIFileWrapper(object):
 
 class ResourceManager(object):
     ''' This class manages a list of search paths and helps to find and open
-        aplication-bound resources (files). '''
+        aplication-bound resources (files).
 
-    #: Callable used to open files. Defaults to the ``open()`` built-in.
-    opener = open
+        :param base: path used to resolve relative search paths. It works as a
+                     default for :meth:`add_path`.
+        :param opener: callable used to open resources.
+        :param cachemode: controls which lookups are cached. One of 'all',
+                         'found' or 'none'.
+    '''
 
-    #: The base path used to resolve relative search paths. It works as a
-    #: default for :meth:`add_path`.
-    base = './'
+    def __init__(self, base='./', opener=open, cachemode='all'):
 
-    #: Controls which lookups are cached. One of 'all', 'found' or 'none'.
-    cachemode = 'all'
+        self.opener = open
+        self.base = './'
+        self.cachemode = cachemode
 
-    def __init__(self):
         #: A list of search paths. See :meth:`add_path` for details.
         self.path = []
         #: A list of file masks. See :meth:`add_mask` for details.
@@ -1908,8 +1910,8 @@ class ResourceManager(object):
 
             The :attr:`path` list is searched in order and new paths are
             added to the end of the list. The *index* parameter can change
-            the position (e.g. ``0`` to prepend). Adding a path twice moves it
-            to the new position.
+            the position (e.g. ``0`` to prepend). Adding a path a second time
+            moves it to the new position.
         '''
         base = os.path.abspath(os.path.dirname(base or self.base))
         path = os.path.abspath(os.path.join(base, os.path.dirname(path)))
@@ -1936,7 +1938,7 @@ class ResourceManager(object):
             self.masks.insert(index, mask)
         self.cache.clear()
 
-    def get(self, name):
+    def lookup(self, name):
         ''' Search for a resource and return an absolute file path, or `None`.
 
             The :attr:`path` list is searched in order. For each path, the
@@ -1958,12 +1960,13 @@ class ResourceManager(object):
     def open(self, name, *args, **kwargs):
         ''' Find a resource and return an opened file object, or raise IOError.
 
-            Additional parameters are passed to the :attr:`opener` function, 
-            which defaults to the ``open()`` built-in.
+            Additional parameters are passed to the ``open()`` built-in.
         '''
-        fname = self.find(name)
+        fname = self.lookup(name)
         if not fname: raise IOError("Resource %r not found." % name)
         return self.opener(name, *args, **kwargs)
+
+
 
 
 

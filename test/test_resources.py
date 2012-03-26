@@ -51,13 +51,13 @@ class TestResouceManager(unittest.TestCase):
         rm.add_path('/last/')
         self.assertEqual(rm.path, ['/first/', '/middle/', '/last/'])
 
-    def test_find(self):
+    def test_get(self):
         rm = ResourceManager()
         rm.add_path('/first/')
         rm.add_path(__file__)
         rm.add_path('/last/')
-        self.assertEqual(None, rm.find('notexist.txt'))
-        self.assertEqual(__file__, rm.find(os.path.basename(__file__)))
+        self.assertEqual(None, rm.lookup('notexist.txt'))
+        self.assertEqual(__file__, rm.lookup(os.path.basename(__file__)))
 
     def test_open(self):
         rm = ResourceManager()
