@@ -408,7 +408,7 @@ Most headers are unique, meaning that only one header per name is send to the cl
     response.set_header('Set-Cookie', 'name=value')
     response.add_header('Set-Cookie', 'name2=value2')
 
-Please not that this is just an example. If you want to work with cookies, read :ref:`ahead <tutorial-cookies>`.
+Please note that this is just an example. If you want to work with cookies, read :ref:`ahead <tutorial-cookies>`.
 
 
 .. _tutorial-cookies:
@@ -820,7 +820,7 @@ Here is an incomplete list of things that change in debug mode:
 * Templates are not cached.
 * Plugins are applied immediately.
 
-Just make sure to not use the debug mode on a production server.
+Just make sure not to use the debug mode on a production server.
 
 Auto Reloading
 --------------------------------------------------------------------------------
@@ -884,7 +884,7 @@ Both plugins and applications are specified via import expressions. These consis
 
 .. code-block:: console
 
-    # Grap the 'app' object from the 'myapp.controller' module and
+    # Grab the 'app' object from the 'myapp.controller' module and
     # start a paste server on port 80 on all interfaces.
     python -m bottle -server paste -bind 0.0.0.0:80 myapp.controller:app
 
