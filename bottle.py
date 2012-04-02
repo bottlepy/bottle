@@ -2974,9 +2974,9 @@ class SimpleTemplate(BaseTemplate):
                 elif cmd == 'include':
                     p = cline.split(None, 2)[1:]
                     if len(p) == 2:
-                        code("_=_include(%s, _stdout, %s)" % (repr(p[0]), p[1]))
+                        code("_=_include(%s, _stdout, _args if defined(\"_args\") else {}, %s)" % (repr(p[0]), p[1]))
                     elif p:
-                        code("_=_include(%s, _stdout)" % repr(p[0]))
+                        code("_=_include(%s, _stdout, _args if defined(\"_args\") else {})" % repr(p[0]))
                     else: # Empty %include -> reverse of %rebase
                         code("_printlist(_base)")
                 elif cmd == 'rebase':
@@ -3008,12 +3008,15 @@ class SimpleTemplate(BaseTemplate):
                '_escape': self._escape, 'get': env.get,
                'setdefault': env.setdefault, 'defined': env.__contains__})
         env.update(kwargs)
+        if self.settings['export_env']:
+            env["_args"] = kwargs
         eval(self.co, env)
         if '_rebase' in env:
             subtpl, rargs = env['_rebase']
             rargs['_base'] = _stdout[:] #copy stdout
             del _stdout[:] # clear stdout
-            return self.subtemplate(subtpl,_stdout,rargs)
+            pargs = kwargs if self.settings['export_env'] else {}
+            return self.subtemplate(subtpl, _stdout, pargs, rargs)
         return env
 
     def render(self, *args, **kwargs):
