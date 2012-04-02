@@ -11,7 +11,7 @@ The :class:`Router` distinguishes between two basic types of routes: **static ro
 
 .. versionchanged:: 0.10
 
-The simplest form of a wildcard consists of a name enclosed in angle brackets (e.g. ``<name>``). The name should be unique for a given route and form a valid python identifier (alphanumeric, staring with a letter). This is because wildcards are used as keyword arguments for the request callback later.
+The simplest form of a wildcard consists of a name enclosed in angle brackets (e.g. ``<name>``). The name should be unique for a given route and form a valid python identifier (alphanumeric, starting with a letter). This is because wildcards are used as keyword arguments for the request callback later.
 
 Each wildcard matches one or more characters, but stops at the first slash (``/``). This equals a regular expression of ``[^/]+`` and ensures that only one path segment is matched and routes with more than one wildcard stay unambiguous.
 
@@ -57,7 +57,7 @@ You can add your own filters to the router. All you need is a function that retu
         def to_url(numbers):
             return delimiter.join(map(str, numbers))
         
-        return regexp, to_python, to_user
+        return regexp, to_python, to_url
 
     app.router.add_filter('list', list_filter)
 

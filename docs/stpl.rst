@@ -92,7 +92,7 @@ You can include other templates using the ``%include sub_template [kwargs]`` sta
 
   %include header_template title='Hello World'
   <p>Hello World</p>
-  %include foother_template
+  %include footer_template
 
 The ``%rebase`` Statement
 -------------------------
