@@ -3008,14 +3008,14 @@ class SimpleTemplate(BaseTemplate):
                '_escape': self._escape, 'get': env.get,
                'setdefault': env.setdefault, 'defined': env.__contains__})
         env.update(kwargs)
-        if self.settings['export_env']:
+        if 'export_env' in self.settings:
             env["_args"] = kwargs
         eval(self.co, env)
         if '_rebase' in env:
             subtpl, rargs = env['_rebase']
             rargs['_base'] = _stdout[:] #copy stdout
             del _stdout[:] # clear stdout
-            pargs = kwargs if self.settings['export_env'] else {}
+            pargs = kwargs if 'export_env' in self.settings else {}
             return self.subtemplate(subtpl, _stdout, pargs, rargs)
         return env
 
