@@ -384,12 +384,25 @@ class TestRequest(unittest.TestCase):
         e['REQUEST_METHOD'] = "POST"
         e['HTTP_COOKIE'] = 'a=1,b=1,c=1;d=1'
         e['QUERY_STRING'] = 'a&b&c&d'
+        old_value = BaseRequest.MAX_PARAMS
         r = BaseRequest(e)
-        r.MAX_PARAMS = 2
-        self.assertEqual(len(list(r.query.allitems())), 2)
-        self.assertEqual(len(list(r.cookies.allitems())), 2)
-        self.assertEqual(len(list(r.forms.allitems())), 2)
-        self.assertEqual(len(list(r.params.allitems())), 4)
+        try:
+            BaseRequest.MAX_PARAMS = 2
+            self.assertEqual(len(list(r.query.allitems())), 2)
+            self.assertEqual(len(list(r.cookies.allitems())), 2)
+            self.assertEqual(len(list(r.forms.allitems())), 2)
+            self.assertEqual(len(list(r.params.allitems())), 4)
+        finally:
+            BaseRequest.MAX_PARAMS = old_value
+
+    def test_no_additional_attributes(self):
+        r = BaseRequest({})
+        r.environ = {}
+        self.assertRaises(AttributeError, lambda: setattr(r, 'foo', 5))
+        r.environ['bottle.request.ext.foo'] = 5
+        self.assertEquals(r.foo, 5)
+        r.environ['bottle.request.ext.e'] = property(lambda self: self.environ)
+        self.assertEquals(r.e, r.environ)
 
 
 class TestResponse(unittest.TestCase):

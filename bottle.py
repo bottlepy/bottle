@@ -899,6 +899,8 @@ class BaseRequest(object):
     """ A wrapper for WSGI environment dictionaries that adds a lot of
         convenient access methods and properties. Most of them are read-only."""
 
+    __slots__ = ('environ')
+
     #: Maximum size of memory buffer for :attr:`body` in bytes.
     MEMFILE_MAX = 102400
     #: Maximum number pr GET or POST parameters per request
@@ -1214,8 +1216,16 @@ class BaseRequest(object):
         for key in todelete:
             self.environ.pop('bottle.request.'+key, None)
 
+    def __getattr__(self, name):
+        try:
+            var = self.environ['bottle.request.ext.%s'%name]
+            return var.__get__(self) if hasattr(var, '__get__') else var
+        except KeyError:
+            raise AttributeError('Custom attribute %r not found.' % name)
+
     def __repr__(self):
         return '<%s: %s %s>' % (self.__class__.__name__, self.method, self.url)
+
 
 def _hkey(s):
     return s.title().replace('_','-')
