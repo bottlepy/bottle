@@ -897,7 +897,12 @@ class Bottle(object):
 
 class BaseRequest(object):
     """ A wrapper for WSGI environment dictionaries that adds a lot of
-        convenient access methods and properties. Most of them are read-only."""
+        convenient access methods and properties. Most of them are read-only.
+
+        Adding new attributes to a request actually adds them to the environ
+        dictionary (as 'bottle.request.ext.<name>'). This is the recommended
+        way to store and access request-specific data.
+    """
 
     __slots__ = ('environ')
 
@@ -906,17 +911,17 @@ class BaseRequest(object):
     #: Maximum number pr GET or POST parameters per request
     MAX_PARAMS  = 100
 
-    def __init__(self, environ):
+    def __init__(self, environ=None):
         """ Wrap a WSGI environ dictionary. """
         #: The wrapped WSGI environ dictionary. This is the only real attribute.
         #: All other attributes actually are read-only properties.
-        self.environ = environ
-        environ['bottle.request'] = self
+        self.environ = {} if environ is None else environ
+        self.environ['bottle.request'] = self
 
     @DictProperty('environ', 'bottle.app', read_only=True)
     def app(self):
         ''' Bottle application handling this request. '''
-        raise AttributeError('This request is not connected to an application.')
+        raise RuntimeError('This request is not connected to an application.')
 
     @property
     def path(self):
@@ -1216,15 +1221,22 @@ class BaseRequest(object):
         for key in todelete:
             self.environ.pop('bottle.request.'+key, None)
 
+    def __repr__(self):
+        return '<%s: %s %s>' % (self.__class__.__name__, self.method, self.url)
+
     def __getattr__(self, name):
+        ''' Search in self.environ for additional user defined attributes. '''
         try:
             var = self.environ['bottle.request.ext.%s'%name]
             return var.__get__(self) if hasattr(var, '__get__') else var
         except KeyError:
-            raise AttributeError('Custom attribute %r not found.' % name)
+            raise AttributeError('Attribute %r not defined.' % name)       
 
-    def __repr__(self):
-        return '<%s: %s %s>' % (self.__class__.__name__, self.method, self.url)
+    def __setattr__(self, name, value):
+        if name == 'environ': return object.__setattr__(self, name, value)
+        self.environ['bottle.request.ext.%s'%name] = value
+
+
 
 
 def _hkey(s):
@@ -1472,14 +1484,11 @@ class BaseResponse(object):
 #: attributes.
 _lctx = threading.local()
 
-def local_property(name, doc=None):
-
-    return property(
-        lambda self: getattr(_lctx, name),
-        lambda self, value: setattr(_lctx, name, value),
-        lambda self: delattr(_lctx, name),
-        doc or ('Thread-local property stored in :data:`_lctx.%s` ' % name)
-    )
+def local_property(name):
+    return property(lambda self: getattr(_lctx, name),
+                    lambda self, value: setattr(_lctx, name, value),
+                    lambda self: delattr(_lctx, name),
+                    'Thread-local property stored in :data:`_lctx.%s`' % name)
 
 class LocalRequest(BaseRequest):
     ''' A thread-local subclass of :class:`BaseRequest` with a different
@@ -1487,7 +1496,6 @@ class LocalRequest(BaseRequest):
         instance of this class (:data:`request`). If accessed during a
         request/response cycle, this instance always refers to the *current*
         request (even on a multithreaded server). '''
-    def __init__(self): pass
     bind = BaseRequest.__init__
     environ = local_property('request_environ')
 
@@ -1498,7 +1506,6 @@ class LocalResponse(BaseResponse):
         instance of this class (:data:`response`). Its attributes are used
         to build the HTTP response at the end of the request/response cycle.
     '''
-    def __init__(self): pass
     bind = BaseResponse.__init__
     _status_line = local_property('response_status_line')
     _status_code = local_property('response_status_code')

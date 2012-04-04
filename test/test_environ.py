@@ -10,14 +10,14 @@ import wsgiref.util
 import threading
 import base64
 
-from bottle import BaseRequest, BaseResponse
+from bottle import BaseRequest, BaseResponse, LocalRequest
 
 class TestRequest(unittest.TestCase):
 
     def test_app(self):
         e = {}
         r = BaseRequest(e)
-        self.assertRaises(AttributeError, lambda: r.app)
+        self.assertRaises(RuntimeError, lambda: r.app)
         e.update({'bottle.app': 5})
         self.assertEqual(r.app, 5)
 
@@ -395,14 +395,18 @@ class TestRequest(unittest.TestCase):
         finally:
             BaseRequest.MAX_PARAMS = old_value
 
-    def test_no_additional_attributes(self):
-        r = BaseRequest({})
-        r.environ = {}
-        self.assertRaises(AttributeError, lambda: setattr(r, 'foo', 5))
-        r.environ['bottle.request.ext.foo'] = 5
-        self.assertEquals(r.foo, 5)
-        r.environ['bottle.request.ext.e'] = property(lambda self: self.environ)
-        self.assertEquals(r.e, r.environ)
+    def test_user_defined_attributes(self):
+        for cls in (BaseRequest, LocalRequest):
+            r = cls()
+
+            # New attributes go to the environ dict.
+            r.foo = 'somevalue'
+            self.assertEqual(r.foo, 'somevalue')
+            self.assertTrue('somevalue' in r.environ.values())
+
+            # Unknown attributes raise AttributeError.
+            self.assertRaises(AttributeError, getattr, r, 'somevalue')
+
 
 
 class TestResponse(unittest.TestCase):
