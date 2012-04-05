@@ -2453,7 +2453,6 @@ class GeventServer(ServerAdapter):
           issues: No streaming, no pipelining, no SSL.
     """
     def run(self, handler):
-        print self.options
         from gevent import wsgi as wsgi_fast, pywsgi, monkey, local
         if self.options.get('monkey', True):
             if not threading.local is local.local: monkey.patch_all()
