@@ -2457,7 +2457,8 @@ class GeventServer(ServerAdapter):
         if self.options.get('monkey', True):
             if not threading.local is local.local: monkey.patch_all()
         wsgi = wsgi_fast if self.options.get('fast') else pywsgi
-        wsgi.WSGIServer((self.host, self.port), handler).serve_forever()
+        log = None if self.quiet else 'default'
+        wsgi.WSGIServer((self.host, self.port), handler, log=log).serve_forever()
 
 
 class GunicornServer(ServerAdapter):
