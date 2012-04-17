@@ -61,6 +61,32 @@ The werkzeug_ and paste_ libraries both ship with very powerfull debugging WSGI 
 Unit-Testing Bottle Applications
 --------------------------------------------------------------------------------
 
+Unit-testing is usually performed against methods defined in your web application without running a WSGI environment.
+
+A simple example using `Nose <http://readthedocs.org/docs/nose>`_::
+
+    import bottle
+    
+    @bottle.route('/')
+    def index():
+        return 'Hi!'
+
+    if __name__ == '__main__':
+        bottle.run()
+
+Test script::
+
+    import mywebapp
+    
+    def test_webapp_index():
+        assert mywebapp.index() == 'Hi!'
+
+In the example the Bottle route() method is never executed - only index() is tested.
+
+
+Functional Testing Bottle Applications
+--------------------------------------------------------------------------------
+
 Any HTTP-based testing system can be used with a running WSGI server, but some testing frameworks work more intimately with WSGI, and provide the ability the call WSGI applications in a controlled environment, with tracebacks and full use of debugging tools. `Testing tools for WSGI <http://www.wsgi.org/en/latest/testing.html>`_ is a good starting point.
 
 
