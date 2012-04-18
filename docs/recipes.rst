@@ -89,6 +89,24 @@ Functional Testing Bottle Applications
 
 Any HTTP-based testing system can be used with a running WSGI server, but some testing frameworks work more intimately with WSGI, and provide the ability the call WSGI applications in a controlled environment, with tracebacks and full use of debugging tools. `Testing tools for WSGI <http://www.wsgi.org/en/latest/testing.html>`_ is a good starting point.
 
+Example using `WebTest <http://webtest.pythonpaste.org/>`_ and `Nose <http://readthedocs.org/docs/nose>`_::
+
+    from webtest import TestApp
+    import mywebapp
+
+    def test_functional_login_logout():
+        app = TestApp(mywebapp.app)
+        
+        app.post('/login', {'user': 'foo', 'pass': 'bar'}) # log in and get a cookie
+
+        assert app.get('/admin').status == '200 OK'        # fetch a page successfully
+
+        app.get('/logout')                                 # log out
+        app.reset()                                        # drop the cookie
+
+        # fetch the same page, unsuccessfully
+        assert app.get('/admin').status == '401 Unauthorized'
+
 
 Embedding other WSGI Apps
 --------------------------------------------------------------------------------
