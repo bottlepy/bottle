@@ -1908,96 +1908,86 @@ class ResourceManager(object):
     ''' This class manages a list of search paths and helps to find and open
         aplication-bound resources (files).
 
-        :param base: path used to resolve relative search paths. It works as a
-                     default for :meth:`add_path`.
+        :param base: default value for same-named :meth:`add_path` parameter.
         :param opener: callable used to open resources.
         :param cachemode: controls which lookups are cached. One of 'all',
                          'found' or 'none'.
     '''
 
     def __init__(self, base='./', opener=open, cachemode='all'):
-
         self.opener = open
-        self.base = './'
+        self.base = base
         self.cachemode = cachemode
 
         #: A list of search paths. See :meth:`add_path` for details.
         self.path = []
-        #: A list of file masks. See :meth:`add_mask` for details.
-        self.mask = ['%s']
         #: A cache for resolved paths. `res.cache.clear()`` clears the cache.
         self.cache = {}
 
-    def add_path(self, path, base=None, index=None):
-        ''' Add a path to the :attr:`path` list.
+    def add_path(self, path, base=None, index=None, create=False):
+        ''' Add a new path to the list of search paths. Return False if it does
+            not exist.
 
-            The path is turned into an absolute and normalized form. If it
-            looks like a file (not ending in `/`), the filename is stripped
-            off. The path is not required to exist.
+            :param path: The new search path. Relative paths are turned into an
+                absolute and normalized form. If the path looks like a file (not
+                ending in `/`), the filename is stripped off.
+            :param base: Path used to absolutize relative search paths.
+                Defaults to `:attr:base` which defaults to ``./``.
+            :param index: Position within the list of search paths. Defaults to
+                last index (appends to the list).
+            :param create: Create non-existent search paths. Off by default.
 
-            Relative paths are joined with `base` or :attr:`self.base`, which
-            defaults to the current working directory. This comes in handy if
-            you resources live in a sub-folder of your module or package::
-
+            The `base` parameter makes it easy to reference files installed
+            along with a python module or package::
+            
                 res.add_path('./resources/', __file__)
-
-            The :attr:`path` list is searched in order and new paths are
-            added to the end of the list. The *index* parameter can change
-            the position (e.g. ``0`` to prepend). Adding a path a second time
-            moves it to the new position.
         '''
         base = os.path.abspath(os.path.dirname(base or self.base))
         path = os.path.abspath(os.path.join(base, os.path.dirname(path)))
         path += os.sep
         if path in self.path:
             self.path.remove(path)
+        if create and not os.path.isdir(path):
+            os.mkdirs(path)
         if index is None:
             self.path.append(path)
         else:
             self.path.insert(index, path)
         self.cache.clear()
 
-    def add_mask(self, mask, index=None):
-        ''' Add a new format string to the :attr:`mask` list.
-
-            Masks are used to turn resource names into actual filenames. The
-            mask string must contain exactly one occurence of ``%s``, which
-            is replaced by the supplied resource name on lookup. This can be
-            used to auto-append file extentions (e.g. ``%s.ext``).
-        '''
-        if index is None:
-            self.masks.append(mask)
-        else:
-            self.masks.insert(index, mask)
-        self.cache.clear()
+    def __iter__(self):
+        ''' Iterate over all existing files in all registered paths. '''
+        search = self.path[:]
+        while search:
+            path = search.pop()
+            if not os.path.isdir(path): continue
+            for name in os.listdir(path):
+                full = os.path.join(path, name)
+                if os.path.isdir(full): search.append(full)
+                else: yield full
 
     def lookup(self, name):
         ''' Search for a resource and return an absolute file path, or `None`.
 
-            The :attr:`path` list is searched in order. For each path, the
-            :attr:`mask` entries are tried in order. The first path that points
-            to an existing file is returned. Symlinks are followed. The result
-            is cached to speed up future lookups. '''
+            The :attr:`path` list is searched in order. The first match is
+            returend. Symlinks are followed. The result is cached to speed up
+            future lookups. '''
         if name not in self.cache or DEBUG:
             for path in self.path:
-                for mask in self.mask:
-                    fpath = os.path.join(path, mask%name)
-                    if os.path.isfile(fpath):
-                        if self.cachemode in ('all', 'found'):
-                            self.cache[name] = fpath
-                        return fpath
+                fpath = os.path.join(path, name)
+                if os.path.isfile(fpath):
+                    if self.cachemode in ('all', 'found'):
+                        self.cache[name] = fpath
+                    return fpath
             if self.cachemode == 'all':
                 self.cache[name] = None
         return self.cache[name]
 
-    def open(self, name, *args, **kwargs):
-        ''' Find a resource and return an opened file object, or raise IOError.
-
-            Additional parameters are passed to the ``open()`` built-in.
-        '''
+    def open(self, name, mode='r', *args, **kwargs):
+        ''' Find a resource and return a file object, or raise IOError. '''
         fname = self.lookup(name)
         if not fname: raise IOError("Resource %r not found." % name)
-        return self.opener(name, *args, **kwargs)
+        return self.opener(name, mode=mode, *args, **kwargs)
 
 
 
