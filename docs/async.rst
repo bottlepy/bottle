@@ -76,4 +76,52 @@ In order to conform to the WSGI standard, all we have to do is to return a body 
 
 From the server perspective, the queue object is iterable, blocks if empty and stops as soon as it reaches ``StopIteration``. This conforms to WSGI. On application side, the queue object behaves like a non-blocking socket. You can write to it at any time, pass it around and even start a new (pseudo)thread that writes to it asynchronously. This is how long-polling is implemented most of the time.
 
-If the demand is high enough, I could port the `gevent long-polling chat example <https://bitbucket.org/denis/gevent/src/tip/examples/webchat/>`_ to bottle. Join the `mailing-list <mailto:bottlepy@googlegroups.com>`_ if you have questions or want to help.
+
+Finally: WebSockets
+-------------------
+
+Lets forget about the low-level details for a while and speak about WebSockets. Since you are reading this article, you probably know what WebSockets are: A bidirectional communication channel between a browser (client) and a web application (server).
+
+Thankfully the `gevent-websocket <http://pypi.python.org/pypi/gevent-websocket/>`_ package does all the hard work for us. Here is a simple WebSocket endpoint that receives messages and just sends them back to the client::
+
+    from bottle import request, Bottle, abort
+    app = Bottle()
+
+    @app.route('/websocket')
+    def handle_websocket():
+        wsock = request.environ.get('wsgi.websocket')
+        if not wsock:
+            abort(400, 'Expected WebSocket request.')
+
+        while True:
+            try:
+                message = wsock.receive()
+                wsock.send("Your message was: %r" % message)
+            except WebSocketError:
+                break
+
+    from gevent.pywsgi import WSGIServer
+    from geventwebsocket import WebSocketHandler, WebSocketError
+    server = WSGIServer(("0.0.0.0", 8080), app,
+                        handler_class=WebSocketHandler)
+    server.serve_forever()
+
+The while-loop runs until the client closes the connection. You get the idea :)
+
+The client-site JavaScript API is really straight forward, too::
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <script type="text/javascript">
+        var ws = new WebSocket("ws://example.com:8080/websocket");
+        ws.onopen = function() {
+            ws.send("Hello, world");
+        };
+        ws.onmessage = function (evt) {
+            alert(evt.data);
+        };
+      </script>
+    </head>
+    </head>
+
