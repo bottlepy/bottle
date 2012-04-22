@@ -506,7 +506,7 @@ This works exactly the same way with ``FlupServer``, ``CherryPyServer`` and ``Fa
 
 Maybe you already have an Apache_ or you want to run a Bottle-based application large scale - then it is time to think about Apache with mod_wsgi_.
 
-We assume that your Apache server is up and running and mod_wsgi is working fine as well. On a lot of Linux distributions, mod_wsgi can be installed via the package management easily.
+We assume that your Apache server is up and running and mod_wsgi is working fine as well. On a lot of Linux distributions, mod_wsgi can be easily installed via whatever package management system is in use.
 
 Bottle brings an adapter for mod_wsgi with it, so serving your application is an easy task.
 

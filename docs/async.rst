@@ -36,7 +36,7 @@ This makes creating asynchronous applications incredibly easy, because they look
 
     run(host='0.0.0.0', port=8080, server='gevent')
 
-The first line is important. It causes gevent to monkey-patch most of Python's blocking APIs to not block the current thread, but pass the CPU to the next greenlet instead. It actually replaces Python's threading with gevent-based pseudo-threads. This is why you can still use ``time.sleep()`` which would normally block the whole thread. If you don't feel comfortable with monkey-patching python build-ins, you can use the corresponding gevent functions (``gevent.sleep()`` in this case).
+The first line is important. It causes gevent to monkey-patch most of Python's blocking APIs to not block the current thread, but pass the CPU to the next greenlet instead. It actually replaces Python's threading with gevent-based pseudo-threads. This is why you can still use ``time.sleep()`` which would normally block the whole thread. If you don't feel comfortable with monkey-patching python built-ins, you can use the corresponding gevent functions (``gevent.sleep()`` in this case).
 
 If you run this script and point your browser to ``http://localhost:8080/stream``, you should see `START`, `MIDDLE`, and `END` show up one by one (rather than waiting 8 seconds to see them all at once). It works exactly as with normal threads, but now your server can handle thousands of concurrent requests without any problems.
 
@@ -74,7 +74,7 @@ In order to conform to the WSGI standard, all we have to do is to return a body 
         worker.on_finish(lambda: body.put(StopIteration))
         return body
 
-From the server perspective, the queue object is iterable, blocks if empty and stops as soon as it reaches ``StopIteration``. This conforms to WSGI. On application side, the queue object behaves like a non-blocking socket. You can write to it at any time, pass it around and even start a new (pseudo)thread that writes to it asynchronously. This is how long-polling is implemented most of the time.
+From the server perspective, the queue object is iterable. It blocks if empty and stops as soon as it reaches ``StopIteration``. This conforms to WSGI. On the application side, the queue object behaves like a non-blocking socket. You can write to it at any time, pass it around and even start a new (pseudo)thread that writes to it asynchronously. This is how long-polling is implemented most of the time.
 
 
 Finally: WebSockets

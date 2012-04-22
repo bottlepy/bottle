@@ -534,7 +534,7 @@ class Bottle(object):
     """
 
     def __init__(self, catchall=True, autojson=True):
-        #: If true, most exceptions are catched and returned as :exc:`HTTPError`
+        #: If true, most exceptions are caught and returned as :exc:`HTTPError`
         self.catchall = catchall
 
         #: A :cls:`ResourceManager` for application files
@@ -597,7 +597,7 @@ class Bottle(object):
             self.route('/' + '/'.join(parts), callback=mountpoint, **options)
 
     def merge(self, routes):
-        ''' Merge the routes of another :cls:`Bottle` application or a list of
+        ''' Merge the routes of another :class:`Bottle` application or a list of
             :class:`Route` objects into this application. The routes keep their
             'owner', meaning that the :data:`Route.app` attribute is not
             changed. '''
@@ -754,8 +754,8 @@ class Bottle(object):
 
     def handle(self, path, method='GET'):
         """ (deprecated) Execute the first matching route callback and return
-            the result. :exc:`HTTPResponse` exceptions are catched and returned.
-            If :attr:`Bottle.catchall` is true, other exceptions are catched as
+            the result. :exc:`HTTPResponse` exceptions are caught and returned.
+            If :attr:`Bottle.catchall` is true, other exceptions are caught as
             well and returned as :exc:`HTTPError` instances (500).
         """
         depr("This method will change semantics in 0.10. Try to avoid it.")

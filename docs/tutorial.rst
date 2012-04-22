@@ -187,7 +187,7 @@ Old Syntax          New Syntax
 ``:##``             ``<:re>``
 =================== ====================
 
-Try to avoid the old syntax in future projects if you can. It is not deprecated for now, but will be eventually.
+Try to avoid the old syntax in future projects if you can. It is not currently deprecated, but will be eventually.
 
 
 HTTP Request Methods
@@ -232,7 +232,7 @@ To sum it up: HEAD requests fall back to GET routes and all requests fall back t
 Routing Static Files
 ------------------------------------------------------------------------------
 
-Static files such as images or css files are not served automatically. You have to add a route and a callback to control which files get served and where to find them::
+Static files such as images or CSS files are not served automatically. You have to add a route and a callback to control which files get served and where to find them::
 
   from bottle import static_file
   @route('/static/<filename>')
@@ -255,7 +255,7 @@ Be careful when specifying a relative root-path such as ``root='./static/files'`
 Error Pages
 ------------------------------------------------------------------------------
 
-If anything goes wrong, Bottle displays an informative but fairly boring error page. You can override the default for a specific HTTP status code with the :func:`error` decorator::
+If anything goes wrong, Bottle displays an informative but fairly plain error page. You can override the default for a specific HTTP status code with the :func:`error` decorator::
 
   from bottle import error
   @error(404)
@@ -327,7 +327,7 @@ In some rare cases the Python encoding names differ from the names supported by 
 Static Files
 --------------------------------------------------------------------------------
 
-You can directly return file objects, but :func:`static_file` is the recommended way to serve static files. It automatically guesses a mime-type, adds a ``Last-Modified`` header, restricts paths to a ``root`` directory for security reasons and generates appropriate error responses (401 on permission errors, 404 on missing files). It even supports the ``If-Modified-Since`` header and eventually generates a ``304 Not Modified`` response. You can pass a custom mimetype to disable mimetype guessing.
+You can directly return file objects, but :func:`static_file` is the recommended way to serve static files. It automatically guesses a mime-type, adds a ``Last-Modified`` header, restricts paths to a ``root`` directory for security reasons and generates appropriate error responses (401 on permission errors, 404 on missing files). It even supports the ``If-Modified-Since`` header and eventually generates a ``304 Not Modified`` response. You can pass a custom MIME type to disable guessing.
 
 ::
 
@@ -641,7 +641,7 @@ Bottle's core features cover most common use-cases, but as a micro-framework it 
 
 We have a growing :doc:`/plugins/index` and most plugins are designed to be portable and re-usable across applications. The chances are high that your problem has already been solved and a ready-to-use plugin exists. If not, the :doc:`/plugindev` may help you.
 
-The effects and APIs of plugins are manifold and depend on the specific plugin. The 'sqlite' plugin for example detects callbacks that require a ``db`` keyword argument and creates a fresh database connection object every time the callback is called. This makes it very convenient to use a database::
+The effects and APIs of plugins are manifold and depend on the specific plugin. The ``SQLitePlugin`` plugin for example detects callbacks that require a ``db`` keyword argument and creates a fresh database connection object every time the callback is called. This makes it very convenient to use a database::
 
     from bottle import route, install, template
     from bottle_sqlite import SQLitePlugin
@@ -669,7 +669,7 @@ Application-wide Installation
 
 Plugins can be installed application-wide or just to some specific routes that need additional functionality. Most plugins can safely be installed to all routes and are smart enough to not add overhead to callbacks that do not need their functionality.
 
-Let us take the 'sqlite' plugin for example. It only affects route callbacks that need a database connection. Other routes are left alone. Because of this, we can install the plugin application-wide with no additional overhead.
+Let us take the ``SQLitePlugin`` plugin for example. It only affects route callbacks that need a database connection. Other routes are left alone. Because of this, we can install the plugin application-wide with no additional overhead.
 
 To install a plugin, just call :func:`install` with the plugin as first argument::
 
@@ -742,20 +742,20 @@ Most plugins are specific to the application they were installed to. Consequentl
 
     root.install(plugins.WTForms())
 
-Whenever you mount an application, Bottle creates a proxy-route on the main-application that relays all requests to the sub-application. Plugins are disabled for this kind of proxy-routes by default. As a result, our (fictional) `WTForms` plugin affects the ``/contact`` route, but does not affect the routes of the ``/blog`` sub-application.
+Whenever you mount an application, Bottle creates a proxy-route on the main-application that forwards all requests to the sub-application. Plugins are disabled for this kind of proxy-route by default. As a result, our (fictional) `WTForms` plugin affects the ``/contact`` route, but does not affect the routes of the ``/blog`` sub-application.
 
 This behavior is intended as a sane default, but can be overridden. The following example re-activates all plugins for a specific proxy-route::
 
     root.mount(apps.blog, '/blog', skip=None)
 
-But there is a snag: The plugin sees the whole sub-application as a single route, namely the proxy-route mentioned above. In order to affect each individual route of the sub-application, you have to install the plugin to the application explicitly.
+But there is a snag: The plugin sees the whole sub-application as a single route, namely the proxy-route mentioned above. In order to affect each individual route of the sub-application, you have to install the plugin to the mounted application explicitly.
 
 
 
 Development
 ================================================================================
 
-You learned the basics and want to write your own application? Here are
+So you have learned the basics and want to write your own application? Here are
 some tips that might help you to be more productive.
 
 .. _default-app:

@@ -2,7 +2,7 @@
 Bottle-Werkzeug
 =====================
 
-`Werkzeug <http://werkzeug.pocoo.org/>`_ is a powerfull WSGI utility library for 
+`Werkzeug <http://werkzeug.pocoo.org/>`_ is a powerful WSGI utility library for 
 Python. It includes an interactive debugger and feature-packed request and response 
 objects.
 

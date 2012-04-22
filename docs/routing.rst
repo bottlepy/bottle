@@ -83,7 +83,7 @@ Old Syntax          New Syntax
 ``:##``             ``<:re>``
 =================== ====================
 
-Try to avoid the old syntax in future projects if you can. It is not deprecated for now, but will be eventually.
+Try to avoid the old syntax in future projects if you can. It is not currently deprecated, but will be eventually.
 
 
 Routing Order

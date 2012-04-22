@@ -55,7 +55,7 @@ Bottle catches all Exceptions raised in your app code to prevent your WSGI serve
 
 Now, bottle only catches its own exceptions (:exc:`HTTPError`, :exc:`HTTPResponse` and :exc:`BottleException`) and your middleware can handle the rest.
 
-The werkzeug_ and paste_ libraries both ship with very powerfull debugging WSGI middleware. Look at :class:`werkzeug.debug.DebuggedApplication` for werkzeug_ and :class:`paste.evalexception.middleware.EvalException` for paste_. They both allow you do inspect the stack and even execute python code within the stack context, so **do not use them in production**.
+The werkzeug_ and paste_ libraries both ship with very powerful debugging WSGI middleware. Look at :class:`werkzeug.debug.DebuggedApplication` for werkzeug_ and :class:`paste.evalexception.middleware.EvalException` for paste_. They both allow you do inspect the stack and even execute python code within the stack context, so **do not use them in production**.
 
 
 Unit-Testing Bottle Applications
