@@ -123,5 +123,5 @@ The client-site JavaScript API is really straight forward, too::
         };
       </script>
     </head>
-    </head>
+    </html>
 
