@@ -900,165 +900,16 @@ Both plugins and applications are specified via import expressions. These consis
     python -m bottle 'myapp.controller:make_app()''
 
 
-.. _tutorial-deployment:
-
 Deployment
 ================================================================================
 
 Bottle runs on the built-in `wsgiref WSGIServer <http://docs.python.org/library/wsgiref.html#module-wsgiref.simple_server>`_  by default. This non-threading HTTP server is perfectly fine for development and early production, but may become a performance bottleneck when server load increases.
 
-There are three ways to eliminate this bottleneck:
+The easiest way to increase performance is to install a multi-threaded server library like paste_ or cherrypy_ and tell Bottle to use that instead of the single-threaded server::
 
-* Use a multi-threaded or asynchronous HTTP server.
-* Spread the load between multiple Bottle instances.
-* Do both.
+    bottle.run(server='paste')
 
-
-
-Multi-Threaded Server
---------------------------------------------------------------------------------
-
-.. _flup: http://trac.saddi.com/flup
-.. _gae: http://code.google.com/appengine/docs/python/overview.html
-.. _wsgiref: http://docs.python.org/library/wsgiref.html
-.. _cherrypy: http://www.cherrypy.org/
-.. _paste: http://pythonpaste.org/
-.. _rocket: http://pypi.python.org/pypi/rocket
-.. _gunicorn: http://pypi.python.org/pypi/gunicorn
-.. _fapws3: http://www.fapws.org/
-.. _tornado: http://www.tornadoweb.org/
-.. _twisted: http://twistedmatrix.com/
-.. _diesel: http://dieselweb.org/
-.. _meinheld: http://pypi.python.org/pypi/meinheld
-.. _bjoern: http://pypi.python.org/pypi/bjoern
-
-The easiest way to increase performance is to install a multi-threaded or asynchronous WSGI server like paste_ or cherrypy_ and tell Bottle to start it instead of the default single-threaded one::
-
-    bottle.run(server='paste') # Example
-
-Bottle ships with a lot of ready-to-use adapters for the most common WSGI servers and automates the setup process. Here is an incomplete list:
-
-========  ============  ======================================================
-Name      Homepage      Description
-========  ============  ======================================================
-cgi                     Run as CGI script
-flup      flup_         Run as Fast CGI process
-gae       gae_          Helper for Google App Engine deployments
-wsgiref   wsgiref_      Single-threaded default server
-cherrypy  cherrypy_     Multi-threaded and very stable
-paste     paste_        Multi-threaded, stable, tried and tested
-rocket    rocket_       Multi-threaded
-gunicorn  gunicorn_     Pre-forked, partly written in C
-fapws3    fapws3_       Asynchronous, written in C
-tornado   tornado_      Asynchronous, powers some parts of Facebook
-twisted   twisted_      Asynchronous, well tested
-diesel    diesel_       Asynchronous, based on greenlet
-meinheld  meinheld_     Asynchronous, partly written in C
-bjoern    bjoern_       Asynchronous, very fast and written in C
-auto                    Automatically selects an available server adapter
-========  ============  ======================================================
-
-The full list is available through :data:`server_names`.
-
-If there is no adapter for your favorite server or if you need more control over the server setup, you may want to start the server manually. Refer to the server documentation on how to mount WSGI applications. Here is an example for paste_::
-
-    from paste import httpserver
-    httpserver.serve(bottle.default_app(), host='0.0.0.0', port=80)
-
-
-Multiple Server Processes
---------------------------------------------------------------------------------
-
-A single Python process can only utilise one CPU at a time, even if
-there are more CPU cores available. The trick is to balance the load
-between multiple independent Python processes to utilize all of your
-CPU cores.
-
-Instead of a single Bottle application server, you start one instance
-of your server for each CPU core available using different local port
-(localhost:8080, 8081, 8082, ...). Then a high performance load
-balancer acts as a reverse proxy and forwards each new requests to
-a random Bottle processes, spreading the load between all available
-back end server instances. This way you can use all of your CPU cores and
-even spread out the load between different physical servers.
-
-One of the fastest load balancers available is Pound_ but most common web servers have a proxy-module that can do the work just fine.
-
-
-Apache mod_wsgi
---------------------------------------------------------------------------------
-
-Instead of running your own HTTP server from within Bottle, you can
-attach Bottle applications to an `Apache server`_ using
-mod_wsgi_ and Bottle's WSGI interface.
-
-All you need is an ``app.wsgi`` file that provides an
-``application`` object. This object is used by mod_wsgi to start your
-application and should be a WSGI-compatible Python callable.
-
-File ``/var/www/yourapp/app.wsgi``::
-
-    # Change working directory so relative paths (and template lookup) work again
-    os.chdir(os.path.dirname(__file__))
-
-    import bottle
-    # ... build or import your bottle application here ...
-    # Do NOT use bottle.run() with mod_wsgi
-    application = bottle.default_app()
-
-The Apache configuration may look like this::
-
-    <VirtualHost *>
-        ServerName example.com
-
-        WSGIDaemonProcess yourapp user=www-data group=www-data processes=1 threads=5
-        WSGIScriptAlias / /var/www/yourapp/app.wsgi
-
-        <Directory /var/www/yourapp>
-            WSGIProcessGroup yourapp
-            WSGIApplicationGroup %{GLOBAL}
-            Order deny,allow
-            Allow from all
-        </Directory>
-    </VirtualHost>
-
-
-
-Google AppEngine
---------------------------------------------------------------------------------
-
-.. versionadded:: 0.9
-
-The ``gae`` adapter completely automates the Google App Engine deployment. It even ensures that a ``main()`` function is present in your ``__main__`` module to enable `App Caching <http://code.google.com/appengine/docs/python/runtime.html#App_Caching>`_ (which drastically improves performance)::
-
-    import bottle
-    # ... build or import your bottle application here ...
-    bottle.run(server='gae')
-
-It is always a good idea to let GAE serve static files directly. Here is example ``app.yaml``::
-
-    application: myapp
-    version: 1
-    runtime: python
-    api_version: 1
-
-    handlers:
-    - url: /static
-      static_dir: static
-
-    - url: /.*
-      script: myapp.py
-
-
-Good old CGI
---------------------------------------------------------------------------------
-
-CGI is slow as hell, but it works::
-
-    import bottle
-    # ... build or import your bottle application here ...
-    bottle.run(server=bottle.CGIServer)
-
+This, and many other deployment options are described in a separate article: :doc:`deployment`
 
 
 
