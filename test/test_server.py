@@ -50,7 +50,7 @@ class TestServer(unittest.TestCase):
                 if not self.p.poll() is None: break
             rv = self.p.poll()
             if rv is None:
-                raise AssertionError("Server took to long to start up.")
+                raise AssertionError("Server took too long to start up.")
             if rv is 128: # Import error
                 tools.warn("Skipping %r test (ImportError)." % self.server)
                 self.skip = True
