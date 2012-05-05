@@ -13,6 +13,16 @@ Release 0.11
 * Support for partial downloads (``Range`` header) in :func:`static_file`.
 * Native support for Python 2.x and 3.x syntax. No need to run 2to3 anymore.
 
+.. rubric:: API Changes
+
+These APIs will most probably change in the next release.
+
+* :attr:`Response.status` is a read-write property that can be assigned either a numeric status code or a status string with a reason phrase (``200 OK``). The return value is now a string to better match existing APIs (WebOb, werkzeug). To be absolutely clear, you can use the read-only properties :attr:`BaseResponse.status_code` and :attr:`BaseResponse.status_line`.
+* :func:`run` is now a method of :class:`Bottle`. The module-level :func:`run` function still works and can be used further.
+* New :meth:`Bottle.merge` method to install all routes from one application into another.
+* New :attr:`BaseRequest.app` property to get the application object that handles that request.
+
+
 Release 0.10
 ==============
 

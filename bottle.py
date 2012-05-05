@@ -1250,21 +1250,20 @@ def _hkey(s):
 
 class HeaderProperty(object):
     def __init__(self, name, reader=None, writer=str, default=''):
-        self.name, self.reader, self.writer, self.default = name, reader, writer, default
+        self.name, self.default = name, default
+        self.reader, self.writer = reader, writer
         self.__doc__ = 'Current value of the %r header.' % name.title()
 
     def __get__(self, obj, cls):
         if obj is None: return self
-        value = obj.headers.get(self.name)
-        return self.reader(value) if (value and self.reader) else (value or self.default)
+        value = obj.headers.get(self.name, self.default)
+        return self.reader(value) if self.reader else value
 
     def __set__(self, obj, value):
-        if self.writer: value = self.writer(value)
-        obj.headers[self.name] = value
+        obj.headers[self.name] = self.writer(value)
 
     def __delete__(self, obj):
-        if self.name in obj.headers:
-            del obj.headers[self.name]
+        del obj.headers[self.name]
 
 
 class BaseResponse(object):
