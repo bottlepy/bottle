@@ -64,8 +64,13 @@ py25 = py <  (2,6,0)
 # Workaround for the missing "as" keyword in py3k.
 def _e(): return sys.exc_info()[1]
 
-# Workaround for the "print is a keyword/function" dilemma.
-_stdout, _stderr = sys.stdout.write, sys.stderr.write
+# Workaround for the "print is a keyword/function" Python 2/3 dilemma
+# and a fallback for mod_wsgi (resticts stdout/err attribute access)
+try:
+    _stdout, _stderr = sys.stdout.write, sys.stderr.write
+except IOError:
+    _stdout = lambda x: sys.stdout.write(x)
+    _stderr = lambda x: sys.stderr.write(x)
 
 # Lots of stdlib and builtin differences.
 if py3k:
