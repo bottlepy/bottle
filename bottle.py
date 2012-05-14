@@ -1071,7 +1071,8 @@ class BaseRequest(object):
             instances of :class:`cgi.FieldStorage` (file uploads).
         """
         post = FormsDict()
-        safe_env = {'QUERY_STRING':''} # Build a safe environment for cgi
+        
+        _env = {'QUERY_STRING':''} # Build a safe environment for cgi
         for key in ('REQUEST_METHOD', 'CONTENT_TYPE', 'CONTENT_LENGTH'):
             if key in self.environ: safe_env[key] = self.environ[key]
         if NCTextIOWrapper:
@@ -2141,7 +2142,7 @@ def parse_range_header(header, maxlen=0):
             pass
 
 def _lscmp(a, b):
-    ''' Compares two strings in a cryptographically save way:
+    ''' Compares two strings in a cryptographically safe way:
         Runtime is not affected by length of common prefix. '''
     return not sum(0 if x==y else 1 for x, y in zip(a, b)) and len(a) == len(b)
 
