@@ -188,6 +188,19 @@ class lazy_attribute(object):
         return value
 
 
+class FileCustomizableFieldStorage(cgi.FieldStorage):
+    ''' A wrapper of cgi.FieldStorage that allows for customizing where and how
+        temporary files are created. '''
+    def __init__(self, *args, **kwargs):
+        cgi.FieldStorage.__init__(self, *args, **kwargs)
+        self.environ = kwargs.get("environ", {})
+
+    def make_file(self, **kwargs):
+        try: tempfile_generator = self.environ["bottle.tempfile_generator"]
+        except KeyError: return TemporaryFile()
+        else: return tempfile_generator()
+
+
 
 
 
@@ -467,6 +480,12 @@ class Route(object):
         ''' The route callback with all plugins applied. This property is
             created on demand and then cached to speed up subsequent requests.'''
         return self._make_callback()
+
+    def prerequest(self, environ):
+        ''' Called prior to request processing.'''
+        for plugin in self.all_plugins():
+            if hasattr(plugin, 'prerequest'):
+                plugin.prerequest(self, environ)
 
     def reset(self):
         ''' Forget any cached values. The next time :attr:`call` is accessed,
@@ -766,11 +785,12 @@ class Bottle(object):
     def _handle(self, environ):
         try:
             environ['bottle.app'] = self
-            request.bind(environ)
-            response.bind()
             route, args = self.router.match(environ)
             environ['route.handle'] = environ['bottle.route'] = route
             environ['route.url_args'] = args
+            route.prerequest(environ)
+            request.bind(environ)
+            response.bind()
             return route.call(**args)
         except HTTPResponse:
             return _e()
@@ -1036,7 +1056,11 @@ class BaseRequest(object):
     def _body(self):
         maxread = max(0, self.content_length)
         stream = self.environ['wsgi.input']
-        body = BytesIO() if maxread < self.MEMFILE_MAX else TemporaryFile(mode='w+b')
+        try: bodystream_generator = self.environ["bottle.bodystream_generator"]
+        except KeyError:
+            if maxread < self.MEMFILE_MAX: bodystream_generator = BytesIO
+            else: bodystream_generator = TemporaryFile
+        body = bodystream_generator()
         while maxread > 0:
             part = stream.read(min(maxread, self.MEMFILE_MAX))
             if not part: break
@@ -1067,13 +1091,15 @@ class BaseRequest(object):
         """
         post = FormsDict()
         safe_env = {'QUERY_STRING':''} # Build a safe environment for cgi
-        for key in ('REQUEST_METHOD', 'CONTENT_TYPE', 'CONTENT_LENGTH'):
+        for key in ('REQUEST_METHOD', 'CONTENT_TYPE', 'CONTENT_LENGTH',
+                'bottle.tempfile_generator'):
             if key in self.environ: safe_env[key] = self.environ[key]
         if NCTextIOWrapper:
             fb = NCTextIOWrapper(self.body, encoding='ISO-8859-1', newline='\n')
         else:
             fb = self.body
-        data = cgi.FieldStorage(fp=fb, environ=safe_env, keep_blank_values=True)
+        data = FileCustomizableFieldStorage(fp=fb, environ=safe_env,
+                keep_blank_values=True)
         for item in (data.list or [])[:self.MAX_PARAMS]:
             post[item.name] = item if item.filename else item.value
         return post
@@ -1547,6 +1573,51 @@ class JSONPlugin(object):
                 return json_response
             return rv
         return wrapper
+
+
+class ZeroCopyBodyUploadPlugin(object):
+    """With this plugin installed, request.body will always be a real file,
+    and request.body gets a 'name' attribute, which will refer to the fullpath
+    of the file that backs request.body
+    """
+
+    name = "zero_copy_body_upload"
+    api = 2
+
+    def __init__(self, storage_dir, delete=True):
+        self.storage_dir = storage_dir
+        self.delete = delete
+
+    def apply(self, callback, _): return callback
+
+    def prerequest(self, route, environ):
+        environ["bottle.bodystream_generator"] = self.generate
+
+    def generate(self):
+        return tempfile.NamedTemporaryFile(dir=self.storage_dir,
+                delete=self.delete)
+
+
+class ZeroCopyFileUploadPlugin(object):
+    """With this plugin installed, file objects from request.file will get a
+    'name' attribute, which will refer to the fullpath of that file.
+    """
+
+    name = "zero_copy_file_upload"
+    api = 2
+
+    def __init__(self, storage_dir, delete=True):
+        self.storage_dir = storage_dir
+        self.delete = delete
+
+    def apply(self, callback, _): return callback
+
+    def prerequest(self, route, environ):
+        environ["bottle.tempfile_generator"] = self.generate
+
+    def generate(self):
+        return tempfile.NamedTemporaryFile(dir=self.storage_dir,
+                delete=self.delete)
 
 
 class HooksPlugin(object):
@@ -3153,7 +3224,7 @@ ERROR_PAGE_TEMPLATE = """
 %%end
 """ % __name__
 
-#: A thread-safe instance of :class:`LocalRequest`. If accessed from within a 
+#: A thread-safe instance of :class:`LocalRequest`. If accessed from within a
 #: request callback, this instance always refers to the *current* request
 #: (even on a multithreaded server).
 request = LocalRequest()
