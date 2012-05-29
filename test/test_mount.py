@@ -20,6 +20,15 @@ class TestAppMounting(ServerTestBase):
         self.assertStatus(200, '/test/test/bar')
         self.assertBody('bar', '/test/test/bar')
 
+    def test_mount_meta(self):
+        self.app.mount('/test/', self.subapp)
+        self.assertEqual(
+            self.app.routes[0].config.mountpoint['prefix'],
+            '/test/')
+        self.assertEqual(
+            self.app.routes[0].config.mountpoint['target'],
+            self.subapp)
+
     def test_no_slash_prefix(self):
         self.app.mount('/test', self.subapp)
         self.assertStatus(404, '/')

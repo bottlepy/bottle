@@ -578,14 +578,11 @@ class Bottle(object):
             prefix, app = app, prefix
             depr('Parameter order of Bottle.mount() changed.') # 0.10
 
-        parts = [p for p in prefix.split('/') if p]
-        if not parts: raise ValueError('Empty path prefix.')
-        path_depth = len(parts)
-        options.setdefault('skip', True)
-        options.setdefault('method', 'ANY')
+        segments = [p for p in prefix.split('/') if p]
+        if not segments: raise ValueError('Empty path prefix.')
+        path_depth = len(segments)
 
-        @self.route('/%s/:#.*#' % '/'.join(parts), **options)
-        def mountpoint():
+        def mountpoint_wrapper():
             try:
                 request.path_shift(path_depth)
                 rs = BaseResponse([], 200)
@@ -593,13 +590,20 @@ class Bottle(object):
                     rs.status = status
                     for name, value in header: rs.add_header(name, value)
                     return rs.body.append
-                rs.body = itertools.chain(rs.body, app(request.environ, start_response))
-                return HTTPResponse(rs.body, rs.status_code, rs.headers)
+                body = app(request.environ, start_response)
+                body = itertools.chain(rs.body, body)
+                return HTTPResponse(body, rs.status_code, rs.headers)
             finally:
                 request.path_shift(-path_depth)
 
+        options.setdefault('skip', True)
+        options.setdefault('method', 'ANY')
+        options.setdefault('mountpoint', {'prefix': prefix, 'target': app})
+        options['callback'] = mountpoint_wrapper
+
+        self.route('/%s/<:re:.*>' % '/'.join(segments), **options)
         if not prefix.endswith('/'):
-            self.route('/' + '/'.join(parts), callback=mountpoint, **options)
+            self.route('/' + '/'.join(segments), **options)
 
     def merge(self, routes):
         ''' Merge the routes of another :class:`Bottle` application or a list of
