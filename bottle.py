@@ -790,7 +790,7 @@ class Bottle(object):
             raise
         except Exception:
             if not self.catchall: raise
-            stacktrace = format_exc(10)
+            stacktrace = format_exc()
             environ['wsgi.errors'].write(stacktrace)
             return HTTPError(500, "Internal Server Error", _e(), stacktrace)
 
@@ -849,7 +849,7 @@ class Bottle(object):
             raise
         except Exception:
             if not self.catchall: raise
-            first = HTTPError(500, 'Unhandled exception', _e(), format_exc(10))
+            first = HTTPError(500, 'Unhandled exception', _e(), format_exc())
 
         # These are the inner types allowed in iterator or generator objects.
         if isinstance(first, HTTPResponse):
@@ -884,7 +884,7 @@ class Bottle(object):
             if DEBUG:
                 err += '<h2>Error:</h2>\n<pre>\n%s\n</pre>\n' \
                        '<h2>Traceback:</h2>\n<pre>\n%s\n</pre>\n' \
-                       % (html_escape(repr(_e())), html_escape(format_exc(10)))
+                       % (html_escape(repr(_e())), html_escape(format_exc()))
             environ['wsgi.errors'].write(err)
             headers = [('Content-Type', 'text/html; charset=UTF-8')]
             start_response('500 INTERNAL SERVER ERROR', headers)
