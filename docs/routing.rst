@@ -107,5 +107,23 @@ The second route will never hit. Even POST requests don't arrive at the second r
 Sounds complicated, and it is. That is the price for performance. It is best to avoid ambiguous routes at all and choose unique prefixes for each route. This implementation detail may change in the future, though. We are working on it.
 
 
-        
+Explicit routing configuration
+--------------------------------------------------------------------------------
+
+Route decorator can also be directly called as method. This way provides flexibility in complex setups, allowing you to directly control, when and how routing configuration done.
+
+Here is a basic example of explicit routing configuration for default bottle application::
+
+    def setup_routing():
+        bottle.route('/', method='GET', index)
+        bottle.route('/edit', method=['GET', 'POST'], edit)
+
+In fact, any :class:`Bottle` instance routing can be configured same way::
+
+    def setup_routing(app):
+        app.route('/new', method=['GET', 'POST'], form_new)
+        app.route('/edit', method=['GET', 'POST'], form_edit)
+
+    app = Bottle()
+    setup_routing(app)
 
