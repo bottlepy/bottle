@@ -1493,10 +1493,16 @@ class BaseResponse(object):
 _lctx = threading.local()
 
 def local_property(name):
-    return property(lambda self: getattr(_lctx, name),
-                    lambda self, value: setattr(_lctx, name, value),
-                    lambda self: delattr(_lctx, name),
-                    'Thread-local property stored in :data:`_lctx.%s`' % name)
+    def fget(self):
+        try:
+            return getattr(_lctx, name)
+        except AttributeError:
+            raise RuntimeError("Request context not initialized.")
+    def fset(self, value): setattr(_lctx, name, value)
+    def fdel(self): delattr(_lctx, name)
+    return property(fget, fset, fdel,
+        'Thread-local property stored in :data:`_lctx.%s`' % name)
+
 
 class LocalRequest(BaseRequest):
     ''' A thread-local subclass of :class:`BaseRequest` with a different
