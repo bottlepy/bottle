@@ -36,7 +36,8 @@ if __name__ == '__main__':
         import gevent.monkey; gevent.monkey.patch_all()
 
 import base64, cgi, email.utils, functools, hmac, imp, itertools, mimetypes,\
-        os, re, subprocess, sys, tempfile, threading, time, urllib, warnings
+        os, re, subprocess, sys, tempfile, threading, time, urllib, warnings,\
+        inspect
 
 from datetime import date as datedate, datetime, timedelta
 from tempfile import TemporaryFile
@@ -450,6 +451,8 @@ class Route(object):
         self.method = method
         #: The original callback with no plugins applied. Useful for introspection.
         self.callback = callback
+        #: The callback has the context argument or not
+        self.used_context = "context" in inspect.getargspec(self.callback)[0]
         #: The name of the route (if specified) or ``None``.
         self.name = name or None
         #: A list of route-specific plugins (see :meth:`Bottle.route`).
@@ -780,6 +783,10 @@ class Bottle(object):
             route, args = self.router.match(environ)
             environ['route.handle'] = environ['bottle.route'] = route
             environ['route.url_args'] = args
+            #: check the argument is prepared or not.
+            if route.used_context:
+                #: enable the plugin context
+                args['context'] = ObjectDict()
             return route.call(**args)
         except HTTPResponse:
             return _e()
@@ -894,6 +901,18 @@ class Bottle(object):
         ''' Each instance of :class:'Bottle' is a WSGI application. '''
         return self.wsgi(environ, start_response)
 
+
+class ObjectDict(dict):
+    """A object-like dictionary."""
+
+    def __getattribute__(self, attr):
+        try:
+            return self[attr]
+        except KeyError as error:
+            raise AttributeError(error)
+
+    def __setattr__(self, attr, value):
+        self[attr] = value
 
 
 
@@ -2199,7 +2218,6 @@ def yieldroutes(func):
         c(x, y=5)   -> '/c/:x' and '/c/:x/:y'
         d(x=5, y=6) -> '/d' and '/d/:x' and '/d/:x/:y'
     """
-    import inspect # Expensive module. Only import if necessary.
     path = '/' + func.__name__.replace('__','/').lstrip('/')
     spec = inspect.getargspec(func)
     argc = len(spec[0]) - len(spec[3] or [])
