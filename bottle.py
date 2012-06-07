@@ -1083,8 +1083,15 @@ class BaseRequest(object):
         else:
             fb = self.body
         data = cgi.FieldStorage(fp=fb, environ=safe_env, keep_blank_values=True)
-        for item in (data.list or [])[:self.MAX_PARAMS]:
-            post[item.name] = item if item.filename else item.value
+        for item_name in data.keys()[:self.MAX_PARAMS]:
+            item = data[item_name]
+            try:
+                post[item_name] = item if item.filename else item.value
+            except AttributeError: # item is list
+                value = data.getvalue(item_name)
+                if item_name.endswith('[]'):
+                    item_name = item_name[:-2]
+                post[item_name] = value
         return post
 
     @property
