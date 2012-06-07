@@ -33,7 +33,6 @@ __license__ = 'MIT'
 ### CUT HERE (see setup.py)
 
 import sqlite3
-import inspect
 from bottle import HTTPError, PluginError
 
 
@@ -70,19 +69,16 @@ class SQLitePlugin(object):
         dictrows = conf.get('dictrows', self.dictrows)
         keyword = conf.get('keyword', self.keyword)
 
-        # Test if the original callback accepts a 'db' keyword.
-        # Ignore it if it does not need a database handle.
-        args = inspect.getargspec(route.callback)[0]
-        if keyword not in args:
-            return callback
-
         def wrapper(*args, **kwargs):
+            if "context" not in kwargs:
+                return callback(*args, **kwargs)
+
             # Connect to the database
             db = sqlite3.connect(dbfile)
             # This enables column access by name: row['column_name']
             if dictrows: db.row_factory = sqlite3.Row
             # Add the connection handle as a keyword argument.
-            kwargs[keyword] = db
+            kwargs['context'][keyword] = db
 
             try:
                 rv = callback(*args, **kwargs)
