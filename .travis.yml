@@ -1,0 +1,20 @@
+language: python
+
+python:
+  - 2.5
+  - 2.6
+  - 2.7
+  - 3.2
+  - pypy
+
+matrix:
+  include:
+    - python: 2.7
+      env: MOST="true"
+
+install:
+  - pip install --use-mirrors Mako jinja2
+  - if [[ $TRAVIS_PYTHON_VERSION == '2.5' ]]; then pip install --use-mirrors simplejson; fi
+  - if [[ $MOST == 'true' ]]; then pip install --use-mirrors Mako jinja2 eventlet cherrypy paste twisted tornado; fi
+
+script: python test/testall.py
