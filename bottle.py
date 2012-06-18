@@ -683,6 +683,23 @@ class Bottle(object):
         self.router.add(route.rule, route.method, route, name=route.name)
         if DEBUG: route.prepare()
 
+    def maxage(self, seconds):
+        def maxage_decorator(callback, seconds=seconds):
+            @functools.wraps(callback)
+            def set_expires(*args, **kwargs):
+                expires = int(time.time() + seconds)
+                expires = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(expires)) 
+                response.set_header('Expires', expires)
+                if seconds:
+                    pragma = 'public'
+                else:
+                    pragma = 'no-cache, must-revalidate'
+                response.set_header('Cache-Control', "%s, max-age=%s" % (pragma, seconds))
+                response.set_header('Pragma', pragma)
+                return callback(*args, **kwargs)
+            return set_expires
+        return maxage_decorator
+
     def route(self, path=None, method='GET', callback=None, name=None,
               apply=None, skip=None, **config):
         """ A decorator to bind a function to a request URL. Example::
@@ -2297,6 +2314,7 @@ hook      = make_default_app_wrapper('hook')
 install   = make_default_app_wrapper('install')
 uninstall = make_default_app_wrapper('uninstall')
 url       = make_default_app_wrapper('get_url')
+maxage    = make_default_app_wrapper('maxage')
 
 
 
