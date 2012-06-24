@@ -1965,7 +1965,7 @@ class ResourceManager(object):
         if path in self.path:
             self.path.remove(path)
         if create and not os.path.isdir(path):
-            os.mkdirs(path)
+            os.mkdir(path)
         if index is None:
             self.path.append(path)
         else:
