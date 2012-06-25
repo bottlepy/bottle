@@ -60,6 +60,7 @@ except ImportError: # pragma: no cover
 py   = sys.version_info
 py3k = py >= (3,0,0)
 py25 = py <  (2,6,0)
+py31 = (3,1,0) <= py < (3,2,0)
 
 # Workaround for the missing "as" keyword in py3k.
 def _e(): return sys.exc_info()[1]
@@ -116,10 +117,8 @@ def touni(s, enc='utf8', err='strict'):
 tonat = touni if py3k else tob
 
 # 3.2 fixes cgi.FieldStorage to accept bytes (which makes a lot of sense).
-#     but defaults to utf-8 (which is not always true)
 # 3.1 needs a workaround.
-NCTextIOWrapper = None
-if (3,0,0) < py < (3,2,0):
+if py31:
     from io import TextIOWrapper
     class NCTextIOWrapper(TextIOWrapper):
         def close(self): pass # Keep wrapped buffer open.
@@ -1080,11 +1079,11 @@ class BaseRequest(object):
         for key in ('REQUEST_METHOD', 'CONTENT_TYPE', 'CONTENT_LENGTH'):
             if key in self.environ: safe_env[key] = self.environ[key]
         args = dict(fp=self.body, environ=safe_env, keep_blank_values=True)
-        if py >= (3,2,0):
-            args['encoding'] = 'ISO-8859-1'
-        if NCTextIOWrapper:
+        if py31:
             args['fp'] = NCTextIOWrapper(args['fp'], encoding='ISO-8859-1',
                                          newline='\n')
+        elif py3k:
+            args['encoding'] = 'ISO-8859-1'
         data = cgi.FieldStorage(**args)
         for item in (data.list or [])[:self.MAX_PARAMS]:
             post[item.name] = item if item.filename else item.value
