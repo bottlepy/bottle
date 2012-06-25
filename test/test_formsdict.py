@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# '瓶' means "Bottle"
 
 import unittest
 from bottle import FormsDict, touni, tob
@@ -6,10 +7,9 @@ from bottle import FormsDict, touni, tob
 class TestFormsDict(unittest.TestCase):
     def test_attr_access(self):
         """ FomsDict.attribute returs string values as unicode. """
-        data = u'äöü'.encode('utf8')
-        d = FormsDict(py2=data, py3=data.decode('latin1'))
-        self.assertEqual(u'äöü', d.py2)
-        self.assertEqual(u'äöü', d.py3)
+        d = FormsDict(py2=tob('瓶'), py3=tob('瓶').decode('latin1'))
+        self.assertEqual(touni('瓶'), d.py2)
+        self.assertEqual(touni('瓶'), d.py3)
 
     def test_attr_missing(self):
         """ FomsDict.attribute returs u'' on missing keys. """
@@ -18,12 +18,10 @@ class TestFormsDict(unittest.TestCase):
 
     def test_attr_unicode_error(self):
         """ FomsDict.attribute returs u'' on UnicodeError. """
-        d = FormsDict(latin=u'äöü'.encode('latin1'))
-        self.assertEqual(u'', d.latin)
+        d = FormsDict(latin=touni('öäüß').encode('latin1'))
+        self.assertEqual(touni(''), d.latin)
         d.input_encoding = 'latin1'
-        self.assertEqual(u'äöü', d.latin)
-
-
+        self.assertEqual(touni('öäüß'), d.latin)
 
    
 if __name__ == '__main__': #pragma: no cover

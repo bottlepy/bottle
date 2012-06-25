@@ -137,17 +137,20 @@ class TestRequest(unittest.TestCase):
 
     def test_get(self):
         """ Environ: GET data """ 
-        request = BaseRequest({'QUERY_STRING':'a=a&a=1&b=b&c=c'})
+        qs = tonat(tob('a=a&a=1&b=b&c=c&cn=瓶'), 'latin1')
+        request = BaseRequest({'QUERY_STRING':qs})
         self.assertTrue('a' in request.query)
         self.assertTrue('b' in request.query)
         self.assertEqual(['a','1'], request.query.getall('a'))
         self.assertEqual(['b'], request.query.getall('b'))
         self.assertEqual('1', request.query['a'])
         self.assertEqual('b', request.query['b'])
+        self.assertEqual(tonat(tob('瓶'), 'latin1'), request.query['cn'])
+        self.assertEqual(touni('瓶'), request.query.cn)
         
     def test_post(self):
         """ Environ: POST data """ 
-        sq = u'a=a&a=1&b=b&c=&d'.encode('utf8')
+        sq = tob('a=a&a=1&b=b&c=&d&cn=瓶')
         e = {}
         wsgiref.util.setup_testing_defaults(e)
         e['wsgi.input'].write(sq)
@@ -163,6 +166,8 @@ class TestRequest(unittest.TestCase):
         self.assertEqual('b', request.POST['b'])
         self.assertEqual('', request.POST['c'])
         self.assertEqual('', request.POST['d'])
+        self.assertEqual(tonat(tob('瓶'), 'latin1'), request.POST['cn'])
+        self.assertEqual(touni('瓶'), request.POST.cn)
 
     def test_bodypost(self):
         sq = u'foobar'.encode('utf8')

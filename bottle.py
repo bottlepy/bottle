@@ -88,7 +88,8 @@ except ImportError: # pragma: no cover
                 raise ImportError("JSON support requires Python 2.6 or simplejson.")
             json_lds = json_dumps
 
-py3k = sys.version_info >= (3,0,0)
+py = sys.version_info
+py3k = py >= (3,0,0)
 NCTextIOWrapper = None
 
 if sys.version_info < (2,6,0):
@@ -127,6 +128,15 @@ def try_update_wrapper(wrapper, wrapped, *a, **ka):
     try: # Bug: functools breaks if wrapper is an instane method
         functools.update_wrapper(wrapper, wrapped, *a, **ka)
     except AttributeError: pass
+
+# 3.2 fixes cgi.FieldStorage to accept bytes (which makes a lot of sense).
+#     but defaults to utf-8 (which is not always true)
+# 3.1 needs a workaround.
+NCTextIOWrapper = None
+if (3,0,0) < py < (3,2,0):
+    from io import TextIOWrapper
+    class NCTextIOWrapper(TextIOWrapper):
+        def close(self): pass # Keep wrapped buffer open.
 
 # Backward compatibility
 def depr(message):
@@ -1020,11 +1030,13 @@ class BaseRequest(DictMixin):
         safe_env = {'QUERY_STRING':''} # Build a safe environment for cgi
         for key in ('REQUEST_METHOD', 'CONTENT_TYPE', 'CONTENT_LENGTH'):
             if key in self.environ: safe_env[key] = self.environ[key]
+        args = dict(fp=self.body, environ=safe_env, keep_blank_values=True)
+        if py >= (3,2,0):
+            args['encoding'] = 'ISO-8859-1'
         if NCTextIOWrapper:
-            fb = NCTextIOWrapper(self.body, encoding='ISO-8859-1', newline='\n')
-        else:
-            fb = self.body
-        data = cgi.FieldStorage(fp=fb, environ=safe_env, keep_blank_values=True)
+            args['fp'] = NCTextIOWrapper(args['fp'], encoding='ISO-8859-1',
+                                         newline='\n')
+        data = cgi.FieldStorage(**args)
         for item in (data.list or [])[:self.MAX_PARAMS]:
             post[item.name] = item if item.filename else item.value
         return post
