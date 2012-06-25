@@ -116,6 +116,7 @@ def touni(s, enc='utf8', err='strict'):
 tonat = touni if py3k else tob
 
 # 3.2 fixes cgi.FieldStorage to accept bytes (which makes a lot of sense).
+#     but defaults to utf-8 (which is not always true)
 # 3.1 needs a workaround.
 NCTextIOWrapper = None
 if (3,0,0) < py < (3,2,0):
@@ -1078,11 +1079,13 @@ class BaseRequest(object):
         safe_env = {'QUERY_STRING':''} # Build a safe environment for cgi
         for key in ('REQUEST_METHOD', 'CONTENT_TYPE', 'CONTENT_LENGTH'):
             if key in self.environ: safe_env[key] = self.environ[key]
+        args = dict(fp=self.body, environ=safe_env, keep_blank_values=True)
+        if py >= (3,2,0):
+            args['encoding'] = 'ISO-8859-1'
         if NCTextIOWrapper:
-            fb = NCTextIOWrapper(self.body, encoding='ISO-8859-1', newline='\n')
-        else:
-            fb = self.body
-        data = cgi.FieldStorage(fp=fb, environ=safe_env, keep_blank_values=True)
+            args['fp'] = NCTextIOWrapper(args['fp'], encoding='ISO-8859-1',
+                                         newline='\n')
+        data = cgi.FieldStorage(**args)
         for item in (data.list or [])[:self.MAX_PARAMS]:
             post[item.name] = item if item.filename else item.value
         return post
