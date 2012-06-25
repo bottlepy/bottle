@@ -568,14 +568,14 @@ Here is an example for a simple file upload form:
 Unicode issues
 -----------------------
 
-In **Python 2** all keys and values are byte-strings. If you need unicode, you can call :meth:`FormDict.getunicode` or fetch values via attribute access. Both methods try to decode the string (default: utf8) and return an empty string if that fails. No need to catch :exc:`UnicodeError`::
+In **Python 2** all keys and values are byte-strings. If you need unicode, you can call :meth:`FormsDict.getunicode` or fetch values via attribute access. Both methods try to decode the string (default: utf8) and return an empty string if that fails. No need to catch :exc:`UnicodeError`::
 
   >>> request.query['city']
   'G\xc3\xb6ttingen'  # A utf8 byte string
   >>> request.query.city
   u'Göttingen'        # The same string as unicode
 
-In **Python 3** all strings are unicode, but HTTP is a byte-based wire protocol. The server has to decode the byte strings somehow before they are passed to the application. To be on the safe side, WSGI suggests ISO-8859-1 (aka latin1), a reversible single-byte codec that can be re-encoded with a different encoding later. Bottle does that for :meth:`FormDict.getunicode` and attribute access, but not for the dict-access methods. These return the unchanged values as provided by the server implementation, which is probably not what you want.
+In **Python 3** all strings are unicode, but HTTP is a byte-based wire protocol. The server has to decode the byte strings somehow before they are passed to the application. To be on the safe side, WSGI suggests ISO-8859-1 (aka latin1), a reversible single-byte codec that can be re-encoded with a different encoding later. Bottle does that for :meth:`FormsDict.getunicode` and attribute access, but not for the dict-access methods. These return the unchanged values as provided by the server implementation, which is probably not what you want.
 
   >>> request.query['city']
   'GÃ¶ttingen' # An utf8 string provisionally decoded as ISO-8859-1 by the server
