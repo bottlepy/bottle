@@ -39,4 +39,24 @@ Dynamic Routes and Slashes
 
 In :ref:`dynamic route syntax <tutorial-dynamic-routes>`, a placeholder token (``:name``) matches everything up to the next slash. This equals to ``[^/]+`` in regular expression syntax. To accept slashes too, you have to add a custom regular pattern to the placeholder. An example: ``/images/:filepath#.*#`` would match ``/images/icons/error.png`` but ``/images/:filename`` won't.
 
+Problems with reverse proxies
+--------------------------------------------------------------------------------
+
+Redirects and url-building only works if bottle knows the public address and location of your application. If you run bottle locally behind a reverse proxy or load balancer, some information might get lost along the way. For example, the ``wsgi.url_scheme`` value or the ``Host`` header might reflect the local request by your proxy, not the real request by the client. Here is a small WSGI middleware snippet that helps to fix these values::
+
+  def fix_environ_middleware(app):
+    def fixed_app(environ, start_response):
+      environ['wsgi.url_scheme'] = 'https'
+      environ['HTTP_X_FORWARDED_HOST'] = 'example.com'
+      return app(environ, start_response)
+    return https_app
+
+  app = bottle.default_app()    
+  app.wsgi = fix_environ_middleware(app.wsgi)
+  
+
+
+
+
+
 
