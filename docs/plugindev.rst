@@ -23,7 +23,7 @@ Of course, this is just a simplification. Plugins can do a lot more than just de
     import time
 
     def stopwatch(callback):
-        def wrapper(*args, **kawrgs):
+        def wrapper(*args, **kwargs):
             start = time.time()
             body = callback(*args, **kwargs)
             end = time.time()
