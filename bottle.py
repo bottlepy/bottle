@@ -70,10 +70,6 @@ try: from collections import MutableMapping as DictMixin
 except ImportError: # pragma: no cover
     from UserDict import DictMixin
 
-try: from urlparse import parse_qsl
-except ImportError: # pragma: no cover
-    from cgi import parse_qsl
-
 try: import cPickle as pickle
 except ImportError: # pragma: no cover
     import pickle
@@ -98,6 +94,7 @@ if sys.version_info < (2,6,0):
 
 if py3k: # pragma: no cover
     json_loads = lambda s: json_lds(touni(s))
+    urlunquote = functools.partial(urlunquote, encoding='latin1')
     # See Request.POST
     from io import BytesIO
     def touni(x, enc='utf8', err='strict'):
@@ -930,8 +927,8 @@ class BaseRequest(DictMixin):
             values are sometimes called "URL arguments" or "GET parameters", but
             not to be confused with "URL wildcards" as they are provided by the
             :class:`Router`. '''
-        pairs = parse_qsl(self.query_string, keep_blank_values=True)
         get = self.environ['bottle.get'] = FormsDict()
+        pairs = _parse_qsl(self.environ.get('QUERY_STRING', ''))
         for key, value in pairs[:self.MAX_PARAMS]:
             get[key] = value
         return get
@@ -1027,6 +1024,15 @@ class BaseRequest(DictMixin):
             instances of :class:`cgi.FieldStorage` (file uploads).
         """
         post = FormsDict()
+        # We default to application/x-www-form-urlencoded for everything that
+        # is not multipart and take the fast path (also: 3.1 workaround)
+        if not self.content_type.startswith('multipart/'):
+            maxlen = max(0, min(self.content_length, self.MEMFILE_MAX))
+            pairs = _parse_qsl(tonat(self.body.read(maxlen), 'latin1'))
+            for key, value in pairs[:self.MAX_PARAMS]:
+                post[key] = value
+            return post
+
         safe_env = {'QUERY_STRING':''} # Build a safe environment for cgi
         for key in ('REQUEST_METHOD', 'CONTENT_TYPE', 'CONTENT_LENGTH'):
             if key in self.environ: safe_env[key] = self.environ[key]
@@ -1109,6 +1115,11 @@ class BaseRequest(DictMixin):
             set this header. Otherwise, the real length of the body is unknown
             and -1 is returned. In this case, :attr:`body` will be empty. '''
         return int(self.environ.get('CONTENT_LENGTH') or -1)
+
+    @property
+    def content_type(self):
+        ''' The Content-Type header as a lowercase-string (default: empty). '''
+        return self.environ.get('CONTENT_TYPE', '').lower()
 
     @property
     def is_xhr(self):
@@ -1905,6 +1916,18 @@ def parse_auth(header):
             return user, pwd
     except (KeyError, ValueError):
         return None
+
+
+def _parse_qsl(qs):
+    r = []
+    for pair in qs.replace(';','&').split('&'):
+        if not pair: continue
+        nv = pair.split('=', 1)
+        if len(nv) != 2: nv.append('')
+        key = urlunquote(nv[0].replace('+', ' '))
+        value = urlunquote(nv[1].replace('+', ' '))
+        r.append((key, value))
+    return r
 
 
 def _lscmp(a, b):

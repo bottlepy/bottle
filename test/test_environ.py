@@ -137,7 +137,7 @@ class TestRequest(unittest.TestCase):
 
     def test_get(self):
         """ Environ: GET data """ 
-        qs = tonat(tob('a=a&a=1&b=b&c=c&cn=瓶'), 'latin1')
+        qs = tonat(tob('a=a&a=1&b=b&c=c&cn=%e7%93%b6'), 'latin1')
         request = BaseRequest({'QUERY_STRING':qs})
         self.assertTrue('a' in request.query)
         self.assertTrue('b' in request.query)
@@ -150,7 +150,7 @@ class TestRequest(unittest.TestCase):
         
     def test_post(self):
         """ Environ: POST data """ 
-        sq = tob('a=a&a=1&b=b&c=&d&cn=瓶')
+        sq = tob('a=a&a=1&b=b&c=&d&cn=%e7%93%b6')
         e = {}
         wsgiref.util.setup_testing_defaults(e)
         e['wsgi.input'].write(sq)
