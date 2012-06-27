@@ -12,7 +12,7 @@ template engines - all in a single file and with no dependencies other than the
 Python Standard Library.
 
 Homepage and documentation: http://bottlepy.org/
-License: MIT (see LICENSE.txt)
+License: MIT (see LICENSE)
 
 Installation and Dependencies
 -----------------------------
