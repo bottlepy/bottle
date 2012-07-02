@@ -1940,7 +1940,7 @@ class ResourceManager(object):
     ''' This class manages a list of search paths and helps to find and open
         aplication-bound resources (files).
 
-        :param base: default value for same-named :meth:`add_path` parameter.
+        :param base: default value for :meth:`add_path` calls.
         :param opener: callable used to open resources.
         :param cachemode: controls which lookups are cached. One of 'all',
                          'found' or 'none'.
@@ -1953,20 +1953,20 @@ class ResourceManager(object):
 
         #: A list of search paths. See :meth:`add_path` for details.
         self.path = []
-        #: A cache for resolved paths. `res.cache.clear()`` clears the cache.
+        #: A cache for resolved paths. ``res.cache.clear()`` clears the cache.
         self.cache = {}
 
     def add_path(self, path, base=None, index=None, create=False):
-        ''' Add a new path to the list of search paths. Return False if it does
-            not exist.
+        ''' Add a new path to the list of search paths. Return False if the
+            path does not exist.
 
-            :param path: The new search path. Relative paths are turned into an
-                absolute and normalized form. If the path looks like a file (not
-                ending in `/`), the filename is stripped off.
+            :param path: The new search path. Relative paths are turned into
+                an absolute and normalized form. If the path looks like a file
+                (not ending in `/`), the filename is stripped off.
             :param base: Path used to absolutize relative search paths.
-                Defaults to `:attr:base` which defaults to ``./``.
-            :param index: Position within the list of search paths. Defaults to
-                last index (appends to the list).
+                Defaults to :attr:`base` which defaults to ``os.getcwd()``.
+            :param index: Position within the list of search paths. Defaults
+                to last index (appends to the list).
             :param create: Create non-existent search paths. Off by default.
 
             The `base` parameter makes it easy to reference files installed
@@ -1980,12 +1980,13 @@ class ResourceManager(object):
         if path in self.path:
             self.path.remove(path)
         if create and not os.path.isdir(path):
-            os.mkdir(path)
+            os.makedirs(path)
         if index is None:
             self.path.append(path)
         else:
             self.path.insert(index, path)
         self.cache.clear()
+        return os.path.exists(path)
 
     def __iter__(self):
         ''' Iterate over all existing files in all registered paths. '''

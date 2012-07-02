@@ -13,6 +13,18 @@ class TestResouceManager(unittest.TestCase):
             rm.add_path(test)
             self.assertEqual(rm.path, ['/foo/bar/'])
 
+    def test_path_create(self):
+        import tempfile, shutil
+        tempdir = tempfile.mkdtemp()
+        try:
+            rm = ResourceManager()
+            exists = rm.add_path('./test/', base=tempdir)
+            self.assertEqual(exists, False)
+            exists = rm.add_path('./test2/', base=tempdir, create=True)
+            self.assertEqual(exists, True)
+        finally:
+            shutil.rmtree(tempdir)
+
     def test_path_absolutize(self):
         tests = ('./foo/bar/', './foo/bar/baz', './foo/baz/../bar/blub')
         abspath = os.path.abspath('./foo/bar/') + os.sep
