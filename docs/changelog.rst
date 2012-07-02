@@ -10,18 +10,22 @@ Release 0.11
 
 .. warning: Not released yet.
 
-* Support for partial downloads (``Range`` header) in :func:`static_file`.
 * Native support for Python 2.x and 3.x syntax. No need to run 2to3 anymore.
+* Support for partial downloads (``Range`` header) in :func:`static_file`.
+* The new :class:`ResourceManager` interface helps locating files bundled with the application.
+* Added a server adapter for `waitress <http://docs.pylonsproject.org/projects/waitress/en/latest/>`_.
+* New :meth:`Bottle.merge` method to install all routes from one application into another.
+* New :attr:`BaseRequest.app` property to get the application object that handles that request.
+* Added :meth:`FormsDict.decode()` to get an all-unicode version (needed by WTForms).
+* :class:`MultiDict` and subclasses are now pickle-able.
 
 .. rubric:: API Changes
 
-These APIs will most probably change in the next release.
-
 * :attr:`Response.status` is a read-write property that can be assigned either a numeric status code or a status string with a reason phrase (``200 OK``). The return value is now a string to better match existing APIs (WebOb, werkzeug). To be absolutely clear, you can use the read-only properties :attr:`BaseResponse.status_code` and :attr:`BaseResponse.status_line`.
-* :func:`run` is now a method of :class:`Bottle`. The module-level :func:`run` function still works and can be used further.
-* New :meth:`Bottle.merge` method to install all routes from one application into another.
-* New :attr:`BaseRequest.app` property to get the application object that handles that request.
 
+.. rubric:: API Deprecations
+
+* :class:`SimpleTALTemplate` is now deprecating. There seems to be no demand.
 
 Release 0.10
 ==============
