@@ -176,7 +176,7 @@ You can add your own filters as well. See :doc:`Routing` for details.
 
 .. versionchanged:: 0.10
 
-The new rule syntax was introduced in **Bottle 0.10** to simplify some common use cases, but the old syntax still works and you can find lot code examples still using it. The differences are best described by example:
+The new rule syntax was introduced in **Bottle 0.10** to simplify some common use cases, but the old syntax still works and you can find a lot of code examples still using it. The differences are best described by example:
 
 =================== ====================
 Old Syntax          New Syntax
