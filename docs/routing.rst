@@ -99,8 +99,8 @@ In a second step, the request method is checked. If no exact match is found, and
 
 Here is an example where this might bite you::
 
-    @route('/:action/:name', method='GET')
-    @route('/save/:name', method='POST')
+    @route('/<action>/<name>', method='GET')
+    @route('/save/<name>', method='POST')
 
 The second route will never hit. Even POST requests don't arrive at the second route because the request method is checked in a separate step. The router stops at the first route which matches the request path, then checks for a valid request method, can't find one and raises a 405 error.
 
