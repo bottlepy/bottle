@@ -1118,7 +1118,7 @@ class BaseRequest(object):
             but the fragment is always empty because it is not visible to the
             server. '''
         env = self.environ
-        http = env.get('wsgi.url_scheme', 'http')
+        http = env.get('HTTP_X_FORWARDED_PROTO') or env.get('wsgi.url_scheme', 'http')
         host = env.get('HTTP_X_FORWARDED_HOST') or env.get('HTTP_HOST')
         if not host:
             # HTTP 1.1 requires a Host-header. This is for HTTP/1.0 clients.
