@@ -754,7 +754,7 @@ Plugins and Sub-Applications
 Most plugins are specific to the application they were installed to. Consequently, they should not affect sub-applications mounted with :meth:`Bottle.mount`. Here is an example::
 
     root = Bottle()
-    root.mount(apps.blog, '/blog')
+    root.mount('/blog', apps.blog)
 
     @root.route('/contact', template='contact')
     def contact():
@@ -766,7 +766,7 @@ Whenever you mount an application, Bottle creates a proxy-route on the main-appl
 
 This behavior is intended as a sane default, but can be overridden. The following example re-activates all plugins for a specific proxy-route::
 
-    root.mount(apps.blog, '/blog', skip=None)
+    root.mount('/blog', apps.blog, skip=None)
 
 But there is a snag: The plugin sees the whole sub-application as a single route, namely the proxy-route mentioned above. In order to affect each individual route of the sub-application, you have to install the plugin to the mounted application explicitly.
 
