@@ -203,9 +203,10 @@ The POST method is commonly used for HTML form submission. This example shows ho
 
     @get('/login') # or @route('/login')
     def login_form():
-        return '''<form method="POST">
+        return '''<form method="POST" action="/login">
                     <input name="name"     type="text" />
                     <input name="password" type="password" />
+                    <input type="submit" />
                   </form>'''
 
     @post('/login') # or @route('/login', method='POST')
