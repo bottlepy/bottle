@@ -122,6 +122,11 @@ if py31:
     class NCTextIOWrapper(TextIOWrapper):
         def close(self): pass # Keep wrapped buffer open.
 
+# The truth-value of cgi.FieldStorage is misleading.
+class FieldStorage(cgi.FieldStorage):
+    def __nonzero__(self):
+        return bool(self.list or self.file)
+
 # A bug in functools causes it to break if the wrapper is an instance method
 def update_wrapper(wrapper, wrapped, *a, **ka):
     try: functools.update_wrapper(wrapper, wrapped, *a, **ka)
@@ -1092,7 +1097,7 @@ class BaseRequest(object):
                                          newline='\n')
         elif py3k:
             args['encoding'] = 'ISO-8859-1'
-        data = cgi.FieldStorage(**args)
+        data = FieldStorage(**args)
         for item in (data.list or [])[:self.MAX_PARAMS]:
             post[item.name] = item if item.filename else item.value
         return post

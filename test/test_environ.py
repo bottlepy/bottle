@@ -285,6 +285,8 @@ class TestRequest(unittest.TestCase):
         self.assertTrue('file2' in request.files)
         self.assertTrue('file2' not in request.forms)
         self.assertEqual('filename2.py', request.POST['file2'].filename)
+        self.assertTrue(request.files.file2)
+        self.assertFalse(request.files.file77)
         # UTF-8 files
         x = request.POST['file2'].file.read()
         if (3,2,0) > sys.version_info >= (3,0,0):
