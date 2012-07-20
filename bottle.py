@@ -3089,21 +3089,22 @@ def template(*args, **kwargs):
     or directly (as keyword arguments).
     '''
     tpl = args[0] if args else None
-    template_adapter = kwargs.pop('template_adapter', SimpleTemplate)
+    adapter = kwargs.pop('template_adapter', SimpleTemplate)
+    lookup = kwargs.pop('template_lookup', TEMPLATE_PATH)
+    tplid = (id(lookup), tpl)
     if tpl not in TEMPLATES or DEBUG:
         settings = kwargs.pop('template_settings', {})
-        lookup = kwargs.pop('template_lookup', TEMPLATE_PATH)
-        if isinstance(tpl, template_adapter):
-            TEMPLATES[tpl] = tpl
-            if settings: TEMPLATES[tpl].prepare(**settings)
+        if isinstance(tpl, adapter):
+            TEMPLATES[tplid] = tpl
+            if settings: TEMPLATES[tplid].prepare(**settings)
         elif "\n" in tpl or "{" in tpl or "%" in tpl or '$' in tpl:
-            TEMPLATES[tpl] = template_adapter(source=tpl, lookup=lookup, **settings)
+            TEMPLATES[tplid] = adapter(source=tpl, lookup=lookup, **settings)
         else:
-            TEMPLATES[tpl] = template_adapter(name=tpl, lookup=lookup, **settings)
-    if not TEMPLATES[tpl]:
+            TEMPLATES[tplid] = adapter(name=tpl, lookup=lookup, **settings)
+    if not TEMPLATES[tplid]:
         abort(500, 'Template (%s) not found' % tpl)
     for dictarg in args[1:]: kwargs.update(dictarg)
-    return TEMPLATES[tpl].render(kwargs)
+    return TEMPLATES[tplid].render(kwargs)
 
 mako_template = functools.partial(template, template_adapter=MakoTemplate)
 cheetah_template = functools.partial(template, template_adapter=CheetahTemplate)
