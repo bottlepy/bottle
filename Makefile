@@ -18,6 +18,7 @@ docs:
 	cd docs/; $(MAKE) html
 
 test:
+	which python
 	python test/testall.py
 
 test_all: test_25 test_26 test_27 test_31 test_32

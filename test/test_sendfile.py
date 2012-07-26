@@ -1,5 +1,6 @@
 import unittest
 from bottle import static_file, HTTPError, HTTPResponse, request, response, parse_date, parse_range_header, Bottle, tob
+import bottle
 import wsgiref.util
 import os
 import os.path
@@ -34,9 +35,7 @@ class TestSendFile(unittest.TestCase):
     def setUp(self):
         e = dict()
         wsgiref.util.setup_testing_defaults(e)
-        b = Bottle()
-        request.bind(e)
-        response.bind()
+        self.context = bottle.app().test_context(e)
 
     def test_valid(self):
         """ SendFile: Valid requests"""
@@ -55,7 +54,7 @@ class TestSendFile(unittest.TestCase):
         finally:
             os.close(fp)
             os.unlink(fn)
-            
+
     def test_mime(self):
         """ SendFile: Mime Guessing"""
         f = static_file(os.path.basename(__file__), root='./')
@@ -65,27 +64,36 @@ class TestSendFile(unittest.TestCase):
 
     def test_ims(self):
         """ SendFile: If-Modified-Since"""
-        request.environ['HTTP_IF_MODIFIED_SINCE'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime())
-        res = static_file(os.path.basename(__file__), root='./')
+        with self.context:
+            request.environ['HTTP_IF_MODIFIED_SINCE'] = \
+                time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime())
+            res = static_file(os.path.basename(__file__), root='./')
         self.assertEqual(304, res.status)
-        self.assertEqual(int(os.stat(__file__).st_mtime), parse_date(res.headers['Last-Modified']))
-        self.assertAlmostEqual(int(time.time()), parse_date(res.headers['Date']))
-        request.environ['HTTP_IF_MODIFIED_SINCE'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(100))
-        self.assertEqual(open(__file__,'rb').read(), static_file(os.path.basename(__file__), root='./').output.read())
+        self.assertEqual(int(os.stat(__file__).st_mtime),
+                         parse_date(res.headers['Last-Modified']))
+        self.assertAlmostEqual(int(time.time()),
+                               parse_date(res.headers['Date']))
+        with self.context:
+            request.environ['HTTP_IF_MODIFIED_SINCE'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(100))
+            res = static_file(os.path.basename(__file__), root='./')
+        self.assertEqual(open(__file__,'rb').read(), res.output.read())
 
     def test_download(self):
         """ SendFile: Download as attachment """
         basename = os.path.basename(__file__)
         f = static_file(basename, root='./', download=True)
         self.assertEqual('attachment; filename="%s"' % basename, f.headers['Content-Disposition'])
-        request.environ['HTTP_IF_MODIFIED_SINCE'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(100))
-        f = static_file(os.path.basename(__file__), root='./')
+        with self.context:
+            request.environ['HTTP_IF_MODIFIED_SINCE'] =\
+              time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(100))
+            f = static_file(os.path.basename(__file__), root='./')
         self.assertEqual(open(__file__,'rb').read(), f.output.read())
 
     def test_range(self):
         basename = os.path.basename(__file__)
-        request.environ['HTTP_RANGE'] = 'bytes=10-25,-80'
-        f = static_file(basename, root='./')
+        with self.context:
+            request.environ['HTTP_RANGE'] = 'bytes=10-25,-80'
+            f = static_file(basename, root='./')
         c = open(basename, 'rb'); c.seek(10)
         self.assertEqual(c.read(16), tob('').join(f.output))
         self.assertEqual('bytes 10-25/%d' % len(open(basename, 'rb').read()),

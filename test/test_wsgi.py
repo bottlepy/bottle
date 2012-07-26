@@ -246,7 +246,8 @@ class TestRouteDecorator(ServerTestBase):
     def test_name(self):
         @bottle.route(name='foo')
         def test(x=5): return 'ok'
-        self.assertEquals('/test/6', bottle.url('foo', x=6))
+        with bottle.default_app().test_context({}):
+            self.assertEquals('/test/6', bottle.url('foo', x=6))
 
     def test_callback(self):
         def test(x=5): return str(x)
@@ -297,15 +298,15 @@ class TestDecorators(ServerTestBase):
         """ WSGI: Test route builder """
         def foo(): pass
         bottle.route('/a/:b/c', name='named')(foo)
-        bottle.request.environ['SCRIPT_NAME'] = ''
-        self.assertEqual('/a/xxx/c', bottle.url('named', b='xxx'))
-        self.assertEqual('/a/xxx/c', bottle.app().get_url('named', b='xxx'))
-        bottle.request.environ['SCRIPT_NAME'] = '/app'
-        self.assertEqual('/app/a/xxx/c', bottle.url('named', b='xxx'))
-        bottle.request.environ['SCRIPT_NAME'] = '/app/'
-        self.assertEqual('/app/a/xxx/c', bottle.url('named', b='xxx'))
-        bottle.request.environ['SCRIPT_NAME'] = 'app/'
-        self.assertEqual('/app/a/xxx/c', bottle.url('named', b='xxx'))
+        with bottle.default_app().test_context({'SCRIPT_NAME':''}):
+            self.assertEqual('/a/xxx/c', bottle.url('named', b='xxx'))
+            self.assertEqual('/a/xxx/c', bottle.app().get_url('named', b='xxx'))
+            bottle.request.environ['SCRIPT_NAME'] = '/app'
+            self.assertEqual('/app/a/xxx/c', bottle.url('named', b='xxx'))
+            bottle.request.environ['SCRIPT_NAME'] = '/app/'
+            self.assertEqual('/app/a/xxx/c', bottle.url('named', b='xxx'))
+            bottle.request.environ['SCRIPT_NAME'] = 'app/'
+            self.assertEqual('/app/a/xxx/c', bottle.url('named', b='xxx'))
 
     def test_autoroute(self):
         app = bottle.Bottle()

@@ -779,8 +779,6 @@ class Bottle(object):
     def _handle(self, environ):
         try:
             environ['bottle.app'] = self
-            request.bind(environ)
-            response.bind()
             route, args = self.router.match(environ)
             environ['route.handle'] = environ['bottle.route'] = route
             environ['route.url_args'] = args
@@ -839,7 +837,6 @@ class Bottle(object):
             elif hasattr(out, 'close') or not hasattr(out, '__iter__'):
                 return WSGIFileWrapper(out)
 
-        # Handle Iterables. We peek into them to detect their inner type.
         try:
             out = iter(out)
             first = next(out)
@@ -861,24 +858,36 @@ class Bottle(object):
         if isinstance(first, bytes):
             return itertools.chain([first], out)
         if isinstance(first, unicode):
-            return imap(lambda x: x.encode(response.charset),
+            charset = response.charset
+            return imap(lambda x: x.encode(charset),
                                   itertools.chain([first], out))
         return self._cast(HTTPError(500, 'Unsupported response type: %s'\
                                          % type(first)))
 
+    def test_context(self, environ):
+        environ['bottle.app'] = self
+        try:
+            route, args = self.router.match(environ)
+            environ['route.handle'] = environ['bottle.route'] = route
+            environ['route.url_args'] = args
+        except Exception:
+            pass
+        return RequestContext(environ)
+
     def wsgi(self, environ, start_response):
         """ The bottle WSGI-interface. """
         try:
-            out = self._cast(self._handle(environ))
-            # rfc2616 section 4.3
-            if response._status_code in (100, 101, 204, 304)\
-            or request.method == 'HEAD':
-                if hasattr(out, 'close'): out.close()
-                out = []
-            if isinstance(response._status_line, unicode):
-              response._status_line = str(response._status_line)
-            start_response(response._status_line, list(response.iter_headers()))
-            return out
+            with RequestContext(environ):
+                out = self._cast(self._handle(environ))
+                # rfc2616 section 4.3
+                if response._status_code in (100, 101, 204, 304)\
+                or request.method == 'HEAD':
+                    if hasattr(out, 'close'): out.close()
+                    out = []
+                if isinstance(response._status_line, unicode):
+                  response._status_line = str(response._status_line)
+                start_response(response._status_line, list(response.iter_headers()))
+                return out
         except (KeyboardInterrupt, SystemExit, MemoryError):
             raise
         except Exception:
@@ -1511,44 +1520,72 @@ class BaseResponse(object):
 #: Thread-local storage for :class:`LocalRequest` and :class:`LocalResponse`
 #: attributes.
 _lctx = threading.local()
+_context_error = RuntimeError('Request context not available. Please read '\
+                               'http://bottlepy.org/docs/dev/context.html '\
+                               'for details.')
 
-def local_property(name):
-    def fget(self):
-        try:
-            return getattr(_lctx, name)
-        except AttributeError:
-            raise RuntimeError("Request context not initialized.")
-    def fset(self, value): setattr(_lctx, name, value)
-    def fdel(self): delattr(_lctx, name)
+
+class RequestContext(object):
+    def __init__(self, environ):
+        self.environ  = environ
+        self.request  = Request(environ)
+        self.response = Response()
+
+    def __enter__(self):
+        self.parent, _lctx.context = getattr(_lctx, 'context', None), self
+
+    def __exit__(self, err_type=None, err_value=None, err_traceback=None):
+        if err_type and DEBUG: _lctx.last_exception_context = self
+        self.parent, _lctx.context = None, self.parent
+
+    push, pop = __enter__, __exit__
+
+
+def get_current_request():
+    ''' Return :class:`Request` currently associated with calling thread. '''
+    try: return _lctx.context.request
+    except AttributeError: raise _context_error
+
+
+def get_current_response():
+    ''' Return :class:`Response` currently associated with calling thread. '''
+    try: return _lctx.context.response
+    except AttributeError: raise _context_error
+
+
+def get_context():
+    ''' Return request context associated with calling thread, or None. '''
+    return getattr(_lctx, 'context', None)
+
+
+def _redirecting_property(getter, name):
+    def fget(self): return getattr(getter(), name)
+    def fset(self, value): setattr(getter(), name, value)
+    def fdel(self): delattr(getter(), name)
     return property(fget, fset, fdel,
-        'Thread-local property stored in :data:`_lctx.%s`' % name)
+        'Virtual property for %r.%s' % (getter, name))
 
 
 class LocalRequest(BaseRequest):
-    ''' A thread-local subclass of :class:`BaseRequest` with a different
-        set of attribues for each thread. There is usually only one global
-        instance of this class (:data:`request`). If accessed during a
-        request/response cycle, this instance always refers to the *current*
-        request (even on a multithreaded server). '''
-    bind = BaseRequest.__init__
-    environ = local_property('request_environ')
+    ''' A proxy object that always refers the *current* request (even on a
+        multi-threaded server). '''
+    def __init__(self): pass
+    environ = _redirecting_property(get_current_request, 'environ')
+    get_current = staticmethod(get_current_request)
 
 
 class LocalResponse(BaseResponse):
-    ''' A thread-local subclass of :class:`BaseResponse` with a different
-        set of attribues for each thread. There is usually only one global
-        instance of this class (:data:`response`). Its attributes are used
-        to build the HTTP response at the end of the request/response cycle.
-    '''
-    bind = BaseResponse.__init__
-    _status_line = local_property('response_status_line')
-    _status_code = local_property('response_status_code')
-    _cookies     = local_property('response_cookies')
-    _headers     = local_property('response_headers')
-    body         = local_property('response_body')
+    ''' A proxy object that always refers the *current* response (even on a
+        multi-threaded server). '''
+    def __init__(self): pass
+    _status_line = _redirecting_property(get_current_response, '_status_line')
+    _status_code = _redirecting_property(get_current_response, '_status_code')
+    _cookies     = _redirecting_property(get_current_response, '_cookies')
+    _headers     = _redirecting_property(get_current_response, '_headers')
+    body         = _redirecting_property(get_current_response, 'body')
 
-Response = LocalResponse # BC 0.9
-Request  = LocalRequest  # BC 0.9
+Response = BaseResponse
+Request  = BaseRequest
 
 
 
@@ -2070,6 +2107,7 @@ def static_file(filename, root, mimetype='auto', download=False):
     root = os.path.abspath(root) + os.sep
     filename = os.path.abspath(os.path.join(root, filename.strip('/\\')))
     header = dict()
+    time_format = "%a, %d %b %Y %H:%M:%S GMT"
 
     if not filename.startswith(root):
         return HTTPError(403, "Access denied.")
@@ -2091,29 +2129,36 @@ def static_file(filename, root, mimetype='auto', download=False):
 
     stats = os.stat(filename)
     header['Content-Length'] = clen = stats.st_size
-    lm = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(stats.st_mtime))
+    lm = time.strftime(time_format, time.gmtime(stats.st_mtime))
     header['Last-Modified'] = lm
 
-    ims = request.environ.get('HTTP_IF_MODIFIED_SINCE')
-    if ims:
-        ims = parse_date(ims.split(";")[0].strip())
-    if ims is not None and ims >= int(stats.st_mtime):
-        header['Date'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime())
-        return HTTPResponse(status=304, header=header)
+    context = get_context()
+    
+    if context:
+        ims = request.environ.get('HTTP_IF_MODIFIED_SINCE')
+        if ims:
+            ims = parse_date(ims.split(";")[0].strip())
+        if ims is not None and ims >= int(stats.st_mtime):
+            header['Date'] = time.strftime(time_format, time.gmtime())
+            return HTTPResponse(status=304, header=header)
 
-    body = '' if request.method == 'HEAD' else open(filename, 'rb')
+    if context and request.method == 'HEAD':
+        body = ''
+    else:
+        body = open(filename, 'rb')
 
     header["Accept-Ranges"] = "bytes"
-    ranges = request.environ.get('HTTP_RANGE')
-    if 'HTTP_RANGE' in request.environ:
-        ranges = list(parse_range_header(request.environ['HTTP_RANGE'], clen))
-        if not ranges:
-            return HTTPError(416, "Requested Range Not Satisfiable")
-        offset, end = ranges[0]
-        header["Content-Range"] = "bytes %d-%d/%d" % (offset, end-1, clen)
-        header["Content-Length"] = str(end-offset)
-        if body: body = _file_iter_range(body, offset, end-offset)
-        return HTTPResponse(body, header=header, status=206)
+    if context:
+        ranges = request.environ.get('HTTP_RANGE')
+        if ranges:
+            ranges = list(parse_range_header(ranges, clen))
+            if not ranges:
+                return HTTPError(416, "Requested Range Not Satisfiable")
+            offset, end = ranges[0]
+            header["Content-Range"] = "bytes %d-%d/%d" % (offset, end-1, clen)
+            header["Content-Length"] = str(end-offset)
+            if body: body = _file_iter_range(body, offset, end-offset)
+            return HTTPResponse(body, header=header, status=206)
     return HTTPResponse(body, header=header)
 
 

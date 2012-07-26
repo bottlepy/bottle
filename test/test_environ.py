@@ -403,16 +403,17 @@ class TestRequest(unittest.TestCase):
             BaseRequest.MAX_PARAMS = old_value
 
     def test_user_defined_attributes(self):
-        for cls in (BaseRequest, LocalRequest):
-            r = cls()
+        with bottle.default_app().test_context({}):
+            for cls in (BaseRequest, LocalRequest):
+                r = cls()
 
-            # New attributes go to the environ dict.
-            r.foo = 'somevalue'
-            self.assertEqual(r.foo, 'somevalue')
-            self.assertTrue('somevalue' in r.environ.values())
+                # New attributes go to the environ dict.
+                r.foo = 'somevalue'
+                self.assertEqual(r.foo, 'somevalue')
+                self.assertTrue('somevalue' in r.environ.values())
 
-            # Unknown attributes raise AttributeError.
-            self.assertRaises(AttributeError, getattr, r, 'somevalue')
+                # Unknown attributes raise AttributeError.
+                self.assertRaises(AttributeError, getattr, r, 'somevalue')
 
 
 
@@ -591,14 +592,14 @@ class TestRedirect(unittest.TestCase):
                 args[key.replace('_', '.', 1)] = args[key]
                 del args[key]
         env.update(args)
-        request.bind(env)
-        try:
-            bottle.redirect(target, **(query or {}))
-        except bottle.HTTPResponse:
-            r = _e()
-            self.assertEqual(status, r.status)
-            self.assertTrue(r.headers)
-            self.assertEqual(result, r.headers['Location'])
+        with bottle.default_app().test_context(env):
+            try:
+                bottle.redirect(target, **(query or {}))
+            except bottle.HTTPResponse:
+                r = _e()
+                self.assertEqual(status, r.status)
+                self.assertTrue(r.headers)
+                self.assertEqual(result, r.headers['Location'])
                 
     def test_absolute_path(self):
         self.assertRedirect('/', 'http://127.0.0.1/')
