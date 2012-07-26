@@ -1,7 +1,7 @@
 Bottle Web Framework
 ====================
 
-.. image:: http://bottlepy.org/bottle-logo.png
+.. image:: http://bottlepy.org/docs/dev/_static/logo_nav.png
   :alt: Bottle Logo
   :align: right
 
