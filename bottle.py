@@ -1259,7 +1259,7 @@ class BaseRequest(object):
             var = self.environ['bottle.request.ext.%s'%name]
             return var.__get__(self) if hasattr(var, '__get__') else var
         except KeyError:
-            raise AttributeError('Attribute %r not defined.' % name)       
+            raise AttributeError('Attribute %r not defined.' % name)
 
     def __setattr__(self, name, value):
         if name == 'environ': return object.__setattr__(self, name, value)
@@ -1976,7 +1976,7 @@ class ResourceManager(object):
 
             The `base` parameter makes it easy to reference files installed
             along with a python module or package::
-            
+
                 res.add_path('./resources/', __file__)
         '''
         base = os.path.abspath(os.path.dirname(base or self.base))
@@ -3081,6 +3081,197 @@ class SimpleTemplate(BaseTemplate):
         return ''.join(stdout)
 
 
+class SimpleTemplate(BaseTemplate):
+
+    def prepare(self, escape=None, encoding='utf8', debug=False, **kwargs):
+        if not escape:
+            def escape(x): return cgi.escape(unicode(x))
+        self.escape = escape
+        self.debug = debug
+        self.cache = {} # Cache for subtemplates
+        self.state = self.defaults.copy()
+        self.state.update({'_esc': escape, '_rebase': None,
+                           'Template': self.__class__})
+        if not self.source:
+            with open(self.filename, 'r') as fp:
+                self.source = fp.read()
+        if not self.filename:
+            self.filename = '<string>'
+        if not isinstance(self.source, unicode):
+            self.source = unicode(self.source, encoding)
+        self.code = str(StplParser(self.source).translate())
+        self.co = compile(self.code, self.filename, 'exec')
+
+    def render(self, *args, **kwargs):
+        """ Render the template using keyword arguments as local variables. """
+        for dictarg in args: kwargs.update(dictarg)
+        stdout = []
+        self.execute(stdout, kwargs)
+        return u''.join(stdout)
+
+    def _include(self, _env, _name, *a, **ka):
+        ''' Print a sub-template and return its namespace. '''
+        if _name not in self.cache:
+            self.cache[_name] = self.__class__(name=_name, lookup=self.lookup)
+        return self.cache[_name].execute(_env['_stdout'], _env, *a, **ka)
+
+    def _rebase(self, _env, _name, *a, **ka):
+        _env['_rebase'] = (_name, a, ka)
+
+    def execute(self, _stdout, *args, **kwargs):
+        # Build and setup the template namespace
+        env = self.state.copy()
+        for dictarg in args: env.update(dictarg)
+        env.update(kwargs)
+        env.update({'_stdout': _stdout, '_printlist': _stdout.extend,
+               'include': functools.partial(self._include, env),
+               'rebase': functools.partial(self._rebase, env),
+               '_esc': self.escape, 'get': env.get,
+               'setdefault': env.setdefault, 'defined': env.__contains__})
+        # Render template now.
+        eval(self.co, env)
+        # Check if template requested a rebase
+        if env['_rebase']:
+            subtpl, args, kwargs = env.pop('_rebase')
+            kwargs['body'] = ''.join(_stdout[:]) # save stdout for later use
+            del _stdout[:] # clear stdout but keep the reference
+            if subtpl not in self.cache:
+                self.cache[subtpl] = self.__class__(name=subtpl, lookup=self.lookup)
+            return self.cache[subtpl].execute(_stdout, env, *args, **kwargs)
+        return env
+
+class StplSyntaxError(TemplateError): pass
+
+class StplParser(object):
+    _re_cache = {}
+
+    # This huge pile of voodoo magic matches one of 7 Groups:
+    # 1: All kinds of python strings (just believe me)
+    _re_tok = '((?m)[urbURB]?(?:\'\'(?!\')|""(?!")|\'{6}|"{6}' \
+               '|\'(?:[^\\\\\']|\\\\.)+?\'|"(?:[^\\\\"]|\\\\.)+?"' \
+               '|\'{3}(?:[^\\\\]|\\\\.|\\n)+?\'{3}' \
+               '|"{3}(?:[^\\\\]|\\\\.|\\n)+?"{3}))'
+    _re_inl = _re_tok.replace('|\\n','') # Re-use of this pattern down below
+    # 2: Comments (until end of line, but not the newline itself)
+    _re_tok += '|(#.*)'
+    # 3,4: Keywords that start or continue a python block (only start of line)
+    _re_tok += '|^([ \\t]*(?:if|for|while|with|try|def|class)\\b)' \
+               '|^([ \\t]*(?:elif|else|except|finally)\\b)'
+    # 5: Our special 'end' keyword (but only if it stands alone)
+    _re_tok += '|((?:^|;)[ \\t]*end[ \\t]*(?=$|;|#))'
+    # 6: A customizable end-of-code-block template token (only end of line)
+    _re_tok += '|(%(block_close)s[ \\t]*(?=$))'
+    # 7: And finally, a single newline
+    _re_tok += '|(\\n)' # Match a single newline
+    # Find the start tokens of code areas in a template
+    _re_split = '(?m)^[ \t]*(?:(%(line_start)s)|(%(block_start)s))'
+    # Find inline statements (may contain python strings)
+    _re_inl = '%%(inline_start)s((?:%s|[^\'"\n]*?)+)%%(inline_end)s' % _re_inl
+
+    def __init__(self, source, syntax='<% %> % {{ }}'):
+        self.source, self.syntax = source, syntax
+        self.code_buffer, self.text_buffer = [], []
+        self.indent, self.indent_mod, self.lineno, self.offset = 0, 0, 1, 0
+        self.set_syntax(syntax)
+
+    def set_syntax(self, syntax):
+        if not syntax in self._re_cache:
+            names = 'block_start block_close line_start inline_start inline_end'
+            tokens = map(re.escape, syntax.split())
+            pattern_vars = dict(zip(names.split(), tokens))
+            patterns = (self._re_split, self._re_tok, self._re_inl)
+            patterns = [re.compile(p%pattern_vars) for p in patterns]
+            self._re_cache[syntax] = patterns
+        self.re_split, self.re_tok, self.re_inl = self._re_cache[syntax]
+
+    def translate(self):
+        if self.offset: raise RuntimeError('Parser is a one time instance.')
+        while True:
+            m = self.re_split.search(self.source[self.offset:])
+            if not m: break
+            text = self.source[self.offset:self.offset+m.start()]
+            self.text_buffer.append(text)
+            self.offset += m.end()
+            self.flush_text()
+            self.read_code(multiline=bool(m.group(2)))
+        self.text_buffer.append(self.source[self.offset:])
+        self.flush_text()
+        return ''.join(self.code_buffer)
+
+    def read_code(self, multiline):
+        code_line, comment, indent_mod, start_line = '', '', 0, self.lineno
+        while True:
+            m = self.re_tok.search(self.source[self.offset:])
+            if not m:
+                raise StplSyntaxError('Missing block-close token (e.g. %%>). '\
+                    'Block stated in line %d' % start_line)
+            code_line += self.source[self.offset:self.offset+m.start()]
+            self.offset += m.end()
+            _str, _com, _blk1, _blk2, _end, _cend, _nl = m.groups()
+            if _str:    # Python string
+                code_line += _str
+            elif _com:  # Python comment (up to EOL)
+                comment = _com
+            elif _blk1: # Start-block keyword (if/for/while/def/try/...)
+                code_line, self.indent_mod = _blk1, -1
+                self.indent += 1
+            elif _blk2: # Continue-block keyword (else/elif/except/...)
+                code_line, self.indent_mod = _blk2, -1
+            elif _end:  # The non-standard 'end'-keyword (ends a block)
+                self.indent -= 1
+            elif _cend: # The end-code-block template token (usually '%>')
+                if multiline: multiline = False
+                else: code_line += _cend
+            elif _nl:   # A single newline
+                self.write_code(code_line.strip(), comment)
+                self.lineno += 1
+                code_line, comment, self.indent_mod = '', '', 0
+                if not multiline:
+                    break
+
+    def flush_text(self):
+        text = ''.join(self.text_buffer)
+        del self.text_buffer[:]
+        if not text: return
+        parts, pos = [], 0
+        for m in self.re_inl.finditer(text):
+            prefix, pos = text[pos:m.start()], m.end()
+            if prefix:
+                parts.append('\\\n  '.join(map(repr, prefix.splitlines(True))))
+            if prefix.endswith('\n'): parts.append('\n  ')
+            inline = self.process_inline(m.group(1).strip())
+            if inline: parts.append(inline)
+        if pos < len(text):
+            prefix = text[pos:]
+            lines = prefix.splitlines(True)
+            if lines[-1].endswith('\\\\\n'): lines[-1] = lines[-1][:-3]
+            parts.append('\\\n  '.join(map(repr, lines)))
+        if parts:
+            code = '_printlist(%s)' % '(%s,)' % ', '.join(parts)
+        else:
+            code = ''
+        self.lineno += code.count('\n')+1
+        self.write_code(code)
+
+    def process_inline(self, chunk):
+        if chunk[0] == '!': return chunk.partition[1:]
+        return '_esc(%s)' % chunk
+
+    def write_code(self, code, comment=''):
+        parts = code.strip().split(None, 2)
+        if parts and parts[0] in ('include', 'rebase'):
+            print 'The include and rebase keywords are functions now.'
+            if len(parts) == 1:   code = "_printlist([body])"
+            elif len(parts) == 2: code = "_=%s(%r)" % tuple(parts)
+            else:                 code = "_=%s(%r, %s)" % tuple(parts)
+        #elif parts[0:2] == ['set', 'syntax']:
+        #    self.set_syntax(' '.join(parts[2:]+comment.split()))
+        #    code, comment = '', '#MACRO:' + code + comment
+        code = '  '*(self.indent+self.indent_mod) + code + comment + '#id%d' % self.indent + '\n'
+        self.code_buffer.append(code)
+
+
+
 def template(*args, **kwargs):
     '''
     Get a rendered template as a string iterator.
@@ -3200,7 +3391,7 @@ ERROR_PAGE_TEMPLATE = """
 %%end
 """ % __name__
 
-#: A thread-safe instance of :class:`LocalRequest`. If accessed from within a 
+#: A thread-safe instance of :class:`LocalRequest`. If accessed from within a
 #: request callback, this instance always refers to the *current* request
 #: (even on a multithreaded server).
 request = LocalRequest()
