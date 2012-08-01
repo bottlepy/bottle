@@ -2928,23 +2928,8 @@ class SimpleTALTemplate(BaseTemplate):
         return output.getvalue()
 
 
-class SimpleTemplate(BaseTemplate):
-    blocks = ('if', 'elif', 'else', 'try', 'except', 'finally', 'for', 'while',
-              'with', 'def', 'class')
-    dedent_blocks = ('elif', 'else', 'except', 'finally')
 
-    @lazy_attribute
-    def re_pytokens(cls):
-        ''' This matches comments and all kinds of quoted strings but does
-            NOT match comments (#...) within quoted strings. (trust me) '''
-        return re.compile(r'''
-            (''(?!')|""(?!")|'{6}|"{6}    # Empty strings (all 4 types)
-             |'(?:[^\\']|\\.)+?'          # Single quotes (')
-             |"(?:[^\\"]|\\.)+?"          # Double quotes (")
-             |'{3}(?:[^\\]|\\.|\n)+?'{3}  # Triple-quoted strings (')
-             |"{3}(?:[^\\]|\\.|\n)+?"{3}  # Triple-quoted strings (")
-             |\#.*                        # Comments
-            )''', re.VERBOSE)
+class SimpleTemplate(BaseTemplate):
 
     def prepare(self, escape_func=html_escape, noescape=False, **kwargs):
         self.cache = {}
@@ -2954,123 +2939,44 @@ class SimpleTemplate(BaseTemplate):
         if noescape:
             self._str, self._escape = self._escape, self._str
 
-    @classmethod
-    def split_comment(cls, code):
-        """ Removes comments (#...) from python code. """
-        if '#' not in code: return code
-        #: Remove comments only (leave quoted strings as they are)
-        subf = lambda m: '' if m.group(0)[0]=='#' else m.group(0)
-        return re.sub(cls.re_pytokens, subf, code)
-
     @cached_property
     def co(self):
         return compile(self.code, self.filename or '<string>', 'exec')
 
     @cached_property
     def code(self):
-        stack = [] # Current Code indentation
-        lineno = 0 # Current line of code
-        ptrbuffer = [] # Buffer for printable strings and token tuple instances
-        codebuffer = [] # Buffer for generated python code
-        multiline = dedent = oneline = False
         template = self.source or open(self.filename, 'rb').read()
+        parser = StplParser(touni(template))
+        code = parser.translate()
+        self.encoding = parser.encoding
+        return code
 
-        def yield_tokens(line):
-            for i, part in enumerate(re.split(r'\{\{(.*?)\}\}', line)):
-                if i % 2:
-                    if part.startswith('!'): yield 'RAW', part[1:]
-                    else: yield 'CMD', part
-                else: yield 'TXT', part
+    def _rebase(self, _env, _name, **kwargs):
+        _env['_rebase'] = (_name, kwargs)
 
-        def flush(): # Flush the ptrbuffer
-            if not ptrbuffer: return
-            cline = ''
-            for line in ptrbuffer:
-                for token, value in line:
-                    if token == 'TXT': cline += repr(value)
-                    elif token == 'RAW': cline += '_str(%s)' % value
-                    elif token == 'CMD': cline += '_escape(%s)' % value
-                    cline +=  ', '
-                cline = cline[:-2] + '\\\n'
-            cline = cline[:-2]
-            if cline[:-1].endswith('\\\\\\\\\\n'):
-                cline = cline[:-7] + cline[-1] # 'nobr\\\\\n' --> 'nobr'
-            cline = '_printlist([' + cline + '])'
-            del ptrbuffer[:] # Do this before calling code() again
-            code(cline)
+    def _include(self, _env, _name, **kwargs):
+        env = _env.copy()
 
-        def code(stmt):
-            for line in stmt.splitlines():
-                codebuffer.append('  ' * len(stack) + line.strip())
-
-        for line in template.splitlines(True):
-            lineno += 1
-            line = touni(line, self.encoding)
-            sline = line.lstrip()
-            if lineno <= 2:
-                m = re.match(r"%\s*#.*coding[:=]\s*([-\w.]+)", sline)
-                if m: self.encoding = m.group(1)
-                if m: line = line.replace('coding','coding (removed)')
-            if sline and sline[0] == '%' and sline[:2] != '%%':
-                line = line.split('%',1)[1].lstrip() # Full line following the %
-                cline = self.split_comment(line).strip()
-                cmd = re.split(r'[^a-zA-Z0-9_]', cline)[0]
-                flush() # You are actually reading this? Good luck, it's a mess :)
-                if cmd in self.blocks or multiline:
-                    cmd = multiline or cmd
-                    dedent = cmd in self.dedent_blocks # "else:"
-                    if dedent and not oneline and not multiline:
-                        cmd = stack.pop()
-                    code(line)
-                    oneline = not cline.endswith(':') # "if 1: pass"
-                    multiline = cmd if cline.endswith('\\') else False
-                    if not oneline and not multiline:
-                        stack.append(cmd)
-                elif cmd == 'end' and stack:
-                    code('#end(%s) %s' % (stack.pop(), line.strip()[3:]))
-                elif cmd == 'include':
-                    p = cline.split(None, 2)[1:]
-                    if len(p) == 2:
-                        code("_=_include(%s, _stdout, %s)" % (repr(p[0]), p[1]))
-                    elif p:
-                        code("_=_include(%s, _stdout)" % repr(p[0]))
-                    else: # Empty %include -> reverse of %rebase
-                        code("_printlist(_base)")
-                elif cmd == 'rebase':
-                    p = cline.split(None, 2)[1:]
-                    if len(p) == 2:
-                        code("globals()['_rebase']=(%s, dict(%s))" % (repr(p[0]), p[1]))
-                    elif p:
-                        code("globals()['_rebase']=(%s, {})" % repr(p[0]))
-                else:
-                    code(line)
-            else: # Line starting with text (not '%') or '%%' (escaped)
-                if line.strip().startswith('%%'):
-                    line = line.replace('%%', '%', 1)
-                ptrbuffer.append(yield_tokens(line))
-        flush()
-        return '\n'.join(codebuffer) + '\n'
-
-    def subtemplate(self, _name, _stdout, *args, **kwargs):
-        for dictarg in args: kwargs.update(dictarg)
+        if kwargs: env.update(kwargs)
         if _name not in self.cache:
             self.cache[_name] = self.__class__(name=_name, lookup=self.lookup)
-        return self.cache[_name].execute(_stdout, kwargs)
+        return self.cache[_name].execute(env['_stdout'], env)
 
-    def execute(self, _stdout, *args, **kwargs):
-        for dictarg in args: kwargs.update(dictarg)
+    def execute(self, _stdout, kwargs):
         env = self.defaults.copy()
-        env.update({'_stdout': _stdout, '_printlist': _stdout.extend,
-               '_include': self.subtemplate, '_str': self._str,
-               '_escape': self._escape, 'get': env.get,
-               'setdefault': env.setdefault, 'defined': env.__contains__})
         env.update(kwargs)
+        env.update({'_stdout': _stdout, '_printlist': _stdout.extend,
+               'include': functools.partial(self._include, env),
+               'rebase': functools.partial(self._rebase, env),
+               '_str': self._str, '_escape': self._escape, 'get': env.get,
+               'setdefault': env.setdefault, 'defined': env.__contains__,
+               '_rebase': None})
         eval(self.co, env)
-        if '_rebase' in env:
-            subtpl, rargs = env['_rebase']
-            rargs['_base'] = _stdout[:] #copy stdout
+        if env.get('_rebase'):
+            subtpl, rargs = env.pop('_rebase')
+            rargs['body'] = ''.join(_stdout) #copy stdout
             del _stdout[:] # clear stdout
-            return self.subtemplate(subtpl,_stdout,rargs)
+            return self._include(env, subtpl, **rargs)
         return env
 
     def render(self, *args, **kwargs):
@@ -3081,66 +2987,8 @@ class SimpleTemplate(BaseTemplate):
         return ''.join(stdout)
 
 
-class SimpleTemplate(BaseTemplate):
-
-    def prepare(self, escape=None, encoding='utf8', debug=False, **kwargs):
-        if not escape:
-            def escape(x): return cgi.escape(unicode(x))
-        self.escape = escape
-        self.debug = debug
-        self.cache = {} # Cache for subtemplates
-        self.state = self.defaults.copy()
-        self.state.update({'_esc': escape, '_rebase': None,
-                           'Template': self.__class__})
-        if not self.source:
-            with open(self.filename, 'r') as fp:
-                self.source = fp.read()
-        if not self.filename:
-            self.filename = '<string>'
-        if not isinstance(self.source, unicode):
-            self.source = unicode(self.source, encoding)
-        self.code = str(StplParser(self.source).translate())
-        self.co = compile(self.code, self.filename, 'exec')
-
-    def render(self, *args, **kwargs):
-        """ Render the template using keyword arguments as local variables. """
-        for dictarg in args: kwargs.update(dictarg)
-        stdout = []
-        self.execute(stdout, kwargs)
-        return u''.join(stdout)
-
-    def _include(self, _env, _name, *a, **ka):
-        ''' Print a sub-template and return its namespace. '''
-        if _name not in self.cache:
-            self.cache[_name] = self.__class__(name=_name, lookup=self.lookup)
-        return self.cache[_name].execute(_env['_stdout'], _env, *a, **ka)
-
-    def _rebase(self, _env, _name, *a, **ka):
-        _env['_rebase'] = (_name, a, ka)
-
-    def execute(self, _stdout, *args, **kwargs):
-        # Build and setup the template namespace
-        env = self.state.copy()
-        for dictarg in args: env.update(dictarg)
-        env.update(kwargs)
-        env.update({'_stdout': _stdout, '_printlist': _stdout.extend,
-               'include': functools.partial(self._include, env),
-               'rebase': functools.partial(self._rebase, env),
-               '_esc': self.escape, 'get': env.get,
-               'setdefault': env.setdefault, 'defined': env.__contains__})
-        # Render template now.
-        eval(self.co, env)
-        # Check if template requested a rebase
-        if env['_rebase']:
-            subtpl, args, kwargs = env.pop('_rebase')
-            kwargs['body'] = ''.join(_stdout[:]) # save stdout for later use
-            del _stdout[:] # clear stdout but keep the reference
-            if subtpl not in self.cache:
-                self.cache[subtpl] = self.__class__(name=subtpl, lookup=self.lookup)
-            return self.cache[subtpl].execute(_stdout, env, *args, **kwargs)
-        return env
-
 class StplSyntaxError(TemplateError): pass
+
 
 class StplParser(object):
     _re_cache = {}
@@ -3170,9 +3018,11 @@ class StplParser(object):
 
     def __init__(self, source, syntax='<% %> % {{ }}'):
         self.source, self.syntax = source, syntax
+        self.encoding = 'utf8'
         self.code_buffer, self.text_buffer = [], []
-        self.indent, self.indent_mod, self.lineno, self.offset = 0, 0, 1, 0
+        self.lineno, self.offset = 1, 0
         self.set_syntax(syntax)
+        self.indent, self.indent_mod = 0, 0
 
     def set_syntax(self, syntax):
         if not syntax in self._re_cache:
@@ -3188,23 +3038,31 @@ class StplParser(object):
         if self.offset: raise RuntimeError('Parser is a one time instance.')
         while True:
             m = self.re_split.search(self.source[self.offset:])
-            if not m: break
-            text = self.source[self.offset:self.offset+m.start()]
-            self.text_buffer.append(text)
-            self.offset += m.end()
-            self.flush_text()
-            self.read_code(multiline=bool(m.group(2)))
+            if m:
+                text = self.source[self.offset:self.offset+m.start()]
+                self.text_buffer.append(text)
+                self.offset += m.end()
+                if self.source[self.offset] == '%': # Escaped code stuff
+                    line, sep, _ = self.source[self.offset+1:].partition('\n')
+                    self.text_buffer.append(m.group(0)+line+sep)
+                    self.offset += len(line+sep)+1
+                    continue
+                self.flush_text()
+                self.read_code(multiline=bool(m.group(2)))
+            else: break
         self.text_buffer.append(self.source[self.offset:])
         self.flush_text()
         return ''.join(self.code_buffer)
 
     def read_code(self, multiline):
-        code_line, comment, indent_mod, start_line = '', '', 0, self.lineno
+        code_line, comment, start_line = '', '', self.lineno
         while True:
             m = self.re_tok.search(self.source[self.offset:])
             if not m:
-                raise StplSyntaxError('Missing block-close token (e.g. %%>). '\
-                    'Block stated in line %d' % start_line)
+                code_line += self.source[self.offset:]
+                self.offset = len(self.source)
+                self.write_code(code_line.strip(), comment)
+                return
             code_line += self.source[self.offset:self.offset+m.start()]
             self.offset += m.end()
             _str, _com, _blk1, _blk2, _end, _cend, _nl = m.groups()
@@ -3222,7 +3080,7 @@ class StplParser(object):
             elif _cend: # The end-code-block template token (usually '%>')
                 if multiline: multiline = False
                 else: code_line += _cend
-            elif _nl:   # A single newline
+            else: # \n
                 self.write_code(code_line.strip(), comment)
                 self.lineno += 1
                 code_line, comment, self.indent_mod = '', '', 0
@@ -3233,11 +3091,11 @@ class StplParser(object):
         text = ''.join(self.text_buffer)
         del self.text_buffer[:]
         if not text: return
-        parts, pos = [], 0
+        parts, pos, nl = [], 0, '\\\n'+'  '*self.indent
         for m in self.re_inl.finditer(text):
             prefix, pos = text[pos:m.start()], m.end()
             if prefix:
-                parts.append('\\\n  '.join(map(repr, prefix.splitlines(True))))
+                parts.append(nl.join(map(repr, prefix.splitlines(True))))
             if prefix.endswith('\n'): parts.append('\n  ')
             inline = self.process_inline(m.group(1).strip())
             if inline: parts.append(inline)
@@ -3245,31 +3103,40 @@ class StplParser(object):
             prefix = text[pos:]
             lines = prefix.splitlines(True)
             if lines[-1].endswith('\\\\\n'): lines[-1] = lines[-1][:-3]
-            parts.append('\\\n  '.join(map(repr, lines)))
+            parts.append(nl.join(map(repr, lines)))
         if parts:
-            code = '_printlist(%s)' % '(%s,)' % ', '.join(parts)
+            code = '_printlist((%s,))' % ', '.join(parts)
         else:
             code = ''
         self.lineno += code.count('\n')+1
         self.write_code(code)
 
     def process_inline(self, chunk):
-        if chunk[0] == '!': return chunk.partition[1:]
-        return '_esc(%s)' % chunk
+        if chunk[0] == '!': return '_str(%s)' % chunk[1:]
+        return '_escape(%s)' % chunk
 
-    def write_code(self, code, comment=''):
-        parts = code.strip().split(None, 2)
-        if parts and parts[0] in ('include', 'rebase'):
-            print 'The include and rebase keywords are functions now.'
-            if len(parts) == 1:   code = "_printlist([body])"
-            elif len(parts) == 2: code = "_=%s(%r)" % tuple(parts)
-            else:                 code = "_=%s(%r, %s)" % tuple(parts)
-        #elif parts[0:2] == ['set', 'syntax']:
-        #    self.set_syntax(' '.join(parts[2:]+comment.split()))
-        #    code, comment = '', '#MACRO:' + code + comment
-        code = '  '*(self.indent+self.indent_mod) + code + comment + '#id%d' % self.indent + '\n'
+    def write_code(self, line, comment=''):
+        line, comment = self.fix_brackward_compatibility(line, comment)
+        code  = '  ' * (self.indent+self.indent_mod)
+        code += line.lstrip() + comment + '\n'
         self.code_buffer.append(code)
 
+    def fix_brackward_compatibility(self, line, comment):
+        parts = line.strip().split(None, 2)
+        if parts and parts[0] in ('include', 'rebase'):
+            depr('The include and rebase keywords are functions now.')
+            if len(parts) == 1:   return "_printlist([body])", comment
+            elif len(parts) == 2: return "_=%s(%r)" % tuple(parts), comment
+            else:                 return "_=%s(%r, %s)" % tuple(parts), comment
+        if not line.strip() and self.lineno <= 2 and 'coding' in comment:
+            depr('Template encodings other than utf8 are no longer supported.')
+            m = re.match(r"#.*coding[:=]\s*([-\w.]+)", comment)
+            if not m: return line, comment
+            enc = m.group(1)
+            self.source = self.source.encode(self.encoding).decode(enc)
+            self.encoding = enc
+            return line, comment.replace('coding','coding*')
+        return line, comment
 
 
 def template(*args, **kwargs):

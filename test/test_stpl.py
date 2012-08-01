@@ -11,7 +11,7 @@ class TestSimpleTemplate(unittest.TestCase):
     def test_string(self):
         """ Templates: Parse string"""
         self.assertRenders('start {{var}} end', 'start var end', var='var')
-    
+
     def test_self_as_variable_name(self):
         self.assertRenders('start {{self}} end', 'start var end', {'self':'var'})
 
@@ -93,10 +93,10 @@ class TestSimpleTemplate(unittest.TestCase):
 
     def test_dedentbug(self):
         ''' One-Line dednet blocks should not change indention '''
-        t = '%if x: a="if"\n%else: a="else"\n{{a}}'
+        t = '%if x: a="if"\n%else: a="else"\n%end\n{{a}}'
         self.assertRenders(t, "if", x=True)
         self.assertRenders(t, "else", x=False)
-        t = '%if x:\n%a="if"\n%else: a="else"\n{{a}}'
+        t = '%if x:\n%a="if"\n%else: a="else"\n%end\n{{a}}'
         self.assertRenders(t, "if", x=True)
         self.assertRenders(t, "else", x=False)
         t = SimpleTemplate('%if x: a="if"\n%else: a="else"\n%end')
@@ -106,7 +106,7 @@ class TestSimpleTemplate(unittest.TestCase):
         ''' One-Line blocks should not change indention '''
         t = '%if x:\n%a=1\n%end\n{{a}}'
         self.assertRenders(t, "1", x=True)
-        t = '%if x: a=1\n{{a}}'
+        t = '%if x: a=1; end\n{{a}}'
         self.assertRenders(t, "1", x=True)
         t = '%if x:\n%a=1\n%else:\n%a=2\n%end\n{{a}}'
         self.assertRenders(t, "1", x=True)
@@ -114,16 +114,16 @@ class TestSimpleTemplate(unittest.TestCase):
         t = '%if x:   a=1\n%else:\n%a=2\n%end\n{{a}}'
         self.assertRenders(t, "1", x=True)
         self.assertRenders(t, "2", x=False)
-        t = '%if x:\n%a=1\n%else:   a=2\n{{a}}'
+        t = '%if x:\n%a=1\n%else:   a=2; end\n{{a}}'
         self.assertRenders(t, "1", x=True)
         self.assertRenders(t, "2", x=False)
-        t = '%if x:   a=1\n%else:   a=2\n{{a}}'
+        t = '%if x:   a=1\n%else:   a=2; end\n{{a}}'
         self.assertRenders(t, "1", x=True)
         self.assertRenders(t, "2", x=False)
 
     def test_onelineblocks(self):
         """ Templates: one line code blocks """
-        t = "start\n%a=''\n%for i in l: a += str(i)\n{{a}}\nend"
+        t = "start\n%a=''\n%for i in l: a += str(i); end\n{{a}}\nend"
         self.assertRenders(t, 'start\n123\nend', l=[1,2,3])
         self.assertRenders(t, 'start\n\nend', l=[])
 
@@ -134,7 +134,7 @@ class TestSimpleTemplate(unittest.TestCase):
     def test_nobreak(self):
         """ Templates: Nobreak statements"""
         self.assertRenders("start\\\\\n%pass\nend", 'startend')
-        
+
     def test_nonobreak(self):
         """ Templates: Escaped nobreak statements"""
         self.assertRenders("start\\\\\n\\\\\n%pass\nend", 'start\\\\\nend')
@@ -171,7 +171,7 @@ class TestSimpleTemplate(unittest.TestCase):
         """ Templates: Exceptions"""
         self.assertRaises(SyntaxError, lambda: SimpleTemplate('%for badsyntax').co)
         self.assertRaises(IndexError, SimpleTemplate('{{i[5]}}').render, i=[0])
-    
+
     def test_winbreaks(self):
         """ Templates: Test windows line breaks """
         self.assertRenders('%var+=1\r\n{{var}}\r\n', '6\r\n', var=5)
