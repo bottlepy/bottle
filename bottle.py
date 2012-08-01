@@ -2956,8 +2956,7 @@ class SimpleTemplate(BaseTemplate):
 
     def _include(self, _env, _name, **kwargs):
         env = _env.copy()
-
-        if kwargs: env.update(kwargs)
+        env.update(kwargs)
         if _name not in self.cache:
             self.cache[_name] = self.__class__(name=_name, lookup=self.lookup)
         return self.cache[_name].execute(env['_stdout'], env)
@@ -2966,11 +2965,10 @@ class SimpleTemplate(BaseTemplate):
         env = self.defaults.copy()
         env.update(kwargs)
         env.update({'_stdout': _stdout, '_printlist': _stdout.extend,
-               'include': functools.partial(self._include, env),
-               'rebase': functools.partial(self._rebase, env),
-               '_str': self._str, '_escape': self._escape, 'get': env.get,
-               'setdefault': env.setdefault, 'defined': env.__contains__,
-               '_rebase': None})
+            'include': functools.partial(self._include, env),
+            'rebase': functools.partial(self._rebase, env), '_rebase': None,
+            '_str': self._str, '_escape': self._escape, 'get': env.get,
+            'setdefault': env.setdefault, 'defined': env.__contains__ })
         eval(self.co, env)
         if env.get('_rebase'):
             subtpl, rargs = env.pop('_rebase')
@@ -2981,9 +2979,10 @@ class SimpleTemplate(BaseTemplate):
 
     def render(self, *args, **kwargs):
         """ Render the template using keyword arguments as local variables. """
-        for dictarg in args: kwargs.update(dictarg)
-        stdout = []
-        self.execute(stdout, kwargs)
+        env = {}; stdout = []
+        for dictarg in args: env.update(dictarg)
+        env.update(kwargs)
+        self.execute(stdout, env)
         return ''.join(stdout)
 
 
@@ -3016,9 +3015,9 @@ class StplParser(object):
     # Find inline statements (may contain python strings)
     _re_inl = '%%(inline_start)s((?:%s|[^\'"\n]*?)+)%%(inline_end)s' % _re_inl
 
-    def __init__(self, source, syntax='<% %> % {{ }}'):
-        self.source, self.syntax = source, syntax
-        self.encoding = 'utf8'
+    def __init__(self, source, syntax='<% %> % {{ }}', encoding='utf8'):
+        self.source, self.encoding = touni(source, encoding), encoding
+        self.syntax = syntax
         self.code_buffer, self.text_buffer = [], []
         self.lineno, self.offset = 1, 0
         self.set_syntax(syntax)
