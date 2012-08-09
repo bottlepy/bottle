@@ -1268,7 +1268,7 @@ class BaseRequest(object):
             var = self.environ['bottle.request.ext.%s'%name]
             return var.__get__(self) if hasattr(var, '__get__') else var
         except KeyError:
-            raise AttributeError('Attribute %r not defined.' % name)       
+            raise AttributeError('Attribute %r not defined.' % name)
 
     def __setattr__(self, name, value):
         if name == 'environ': return object.__setattr__(self, name, value)
@@ -1537,6 +1537,7 @@ class RequestContext(object):
     def __exit__(self, err_type=None, err_value=None, err_traceback=None):
         if err_type and DEBUG: _lctx.last_exception_context = self
         self.parent, _lctx.context = None, self.parent
+        _lctx._bc_copy = self # BC for 0.10
 
     push, pop = __enter__, __exit__
 
@@ -1544,18 +1545,26 @@ class RequestContext(object):
 def get_current_request():
     ''' Return :class:`Request` currently associated with calling thread. '''
     try: return _lctx.context.request
-    except AttributeError: raise _context_error
+    except AttributeError:
+        if hasattr(_lctx, '_bc_copy'):
+            depr(_context_error.args[0]) #bc for 0.10
+            return _lctx._bc_copy.request
+        raise _context_error
 
 
 def get_current_response():
     ''' Return :class:`Response` currently associated with calling thread. '''
     try: return _lctx.context.response
-    except AttributeError: raise _context_error
+    except AttributeError:
+        if hasattr(_lctx, '_bc_copy'):
+            depr(_context_error.args[0]) #bc for 0.10
+            return _lctx._bc_copy.response
+        raise _context_error
 
 
 def get_context():
     ''' Return request context associated with calling thread, or None. '''
-    return getattr(_lctx, 'context', None)
+    return getattr(_lctx, 'context', None) or getattr(_lctx, '_bc_copy', None)
 
 
 def _redirecting_property(getter, name):
@@ -2013,7 +2022,7 @@ class ResourceManager(object):
 
             The `base` parameter makes it easy to reference files installed
             along with a python module or package::
-            
+
                 res.add_path('./resources/', __file__)
         '''
         base = os.path.abspath(os.path.dirname(base or self.base))
@@ -2133,7 +2142,7 @@ def static_file(filename, root, mimetype='auto', download=False):
     header['Last-Modified'] = lm
 
     context = get_context()
-    
+
     if context:
         ims = request.environ.get('HTTP_IF_MODIFIED_SINCE')
         if ims:
@@ -3245,7 +3254,7 @@ ERROR_PAGE_TEMPLATE = """
 %%end
 """ % __name__
 
-#: A thread-safe instance of :class:`LocalRequest`. If accessed from within a 
+#: A thread-safe instance of :class:`LocalRequest`. If accessed from within a
 #: request callback, this instance always refers to the *current* request
 #: (even on a multithreaded server).
 request = LocalRequest()
