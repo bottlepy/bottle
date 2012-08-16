@@ -94,7 +94,7 @@ class TestOutputFilter(ServerTestBase):
             yield 'foo'
         self.assertBody('foo')
         self.assertHeader('Test-Header', 'test')
-        
+
     def test_empty_generator_callback(self):
         @self.app.route('/')
         def test():
@@ -102,7 +102,7 @@ class TestOutputFilter(ServerTestBase):
             bottle.response.headers['Test-Header'] = 'test'
         self.assertBody('')
         self.assertHeader('Test-Header', 'test')
-        
+
     def test_error_in_generator_callback(self):
         @self.app.route('/')
         def test():
@@ -113,7 +113,7 @@ class TestOutputFilter(ServerTestBase):
     def test_fatal_error_in_generator_callback(self):
         @self.app.route('/')
         def test():
-            yield 
+            yield
             raise KeyboardInterrupt()
         self.assertRaises(KeyboardInterrupt, self.assertStatus, 500)
 
@@ -123,28 +123,28 @@ class TestOutputFilter(ServerTestBase):
             yield
             bottle.abort(404, 'teststring')
         self.assertInBody('teststring')
-        self.assertInBody('Error 404: Not Found')
+        self.assertInBody('404 Not Found')
         self.assertStatus(404)
 
     def test_httpresponse_in_generator_callback(self):
         @self.app.route('/')
         def test():
             yield bottle.HTTPResponse('test')
-        self.assertBody('test')        
-        
+        self.assertBody('test')
+
     def test_unicode_generator_callback(self):
         @self.app.route('/')
         def test():
             yield touni('äöüß')
-        self.assertBody(touni('äöüß').encode('utf8')) 
-        
+        self.assertBody(touni('äöüß').encode('utf8'))
+
     def test_invalid_generator_callback(self):
         @self.app.route('/')
         def test():
             yield 1234
         self.assertStatus(500)
         self.assertInBody('Unsupported response type')
-        
+
     def test_cookie(self):
         """ WSGI: Cookies """
         @bottle.route('/cookie')

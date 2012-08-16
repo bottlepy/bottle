@@ -16,7 +16,7 @@ License: MIT (see LICENSE for details)
 from __future__ import with_statement
 
 __author__ = 'Marcel Hellkamp'
-__version__ = '0.11.dev'
+__version__ = '0.11.rc1'
 __license__ = 'MIT'
 
 # The gevent server adapter needs to patch some modules before they are imported
@@ -209,34 +209,6 @@ class lazy_attribute(object):
 class BottleException(Exception):
     """ A base class for exceptions used by bottle. """
     pass
-
-
-#TODO: This should subclass BaseRequest
-class HTTPResponse(BottleException):
-    """ Used to break execution and immediately finish the response """
-    def __init__(self, output='', status=200, header=None):
-        super(BottleException, self).__init__("HTTP Response %d" % status)
-        self.status = int(status)
-        self.output = output
-        self.headers = HeaderDict(header) if header else None
-
-    def apply(self, response):
-        if self.headers:
-            for key, value in self.headers.allitems():
-                response.headers[key] = value
-        response.status = self.status
-
-
-class HTTPError(HTTPResponse):
-    """ Used to generate an error page """
-    def __init__(self, code=500, output='Unknown Error', exception=None,
-                 traceback=None, header=None):
-        super(HTTPError, self).__init__(output, code, header)
-        self.exception = exception
-        self.traceback = traceback
-
-    def __repr__(self):
-        return tonat(template(ERROR_PAGE_TEMPLATE, e=self))
 
 
 
@@ -776,6 +748,9 @@ class Bottle(object):
             return self._handle(path)
         return self._handle({'PATH_INFO': path, 'REQUEST_METHOD': method.upper()})
 
+    def default_error_handler(self, res):
+        return tob(template(ERROR_PAGE_TEMPLATE, e=res))
+
     def _handle(self, environ):
         try:
             environ['bottle.app'] = self
@@ -824,7 +799,7 @@ class Bottle(object):
         # TODO: Handle these explicitly in handle() or make them iterable.
         if isinstance(out, HTTPError):
             out.apply(response)
-            out = self.error_handler.get(out.status, repr)(out)
+            out = self.error_handler.get(out.status_code, self.default_error_handler)(out)
             if isinstance(out, HTTPResponse):
                 depr('Error handlers must not return :exc:`HTTPResponse`.') #0.9
             return self._cast(out)
@@ -1547,9 +1522,35 @@ class LocalResponse(BaseResponse):
     _headers     = local_property('response_headers')
     body         = local_property('response_body')
 
-Response = LocalResponse # BC 0.9
-Request  = LocalRequest  # BC 0.9
+Request = BaseRequest
+Response = BaseResponse
 
+class HTTPResponse(Response, BottleException):
+    def __init__(self, body='', status=None, header=None, **headers):
+        if header or 'output' in headers:
+            depr('Call signature changed (for the better)')
+            if header: headers.update(header)
+            if 'output' in headers: body = headers.pop('output')
+        super(HTTPResponse, self).__init__(body, status, **headers)
+
+    def apply(self, response):
+        response.status = self.status
+        response._headers = self._headers
+        response.body = self.body
+
+    def _output(self, value=None):
+        depr('Use HTTPResponse.body instead of HTTPResponse.output')
+        if value is None: return self.body
+        self.body = value
+
+    output = property(_output, _output, doc='Alias for .body')
+
+class HTTPError(HTTPResponse):
+    default_status = 500
+    def __init__(self, status=None, body=None, exception=None, traceback=None, header=None, **headers):
+        self.exception = exception
+        self.traceback = traceback
+        super(HTTPError, self).__init__(body, status, header, **headers)
 
 
 
@@ -3166,11 +3167,10 @@ _HTTP_STATUS_LINES = dict((k, '%d %s'%(k,v)) for (k,v) in HTTP_CODES.items())
 ERROR_PAGE_TEMPLATE = """
 %%try:
     %%from %s import DEBUG, HTTP_CODES, request, touni
-    %%status_name = HTTP_CODES.get(e.status, 'Unknown').title()
     <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
     <html>
         <head>
-            <title>Error {{e.status}}: {{status_name}}</title>
+            <title>Error: {{e.status}}</title>
             <style type="text/css">
               html {background-color: #eee; font-family: sans;}
               body {background-color: #fff; border: 1px solid #ddd;
@@ -3179,10 +3179,10 @@ ERROR_PAGE_TEMPLATE = """
             </style>
         </head>
         <body>
-            <h1>Error {{e.status}}: {{status_name}}</h1>
+            <h1>Error: {{e.status}}</h1>
             <p>Sorry, the requested URL <tt>{{repr(request.url)}}</tt>
                caused an error:</p>
-            <pre>{{e.output}}</pre>
+            <pre>{{e.body}}</pre>
             %%if DEBUG and e.exception:
               <h2>Exception:</h2>
               <pre>{{repr(e.exception)}}</pre>
