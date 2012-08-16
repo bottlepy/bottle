@@ -9,7 +9,7 @@ Python Standard Library.
 
 Homepage and documentation: http://bottlepy.org/
 
-Copyright (c) 2011, Marcel Hellkamp.
+Copyright (c) 2012, Marcel Hellkamp.
 License: MIT (see LICENSE for details)
 """
 
@@ -1259,7 +1259,7 @@ class BaseRequest(object):
             var = self.environ['bottle.request.ext.%s'%name]
             return var.__get__(self) if hasattr(var, '__get__') else var
         except KeyError:
-            raise AttributeError('Attribute %r not defined.' % name)       
+            raise AttributeError('Attribute %r not defined.' % name)
 
     def __setattr__(self, name, value):
         if name == 'environ': return object.__setattr__(self, name, value)
@@ -1943,7 +1943,7 @@ class WSGIFileWrapper(object):
 
 class ResourceManager(object):
     ''' This class manages a list of search paths and helps to find and open
-        aplication-bound resources (files).
+        application-bound resources (files).
 
         :param base: default value for :meth:`add_path` calls.
         :param opener: callable used to open resources.
@@ -1972,11 +1972,10 @@ class ResourceManager(object):
                 Defaults to :attr:`base` which defaults to ``os.getcwd()``.
             :param index: Position within the list of search paths. Defaults
                 to last index (appends to the list).
-            :param create: Create non-existent search paths. Off by default.
 
             The `base` parameter makes it easy to reference files installed
             along with a python module or package::
-            
+
                 res.add_path('./resources/', __file__)
         '''
         base = os.path.abspath(os.path.dirname(base or self.base))
@@ -3200,7 +3199,7 @@ ERROR_PAGE_TEMPLATE = """
 %%end
 """ % __name__
 
-#: A thread-safe instance of :class:`LocalRequest`. If accessed from within a 
+#: A thread-safe instance of :class:`LocalRequest`. If accessed from within a
 #: request callback, this instance always refers to the *current* request
 #: (even on a multithreaded server).
 request = LocalRequest()
