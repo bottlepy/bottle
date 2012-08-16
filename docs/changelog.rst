@@ -15,7 +15,7 @@ Release 0.11
 * The new :class:`ResourceManager` interface helps locating files bundled with the application.
 * Added a server adapter for `waitress <http://docs.pylonsproject.org/projects/waitress/en/latest/>`_.
 * New :meth:`Bottle.merge` method to install all routes from one application into another.
-* New :attr:`BaseRequest.app` property to get the application object that handles that request.
+* New :attr:`BaseRequest.app` property to get the application object that handles a request.
 * Added :meth:`FormsDict.decode()` to get an all-unicode version (needed by WTForms).
 * :class:`MultiDict` and subclasses are now pickle-able.
 
@@ -95,7 +95,7 @@ This release is mostly backward compatible, but some APIs are marked deprecated 
 Release 0.8
 ============
 
-.. rubric:: API changes 
+.. rubric:: API changes
 
 These changes may break compatibility with previous versions.
 
@@ -121,7 +121,7 @@ These changes may break compatibility with previous versions.
 .. rubric:: New features
 
 
-This is an incomplete list of new features and improved functionality. 
+This is an incomplete list of new features and improved functionality.
 
 * The :class:`Request` object got new properties: :attr:`Request.body`, :attr:`Request.auth`, :attr:`Request.url`, :attr:`Request.header`, :attr:`Request.forms`, :attr:`Request.files`.
 * The :meth:`Response.set_cookie` and :meth:`Request.get_cookie` methods are now able to encode and decode python objects. This is called a *secure cookie* because the encoded values are signed and protected from changes on client side. All pickle-able data structures are allowed.
