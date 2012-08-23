@@ -560,7 +560,7 @@ class TestResponse(unittest.TestCase):
         self.assertEqual(['foo'], headers)
         self.assertEqual('foo', response['x-test'])
 
-        response.set_header('X-Test', 'bar', True)
+        response.add_header('X-Test', 'bar')
         headers = [value for name, value in response.headerlist
                    if name.title() == 'X-Test']
         self.assertEqual(['foo', 'bar'], headers)

@@ -757,7 +757,8 @@ class Bottle(object):
             request.bind(environ)
             response.bind()
             route, args = self.router.match(environ)
-            environ['route.handle'] = environ['bottle.route'] = route
+            environ['route.handle'] = route
+            environ['bottle.route'] = route
             environ['route.url_args'] = args
             return route.call(**args)
         except HTTPResponse:
@@ -847,12 +848,10 @@ class Bottle(object):
             out = self._cast(self._handle(environ))
             # rfc2616 section 4.3
             if response._status_code in (100, 101, 204, 304)\
-            or request.method == 'HEAD':
+            or environ['REQUEST_METHOD'] == 'HEAD':
                 if hasattr(out, 'close'): out.close()
                 out = []
-            if isinstance(response._status_line, unicode):
-              response._status_line = str(response._status_line)
-            start_response(response._status_line, list(response.iter_headers()))
+            start_response(response._status_line, response.headerlist)
             return out
         except (KeyboardInterrupt, SystemExit, MemoryError):
             raise
@@ -1285,8 +1284,6 @@ class BaseResponse(object):
                   'Content-Md5', 'Last-Modified'))}
 
     def __init__(self, body='', status=None, **headers):
-        self._status_line = None
-        self._status_code = None
         self._cookies = None
         self._headers = {'Content-Type': [self.default_content_type]}
         self.body = body
@@ -1329,7 +1326,7 @@ class BaseResponse(object):
             raise ValueError('String status line without a reason phrase.')
         if not 100 <= code <= 999: raise ValueError('Status code out of range.')
         self._status_code = code
-        self._status_line = status or ('%d Unknown' % code)
+        self._status_line = str(status or ('%d Unknown' % code))
 
     def _get_status(self):
         return self._status_line
@@ -1346,7 +1343,7 @@ class BaseResponse(object):
     def headers(self):
         ''' An instance of :class:`HeaderDict`, a case-insensitive dict-like
             view on the response headers. '''
-        self.__dict__['headers'] = hdict = HeaderDict()
+        hdict = HeaderDict()
         hdict.dict = self._headers
         return hdict
 
@@ -1360,13 +1357,10 @@ class BaseResponse(object):
             header with that name, return a default value. '''
         return self._headers.get(_hkey(name), [default])[-1]
 
-    def set_header(self, name, value, append=False):
+    def set_header(self, name, value):
         ''' Create a new response header, replacing any previously defined
             headers with the same name. '''
-        if append:
-            self.add_header(name, value)
-        else:
-            self._headers[_hkey(name)] = [str(value)]
+        self._headers[_hkey(name)] = [str(value)]
 
     def add_header(self, name, value):
         ''' Add an additional response header, not removing duplicates. '''
@@ -1375,16 +1369,7 @@ class BaseResponse(object):
     def iter_headers(self):
         ''' Yield (header, value) tuples, skipping headers that are not
             allowed with the current response status code. '''
-        headers = self._headers.items()
-        bad_headers = self.bad_headers.get(self._status_code)
-        if bad_headers:
-            headers = [h for h in headers if h[0] not in bad_headers]
-        for name, values in headers:
-            for value in values:
-                yield name, value
-        if self._cookies:
-            for c in self._cookies.values():
-                yield 'Set-Cookie', c.OutputString()
+        return self.headerlist
 
     def wsgiheader(self):
         depr('The wsgiheader method is deprecated. See headerlist.') #0.10
@@ -1393,7 +1378,16 @@ class BaseResponse(object):
     @property
     def headerlist(self):
         ''' WSGI conform list of (header, value) tuples. '''
-        return list(self.iter_headers())
+        out = []
+        headers = self._headers.items()
+        if self._status_code in self.bad_headers:
+            bad_headers = self.bad_headers[self._status_code]
+            headers = [h for h in headers if h[0] not in bad_headers]
+        out += [(name, val) for name, vals in headers for val in vals]
+        if self._cookies:
+            for c in self._cookies.values():
+                out.append(('Set-Cookie', c.OutputString()))
+        return out
 
     content_type = HeaderProperty('Content-Type')
     content_length = HeaderProperty('Content-Length', reader=int)
@@ -1534,8 +1528,10 @@ class HTTPResponse(Response, BottleException):
         super(HTTPResponse, self).__init__(body, status, **headers)
 
     def apply(self, response):
-        response.status = self.status
+        response._status_code = self._status_code
+        response._status_line = self._status_line
         response._headers = self._headers
+        response._cookies = self._cookies
         response.body = self.body
 
     def _output(self, value=None):
