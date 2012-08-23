@@ -782,7 +782,8 @@ class Bottle(object):
 
         # Empty output is done here
         if not out:
-            response['Content-Length'] = 0
+            if 'Content-Length' not in response:
+                response['Content-Length'] = 0
             return []
         # Join lists of byte or unicode strings. Mixed lists are NOT supported
         if isinstance(out, (tuple, list))\
@@ -793,15 +794,14 @@ class Bottle(object):
             out = out.encode(response.charset)
         # Byte Strings are just returned
         if isinstance(out, bytes):
-            response['Content-Length'] = len(out)
+            if 'Content-Length' not in response:
+                response['Content-Length'] = len(out)
             return [out]
         # HTTPError or HTTPException (recursive, because they may wrap anything)
         # TODO: Handle these explicitly in handle() or make them iterable.
         if isinstance(out, HTTPError):
             out.apply(response)
             out = self.error_handler.get(out.status_code, self.default_error_handler)(out)
-            if isinstance(out, HTTPResponse):
-                depr('Error handlers must not return :exc:`HTTPResponse`.') #0.9
             return self._cast(out)
         if isinstance(out, HTTPResponse):
             out.apply(response)
