@@ -31,7 +31,7 @@ Of course, this is just a simplification. Plugins can do a lot more than just de
             return body
         return wrapper
 
-    bottle.install(stopwatch)
+    install(stopwatch)
 
 This plugin measures the execution time for each request and adds an appropriate ``X-Exec-Time`` header to the response. As you can see, the plugin returns a wrapper and the wrapper calls the original callback recursively. This is how decorators usually work.
 
