@@ -2488,10 +2488,11 @@ class GeventServer(ServerAdapter):
           issues: No streaming, no pipelining, no SSL.
     """
     def run(self, handler):
-        from gevent import wsgi as wsgi_fast, pywsgi, monkey, local
-        if self.options.get('monkey', True):
-            if not threading.local is local.local: monkey.patch_all()
-        wsgi = wsgi_fast if self.options.get('fast') else pywsgi
+        from gevent import wsgi, pywsgi, local
+        if not isinstance(_lctx, local.local):
+            msg = "Bottle requires gevent.monkey.patch_all() (before import)"
+            raise RuntimeError(msg)
+        if not self.options.get('fast'): wsgi = pywsgi
         log = None if self.quiet else 'default'
         wsgi.WSGIServer((self.host, self.port), handler, log=log).serve_forever()
 
