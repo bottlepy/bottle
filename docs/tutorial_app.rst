@@ -250,21 +250,21 @@ The code needs to be extended to::
     @route('/new', method='GET')
     def new_item():
 
-    if request.GET.get('save','').strip():
+        if request.GET.get('save','').strip():
 
-        new = request.GET.get('task', '').strip()
-        conn = sqlite3.connect('todo.db')
-        c = conn.cursor()
+            new = request.GET.get('task', '').strip()
+            conn = sqlite3.connect('todo.db')
+            c = conn.cursor()
 
-        c.execute("INSERT INTO todo (task,status) VALUES (?,?)", (new,1))
-        new_id = c.lastrowid
+            c.execute("INSERT INTO todo (task,status) VALUES (?,?)", (new,1))
+            new_id = c.lastrowid
 
-        conn.commit()
-        c.close()
+            conn.commit()
+            c.close()
 
-        return '<p>The new task was inserted into the database, the ID is %s</p>' % new_id
-    else:
-        return template('new_task.tpl')
+            return '<p>The new task was inserted into the database, the ID is %s</p>' % new_id
+        else:
+            return template('new_task.tpl')
 
 
 ``new_task.tpl`` looks like this::
