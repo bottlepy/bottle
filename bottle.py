@@ -3026,10 +3026,30 @@ class SimpleTemplate(BaseTemplate):
                     code('#end(%s) %s' % (stack.pop(), line.strip()[3:]))
                 elif cmd == 'include':
                     p = cline.split(None, 2)[1:]
+
+                    if p:
+                        # Abillity to use {{}} in include statements so as to have variables in include
+                        include_tokens = []
+                        include_tokens.append(yield_tokens(p[0]))
+                        p[0] = ""
+                        first = True
+                        for token, value in include_tokens[0]:  # There will be always only one line in include_tokens
+                            if first:
+                                first = False
+                            else:
+                                p[0] += '+'
+
+                            if token == 'TXT':
+                                p[0] += repr(value)
+                            elif token == 'CMD':
+                                p[0] += '_escape(%s)' % value
+                            elif token == 'RAW':
+                                p[0] += '_str(%s)' % value
+
                     if len(p) == 2:
-                        code("_=_include(%s, _stdout, %s)" % (repr(p[0]), p[1]))
+                        code("_=_include(%s, _stdout, %s)" % (p[0], p[1]))
                     elif p:
-                        code("_=_include(%s, _stdout)" % repr(p[0]))
+                        code("_=_include(%s, _stdout)" % p[0])
                     else: # Empty %include -> reverse of %rebase
                         code("_printlist(_base)")
                 elif cmd == 'rebase':
