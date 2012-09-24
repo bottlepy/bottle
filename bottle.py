@@ -1565,7 +1565,7 @@ class JSONPlugin(object):
     def __init__(self, json_dumps=json_dumps):
         self.json_dumps = json_dumps
 
-    def apply(self, callback, context):
+    def apply(self, callback, route):
         dumps = self.json_dumps
         if not dumps: return callback
         def wrapper(*a, **ka):
@@ -1615,7 +1615,7 @@ class HooksPlugin(object):
         if ka.pop('reversed', False): hooks = hooks[::-1]
         return [hook(*a, **ka) for hook in hooks]
 
-    def apply(self, callback, context):
+    def apply(self, callback, route):
         if self._empty(): return callback
         def wrapper(*a, **ka):
             self.trigger('before_request')
