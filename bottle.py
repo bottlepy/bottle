@@ -122,10 +122,11 @@ if py31:
     class NCTextIOWrapper(TextIOWrapper):
         def close(self): pass # Keep wrapped buffer open.
 
-# The truth-value of cgi.FieldStorage is misleading.
+# File uploads (which are implemented as empty FiledStorage instances...)
+# have a negative truth value. That makes no sense, here is a fix.
 class FieldStorage(cgi.FieldStorage):
-    def __nonzero__(self):
-        return bool(self.list or self.file)
+    def __nonzero__(self): return bool(self.list or self.file)
+    if py3k: __bool__ = __nonzero__
 
 # A bug in functools causes it to break if the wrapper is an instance method
 def update_wrapper(wrapper, wrapped, *a, **ka):
