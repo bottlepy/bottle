@@ -130,7 +130,7 @@ The :class:`Request` class wraps a WSGI environment and provides helpful methods
 .. autoclass:: BaseRequest
    :members:
 
-The module-level :data:`bottle.request` is a proxy object (implemented in :cls:`LocalRequest`) and always refers to the `current` request, or in other words, the request that is currently processed by the request handler in the current thread. This `thread locality` ensures that you can safely use a global instance in a multi-threaded environment.
+The module-level :data:`bottle.request` is a proxy object (implemented in :class:`LocalRequest`) and always refers to the `current` request, or in other words, the request that is currently processed by the request handler in the current thread. This `thread locality` ensures that you can safely use a global instance in a multi-threaded environment.
 
 .. autoclass:: LocalRequest
    :members:
@@ -151,7 +151,7 @@ The :class:`Response` class stores the HTTP status code as well as headers and c
    :members:
 
 
-The following two classes can be raised as an exception. The most noticeable difference is that bottle invokes error handlers for :cls:`HTTPError`, but not for :cls:`HTTPResponse` or other response types.
+The following two classes can be raised as an exception. The most noticeable difference is that bottle invokes error handlers for :class:`HTTPError`, but not for :class:`HTTPResponse` or other response types.
 
 .. autoexception:: HTTPResponse
    :members:

@@ -519,10 +519,10 @@ class Bottle(object):
         #: If true, most exceptions are caught and returned as :exc:`HTTPError`
         self.catchall = catchall
 
-        #: A :cls:`ResourceManager` for application files
+        #: A :class:`ResourceManager` for application files
         self.resources = ResourceManager()
 
-        #: A :cls:`ConfigDict` for app specific configuration.
+        #: A :class:`ConfigDict` for app specific configuration.
         self.config = ConfigDict()
         self.config.autojson = autojson
 
@@ -1838,7 +1838,7 @@ class WSGIHeaderDict(DictMixin):
         Currently PEP 333, 444 and 3333 are supported. (PEP 444 is the only one
         that uses non-native strings.)
     '''
-    #: List of keys that do not have a 'HTTP_' prefix.
+    #: List of keys that do not have a ``HTTP_`` prefix.
     cgikeys = ('CONTENT_TYPE', 'CONTENT_LENGTH')
 
     def __init__(self, environ):
