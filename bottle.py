@@ -807,7 +807,7 @@ class Bottle(object):
             return self._cast(out)
         if isinstance(out, HTTPResponse):
             out.apply(response)
-            return self._cast(out.output)
+            return self._cast(out.body)
 
         # File-like objects.
         if hasattr(out, 'read'):
@@ -2066,7 +2066,7 @@ def static_file(filename, root, mimetype='auto', download=False):
     """
     root = os.path.abspath(root) + os.sep
     filename = os.path.abspath(os.path.join(root, filename.strip('/\\')))
-    header = dict()
+    headers = dict()
 
     if not filename.startswith(root):
         return HTTPError(403, "Access denied.")
@@ -2077,41 +2077,41 @@ def static_file(filename, root, mimetype='auto', download=False):
 
     if mimetype == 'auto':
         mimetype, encoding = mimetypes.guess_type(filename)
-        if mimetype: header['Content-Type'] = mimetype
-        if encoding: header['Content-Encoding'] = encoding
+        if mimetype: headers['Content-Type'] = mimetype
+        if encoding: headers['Content-Encoding'] = encoding
     elif mimetype:
-        header['Content-Type'] = mimetype
+        headers['Content-Type'] = mimetype
 
     if download:
         download = os.path.basename(filename if download == True else download)
-        header['Content-Disposition'] = 'attachment; filename="%s"' % download
+        headers['Content-Disposition'] = 'attachment; filename="%s"' % download
 
     stats = os.stat(filename)
-    header['Content-Length'] = clen = stats.st_size
+    headers['Content-Length'] = clen = stats.st_size
     lm = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(stats.st_mtime))
-    header['Last-Modified'] = lm
+    headers['Last-Modified'] = lm
 
     ims = request.environ.get('HTTP_IF_MODIFIED_SINCE')
     if ims:
         ims = parse_date(ims.split(";")[0].strip())
     if ims is not None and ims >= int(stats.st_mtime):
-        header['Date'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime())
-        return HTTPResponse(status=304, header=header)
+        headers['Date'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime())
+        return HTTPResponse(status=304, **headers)
 
     body = '' if request.method == 'HEAD' else open(filename, 'rb')
 
-    header["Accept-Ranges"] = "bytes"
+    headers["Accept-Ranges"] = "bytes"
     ranges = request.environ.get('HTTP_RANGE')
     if 'HTTP_RANGE' in request.environ:
         ranges = list(parse_range_header(request.environ['HTTP_RANGE'], clen))
         if not ranges:
             return HTTPError(416, "Requested Range Not Satisfiable")
         offset, end = ranges[0]
-        header["Content-Range"] = "bytes %d-%d/%d" % (offset, end-1, clen)
-        header["Content-Length"] = str(end-offset)
+        headers["Content-Range"] = "bytes %d-%d/%d" % (offset, end-1, clen)
+        headers["Content-Length"] = str(end-offset)
         if body: body = _file_iter_range(body, offset, end-offset)
-        return HTTPResponse(body, header=header, status=206)
-    return HTTPResponse(body, header=header)
+        return HTTPResponse(body, status=206, **headers)
+    return HTTPResponse(body, **headers)
 
 
 
