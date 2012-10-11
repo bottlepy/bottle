@@ -8,8 +8,12 @@ release: test_all
 	python setup.py --version | egrep -q -v '[a-zA-Z]' # Fail on dev/rc versions
 	git commit -e -m "Release of $(VERSION)"           # Fail on nothing to commit
 	git tag -a -m "Release of $(VERSION)" $(VERSION)   # Fail on existing tags
+	git push origin HEAD                               # Fail on out-of-sync upstream
+	git push tag $(VERSION)                            # Fail on dublicate tag
 	python setup.py sdist register upload              # Release to pypi
-	echo "Do not forget to: git push --tags"
+
+push: test_all
+	git push origin HEAD
 
 install:
 	python setup.py install
