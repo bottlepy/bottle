@@ -586,7 +586,7 @@ class TestRedirect(unittest.TestCase):
 
     def assertRedirect(self, target, result, query=None, status=303, **args):
         env = {'SERVER_PROTOCOL':'HTTP/1.1'}
-        for key in args:
+        for key in list(args):
             if key.startswith('wsgi'):
                 args[key.replace('_', '.', 1)] = args[key]
                 del args[key]
