@@ -2799,11 +2799,19 @@ class BaseTemplate(object):
     def search(cls, name, lookup=[]):
         """ Search name in all directories specified in lookup.
         First without, then with common extensions. Return first hit. """
-        if os.path.isfile(name): return name
+        if not lookup:
+            depr('The template lookup path list should not be empty.')
+            lookup = ['.']
+
+        if os.path.isabs(name) and os.path.isfile(name):
+            depr('Absolute template path names are deprecated.')
+            return os.path.abspath(name)
+
         for spath in lookup:
-            fname = os.path.join(spath, name)
-            if os.path.isfile(fname):
-                return fname
+            spath = os.path.abspath(spath) + os.sep
+            fname = os.path.abspath(os.path.join(spath, name))
+            if not fname.startswith(spath): continue
+            if os.path.isfile(fname): return fname
             for ext in cls.extensions:
                 if os.path.isfile('%s.%s' % (fname, ext)):
                     return '%s.%s' % (fname, ext)
