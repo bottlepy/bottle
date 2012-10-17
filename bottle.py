@@ -2044,7 +2044,10 @@ def redirect(url, code=None):
     if code is None:
         code = 303 if request.get('SERVER_PROTOCOL') == "HTTP/1.1" else 302
     location = urljoin(request.url, url)
-    raise HTTPResponse("", status=code, Location=location)
+    res = HTTPResponse("", status=code, Location=location)
+    if response._cookies:
+        res._cookies = response._cookies
+    raise res
 
 
 def _file_iter_range(fp, offset, bytes, maxread=1024*1024):
