@@ -407,8 +407,7 @@ class Router(object):
         allowed = [verb for verb in targets if verb != 'ANY']
         if 'GET' in allowed and 'HEAD' not in allowed:
             allowed.append('HEAD')
-        raise HTTPError(405, "Method not allowed.",
-                        header=[('Allow',",".join(allowed))])
+        raise HTTPError(405, "Method not allowed.", Allow=",".join(allowed))
 
 
 class Route(object):
@@ -2045,7 +2044,7 @@ def redirect(url, code=None):
     if code is None:
         code = 303 if request.get('SERVER_PROTOCOL') == "HTTP/1.1" else 302
     location = urljoin(request.url, url)
-    raise HTTPResponse("", status=code, header=dict(Location=location))
+    raise HTTPResponse("", status=code, Location=location)
 
 
 def _file_iter_range(fp, offset, bytes, maxread=1024*1024):
