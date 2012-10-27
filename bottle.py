@@ -1564,7 +1564,11 @@ def get_current_response():
 
 def get_context():
     ''' Return request context associated with calling thread, or None. '''
-    return getattr(_lctx, 'context', None) or getattr(_lctx, '_bc_copy', None)
+    try: return _lctx.context
+    except AttributeError:
+        try: return _lctx._bc_copy
+        except AttributeError:
+            return None
 
 
 def _redirecting_property(getter, name):
