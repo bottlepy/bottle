@@ -1,4 +1,6 @@
 #coding: utf-8
+from __future__ import with_statement
+
 import unittest
 import bottle
 from bottle import tob, touni

@@ -1,3 +1,5 @@
+from __future__ import with_statement
+
 import unittest
 from bottle import static_file, HTTPError, HTTPResponse, request, response, parse_date, parse_range_header, Bottle, tob
 import bottle

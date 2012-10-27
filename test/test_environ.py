@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 ''' Tests for the BaseRequest and BaseResponse objects and their subclasses. '''
+from __future__ import with_statement
 
 import unittest
 import sys, os.path
