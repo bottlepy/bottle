@@ -8,7 +8,7 @@ This is a list of third-party plugins that add extend Bottles core functionality
 
 Have a look at :ref:`plugins` for general questions about plugins (installation, usage). If you plan to develop a new plugin, the :doc:`/plugindev` may help you.
 
-`Bottle-Corc <http://cork.firelet.net/>`_
+`Bottle-Cork <http://cork.firelet.net/>`_
 	Cork provides a simple set of methods to implement Authentication and Authorization in web applications based on Bottle.
 
 `Bottle-Extras <http://pypi.python.org/pypi/bottle-extras/>`_
