@@ -754,6 +754,7 @@ class Bottle(object):
     def _handle(self, environ):
         try:
             environ['bottle.app'] = self
+            url_rewrite.apply(environ)
             request.bind(environ)
             response.bind()
             route, args = self.router.match(environ)
@@ -3245,6 +3246,112 @@ if __name__ == '__main__':
         reloader=opt.reload, plugins=opt.plugin, debug=opt.debug)
 
 
+
+
+
+##############################################################################
+# Nippey #### 28.10.2012# #### mod_rewrite ###################################
+##############################################################################
+# This modification to bottly.py allows the aplication of rewrite rules to 
+# requests _before_ they are processed by the routing system
+
+class UrlRewriteException(BottleException):
+    """ This is a base class for all rewrite related exceptions """
+
+class UrlRewrite():
+    """ This class processes every URL before is is passed to the routing 
+    system. In case one of the included rewrite rules matches the URL, the URL
+    will be modified. New rules can be added via the .addRule(str, str, bool) 
+    method. For each requested URL, the method apply will be called with the 
+    environ variable as parameter.
+    """
+    
+    def __init__(self):
+        """ Initiates the rules variable """
+        #print("UrlRewrite init.")
+        self.rules = []
+    
+    def addRule(self, match, replace, final=False):
+        """ Add a new rule.
+        match:   Regular expression to search for. Can be a string or a 
+                 compiled regular expression
+        replace: Replacement string. May use backreferences.
+        final:   If a rule with <final=True> matches the URL, the evaluation 
+                 will be stopped afterwards
+        """
+        #print("UrlRewrite addRule.")
+        if type(match) is not str and type(replace) is not str:
+            raise UrlRewriteException
+        pattern = re.compile(match)
+        self.rules.append({'pattern':pattern, 
+                           'repl':replace, 
+                           'final':bool(final)})
+    
+    def apply(self, environ):
+        """ Test a URL for a match of one of the saved rules 
+            and rewrite it if required
+        environ: Environmental variable created by bottle on each request. 
+                 Contains the PATH_INFO information, modification will happen 
+                 with the reference to this variable.
+        returns: Returns true if a rewrite has been executed. Not used by the 
+                 main program (yet). Original path will still be available as 
+                 PATH_INFO_ORIGINAL in the environ variable
+        """
+        #print("UrlRewrite apply.")
+        rewritten = False
+        url = environ['PATH_INFO']
+        for rule in self.rules:             #Try to alppy each of the rules
+            (url, noSubs) = rule['pattern'].subn(rule['repl'], url)
+            if noSubs > 0:
+                rewritten = True
+                if rule['final']:
+                    break
+        if rewritten:
+            environ['PATH_INFO_ORIGINAL'] = environ['PATH_INFO']
+            environ['PATH_INFO'] = url
+            return True
+        return False
+
+    """ EXAMPLES:
+    
+    #Backreferences may be used by the replacement string
+    from bottle import url_rewrite
+    url_rewrite.addRule("^/he(l*)o", r"/by\1e", False)
+    #Input:  "/hello/test_hello" 
+    #Output: "/bye/test_hello"
+    
+    #All matching occurences will be replaced
+    from bottle import url_rewrite
+    url_rewrite.addRule("hello", "bye", False)
+    #Input:  "/hello/test_hello" 
+    #Output: "/bye/test_bye"
+    
+    #Rules will be applied in successive order
+    from bottle import url_rewrite
+    url_rewrite.addRule("hello", "hi", False)
+    url_rewrite.addRule("hi", "bye", False)
+    #Input:  "/hello/test_hello" 
+    #Output: "/bye/test_bye"
+    
+    #Rules won't be re-applied from the start if one rule matches
+    from bottle import url_rewrite
+    url_rewrite.addRule("hi", "bye", False)
+    url_rewrite.addRule("hello", "hi", False)
+    #Input:  "/hello/test_hello" 
+    #Output: "/hi/test_hi"
+    
+    #After applying a rule with <final> set to True, the evaluation will be 
+    #finished
+    from bottle import url_rewrite
+    url_rewrite.addRule("hello", "hi", True)
+    url_rewrite.addRule("hi", "bye", False)
+    #Input:  "/hello/test_hello" 
+    #Output: "/hi/test_hi"
+    """
+# END class UrlRewrite
+
+url_rewrite = UrlRewrite()
+# END ## mod_rewrite ##
 
 
 # THE END
