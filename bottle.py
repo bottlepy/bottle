@@ -1530,7 +1530,10 @@ class HTTPResponse(Response, BottleException):
     def apply(self, response):
         response._status_code = self._status_code
         response._status_line = self._status_line
-        response._headers = self._headers
+        if response._headers:
+            response._headers.update(self._headers)
+        else:
+            response._headers = self._headers
         response._cookies = self._cookies
         response.body = self.body
 
