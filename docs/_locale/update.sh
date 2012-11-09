@@ -1,7 +1,7 @@
 #!/bin/bash
 cd "$( cd "$( dirname "$0" )" && pwd )"
 
-LANGUAGES='de cn'
+LANGUAGES='de zh_CN'
 
 echo 'Generating new POT files ...'
 sphinx-build -b gettext -E .. _pot
