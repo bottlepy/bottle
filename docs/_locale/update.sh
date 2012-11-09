@@ -1,10 +1,10 @@
 #!/bin/bash
 cd "$( cd "$( dirname "$0" )" && pwd )"
 
-LANGUAGES='de cn'
+LANGUAGES='zh_CN'
 
 echo 'Generating new POT files ...'
-sphinx-build -b gettext -E .. _pot
+sphinx-build -q -b gettext -E .. _pot
 
 echo 'Merging and compiling *.po files ...'
 for LANG in $LANGUAGES; do
