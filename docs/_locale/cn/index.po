@@ -7,10 +7,11 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Bottle 0.12-dev\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-11-08 00:29\n"
-"PO-Revision-Date: 2012-11-09 15:22+0800\n"
+"POT-Creation-Date: 2012-11-09 18:23\n"
+"PO-Revision-Date: 2012-11-09 19:04+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -28,7 +29,7 @@ msgid ""
 "other than the `Python Standard Library <http://docs.python.org/library/>`_."
 msgstr ""
 "Bottle是一个快速，简单，轻量级的 Python_ WSGI_ Web框架。单一文件，只依赖 "
-"Python标准库_ 。"
+"`Python标准库 <http://docs.python.org/library/>`_ 。"
 
 # 87fb9bd30b3b41448aa966e6f47b3495
 #: ../../index.rst:25
@@ -45,7 +46,7 @@ msgid ""
 "templates>` and support for mako_, jinja2_ and cheetah_ templates."
 msgstr ""
 "**模板(Templates):** 快速且pythonic的 :ref:`内置模板引擎 <tutorial-"
-"templates>` ，同时支持 mako_, jinja2_ 和 cheetah_ 等模板。"
+"templates>` ，同时支持 mako_ , jinja2_ 和 cheetah_ 等模板。"
 
 # 1ef9c634d3b148dbb49d21228a9cddaf
 #: ../../index.rst:27
