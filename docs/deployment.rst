@@ -14,6 +14,11 @@
 .. _gevent: http://www.gevent.org/
 .. _eventlet: http://eventlet.net/
 .. _waitress: http://readthedocs.org/docs/waitress/en/latest/
+.. _apache: http://httpd.apache.org/
+.. _mod_wsgi: http://code.google.com/p/modwsgi/
+.. _pound: http://www.apsis.ch/pound
+
+
 
 .. _tutorial-deployment:
 
@@ -87,7 +92,7 @@ If there is no adapter for your favorite server or if you need more control over
 Apache mod_wsgi
 --------------------------------------------------------------------------------
 
-Instead of running your own HTTP server from within Bottle, you can attach Bottle applications to an `Apache server`_ using mod_wsgi_.
+Instead of running your own HTTP server from within Bottle, you can attach Bottle applications to an `Apache server <apache>`_ using mod_wsgi_.
 
 All you need is an ``app.wsgi`` file that provides an ``application`` object. This object is used by mod_wsgi to start your application and should be a WSGI-compatible Python callable.
 

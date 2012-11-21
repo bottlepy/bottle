@@ -73,7 +73,7 @@ class TestRequest(unittest.TestCase):
         self.assertEqual(['/', '/a/b/c/d/'], test_shift('/a/b/c/d', '/', -4))
         self.assertRaises(AssertionError, test_shift, '/a/b', '/c/d', 3)
         self.assertRaises(AssertionError, test_shift, '/a/b', '/c/d', -3)
-        
+
     def test_url(self):
         """ Environ: URL building """
         request = BaseRequest({'HTTP_HOST':'example.com'})
@@ -121,7 +121,7 @@ class TestRequest(unittest.TestCase):
         self.assertTrue('Some-Header' in request.headers)
         self.assertTrue(request.headers['Some-Header'] == 'some value')
         self.assertTrue(request.headers['Some-Other-Header'] == 'some other value')
-    
+
     def test_header_access_special(self):
         e = {}
         wsgiref.util.setup_testing_defaults(e)
@@ -132,7 +132,7 @@ class TestRequest(unittest.TestCase):
         self.assertEqual(request.headers['Content-Length'], '123')
 
     def test_cookie_dict(self):
-        """ Environ: Cookie dict """ 
+        """ Environ: Cookie dict """
         t = dict()
         t['a=a']      = {'a': 'a'}
         t['a=a; b=b'] = {'a': 'a', 'b':'b'}
@@ -144,7 +144,7 @@ class TestRequest(unittest.TestCase):
                 self.assertEqual(v[n], request.get_cookie(n))
 
     def test_get(self):
-        """ Environ: GET data """ 
+        """ Environ: GET data """
         qs = tonat(tob('a=a&a=1&b=b&c=c&cn=%e7%93%b6'), 'latin1')
         request = BaseRequest({'QUERY_STRING':qs})
         self.assertTrue('a' in request.query)
@@ -155,9 +155,9 @@ class TestRequest(unittest.TestCase):
         self.assertEqual('b', request.query['b'])
         self.assertEqual(tonat(tob('瓶'), 'latin1'), request.query['cn'])
         self.assertEqual(touni('瓶'), request.query.cn)
-        
+
     def test_post(self):
-        """ Environ: POST data """ 
+        """ Environ: POST data """
         sq = tob('a=a&a=1&b=b&c=&d&cn=%e7%93%b6')
         e = {}
         wsgiref.util.setup_testing_defaults(e)
@@ -203,7 +203,7 @@ class TestRequest(unittest.TestCase):
         self.assertEqual(sq, request.body.read())
 
     def test_params(self):
-        """ Environ: GET and POST are combined in request.param """ 
+        """ Environ: GET and POST are combined in request.param """
         e = {}
         wsgiref.util.setup_testing_defaults(e)
         e['wsgi.input'].write(tob('b=b&c=p'))
@@ -216,7 +216,7 @@ class TestRequest(unittest.TestCase):
         self.assertEqual('p', request.params['c'])
 
     def test_getpostleak(self):
-        """ Environ: GET and POST should not leak into each other """ 
+        """ Environ: GET and POST should not leak into each other """
         e = {}
         wsgiref.util.setup_testing_defaults(e)
         e['wsgi.input'].write(tob('b=b'))
@@ -229,7 +229,7 @@ class TestRequest(unittest.TestCase):
         self.assertEqual(['b'], list(request.POST.keys()))
 
     def test_body(self):
-        """ Environ: Request.body should behave like a file object factory """ 
+        """ Environ: Request.body should behave like a file object factory """
         e = {}
         wsgiref.util.setup_testing_defaults(e)
         e['wsgi.input'].write(tob('abc'))
@@ -249,7 +249,7 @@ class TestRequest(unittest.TestCase):
         e['wsgi.input'].seek(0)
         e['CONTENT_LENGTH'] = str(1024*1000)
         request = BaseRequest(e)
-        self.assertTrue(hasattr(request.body, 'fileno'))        
+        self.assertTrue(hasattr(request.body, 'fileno'))
         self.assertEqual(1024*1000, len(request.body.read()))
         self.assertEqual(1024, len(request.body.read(1024)))
         self.assertEqual(1024*1000, len(request.body.readline()))
@@ -490,7 +490,7 @@ class TestResponse(unittest.TestCase):
     def test_content_type(self):
         rs = BaseResponse()
         rs.content_type = 'test/some'
-        self.assertEquals('test/some', rs.headers.get('Content-Type')) 
+        self.assertEquals('test/some', rs.headers.get('Content-Type'))
 
     def test_charset(self):
         rs = BaseResponse()
@@ -551,7 +551,7 @@ class TestResponse(unittest.TestCase):
                    if name.title() == 'X-Test']
         self.assertEqual(['bar'], headers)
         self.assertEqual('bar', response['x-test'])
-        
+
     def test_append_header(self):
         response = BaseResponse()
         response.set_header('x-test', 'foo')
@@ -560,7 +560,7 @@ class TestResponse(unittest.TestCase):
         self.assertEqual(['foo'], headers)
         self.assertEqual('foo', response['x-test'])
 
-        response.set_header('X-Test', 'bar', True)
+        response.add_header('X-Test', 'bar')
         headers = [value for name, value in response.headerlist
                    if name.title() == 'X-Test']
         self.assertEqual(['foo', 'bar'], headers)
@@ -583,10 +583,10 @@ class TestResponse(unittest.TestCase):
 
 
 class TestRedirect(unittest.TestCase):
-   
+
     def assertRedirect(self, target, result, query=None, status=303, **args):
         env = {'SERVER_PROTOCOL':'HTTP/1.1'}
-        for key in args:
+        for key in list(args):
             if key.startswith('wsgi'):
                 args[key.replace('_', '.', 1)] = args[key]
                 del args[key]
@@ -596,10 +596,10 @@ class TestRedirect(unittest.TestCase):
             bottle.redirect(target, **(query or {}))
         except bottle.HTTPResponse:
             r = _e()
-            self.assertEqual(status, r.status)
+            self.assertEqual(status, r.status_code)
             self.assertTrue(r.headers)
             self.assertEqual(result, r.headers['Location'])
-                
+
     def test_absolute_path(self):
         self.assertRedirect('/', 'http://127.0.0.1/')
         self.assertRedirect('/test.html', 'http://127.0.0.1/test.html')
@@ -639,7 +639,7 @@ class TestRedirect(unittest.TestCase):
                             SCRIPT_NAME='/foo/', PATH_INFO='/bar/baz.html')
         self.assertRedirect('../baz/../test.html', 'http://127.0.0.1/foo/test.html',
                             PATH_INFO='/foo/bar/')
-      
+
     def test_sheme(self):
         self.assertRedirect('./test.html', 'https://127.0.0.1/test.html',
                             wsgi_url_scheme='https')
@@ -677,7 +677,7 @@ class TestRedirect(unittest.TestCase):
         self.assertRedirect('./te st.html',
                             'http://example.com/a%20a/b%20b/te st.html',
                             HTTP_HOST='example.com', SCRIPT_NAME='/a a/', PATH_INFO='/b b/')
-                            
+
 class TestWSGIHeaderDict(unittest.TestCase):
     def setUp(self):
         self.env = {}
