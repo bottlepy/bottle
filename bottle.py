@@ -970,7 +970,14 @@ class BaseRequest(object):
             are stored separately in :attr:`files`. """
         forms = FormsDict()
         for name, item in self.POST.allitems():
-            if not hasattr(item, 'filename'):
+            if hasattr(item, 'filename'):
+                continue
+            if name.endswith(']'):
+                name = name.split('[')[0]
+                if not name in forms:
+                    forms[name] = []
+                forms[name].append(item)
+            else:
                 forms[name] = item
         return forms
 
