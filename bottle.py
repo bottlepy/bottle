@@ -3134,6 +3134,8 @@ def view(tpl_name, **defaults):
                 tplvars = defaults.copy()
                 tplvars.update(result)
                 return template(tpl_name, **tplvars)
+            elif result is None:
+                return template(tpl_name, defaults)
             return result
         return wrapper
     return decorator
