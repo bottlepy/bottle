@@ -23,7 +23,7 @@ Install bottle with ``pip install bottle`` or just `download bottle.py <http://p
 Example
 -------
 
-::
+.. code-block:: python
 
     from bottle import route, run
 
