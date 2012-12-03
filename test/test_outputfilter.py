@@ -158,7 +158,7 @@ class TestOutputFilter(ServerTestBase):
 
         for test_iter in (byte_iter, unicode_iter):
             @self.app.route('/')
-            def test(): return byte_iter
+            def test(): return test_iter
             self.assertInBody('abcdef')
             self.assertTrue(byte_iter.closed)
 
