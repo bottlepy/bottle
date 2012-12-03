@@ -145,6 +145,23 @@ class TestOutputFilter(ServerTestBase):
         self.assertStatus(500)
         self.assertInBody('Unsupported response type')
 
+    def test_iterator_with_close(self):
+        class MyIter(object):
+            def __init__(self, data):
+                self.data = data
+                self.closed = False
+            def close(self):    self.closed = True
+            def __iter__(self): return iter(self.data)
+
+        byte_iter = MyIter([tob('abc'), tob('def')])
+        unicode_iter = MyIter([touni('abc'), touni('def')])
+
+        for test_iter in (byte_iter, unicode_iter):
+            @self.app.route('/')
+            def test(): return byte_iter
+            self.assertInBody('abcdef')
+            self.assertTrue(byte_iter.closed)
+
     def test_cookie(self):
         """ WSGI: Cookies """
         @bottle.route('/cookie')

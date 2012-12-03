@@ -817,10 +817,10 @@ class Bottle(object):
 
         # Handle Iterables. We peek into them to detect their inner type.
         try:
-            out = iter(out)
-            first = next(out)
+            iout = iter(out)
+            first = next(iout)
             while not first:
-                first = next(out)
+                first = next(iout)
         except StopIteration:
             return self._cast('')
         except HTTPResponse:
@@ -834,13 +834,18 @@ class Bottle(object):
         # These are the inner types allowed in iterator or generator objects.
         if isinstance(first, HTTPResponse):
             return self._cast(first)
-        if isinstance(first, bytes):
-            return itertools.chain([first], out)
-        if isinstance(first, unicode):
-            return imap(lambda x: x.encode(response.charset),
-                                  itertools.chain([first], out))
-        return self._cast(HTTPError(500, 'Unsupported response type: %s'\
-                                         % type(first)))
+        elif isinstance(first, bytes):
+            new_iter = itertools.chain([first], iout)
+        elif isinstance(first, unicode):
+            encoder = lambda x: x.encode(response.charset)
+            new_iter = imap(encoder, itertools.chain([first], iout))
+        else:
+            msg = 'Unsupported response type: %s' % type(first)
+            return self._cast(HTTPError(500, msg))
+        if hasattr(out, 'close'):
+            new_iter = _iterchain(new_iter)
+            new_iter.close = out.close
+        return new_iter
 
     def wsgi(self, environ, start_response):
         """ The bottle WSGI-interface. """
@@ -1936,6 +1941,11 @@ class WSGIFileWrapper(object):
             part = read(buff)
             if not part: return
             yield part
+
+
+class _iterchain(itertools.chain):
+    ''' This only exists to be able to attach a .close method to iterators that
+        do not support attribute assignment (most of itertools). '''
 
 
 class ResourceManager(object):
