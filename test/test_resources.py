@@ -4,7 +4,7 @@ from bottle import ResourceManager
 import os.path
 import unittest
 
-class TestResouceManager(unittest.TestCase):
+class TestResourceManager(unittest.TestCase):
 
     def test_path_normalize(self):
         tests = ('/foo/bar/', '/foo/bar/baz', '/foo/baz/../bar/blub')
