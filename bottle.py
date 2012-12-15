@@ -2307,8 +2307,8 @@ def auth_basic(check, realm="private", text="Access denied"):
       def wrapper(*a, **ka):
         user, password = request.auth or (None, None)
         if user is None or not check(user, password):
-          response.headers['WWW-Authenticate'] = 'Basic realm="%s"' % realm
-          return HTTPError(401, text)
+          headers = {'WWW-Authenticate': 'Basic realm="%s"' % realm}
+          return HTTPError(401, text, **headers)
         return func(*a, **ka)
       return wrapper
     return decorator
