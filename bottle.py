@@ -1275,6 +1275,14 @@ class BaseResponse(object):
         This class does support dict-like case-insensitive item-access to
         headers, but is NOT a dict. Most notably, iterating over a response
         yields parts of the body and not the headers.
+
+        :param body: The response body as one of the supported types.
+        :param status: Either an HTTP status code (e.g. 200) or a status line
+                       including the reason phrase (e.g. '200 OK').
+        :param headers: A dictionary or a list of name-value pairs.
+
+        Additional keyword arguments are added to the list of headers.
+        Underscores in the header name are replaced with dashes.
     """
 
     default_status = 200
@@ -1288,17 +1296,25 @@ class BaseResponse(object):
                   'Content-Length', 'Content-Range', 'Content-Type',
                   'Content-Md5', 'Last-Modified'))}
 
-    def __init__(self, body='', status=None, **headers):
+    def __init__(self, body='', status=None, headers=None, **more_headers):
         self._cookies = None
-        self._headers = {'Content-Type': [self.default_content_type]}
+        self._headers = {}
         self.body = body
         self.status = status or self.default_status
         if headers:
-            for name, value in headers.items():
-                self[name] = value
+            if isinstance(headers, dict):
+                headers = headers.items()
+            for name, value in headers:
+                self.add_header(name, value)
+        if more_headers:
+            for name, value in more_headers.items():
+                self.add_header(name, value)
+        if 'Content-Type' not in self._headers:
+            self._headers['Content-Type'] = [self.default_content_type]
 
     def copy(self):
         ''' Returns a copy of self. '''
+        # TODO
         copy = Response()
         copy.status = self.status
         copy._headers = dict((k, v[:]) for (k, v) in self._headers.items())
@@ -1398,11 +1414,11 @@ class BaseResponse(object):
     content_length = HeaderProperty('Content-Length', reader=int)
 
     @property
-    def charset(self):
+    def charset(self, default='UTF-8'):
         """ Return the charset specified in the content-type header (default: utf8). """
         if 'charset=' in self.content_type:
             return self.content_type.split('charset=')[-1].split(';')[0].strip()
-        return 'UTF-8'
+        return default
 
     @property
     def COOKIES(self):
@@ -1525,12 +1541,13 @@ Request = BaseRequest
 Response = BaseResponse
 
 class HTTPResponse(Response, BottleException):
-    def __init__(self, body='', status=None, header=None, **headers):
-        if header or 'output' in headers:
-            depr('Call signature changed (for the better)')
-            if header: headers.update(header)
-            if 'output' in headers: body = headers.pop('output')
-        super(HTTPResponse, self).__init__(body, status, **headers)
+    def __init__(self, body='', status=None, headers=None,
+                 header=None, **more_headers):
+        if header or 'output' in more_headers:
+            depr('Call signature changed (for the better). See BaseResponse')
+            if header: more_headers.update(header)
+            if 'output' in more_headers: body = more_headers.pop('output')
+        super(HTTPResponse, self).__init__(body, status, headers, **more_headers)
 
     def apply(self, response):
         response._status_code = self._status_code
@@ -1548,10 +1565,11 @@ class HTTPResponse(Response, BottleException):
 
 class HTTPError(HTTPResponse):
     default_status = 500
-    def __init__(self, status=None, body=None, exception=None, traceback=None, header=None, **headers):
+    def __init__(self, status=None, body=None, exception=None, traceback=None,
+                 **options):
         self.exception = exception
         self.traceback = traceback
-        super(HTTPError, self).__init__(body, status, header, **headers)
+        super(HTTPError, self).__init__(body, status, **options)
 
 
 
@@ -2304,13 +2322,14 @@ def auth_basic(check, realm="private", text="Access denied"):
     ''' Callback decorator to require HTTP auth (basic).
         TODO: Add route(check_auth=...) parameter. '''
     def decorator(func):
-      def wrapper(*a, **ka):
-        user, password = request.auth or (None, None)
-        if user is None or not check(user, password):
-          headers = {'WWW-Authenticate': 'Basic realm="%s"' % realm}
-          return HTTPError(401, text, **headers)
-        return func(*a, **ka)
-      return wrapper
+        def wrapper(*a, **ka):
+            user, password = request.auth or (None, None)
+            if user is None or not check(user, password):
+                err = HTTPError(401, text)
+                err.add_header('WWW-Authenticate', 'Basic realm="%s"' % realm)
+                return err
+            return func(*a, **ka)
+        return wrapper
     return decorator
 
 
