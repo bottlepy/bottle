@@ -568,7 +568,7 @@ class Bottle(object):
                     return rs.body.append
                 body = app(request.environ, start_response)
                 body = itertools.chain(rs.body, body)
-                return HTTPResponse(body, rs.status_code, **rs.headers)
+                return HTTPResponse(body, rs.status_code, header=rs.headers)
             finally:
                 request.path_shift(-path_depth)
 
