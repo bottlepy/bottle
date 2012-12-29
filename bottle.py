@@ -568,7 +568,7 @@ class Bottle(object):
                     return rs.body.append
                 body = app(request.environ, start_response)
                 body = itertools.chain(rs.body, body)
-                return HTTPResponse(body, rs.status_code, rs.headers)
+                return HTTPResponse(body, rs.status_code, **rs.headers)
             finally:
                 request.path_shift(-path_depth)
 
@@ -817,10 +817,10 @@ class Bottle(object):
 
         # Handle Iterables. We peek into them to detect their inner type.
         try:
-            out = iter(out)
-            first = next(out)
+            iout = iter(out)
+            first = next(iout)
             while not first:
-                first = next(out)
+                first = next(iout)
         except StopIteration:
             return self._cast('')
         except HTTPResponse:
@@ -834,13 +834,18 @@ class Bottle(object):
         # These are the inner types allowed in iterator or generator objects.
         if isinstance(first, HTTPResponse):
             return self._cast(first)
-        if isinstance(first, bytes):
-            return itertools.chain([first], out)
-        if isinstance(first, unicode):
-            return imap(lambda x: x.encode(response.charset),
-                                  itertools.chain([first], out))
-        return self._cast(HTTPError(500, 'Unsupported response type: %s'\
-                                         % type(first)))
+        elif isinstance(first, bytes):
+            new_iter = itertools.chain([first], iout)
+        elif isinstance(first, unicode):
+            encoder = lambda x: x.encode(response.charset)
+            new_iter = imap(encoder, itertools.chain([first], iout))
+        else:
+            msg = 'Unsupported response type: %s' % type(first)
+            return self._cast(HTTPError(500, msg))
+        if hasattr(out, 'close'):
+            new_iter = _iterchain(new_iter)
+            new_iter.close = out.close
+        return new_iter
 
     def wsgi(self, environ, start_response):
         """ The bottle WSGI-interface. """
@@ -965,7 +970,7 @@ class BaseRequest(object):
     @DictProperty('environ', 'bottle.request.forms', read_only=True)
     def forms(self):
         """ Form values parsed from an `url-encoded` or `multipart/form-data`
-            encoded POST or PUT request body. The result is retuned as a
+            encoded POST or PUT request body. The result is returned as a
             :class:`FormsDict`. All keys and values are strings. File uploads
             are stored separately in :attr:`files`. """
         forms = FormsDict()
@@ -1938,6 +1943,11 @@ class WSGIFileWrapper(object):
             yield part
 
 
+class _iterchain(itertools.chain):
+    ''' This only exists to be able to attach a .close method to iterators that
+        do not support attribute assignment (most of itertools). '''
+
+
 class ResourceManager(object):
     ''' This class manages a list of search paths and helps to find and open
         application-bound resources (files).
@@ -2297,8 +2307,8 @@ def auth_basic(check, realm="private", text="Access denied"):
       def wrapper(*a, **ka):
         user, password = request.auth or (None, None)
         if user is None or not check(user, password):
-          response.headers['WWW-Authenticate'] = 'Basic realm="%s"' % realm
-          return HTTPError(401, text)
+          headers = {'WWW-Authenticate': 'Basic realm="%s"' % realm}
+          return HTTPError(401, text, **headers)
         return func(*a, **ka)
       return wrapper
     return decorator
@@ -3096,7 +3106,7 @@ def template(*args, **kwargs):
     adapter = kwargs.pop('template_adapter', SimpleTemplate)
     lookup = kwargs.pop('template_lookup', TEMPLATE_PATH)
     tplid = (id(lookup), tpl)
-    if tpl not in TEMPLATES or DEBUG:
+    if tplid not in TEMPLATES or DEBUG:
         settings = kwargs.pop('template_settings', {})
         if isinstance(tpl, adapter):
             TEMPLATES[tplid] = tpl
@@ -3134,6 +3144,8 @@ def view(tpl_name, **defaults):
                 tplvars = defaults.copy()
                 tplvars.update(result)
                 return template(tpl_name, **tplvars)
+            elif result is None:
+                return template(tpl_name, defaults)
             return result
         return wrapper
     return decorator
