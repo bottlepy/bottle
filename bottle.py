@@ -2409,9 +2409,8 @@ class WaitressServer(ServerAdapter):
 class PasteServer(ServerAdapter):
     def run(self, handler): # pragma: no cover
         from paste import httpserver
-        if not self.quiet:
-            from paste.translogger import TransLogger
-            handler = TransLogger(handler)
+        from paste.translogger import TransLogger
+        handler = TransLogger(handler, setup_console_handler=(not self.quiet))
         httpserver.serve(handler, host=self.host, port=str(self.port),
                          **self.options)
 
