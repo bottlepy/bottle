@@ -418,6 +418,40 @@ class TestRequest(unittest.TestCase):
 
 class TestResponse(unittest.TestCase):
 
+    def test_constructor_body(self):
+        self.assertEqual('',
+            BaseResponse('').body)
+
+        self.assertEqual('YAY',
+            BaseResponse('YAY').body)
+
+    def test_constructor_status(self):
+        self.assertEqual(200,
+            BaseResponse('YAY', 200).status_code)
+
+        self.assertEqual('200 OK',
+            BaseResponse('YAY', 200).status_line)
+
+        self.assertEqual('200 YAY',
+            BaseResponse('YAY', '200 YAY').status_line)
+
+        self.assertEqual('200 YAY',
+            BaseResponse('YAY', '200 YAY').status_line)
+        
+    def test_constructor_headerlist(self):
+        from functools import partial
+        make_res = partial(BaseResponse, '', 200)
+
+        self.assertTrue('yay',
+            make_res([('x-test','yay')])['x-test'])
+
+    def test_constructor_headerlist(self):
+        from functools import partial
+        make_res = partial(BaseResponse, '', 200)
+
+        self.assertTrue('yay', make_res(x_test='yay')['x-test'])
+
+
     def test_set_status(self):
         rs = BaseResponse()
 
