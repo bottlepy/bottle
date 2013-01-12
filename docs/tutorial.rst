@@ -172,7 +172,7 @@ Let's have a look at some practical examples::
     def callback(path):
         return static_file(path, ...)
 
-You can add your own filters as well. See :doc:`Routing` for details.
+You can add your own filters as well. See :ref:`tutorial-routing` for details.
 
 .. versionchanged:: 0.10
 
