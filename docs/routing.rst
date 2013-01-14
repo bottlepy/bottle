@@ -115,14 +115,14 @@ Route decorator can also be directly called as method. This way provides flexibi
 Here is a basic example of explicit routing configuration for default bottle application::
 
     def setup_routing():
-        bottle.route('/', method='GET', index)
-        bottle.route('/edit', method=['GET', 'POST'], edit)
+        bottle.route('/', 'GET', index)
+        bottle.route('/edit', ['GET', 'POST'], edit)
 
 In fact, any :class:`Bottle` instance routing can be configured same way::
 
     def setup_routing(app):
-        app.route('/new', method=['GET', 'POST'], form_new)
-        app.route('/edit', method=['GET', 'POST'], form_edit)
+        app.route('/new', ['GET', 'POST'], form_new)
+        app.route('/edit', ['GET', 'POST'], form_edit)
 
     app = Bottle()
     setup_routing(app)
