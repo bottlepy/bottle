@@ -2368,8 +2368,8 @@ url       = make_default_app_wrapper('get_url')
 
 class ServerAdapter(object):
     quiet = False
-    def __init__(self, host='127.0.0.1', port=8080, **config):
-        self.options = config
+    def __init__(self, host='127.0.0.1', port=8080, **options):
+        self.options = options
         self.host = host
         self.port = int(port)
 
@@ -2514,15 +2514,17 @@ class GeventServer(ServerAdapter):
 
         * `fast` (default: False) uses libevent's http server, but has some
           issues: No streaming, no pipelining, no SSL.
+        * See gevent.wsgi.WSGIServer() documentation for more options.
     """
     def run(self, handler):
         from gevent import wsgi, pywsgi, local
         if not isinstance(_lctx, local.local):
             msg = "Bottle requires gevent.monkey.patch_all() (before import)"
             raise RuntimeError(msg)
-        if not self.options.get('fast'): wsgi = pywsgi
-        log = None if self.quiet else 'default'
-        wsgi.WSGIServer((self.host, self.port), handler, log=log).serve_forever()
+        if not self.options.pop('fast'): wsgi = pywsgi
+        self.options['log'] = None if self.quiet else 'default'
+        address = (self.host, self.port)
+        wsgi.WSGIServer(address, handler, **self.options).serve_forever()
 
 
 class GunicornServer(ServerAdapter):
