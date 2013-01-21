@@ -68,7 +68,8 @@ class TestAppMounting(ServerTestBase):
             response.set_cookie('a', 'a')
             response.set_cookie('b', 'b')
         self.app.mount('/test', self.subapp)
-        self.assertHeader('Set-Cookie', 'a=a, b=b', '/test/cookie')
+        c = self.urlopen('/test/cookie')['header']['Set-Cookie']
+        self.assertEqual(['a=a', 'b=b'], list(sorted(c.split(', '))))
 
 class TestAppMerging(ServerTestBase):
     def setUp(self):
