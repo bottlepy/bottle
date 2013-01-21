@@ -151,7 +151,7 @@ By enabling "debug", you will get a full stacktrace of the Python interpreter, w
 
 
 
-A further quiet nice feature is auto-reloading, which is enabled by modifying the ``run()`` statement to
+A further quite nice feature is auto-reloading, which is enabled by modifying the ``run()`` statement to
 
 ::
 
