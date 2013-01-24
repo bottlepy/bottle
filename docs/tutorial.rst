@@ -550,6 +550,7 @@ Here is an example for a simple file upload form:
     <form action="/upload" method="post" enctype="multipart/form-data">
       <input type="text" name="name" />
       <input type="file" name="data" />
+      <input type="submit" name="submit" />
     </form>
 
 ::
