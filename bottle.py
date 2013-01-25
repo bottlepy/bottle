@@ -2469,7 +2469,7 @@ class TornadoServer(ServerAdapter):
         import tornado.wsgi, tornado.httpserver, tornado.ioloop
         container = tornado.wsgi.WSGIContainer(handler)
         server = tornado.httpserver.HTTPServer(container)
-        server.listen(port=self.port)
+        server.listen(port=self.port,address=self.host)
         tornado.ioloop.IOLoop.instance().start()
 
 
