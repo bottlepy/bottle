@@ -2142,6 +2142,12 @@ def static_file(filename, root, mimetype='auto', download=False):
 
 
 
+def never_cache(func):
+    @functools.wraps(func)
+    def _wraps(*args, **kwargs):
+        response.set_header('Cache-Control', 'no-cache')
+        return func(*args, **kwargs)
+    return _wraps
 
 
 
