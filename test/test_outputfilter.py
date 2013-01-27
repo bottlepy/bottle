@@ -177,5 +177,17 @@ class TestOutputFilter(ServerTestBase):
         self.assertTrue('b=b' in c)
         self.assertTrue('c=c; Path=/' in c)
 
+    def test_never_cache(self):
+        """no-cache Headers"""
+        from bottle import never_cache
+
+        @self.app.route('/')
+        @never_cache
+        def test():
+            return 'hello'
+
+        self.assertHeader('Cache-Control','no-cache')
+
+
 if __name__ == '__main__': #pragma: no cover
     unittest.main()
