@@ -19,7 +19,7 @@
 Bottle: Python Web Framework
 ============================
 
-Bottle is a fast, simple and lightweight WSGI_ micro web-framework for Python_. It is distributed as a single file module and has no dependencies other than the `Python Standard Library <http://docs.python.org/library/>`_. 
+Bottle is a fast, simple and lightweight WSGI_ micro web-framework for Python_. It is distributed as a single file module and has no dependencies other than the `Python Standard Library <http://docs.python.org/library/>`_.
 
 
 * **Routing:** Requests to function-call mapping with support for clean and  dynamic URLs.
@@ -48,6 +48,13 @@ Run this script or paste it into a Python console, then point your browser to `<
 .. __: https://github.com/defnull/bottle/raw/master/bottle.py
 
 Install the latest stable release via PyPi_ (``easy_install -U bottle``) or download `bottle.py`__ (unstable) into your project directory. There are no hard [1]_ dependencies other than the Python standard library. Bottle runs with **Python 2.5+ and 3.x**.
+
+Or, for the truly lazy:
+
+::
+
+    curl https://raw.github.com/defnull/bottle/release/bottle.py -o bottle.py
+
 
 User's Guide
 ===============
@@ -93,7 +100,7 @@ These chapters are intended for developers interested in the bottle development 
    :hidden:
 
    plugins/index
-   
+
 License
 ==================
 
