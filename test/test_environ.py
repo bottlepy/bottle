@@ -21,6 +21,11 @@ class TestRequest(unittest.TestCase):
         e.update({'bottle.app': 5})
         self.assertEqual(r.app, 5)
 
+    def test_route_property(self):
+        e = {'bottle.route': 5}
+        r = BaseRequest(e)
+        self.assertEqual(r.route, 5)
+
     def test_path(self):
         """ PATH_INFO normalization. """
         # Legal paths
@@ -437,7 +442,7 @@ class TestResponse(unittest.TestCase):
 
         self.assertEqual('200 YAY',
             BaseResponse('YAY', '200 YAY').status_line)
-        
+
     def test_constructor_headerlist(self):
         from functools import partial
         make_res = partial(BaseResponse, '', 200)

@@ -39,6 +39,17 @@ class TestWsgi(ServerTestBase):
         self.assertStatus(200, '/get', method='HEAD')
         self.assertBody('', '/get', method='HEAD')
 
+    def test_request_attrs(self):
+        """ WSGI: POST routes"""
+        @bottle.route('/')
+        def test():
+            self.assertEqual(bottle.request.app,
+                             bottle.default_app())
+            self.assertEqual(bottle.request.route,
+                             bottle.default_app().routes[0])
+            return 'foo'
+        self.assertBody('foo', '/')
+
     def get304(self):
         """ 304 responses must not return entity headers """
         bad = ('allow', 'content-encoding', 'content-language',

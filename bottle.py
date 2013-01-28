@@ -915,6 +915,11 @@ class BaseRequest(object):
         ''' Bottle application handling this request. '''
         raise RuntimeError('This request is not connected to an application.')
 
+    @DictProperty('environ', 'bottle.route', read_only=True)
+    def route(self):
+        """ The bottle :class:`Route` object that matches this request. """
+        raise RuntimeError('This request is not connected to a route.')
+
     @property
     def path(self):
         ''' The value of ``PATH_INFO`` with exactly one prefixed slash (to fix
