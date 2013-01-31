@@ -2520,7 +2520,7 @@ class GeventServer(ServerAdapter):
         if not isinstance(_lctx, local.local):
             msg = "Bottle requires gevent.monkey.patch_all() (before import)"
             raise RuntimeError(msg)
-        if not self.options.pop('fast'): wsgi = pywsgi
+        if not self.options.pop('fast', None): wsgi = pywsgi
         self.options['log'] = None if self.quiet else 'default'
         address = (self.host, self.port)
         wsgi.WSGIServer(address, handler, **self.options).serve_forever()
