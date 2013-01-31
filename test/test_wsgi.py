@@ -39,6 +39,17 @@ class TestWsgi(ServerTestBase):
         self.assertStatus(200, '/get', method='HEAD')
         self.assertBody('', '/get', method='HEAD')
 
+    def test_request_attrs(self):
+        """ WSGI: POST routes"""
+        @bottle.route('/')
+        def test():
+            self.assertEqual(bottle.request.app,
+                             bottle.default_app())
+            self.assertEqual(bottle.request.route,
+                             bottle.default_app().routes[0])
+            return 'foo'
+        self.assertBody('foo', '/')
+
     def get304(self):
         """ 304 responses must not return entity headers """
         bad = ('allow', 'content-encoding', 'content-language',
@@ -90,12 +101,12 @@ class TestWsgi(ServerTestBase):
         """ WSGI: abort(401, '') (HTTP 401) """
         @bottle.route('/')
         def test(): bottle.abort(401)
-        self.assertStatus(401,'/')
+        self.assertStatus(401, '/')
         @bottle.error(401)
         def err(e):
             bottle.response.status = 200
             return str(type(e))
-        self.assertStatus(200,'/')
+        self.assertStatus(200, '/')
         self.assertBody("<class 'bottle.HTTPError'>",'/')
 
     def test_303(self):
@@ -278,7 +289,7 @@ class TestDecorators(ServerTestBase):
         def test():
             return bottle.HTTPError(401, 'The cake is a lie!')
         self.assertInBody('The cake is a lie!', '/tpl')
-        self.assertInBody('401: Unauthorized', '/tpl')
+        self.assertInBody('401 Unauthorized', '/tpl')
         self.assertStatus(401, '/tpl')
 
     def test_truncate_body(self):

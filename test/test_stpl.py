@@ -220,6 +220,16 @@ class TestSimpleTemplate(unittest.TestCase):
             return dict(var='middle')
         self.assertEqual(touni('start middle end'), test())
 
+    def test_view_decorator_issue_407(self):
+        @view('stpl_no_vars')
+        def test():
+            pass
+        self.assertEqual(touni('hihi'), test())
+        @view('aaa {{x}}', x='bbb')
+        def test2():
+            pass
+        self.assertEqual(touni('aaa bbb'), test2())
+
     def test_global_config(self):
         SimpleTemplate.global_config('meh', 1)
         t = SimpleTemplate('anything')

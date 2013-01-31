@@ -1,0 +1,119 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2009-2012, Marcel Hellkamp
+# This file is distributed under the same license as the Bottle package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Bottle 0.12-dev\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2012-11-09 18:23\n"
+"PO-Revision-Date: 2012-11-09 16:47+0800\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+# 7422025ba87c41df91aa766602d3562b
+#: ../../faq.rst:10
+msgid "Frequently Asked Questions"
+msgstr "常见问题"
+
+# 7b350c11f4bc4ff6a80dbab624890041
+#: ../../faq.rst:13
+msgid "About Bottle"
+msgstr "关于Bottle"
+
+# b3bd6fdbb6a24d22aaf160f45bdb69dd
+#: ../../faq.rst:16
+msgid "Is bottle suitable for complex applications?"
+msgstr "Bottle适合用于复杂的应用吗？"
+
+# 94af81a76cfd4133b6d2ba7794605511
+#: ../../faq.rst:18
+msgid ""
+"Bottle is a *micro* framework designed for prototyping and building small "
+"web applications and services. It stays out of your way and allows you to "
+"get things done fast, but misses some advanced features and ready-to-use "
+"solutions found in other frameworks (MVC, ORM, form validation, scaffolding, "
+"XML-RPC). Although it *is* possible to add these features and build complex "
+"applications with Bottle, you should consider using a full-stack Web "
+"framework like pylons_ or paste_ instead."
+msgstr ""
+"Bottle是一个 *迷你* 框架，被设计来提供原型开发和创建小的Web应用和服务。它能快"
+"速上手，并帮助你快速完成任务，但缺少一些高级功能和一些其他框架已提供的已知问"
+"题解决方法(例如:MVC， ORM，表单验证，手脚架，XML-RPC)。尽管 *可以* 添加这些功"
+"能，然后通过Bottle来开发复杂的应用，但我们还是建议你使用一些功能完备的Web框"
+"架，例如 pylons_ 或 paste_ 。"
+
+# 7cd9fb83437548a7a76a53a369052dd3
+#: ../../faq.rst:22
+msgid "Common Problems and Pitfalls"
+msgstr "常见的，意料之外的问题"
+
+# 8b95ed13f0554348813619adb56c61e6
+#: ../../faq.rst:29
+msgid "\"Template Not Found\" in mod_wsgi/mod_python"
+msgstr "在mod_wsgi/mod_python中的 \"Template Not Found\" 错误"
+
+# 966c583dc9144d6596cebc06f9240f1c
+#: ../../faq.rst:31
+msgid ""
+"Bottle searches in ``./`` and ``./views/`` for templates. In a mod_python_ "
+"or mod_wsgi_ environment, the working directory (``./``) depends on your "
+"Apache settings. You should add an absolute path to the template search "
+"path::"
+msgstr ""
+"Bottle会在 ``./`` 和 ``./views/`` 目录中搜索模板。在一个 mod_python_ 或 "
+"mod_wsgi_ 环境，当前工作目录( ``./`` )是由Apache的设置决定的。你应该在模板的"
+"搜索路径中添加一个绝对路径。"
+
+# 915f4819cc2b414da8453921d84d0eda
+#: ../../faq.rst:35
+msgid "so bottle searches the right paths."
+msgstr "这样，Bottle就能在正确的目录下搜索模板了"
+
+# 0c24d7df42734c08a1a401c59692d47e
+#: ../../faq.rst:38
+msgid "Dynamic Routes and Slashes"
+msgstr "动态route和反斜杠"
+
+# ac001cb8786f475987c1cb542f5537cb
+#: ../../faq.rst:40
+msgid ""
+"In :ref:`dynamic route syntax <tutorial-dynamic-routes>`, a placeholder "
+"token (``:name``) matches everything up to the next slash. This equals to ``"
+"[^/]+`` in regular expression syntax. To accept slashes too, you have to add "
+"a custom regular pattern to the placeholder. An example: ``/images/:"
+"filepath#.*#`` would match ``/images/icons/error.png`` but ``/images/:"
+"filename`` won't."
+msgstr ""
+"在 :ref:`dynamic route syntax <tutorial-dynamic-routes>` 中， ``:name`` 匹配"
+"任何字符，直到出现一个反斜杠。工作方式相当与 ``[^/]+`` 这样一个正则表达式。为"
+"了将反斜杠包涵进来，你必须在 ``:name`` 中添加一个自定义的正则表达式。例如： "
+"``/images/:filepath#.*#`` 会匹配 ``/images/icons/error.png`` ，但不匹配 ``/"
+"images/:filename`` 。"
+
+# a88283ebbbe04b81b894882c8e4b6c02
+#: ../../faq.rst:43
+msgid "Problems with reverse proxies"
+msgstr "反向代理的问题"
+
+# 7aa118afe3be43ccb06933b955801d4b
+#: ../../faq.rst:45
+msgid ""
+"Redirects and url-building only works if bottle knows the public address and "
+"location of your application. If you run bottle locally behind a reverse "
+"proxy or load balancer, some information might get lost along the way. For "
+"example, the ``wsgi.url_scheme`` value or the ``Host`` header might reflect "
+"the local request by your proxy, not the real request by the client. Here is "
+"a small WSGI middleware snippet that helps to fix these values::"
+msgstr ""
+"只用Bottle知道公共地址和应用位置的情况下，重定向和url-building才会起作用。(译"
+"者注：保留原文)Redirects and url-building only works if bottle knows the "
+"public address and location of your application.如果Bottle应用运行在反向代理"
+"或负载均衡后面，一些信息也许会丢失。例如， ``wsgi.url_scheme`` 的值或 "
+"``Host`` 头或许只能获取到代理的请求信息，而不是真实的用户请求。下面是一个简单"
+"的中间件代码片段，处理上面的问题，获取正确的值。"
