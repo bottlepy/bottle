@@ -71,6 +71,21 @@ class TestAppMounting(ServerTestBase):
         c = self.urlopen('/test/cookie')['header']['Set-Cookie']
         self.assertEqual(['a=a', 'b=b'], list(sorted(c.split(', '))))
 
+    def test_mount_wsgi_ctype_bug(self):
+        status = {}
+        def app(environ, start_response):
+            start_response('200 OK', [('Content-Type', 'test/test')])
+            return 'WSGI ' + environ['PATH_INFO']
+        self.app.mount('/test', app)
+        self.assertHeader('Content-Type', 'test/test', '/test/')
+
+    def test_mount_json_bug(self):
+        @self.subapp.route('/json')
+        def test_cookie():
+            return {'a':5}
+        self.app.mount('/test', self.subapp)
+        self.assertHeader('Content-Type', 'application/json', '/test/json')
+
 class TestAppMerging(ServerTestBase):
     def setUp(self):
         ServerTestBase.setUp(self)
