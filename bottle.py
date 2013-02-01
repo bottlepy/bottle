@@ -2970,11 +2970,12 @@ class SimpleTALTemplate(BaseTemplate):
 
 class SimpleTemplate(BaseTemplate):
 
-    def prepare(self, escape_func=html_escape, noescape=False, **kwargs):
+    def prepare(self, escape_func=html_escape, noescape=False, syntax=None, **ka):
         self.cache = {}
         enc = self.encoding
         self._str = lambda x: touni(x, enc)
         self._escape = lambda x: escape_func(touni(x, enc))
+        self.syntax = syntax
         if noescape:
             self._str, self._escape = self._escape, self._str
 
@@ -2990,7 +2991,7 @@ class SimpleTemplate(BaseTemplate):
         except UnicodeError:
             depr('Template encodings other than utf8 are no longer supported.')
             source, encoding = touni(source, 'latin1'), 'latin1'
-        parser = StplParser(source, encoding=encoding)
+        parser = StplParser(source, encoding=encoding, syntax=self.syntax)
         code = parser.translate()
         self.encoding = parser.encoding
         return code
@@ -3049,7 +3050,7 @@ class StplParser(object):
     _re_tok += '|^([ \\t]*(?:if|for|while|with|try|def|class)\\b)' \
                '|^([ \\t]*(?:elif|else|except|finally)\\b)'
     # 5: Our special 'end' keyword (but only if it stands alone)
-    _re_tok += '|((?:^|;)[ \\t]*end[ \\t]*(?=$|;|#))'
+    _re_tok += '|((?:^|;)[ \\t]*end[ \\t]*(?=(?:%(block_close)s[ \\t]*)?$|;|#))'
     # 6: A customizable end-of-code-block template token (only end of line)
     _re_tok += '|(%(block_close)s[ \\t]*(?=$))'
     # 7: And finally, a single newline. The 8th token is 'everything else'
@@ -3058,10 +3059,12 @@ class StplParser(object):
     _re_split = '(?m)^[ \t]*(?:(%(line_start)s)|(%(block_start)s))'
     # Match inline statements (may contain python strings)
     _re_inl = '%%(inline_start)s((?:%s|[^\'"\n]*?)+)%%(inline_end)s' % _re_inl
+    
+    default_syntax = '<% %> % {{ }}'
 
-    def __init__(self, source, syntax='<% %> % {{ }}', encoding='utf8'):
+    def __init__(self, source, syntax=None, encoding='utf8'):
         self.source, self.encoding = touni(source, encoding), encoding
-        self.set_syntax(syntax)
+        self.set_syntax(syntax or self.default_syntax)
         self.code_buffer, self.text_buffer = [], []
         self.lineno, self.offset = 1, 0
         self.indent, self.indent_mod = 0, 0
@@ -3071,15 +3074,16 @@ class StplParser(object):
         return self._syntax
 
     def set_syntax(self, syntax):
+        self._syntax = syntax
+        self._tokens = syntax.split()
         if not syntax in self._re_cache:
             names = 'block_start block_close line_start inline_start inline_end'
-            tokens = map(re.escape, syntax.split())
-            pattern_vars = dict(zip(names.split(), tokens))
+            etokens = map(re.escape, self._tokens)
+            pattern_vars = dict(zip(names.split(), etokens))
             patterns = (self._re_split, self._re_tok, self._re_inl)
             patterns = [re.compile(p%pattern_vars) for p in patterns]
             self._re_cache[syntax] = patterns
         self.re_split, self.re_tok, self.re_inl = self._re_cache[syntax]
-        self._syntax = syntax
 
     syntax = property(get_syntax, set_syntax)
 
@@ -3119,6 +3123,8 @@ class StplParser(object):
                 code_line += _str
             elif _com:  # Python comment (up to EOL)
                 comment = _com
+                if multiline and _com.strip().endswith(self._tokens[1]): 
+                    multiline = False # Allow end-of-block in comments
             elif _blk1: # Start-block keyword (if/for/while/def/try/...)
                 code_line, self.indent_mod = _blk1, -1
                 self.indent += 1
@@ -3146,17 +3152,13 @@ class StplParser(object):
             if prefix:
                 parts.append(nl.join(map(repr, prefix.splitlines(True))))
             if prefix.endswith('\n'): parts.append('\n  ')
-            inline = self.process_inline(m.group(1).strip())
-            if inline: parts.append(inline)
+            parts.append(self.process_inline(m.group(1).strip()))
         if pos < len(text):
             prefix = text[pos:]
             lines = prefix.splitlines(True)
             if lines[-1].endswith('\\\\\n'): lines[-1] = lines[-1][:-3]
             parts.append(nl.join(map(repr, lines)))
-        if parts:
-            code = '_printlist((%s,))' % ', '.join(parts)
-        else:
-            code = ''
+        code = '_printlist((%s,))' % ', '.join(parts)
         self.lineno += code.count('\n')+1
         self.write_code(code)
 
@@ -3177,10 +3179,10 @@ class StplParser(object):
             if len(parts) == 1:   return "_printlist([body])", comment
             elif len(parts) == 2: return "_=%s(%r)" % tuple(parts), comment
             else:                 return "_=%s(%r, %s)" % tuple(parts), comment
-        if not line.strip() and self.lineno <= 2 and 'coding' in comment:
-            depr('Template encodings other than utf8 are no longer supported.')
+        if self.lineno <= 2 and not line.strip() and 'coding' in comment:
             m = re.match(r"#.*coding[:=]\s*([-\w.]+)", comment)
             if m:
+                depr('PEP263 encoding strings in templates are reprecated.')
                 enc = m.group(1)
                 self.source = self.source.encode(self.encoding).decode(enc)
                 self.encoding = enc

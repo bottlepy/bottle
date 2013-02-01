@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import unittest
 from bottle import SimpleTemplate, TemplateError, view, template, touni, tob
+import re
+import traceback
 
 class TestSimpleTemplate(unittest.TestCase):
     def assertRenders(self, tpl, to, *args, **vars):
@@ -232,6 +234,110 @@ class TestSimpleTemplate(unittest.TestCase):
         SimpleTemplate.global_config('meh', 1)
         t = SimpleTemplate('anything')
         self.assertEqual(touni('anything'), t.render())
+
+class TestSTPLDir(unittest.TestCase):
+    def fix_ident(self, string):
+        lines = string.splitlines(True)
+        if not lines: return string
+        if not lines[0].strip(): lines.pop(0)
+        whitespace = re.match('([ \t]*)', lines[0]).group(0)
+        if not whitespace: return string
+        for i in range(len(lines)):
+            lines[i] = lines[i][len(whitespace):]
+        return lines[0][:0].join(lines)
+            
+    def assertRenders(self, source, result, syntax=None, *args, **vars):
+        source = self.fix_ident(source)
+        result = self.fix_ident(result)
+        tpl = SimpleTemplate(source, syntax=syntax)
+        try:
+            tpl.co
+            self.assertEqual(touni(result), tpl.render(*args, **vars))
+        except SyntaxError:
+            self.fail('Syntax error in template:\n%s\n\nTemplate code:\n##########\n%s\n##########' %
+                     (traceback.format_exc(), tpl.code))
+
+    def test_multiline_block(self):
+        source = '''
+            <% a = 5
+            b = 6
+            c = 7 %>
+            {{a+b+c}}
+        '''; result = '''
+            18
+        '''
+        self.assertRenders(source, result)
+
+    def test_multiline_ignore_eob_in_string(self):
+        source = '''
+            <% x=5 # a comment
+               y = '%>' # a string
+               # this is still code
+               # lets end this %>
+            {{x}}{{!y}}
+        '''; result = '''
+            5%>
+        '''
+        self.assertRenders(source, result)
+
+    def test_multiline_find_eob_in_comments(self):
+        source = '''
+            <% # a comment
+               # %> ignore because not end of line
+               # this is still code
+               x=5
+               # lets end this here %>
+            {{x}}
+        '''; result = '''
+            5
+        '''
+        self.assertRenders(source, result)
+
+    def test_multiline_indention(self):
+        source = '''
+            <%   if True:
+                   a = 2
+                     else:
+                       a = 0
+                         end
+            %>
+            {{a}}
+        '''; result = '''
+            2
+        '''
+        self.assertRenders(source, result)
+
+    def test_multiline_eob_after_end(self):
+        source = '''
+            <%   if True:
+                   a = 2
+                 end %>
+            {{a}}
+        '''; result = '''
+            2
+        '''
+        self.assertRenders(source, result)
+
+    def test_multiline_eob_in_single_line_code(self):
+        # eob must be a valid python expression to allow this test.
+        source = '''
+            cline eob=5; eob
+            xxx
+        '''; result = '''
+            xxx
+        '''
+        self.assertRenders(source, result, syntax='sob eob cline foo bar')
+
+    def test_multiline_strings_in_code_line(self):
+        source = '''
+            % a = """line 1
+                  line 2"""
+            {{a}}
+        '''; result = '''
+            line 1
+                  line 2
+        '''
+        self.assertRenders(source, result)
 
 if __name__ == '__main__': #pragma: no cover
     unittest.main()
