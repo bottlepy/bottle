@@ -561,13 +561,14 @@ class Bottle(object):
         def mountpoint_wrapper():
             try:
                 request.path_shift(path_depth)
-                rs = BaseResponse([])
+                rs = HTTPResponse([])
                 def start_response(status, headerlist):
                     rs.status = status
                     for name, value in headerlist: rs.add_header(name, value)
                     return rs.body.append
                 body = app(request.environ, start_response)
-                if body: rs.body = itertools.chain(rs.body, body)
+                if body and rs.body: body = itertools.chain(rs.body, body)
+                rs.body = body or rs.body
                 return rs
             finally:
                 request.path_shift(-path_depth)
@@ -1314,8 +1315,6 @@ class BaseResponse(object):
         if more_headers:
             for name, value in more_headers.items():
                 self.add_header(name, value)
-        if 'Content-Type' not in self._headers:
-            self._headers['Content-Type'] = [self.default_content_type]
 
     def copy(self):
         ''' Returns a copy of self. '''
@@ -1405,7 +1404,9 @@ class BaseResponse(object):
     def headerlist(self):
         ''' WSGI conform list of (header, value) tuples. '''
         out = []
-        headers = self._headers.items()
+        headers = list(self._headers.items())
+        if 'Content-Type' not in self._headers:
+            headers.append(('Content-Type', [self.default_content_type]))
         if self._status_code in self.bad_headers:
             bad_headers = self.bad_headers[self._status_code]
             headers = [h for h in headers if h[0] not in bad_headers]
