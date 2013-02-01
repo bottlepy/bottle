@@ -1620,14 +1620,22 @@ class JSONPlugin(object):
         dumps = self.json_dumps
         if not dumps: return callback
         def wrapper(*a, **ka):
-            rv = callback(*a, **ka)
+            try:
+                rv = callback(*a, **ka)
+            except HTTPError, e:
+                rv = e
+
             if isinstance(rv, dict):
                 #Attempt to serialize, raises exception on failure
                 json_response = dumps(rv)
                 #Set content type only if serialization succesful
                 response.content_type = 'application/json'
                 return json_response
+            elif isinstance(rv, HTTPResponse) and isinstance(rv.body, dict):
+                rv.body = dumps(rv.body)
+                rv.content_type = 'application/json'
             return rv
+
         return wrapper
 
 
