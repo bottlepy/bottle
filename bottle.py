@@ -2984,8 +2984,13 @@ class SimpleTemplate(BaseTemplate):
 
     @cached_property
     def code(self):
-        template = self.source or open(self.filename, 'rb').read()
-        parser = StplParser(touni(template))
+        source = self.source or open(self.filename, 'rb').read()
+        try:
+            source, encoding = touni(source), 'utf8'
+        except UnicodeError:
+            depr('Template encodings other than utf8 are no longer supported.')
+            source, encoding = touni(source, 'latin1'), 'latin1'
+        parser = StplParser(source, encoding=encoding)
         code = parser.translate()
         self.encoding = parser.encoding
         return code
@@ -3175,11 +3180,11 @@ class StplParser(object):
         if not line.strip() and self.lineno <= 2 and 'coding' in comment:
             depr('Template encodings other than utf8 are no longer supported.')
             m = re.match(r"#.*coding[:=]\s*([-\w.]+)", comment)
-            if not m: return line, comment
-            enc = m.group(1)
-            self.source = self.source.encode(self.encoding).decode(enc)
-            self.encoding = enc
-            return line, comment.replace('coding','coding*')
+            if m:
+                enc = m.group(1)
+                self.source = self.source.encode(self.encoding).decode(enc)
+                self.encoding = enc
+                return line, comment.replace('coding','coding*')
         return line, comment
 
 

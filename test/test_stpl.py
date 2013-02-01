@@ -193,14 +193,12 @@ class TestSimpleTemplate(unittest.TestCase):
 
     def test_ignore_pep263_in_textline(self):
         ''' PEP263 strings in text-lines have no effect '''
-        self.assertRaises(UnicodeError, lambda: SimpleTemplate(touni('#coding: iso8859_15\nöäü?@€').encode('iso8859_15')).co)
         t = SimpleTemplate(touni('#coding: iso8859_15\nöäü?@€').encode('utf8'))
         self.assertEqual(touni('#coding: iso8859_15\nöäü?@€'), t.render())
         self.assertEqual(t.encoding, 'utf8')
 
     def test_ignore_late_pep263(self):
         ''' PEP263 strings must appear within the first two lines '''
-        self.assertRaises(UnicodeError, lambda: SimpleTemplate(touni('\n\n%#coding: iso8859_15\nöäü?@€').encode('iso8859_15')).co)
         t = SimpleTemplate(touni('\n\n%#coding: iso8859_15\nöäü?@€').encode('utf8'))
         self.assertEqual(touni('\n\nöäü?@€'), t.render())
         self.assertEqual(t.encoding, 'utf8')
