@@ -567,7 +567,8 @@ class Bottle(object):
                     for name, value in headerlist: rs.add_header(name, value)
                     return rs.body.append
                 body = app(request.environ, start_response)
-                if body: rs.body = itertools.chain(rs.body, body)
+                if body and rs.body: body = itertools.chain(rs.body, body)
+                rs.body = body or rs.body
                 return rs
             finally:
                 request.path_shift(-path_depth)
@@ -1285,7 +1286,7 @@ class BaseResponse(object):
 
     def __init__(self, body='', status=None, **headers):
         self._cookies = None
-        self._headers = {'Content-Type': [self.default_content_type]}
+        self._headers = {}
         self.body = body
         self.status = status or self.default_status
         if headers:
@@ -1379,7 +1380,9 @@ class BaseResponse(object):
     def headerlist(self):
         ''' WSGI conform list of (header, value) tuples. '''
         out = []
-        headers = self._headers.items()
+        headers = list(self._headers.items())
+        if 'Content-Type' not in self._headers:
+            headers.append(('Content-Type', [self.default_content_type]))
         if self._status_code in self.bad_headers:
             bad_headers = self.bad_headers[self._status_code]
             headers = [h for h in headers if h[0] not in bad_headers]
