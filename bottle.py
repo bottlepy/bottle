@@ -561,7 +561,7 @@ class Bottle(object):
         def mountpoint_wrapper():
             try:
                 request.path_shift(path_depth)
-                rs = HTTPResponse([])
+                rs = BaseResponse([])
                 def start_response(status, headerlist):
                     rs.status = status
                     for name, value in headerlist: rs.add_header(name, value)
