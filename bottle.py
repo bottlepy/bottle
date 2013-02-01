@@ -3029,15 +3029,15 @@ class StplSyntaxError(TemplateError): pass
 
 
 class StplParser(object):
-    _re_cache = {}
-
-    # This huge pile of voodoo magic matches one of 7 Groups:
-    # 1: All kinds of python strings (just believe me)
+    ''' Parser for stpl templates. '''
+    _re_cache = {} #: Cache for compiled re patterns
+    # This huge pile of voodoo magic splits python code into 8 different tokens.
+    # 1: All kinds of python strings (trust me, it works)
     _re_tok = '((?m)[urbURB]?(?:\'\'(?!\')|""(?!")|\'{6}|"{6}' \
                '|\'(?:[^\\\\\']|\\\\.)+?\'|"(?:[^\\\\"]|\\\\.)+?"' \
                '|\'{3}(?:[^\\\\]|\\\\.|\\n)+?\'{3}' \
                '|"{3}(?:[^\\\\]|\\\\.|\\n)+?"{3}))'
-    _re_inl = _re_tok.replace('|\\n','') # Re-use of this pattern down below
+    _re_inl = _re_tok.replace('|\\n','') # We re-use this string pattern later
     # 2: Comments (until end of line, but not the newline itself)
     _re_tok += '|(#.*)'
     # 3,4: Keywords that start or continue a python block (only start of line)
@@ -3047,20 +3047,23 @@ class StplParser(object):
     _re_tok += '|((?:^|;)[ \\t]*end[ \\t]*(?=$|;|#))'
     # 6: A customizable end-of-code-block template token (only end of line)
     _re_tok += '|(%(block_close)s[ \\t]*(?=$))'
-    # 7: And finally, a single newline
-    _re_tok += '|(\\n)' # Match a single newline
-    # Find the start tokens of code areas in a template
+    # 7: And finally, a single newline. The 8th token is 'everything else'
+    _re_tok += '|(\\n)'
+    # Match the start tokens of code areas in a template
     _re_split = '(?m)^[ \t]*(?:(%(line_start)s)|(%(block_start)s))'
-    # Find inline statements (may contain python strings)
+    # Match inline statements (may contain python strings)
     _re_inl = '%%(inline_start)s((?:%s|[^\'"\n]*?)+)%%(inline_end)s' % _re_inl
 
     def __init__(self, source, syntax='<% %> % {{ }}', encoding='utf8'):
         self.source, self.encoding = touni(source, encoding), encoding
-        self.syntax = syntax
+        self.set_syntax(syntax)
         self.code_buffer, self.text_buffer = [], []
         self.lineno, self.offset = 1, 0
-        self.set_syntax(syntax)
         self.indent, self.indent_mod = 0, 0
+
+    def get_syntax(self):
+        ''' Tokens as a space separated string (default: <% %> % {{ }}) '''
+        return self._syntax
 
     def set_syntax(self, syntax):
         if not syntax in self._re_cache:
@@ -3071,6 +3074,9 @@ class StplParser(object):
             patterns = [re.compile(p%pattern_vars) for p in patterns]
             self._re_cache[syntax] = patterns
         self.re_split, self.re_tok, self.re_inl = self._re_cache[syntax]
+        self._syntax = syntax
+
+    syntax = property(get_syntax, set_syntax)
 
     def translate(self):
         if self.offset: raise RuntimeError('Parser is a one time instance.')
