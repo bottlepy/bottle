@@ -1067,7 +1067,9 @@ class BaseRequest(object):
         # We default to application/x-www-form-urlencoded for everything that
         # is not multipart and take the fast path (also: 3.1 workaround)
         if not self.content_type.startswith('multipart/'):
-            maxlen = max(0, min(self.content_length, self.MEMFILE_MAX))
+            if self.content_length > self.MEMFILE_MAX:
+                abort(413, 'Request Entity Too Large')
+            maxlen = max(0, self.content_length)
             pairs = _parse_qsl(tonat(self.body.read(maxlen), 'latin1'))
             for key, value in pairs[:self.MAX_PARAMS]:
                 post[key] = value
