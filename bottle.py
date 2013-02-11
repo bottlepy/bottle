@@ -82,7 +82,6 @@ if py3k:
     urlunquote = functools.partial(urlunquote, encoding='latin1')
     from http.cookies import SimpleCookie
     from collections import MutableMapping as DictMixin
-    import pickle
     from io import BytesIO
     basestring = str
     unicode = str
@@ -96,7 +95,6 @@ else: # 2.x
     from urllib import urlencode, quote as urlquote, unquote as urlunquote
     from Cookie import SimpleCookie
     from itertools import imap
-    import cPickle as pickle
     from StringIO import StringIO as BytesIO
     if py25:
         msg = "Python 2.5 support may be dropped in future versions of Bottle."
@@ -1459,7 +1457,7 @@ class BaseResponse(object):
             expire at the end of the browser session (as soon as the browser
             window is closed).
 
-            Signed cookies may store any pickle-able object and are
+            Signed cookies may store any JSON-serializable object and are
             cryptographically signed to prevent manipulation. Keep in mind that
             cookies are limited to 4kb in most browsers.
 
@@ -2218,8 +2216,8 @@ def _lscmp(a, b):
 
 
 def cookie_encode(data, key):
-    ''' Encode and sign a pickle-able object. Return a (byte) string '''
-    msg = base64.b64encode(pickle.dumps(data, -1))
+    ''' Encode and sign a JSON-serializable object. Return a (byte) string '''
+    msg = base64.b64encode(json.dumps(data).encode(zlib))
     sig = base64.b64encode(hmac.new(tob(key), msg).digest())
     return tob('!') + sig + tob('?') + msg
 
@@ -2230,7 +2228,7 @@ def cookie_decode(data, key):
     if cookie_is_encoded(data):
         sig, msg = data.split(tob('?'), 1)
         if _lscmp(sig[1:], base64.b64encode(hmac.new(tob(key), msg).digest())):
-            return pickle.loads(base64.b64decode(msg))
+            return json.loads(base64.b64decode(msg).decode('zlib'))
     return None
 
 
