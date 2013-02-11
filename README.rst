@@ -19,6 +19,11 @@ Installation and Dependencies
 
 Install bottle with ``pip install bottle`` or just `download bottle.py <http://pypi.python.org/pypi/bottle>`_ and place it in your project directory. There are no (hard) dependencies other than the Python Standard Library.
 
+Or, for the truly lazy:
+
+::
+
+    curl https://raw.github.com/defnull/bottle/release/bottle.py -o bottle.py
 
 Example
 -------
