@@ -143,7 +143,7 @@ def depr(message):
 
 def makelist(data): # This is just to handy
     if isinstance(data, (tuple, list, set, dict)): return list(data)
-    elif data: return [data]
+    elif data or isinstance(data, str): return [data]
     else: return []
 
 
