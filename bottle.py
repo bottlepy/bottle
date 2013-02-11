@@ -887,7 +887,6 @@ class Bottle(object):
 # HTTP and WSGI Tools ##########################################################
 ###############################################################################
 
-
 class BaseRequest(object):
     """ A wrapper for WSGI environment dictionaries that adds a lot of
         convenient access methods and properties. Most of them are read-only.
@@ -946,8 +945,9 @@ class BaseRequest(object):
     def cookies(self):
         """ Cookies parsed into a :class:`FormsDict`. Signed cookies are NOT
             decoded. Use :meth:`get_cookie` if you expect signed cookies. """
-        cookies = SimpleCookie(self.environ.get('HTTP_COOKIE',''))
-        cookies = list(cookies.values())[:self.MAX_PARAMS]
+        cookies = SimpleCookie(self.environ.get('HTTP_COOKIE','')).values()
+        if len(cookies) > self.MAX_PARAMS:
+            raise HTTPError(413, 'Too many cookies')
         return FormsDict((c.key, c.value) for c in cookies)
 
     def get_cookie(self, key, default=None, secret=None):
@@ -969,7 +969,9 @@ class BaseRequest(object):
             :class:`Router`. '''
         get = self.environ['bottle.get'] = FormsDict()
         pairs = _parse_qsl(self.environ.get('QUERY_STRING', ''))
-        for key, value in pairs[:self.MAX_PARAMS]:
+        if len(pairs) > self.MAX_PARAMS:
+            raise HTTPError(413, 'Too many parameters')
+        for key, value in pairs:
             get[key] = value
         return get
 
@@ -1025,9 +1027,8 @@ class BaseRequest(object):
             property holds the parsed content of the request body. Only requests
             smaller than :attr:`MEMFILE_MAX` are processed to avoid memory
             exhaustion. '''
-        if 'application/json' in self.environ.get('CONTENT_TYPE', '') \
-        and 0 < self.content_length < self.MEMFILE_MAX:
-            return json_loads(self.body.read(self.MEMFILE_MAX))
+        if 'application/json' in self.environ.get('CONTENT_TYPE', ''):
+            return json_loads(self._get_body_string())
         return None
 
     @DictProperty('environ', 'bottle.request.body', read_only=True)
@@ -1043,6 +1044,18 @@ class BaseRequest(object):
         self.environ['wsgi.input'] = body
         body.seek(0)
         return body
+
+    def _get_body_string(self):
+        ''' read body until content-length or MEMFILE_MAX into a string. Raise
+            HTTPError(413) on requests that are to large. '''
+        clen = self.content_length
+        if clen > self.MEMFILE_MAX:
+            raise HTTPError(413, 'Request to large')
+        if clen < 0: clen = self.MEMFILE_MAX + 1
+        data = self.body.read(clen)
+        if len(data) > self.MEMFILE_MAX: # Fail fast
+            raise HTTPError(413, 'Request to large')
+        return data
 
     @property
     def body(self):
@@ -1067,9 +1080,10 @@ class BaseRequest(object):
         # We default to application/x-www-form-urlencoded for everything that
         # is not multipart and take the fast path (also: 3.1 workaround)
         if not self.content_type.startswith('multipart/'):
-            maxlen = max(0, min(self.content_length, self.MEMFILE_MAX))
-            pairs = _parse_qsl(tonat(self.body.read(maxlen), 'latin1'))
-            for key, value in pairs[:self.MAX_PARAMS]:
+            pairs = _parse_qsl(tonat(self._get_body_string(), 'latin1'))
+            if len(pairs) > self.MAX_PARAMS:
+                raise HTTPError(413, 'Too many parameters')
+            for key, value in pairs:
                 post[key] = value
             return post
 
@@ -1083,7 +1097,10 @@ class BaseRequest(object):
         elif py3k:
             args['encoding'] = 'ISO-8859-1'
         data = FieldStorage(**args)
-        for item in (data.list or [])[:self.MAX_PARAMS]:
+        data = data.list or []
+        if len(data) > self.MAX_PARAMS:
+            raise HTTPError(413, 'Too many parameters')
+        for item in data:
             post[item.name] = item if item.filename else item.value
         return post
 

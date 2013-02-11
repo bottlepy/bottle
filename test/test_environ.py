@@ -4,7 +4,7 @@
 import unittest
 import sys, os.path
 import bottle
-from bottle import request, response, tob, touni, tonat, json_dumps, _e
+from bottle import request, response, tob, touni, tonat, json_dumps, _e, HTTPError
 import tools
 import wsgiref.util
 import threading
@@ -333,7 +333,7 @@ class TestRequest(unittest.TestCase):
         e['wsgi.input'].write(tob(json_dumps(test)))
         e['wsgi.input'].seek(0)
         e['CONTENT_LENGTH'] = str(len(json_dumps(test)))
-        self.assertEqual(BaseRequest(e).json, None)
+        self.assertRaises(HTTPError, lambda: BaseRequest(e).json)
 
     def test_json_valid(self):
         """ Environ: Request.json property. """
@@ -394,16 +394,16 @@ class TestRequest(unittest.TestCase):
         e['wsgi.input'].seek(0)
         e['CONTENT_LENGTH'] = '11'
         e['REQUEST_METHOD'] = "POST"
-        e['HTTP_COOKIE'] = 'a=1,b=1,c=1;d=1'
+        e['HTTP_COOKIE'] = 'a=1;b=1;c=1;d=1'
         e['QUERY_STRING'] = 'a&b&c&d'
         old_value = BaseRequest.MAX_PARAMS
         r = BaseRequest(e)
         try:
             BaseRequest.MAX_PARAMS = 2
-            self.assertEqual(len(list(r.query.allitems())), 2)
-            self.assertEqual(len(list(r.cookies.allitems())), 2)
-            self.assertEqual(len(list(r.forms.allitems())), 2)
-            self.assertEqual(len(list(r.params.allitems())), 4)
+            self.assertRaises(HTTPError, lambda: r.query)
+            self.assertRaises(HTTPError, lambda: r.cookies)
+            self.assertRaises(HTTPError, lambda: r.forms)
+            self.assertRaises(HTTPError, lambda: r.params)
         finally:
             BaseRequest.MAX_PARAMS = old_value
 
