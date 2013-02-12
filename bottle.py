@@ -562,7 +562,12 @@ class Bottle(object):
             try:
                 request.path_shift(path_depth)
                 rs = HTTPResponse([])
-                def start_response(status, headerlist):
+                def start_response(status, headerlist, exc_info=None):
+                    if exc_info:
+                        try:
+                            raise exc_info[0], exc_info[1], exc_info[2]
+                        finally:
+                            exc_info = None
                     rs.status = status
                     for name, value in headerlist: rs.add_header(name, value)
                     return rs.body.append
