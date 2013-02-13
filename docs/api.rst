@@ -101,6 +101,9 @@ Data Structures
 .. autoclass:: ResourceManager
    :members:
 
+.. autoclass:: FileUpload
+   :members:
+
 Exceptions
 ---------------
 

@@ -122,11 +122,6 @@ if py31:
     class NCTextIOWrapper(TextIOWrapper):
         def close(self): pass # Keep wrapped buffer open.
 
-# File uploads (which are implemented as empty FiledStorage instances...)
-# have a negative truth value. That makes no sense, here is a fix.
-class FieldStorage(cgi.FieldStorage):
-    def __nonzero__(self): return bool(self.list or self.file)
-    if py3k: __bool__ = __nonzero__
 
 # A bug in functools causes it to break if the wrapper is an instance method
 def update_wrapper(wrapper, wrapped, *a, **ka):
@@ -178,6 +173,7 @@ class cached_property(object):
         property. '''
 
     def __init__(self, func):
+        self.__doc__ = getattr(func, '__doc__')
         self.func = func
 
     def __get__(self, obj, cls):
@@ -988,7 +984,7 @@ class BaseRequest(object):
             are stored separately in :attr:`files`. """
         forms = FormsDict()
         for name, item in self.POST.allitems():
-            if not hasattr(item, 'filename'):
+            if not isinstance(item, FileUpload):
                 forms[name] = item
         return forms
 
@@ -1005,24 +1001,13 @@ class BaseRequest(object):
 
     @DictProperty('environ', 'bottle.request.files', read_only=True)
     def files(self):
-        """ File uploads parsed from an `url-encoded` or `multipart/form-data`
-            encoded POST or PUT request body. The values are instances of
-            :class:`cgi.FieldStorage`. The most important attributes are:
+        """ File uploads parsed from `multipart/form-data` encoded POST or PUT
+            request body. The values are instances of :class:`FileUpload`.
 
-            filename
-                The filename, if specified; otherwise None; this is the client
-                side filename, *not* the file name on which it is stored (that's
-                a temporary file you don't deal with)
-            file
-                The file(-like) object from which you can read the data.
-            value
-                The value as a *string*; for file uploads, this transparently
-                reads the file every time you request the value. Do not do this
-                on big files.
         """
         files = FormsDict()
         for name, item in self.POST.allitems():
-            if hasattr(item, 'filename'):
+            if isinstance(item, FileUpload):
                 files[name] = item
         return files
 
@@ -1101,12 +1086,16 @@ class BaseRequest(object):
                                          newline='\n')
         elif py3k:
             args['encoding'] = 'ISO-8859-1'
-        data = FieldStorage(**args)
+        data = cgi.FieldStorage(**args)
         data = data.list or []
         if len(data) > self.MAX_PARAMS:
             raise HTTPError(413, 'Too many parameters')
         for item in data:
-            post[item.name] = item if item.filename else item.value
+            if item.filename:
+                post[item.name] = FileUpload(item.file, item.name,
+                                             item.filename, item.headers)
+            else:
+                post[item.name] = item.value
         return post
 
     @property
@@ -2086,6 +2075,67 @@ class ResourceManager(object):
         fname = self.lookup(name)
         if not fname: raise IOError("Resource %r not found." % name)
         return self.opener(name, mode=mode, *args, **kwargs)
+
+
+class FileUpload(object):
+
+    def __init__(self, fileobj, name, filename, headers=None):
+        ''' Wrapper for file uploads. '''
+        #: Open file(-like) object (BytesIO buffer or temporary file)
+        self.file = fileobj
+        #: Name of the upload form field
+        self.name = name
+        #: Raw filename as sent by the client (may contain unsafe characters)
+        self.raw_filename = filename
+        #: A :class:`HeaderDict` with additional headers (e.g. content-type)
+        self.headers = HeaderDict(headers) if headers else HeaderDict()
+
+    content_type = HeaderProperty('Content-Type')
+    content_length = HeaderProperty('Content-Length', reader=int, default=-1)
+
+    @cached_property
+    def filename(self):
+        ''' Name of the file on the client file system, but normalized to ensure
+            file system compatibility (lowercase, no whitespace, no path
+            separators, no unsafe characters, ASCII only). An empty filename
+            is returned as 'empty'.
+        '''
+        from unicodedata import normalize #TODO: Module level import?
+        fname = self.raw_filename
+        if isinstance(fname, unicode):
+            fname = normalize('NFKD', fname).encode('ASCII', 'ignore')
+        fname = fname.decode('ASCII', 'ignore')
+        fname = os.path.basename(fname.replace('\\', os.path.sep))
+        fname = re.sub(r'[^a-zA-Z0-9-_.\s]', '', fname).strip().lower()
+        fname = re.sub(r'[-\s]+', '-', fname.strip('.').strip())
+        return fname or 'empty'
+
+    def _copy_file(self, fp, chunk_size=2**16):
+        read, write, offset = self.file.read, fp.write, self.file.tell()
+        while 1:
+            buf = read(chunk_size)
+            if not buf: break
+            write(buf)
+        self.file.seek(offset)    
+
+    def save(self, destination, overwrite=False, chunk_size=2**16):
+        ''' Save file to disk or copy its content to an open file(-like) object.
+            If *destination* is a directory, :attr:`filename` is added to the
+            path. Existing files are not overwritten by default (IOError).
+
+            :param destination: File path, directory or file(-like) object.
+            :param overwrite: If True, replace existing files. (default: False)
+            :param chunk_size: Bytes to read at a time. (default: 64kb)
+        '''
+        if isinstance(destination, basestring): # Except file-likes here
+            if os.path.isdir(destination):
+                destination = os.path.join(destination, self.filename)
+            if not overwrite and os.path.exists(destination):
+                raise IOError('File exists.')
+            with open(destination, 'wb') as fp:
+                self._copy_file(fp, chunk_size)
+        else:
+            self._copy_file(destination, chunk_size)
 
 
 
