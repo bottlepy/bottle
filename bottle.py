@@ -1986,9 +1986,13 @@ class WSGIFileWrapper(object):
             yield part
 
 
-class _iterchain(itertools.chain):
+class _iterchain(object):
     ''' This only exists to be able to attach a .close method to iterators that
         do not support attribute assignment (most of itertools). '''
+    def __init__(self, *iterators):
+        self.iterators = iterators
+    def __iter__(self):
+        return itertools.chain(*self.iterators)
 
 
 class ResourceManager(object):
