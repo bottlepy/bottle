@@ -33,7 +33,7 @@ Python is a very powerful language but its whitespace-aware syntax makes it diff
    The :class:`SimpleTemplate` syntax compiles directly to python bytecode and is executed on each :meth:`SimpleTemplate.render` call. Do not render untrusted templates! They may contain and execute harmful python code.
 
 Inline Expressions
------------------
+------------------
 
 You already learned the use of the ``{{...}}`` syntax from the "Hello World!" example above, but there is more: any python expression is allowed within the curly brackets as long as it returns a string or something that has a string representation::
 

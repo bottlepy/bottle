@@ -2955,8 +2955,8 @@ class BaseTemplate(object):
         """ Render the template with the specified local variables and return
         a single byte or unicode string. If it is a byte string, the encoding
         must match self.encoding. This method must be thread-safe!
-        Local variables may be provided in dictionaries (*args)
-        or directly, as keywords (**kwargs).
+        Local variables may be provided in dictionaries (args)
+        or directly, as keywords (kwargs).
         """
         raise NotImplementedError
 
