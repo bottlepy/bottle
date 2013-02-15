@@ -1838,6 +1838,7 @@ class FormsDict(MultiDict):
         return copy
 
     def getunicode(self, name, default=None, encoding=None):
+        ''' Return the value as a unicode string, or the default. '''
         try:
             return self._fix(self[name], encoding)
         except (UnicodeError, KeyError):

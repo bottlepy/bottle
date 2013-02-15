@@ -139,6 +139,8 @@ The module-level :data:`bottle.request` is a proxy object (implemented in :class
    :members:
 
 
+.. autodata:: request
+
 The :class:`Response` Object
 ===================================================
 
