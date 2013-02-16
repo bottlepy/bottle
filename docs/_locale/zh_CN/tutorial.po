@@ -8,10 +8,9 @@ msgstr ""
 "Project-Id-Version: Bottle 0.12-dev\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2013-02-17 01:11\n"
-"PO-Revision-Date: 2013-02-17 01:38+0800\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2013-02-17 02:22+0800\n"
+"Last-Translator: \n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -1130,10 +1129,9 @@ msgid ""
 "value is missing or unicode decoding fails. In that case, the string is "
 "empty, but still present::"
 msgstr ""
-"Bottle在 :class:`FormsDict` 类的一个实例里，存储大多数解析后的HTTP元数据。其"
-"行为和普通的字典类似，但有一些额外的特性: 所有在字典中的值都可像访问类的属性"
-"那样访问。这类虚拟的属性总是返回一个unicode字符串，如果缺失该属性，将返回一个"
-"空字符串。"
+"**属性访问** ：字典中所有的值都可以当做属性来访问。这些虚拟的属性返回unicode"
+"字符串。在字典中缺少对应的值，或unicode解码失败的情况下，属性返回的字符串为"
+"空。"
 
 # c6d66b38537f4c93a5aea83e2d90096d
 #: ../../tutorial.rst:520
@@ -1144,9 +1142,9 @@ msgid ""
 "`~MultiDict.getall` method returns a (possibly empty) list of all values for "
 "a specific key::"
 msgstr ""
-":class:`FormsDict` 类继承自 :class:`MultiDict` 类，一个key可存储多个值。标准"
-"的字典访问方法只会返回一个值，但可通过 :meth:`MultiDict.getall` 方法来获取一"
-"个包含所有值的list (或许为空)。"
+"**一个key对应多个value：** :class:`FormsDict` 是 :class:`MutilDict` 的子类，"
+"一个key可存储多个value。标准的字典访问方法只返回一个值，但 :meth:`~MultiDict."
+"getall` 方法会返回一个包含了所有value的一个list（也许为空）。"
 
 # bc6adb59e0714314b37551f7db353571
 #: ../../tutorial.rst:525
@@ -1232,9 +1230,8 @@ msgid ""
 "cookies. It supports decoding :ref:`signed cookies <tutorial-signed-"
 "cookies>` as described in a separate section."
 msgstr ""
-"cookie存储在 :attr:`BaseRequest.cookie` 中，是  :class:`FormsDict` 类的一个实"
-"例。 :meth:`BaseRequest.get_cookie` 方法提供了对 :ref:`签名cookie <tutorial-"
-"signed-cookies>` 的访问。下面是一个基于cookie的计数器例子。"
+":meth:`BaseRequest.get_cookie` 是访问cookie的另一种方法。它支持解析 :ref:"
+"`signed cookies <tutorial-signed-cookies>` 。"
 
 # 100ecfb0ffa34da8a18ba10859ec5203
 #: ../../tutorial.rst:564
@@ -1249,9 +1246,9 @@ msgid ""
 "the :attr:`BaseRequest.headers` attribute. A :class:`WSGIHeaderDict` is "
 "basically a dictionary with case-insensitive keys::"
 msgstr ""
-"所有发送到客户端的HTTP头(例如 ``Referer``, ``Agent`` 和 ``Accept-Language``)"
-"存储在一个 :class:`WSGIHeaderDict` 中，可通过 :attr:`BaseRequest.headers` 访"
-"问。  :class:`WSGIHeaderDict` 是一个字典，其key大小写敏感。"
+"所有客户端发送过来的HTTP头(例如 ``Referer``, ``Agent`` 和 ``Accept-"
+"Language``)存储在一个 :class:`WSGIHeaderDict` 中，可通过 :attr:`BaseRequest."
+"headers` 访问。  :class:`WSGIHeaderDict` 基本上是一个字典，其key大小写敏感。"
 
 # a04a46af8ede416dbc96fa3067dce003
 #: ../../tutorial.rst:578
@@ -1266,9 +1263,9 @@ msgid ""
 "`BaseRequest.query` attribute (a :class:`FormsDict`) to access these values "
 "and the :attr:`BaseRequest.query_string` attribute to get the whole string."
 msgstr ""
-"查询字符串(例如 ``/forum?id=1&page=5`` 中的 id=5和page=5)一般用于向服务器传输"
-"键值对。你可通过 :attr:`BaseRequest.query` ( :class:`FormsDict` 类的实例) 来"
-"访问，和通过 :attr:`BaseRequest.query_string` 来获取整个字符串。"
+"查询字符串(例如 ``/forum?id=1&page=5`` )一般用于向服务器传输键值对。你可通"
+"过 :attr:`BaseRequest.query` ( :class:`FormsDict` 类的实例) 来访问，和通过 :"
+"attr:`BaseRequest.query_string` 来获取整个字符串。"
 
 # 25526928151e427cab403bbea63ec097
 #: ../../tutorial.rst:593
@@ -1329,7 +1326,7 @@ msgstr ""
 # 62ba54597de54af58b7f60aa96fee29a
 #: ../../tutorial.rst:633
 msgid "POST Form fields"
-msgstr "POST表单数据和文件上传"
+msgstr "POST表单数据"
 
 # 62ba54597de54af58b7f60aa96fee29a
 #: ../../tutorial.rst:633
