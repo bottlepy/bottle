@@ -873,7 +873,7 @@ class Bottle(object):
                        % (html_escape(repr(_e())), html_escape(format_exc()))
             environ['wsgi.errors'].write(err)
             headers = [('Content-Type', 'text/html; charset=UTF-8')]
-            start_response('500 INTERNAL SERVER ERROR', headers)
+            start_response('500 INTERNAL SERVER ERROR', headers, sys.exc_info())
             return [tob(err)]
 
     def __call__(self, environ, start_response):
