@@ -89,6 +89,7 @@ if py3k:
     json_loads = lambda s: json_lds(touni(s))
     callable = lambda x: hasattr(x, '__call__')
     imap = map
+    def _raise(*a): raise a[0](a[1]).with_traceback(a[2])
 else: # 2.x
     import httplib
     import thread
@@ -107,6 +108,7 @@ else: # 2.x
     else: # 2.6, 2.7
         from collections import MutableMapping as DictMixin
     json_loads = json_lds
+    eval(compile('def _raise(*a): raise a[0], a[1], a[2]', '<py3fix>', 'exec'))
 
 # Some helpers for string/byte handling
 def tob(s, enc='utf8'):
@@ -561,7 +563,7 @@ class Bottle(object):
                 def start_response(status, headerlist, exc_info=None):
                     if exc_info:
                         try:
-                            raise exc_info[0], exc_info[1], exc_info[2]
+                            _raise(*exc_info)
                         finally:
                             exc_info = None
                     rs.status = status
@@ -1610,8 +1612,8 @@ class JSONPlugin(object):
         def wrapper(*a, **ka):
             try:
                 rv = callback(*a, **ka)
-            except HTTPError, e:
-                rv = e
+            except HTTPError:
+                rv = _e()
 
             if isinstance(rv, dict):
                 #Attempt to serialize, raises exception on failure
