@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Bottle 0.12-dev\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-11-09 18:23\n"
+"POT-Creation-Date: 2013-02-16 21:45\n"
 "PO-Revision-Date: 2012-11-09 15:47+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -161,6 +161,11 @@ msgstr ""
 "修复，然后通过所有渠道发布(邮件列表, twitter, github)。不重要的bug修复或特征"
 "不保证添加到旧版本中。这个情况在未来也许会改变。"
 
+# 9ecb2ba91a264d909f35e766e4526450
+#: ../../development.rst:36
+msgid "Major Release (x.0)"
+msgstr ""
+
 # 03d00f16fb6b4214899a04cba5c35a6d
 #: ../../development.rst:36
 msgid ""
@@ -171,6 +176,11 @@ msgid ""
 msgstr ""
 "在重要的里程碑达成或新的更新和旧版本彻底不兼容时，会增加major版本号。为了使用"
 "新版本，你也许需要修改整个应用，但major版本号极少会改变。"
+
+# c9620f52ec754a4aab875fdb2137c0cc
+#: ../../development.rst:39
+msgid "Minor Release (x.y)"
+msgstr ""
 
 # 7a1a1638c40e43e0b01af3627996a080
 #: ../../development.rst:39
@@ -188,6 +198,11 @@ msgstr ""
 "新，但这不是必须的。0.8版本是一个特例，它 *不兼容* 旧版本(所以我们跳过了0.7版"
 "本直接发布0.8版本)，不好意思。"
 
+# c1cd34f3caf846dab76881dac14c53e2
+#: ../../development.rst:42
+msgid "Revision (x.y.z)"
+msgstr ""
+
 # ba5728b974e14b75911cbbea41cbe6d7
 #: ../../development.rst:42
 msgid ""
@@ -199,6 +214,11 @@ msgstr ""
 "在修复了一些bug，和改动不会修改API的时候，会增加revision版本号。你可以放心更"
 "新，而不用修改你应用的代码。事实上，你确实应该更新这类版本，因为它常常修复一"
 "些安全问题。"
+
+# 7629abe7b2f144bc9f1de10aad83d468
+#: ../../development.rst:46
+msgid "Pre-Release Versions"
+msgstr ""
 
 # e7d78ebc45b147989ff9c8cb1ae39a91
 #: ../../development.rst:45
@@ -220,6 +240,11 @@ msgstr "代码仓库结构"
 msgid "The source repository is structured as follows:"
 msgstr "代码仓库的结构如下:"
 
+# 7dcc7cc36e324c829aebbafe37c3796f
+#: ../../development.rst:54
+msgid "``master`` branch"
+msgstr ""
+
 # d116d802a64e43788fceb4041ce2a7a2
 #: ../../development.rst:54
 msgid ""
@@ -228,6 +253,11 @@ msgid ""
 msgstr ""
 "该分支用于集成，测试和开发。所有计划添加到下一版本的改动，会在这里合并和测"
 "试。"
+
+# 6abfeb26070147c09c19c10a7090f44a
+#: ../../development.rst:57
+msgid "``release-x.y`` branches"
+msgstr ""
 
 # bc12377068154a19a6f9a3bffda6d913
 #: ../../development.rst:57
@@ -246,6 +276,11 @@ msgstr ""
 "受bug-fix，但仅限关键的bug-fix。每次更改后，版本号都会更新，这样你就能及时获"
 "取重要的改动了。"
 
+# 30902a4eb31141c4b9e2e99195dc69df
+#: ../../development.rst:60
+msgid "``bugfix_name-x.y`` branches"
+msgstr ""
+
 # 6724eda55b8a4e02a39d970badc69f0b
 #: ../../development.rst:60
 msgid ""
@@ -255,6 +290,11 @@ msgid ""
 msgstr ""
 "这些分支是临时性的，用于修复现有发布版本的bug。在合并到其他分支后，它们就会被"
 "删除。"
+
+# 1c189971e0b846d8935a5c9f4fcf6374
+#: ../../development.rst:64
+msgid "Feature branches"
+msgstr ""
 
 # 23e018316a6343b88a255c80f908693f
 #: ../../development.rst:63

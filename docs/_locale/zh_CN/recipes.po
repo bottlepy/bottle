@@ -7,14 +7,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Bottle 0.12-dev\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-11-09 18:23\n"
-"PO-Revision-Date: 2012-11-09 17:47+0800\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"POT-Creation-Date: 2013-02-16 21:45\n"
+"PO-Revision-Date: 2013-02-17 01:52+0800\n"
+"Last-Translator: \n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.5.4\n"
 
 # 8487026bb92949c197608691e0682922
 #: ../../recipes.rst:16
@@ -340,11 +340,11 @@ msgstr "例如，你想提供跨域资源共享，可参考下面的例子。"
 # 27f25eeca0c140c881b5a82396063aaa
 #: ../../recipes.rst:230
 msgid ""
-"You can also use the ``before_callback`` to take an action before every "
+"You can also use the ``before_request`` to take an action before every "
 "function gets called."
 msgstr ""
-"你也可以使用 ``before_callback`` ，这样在route的回调函数被调用之前，都会调用"
-"你的钩子函数。"
+"你也可以使用 ``before_request`` ，这样在route的回调函数被调用之前，都会调用你"
+"的钩子函数。"
 
 # 5882be32dd4040c8a642ff5f40a20229
 #: ../../recipes.rst:235
