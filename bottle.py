@@ -922,6 +922,11 @@ class BaseRequest(object):
         """ The bottle :class:`Route` object that matches this request. """
         raise RuntimeError('This request is not connected to a route.')
 
+    @DictProperty('environ', 'route.url_args', read_only=True)
+    def url_args(self):
+        """ The arguments extracted from the URL. """
+        raise RuntimeError('This request is not connected to a route.')
+
     @property
     def path(self):
         ''' The value of ``PATH_INFO`` with exactly one prefixed slash (to fix

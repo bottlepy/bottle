@@ -14,7 +14,7 @@ from bottle import BaseRequest, BaseResponse, LocalRequest
 
 class TestRequest(unittest.TestCase):
 
-    def test_app(self):
+    def test_app_property(self):
         e = {}
         r = BaseRequest(e)
         self.assertRaises(RuntimeError, lambda: r.app)
@@ -25,6 +25,13 @@ class TestRequest(unittest.TestCase):
         e = {'bottle.route': 5}
         r = BaseRequest(e)
         self.assertEqual(r.route, 5)
+
+    def test_url_for_property(self):
+        e = {}
+        r = BaseRequest(e)
+        self.assertRaises(RuntimeError, lambda: r.url_args)
+        e.update({'route.url_args': {'a': 5}})
+        self.assertEqual(r.url_args, {'a': 5})
 
     def test_path(self):
         """ PATH_INFO normalization. """
