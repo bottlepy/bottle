@@ -845,8 +845,7 @@ class Bottle(object):
             msg = 'Unsupported response type: %s' % type(first)
             return self._cast(HTTPError(500, msg))
         if hasattr(out, 'close'):
-            new_iter = _iterchain(new_iter)
-            new_iter.close = out.close
+            new_iter = _closeiter(new_iter, out.close)
         return new_iter
 
     def wsgi(self, environ, start_response):
@@ -1987,13 +1986,20 @@ class WSGIFileWrapper(object):
             yield part
 
 
-class _iterchain(object):
+class _closeiter(object):
     ''' This only exists to be able to attach a .close method to iterators that
         do not support attribute assignment (most of itertools). '''
-    def __init__(self, *iterators):
-        self.iterators = iterators
+
+    def __init__(self, iterator, close=None):
+        self.iterator = iterator
+        self.close_callbacks = makelist(close)
+
     def __iter__(self):
-        return itertools.chain(*self.iterators)
+        return iter(self.iterator)
+
+    def close(self):
+        for func in self.close_callbacks:
+            func()
 
 
 class ResourceManager(object):
