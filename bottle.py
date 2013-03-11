@@ -3095,6 +3095,18 @@ class AiohttpServer(ServerAdapter):
             self.loop.stop()
 
 
+class CircuitsServer(ServerAdapter):
+    """circuits.web Asynchronous Server (http://circuitsframework.com/)"""
+
+    def run(self, handler):  # pragma: no cover
+        from circuits import Debugger
+        from circuits.web import Server
+        from circuits.web.wsgi import Gateway
+
+        apps = {"/": handler}
+        (Server((self.host, self.port)) + Debugger() + Gateway(apps)).run()
+
+
 class AutoServer(ServerAdapter):
     """ Untested. """
     adapters = [WaitressServer, PasteServer, TwistedServer, CherryPyServer,
@@ -3114,6 +3126,7 @@ server_names = {
     'wsgiref': WSGIRefServer,
     'waitress': WaitressServer,
     'cherrypy': CherryPyServer,
+    'circuits': CircuitsServer,
     'paste': PasteServer,
     'fapws3': FapwsServer,
     'tornado': TornadoServer,
