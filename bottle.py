@@ -3141,9 +3141,21 @@ class SimpleTemplate(BaseTemplate):
             for line in stmt.splitlines():
                 codebuffer.append('  ' * len(stack) + line.strip())
 
+        blockdeep = 0
+        block_start,block_close,line_start,line_escape = '<%','%>','%','%\\'
         for line in template.splitlines(True):
             lineno += 1
             line = touni(line, self.encoding)
+            if line.startswith(block_start):
+                line = line[len(block_start):]
+                blockdeep += 1
+            if blockdeep: 
+                line = line_start + line
+                if line.startswith(line_escape): #use '\' to escape codeblock
+                  line = line[len(line_escape):]
+                if line.rstrip().endswith(block_close):
+                    line = line.rstrip()[:-len(block_close)]+'\n'
+                    blockdeep -= 1
             sline = line.lstrip()
             if lineno <= 2:
                 m = re.match(r"%\s*#.*coding[:=]\s*([-\w.]+)", sline)

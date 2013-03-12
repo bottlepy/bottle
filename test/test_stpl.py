@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+if __name__ == '__main__':
+    import sys
+    '..' not in sys.path and sys.path.append('..')
+import os
 import unittest
 from bottle import SimpleTemplate, TemplateError, view, template, touni, tob
 
@@ -11,17 +15,17 @@ class TestSimpleTemplate(unittest.TestCase):
     def test_string(self):
         """ Templates: Parse string"""
         self.assertRenders('start {{var}} end', 'start var end', var='var')
-    
+
     def test_self_as_variable_name(self):
         self.assertRenders('start {{self}} end', 'start var end', {'self':'var'})
 
     def test_file(self):
         t = SimpleTemplate(name='./views/stpl_simple.tpl')
-        self.assertRenders(t, 'start var end\n', var='var')
+        self.assertRenders(t, 'start var end\n'.replace('\n',os.linesep), var='var')
 
     def test_name(self):
         t = SimpleTemplate(name='stpl_simple', lookup=['./views/'])
-        self.assertRenders(t, 'start var end\n', var='var')
+        self.assertRenders(t, 'start var end\n'.replace('\n',os.linesep), var='var')
 
     def test_unicode(self):
         self.assertRenders('start {{var}} end', 'start äöü end', var=touni('äöü'))
@@ -30,7 +34,7 @@ class TestSimpleTemplate(unittest.TestCase):
     def test_unicode_code(self):
         """ Templates: utf8 code in file"""
         t = SimpleTemplate(name='./views/stpl_unicode.tpl')
-        self.assertRenders(t, 'start ñç äöü end\n', var=touni('äöü'))
+        self.assertRenders(t, 'start ñç äöü end\n'.replace('\n',os.linesep), var=touni('äöü'))
 
     def test_import(self):
         """ Templates: import statement"""
@@ -64,6 +68,13 @@ class TestSimpleTemplate(unittest.TestCase):
         t = SimpleTemplate('<{{!var}}>', noescape=True)
         self.assertRenders(t, '<b>', var='b')
         self.assertRenders(t, '<&lt;&amp;&gt;>', var='<&>')
+
+    def test_codeblock(self):
+        t = '''<% var = 'test='
+                  for i in range(3):
+\ {{i}}
+                  end %>'''
+        self.assertRenders(t, ' 0\n 1\n 2\n')
 
     def test_blocks(self):
         """ Templates: Code blocks and loops """
@@ -134,7 +145,7 @@ class TestSimpleTemplate(unittest.TestCase):
     def test_nobreak(self):
         """ Templates: Nobreak statements"""
         self.assertRenders("start\\\\\n%pass\nend", 'startend')
-        
+
     def test_nonobreak(self):
         """ Templates: Escaped nobreak statements"""
         self.assertRenders("start\\\\\n\\\\\n%pass\nend", 'start\\\\\nend')
@@ -142,13 +153,13 @@ class TestSimpleTemplate(unittest.TestCase):
     def test_include(self):
         """ Templates: Include statements"""
         t = SimpleTemplate(name='stpl_include', lookup=['./views/'])
-        self.assertRenders(t, 'before\nstart var end\nafter\n', var='var')
+        self.assertRenders(t, 'before\nstart var end\nafter\n'.replace('\n',os.linesep), var='var')
 
     def test_rebase(self):
         """ Templates: %rebase and method passing """
         t = SimpleTemplate(name='stpl_t2main', lookup=['./views/'])
         result='+base+\n+main+\n!1234!\n+include+\n-main-\n+include+\n-base-\n'
-        self.assertRenders(t, result, content='1234')
+        self.assertRenders(t, result.replace('\n',os.linesep), content='1234')
 
     def test_get(self):
         self.assertRenders('{{get("x", "default")}}', '1234', x='1234')
@@ -171,7 +182,7 @@ class TestSimpleTemplate(unittest.TestCase):
         """ Templates: Exceptions"""
         self.assertRaises(SyntaxError, lambda: SimpleTemplate('%for badsyntax').co)
         self.assertRaises(IndexError, SimpleTemplate('{{i[5]}}').render, i=[0])
-    
+
     def test_winbreaks(self):
         """ Templates: Test windows line breaks """
         self.assertRenders('%var+=1\r\n{{var}}\r\n', '6\r\n', var=5)
