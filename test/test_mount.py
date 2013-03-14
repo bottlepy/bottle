@@ -1,3 +1,6 @@
+import sys
+__name__ == '__main__' and '..' not in sys.path and sys.path.append('..')
+import unittest
 import bottle
 from tools import ServerTestBase
 from bottle import Bottle, response
@@ -61,7 +64,7 @@ class TestAppMounting(ServerTestBase):
         self.assertBody('WSGI /', '/test/')
         self.assertHeader('X-Test', 'WSGI', '/test/')
         self.assertBody('WSGI /test/bar', '/test/test/bar')
-            
+
     def test_mount_wsgi(self):
         @self.subapp.route('/cookie')
         def test_cookie():
@@ -101,6 +104,39 @@ class TestAppMerging(ServerTestBase):
         self.assertBody('foo', '/')
         self.assertStatus(200, '/test/bar')
         self.assertBody('bar', '/test/bar')
+
+class TestAppZindex(ServerTestBase):
+    def test_zindex(self):
+        @self.app.route('/:hello/:test',zindex=-100)
+        def hellotest(hello,test):
+            return hello + '!' + test
+        self.assertStatus(200, '/test/bar')
+        self.assertBody('test!bar', '/test/bar')
+
+        @self.app.route('/test/:test',zindex=-200)
+        def test_never_match(test):
+            return 'test_never_match'+test
+        self.assertStatus(200, '/test/bar')
+        self.assertBody('test!bar', '/test/bar')
+
+
+        @self.app.route('/test/:test')
+        def test(test):
+            return test
+        self.assertStatus(200, '/test/bar')
+        self.assertBody('bar', '/test/bar')
+
+        @self.app.route('/:hello/:test',zindex=100)
+        def hello2(hello,test):
+            return hello+'!'+hello+'!'+test
+        self.assertStatus(200, '/test/bar')
+        self.assertBody('test!test!bar', '/test/bar')
+
+        @self.app.route('/test/:test',zindex=50)
+        def test_never_match2(test):
+            return 'test_never_match'+test
+        self.assertStatus(200, '/test/bar')
+        self.assertBody('test!test!bar', '/test/bar')
 
 
 
