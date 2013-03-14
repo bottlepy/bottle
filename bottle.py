@@ -2630,6 +2630,13 @@ class GeventServer(ServerAdapter):
         wsgi.WSGIServer(address, handler, **self.options).serve_forever()
 
 
+class GeventSocketIOServer(ServerAdapter):
+    def run(self,handler):
+        from socketio import server
+        address = (self.host, self.port)
+        server.SocketIOServer(address, handler, **self.options).serve_forever()
+
+
 class GunicornServer(ServerAdapter):
     """ Untested. See http://gunicorn.org/configure.html for options. """
     def run(self, handler):
@@ -2701,6 +2708,7 @@ server_names = {
     'gunicorn': GunicornServer,
     'eventlet': EventletServer,
     'gevent': GeventServer,
+    'geventSocketIO':GeventSocketIOServer,
     'rocket': RocketServer,
     'bjoern' : BjoernServer,
     'auto': AutoServer,
