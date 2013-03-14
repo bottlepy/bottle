@@ -267,7 +267,9 @@ class Router(object):
         self.strict_order = strict
         self.filters = {'re': self.re_filter, 'int': self.int_filter,
                         'float': self.float_filter, 'path': self.path_filter}
-
+        self.zcache   = {0: (self.rules,self.static,self.dynamic)} # zindex cache
+        self.zkeys    = [0] # available zindex cache
+        
     def re_filter(self, conf):
         return conf or self.default_pattern, None, None
 
@@ -305,14 +307,21 @@ class Router(object):
         if offset <= len(rule) or prefix:
             yield prefix+rule[offset:], None, None
 
-    def add(self, rule, method, target, name=None):
+    def add(self, rule, method, target, name=None, zindex=None):
         ''' Add a new route or replace the target for an existing route. '''
-        if rule in self.rules:
-            self.rules[rule][method] = target
+        try: zindex = int(zindex)
+        except: zindex = 0
+        if zindex not in self.zkeys:
+            self.zkeys.append(zindex)
+            self.zkeys.sort(reverse=True) # higher zindex will match before the lower
+        rules,static,dynamic = self.zcache.setdefault(zindex,({},{},[]))
+
+        if rule in rules:
+            rules[rule][method] = target
             if name: self.builder[name] = self.builder[rule]
             return
 
-        target = self.rules[rule] = {method: target}
+        target = rules[rule] = {method: target}
 
         # Build pattern and other structures for dynamic routes
         anons = 0      # Number of anonymous wildcards
@@ -338,7 +347,7 @@ class Router(object):
         if name: self.builder[name] = builder
 
         if is_static and not self.strict_order:
-            self.static[self.build(rule)] = target
+            static[self.build(rule)] = target
             return
 
         def fpat_sub(m):
@@ -361,11 +370,11 @@ class Router(object):
             return url_args
 
         try:
-            combined = '%s|(^%s$)' % (self.dynamic[-1][0].pattern, flat_pattern)
-            self.dynamic[-1] = (re.compile(combined), self.dynamic[-1][1])
-            self.dynamic[-1][1].append((match, target))
+            combined = '%s|(^%s$)' % (dynamic[-1][0].pattern, flat_pattern)
+            dynamic[-1] = (re.compile(combined), dynamic[-1][1])
+            dynamic[-1][1].append((match, target))
         except (AssertionError, IndexError): # AssertionError: Too many groups
-            self.dynamic.append((re.compile('(^%s$)' % flat_pattern),
+            dynamic.append((re.compile('(^%s$)' % flat_pattern),
                                 [(match, target)]))
         return match
 
@@ -383,16 +392,21 @@ class Router(object):
     def match(self, environ):
         ''' Return a (target, url_agrs) tuple or raise HTTPError(400/404/405). '''
         path, targets, urlargs = environ['PATH_INFO'] or '/', None, {}
-        if path in self.static:
-            targets = self.static[path]
-        else:
-            for combined, rules in self.dynamic:
-                match = combined.match(path)
-                if not match: continue
-                getargs, targets = rules[match.lastindex - 1]
-                urlargs = getargs(path) if getargs else {}
+        match = False
+        for zi in self.zkeys:
+            static,dynamic = self.zcache[zi][1:3]
+            if path in static:
+                targets = static[path]
                 break
-
+            else:
+                for combined, rules in dynamic:
+                    match = combined.match(path)
+                    if not match: continue
+                    getargs, targets = rules[match.lastindex - 1]
+                    urlargs = getargs(path) if getargs else {}
+                    break
+                if match:
+                    break
         if not targets:
             raise HTTPError(404, "Not found: " + repr(environ['PATH_INFO']))
         method = environ['REQUEST_METHOD'].upper()
@@ -660,7 +674,7 @@ class Bottle(object):
         ''' Add a route object, but do not change the :data:`Route.app`
             attribute.'''
         self.routes.append(route)
-        self.router.add(route.rule, route.method, route, name=route.name)
+        self.router.add(route.rule, route.method, route, name=route.name, zindex=route.config.zindex)
         if DEBUG: route.prepare()
 
     def route(self, path=None, method='GET', callback=None, name=None,
