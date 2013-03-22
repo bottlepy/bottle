@@ -1,5 +1,6 @@
 import unittest
 import bottle
+import warnings
 
 class TestRouter(unittest.TestCase):
     CGI=False
@@ -127,6 +128,58 @@ class TestRouter(unittest.TestCase):
 class TestRouterInCGIMode(TestRouter):
     ''' Makes no sense since the default route does not optimize CGI anymore.'''
     CGI = True
+
+
+class TestRouteShadow(unittest.TestCase):
+
+    def setUp(self):
+        self.r = bottle.Router()
+    
+    def add(self, path, target, method='GET', **ka):
+        self.r.add(path, method, target, **ka)
+
+    def assertWarning(self, rule, method='GET', count=1):
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            self.add(rule, rule, method)
+            self.assertEqual(count, len(w))
+            if count:
+                self.assertTrue(issubclass(w[-1].category, RuntimeWarning))
+
+    def assertNoWarning(self, rule, method='GET'):
+        self.assertWarning(rule, method, 0)
+
+    def test_static_override(self):
+        self.add('/static_route', '/static_route')
+        self.assertNoWarning('/static_route')
+
+    def test_route_override(self):
+        self.add('/<x>', '/<x>')
+        self.assertNoWarning('/<x>')
+
+    def test_anonymous_route_override(self):
+        self.add('/<>', '/<>')
+        self.assertNoWarning('/<>')
+
+    def test_route_with_other_method(self):
+        self.add('/<x>', '/<x>')
+        self.assertNoWarning('/<x>', method='POST')
+        
+    def test_route_shadow_with_same_method(self):
+        self.add('/<x>', '/<x>')
+        self.assertWarning('/<y>')
+
+    def test_route_shadow_with_other_method(self):
+        self.add('/<x>', '/<x>')
+        self.assertWarning('/<y>', method='POST')
+
+    def test_route_shadow_anonymous(self):
+        self.add('/<>', '/<>')
+        self.assertWarning('/<y>')
+
+    def test_anonymous_shadow_route(self):
+        self.add('/<y>', '/<y>')
+        self.assertWarning('/<>')
 
 
 if __name__ == '__main__': #pragma: no cover

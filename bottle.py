@@ -267,6 +267,7 @@ class Router(object):
         self.strict_order = strict
         self.filters = {'re': self.re_filter, 'int': self.int_filter,
                         'float': self.float_filter, 'path': self.path_filter}
+        self._patterns = {}
 
     def re_filter(self, conf):
         return conf or self.default_pattern, None, None
@@ -317,6 +318,7 @@ class Router(object):
         # Build pattern and other structures for dynamic routes
         anons = 0      # Number of anonymous wildcards
         pattern = ''   # Regular expression  pattern
+        anon_pattern = '' # Regular expression pattern with anonymous groups
         filters = []   # Lists of wildcard input filters
         builder = []   # Data structure for the URL builder
         is_static = True
@@ -324,6 +326,7 @@ class Router(object):
             if mode:
                 is_static = False
                 mask, in_filter, out_filter = self.filters[mode](conf)
+                anon_pattern += '(?:%s)' % mask
                 if key:
                     pattern += '(?P<%s>%s)' % (key, mask)
                 else:
@@ -332,8 +335,17 @@ class Router(object):
                 if in_filter: filters.append((key, in_filter))
                 builder.append((key, out_filter or str))
             elif key:
+                anon_pattern += key
                 pattern += re.escape(key)
                 builder.append((None, key))
+
+        if anon_pattern in self._patterns:
+            cached_pattern, method_rule = self._patterns[anon_pattern]
+            if pattern != cached_pattern:
+                warnings.warn('Route shadow (calls to "%s %s" will match with "%s")' % (method, rule, method_rule), RuntimeWarning)
+        else:
+            self._patterns[anon_pattern] = (pattern, '%s %s' % (method, rule))
+
         self.builder[rule] = builder
         if name: self.builder[name] = builder
 
