@@ -238,6 +238,45 @@ class RouteBuildError(RouteError):
     """ The route could not been built """
 
 
+class RouteRuleParser(object):
+
+    #: Sorry for the mess. It works. Trust me.
+    rule_syntax = re.compile('(\\\\*)'\
+        '(?:(?::([a-zA-Z_][a-zA-Z_0-9]*)?()(?:#(.*?)#)?)'\
+          '|(?:<([a-zA-Z_][a-zA-Z_0-9]*)?(?::([a-zA-Z_]*)'\
+            '(?::((?:\\\\.|[^\\\\>]+)+)?)?)?>))')
+
+    def __init__(self):
+        self.cache = {}
+
+    def tokenize(self, rule):
+        ''' Parses a rule into a (name, filter, conf) token stream. If filter is
+            None, name contains a static rule part. '''
+        if rule not in self.cache:
+            self.cache[rule] = list(self._itertokens(rule))
+        return self.cache[rule]
+
+    def _itertokens(self, rule):
+        offset, prefix = 0, ''
+        for match in self.rule_syntax.finditer(rule):
+            prefix += rule[offset:match.start()]
+            g = match.groups()
+            if len(g[0])%2: # Escaped wildcard
+                prefix += match.group(0)[len(g[0]):]
+                offset = match.end()
+                continue
+            if prefix:
+                yield prefix, None, None
+            name, filtr, conf = g[4:7] if g[2] is None else g[1:4]
+            yield name, filtr or 'default', conf or None
+            offset, prefix = match.end(), ''
+        if offset <= len(rule) or prefix:
+            yield prefix+rule[offset:], None, None
+
+    def normalize(self, rule):
+        ''' Removes the names from wildcards '''
+    
+
 class Router(object):
     ''' A Router is an ordered collection of route->target pairs. It is used to
         efficiently match WSGI requests against a number of routes and return
@@ -251,12 +290,8 @@ class Router(object):
     '''
 
     default_pattern = '[^/]+'
-    default_filter   = 're'
-    #: Sorry for the mess. It works. Trust me.
-    rule_syntax = re.compile('(\\\\*)'\
-        '(?:(?::([a-zA-Z_][a-zA-Z_0-9]*)?()(?:#(.*?)#)?)'\
-          '|(?:<([a-zA-Z_][a-zA-Z_0-9]*)?(?::([a-zA-Z_]*)'\
-            '(?::((?:\\\\.|[^\\\\>]+)+)?)?)?>))')
+    default_filter  = 're'
+    default_parser  = RouteRuleParser
 
     def __init__(self, strict=False):
         self.rules    = {} # A {rule: Rule} mapping
@@ -267,6 +302,7 @@ class Router(object):
         self.strict_order = strict
         self.filters = {'re': self.re_filter, 'int': self.int_filter,
                         'float': self.float_filter, 'path': self.path_filter}
+        self.parser = self.default_parser()
 
     def re_filter(self, conf):
         return conf or self.default_pattern, None, None
@@ -286,25 +322,6 @@ class Router(object):
         The first element is a string, the last two are callables or None. '''
         self.filters[name] = func
 
-    def parse_rule(self, rule):
-        ''' Parses a rule into a (name, filter, conf) token stream. If mode is
-            None, name contains a static rule part. '''
-        offset, prefix = 0, ''
-        for match in self.rule_syntax.finditer(rule):
-            prefix += rule[offset:match.start()]
-            g = match.groups()
-            if len(g[0])%2: # Escaped wildcard
-                prefix += match.group(0)[len(g[0]):]
-                offset = match.end()
-                continue
-            if prefix: yield prefix, None, None
-            name, filtr, conf = g[1:4] if not g[2] is None else g[4:7]
-            if not filtr: filtr = self.default_filter
-            yield name, filtr, conf or None
-            offset, prefix = match.end(), ''
-        if offset <= len(rule) or prefix:
-            yield prefix+rule[offset:], None, None
-
     def add(self, rule, method, target, name=None):
         ''' Add a new route or replace the target for an existing route. '''
         if rule in self.rules:
@@ -320,9 +337,10 @@ class Router(object):
         filters = []   # Lists of wildcard input filters
         builder = []   # Data structure for the URL builder
         is_static = True
-        for key, mode, conf in self.parse_rule(rule):
+        for key, mode, conf in self.parser.tokenize(rule):
             if mode:
                 is_static = False
+                if mode == 'default': mode = self.default_filter
                 mask, in_filter, out_filter = self.filters[mode](conf)
                 if key:
                     pattern += '(?P<%s>%s)' % (key, mask)
