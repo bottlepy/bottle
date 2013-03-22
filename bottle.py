@@ -3041,31 +3041,6 @@ class Jinja2Template(BaseTemplate):
             return f.read().decode(self.encoding)
 
 
-class SimpleTALTemplate(BaseTemplate):
-    ''' Deprecated, do not use. '''
-    def prepare(self, **options):
-        depr('The SimpleTAL template handler is deprecated'\
-             ' and will be removed in 0.12')
-        from simpletal import simpleTAL
-        if self.source:
-            self.tpl = simpleTAL.compileHTMLTemplate(self.source)
-        else:
-            with open(self.filename, 'rb') as fp:
-                self.tpl = simpleTAL.compileHTMLTemplate(tonat(fp.read()))
-
-    def render(self, *args, **kwargs):
-        from simpletal import simpleTALES
-        for dictarg in args: kwargs.update(dictarg)
-        context = simpleTALES.Context()
-        for k,v in self.defaults.items():
-            context.addGlobal(k, v)
-        for k,v in kwargs.items():
-            context.addGlobal(k, v)
-        output = StringIO()
-        self.tpl.expand(context, output)
-        return output.getvalue()
-
-
 class SimpleTemplate(BaseTemplate):
     blocks = ('if', 'elif', 'else', 'try', 'except', 'finally', 'for', 'while',
               'with', 'def', 'class')
@@ -3247,7 +3222,6 @@ def template(*args, **kwargs):
 mako_template = functools.partial(template, template_adapter=MakoTemplate)
 cheetah_template = functools.partial(template, template_adapter=CheetahTemplate)
 jinja2_template = functools.partial(template, template_adapter=Jinja2Template)
-simpletal_template = functools.partial(template, template_adapter=SimpleTALTemplate)
 
 
 def view(tpl_name, **defaults):
@@ -3277,7 +3251,6 @@ def view(tpl_name, **defaults):
 mako_view = functools.partial(view, template_adapter=MakoTemplate)
 cheetah_view = functools.partial(view, template_adapter=CheetahTemplate)
 jinja2_view = functools.partial(view, template_adapter=Jinja2Template)
-simpletal_view = functools.partial(view, template_adapter=SimpleTALTemplate)
 
 
 
