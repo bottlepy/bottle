@@ -2398,27 +2398,6 @@ def path_shift(script_name, path_info, shift=1):
     return new_script_name, new_path_info
 
 
-def validate(**vkargs):
-    """
-    Validates and manipulates keyword arguments by user defined callables.
-    Handles ValueError and missing arguments by raising HTTPError(403).
-    """
-    depr('Use route wildcard filters instead.')
-    def decorator(func):
-        @functools.wraps(func)
-        def wrapper(*args, **kargs):
-            for key, value in vkargs.items():
-                if key not in kargs:
-                    abort(403, 'Missing parameter: %s' % key)
-                try:
-                    kargs[key] = value(kargs[key])
-                except ValueError:
-                    abort(403, 'Wrong parameter format for: %s' % key)
-            return func(*args, **kargs)
-        return wrapper
-    return decorator
-
-
 def auth_basic(check, realm="private", text="Access denied"):
     ''' Callback decorator to require HTTP auth (basic).
         TODO: Add route(check_auth=...) parameter. '''
