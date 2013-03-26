@@ -82,6 +82,7 @@ class TestRouter(unittest.TestCase):
 
     def testErrorInPattern(self):
         self.assertRaises(Exception, self.assertMatches, '/:bug#(#/', '/foo/')
+        self.assertRaises(Exception, self.assertMatches, '/<:re:(>/', '/foo/')
 
     def testBuild(self):
         add, build = self.add, self.r.build
