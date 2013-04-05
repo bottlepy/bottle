@@ -1959,6 +1959,8 @@ class ConfigDict(dict):
     def __getattr__(self, key):
         if key not in self and key[0].isupper():
             self[key] = ConfigDict()
+        elif callable(self.get(key)):
+            return self.get(key)()
         return self.get(key)
 
     def __setattr__(self, key, value):
