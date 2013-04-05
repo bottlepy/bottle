@@ -2915,6 +2915,7 @@ class BaseTemplate(object):
         self.encoding = encoding
         self.settings = self.settings.copy() # Copy from class variable
         self.settings.update(settings) # Apply
+        self.defaults = self.defaults.copy() # Copy from class variable
         if not self.source and self.name:
             self.filename = self.search(self.name, self.lookup)
             if not self.filename:
@@ -2952,6 +2953,15 @@ class BaseTemplate(object):
             cls.settings[key] = args[0]
         else:
             return cls.settings[key]
+            
+    @classmethod
+    def global_defaults(cls, key, *args):
+        ''' This reads or sets the global defaults stored in class.defaults. '''
+        if args:
+            cls.defaults = cls.defaults.copy() # Make settings local to class
+            cls.defaults[key] = args[0]
+        else:
+            return cls.defaults[key]
 
     def prepare(self, **options):
         """ Run preparations (parsing, caching, ...).
