@@ -2202,7 +2202,7 @@ def _file_iter_range(fp, offset, bytes, maxread=1024*1024):
         yield part
 
 
-def static_file(filename, root, mimetype='auto', download=False):
+def static_file(filename, root, mimetype='auto', download=False, autocharset='UTF-8'):
     """ Open a file in a safe way and return :exc:`HTTPResponse` with status
         code 200, 305, 401 or 404. Set Content-Type, Content-Encoding,
         Content-Length and Last-Modified header. Obey If-Modified-Since header
@@ -2221,6 +2221,8 @@ def static_file(filename, root, mimetype='auto', download=False):
 
     if mimetype == 'auto':
         mimetype, encoding = mimetypes.guess_type(filename)
+        if autocharset and mimetype.startswith('text/'):
+            mimetype += '; charset=%s' % autocharset
         if mimetype: headers['Content-Type'] = mimetype
         if encoding: headers['Content-Encoding'] = encoding
     elif mimetype:
