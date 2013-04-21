@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import unittest
-import sys, os.path
 import bottle
 from tools import ServerTestBase
 from bottle import tob
