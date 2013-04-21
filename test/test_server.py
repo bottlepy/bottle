@@ -119,7 +119,7 @@ class TestRocketServer(TestServer):
 class TestFapwsServer(TestServer):
     server = 'fapws3'
 
-class TestFapwsServer(TestServer):
+class MeinheldServer(TestServer):
     server = 'meinheld'
 
 class TestBjoernServer(TestServer):
