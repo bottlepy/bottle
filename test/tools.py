@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
 import bottle
-import threading
 import sys
-import time
 import unittest
 import wsgiref
-import wsgiref.simple_server
 import wsgiref.util
 import wsgiref.validate
 

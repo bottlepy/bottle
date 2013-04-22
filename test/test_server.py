@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import unittest
-import bottle
 import time
 from tools import tob
 import sys
@@ -119,7 +118,7 @@ class TestRocketServer(TestServer):
 class TestFapwsServer(TestServer):
     server = 'fapws3'
 
-class TestFapwsServer(TestServer):
+class MeinheldServer(TestServer):
     server = 'meinheld'
 
 class TestBjoernServer(TestServer):

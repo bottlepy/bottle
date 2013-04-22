@@ -2,12 +2,11 @@
 ''' Tests for the BaseRequest and BaseResponse objects and their subclasses. '''
 
 import unittest
-import sys, os.path
+import sys
 import bottle
-from bottle import request, response, tob, touni, tonat, json_dumps, _e, HTTPError
+from bottle import request, tob, touni, tonat, json_dumps, _e, HTTPError
 import tools
 import wsgiref.util
-import threading
 import base64
 
 from bottle import BaseRequest, BaseResponse, LocalRequest

@@ -1,6 +1,6 @@
 import bottle
 from tools import ServerTestBase
-from bottle import Bottle, response
+from bottle import response
 
 class TestAppMounting(ServerTestBase):
     def setUp(self):
