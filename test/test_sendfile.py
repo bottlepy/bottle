@@ -1,8 +1,7 @@
 import unittest
-from bottle import static_file, HTTPError, HTTPResponse, request, response, parse_date, parse_range_header, Bottle, tob
+from bottle import static_file, request, response, parse_date, parse_range_header, Bottle, tob
 import wsgiref.util
 import os
-import os.path
 import tempfile
 import time
 
