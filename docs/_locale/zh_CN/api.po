@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Bottle 0.12-dev\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-02-16 21:45\n"
+"POT-Creation-Date: 2013-04-18 23:40\n"
 "PO-Revision-Date: 2012-11-09 16:39+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -729,6 +729,11 @@ msgstr ""
 # c41f7380550042b4ac7111a188a88f77
 #: ../../../bottle.py:docstring of bottle.BaseRequest.route:1
 msgid "The bottle :class:`Route` object that matches this request."
+msgstr ""
+
+# 0aeb079900744334aebdf19893cc043c
+#: ../../../bottle.py:docstring of bottle.BaseRequest.url_args:1
+msgid "The arguments extracted from the URL."
 msgstr ""
 
 # 037aee056fb248628a52cf2447ab4c82
