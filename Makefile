@@ -50,5 +50,6 @@ clean:
 	find . -name '*~' -exec rm -f {} +
 	find . -name '._*' -exec rm -f {} +
 	find . -name '.coverage*' -exec rm -f {} +
+	find . -name '__pycache__' -exec rm -rf {} +
 	rm -rf build/ dist/ MANIFEST 2>/dev/null || true
 
