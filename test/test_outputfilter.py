@@ -87,6 +87,23 @@ class TestOutputFilter(ServerTestBase):
         except ImportError:
             warn("Skipping JSON tests.")
 
+    def test_json_HTTPResponse(self):
+        self.app.route('/')(lambda: bottle.HTTPResponse({'a': 1}, 500))
+        try:
+            self.assertBody(bottle.json_dumps({'a': 1}))
+            self.assertHeader('Content-Type','application/json')
+        except ImportError:
+            warn("Skipping JSON tests.")
+
+    def test_json_HTTPError(self):
+        self.app.error(400)(lambda e: e.body)
+        self.app.route('/')(lambda: bottle.HTTPError(400, {'a': 1}))
+        try:
+            self.assertBody(bottle.json_dumps({'a': 1}))
+            self.assertHeader('Content-Type','application/json')
+        except ImportError:
+            warn("Skipping JSON tests.")
+
     def test_generator_callback(self):
         @self.app.route('/')
         def test():

@@ -1,5 +1,3 @@
-import bottle
-from tools import ServerTestBase
 from bottle import ResourceManager
 import os.path
 import unittest

@@ -36,15 +36,15 @@ if __name__ == '__main__':
         import gevent.monkey; gevent.monkey.patch_all()
 
 import base64, cgi, email.utils, functools, hmac, imp, itertools, mimetypes,\
-        os, re, subprocess, sys, tempfile, threading, time, urllib, warnings
+        os, re, subprocess, sys, tempfile, threading, time, warnings
 
 from datetime import date as datedate, datetime, timedelta
 from tempfile import TemporaryFile
 from traceback import format_exc, print_exc
 
-try: from json import dumps as json_dumps, loads as json_lds
+try: from simplejson import dumps as json_dumps, loads as json_lds
 except ImportError: # pragma: no cover
-    try: from simplejson import dumps as json_dumps, loads as json_lds
+    try: from json import dumps as json_dumps, loads as json_lds
     except ImportError:
         try: from django.utils.simplejson import dumps as json_dumps, loads as json_lds
         except ImportError:
@@ -58,9 +58,9 @@ except ImportError: # pragma: no cover
 # It ain't pretty but it works... Sorry for the mess.
 
 py   = sys.version_info
-py3k = py >= (3,0,0)
-py25 = py <  (2,6,0)
-py31 = (3,1,0) <= py < (3,2,0)
+py3k = py >= (3, 0, 0)
+py25 = py <  (2, 6, 0)
+py31 = (3, 1, 0) <= py < (3, 2, 0)
 
 # Workaround for the missing "as" keyword in py3k.
 def _e(): return sys.exc_info()[1]
@@ -89,6 +89,7 @@ if py3k:
     json_loads = lambda s: json_lds(touni(s))
     callable = lambda x: hasattr(x, '__call__')
     imap = map
+    def _raise(*a): raise a[0](a[1]).with_traceback(a[2])
 else: # 2.x
     import httplib
     import thread
@@ -107,6 +108,7 @@ else: # 2.x
     else: # 2.6, 2.7
         from collections import MutableMapping as DictMixin
     json_loads = json_lds
+    eval(compile('def _raise(*a): raise a[0], a[1], a[2]', '<py3fix>', 'exec'))
 
 # Some helpers for string/byte handling
 def tob(s, enc='utf8'):
@@ -122,11 +124,6 @@ if py31:
     class NCTextIOWrapper(TextIOWrapper):
         def close(self): pass # Keep wrapped buffer open.
 
-# File uploads (which are implemented as empty FiledStorage instances...)
-# have a negative truth value. That makes no sense, here is a fix.
-class FieldStorage(cgi.FieldStorage):
-    def __nonzero__(self): return bool(self.list or self.file)
-    if py3k: __bool__ = __nonzero__
 
 # A bug in functools causes it to break if the wrapper is an instance method
 def update_wrapper(wrapper, wrapped, *a, **ka):
@@ -138,7 +135,7 @@ def update_wrapper(wrapper, wrapped, *a, **ka):
 # These helpers are used at module level and need to be defined first.
 # And yes, I know PEP-8, but sometimes a lower-case classname makes more sense.
 
-def depr(message):
+def depr(message, hard=False):
     warnings.warn(message, DeprecationWarning, stacklevel=3)
 
 def makelist(data): # This is just to handy
@@ -178,6 +175,7 @@ class cached_property(object):
         property. '''
 
     def __init__(self, func):
+        self.__doc__ = getattr(func, '__doc__')
         self.func = func
 
     def __get__(self, obj, cls):
@@ -240,6 +238,14 @@ class RouteBuildError(RouteError):
     """ The route could not been built """
 
 
+def _re_flatten(p):
+    ''' Turn all capturing groups in a regular expression pattern into
+        non-capturing groups. '''
+    if '(' not in p: return p
+    return re.sub(r'(\\*)(\(\?P<[^>]*>|\((?!\?))',
+        lambda m: m.group(0) if len(m.group(1)) % 2 else m.group(1) + '(?:', p)
+
+
 class Router(object):
     ''' A Router is an ordered collection of route->target pairs. It is used to
         efficiently match WSGI requests against a number of routes and return
@@ -253,34 +259,22 @@ class Router(object):
     '''
 
     default_pattern = '[^/]+'
-    default_filter   = 're'
-    #: Sorry for the mess. It works. Trust me.
-    rule_syntax = re.compile('(\\\\*)'\
-        '(?:(?::([a-zA-Z_][a-zA-Z_0-9]*)?()(?:#(.*?)#)?)'\
-          '|(?:<([a-zA-Z_][a-zA-Z_0-9]*)?(?::([a-zA-Z_]*)'\
-            '(?::((?:\\\\.|[^\\\\>]+)+)?)?)?>))')
+    default_filter  = 're'
 
     def __init__(self, strict=False):
-        self.rules    = {} # A {rule: Rule} mapping
-        self.builder  = {} # A rule/name->build_info mapping
-        self.static   = {} # Cache for static routes: {path: {method: target}}
-        self.dynamic  = [] # Cache for dynamic routes. See _compile()
+        self.rules    = [] # All rules in order
+        self._groups  = {}
+        self.builder  = {} # Data structure for the url builder
+        self.static   = {} # Search structure for static routes
+        self.dynamic  = [] # Search structure for dynamic routes
         #: If true, static routes are no longer checked first.
         self.strict_order = strict
-        self.filters = {'re': self.re_filter, 'int': self.int_filter,
-                        'float': self.float_filter, 'path': self.path_filter}
-
-    def re_filter(self, conf):
-        return conf or self.default_pattern, None, None
-
-    def int_filter(self, conf):
-        return r'-?\d+', int, lambda x: str(int(x))
-
-    def float_filter(self, conf):
-        return r'-?[\d.]+', float, lambda x: str(float(x))
-
-    def path_filter(self, conf):
-        return r'.+?', None, None
+        self.filters = {
+            're':    lambda conf:
+                (_re_flatten(conf or self.default_pattern), None, None),
+            'int':   lambda conf: (r'-?\d+', int, lambda x: str(int(x))),
+            'float': lambda conf: (r'-?[\d.]+', float, lambda x: str(float(x))),
+            'path':  lambda conf: (r'.+?', None, None)}
 
     def add_filter(self, name, func):
         ''' Add a filter. The provided function is called with the configuration
@@ -288,9 +282,12 @@ class Router(object):
         The first element is a string, the last two are callables or None. '''
         self.filters[name] = func
 
-    def parse_rule(self, rule):
-        ''' Parses a rule into a (name, filter, conf) token stream. If mode is
-            None, name contains a static rule part. '''
+    rule_syntax = re.compile('(\\\\*)'\
+        '(?:(?::([a-zA-Z_][a-zA-Z_0-9]*)?()(?:#(.*?)#)?)'\
+          '|(?:<([a-zA-Z_][a-zA-Z_0-9]*)?(?::([a-zA-Z_]*)'\
+            '(?::((?:\\\\.|[^\\\\>]+)+)?)?)?>))')
+
+    def _itertokens(self, rule):
         offset, prefix = 0, ''
         for match in self.rule_syntax.finditer(rule):
             prefix += rule[offset:match.start()]
@@ -299,77 +296,89 @@ class Router(object):
                 prefix += match.group(0)[len(g[0]):]
                 offset = match.end()
                 continue
-            if prefix: yield prefix, None, None
-            name, filtr, conf = g[1:4] if not g[2] is None else g[4:7]
-            if not filtr: filtr = self.default_filter
-            yield name, filtr, conf or None
+            if prefix:
+                yield prefix, None, None
+            name, filtr, conf = g[4:7] if g[2] is None else g[1:4]
+            yield name, filtr or 'default', conf or None
             offset, prefix = match.end(), ''
         if offset <= len(rule) or prefix:
             yield prefix+rule[offset:], None, None
 
     def add(self, rule, method, target, name=None):
-        ''' Add a new route or replace the target for an existing route. '''
-        if rule in self.rules:
-            self.rules[rule][method] = target
-            if name: self.builder[name] = self.builder[rule]
-            return
-
-        target = self.rules[rule] = {method: target}
-
-        # Build pattern and other structures for dynamic routes
-        anons = 0      # Number of anonymous wildcards
-        pattern = ''   # Regular expression  pattern
-        filters = []   # Lists of wildcard input filters
-        builder = []   # Data structure for the URL builder
+        ''' Add a new rule or replace the target for an existing rule. '''
+        anons     = 0    # Number of anonymous wildcards found
+        keys      = []   # Names of keys
+        pattern   = ''   # Regular expression pattern with named groups
+        filters   = []   # Lists of wildcard input filters
+        builder   = []   # Data structure for the URL builder
         is_static = True
-        for key, mode, conf in self.parse_rule(rule):
+
+        for key, mode, conf in self._itertokens(rule):
             if mode:
                 is_static = False
+                if mode == 'default': mode = self.default_filter
                 mask, in_filter, out_filter = self.filters[mode](conf)
-                if key:
-                    pattern += '(?P<%s>%s)' % (key, mask)
-                else:
+                if not key:
                     pattern += '(?:%s)' % mask
-                    key = 'anon%d' % anons; anons += 1
+                    key = 'anon%d' % anons
+                    anons += 1
+                else:
+                    pattern += '(?P<%s>%s)' % (key, mask)
+                    keys.append(key)
                 if in_filter: filters.append((key, in_filter))
                 builder.append((key, out_filter or str))
             elif key:
                 pattern += re.escape(key)
                 builder.append((None, key))
+
         self.builder[rule] = builder
         if name: self.builder[name] = builder
 
         if is_static and not self.strict_order:
-            self.static[self.build(rule)] = target
+            group = self.static.setdefault(self.build(rule), {})
+            group[method] = (target, None)
             return
 
-        def fpat_sub(m):
-            return m.group(0) if len(m.group(1)) % 2 else m.group(1) + '(?:'
-        flat_pattern = re.sub(r'(\\*)(\(\?P<[^>]*>|\((?!\?))', fpat_sub, pattern)
-
         try:
-            re_match = re.compile('^(%s)$' % pattern).match
+            re_pattern = re.compile('^(%s)$' % pattern)
+            re_match = re_pattern.match
         except re.error:
             raise RouteSyntaxError("Could not add Route: %s (%s)" % (rule, _e()))
 
-        def match(path):
-            """ Return an url-argument dictionary. """
-            url_args = re_match(path).groupdict()
-            for name, wildcard_filter in filters:
-                try:
-                    url_args[name] = wildcard_filter(url_args[name])
-                except ValueError:
-                    raise HTTPError(400, 'Path has wrong format.')
-            return url_args
+        if filters:
+            def getargs(path):
+                url_args = re_match(path).groupdict()
+                for name, wildcard_filter in filters:
+                    try:
+                        url_args[name] = wildcard_filter(url_args[name])
+                    except ValueError:
+                        raise HTTPError(400, 'Path has wrong format.')
+                return url_args
+        elif re_pattern.groupindex:
+            def getargs(path):
+                return re_match(path).groupdict()
+        else:
+            getargs = None
 
+        flatpat = _re_flatten(pattern)
+        if flatpat in self._groups:
+            # Info: Rule groups with previous rule
+            group = self._groups[flatpat]
+            if method in group:
+                if DEBUG:
+                    msg = 'Route <%s %s> overwrites a previously defined route'
+                    warnings.warn(msg % (method, rule), RuntimeWarning)
+            self._groups[flatpat][method] = (target, getargs)
+            return
+
+        mdict = self._groups[flatpat] = {method: (target, getargs)}
+        
         try:
-            combined = '%s|(^%s$)' % (self.dynamic[-1][0].pattern, flat_pattern)
+            combined = '%s|(^%s$)' % (self.dynamic[-1][0].pattern, flatpat)
             self.dynamic[-1] = (re.compile(combined), self.dynamic[-1][1])
-            self.dynamic[-1][1].append((match, target))
+            self.dynamic[-1][1].append(mdict)
         except (AssertionError, IndexError): # AssertionError: Too many groups
-            self.dynamic.append((re.compile('(^%s$)' % flat_pattern),
-                                [(match, target)]))
-        return match
+            self.dynamic.append((re.compile('(^%s$)' % flatpat), [mdict]))
 
     def build(self, _name, *anons, **query):
         ''' Build an URL by filling the wildcards in a rule. '''
@@ -391,23 +400,29 @@ class Router(object):
             for combined, rules in self.dynamic:
                 match = combined.match(path)
                 if not match: continue
-                getargs, targets = rules[match.lastindex - 1]
-                urlargs = getargs(path) if getargs else {}
+                targets = rules[match.lastindex - 1]
                 break
 
         if not targets:
             raise HTTPError(404, "Not found: " + repr(environ['PATH_INFO']))
         method = environ['REQUEST_METHOD'].upper()
         if method in targets:
-            return targets[method], urlargs
-        if method == 'HEAD' and 'GET' in targets:
-            return targets['GET'], urlargs
-        if 'ANY' in targets:
-            return targets['ANY'], urlargs
-        allowed = [verb for verb in targets if verb != 'ANY']
-        if 'GET' in allowed and 'HEAD' not in allowed:
-            allowed.append('HEAD')
-        raise HTTPError(405, "Method not allowed.", Allow=",".join(allowed))
+            target, getargs = targets[method]
+        elif method == 'HEAD' and 'GET' in targets:
+            target, getargs = targets['GET']
+        elif 'ANY' in targets:
+            target, getargs = targets['ANY']            
+        else:
+            allowed = [verb for verb in targets if verb != 'ANY']
+            if 'GET' in allowed and 'HEAD' not in allowed:
+                allowed.append('HEAD')
+            raise HTTPError(405, "Method not allowed.", Allow=",".join(allowed))
+        
+        return target, getargs(path) if getargs else {}
+
+
+
+
 
 
 class Route(object):
@@ -551,8 +566,7 @@ class Bottle(object):
             All other parameters are passed to the underlying :meth:`route` call.
         '''
         if isinstance(app, basestring):
-            prefix, app = app, prefix
-            depr('Parameter order of Bottle.mount() changed.') # 0.10
+            depr('Parameter order of Bottle.mount() changed.', True) # 0.10
 
         segments = [p for p in prefix.split('/') if p]
         if not segments: raise ValueError('Empty path prefix.')
@@ -562,7 +576,12 @@ class Bottle(object):
             try:
                 request.path_shift(path_depth)
                 rs = HTTPResponse([])
-                def start_response(status, headerlist):
+                def start_response(status, headerlist, exc_info=None):
+                    if exc_info:
+                        try:
+                            _raise(*exc_info)
+                        finally:
+                            exc_info = None
                     rs.status = status
                     for name, value in headerlist: rs.add_header(name, value)
                     return rs.body.append
@@ -844,8 +863,7 @@ class Bottle(object):
             msg = 'Unsupported response type: %s' % type(first)
             return self._cast(HTTPError(500, msg))
         if hasattr(out, 'close'):
-            new_iter = _iterchain(new_iter)
-            new_iter.close = out.close
+            new_iter = _closeiter(new_iter, out.close)
         return new_iter
 
     def wsgi(self, environ, start_response):
@@ -871,7 +889,7 @@ class Bottle(object):
                        % (html_escape(repr(_e())), html_escape(format_exc()))
             environ['wsgi.errors'].write(err)
             headers = [('Content-Type', 'text/html; charset=UTF-8')]
-            start_response('500 INTERNAL SERVER ERROR', headers)
+            start_response('500 INTERNAL SERVER ERROR', headers, sys.exc_info())
             return [tob(err)]
 
     def __call__(self, environ, start_response):
@@ -886,7 +904,6 @@ class Bottle(object):
 ###############################################################################
 # HTTP and WSGI Tools ##########################################################
 ###############################################################################
-
 
 class BaseRequest(object):
     """ A wrapper for WSGI environment dictionaries that adds a lot of
@@ -921,6 +938,11 @@ class BaseRequest(object):
         """ The bottle :class:`Route` object that matches this request. """
         raise RuntimeError('This request is not connected to a route.')
 
+    @DictProperty('environ', 'route.url_args', read_only=True)
+    def url_args(self):
+        """ The arguments extracted from the URL. """
+        raise RuntimeError('This request is not connected to a route.')
+
     @property
     def path(self):
         ''' The value of ``PATH_INFO`` with exactly one prefixed slash (to fix
@@ -946,8 +968,9 @@ class BaseRequest(object):
     def cookies(self):
         """ Cookies parsed into a :class:`FormsDict`. Signed cookies are NOT
             decoded. Use :meth:`get_cookie` if you expect signed cookies. """
-        cookies = SimpleCookie(self.environ.get('HTTP_COOKIE',''))
-        cookies = list(cookies.values())[:self.MAX_PARAMS]
+        cookies = SimpleCookie(self.environ.get('HTTP_COOKIE','')).values()
+        if len(cookies) > self.MAX_PARAMS:
+            raise HTTPError(413, 'Too many cookies')
         return FormsDict((c.key, c.value) for c in cookies)
 
     def get_cookie(self, key, default=None, secret=None):
@@ -969,7 +992,9 @@ class BaseRequest(object):
             :class:`Router`. '''
         get = self.environ['bottle.get'] = FormsDict()
         pairs = _parse_qsl(self.environ.get('QUERY_STRING', ''))
-        for key, value in pairs[:self.MAX_PARAMS]:
+        if len(pairs) > self.MAX_PARAMS:
+            raise HTTPError(413, 'Too many parameters')
+        for key, value in pairs:
             get[key] = value
         return get
 
@@ -981,7 +1006,7 @@ class BaseRequest(object):
             are stored separately in :attr:`files`. """
         forms = FormsDict()
         for name, item in self.POST.allitems():
-            if not hasattr(item, 'filename'):
+            if not isinstance(item, FileUpload):
                 forms[name] = item
         return forms
 
@@ -998,24 +1023,13 @@ class BaseRequest(object):
 
     @DictProperty('environ', 'bottle.request.files', read_only=True)
     def files(self):
-        """ File uploads parsed from an `url-encoded` or `multipart/form-data`
-            encoded POST or PUT request body. The values are instances of
-            :class:`cgi.FieldStorage`. The most important attributes are:
+        """ File uploads parsed from `multipart/form-data` encoded POST or PUT
+            request body. The values are instances of :class:`FileUpload`.
 
-            filename
-                The filename, if specified; otherwise None; this is the client
-                side filename, *not* the file name on which it is stored (that's
-                a temporary file you don't deal with)
-            file
-                The file(-like) object from which you can read the data.
-            value
-                The value as a *string*; for file uploads, this transparently
-                reads the file every time you request the value. Do not do this
-                on big files.
         """
         files = FormsDict()
         for name, item in self.POST.allitems():
-            if hasattr(item, 'filename'):
+            if isinstance(item, FileUpload):
                 files[name] = item
         return files
 
@@ -1025,9 +1039,8 @@ class BaseRequest(object):
             property holds the parsed content of the request body. Only requests
             smaller than :attr:`MEMFILE_MAX` are processed to avoid memory
             exhaustion. '''
-        if 'application/json' in self.environ.get('CONTENT_TYPE', '') \
-        and 0 < self.content_length < self.MEMFILE_MAX:
-            return json_loads(self.body.read(self.MEMFILE_MAX))
+        if 'application/json' in self.environ.get('CONTENT_TYPE', ''):
+            return json_loads(self._get_body_string())
         return None
 
     @DictProperty('environ', 'bottle.request.body', read_only=True)
@@ -1043,6 +1056,18 @@ class BaseRequest(object):
         self.environ['wsgi.input'] = body
         body.seek(0)
         return body
+
+    def _get_body_string(self):
+        ''' read body until content-length or MEMFILE_MAX into a string. Raise
+            HTTPError(413) on requests that are to large. '''
+        clen = self.content_length
+        if clen > self.MEMFILE_MAX:
+            raise HTTPError(413, 'Request to large')
+        if clen < 0: clen = self.MEMFILE_MAX + 1
+        data = self.body.read(clen)
+        if len(data) > self.MEMFILE_MAX: # Fail fast
+            raise HTTPError(413, 'Request to large')
+        return data
 
     @property
     def body(self):
@@ -1067,9 +1092,10 @@ class BaseRequest(object):
         # We default to application/x-www-form-urlencoded for everything that
         # is not multipart and take the fast path (also: 3.1 workaround)
         if not self.content_type.startswith('multipart/'):
-            maxlen = max(0, min(self.content_length, self.MEMFILE_MAX))
-            pairs = _parse_qsl(tonat(self.body.read(maxlen), 'latin1'))
-            for key, value in pairs[:self.MAX_PARAMS]:
+            pairs = _parse_qsl(tonat(self._get_body_string(), 'latin1'))
+            if len(pairs) > self.MAX_PARAMS:
+                raise HTTPError(413, 'Too many parameters')
+            for key, value in pairs:
                 post[key] = value
             return post
 
@@ -1082,9 +1108,16 @@ class BaseRequest(object):
                                          newline='\n')
         elif py3k:
             args['encoding'] = 'ISO-8859-1'
-        data = FieldStorage(**args)
-        for item in (data.list or [])[:self.MAX_PARAMS]:
-            post[item.name] = item if item.filename else item.value
+        data = cgi.FieldStorage(**args)
+        data = data.list or []
+        if len(data) > self.MAX_PARAMS:
+            raise HTTPError(413, 'Too many parameters')
+        for item in data:
+            if item.filename:
+                post[item.name] = FileUpload(item.file, item.name,
+                                             item.filename, item.headers)
+            else:
+                post[item.name] = item.value
         return post
 
     @property
@@ -1598,14 +1631,22 @@ class JSONPlugin(object):
         dumps = self.json_dumps
         if not dumps: return callback
         def wrapper(*a, **ka):
-            rv = callback(*a, **ka)
+            try:
+                rv = callback(*a, **ka)
+            except HTTPError:
+                rv = _e()
+
             if isinstance(rv, dict):
                 #Attempt to serialize, raises exception on failure
                 json_response = dumps(rv)
                 #Set content type only if serialization succesful
                 response.content_type = 'application/json'
                 return json_response
+            elif isinstance(rv, HTTPResponse) and isinstance(rv.body, dict):
+                rv.body = dumps(rv.body)
+                rv.content_type = 'application/json'
             return rv
+
         return wrapper
 
 
@@ -1666,9 +1707,6 @@ class TemplatePlugin(object):
         conf = route.config.get('template')
         if isinstance(conf, (tuple, list)) and len(conf) == 2:
             return view(conf[0], **conf[1])(callback)
-        elif isinstance(conf, str) and 'template_opts' in route.config:
-            depr('The `template_opts` parameter is deprecated.') #0.9
-            return view(conf, **route.config['template_opts'])(callback)
         elif isinstance(conf, str):
             return view(conf)(callback)
         else:
@@ -1819,6 +1857,7 @@ class FormsDict(MultiDict):
         return copy
 
     def getunicode(self, name, default=None, encoding=None):
+        ''' Return the value as a unicode string, or the default. '''
         try:
             return self._fix(self[name], encoding)
         except (UnicodeError, KeyError):
@@ -1967,9 +2006,20 @@ class WSGIFileWrapper(object):
             yield part
 
 
-class _iterchain(itertools.chain):
+class _closeiter(object):
     ''' This only exists to be able to attach a .close method to iterators that
         do not support attribute assignment (most of itertools). '''
+
+    def __init__(self, iterator, close=None):
+        self.iterator = iterator
+        self.close_callbacks = makelist(close)
+
+    def __iter__(self):
+        return iter(self.iterator)
+
+    def close(self):
+        for func in self.close_callbacks:
+            func()
 
 
 class ResourceManager(object):
@@ -2056,6 +2106,67 @@ class ResourceManager(object):
         fname = self.lookup(name)
         if not fname: raise IOError("Resource %r not found." % name)
         return self.opener(name, mode=mode, *args, **kwargs)
+
+
+class FileUpload(object):
+
+    def __init__(self, fileobj, name, filename, headers=None):
+        ''' Wrapper for file uploads. '''
+        #: Open file(-like) object (BytesIO buffer or temporary file)
+        self.file = fileobj
+        #: Name of the upload form field
+        self.name = name
+        #: Raw filename as sent by the client (may contain unsafe characters)
+        self.raw_filename = filename
+        #: A :class:`HeaderDict` with additional headers (e.g. content-type)
+        self.headers = HeaderDict(headers) if headers else HeaderDict()
+
+    content_type = HeaderProperty('Content-Type')
+    content_length = HeaderProperty('Content-Length', reader=int, default=-1)
+
+    @cached_property
+    def filename(self):
+        ''' Name of the file on the client file system, but normalized to ensure
+            file system compatibility (lowercase, no whitespace, no path
+            separators, no unsafe characters, ASCII only). An empty filename
+            is returned as 'empty'.
+        '''
+        from unicodedata import normalize #TODO: Module level import?
+        fname = self.raw_filename
+        if isinstance(fname, unicode):
+            fname = normalize('NFKD', fname).encode('ASCII', 'ignore')
+        fname = fname.decode('ASCII', 'ignore')
+        fname = os.path.basename(fname.replace('\\', os.path.sep))
+        fname = re.sub(r'[^a-zA-Z0-9-_.\s]', '', fname).strip().lower()
+        fname = re.sub(r'[-\s]+', '-', fname.strip('.').strip())
+        return fname or 'empty'
+
+    def _copy_file(self, fp, chunk_size=2**16):
+        read, write, offset = self.file.read, fp.write, self.file.tell()
+        while 1:
+            buf = read(chunk_size)
+            if not buf: break
+            write(buf)
+        self.file.seek(offset)    
+
+    def save(self, destination, overwrite=False, chunk_size=2**16):
+        ''' Save file to disk or copy its content to an open file(-like) object.
+            If *destination* is a directory, :attr:`filename` is added to the
+            path. Existing files are not overwritten by default (IOError).
+
+            :param destination: File path, directory or file(-like) object.
+            :param overwrite: If True, replace existing files. (default: False)
+            :param chunk_size: Bytes to read at a time. (default: 64kb)
+        '''
+        if isinstance(destination, basestring): # Except file-likes here
+            if os.path.isdir(destination):
+                destination = os.path.join(destination, self.filename)
+            if not overwrite and os.path.exists(destination):
+                raise IOError('File exists.')
+            with open(destination, 'wb') as fp:
+                self._copy_file(fp, chunk_size)
+        else:
+            self._copy_file(destination, chunk_size)
 
 
 
@@ -2160,6 +2271,7 @@ def debug(mode=True):
     """ Change the debug level.
     There is only one debug level supported at the moment."""
     global DEBUG
+    if mode: warnings.simplefilter('default')
     DEBUG = bool(mode)
 
 
@@ -2301,27 +2413,6 @@ def path_shift(script_name, path_info, shift=1):
     new_path_info = '/' + '/'.join(pathlist)
     if path_info.endswith('/') and pathlist: new_path_info += '/'
     return new_script_name, new_path_info
-
-
-def validate(**vkargs):
-    """
-    Validates and manipulates keyword arguments by user defined callables.
-    Handles ValueError and missing arguments by raising HTTPError(403).
-    """
-    depr('Use route wildcard filters instead.')
-    def decorator(func):
-        @functools.wraps(func)
-        def wrapper(*args, **kargs):
-            for key, value in vkargs.items():
-                if key not in kargs:
-                    abort(403, 'Missing parameter: %s' % key)
-                try:
-                    kargs[key] = value(kargs[key])
-                except ValueError:
-                    abort(403, 'Wrong parameter format for: %s' % key)
-            return func(*args, **kargs)
-        return wrapper
-    return decorator
 
 
 def auth_basic(check, realm="private", text="Access denied"):
@@ -2871,8 +2962,8 @@ class BaseTemplate(object):
         """ Render the template with the specified local variables and return
         a single byte or unicode string. If it is a byte string, the encoding
         must match self.encoding. This method must be thread-safe!
-        Local variables may be provided in dictionaries (*args)
-        or directly, as keywords (**kwargs).
+        Local variables may be provided in dictionaries (args)
+        or directly, as keywords (kwargs).
         """
         raise NotImplementedError
 
@@ -2941,32 +3032,6 @@ class Jinja2Template(BaseTemplate):
         if not fname: return
         with open(fname, "rb") as f:
             return f.read().decode(self.encoding)
-
-
-class SimpleTALTemplate(BaseTemplate):
-    ''' Deprecated, do not use. '''
-    def prepare(self, **options):
-        depr('The SimpleTAL template handler is deprecated'\
-             ' and will be removed in 0.12')
-        from simpletal import simpleTAL
-        if self.source:
-            self.tpl = simpleTAL.compileHTMLTemplate(self.source)
-        else:
-            with open(self.filename, 'rb') as fp:
-                self.tpl = simpleTAL.compileHTMLTemplate(tonat(fp.read()))
-
-    def render(self, *args, **kwargs):
-        from simpletal import simpleTALES
-        for dictarg in args: kwargs.update(dictarg)
-        context = simpleTALES.Context()
-        for k,v in self.defaults.items():
-            context.addGlobal(k, v)
-        for k,v in kwargs.items():
-            context.addGlobal(k, v)
-        output = StringIO()
-        self.tpl.expand(context, output)
-        return output.getvalue()
-
 
 
 class SimpleTemplate(BaseTemplate):
@@ -3219,7 +3284,6 @@ def template(*args, **kwargs):
 mako_template = functools.partial(template, template_adapter=MakoTemplate)
 cheetah_template = functools.partial(template, template_adapter=CheetahTemplate)
 jinja2_template = functools.partial(template, template_adapter=Jinja2Template)
-simpletal_template = functools.partial(template, template_adapter=SimpleTALTemplate)
 
 
 def view(tpl_name, **defaults):
@@ -3249,7 +3313,6 @@ def view(tpl_name, **defaults):
 mako_view = functools.partial(view, template_adapter=MakoTemplate)
 cheetah_view = functools.partial(view, template_adapter=CheetahTemplate)
 jinja2_view = functools.partial(view, template_adapter=Jinja2Template)
-simpletal_view = functools.partial(view, template_adapter=SimpleTALTemplate)
 
 
 

@@ -101,6 +101,9 @@ Data Structures
 .. autoclass:: ResourceManager
    :members:
 
+.. autoclass:: FileUpload
+   :members:
+
 Exceptions
 ---------------
 
@@ -135,6 +138,8 @@ The module-level :data:`bottle.request` is a proxy object (implemented in :class
 .. autoclass:: LocalRequest
    :members:
 
+
+.. autodata:: request
 
 The :class:`Response` Object
 ===================================================

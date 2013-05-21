@@ -1,8 +1,9 @@
 import unittest
 import bottle
 
+
 class TestRouter(unittest.TestCase):
-    CGI=False
+    CGI = False
     
     def setUp(self):
         self.r = bottle.Router()
@@ -82,6 +83,7 @@ class TestRouter(unittest.TestCase):
 
     def testErrorInPattern(self):
         self.assertRaises(Exception, self.assertMatches, '/:bug#(#/', '/foo/')
+        self.assertRaises(Exception, self.assertMatches, '/<:re:(>/', '/foo/')
 
     def testBuild(self):
         add, build = self.add, self.r.build
@@ -129,5 +131,5 @@ class TestRouterInCGIMode(TestRouter):
     CGI = True
 
 
-if __name__ == '__main__': #pragma: no cover
+if __name__ == '__main__':  # pragma: no cover
     unittest.main()

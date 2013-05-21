@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import unittest
 import bottle
 from tools import ServerTestBase
 
