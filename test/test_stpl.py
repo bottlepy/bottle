@@ -181,12 +181,12 @@ class TestSimpleTemplate(unittest.TestCase):
     def test_commentonly(self):
         """ Templates: Commentd should behave like code-lines (e.g. flush text-lines) """
         t = SimpleTemplate('...\n%#test\n...')
-        self.failIfEqual('#test', t.code.splitlines()[0])
+        self.assertNotEqual('#test', t.code.splitlines()[0])
 
     def test_detect_pep263(self):
         ''' PEP263 strings in code-lines change the template encoding on the fly '''
         t = SimpleTemplate(touni('%#coding: iso8859_15\nöäü?@€').encode('utf8'))
-        self.failIfEqual(touni('öäü?@€'), t.render())
+        self.assertNotEqual(touni('öäü?@€'), t.render())
         self.assertEqual(t.encoding, 'iso8859_15')
         t = SimpleTemplate(touni('%#coding: iso8859_15\nöäü?@€').encode('iso8859_15'))
         self.assertEqual(touni('öäü?@€'), t.render())
