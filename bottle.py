@@ -2105,7 +2105,7 @@ class ResourceManager(object):
         ''' Find a resource and return a file object, or raise IOError. '''
         fname = self.lookup(name)
         if not fname: raise IOError("Resource %r not found." % name)
-        return self.opener(name, mode=mode, *args, **kwargs)
+        return self.opener(fname, mode=mode, *args, **kwargs)
 
 
 class FileUpload(object):
