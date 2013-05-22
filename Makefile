@@ -2,7 +2,7 @@ PATH := build/python/bin:$(PATH)
 VERSION = $(shell python setup.py --version)
 ALLFILES = $(shell echo bottle.py test/*.py test/views/*.tpl)
 
-.PHONY: release install docs test test_all test_25 test_26 test_27 test_31 test_32 test_33 2to3 clean
+.PHONY: release coverage install docs test test_all test_25 test_26 test_27 test_31 test_32 test_33 2to3 clean
 
 release: test_all
 	python setup.py --version | egrep -q -v '[a-zA-Z]' # Fail on dev/rc versions
@@ -11,6 +11,14 @@ release: test_all
 	git push origin HEAD                               # Fail on out-of-sync upstream
 	git push origin tag $(VERSION)                     # Fail on dublicate tag
 	python setup.py sdist register upload              # Release to pypi
+
+coverage:
+	-mkdir build/
+	coverage erase
+	COVERAGE_PROCESS_START=.coveragerc test/testall.py
+	coverage combine
+	coverage report
+	coverage html
 
 push: test_all
 	git push origin HEAD

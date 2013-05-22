@@ -245,7 +245,7 @@ class TestSTPLDir(unittest.TestCase):
         for i in range(len(lines)):
             lines[i] = lines[i][len(whitespace):]
         return lines[0][:0].join(lines)
-            
+
     def assertRenders(self, source, result, syntax=None, *args, **vars):
         source = self.fix_ident(source)
         result = self.fix_ident(result)
@@ -256,6 +256,16 @@ class TestSTPLDir(unittest.TestCase):
         except SyntaxError:
             self.fail('Syntax error in template:\n%s\n\nTemplate code:\n##########\n%s\n##########' %
                      (traceback.format_exc(), tpl.code))
+
+    def test_old_include(self):
+        t1 = SimpleTemplate('%include foo')
+        t1.cache['foo'] = SimpleTemplate('foo')
+        self.assertEqual(t1.render(), 'foo')
+
+    def test_old_include(self):
+        t1 = SimpleTemplate('%include foo x=y')
+        t1.cache['foo'] = SimpleTemplate('foo{{x}}')
+        self.assertEqual(t1.render(y='bar'), 'foobar')
 
     def test_multiline_block(self):
         source = '''

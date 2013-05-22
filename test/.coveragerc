@@ -1,0 +1,7 @@
+[run]
+branch = True
+parallel = True
+data_file = ../build/.coverage
+
+[html]
+directory = build/coverage
