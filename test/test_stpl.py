@@ -262,9 +262,13 @@ class TestSTPLDir(unittest.TestCase):
         t1.cache['foo'] = SimpleTemplate('foo')
         self.assertEqual(t1.render(), 'foo')
 
-    def test_old_include(self):
+    def test_old_include_with_args(self):
         t1 = SimpleTemplate('%include foo x=y')
         t1.cache['foo'] = SimpleTemplate('foo{{x}}')
+        self.assertEqual(t1.render(y='bar'), 'foobar')
+
+    def test_defect_coding(self):
+        t1 = SimpleTemplate('%#coding comment\nfoo{{y}}')
         self.assertEqual(t1.render(y='bar'), 'foobar')
 
     def test_multiline_block(self):
