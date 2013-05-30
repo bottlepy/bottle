@@ -5,13 +5,17 @@
 Release Notes and Changelog
 ===========================
 
-Release 0.11
+
+
+Release 0.12
 ==============
 
 .. warning: Not released yet.
 
+* New SimpleTemplate parser implementation
+  * Support for multi-line code blocks (`<% ... %>`).
+  * The keywords `include` and `rebase` are functions now and can accept variable template names.
 * The new :meth:`BaseRequest.route` property returns the :class:`Route` that matched the request.
-
 
 Release 0.11
 ==============
