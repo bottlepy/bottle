@@ -27,7 +27,7 @@ Example
 
     from bottle import route, run
 
-    @route('/hello/:name')
+    @route('/hello/<name>')
     def hello(name):
         return '<h1>Hello %s!</h1>' % name.title()
 
