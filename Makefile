@@ -27,7 +27,7 @@ install:
 	python setup.py install
 
 docs:
-	cd docs/; $(MAKE) html
+	sphinx-build -b html -d build/docs/doctrees docs build/docs/html
 
 test:
 	python test/testall.py
