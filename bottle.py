@@ -1302,6 +1302,13 @@ class HeaderProperty(object):
         return self.reader(value) if self.reader else value
 
     def __set__(self, obj, value):
+        if self.name == 'Expires':
+            if isinstance(value, (datedate, datetime)):
+                value = value.timetuple()
+            elif isinstance(value, (int, float)):
+                value = time.gmtime(value)
+            if not isinstance(value, basestring):
+                value = time.strftime("%a, %d %b %Y %H:%M:%S GMT", value)
         obj.headers[self.name] = self.writer(value)
 
     def __delete__(self, obj):
@@ -1451,6 +1458,7 @@ class BaseResponse(object):
 
     content_type = HeaderProperty('Content-Type')
     content_length = HeaderProperty('Content-Length', reader=int)
+    expires = HeaderProperty('Expires')
 
     @property
     def charset(self, default='UTF-8'):
