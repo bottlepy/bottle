@@ -143,6 +143,15 @@ def makelist(data): # This is just to handy
     elif data: return [data]
     else: return []
 
+def http_date(value):
+    if isinstance(value, (datedate, datetime)):
+        value = value.timetuple()
+    elif isinstance(value, (int, float)):
+        value = time.gmtime(value)
+    if not isinstance(value, basestring):
+        value = time.strftime("%a, %d %b %Y %H:%M:%S GMT", value)
+    return value
+
 
 class DictProperty(object):
     ''' Property that maps to a key in a local dict-like attribute. '''
@@ -1451,6 +1460,7 @@ class BaseResponse(object):
 
     content_type = HeaderProperty('Content-Type')
     content_length = HeaderProperty('Content-Length', reader=int)
+    expires = HeaderProperty('Expires', writer=http_date)
 
     @property
     def charset(self, default='UTF-8'):
