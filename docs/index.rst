@@ -33,7 +33,7 @@ Bottle is a fast, simple and lightweight WSGI_ micro web-framework for Python_. 
 
   from bottle import route, run, template
 
-  @route('/hello/:name')
+  @route('/hello/<name>')
   def index(name='World'):
       return template('<b>Hello {{name}}</b>!', name=name)
 
