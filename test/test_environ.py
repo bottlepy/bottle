@@ -625,7 +625,12 @@ class TestResponse(unittest.TestCase):
         response['x-test'] = None
         self.assertEqual('None', response['x-test'])
 
-
+    def test_expires_header(self):
+        import datetime
+        response = BaseResponse()
+        now = datetime.datetime.now()
+        response.expires = now
+        self.assertEqual(0, int((response.expires-now).total_seconds()))
 
 class TestRedirect(unittest.TestCase):
 
