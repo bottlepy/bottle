@@ -637,6 +637,7 @@ class TestRedirect(unittest.TestCase):
                 del args[key]
         env.update(args)
         request.bind(env)
+        bottle.response.bind()
         try:
             bottle.redirect(target, **(query or {}))
         except bottle.HTTPResponse:
@@ -722,6 +723,17 @@ class TestRedirect(unittest.TestCase):
         self.assertRedirect('./te st.html',
                             'http://example.com/a%20a/b%20b/te st.html',
                             HTTP_HOST='example.com', SCRIPT_NAME='/a a/', PATH_INFO='/b b/')
+
+    def test_redirect_preserve_cookies(self):
+        env = {'SERVER_PROTOCOL':'HTTP/1.1'}
+        request.bind(env)
+        bottle.response.bind()
+        try:
+            bottle.response.set_cookie('xxx', 'yyy')
+            bottle.redirect('...')
+        except bottle.HTTPResponse:
+            h = [v for (k, v) in _e().headerlist if k == 'Set-Cookie']
+            self.assertEqual(h, ['xxx=yyy'])
 
 class TestWSGIHeaderDict(unittest.TestCase):
     def setUp(self):

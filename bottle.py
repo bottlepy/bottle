@@ -1349,12 +1349,14 @@ class BaseResponse(object):
             for name, value in more_headers.items():
                 self.add_header(name, value)
 
-    def copy(self):
+    def copy(self, cls=None):
         ''' Returns a copy of self. '''
-        # TODO
-        copy = Response()
+        cls = cls or BaseResponse
+        assert issubclass(cls, BaseResponse)
+        copy = cls()
         copy.status = self.status
         copy._headers = dict((k, v[:]) for (k, v) in self._headers.items())
+        copy.COOKIES.load(self.COOKIES.output())
         return copy
 
     def __iter__(self):
@@ -2186,10 +2188,13 @@ def abort(code=500, text='Unknown Error: Application stopped.'):
 def redirect(url, code=None):
     """ Aborts execution and causes a 303 or 302 redirect, depending on
         the HTTP protocol version. """
-    if code is None:
+    if not code:
         code = 303 if request.get('SERVER_PROTOCOL') == "HTTP/1.1" else 302
-    location = urljoin(request.url, url)
-    raise HTTPResponse("", status=code, Location=location)
+    res = response.copy(cls=HTTPResponse)
+    res.status = code
+    res.body = ""
+    res.set_header('Location', urljoin(request.url, url))
+    raise res
 
 
 def _file_iter_range(fp, offset, bytes, maxread=1024*1024):
