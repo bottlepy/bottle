@@ -1453,6 +1453,9 @@ class BaseResponse(object):
 
     content_type = HeaderProperty('Content-Type')
     content_length = HeaderProperty('Content-Length', reader=int)
+    expires = HeaderProperty('Expires',
+        reader=lambda x: datetime.utcfromtimestamp(parse_date(x)),
+        writer=lambda x: http_date(x))
 
     @property
     def charset(self, default='UTF-8'):
@@ -2279,6 +2282,14 @@ def debug(mode=True):
     if mode: warnings.simplefilter('default')
     DEBUG = bool(mode)
 
+def http_date(value):
+    if isinstance(value, (datedate, datetime)):
+        value = value.utctimetuple()
+    elif isinstance(value, (int, float)):
+        value = time.gmtime(value)
+    if not isinstance(value, basestring):
+        value = time.strftime("%a, %d %b %Y %H:%M:%S GMT", value)
+    return value
 
 def parse_date(ims):
     """ Parse rfc1123, rfc850 and asctime timestamps and return UTC epoch. """
@@ -2287,7 +2298,6 @@ def parse_date(ims):
         return time.mktime(ts[:8] + (0,)) - (ts[9] or 0) - time.timezone
     except (TypeError, ValueError, IndexError, OverflowError):
         return None
-
 
 def parse_auth(header):
     """ Parse rfc2617 HTTP authentication header string (basic) and return (user,pass) tuple or None"""
