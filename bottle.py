@@ -1104,10 +1104,10 @@ class BaseRequest(object):
             if key in self.environ: safe_env[key] = self.environ[key]
         args = dict(fp=self.body, environ=safe_env, keep_blank_values=True)
         if py31:
-            args['fp'] = NCTextIOWrapper(args['fp'], encoding='ISO-8859-1',
+            args['fp'] = NCTextIOWrapper(args['fp'], encoding='latin1',
                                          newline='\n')
         elif py3k:
-            args['encoding'] = 'ISO-8859-1'
+            args['encoding'] = 'latin1'
         data = cgi.FieldStorage(**args)
         data = data.list or []
         if len(data) > self.MAX_PARAMS:
