@@ -335,9 +335,14 @@ class Router(object):
         self.builder[rule] = builder
         if name: self.builder[name] = builder
 
+        match_methods = ['ANY', method] if method != 'ANY' else ['ANY']
+        if method == "GET":
+            match_methods.append("HEAD")
+
         if is_static and not self.strict_order:
-            self.static.setdefault(method, {})
-            self.static[method][self.build(rule)] = (target, None)
+            for method in match_methods:
+                self.static.setdefault(method, {})
+                self.static[method][self.build(rule)] = (target, None)
             return
 
         try:
@@ -363,18 +368,19 @@ class Router(object):
 
         flatpat = _re_flatten(pattern)
 
-        self._groups.setdefault(method, {})
-        if flatpat in self._groups[method]:
-            # Info: Rule groups with previous rule
-            if DEBUG:
-                msg = 'Route <%s %s> overwrites a previously defined route'
-                warnings.warn(msg % (method, rule), RuntimeWarning)
+        for method in match_methods:
+            self._groups.setdefault(method, {})
+            if flatpat in self._groups[method]:
+                # Info: Rule groups with previous rule
+                if DEBUG:
+                    msg = 'Route <%s %s> overwrites a previously defined route'
+                    warnings.warn(msg % (method, rule), RuntimeWarning)
 
-        mdict = self._groups[method][flatpat] = (target, getargs)
+            mdict = self._groups[method][flatpat] = (target, getargs)
 
-        self.dyna_routes.setdefault(method, []).append((rule, flatpat, mdict))
+            self.dyna_routes.setdefault(method, []).append((rule, flatpat, mdict))
 
-        self._regen_dynamic(method)
+            self._regen_dynamic(method)
 
     def _regen_dynamic(self, method):
         combined_l = []
@@ -399,24 +405,19 @@ class Router(object):
         ''' Return a (target, url_agrs) tuple or raise HTTPError(400/404/405). '''
 
         method = environ['REQUEST_METHOD'].upper()
-        possibilities = [method]
-        if method == "HEAD":
-            possibilities.append("GET")
-        possibilities.append("ANY")
 
         path, targets, urlargs = environ['PATH_INFO'] or '/', None, {}
 
-        for meth in possibilities:
-            if meth in self.static and path in self.static[meth]:
-                targets = self.static[meth][path]
-                break
-            if not meth in self.dyna_regexes:
-                continue
-            combined, rules = self.dyna_regexes[meth]
+        if not method in self.static and not method in self.dyna_regexes:
+            method = 'ANY'
+
+        if method in self.static and path in self.static[method]:
+            targets = self.static[method][path]
+        elif method in self.dyna_regexes:
+            combined, rules = self.dyna_regexes[method]
             match = combined.match(path)
             if match:
                 targets = rules[match.lastindex - 1]
-                break
 
         if not targets:
             raise HTTPError(404, "Not found: " + repr(environ['PATH_INFO']))
