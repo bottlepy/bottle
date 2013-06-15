@@ -266,6 +266,7 @@ class Router(object):
         self._groups  = {}
         self.builder  = {} # Data structure for the url builder
         self.static   = {} # Search structure for static routes
+        self.dyna_routes = []
         self.dynamic  = [] # Search structure for dynamic routes
         #: If true, static routes are no longer checked first.
         self.strict_order = strict
@@ -372,13 +373,18 @@ class Router(object):
             return
 
         mdict = self._groups[flatpat] = {method: (target, getargs)}
-        
-        try:
-            combined = '%s|(^%s$)' % (self.dynamic[-1][0].pattern, flatpat)
-            self.dynamic[-1] = (re.compile(combined), self.dynamic[-1][1])
-            self.dynamic[-1][1].append(mdict)
-        except (AssertionError, IndexError): # AssertionError: Too many groups
-            self.dynamic.append((re.compile('(^%s$)' % flatpat), [mdict]))
+
+        self.dyna_routes.append((rule, flatpat, mdict))
+
+        self._regen_dynamic()
+
+    def _regen_dynamic(self):
+        combined_l = []
+        mdicts = []
+        for rule, flatpat, mdict in self.dyna_routes:
+            combined_l.append('(^%s$)' % flatpat)
+            mdicts.append(mdict)
+        self.dynamic = [(re.compile('|'.join(combined_l)), mdicts)]
 
     def build(self, _name, *anons, **query):
         ''' Build an URL by filling the wildcards in a rule. '''
