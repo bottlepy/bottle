@@ -266,8 +266,8 @@ class Router(object):
         self._groups  = {}
         self.builder  = {} # Data structure for the url builder
         self.static   = {} # Search structure for static routes
-        self.dyna_routes = []
-        self.dynamic  = [] # Search structure for dynamic routes
+        self.dyna_routes = {}
+        self.dyna_regexes  = {} # Search structure for dynamic routes
         #: If true, static routes are no longer checked first.
         self.strict_order = strict
         self.filters = {
@@ -336,8 +336,8 @@ class Router(object):
         if name: self.builder[name] = builder
 
         if is_static and not self.strict_order:
-            group = self.static.setdefault(self.build(rule), {})
-            group[method] = (target, None)
+            self.static.setdefault(method, {})
+            self.static[method][self.build(rule)] = (target, None)
             return
 
         try:
@@ -362,29 +362,27 @@ class Router(object):
             getargs = None
 
         flatpat = _re_flatten(pattern)
-        if flatpat in self._groups:
+
+        self._groups.setdefault(method, {})
+        if flatpat in self._groups[method]:
             # Info: Rule groups with previous rule
-            group = self._groups[flatpat]
-            if method in group:
-                if DEBUG:
-                    msg = 'Route <%s %s> overwrites a previously defined route'
-                    warnings.warn(msg % (method, rule), RuntimeWarning)
-            self._groups[flatpat][method] = (target, getargs)
-            return
+            if DEBUG:
+                msg = 'Route <%s %s> overwrites a previously defined route'
+                warnings.warn(msg % (method, rule), RuntimeWarning)
 
-        mdict = self._groups[flatpat] = {method: (target, getargs)}
+        mdict = self._groups[method][flatpat] = (target, getargs)
 
-        self.dyna_routes.append((rule, flatpat, mdict))
+        self.dyna_routes.setdefault(method, []).append((rule, flatpat, mdict))
 
-        self._regen_dynamic()
+        self._regen_dynamic(method)
 
-    def _regen_dynamic(self):
+    def _regen_dynamic(self, method):
         combined_l = []
         mdicts = []
-        for rule, flatpat, mdict in self.dyna_routes:
+        for rule, flatpat, mdict in self.dyna_routes[method]:
             combined_l.append('(^%s$)' % flatpat)
             mdicts.append(mdict)
-        self.dynamic = [(re.compile('|'.join(combined_l)), mdicts)]
+        self.dyna_regexes[method] = (re.compile('|'.join(combined_l)), mdicts)
 
     def build(self, _name, *anons, **query):
         ''' Build an URL by filling the wildcards in a rule. '''
@@ -399,30 +397,30 @@ class Router(object):
 
     def match(self, environ):
         ''' Return a (target, url_agrs) tuple or raise HTTPError(400/404/405). '''
+
+        method = environ['REQUEST_METHOD'].upper()
+        possibilities = [method]
+        if method == "HEAD":
+            possibilities.append("GET")
+        possibilities.append("ANY")
+
         path, targets, urlargs = environ['PATH_INFO'] or '/', None, {}
-        if path in self.static:
-            targets = self.static[path]
-        else:
-            for combined, rules in self.dynamic:
-                match = combined.match(path)
-                if not match: continue
+
+        for meth in possibilities:
+            if meth in self.static and path in self.static[meth]:
+                targets = self.static[meth][path]
+                break
+            if not meth in self.dyna_regexes:
+                continue
+            combined, rules = self.dyna_regexes[meth]
+            match = combined.match(path)
+            if match:
                 targets = rules[match.lastindex - 1]
                 break
 
         if not targets:
             raise HTTPError(404, "Not found: " + repr(environ['PATH_INFO']))
-        method = environ['REQUEST_METHOD'].upper()
-        if method in targets:
-            target, getargs = targets[method]
-        elif method == 'HEAD' and 'GET' in targets:
-            target, getargs = targets['GET']
-        elif 'ANY' in targets:
-            target, getargs = targets['ANY']            
-        else:
-            allowed = [verb for verb in targets if verb != 'ANY']
-            if 'GET' in allowed and 'HEAD' not in allowed:
-                allowed.append('HEAD')
-            raise HTTPError(405, "Method not allowed.", Allow=",".join(allowed))
+        target, getargs = targets
         
         return target, getargs(path) if getargs else {}
 
