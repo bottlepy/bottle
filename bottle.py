@@ -411,10 +411,11 @@ class Router(object):
         method = environ['REQUEST_METHOD'].upper()
 
         path, targets, urlargs = environ['PATH_INFO'] or '/', None, {}
-
-        static = self.static[method] if method in self.static else self.static['ANY']
-        if path in static:
+        
+        if method in self.static and path in self.static[method]:
             targets = self.static[method][path]
+        elif path in self.static['ANY']:
+            targets = self.static['ANY'][path]
         else:
             dyna_regex = self.dyna_regexes[method] if method in self.dyna_regexes else self.dyna_regexes['ANY']
             combined, rules = dyna_regex
