@@ -265,8 +265,8 @@ class Router(object):
         self.rules    = [] # All rules in order
         self._groups  = {}
         self.builder  = {} # Data structure for the url builder
-        self.static   = {} # Search structure for static routes
-        self.dyna_routes = {}
+        self.static   = {'ANY': {}} # Search structure for static routes
+        self.dyna_routes = {'ANY': []}
         self.dyna_regexes  = {} # Search structure for dynamic routes
         #: If true, static routes are no longer checked first.
         self.strict_order = strict
@@ -335,9 +335,9 @@ class Router(object):
         self.builder[rule] = builder
         if name: self.builder[name] = builder
 
-        match_methods = ['ANY', method] if method != 'ANY' else ['ANY']
+        match_methods = set([method])
         if method == "GET":
-            match_methods.append("HEAD")
+            match_methods.add("HEAD")
 
         if is_static and not self.strict_order:
             for method in match_methods:
@@ -380,15 +380,21 @@ class Router(object):
 
             self.dyna_routes.setdefault(method, []).append((rule, flatpat, mdict))
 
-            self._regen_dynamic(method)
+        self._regen_dynamic(match_methods)
 
-    def _regen_dynamic(self, method):
-        combined_l = []
-        mdicts = []
-        for rule, flatpat, mdict in self.dyna_routes[method]:
-            combined_l.append('(^%s$)' % flatpat)
-            mdicts.append(mdict)
-        self.dyna_regexes[method] = (re.compile('|'.join(combined_l)), mdicts)
+    def _regen_dynamic(self, methods):
+        if 'ANY' in methods: # must regen all regexes
+            methods = set(self.dyna_routes.keys())
+        for method in methods:
+            if method == 'ANY': # no regex for any
+                continue
+            rules = []
+            rules += self.dyna_routes[method]
+            rules += self.dyna_routes['ANY']
+            # now would be a good time to sort the rules
+            combined = ['(^%s$)' % flatpat for rule, flatpat, mdict in rules]
+            mdicts = [mdict for rule, flatpat, mdict in rules]
+            self.dyna_regexes[method] = (re.compile('|'.join(combined)), mdicts)
 
     def build(self, _name, *anons, **query):
         ''' Build an URL by filling the wildcards in a rule. '''
@@ -408,22 +414,34 @@ class Router(object):
 
         path, targets, urlargs = environ['PATH_INFO'] or '/', None, {}
 
-        if not method in self.static and not method in self.dyna_regexes:
-            method = 'ANY'
-
         if method in self.static and path in self.static[method]:
             targets = self.static[method][path]
+        elif path in self.static['ANY']:
+            targets = self.static['ANY'][path]
         elif method in self.dyna_regexes:
             combined, rules = self.dyna_regexes[method]
             match = combined.match(path)
             if match:
                 targets = rules[match.lastindex - 1]
 
-        if not targets:
-            raise HTTPError(404, "Not found: " + repr(environ['PATH_INFO']))
-        target, getargs = targets
-        
-        return target, getargs(path) if getargs else {}
+        if targets:
+            target, getargs = targets
+            
+            return target, getargs(path) if getargs else {}
+
+        verbs = set([])
+        for method in set(self.static.keys()) - set(['ANY', method]):
+            if path in self.static[method]:
+                verbs.add(method)
+        for method in set(self.dyna_regexes.keys()) - set([method]):
+            combined, rules = self.dyna_regexes[method]
+            match = combined.match(path)
+            if match:
+                verbs.add(method)
+        if len(verbs) >= 1:
+            raise HTTPError(405, "Method not allowed.", Allow=",".join(sorted(verbs)))
+
+        raise HTTPError(404, "Not found: " + repr(environ['PATH_INFO']))
 
 
 
