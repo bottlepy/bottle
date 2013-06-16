@@ -267,7 +267,7 @@ class Router(object):
         self.builder  = {} # Data structure for the url builder
         self.static   = {'ANY': {}} # Search structure for static routes
         self.dyna_routes = {'ANY': []}
-        self.dyna_regexes  = {} # Search structure for dynamic routes
+        self.dyna_regexes  = {'ANY': (re.compile('$^'), [])} # Search structure for dynamic routes
         #: If true, static routes are no longer checked first.
         self.strict_order = strict
         self.filters = {
@@ -386,11 +386,10 @@ class Router(object):
         if 'ANY' in methods: # must regen all regexes
             methods = set(self.dyna_routes.keys())
         for method in methods:
-            if method == 'ANY': # no regex for any
-                continue
             rules = []
             rules += self.dyna_routes[method]
-            rules += self.dyna_routes['ANY']
+            if method != 'ANY':
+                rules += self.dyna_routes['ANY']
             # now would be a good time to sort the rules
             combined = ['(^%s$)' % flatpat for rule, flatpat, mdict in rules]
             mdicts = [mdict for rule, flatpat, mdict in rules]
@@ -409,17 +408,16 @@ class Router(object):
 
     def match(self, environ):
         ''' Return a (target, url_agrs) tuple or raise HTTPError(400/404/405). '''
-
         method = environ['REQUEST_METHOD'].upper()
 
         path, targets, urlargs = environ['PATH_INFO'] or '/', None, {}
 
-        if method in self.static and path in self.static[method]:
+        static = self.static[method] if method in self.static else self.static['ANY']
+        if path in static:
             targets = self.static[method][path]
-        elif path in self.static['ANY']:
-            targets = self.static['ANY'][path]
-        elif method in self.dyna_regexes:
-            combined, rules = self.dyna_regexes[method]
+        else:
+            dyna_regex = self.dyna_regexes[method] if method in self.dyna_regexes else self.dyna_regexes['ANY']
+            combined, rules = dyna_regex
             match = combined.match(path)
             if match:
                 targets = rules[match.lastindex - 1]
@@ -433,7 +431,7 @@ class Router(object):
         for method in set(self.static.keys()) - set(['ANY', method]):
             if path in self.static[method]:
                 verbs.add(method)
-        for method in set(self.dyna_regexes.keys()) - set([method]):
+        for method in set(self.dyna_regexes.keys()) - set(['ANY', method]):
             combined, rules = self.dyna_regexes[method]
             match = combined.match(path)
             if match:
