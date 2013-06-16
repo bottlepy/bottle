@@ -263,7 +263,7 @@ class Router(object):
 
     def __init__(self, strict=False):
         self.rules    = [] # All rules in order
-        self._groups  = {}
+        self._groups  = {} # index of regexes to find them in dyna_routes
         self.builder  = {} # Data structure for the url builder
         self.static   = {'ANY': {}} # Search structure for static routes
         self.dyna_routes = {'ANY': []}
@@ -368,6 +368,8 @@ class Router(object):
             getargs = None
 
         flatpat = _re_flatten(pattern)
+        mdict =(target, getargs)
+        whole_rule = (rule, flatpat, mdict)
 
         for method in match_methods:
             self._groups.setdefault(method, {})
@@ -376,10 +378,10 @@ class Router(object):
                 if DEBUG:
                     msg = 'Route <%s %s> overwrites a previously defined route'
                     warnings.warn(msg % (method, rule), RuntimeWarning)
-
-            mdict = self._groups[method][flatpat] = (target, getargs)
-
-            self.dyna_routes.setdefault(method, []).append((rule, flatpat, mdict))
+                self.dyna_routes[method][self._groups[method][flatpat]] = whole_rule
+            else:
+                self.dyna_routes.setdefault(method, []).append(whole_rule)
+                self._groups[method][flatpat] = len(self.dyna_routes[method]) - 1
 
         self._regen_dynamic(match_methods)
 
@@ -412,7 +414,7 @@ class Router(object):
         method = environ['REQUEST_METHOD'].upper()
 
         path, targets, urlargs = environ['PATH_INFO'] or '/', None, {}
-        
+
         if method in self.static and path in self.static[method]:
             targets = self.static[method][path]
         elif path in self.static['ANY']:
