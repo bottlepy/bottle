@@ -267,7 +267,8 @@ class Router(object):
         self.builder  = {} # Data structure for the url builder
         self.static   = {'ANY': {}} # Search structure for static routes
         self.dyna_routes = {'ANY': []}
-        self.dyna_regexes  = {'ANY': (re.compile('$^'), [])} # Search structure for dynamic routes
+        # '$ ^' is a regex that matches nothing
+        self.dyna_regexes  = {'ANY': (re.compile('$ ^'), [])} # Search structure for dynamic routes
         #: If true, static routes are no longer checked first.
         self.strict_order = strict
         self.filters = {
