@@ -264,10 +264,12 @@ class Router(object):
 
     def __init__(self, strict=False):
         self.rules    = [] # All rules in order
-        self._groups  = {}
+        self._groups  = {} # index of regexes to find them in dyna_routes
         self.builder  = {} # Data structure for the url builder
-        self.static   = {} # Search structure for static routes
-        self.dynamic  = [] # Search structure for dynamic routes
+        self.static   = {'ANY': {}} # Search structure for static routes
+        self.dyna_routes = {'ANY': []}
+        # '$ ^' is a regex that matches nothing
+        self.dyna_regexes  = {'ANY': (re.compile('$ ^'), [])} # Search structure for dynamic routes
         #: If true, static routes are no longer checked first.
         self.strict_order = strict
         self.filters = {
@@ -335,9 +337,14 @@ class Router(object):
         self.builder[rule] = builder
         if name: self.builder[name] = builder
 
+        match_methods = set([method])
+        if method == "GET":
+            match_methods.add("HEAD")
+
         if is_static and not self.strict_order:
-            group = self.static.setdefault(self.build(rule), {})
-            group[method] = (target, None)
+            for method in match_methods:
+                self.static.setdefault(method, {})
+                self.static[method][self.build(rule)] = (target, None)
             return
 
         try:
@@ -362,24 +369,35 @@ class Router(object):
             getargs = None
 
         flatpat = _re_flatten(pattern)
-        if flatpat in self._groups:
-            # Info: Rule groups with previous rule
-            group = self._groups[flatpat]
-            if method in group:
+        mdict =(target, getargs)
+        whole_rule = (rule, flatpat, mdict)
+
+        for method in match_methods:
+            self._groups.setdefault(method, {})
+            if flatpat in self._groups[method]:
+                # Info: Rule groups with previous rule
                 if DEBUG:
                     msg = 'Route <%s %s> overwrites a previously defined route'
                     warnings.warn(msg % (method, rule), RuntimeWarning)
-            self._groups[flatpat][method] = (target, getargs)
-            return
+                self.dyna_routes[method][self._groups[method][flatpat]] = whole_rule
+            else:
+                self.dyna_routes.setdefault(method, []).append(whole_rule)
+                self._groups[method][flatpat] = len(self.dyna_routes[method]) - 1
 
-        mdict = self._groups[flatpat] = {method: (target, getargs)}
-        
-        try:
-            combined = '%s|(^%s$)' % (self.dynamic[-1][0].pattern, flatpat)
-            self.dynamic[-1] = (re.compile(combined), self.dynamic[-1][1])
-            self.dynamic[-1][1].append(mdict)
-        except (AssertionError, IndexError): # AssertionError: Too many groups
-            self.dynamic.append((re.compile('(^%s$)' % flatpat), [mdict]))
+        self._regen_dynamic(match_methods)
+
+    def _regen_dynamic(self, methods):
+        if 'ANY' in methods: # must regen all regexes
+            methods = set(self.dyna_routes.keys())
+        for method in methods:
+            rules = []
+            rules += self.dyna_routes[method]
+            if method != 'ANY':
+                rules += self.dyna_routes['ANY']
+            # now would be a good time to sort the rules
+            combined = ['(^%s$)' % flatpat for rule, flatpat, mdict in rules]
+            mdicts = [mdict for rule, flatpat, mdict in rules]
+            self.dyna_regexes[method] = (re.compile('|'.join(combined)), mdicts)
 
     def build(self, _name, *anons, **query):
         ''' Build an URL by filling the wildcards in a rule. '''
@@ -394,32 +412,39 @@ class Router(object):
 
     def match(self, environ):
         ''' Return a (target, url_agrs) tuple or raise HTTPError(400/404/405). '''
-        path, targets, urlargs = environ['PATH_INFO'] or '/', None, {}
-        if path in self.static:
-            targets = self.static[path]
-        else:
-            for combined, rules in self.dynamic:
-                match = combined.match(path)
-                if not match: continue
-                targets = rules[match.lastindex - 1]
-                break
-
-        if not targets:
-            raise HTTPError(404, "Not found: " + repr(environ['PATH_INFO']))
         method = environ['REQUEST_METHOD'].upper()
-        if method in targets:
-            target, getargs = targets[method]
-        elif method == 'HEAD' and 'GET' in targets:
-            target, getargs = targets['GET']
-        elif 'ANY' in targets:
-            target, getargs = targets['ANY']            
+
+        path, targets, urlargs = environ['PATH_INFO'] or '/', None, {}
+
+        if method in self.static and path in self.static[method]:
+            targets = self.static[method][path]
+        elif path in self.static['ANY']:
+            targets = self.static['ANY'][path]
         else:
-            allowed = [verb for verb in targets if verb != 'ANY']
-            if 'GET' in allowed and 'HEAD' not in allowed:
-                allowed.append('HEAD')
-            raise HTTPError(405, "Method not allowed.", Allow=",".join(allowed))
-        
-        return target, getargs(path) if getargs else {}
+            dyna_regex = self.dyna_regexes[method] if method in self.dyna_regexes else self.dyna_regexes['ANY']
+            combined, rules = dyna_regex
+            match = combined.match(path)
+            if match:
+                targets = rules[match.lastindex - 1]
+
+        if targets:
+            target, getargs = targets
+            
+            return target, getargs(path) if getargs else {}
+
+        verbs = set([])
+        for method in set(self.static.keys()) - set(['ANY', method]):
+            if path in self.static[method]:
+                verbs.add(method)
+        for method in set(self.dyna_regexes.keys()) - set(['ANY', method]):
+            combined, rules = self.dyna_regexes[method]
+            match = combined.match(path)
+            if match:
+                verbs.add(method)
+        if len(verbs) >= 1:
+            raise HTTPError(405, "Method not allowed.", Allow=",".join(sorted(verbs)))
+
+        raise HTTPError(404, "Not found: " + repr(environ['PATH_INFO']))
 
 
 
