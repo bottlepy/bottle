@@ -19,10 +19,10 @@ def tobs(data):
     return BytesIO(tob(data))
 
 def api(introduced, deprecated=None, removed=None):
-    current = map(int, bottle.__version__.split('-')[0].split('.'))
-    introduced = map(int, introduced.split('.'))
-    deprecated = map(int, deprecated.split('.')) if deprecated else (99,99)
-    removed    = map(int, removed.split('.'))    if removed    else (99,100)
+    current    = tuple(map(int, bottle.__version__.split('-')[0].split('.')))
+    introduced = tuple(map(int, introduced.split('.')))
+    deprecated = tuple(map(int, deprecated.split('.'))) if deprecated else (99,99)
+    removed    = tuple(map(int, removed.split('.')))    if removed    else (99,100)
     assert introduced < deprecated < removed
 
     def decorator(func):
