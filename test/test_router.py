@@ -121,9 +121,27 @@ class TestRouter(unittest.TestCase):
         # RouteBuildError: Missing URL argument: anon0.
         self.assertRaises(ValueError, build, 'introute', 'hello')
 
-    def test_method(self):
-        #TODO Test method handling. This is done in the router now.
-        pass
+    def test_dynamic_before_static_any(self):
+        ''' Static ANY routes have lower priority than dynamic GET routes. '''
+        self.add('/foo', 'foo', 'ANY')
+        self.assertEqual(self.match('/foo')[0], 'foo')
+        self.add('/<:>', 'bar', 'GET')
+        self.assertEqual(self.match('/foo')[0], 'bar')
+
+    def test_any_static_before_dynamic(self):
+        ''' Static ANY routes have higher priority than dynamic ANY routes. '''
+        self.add('/<:>', 'bar', 'ANY')
+        self.assertEqual(self.match('/foo')[0], 'bar')
+        self.add('/foo', 'foo', 'ANY')
+        self.assertEqual(self.match('/foo')[0], 'foo')
+
+    def test_dynamic_any_if_method_exists(self):
+        ''' Check dynamic ANY routes if the matching method is known,
+            but not matched.'''
+        self.add('/bar<:>', 'bar', 'GET')
+        self.assertEqual(self.match('/barx')[0], 'bar')
+        self.add('/foo<:>', 'foo', 'ANY')
+        self.assertEqual(self.match('/foox')[0], 'foo')
 
 
 class TestRouterInCGIMode(TestRouter):
