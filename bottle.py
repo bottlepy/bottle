@@ -41,6 +41,7 @@ import base64, cgi, email.utils, functools, hmac, imp, itertools, mimetypes,\
 from datetime import date as datedate, datetime, timedelta
 from tempfile import TemporaryFile
 from traceback import format_exc, print_exc
+from inspect import getargspec
 
 try: from simplejson import dumps as json_dumps, loads as json_lds
 except ImportError: # pragma: no cover
@@ -506,6 +507,22 @@ class Route(object):
             if not callback is self.callback:
                 update_wrapper(callback, self.callback)
         return callback
+
+    def get_undecorated_callback(self):
+        ''' Return the callback. If the callback is a decorated function, try to
+            recover the original function. '''
+        func = self.callback
+        func = getattr(func, 'im_func', func)
+        while hasattr(func, 'func_closure') and func.func_closure:
+            assert len(func.func_closure) == 1
+            func = func.func_closure[0].cell_contents
+        return func
+        
+    def get_callback_args(self):
+        ''' Return a list of argument names the callback (most likely) accepts
+            as keyword arguments. If the callback is a decorated function, try
+            to recover the original function before inspection. '''
+        return getargspec(self.get_undecorated_callback())[0]
 
     def __repr__(self):
         return '<%s %r %r>' % (self.method, self.rule, self.callback)
@@ -2388,9 +2405,8 @@ def yieldroutes(func):
         c(x, y=5)   -> '/c/:x' and '/c/:x/:y'
         d(x=5, y=6) -> '/d' and '/d/:x' and '/d/:x/:y'
     """
-    import inspect # Expensive module. Only import if necessary.
     path = '/' + func.__name__.replace('__','/').lstrip('/')
-    spec = inspect.getargspec(func)
+    spec = getargspec(func)
     argc = len(spec[0]) - len(spec[3] or [])
     path += ('/:%s' * argc) % tuple(spec[0][:argc])
     yield path
