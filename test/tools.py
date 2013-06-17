@@ -18,17 +18,23 @@ def tobs(data):
     ''' Transforms bytes or unicode into a byte stream. '''
     return BytesIO(tob(data))
 
-def api(introduced, deprecated=None):
-    print '#'*1000
+def api(introduced, deprecated=None, removed=None):
     current = map(int, bottle.__version__.split('-')[0].split('.'))
     introduced = map(int, introduced.split('.'))
-    deprecated = deprecated and map(int, deprecated.split('.'))
+    deprecated = map(int, deprecated.split('.')) if deprecated else (99,99)
+    removed    = map(int, removed.split('.'))    if removed    else (99,100)
+    assert introduced < deprecated < removed
+
     def decorator(func):
-        if introduced > current:
+        if   current < introduced:
             return None
-        if deprecated and deprecated <= current:
+        elif current < deprecated:
+            return func
+        elif current < removed:
+            func.__doc__ = '(deprecated) ' + (func.__doc__ or '')
+            return func
+        else:
             return None
-        return func
     return decorator
 
 class ServerTestBase(unittest.TestCase):
