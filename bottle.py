@@ -530,10 +530,10 @@ class Route(object):
         ''' Return the callback. If the callback is a decorated function, try to
             recover the original function. '''
         func = self.callback
-        func = getattr(func, 'im_func', func)
-        while hasattr(func, 'func_closure') and func.func_closure:
-            assert len(func.func_closure) == 1
-            func = func.func_closure[0].cell_contents
+        func = getattr(func, '__func__' if py3k else 'im_func', func)
+        closure_attr = '__closure__' if py3k else 'func_closure'
+        while hasattr(func, closure_attr) and getattr(func, closure_attr):
+            func = getattr(func, closure_attr)[0].cell_contents
         return func
         
     def get_callback_args(self):
