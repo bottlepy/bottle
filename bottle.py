@@ -390,10 +390,7 @@ class Router(object):
         if 'ANY' in methods: # must regen all regexes
             methods = set(self.dyna_routes.keys())
         for method in methods:
-            rules = []
-            rules += self.dyna_routes[method]
-            if method != 'ANY':
-                rules += self.dyna_routes['ANY']
+            rules = self.dyna_routes[method]
             # now would be a good time to sort the rules
             combined = ['(^%s$)' % flatpat for rule, flatpat, mdict in rules]
             mdicts = [mdict for rule, flatpat, mdict in rules]
@@ -413,38 +410,36 @@ class Router(object):
     def match(self, environ):
         ''' Return a (target, url_agrs) tuple or raise HTTPError(400/404/405). '''
         method = environ['REQUEST_METHOD'].upper()
+        path = environ['PATH_INFO'] or '/'
+        target = None
 
-        path, targets, urlargs = environ['PATH_INFO'] or '/', None, {}
+        for verb in [method, 'ANY']:
+            if verb in self.static and path in self.static[verb]:
+                target, getargs = self.static[verb][path]
+                return target, getargs(path) if getargs else {}
+            elif verb in self.dyna_regexes:
+                combined, rules = self.dyna_regexes[verb]
+                match = combined.match(path)
+                if match:
+                    target, getargs = rules[match.lastindex - 1]
+                    return target, getargs(path) if getargs else {}
 
-        if method in self.static and path in self.static[method]:
-            targets = self.static[method][path]
-        elif path in self.static['ANY']:
-            targets = self.static['ANY'][path]
-        else:
-            dyna_regex = self.dyna_regexes[method] if method in self.dyna_regexes else self.dyna_regexes['ANY']
-            combined, rules = dyna_regex
+        allowed = set([])
+        nocheck = set(['ANY', method])
+        for verb in set(self.static) - nocheck:
+            if path in self.static[verb]:
+                allowed.add(verb)
+        for verb in set(self.dyna_regexes) - allowed - nocheck:
+            combined, rules = self.dyna_regexes[verb]
             match = combined.match(path)
             if match:
-                targets = rules[match.lastindex - 1]
+                allowed.add(method)
 
-        if targets:
-            target, getargs = targets
-            
-            return target, getargs(path) if getargs else {}
+        if allowed:
+            allow_header = ",".join(sorted(allowed))
+            raise HTTPError(405, "Method not allowed.", Allow=allow_header)
 
-        verbs = set([])
-        for method in set(self.static.keys()) - set(['ANY', method]):
-            if path in self.static[method]:
-                verbs.add(method)
-        for method in set(self.dyna_regexes.keys()) - set(['ANY', method]):
-            combined, rules = self.dyna_regexes[method]
-            match = combined.match(path)
-            if match:
-                verbs.add(method)
-        if len(verbs) >= 1:
-            raise HTTPError(405, "Method not allowed.", Allow=",".join(sorted(verbs)))
-
-        raise HTTPError(404, "Not found: " + repr(environ['PATH_INFO']))
+        raise HTTPError(404, "Not found: " + repr(path))
 
 
 
