@@ -143,6 +143,11 @@ class TestRouter(unittest.TestCase):
         self.add('/foo<:>', 'foo', 'ANY')
         self.assertEqual(self.match('/foox')[0], 'foo')
 
+    def test_lots_of_routes(self):
+        n = bottle.Router._MAX_GROUPS_PER_PATTERN+10
+        for i in range(n):        
+            self.add('/<:>/'+str(i), str(i), 'GET')
+        self.assertEqual(self.match('/foo/'+str(n-1))[0], str(n-1))
 
 class TestRouterInCGIMode(TestRouter):
     ''' Makes no sense since the default route does not optimize CGI anymore.'''

@@ -261,15 +261,18 @@ class Router(object):
 
     default_pattern = '[^/]+'
     default_filter  = 're'
+  
+    #: The current CPython regexp implementation does not allow more
+    #: than 99 matching groups per regular expression. 
+    _MAX_GROUPS_PER_PATTERN = 99
 
     def __init__(self, strict=False):
         self.rules    = [] # All rules in order
         self._groups  = {} # index of regexes to find them in dyna_routes
         self.builder  = {} # Data structure for the url builder
-        self.static   = {'ANY': {}} # Search structure for static routes
-        self.dyna_routes = {'ANY': []}
-        # '$ ^' is a regex that matches nothing
-        self.dyna_regexes  = {'ANY': (re.compile('$ ^'), [])} # Search structure for dynamic routes
+        self.static   = {} # Search structure for static routes
+        self.dyna_routes   = {}
+        self.dyna_regexes  = {} # Search structure for dynamic routes
         #: If true, static routes are no longer checked first.
         self.strict_order = strict
         self.filters = {
@@ -337,14 +340,9 @@ class Router(object):
         self.builder[rule] = builder
         if name: self.builder[name] = builder
 
-        match_methods = set([method])
-        if method == "GET":
-            match_methods.add("HEAD")
-
         if is_static and not self.strict_order:
-            for method in match_methods:
-                self.static.setdefault(method, {})
-                self.static[method][self.build(rule)] = (target, None)
+            self.static.setdefault(method, {})
+            self.static[method][self.build(rule)] = (target, None)
             return
 
         try:
@@ -369,32 +367,30 @@ class Router(object):
             getargs = None
 
         flatpat = _re_flatten(pattern)
-        mdict =(target, getargs)
-        whole_rule = (rule, flatpat, mdict)
+        whole_rule = (rule, flatpat, target, getargs)
 
-        for method in match_methods:
-            self._groups.setdefault(method, {})
-            if flatpat in self._groups[method]:
-                # Info: Rule groups with previous rule
-                if DEBUG:
-                    msg = 'Route <%s %s> overwrites a previously defined route'
-                    warnings.warn(msg % (method, rule), RuntimeWarning)
-                self.dyna_routes[method][self._groups[method][flatpat]] = whole_rule
-            else:
-                self.dyna_routes.setdefault(method, []).append(whole_rule)
-                self._groups[method][flatpat] = len(self.dyna_routes[method]) - 1
+        if (flatpat, method) in self._groups:
+            if DEBUG:
+                msg = 'Route <%s %s> overwrites a previously defined route'
+                warnings.warn(msg % (method, rule), RuntimeWarning)
+            self.dyna_routes[method][self._groups[flatpat, method]] = whole_rule
+        else:
+            self.dyna_routes.setdefault(method, []).append(whole_rule)
+            self._groups[flatpat, method] = len(self.dyna_routes[method]) - 1
 
-        self._regen_dynamic(match_methods)
+        self._compile(method)
 
-    def _regen_dynamic(self, methods):
-        if 'ANY' in methods: # must regen all regexes
-            methods = set(self.dyna_routes.keys())
-        for method in methods:
-            rules = self.dyna_routes[method]
-            # now would be a good time to sort the rules
-            combined = ['(^%s$)' % flatpat for rule, flatpat, mdict in rules]
-            mdicts = [mdict for rule, flatpat, mdict in rules]
-            self.dyna_regexes[method] = (re.compile('|'.join(combined)), mdicts)
+    def _compile(self, method):
+        all_rules = self.dyna_routes[method]
+        comborules = self.dyna_regexes[method] = []
+        maxgroups = self._MAX_GROUPS_PER_PATTERN
+        for x in range(0, len(all_rules), maxgroups):
+            some = all_rules[x:x+maxgroups]
+            combined = (flatpat for (_, flatpat, _, _) in some)
+            combined = '|'.join('(^%s$)' % flatpat for flatpat in combined)
+            combined = re.compile(combined).match
+            rules = [(target, getargs) for (_, _, target, getargs) in some]
+            comborules.append((combined, rules))
 
     def build(self, _name, *anons, **query):
         ''' Build an URL by filling the wildcards in a rule. '''
@@ -409,36 +405,38 @@ class Router(object):
 
     def match(self, environ):
         ''' Return a (target, url_agrs) tuple or raise HTTPError(400/404/405). '''
-        method = environ['REQUEST_METHOD'].upper()
+        verb = environ['REQUEST_METHOD'].upper()
         path = environ['PATH_INFO'] or '/'
         target = None
+        methods = [verb, 'GET', 'ANY'] if verb == 'HEAD' else [verb, 'ANY']
 
-        for verb in [method, 'ANY']:
-            if verb in self.static and path in self.static[verb]:
-                target, getargs = self.static[verb][path]
+        for method in methods:
+            if method in self.static and path in self.static[method]:
+                target, getargs = self.static[method][path]
                 return target, getargs(path) if getargs else {}
-            elif verb in self.dyna_regexes:
-                combined, rules = self.dyna_regexes[verb]
-                match = combined.match(path)
-                if match:
-                    target, getargs = rules[match.lastindex - 1]
-                    return target, getargs(path) if getargs else {}
+            elif method in self.dyna_regexes:
+                for combined, rules in self.dyna_regexes[method]:
+                    match = combined(path)
+                    if match:
+                        target, getargs = rules[match.lastindex - 1]
+                        return target, getargs(path) if getargs else {}
 
+        # No matching route found. Collect alternative methods for 405 response
         allowed = set([])
-        nocheck = set(['ANY', method])
-        for verb in set(self.static) - nocheck:
-            if path in self.static[verb]:
+        nocheck = set(methods)
+        for method in set(self.static) - nocheck:
+            if path in self.static[method]:
                 allowed.add(verb)
-        for verb in set(self.dyna_regexes) - allowed - nocheck:
-            combined, rules = self.dyna_regexes[verb]
-            match = combined.match(path)
-            if match:
-                allowed.add(method)
-
+        for method in set(self.dyna_regexes) - allowed - nocheck:
+            for combined, rules in self.dyna_regexes[method]:
+                match = combined(path)
+                if match:
+                    allowed.add(method)
         if allowed:
             allow_header = ",".join(sorted(allowed))
             raise HTTPError(405, "Method not allowed.", Allow=allow_header)
 
+        # No matching route and no alternative method found. We give up
         raise HTTPError(404, "Not found: " + repr(path))
 
 
