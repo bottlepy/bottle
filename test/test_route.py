@@ -5,6 +5,7 @@ from tools import api
 
 class TestRoute(unittest.TestCase):
 
+    @api('0.12')
     def test_callback_inspection(self):
         def x(a, b): pass
         def d(f):

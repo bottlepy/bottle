@@ -18,6 +18,19 @@ def tobs(data):
     ''' Transforms bytes or unicode into a byte stream. '''
     return BytesIO(tob(data))
 
+def api(introduced, deprecated=None):
+    print '#'*1000
+    current = map(int, bottle.__version__.split('-')[0].split('.'))
+    introduced = map(int, introduced.split('.'))
+    deprecated = deprecated and map(int, deprecated.split('.'))
+    def decorator(func):
+        if introduced > current:
+            return None
+        if deprecated and deprecated <= current:
+            return None
+        return func
+    return decorator
+
 class ServerTestBase(unittest.TestCase):
     def setUp(self):
         ''' Create a new Bottle app set it as default_app '''
