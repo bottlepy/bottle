@@ -3165,11 +3165,11 @@ class StplParser(object):
     _re_tok += '|^([ \\t]*(?:if|for|while|with|try|def|class)\\b)' \
                '|^([ \\t]*(?:elif|else|except|finally)\\b)'
     # 5: Our special 'end' keyword (but only if it stands alone)
-    _re_tok += '|((?:^|;)[ \\t]*end[ \\t]*(?=(?:%(block_close)s[ \\t]*)?$|;|#))'
+    _re_tok += '|((?:^|;)[ \\t]*end[ \\t]*(?=(?:%(block_close)s[ \\t]*)?\\r?$|;|#))'
     # 6: A customizable end-of-code-block template token (only end of line)
     _re_tok += '|(%(block_close)s[ \\t]*(?=$))'
     # 7: And finally, a single newline. The 8th token is 'everything else'
-    _re_tok += '|(\\n)'
+    _re_tok += '|(\\r?\\n)'
     # Match the start tokens of code areas in a template
     _re_split = '(?m)^[ \t]*(?:(%(line_start)s)|(%(block_start)s))'
     # Match inline statements (may contain python strings)

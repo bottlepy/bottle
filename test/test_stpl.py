@@ -178,6 +178,13 @@ class TestSimpleTemplate(unittest.TestCase):
         """ Templates: Test windows line breaks """
         self.assertRenders('%var+=1\r\n{{var}}\r\n', '6\r\n', var=5)
 
+    def test_winbreaks_end_bug(self):
+        d = { 'test': [ 1, 2, 3 ] }
+        self.assertRenders('%for i in test:\n{{i}}\n%end\n', '1\n2\n3\n', **d)
+        self.assertRenders('%for i in test:\n{{i}}\r\n%end\n', '1\r\n2\r\n3\r\n', **d)
+        self.assertRenders('%for i in test:\r\n{{i}}\n%end\r\n', '1\n2\n3\n', **d)
+        self.assertRenders('%for i in test:\r\n{{i}}\r\n%end\r\n', '1\r\n2\r\n3\r\n', **d)
+
     def test_commentonly(self):
         """ Templates: Commentd should behave like code-lines (e.g. flush text-lines) """
         t = SimpleTemplate('...\n%#test\n...')
