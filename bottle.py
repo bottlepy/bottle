@@ -1694,7 +1694,7 @@ class HooksPlugin(object):
     name = 'hooks'
     api  = 2
 
-    _names = 'before_request', 'after_request', 'app_reset'
+    _names = 'before_request', 'after_request', 'app_reset', 'if_exception', 'if_abort'
 
     def __init__(self):
         self.hooks = dict((name, []) for name in self._names)
@@ -1729,9 +1729,16 @@ class HooksPlugin(object):
         if self._empty(): return callback
         def wrapper(*a, **ka):
             self.trigger('before_request')
-            rv = callback(*a, **ka)
-            self.trigger('after_request', reversed=True)
-            return rv
+            try:
+              rv = callback(*a, **ka)
+            except Exception as e:
+              self.trigger('if_exception', reversed=True)
+              if isinstance(e, HTTPError):
+                self.trigger('if_abort', reversed=True)
+              raise
+            else:
+              self.trigger('after_request', reversed=True)
+              return rv
         return wrapper
 
 
