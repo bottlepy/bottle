@@ -261,9 +261,9 @@ class Router(object):
 
     default_pattern = '[^/]+'
     default_filter  = 're'
-  
+
     #: The current CPython regexp implementation does not allow more
-    #: than 99 matching groups per regular expression. 
+    #: than 99 matching groups per regular expression.
     _MAX_GROUPS_PER_PATTERN = 99
 
     def __init__(self, strict=False):
@@ -535,7 +535,7 @@ class Route(object):
         while hasattr(func, closure_attr) and getattr(func, closure_attr):
             func = getattr(func, closure_attr)[0].cell_contents
         return func
-        
+
     def get_callback_args(self):
         ''' Return a list of argument names the callback (most likely) accepts
             as keyword arguments. If the callback is a decorated function, try
@@ -581,12 +581,50 @@ class Bottle(object):
 
         # Core plugins
         self.plugins = [] # List of installed plugins.
-        self.hooks = HooksPlugin()
-        self.install(self.hooks)
         if self.config.autojson:
             self.install(JSONPlugin())
         self.install(TemplatePlugin())
 
+    __hook_names = 'before_request', 'after_request', 'app_reset'
+    __hook_reversed = 'after_request'
+
+    @cached_property
+    def _hooks(self):
+        return dict((name, []) for name in self.__hook_names)
+
+    def add_hook(self, name, func):
+        ''' Attach a callback to a hook. Three hooks are currently implemented:
+
+            before_request
+                Executed once before each request. The request context is
+                available, but no routing has happened yet.
+            after_request
+                Executed once after each request regardless of its outcome.
+            app_reset
+                Called whenever :meth:`Bottle.reset` is called.
+        '''
+        if name in self.__hook_reversed:
+            self._hooks[name].insert(0, func)
+        else:
+            self._hooks[name].append(func)
+
+    def remove_hook(self, name, func):
+        ''' Remove a callback from a hook. '''
+        if name in self._hooks and func in self._hooks[name]:
+            self._hooks[name].remove(func)
+            return True
+
+    def trigger_hook(self, name, args=(), kwargs={}):
+        ''' Trigger a hook and return a list of results. '''
+        return [hook(*args, **kwargs) for hook in self._hooks[name][:]]
+
+    def hook(self, name):
+        """ Return a decorator that attaches a callback to a hook. See
+            :meth:`add_hook` for details."""
+        def decorator(func):
+            self.add_hook(name, func)
+            return func
+        return decorator
 
     def mount(self, prefix, app, **options):
         ''' Mount an application (:class:`Bottle` or plain WSGI) to a specific
@@ -673,10 +711,6 @@ class Bottle(object):
         if removed: self.reset()
         return removed
 
-    def run(self, **kwargs):
-        ''' Calls :func:`run` with the same parameters. '''
-        run(self, **kwargs)
-
     def reset(self, route=None):
         ''' Reset all routes (force plugins to be re-applied) and clear all
             caches. If an ID or route object is given, only that specific route
@@ -687,13 +721,17 @@ class Bottle(object):
         for route in routes: route.reset()
         if DEBUG:
             for route in routes: route.prepare()
-        self.hooks.trigger('app_reset')
+        self.trigger_hook('app_reset')
 
     def close(self):
         ''' Close the application and all installed plugins. '''
         for plugin in self.plugins:
             if hasattr(plugin, 'close'): plugin.close()
         self.stopped = True
+
+    def run(self, **kwargs):
+        ''' Calls :func:`run` with the same parameters. '''
+        run(self, **kwargs)
 
     def match(self, environ):
         """ Search for a matching route and return a (:class:`Route` , urlargs)
@@ -779,19 +817,6 @@ class Bottle(object):
             return handler
         return wrapper
 
-    def hook(self, name):
-        """ Return a decorator that attaches a callback to a hook. Three hooks
-            are currently implemented:
-
-            - before_request: Executed once before each request
-            - after_request: Executed once after each request
-            - app_reset: Called whenever :meth:`reset` is called.
-        """
-        def wrapper(func):
-            self.hooks.add(name, func)
-            return func
-        return wrapper
-
     def handle(self, path, method='GET'):
         """ (deprecated) Execute the first matching route callback and return
             the result. :exc:`HTTPResponse` exceptions are caught and returned.
@@ -811,11 +836,17 @@ class Bottle(object):
             environ['bottle.app'] = self
             request.bind(environ)
             response.bind()
-            route, args = self.router.match(environ)
-            environ['route.handle'] = route
-            environ['bottle.route'] = route
-            environ['route.url_args'] = args
-            return route.call(**args)
+
+            try:
+                self.trigger_hook('before_request')
+                route, args = self.router.match(environ)
+                environ['route.handle'] = route
+                environ['bottle.route'] = route
+                environ['route.url_args'] = args
+                return route.call(**args)
+            finally:
+                self.trigger_hook('after_request')
+
         except HTTPResponse:
             return _e()
         except RouteReset:
@@ -1690,51 +1721,6 @@ class JSONPlugin(object):
         return wrapper
 
 
-class HooksPlugin(object):
-    name = 'hooks'
-    api  = 2
-
-    _names = 'before_request', 'after_request', 'app_reset'
-
-    def __init__(self):
-        self.hooks = dict((name, []) for name in self._names)
-        self.app = None
-
-    def _empty(self):
-        return not (self.hooks['before_request'] or self.hooks['after_request'])
-
-    def setup(self, app):
-        self.app = app
-
-    def add(self, name, func):
-        ''' Attach a callback to a hook. '''
-        was_empty = self._empty()
-        self.hooks.setdefault(name, []).append(func)
-        if self.app and was_empty and not self._empty(): self.app.reset()
-
-    def remove(self, name, func):
-        ''' Remove a callback from a hook. '''
-        was_empty = self._empty()
-        if name in self.hooks and func in self.hooks[name]:
-            self.hooks[name].remove(func)
-        if self.app and not was_empty and self._empty(): self.app.reset()
-
-    def trigger(self, name, *a, **ka):
-        ''' Trigger a hook and return a list of results. '''
-        hooks = self.hooks[name]
-        if ka.pop('reversed', False): hooks = hooks[::-1]
-        return [hook(*a, **ka) for hook in hooks]
-
-    def apply(self, callback, route):
-        if self._empty(): return callback
-        def wrapper(*a, **ka):
-            self.trigger('before_request')
-            rv = callback(*a, **ka)
-            self.trigger('after_request', reversed=True)
-            return rv
-        return wrapper
-
-
 class TemplatePlugin(object):
     ''' This plugin applies the :func:`view` decorator to all routes with a
         `template` config parameter. If the parameter is a tuple, the second
@@ -2187,7 +2173,7 @@ class FileUpload(object):
             buf = read(chunk_size)
             if not buf: break
             write(buf)
-        self.file.seek(offset)    
+        self.file.seek(offset)
 
     def save(self, destination, overwrite=False, chunk_size=2**16):
         ''' Save file to disk or copy its content to an open file(-like) object.
@@ -3174,7 +3160,7 @@ class StplParser(object):
     _re_split = '(?m)^[ \t]*(?:(%(line_start)s)|(%(block_start)s))'
     # Match inline statements (may contain python strings)
     _re_inl = '%%(inline_start)s((?:%s|[^\'"\n]*?)+)%%(inline_end)s' % _re_inl
-    
+
     default_syntax = '<% %> % {{ }}'
 
     def __init__(self, source, syntax=None, encoding='utf8'):
@@ -3238,7 +3224,7 @@ class StplParser(object):
                 code_line += _str
             elif _com:  # Python comment (up to EOL)
                 comment = _com
-                if multiline and _com.strip().endswith(self._tokens[1]): 
+                if multiline and _com.strip().endswith(self._tokens[1]):
                     multiline = False # Allow end-of-block in comments
             elif _blk1: # Start-block keyword (if/for/while/def/try/...)
                 code_line, self.indent_mod = _blk1, -1
