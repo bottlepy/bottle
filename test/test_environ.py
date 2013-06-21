@@ -630,10 +630,15 @@ class TestResponse(unittest.TestCase):
         response = BaseResponse()
         now = datetime.datetime.now()
         response.expires = now
-        self.assertEqual(0, int((response.expires - now).total_seconds()))
+        
+        def seconds(a, b):
+            td = max(a,b) - min(a,b)
+            return td.days*360*24 + td.seconds
+        
+        self.assertEqual(0, seconds(response.expires, now))
         now2 = datetime.datetime.utcfromtimestamp(
             parse_date(response.headers['Expires']))
-        self.assertEqual(0, int((now - now2).total_seconds()))
+        self.assertEqual(0, seconds(now, now2))
 
 class TestRedirect(unittest.TestCase):
 
