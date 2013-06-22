@@ -243,7 +243,7 @@ def _re_flatten(p):
     ''' Turn all capturing groups in a regular expression pattern into
         non-capturing groups. '''
     if '(' not in p: return p
-    return re.sub(r'(\\*)(\(\?P<[^>]*>|\((?!\?))',
+    return re.sub(r'(\\*)(\(\?P<[^>]+>|\((?!\?))',
         lambda m: m.group(0) if len(m.group(1)) % 2 else m.group(1) + '(?:', p)
 
 
