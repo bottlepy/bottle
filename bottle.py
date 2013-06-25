@@ -565,15 +565,22 @@ class Bottle(object):
     """
 
     def __init__(self, catchall=True, autojson=True):
-        #: If true, most exceptions are caught and returned as :exc:`HTTPError`
-        self.catchall = catchall
+
+        #: A :class:`ConfDict` for app specific configuration.
+        self.conf = ConfDict()
+        self.conf._on_change = functools.partial(self.trigger_hook, 'config')
+        self.conf._set_meta('autojson', 'validate', bool)
+        self.conf._set_meta('catchall', 'validate', bool)
+        self.conf['catchall'] = catchall
+        self.conf['autojson'] = autojson
+
+        #: Deprecated
+        self.config = ConfigDict()
+        self.config.autojson = autojson
+        self.config.catchall = catchall
 
         #: A :class:`ResourceManager` for application files
         self.resources = ResourceManager()
-
-        #: A :class:`ConfigDict` for app specific configuration.
-        self.config = ConfigDict()
-        self.config.autojson = autojson
 
         self.routes = [] # List of installed :class:`Route` instances.
         self.router = Router() # Maps requests to :class:`Route` instances.
@@ -585,7 +592,10 @@ class Bottle(object):
             self.install(JSONPlugin())
         self.install(TemplatePlugin())
 
-    __hook_names = 'before_request', 'after_request', 'app_reset'
+    #: If true, most exceptions are caught and returned as :exc:`HTTPError`
+    catchall = DictProperty('conf', 'catchall')
+
+    __hook_names = 'before_request', 'after_request', 'app_reset', 'config'
     __hook_reversed = 'after_request'
 
     @cached_property
@@ -614,9 +624,9 @@ class Bottle(object):
             self._hooks[name].remove(func)
             return True
 
-    def trigger_hook(self, name, args=(), kwargs={}):
+    def trigger_hook(self, __name, *args, **kwargs):
         ''' Trigger a hook and return a list of results. '''
-        return [hook(*args, **kwargs) for hook in self._hooks[name][:]]
+        return [hook(*args, **kwargs) for hook in self._hooks[__name][:]]
 
     def hook(self, name):
         """ Return a decorator that attaches a callback to a hook. See
@@ -1967,6 +1977,53 @@ class WSGIHeaderDict(DictMixin):
     def keys(self): return [x for x in self]
     def __len__(self): return len(self.keys())
     def __contains__(self, key): return self._ekey(key) in self.environ
+
+
+class ConfDict(dict):
+    ''' A dict-subclass with some extras.
+
+        >>> c = ConfDict()
+        >>> c['key'] = 'value'
+        >>> c.update('some.namespace', key='some value')
+        >>> print(c)
+        {'key': 'value', 'some.namespace.key':'some value'}
+    '''
+
+    __slots__ = ('_meta', '_on_change')
+
+    def __init__(self):
+        self._meta = {}
+        self._on_change = lambda name, value: None
+
+    def update(self, *a, **ka):
+        ''' If the first parameter is a string, all keys are prefixed with this
+            string. Apart from that it works just as the usual dict.update().
+            Example: ``update('some.namespace', key='value')`` '''
+        prefix = ''
+        if a and isinstance(a[0], str):
+            prefix = a[0].strip('.') + '.'
+            a = a[1:]
+        for key, value in dict(*a, **ka).items():
+            self[prefix+key] = value
+
+    def setdefault(self, key, value):
+        if key not in self:
+            self[key] = value
+
+    def __setitem__(self, key, value):
+        if not isinstance(key, str):
+            raise TypeError('Keys must be strings')
+        if (key, 'validate') in self._meta:
+            value = self._meta[key, 'validate'](value)
+        if key in self and self[key] is value:
+            return
+        self._on_change(key, value)
+        dict.__setitem__(self, key, value)
+
+    def _set_meta(self, key, meta, value):
+        self._meta[key, meta] = value
+        if key in self:
+            self[key] = self[key]
 
 
 class ConfigDict(dict):
