@@ -381,7 +381,7 @@ class Router(object):
         self._compile(method)
 
     def _compile(self, method):
-        all_rules = self.dyna_routes[method]
+        all_rules = [] + self.dyna_routes[method]
         self._sort_routes(all_rules)
         comborules = self.dyna_regexes[method] = []
         maxgroups = self._MAX_GROUPS_PER_PATTERN

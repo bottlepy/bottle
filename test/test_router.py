@@ -179,6 +179,14 @@ class TestRouter(unittest.TestCase):
         target, urlargs = self.match('/test/something/xxx.html', 'GET')
         self.assertEqual(target, 'c')
 
+    def test_ordering_override(self):
+        self.add_m([
+            ('/<path:path>', 'a', 'GET'),
+            ('/<path:path>', 'b', 'GET'),
+        ])
+        target, urlargs = self.match('/www', 'GET')
+        self.assertEqual(target, 'b')
+
     def test_ordering_post_r(self):
         self.test_ordering_post(True)
 
