@@ -11,6 +11,12 @@ class TestRouter(unittest.TestCase):
     def add(self, path, target, method='GET', **ka):
         self.r.add(path, method, target, **ka)
 
+    def add_m(self, array, reverse=False):
+        if reverse:
+            array.reverse()
+        for r in array:
+            self.add(*r)
+
     def match(self, path, method='GET'):
         env = {'PATH_INFO': path, 'REQUEST_METHOD': method}
         if self.CGI:
@@ -148,6 +154,34 @@ class TestRouter(unittest.TestCase):
         for i in range(n):        
             self.add('/<:>/'+str(i), str(i), 'GET')
         self.assertEqual(self.match('/foo/'+str(n-1))[0], str(n-1))
+
+    def test_ordering(self, reverse=False):
+        self.add_m([
+            ('/<path:path>', 'a', 'GET'),
+            ('/test/<path:path>', 'b', 'GET'),
+        ], reverse)
+        target, urlargs = self.match('/xxx', 'GET')
+        self.assertEqual(target, 'a')
+        target, urlargs = self.match('/test/xxx', 'GET')
+        self.assertEqual(target, 'b')
+
+    def test_ordering_r(self):
+        self.test_ordering(True)
+
+    def test_ordering_post(self, reverse=False):
+        self.add_m([
+            ('/test/<path:path>', 'a', 'GET'),
+            ('/test/<path:path>.html', 'b', 'GET'),
+            ('/test/something/<path:path>', 'c', 'GET'),
+        ], reverse)
+        target, urlargs = self.match('/test/xxx.html', 'GET')
+        self.assertEqual(target, 'b')
+        target, urlargs = self.match('/test/something/xxx.html', 'GET')
+        self.assertEqual(target, 'c')
+
+    def test_ordering_post_r(self):
+        self.test_ordering_post(True)
+
 
 class TestRouterInCGIMode(TestRouter):
     ''' Makes no sense since the default route does not optimize CGI anymore.'''
