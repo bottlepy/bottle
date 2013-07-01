@@ -543,7 +543,8 @@ class Route(object):
         return getargspec(self.get_undecorated_callback())[0]
 
     def __repr__(self):
-        return '<%s %r %r>' % (self.method, self.rule, self.callback)
+        cb = self.get_undecorated_callback()
+        return '<%s %r %r>' % (self.method, self.rule, cb)
 
 
 
@@ -2462,17 +2463,17 @@ def yieldroutes(func):
     takes optional keyword arguments. The output is best described by example::
 
         a()         -> '/a'
-        b(x, y)     -> '/b/:x/:y'
-        c(x, y=5)   -> '/c/:x' and '/c/:x/:y'
-        d(x=5, y=6) -> '/d' and '/d/:x' and '/d/:x/:y'
+        b(x, y)     -> '/b/<x>/<y>'
+        c(x, y=5)   -> '/c/<x>' and '/c/<x>/<y>'
+        d(x=5, y=6) -> '/d' and '/d/<x>' and '/d/<x>/<y>'
     """
     path = '/' + func.__name__.replace('__','/').lstrip('/')
     spec = getargspec(func)
     argc = len(spec[0]) - len(spec[3] or [])
-    path += ('/:%s' * argc) % tuple(spec[0][:argc])
+    path += ('/<%s>' * argc) % tuple(spec[0][:argc])
     yield path
     for arg in spec[0][argc:]:
-        path += '/:%s' % arg
+        path += '/<%s>' % arg
         yield path
 
 
