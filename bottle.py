@@ -570,8 +570,8 @@ class Bottle(object):
         #: A :class:`ConfDict` for app specific configuration.
         self.conf = ConfDict()
         self.conf._on_change = functools.partial(self.trigger_hook, 'config')
-        self.conf._set_meta('autojson', 'validate', bool)
-        self.conf._set_meta('catchall', 'validate', bool)
+        self.conf.meta_set('autojson', 'validate', bool)
+        self.conf.meta_set('catchall', 'validate', bool)
         self.conf['catchall'] = catchall
         self.conf['autojson'] = autojson
 
@@ -2014,17 +2014,32 @@ class ConfDict(dict):
     def __setitem__(self, key, value):
         if not isinstance(key, str):
             raise TypeError('Keys must be strings')
-        if (key, 'validate') in self._meta:
-            value = self._meta[key, 'validate'](value)
+        filtr = self.meta_get(key, 'filter')
+        if filtr is not None:
+            value = filtr(value)
         if key in self and self[key] is value:
             return
         self._on_change(key, value)
         dict.__setitem__(self, key, value)
 
-    def _set_meta(self, key, meta, value):
-        self._meta[key, meta] = value
+    def __delitem__(self, key):
+        dict.__delitem__(self, key)
+        self._on_change(key, value)
+
+    def meta_get(self, key, metafield, default=None):
+        ''' Return the value of a meta field for a key. '''
+        return self._meta.get(key, {}).get(metafield, default)
+
+    def meta_set(self, key, metafield, value):
+        ''' Set the meta field for a key to a new value. This triggers the
+            on-change handler for existing keys. '''
+        self._meta.setdefault(key, {})[metafield] = value
         if key in self:
             self[key] = self[key]
+
+    def meta_list(self, key):
+        ''' Return an iterable of meta field names defined for a key. '''
+        return self._meta.get(key, {}).keys()
 
 
 class ConfigDict(dict):

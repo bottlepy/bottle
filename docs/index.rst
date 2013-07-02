@@ -57,6 +57,7 @@ Start here if you want to learn how to use the bottle framework for web developm
    :maxdepth: 2
 
    tutorial
+   configuration
    routing
    stpl
    api

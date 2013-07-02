@@ -25,8 +25,8 @@ class TestConfDict(unittest.TestCase):
 
     def test_meta(self):
         c = ConfDict()
-        c._set_meta('bool', 'validate', bool)
-        c._set_meta('int', 'validate', int)
+        c.meta_set('bool', 'filter', bool)
+        c.meta_set('int', 'filter', int)
         c['bool'] = 'I am so true!'
         c['int']  = '6'
         self.assertTrue(c['bool'] is True)
