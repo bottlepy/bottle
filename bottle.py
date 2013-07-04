@@ -3335,7 +3335,7 @@ class StplParser(object):
             prefix, pos = text[pos:m.start()], m.end()
             if prefix:
                 parts.append(nl.join(map(repr, prefix.splitlines(True))))
-            if prefix.endswith('\n'): parts.append('\n  ')
+            if prefix.endswith('\n'): parts[-1] += nl
             parts.append(self.process_inline(m.group(1).strip()))
         if pos < len(text):
             prefix = text[pos:]
