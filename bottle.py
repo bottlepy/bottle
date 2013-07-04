@@ -2624,7 +2624,7 @@ def load_app(target):
 _debug = debug
 def run(app=None, server='wsgiref', host='127.0.0.1', port=8080,
         interval=1, reloader=False, quiet=False, plugins=None,
-        debug=False, **kargs):
+        debug=None, **kargs):
     """ Start a server instance. This method blocks until the server terminates.
 
         :param app: WSGI application or target string supported by
@@ -2667,7 +2667,7 @@ def run(app=None, server='wsgiref', host='127.0.0.1', port=8080,
         return
 
     try:
-        _debug(debug)
+        if debug is not None: _debug(debug)
         app = app or default_app()
         if isinstance(app, basestring):
             app = load_app(app)
