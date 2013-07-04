@@ -85,6 +85,7 @@ if py3k:
     from collections import MutableMapping as DictMixin
     import pickle
     from io import BytesIO
+    from configparser import ConfigParser
     basestring = str
     unicode = str
     json_loads = lambda s: json_lds(touni(s))
@@ -100,6 +101,7 @@ else: # 2.x
     from itertools import imap
     import cPickle as pickle
     from StringIO import StringIO as BytesIO
+    from ConfigParser import SafeConfigParser as ConfigParser
     if py25:
         msg = "Python 2.5 support may be dropped in future versions of Bottle."
         warnings.warn(msg, DeprecationWarning)
@@ -1995,6 +1997,14 @@ class ConfDict(dict):
     def __init__(self):
         self._meta = {}
         self._on_change = lambda name, value: None
+
+    def load_config(self, filename):
+        ''' Load an *.ini style config file.'''
+        conf = ConfigParser()
+        conf.read(filename)
+        for section in conf.sections():
+            for key, value in conf.items(section):
+                self['%s.%s' % (section, key)] = value
 
     def update(self, *a, **ka):
         ''' If the first parameter is a string, all keys are prefixed with this
