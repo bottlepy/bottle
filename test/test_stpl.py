@@ -225,6 +225,9 @@ class TestSimpleTemplate(unittest.TestCase):
         t = SimpleTemplate('anything')
         self.assertEqual(touni('anything'), t.render())
 
+    def test_bug_no_whitespace_before_stmt(self):
+        self.assertRenders('\n{{var}}', '\nx', var='x')
+
 if __name__ == '__main__': #pragma: no cover
     unittest.main()
 
