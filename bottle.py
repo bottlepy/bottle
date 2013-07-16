@@ -576,7 +576,7 @@ class Bottle(object):
 
     def __init__(self, catchall=True, autojson=True):
 
-        #: A :class:`ConfDict` for app specific configuration.
+        #: A :class:`ConfigDict` for app specific configuration.
         self.config = ConfigDict()
         self.config._on_change = functools.partial(self.trigger_hook, 'config')
         self.config.meta_set('autojson', 'validate', bool)
