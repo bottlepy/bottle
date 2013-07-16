@@ -23,10 +23,10 @@ class TestAppMounting(ServerTestBase):
     def test_mount_meta(self):
         self.app.mount('/test/', self.subapp)
         self.assertEqual(
-            self.app.routes[0].config.mountpoint['prefix'],
+            self.app.routes[0].config['mountpoint.prefix'],
             '/test/')
         self.assertEqual(
-            self.app.routes[0].config.mountpoint['target'],
+            self.app.routes[0].config['mountpoint.target'],
             self.subapp)
 
     def test_no_slash_prefix(self):
