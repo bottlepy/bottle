@@ -26,7 +26,7 @@ try:
     run(port=port, server=server, quiet=True)
 
 except socket.error:
-    sys.exit(1)
+    sys.exit(3)
 except ImportError:
     sys.exit(128)
 except KeyboardInterrupt:

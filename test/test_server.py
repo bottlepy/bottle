@@ -56,6 +56,7 @@ class TestServer(unittest.TestCase):
                 return
             if rv is 3: # Port in use
                 continue
+            raise AssertionError("Server exited with error code %d" % rv)
         raise AssertionError("Could not find a free port to test server.")
 
     def tearDown(self):
