@@ -21,7 +21,6 @@ class TestConfDict(unittest.TestCase):
         c = ConfigDict()
         c.update('a.b', key='value')
         self.assertEqual(c['a.b.key'], 'value')
-        self.assertEqual(c['a.b.key'], 'value')
 
     def test_meta(self):
         c = ConfigDict()
