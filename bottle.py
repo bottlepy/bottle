@@ -1726,15 +1726,22 @@ class JSONPlugin(object):
             except HTTPError:
                 rv = _e()
 
+            # IE9 and earlier don't handle application/json; they offer to
+            # download the .json file.  Give browsers that don't say they
+            # support application/json a content type of text/plain, as
+            # they're more likely to handle that transparently.
+            content_type = 'application/json'
+            if (request.headers.get('accept').find('application/json') == -1):
+                content_type = 'text/plain'
             if isinstance(rv, dict):
                 #Attempt to serialize, raises exception on failure
                 json_response = dumps(rv)
                 #Set content type only if serialization succesful
-                response.content_type = 'application/json'
+                response.content_type = content_type
                 return json_response
             elif isinstance(rv, HTTPResponse) and isinstance(rv.body, dict):
                 rv.body = dumps(rv.body)
-                rv.content_type = 'application/json'
+                rv.content_type = content_type
             return rv
 
         return wrapper
