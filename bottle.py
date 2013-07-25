@@ -3175,8 +3175,15 @@ class Jinja2Template(BaseTemplate):
 
 class SimpleTemplate(BaseTemplate):
 
-    def prepare(self, escape_func=html_escape, noescape=False, syntax=None, **ka):
-        self.cache = {}
+    def prepare(self, escape_func=html_escape, noescape=False, syntax=None, cache=None, chain=None, **ka):
+        if cache:
+            self.cache = cache
+        else:
+            self.cache = {}
+        if chain:
+            self.chain = chain
+        else:
+            self.chain = [self.name]
         enc = self.encoding
         self._str = lambda x: touni(x, enc)
         self._escape = lambda x: escape_func(touni(x, enc))
@@ -3207,9 +3214,13 @@ class SimpleTemplate(BaseTemplate):
     def _include(self, _env, _name, **kwargs):
         env = _env.copy()
         env.update(kwargs)
-        if _name not in self.cache:
-            self.cache[_name] = self.__class__(name=_name, lookup=self.lookup)
-        return self.cache[_name].execute(env['_stdout'], env)
+        if _name not in self.chain:
+            self.chain.append(_name)
+            if _name not in self.cache:
+                self.cache[_name] = self.__class__(name=_name, cache=self.cache, chain=self.chain, lookup=self.lookup)
+            newenv = self.cache[_name].execute(env['_stdout'], env)
+            del self.chain[-1]
+            return newenv
 
     def execute(self, _stdout, kwargs):
         env = self.defaults.copy()
