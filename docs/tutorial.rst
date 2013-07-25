@@ -657,7 +657,7 @@ To support file uploads, we have to change the ``<form>`` tag a bit. First, we t
 Bottle stores file uploads in :attr:`BaseRequest.files` as :class:`FileUpload` instances, along with some metadata about the upload. Let us assume you just want to save the file to disk::
 
     @route('/upload', method='POST')
-    def do_login():
+    def do_upload():
         category   = request.forms.get('category')
         upload     = request.files.get('upload')
         name, ext = os.path.splitext(upload.filename)
