@@ -455,7 +455,7 @@ As mentioned above, cookies are easily forged by malicious clients. Bottle can c
         password = request.forms.get('password')
         if check_user_credentials(username, password):
             response.set_cookie("account", username, secret='some-secret-key')
-            return "Welcome %s! You are now logged in." % username
+            return template("Welcome {{name}}! You are now logged in.", name=username)
         else:
             return "Login failed."
 
@@ -463,7 +463,7 @@ As mentioned above, cookies are easily forged by malicious clients. Bottle can c
     def restricted_area():
         username = request.get_cookie("account", secret='some-secret-key')
         if username:
-            return "Hello %s. Welcome back." % username
+            return template("Hello {{name}}. Welcome back.", name=username)
         else:
             return "You are not logged in. Access denied."
 
@@ -581,12 +581,12 @@ The query string (as in ``/forum?id=1&page=5``) is commonly used to transmit a s
 
 ::
 
-  from bottle import route, request, response
+  from bottle import route, request, response, template
   @route('/forum')
   def display_forum():
       forum_id = request.query.id
       page = request.query.page or '1'
-      return 'Forum ID: %s (page %s)' % (forum_id, page)
+      return template('Forum ID: {{id}} (page {{page}})', id=forum_id, page=page)
 
 
 HTML `<form>` Handling
@@ -696,7 +696,7 @@ Each :class:`BaseRequest` instance wraps a WSGI environment dictionary. The orig
       ip = request.environ.get('REMOTE_ADDR')
       # or ip = request.get('REMOTE_ADDR')
       # or ip = request['REMOTE_ADDR']
-      return "Your IP is: %s" % ip
+      return template("Your IP is: {{ip}}", ip=ip)
 
 
 
@@ -835,17 +835,25 @@ Blacklisting Plugins
 
 You may want to explicitly disable a plugin for a number of routes. The :func:`route` decorator has a ``skip`` parameter for this purpose::
 
-    sqlite_plugin = SQLitePlugin(dbfile='/tmp/test.db')
+    sqlite_plugin = SQLitePlugin(dbfile='/tmp/test1.db')
     install(sqlite_plugin)
+
+    dbfile1 = '/tmp/test1.db'
+    dbfile2 = '/tmp/test2.db'
 
     @route('/open/<db>', skip=[sqlite_plugin])
     def open_db(db):
         # The 'db' keyword argument is not touched by the plugin this time.
-        if db in ('test', 'test2'):
-            # The plugin handle can be used for runtime configuration, too.
-            sqlite_plugin.dbfile = '/tmp/%s.db' % db
-            return "Database File switched to: /tmp/%s.db" % db
-        abort(404, "No such database.")
+
+        # The plugin handle can be used for runtime configuration, too.
+        if db == 'test1':
+            sqlite_plugin.dbfile = dbfile1
+        elif db == 'test2':
+            sqlite_plugin.dbfile = dbfile2
+        else:
+            abort(404, "No such database.")
+
+        return "Database File switched to: " + sqlite_plugin.dbfile
 
 The ``skip`` parameter accepts a single value or a list of values. You can use a name, class or instance to identify the plugin that is to be skipped. Set ``skip=True`` to skip all plugins at once.
 
