@@ -3176,14 +3176,8 @@ class Jinja2Template(BaseTemplate):
 class SimpleTemplate(BaseTemplate):
 
     def prepare(self, escape_func=html_escape, noescape=False, syntax=None, cache=None, chain=None, **ka):
-        if cache:
-            self.cache = cache
-        else:
-            self.cache = {}
-        if chain:
-            self.chain = chain
-        else:
-            self.chain = [self.name]
+        self.cache = cache or {}
+        self.chain = chain or [self.name]
         enc = self.encoding
         self._str = lambda x: touni(x, enc)
         self._escape = lambda x: escape_func(touni(x, enc))
