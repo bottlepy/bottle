@@ -597,9 +597,9 @@ Let us start from the beginning. In HTML, a typical ``<form>`` looks something l
 .. code-block:: html
 
     <form action="/login" method="post">
-      <input type="text" name="login" />
-      <input type="password" name="password" />
-      <input type="submit" value="Login" />
+        Login:    <input type="text" name="login" />
+        Password: <input type="password" name="password" />
+        <input type="submit" value="Login" />
     </form>
 
 The ``action`` attribute specifies the URL that will receive the form data. ``method`` defines the HTTP method to use (``GET`` or ``POST``). With ``method="get"`` the form values are appended to the URL and available through :attr:`BaseRequest.query` as described above. This is considered insecure and has other limitations, so we use ``method="post"`` here. If in doubt, use ``POST`` forms.
