@@ -93,7 +93,7 @@ The Default Application
 
 For the sake of simplicity, most examples in this tutorial use a module-level :func:`route` decorator to define routes. This adds routes to a global "default application", an instance of :class:`Bottle` that is automatically created the first time you call :func:`route`. Several other module-level decorators and functions relate to this default application, but if you prefer a more object oriented approach and don't mind the extra typing, you can create a separate application object and use that instead of the global one::
 
-    from bottle import Bottle, run, template
+    from bottle import Bottle, run
 
     app = Bottle()
 
