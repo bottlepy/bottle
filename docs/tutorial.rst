@@ -80,7 +80,7 @@ This is it. Run this script, visit http://localhost:8080/hello and you will see 
 
 The :func:`route` decorator binds a piece of code to an URL path. In this case, we link the ``/hello`` URL to the ``hello()`` function. This is called a `route` (hence the decorator name) and is the most important concept of this framework. You can define as many routes as you want. Whenever a browser requests an URL, the associated function is called and the return value is sent back to the browser. Its as simple as that.
 
-The :func:`run` call in the last line starts a built-in development server. It runs on `localhost` port 8080 and serves requests until you hit :kbd:`Control-c`. You can switch the server backend later, but for now a development server is all we need. It requires no setup at all and is an incredibly painless way to get your application up and running for local tests.
+The :func:`run` call in the last line starts a built-in development server. It runs on ``localhost`` port ``8080`` and serves requests until you hit :kbd:`Control-c`. You can switch the server backend later, but for now a development server is all we need. It requires no setup at all and is an incredibly painless way to get your application up and running for local tests.
 
 The :ref:`tutorial-debugging` is very helpful during early development, but should be switched off for public applications. Keep that in mind.
 
@@ -88,7 +88,7 @@ Of course this is a very simple example, but it shows the basic concept of how a
 
 .. _tutorial-default:
 
-The `Default Application`
+The Default Application
 ------------------------------------------------------------------------------
 
 For the sake of simplicity, most examples in this tutorial use a module-level :func:`route` decorator to define routes. This adds routes to a global "default application", an instance of :class:`Bottle` that is automatically created the first time you call :func:`route`. Several other module-level decorators and functions relate to this default application, but if you prefer a more object oriented approach and don't mind the extra typing, you can create a separate application object and use that instead of the global one::
