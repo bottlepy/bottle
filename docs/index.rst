@@ -13,7 +13,7 @@
 .. _Python: http://python.org/
 .. _testing: https://github.com/defnull/bottle/raw/master/bottle.py
 .. _issue_tracker: https://github.com/defnull/bottle/issues
-.. _PyPi: http://pypi.python.org/pypi/bottle
+.. _PyPI: http://pypi.python.org/pypi/bottle
 
 ============================
 Bottle: Python Web Framework
@@ -47,7 +47,7 @@ Run this script or paste it into a Python console, then point your browser to `<
 
 .. __: https://github.com/defnull/bottle/raw/master/bottle.py
 
-Install the latest stable release via PyPi_ (``easy_install -U bottle``) or download `bottle.py`__ (unstable) into your project directory. There are no hard [1]_ dependencies other than the Python standard library. Bottle runs with **Python 2.5+ and 3.x**.
+Install the latest stable release via PyPI_ (``easy_install -U bottle``) or download `bottle.py`__ (unstable) into your project directory. There are no hard [1]_ dependencies other than the Python standard library. Bottle runs with **Python 2.5+ and 3.x**.
 
 User's Guide
 ===============
