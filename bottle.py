@@ -3377,12 +3377,12 @@ class StplParser(object):
         return '_escape(%s)' % chunk
 
     def write_code(self, line, comment=''):
-        line, comment = self.fix_brackward_compatibility(line, comment)
+        line, comment = self.fix_backward_compatibility(line, comment)
         code  = '  ' * (self.indent+self.indent_mod)
         code += line.lstrip() + comment + '\n'
         self.code_buffer.append(code)
 
-    def fix_brackward_compatibility(self, line, comment):
+    def fix_backward_compatibility(self, line, comment):
         parts = line.strip().split(None, 2)
         if parts and parts[0] in ('include', 'rebase'):
             depr('The include and rebase keywords are functions now.')
@@ -3398,7 +3398,6 @@ class StplParser(object):
                 self.encoding = enc
                 return line, comment.replace('coding','coding*')
         return line, comment
-
 
 def template(*args, **kwargs):
     '''
