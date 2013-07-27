@@ -136,13 +136,13 @@ msgstr "发布和更新"
 # 60a5c2362c9446f1bd2139b978dc1089
 #: ../../development.rst:31
 msgid ""
-"Bottle is released at irregular intervals and distributed through `PyPi "
+"Bottle is released at irregular intervals and distributed through `PyPI "
 "<http://pypi.python.org/pypi/bottle>`_. Release candidates and bugfix-"
 "revisions of outdated releases are only available from the git repository "
 "mentioned above. Some Linux distributions may offer packages for outdated "
 "releases, though."
 msgstr ""
-"Bottle不定时发布正式版本，通过 `PyPi <http://pypi.python.org/pypi/bottle>`_ "
+"Bottle不定时发布正式版本，通过 `PyPI <http://pypi.python.org/pypi/bottle>`_ "
 "来分发。RC版或bugfix版本只会在github上面发布。一些Linux发行版也许会提供一些过"
 "时的版本。"
 
