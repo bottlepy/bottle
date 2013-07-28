@@ -36,7 +36,7 @@ Bottle does not depend on any external libraries. You can just download `bottle.
 
     $ wget http://bottlepy.org/bottle.py
 
-This will get you the latest development snapshot that includes all the new features. If you prefer a more stable environment, you should stick with the stable releases. These are available on `PyPi <http://pypi.python.org/pypi/bottle>`_ and can be installed via :command:`pip` (recommended), :command:`easy_install` or your package manager:
+This will get you the latest development snapshot that includes all the new features. If you prefer a more stable environment, you should stick with the stable releases. These are available on `PyPI <http://pypi.python.org/pypi/bottle>`_ and can be installed via :command:`pip` (recommended), :command:`easy_install` or your package manager:
 
 .. code-block:: bash
 
@@ -78,7 +78,7 @@ This tutorial assumes you have Bottle either :ref:`installed <installation>` or 
 
 This is it. Run this script, visit http://localhost:8080/hello and you will see "Hello World!" in your browser. Here is how it works:
 
-The :func:`route` decorator binds a piece of code to an URL path. In this case, we link the ``/hello`` URL to the ``hello()`` function. This is called a `route` (hence the decorator name) and is the most important concept of this framework. You can define as many routes as you want. Whenever a browser requests an URL, the associated function is called and the return value is sent back to the browser. Its as simple as that.
+The :func:`route` decorator binds a piece of code to an URL path. In this case, we link the ``/hello`` path to the ``hello()`` function. This is called a `route` (hence the decorator name) and is the most important concept of this framework. You can define as many routes as you want. Whenever a browser requests an URL, the associated function is called and the return value is sent back to the browser. Its as simple as that.
 
 The :func:`run` call in the last line starts a built-in development server. It runs on ``localhost`` port ``8080`` and serves requests until you hit :kbd:`Control-c`. You can switch the server backend later, but for now a development server is all we need. It requires no setup at all and is an incredibly painless way to get your application up and running for local tests.
 
@@ -199,24 +199,26 @@ The HTTP protocol defines several `request methods`__ (sometimes referred to as 
 
 The POST method is commonly used for HTML form submission. This example shows how to handle a login form using POST::
 
-    from bottle import get, post, request
+    from bottle import get, post, request # or route
 
     @get('/login') # or @route('/login')
-    def login_form():
-        return '''<form method="POST" action="/login">
-                    <input name="name"     type="text" />
-                    <input name="password" type="password" />
-                    <input type="submit" />
-                  </form>'''
+    def login():
+        return '''
+            <form action="/login" method="post">
+                Username: <input name="username" type="text" />
+                Password: <input name="password" type="password" />
+                <input value="Login" type="submit" />
+            </form>
+        '''
 
     @post('/login') # or @route('/login', method='POST')
-    def login_submit():
-        name     = request.forms.get('name')
+    def do_login():
+        username = request.forms.get('username')
         password = request.forms.get('password')
-        if check_login(name, password):
-            return "<p>Your login was correct</p>"
+        if check_login(username, password):
+            return "<p>Your login information was correct.</p>"
         else:
-            return "<p>Login failed</p>"
+            return "<p>Login failed.</p>"
 
 In this example the ``/login`` URL is linked to two distinct callbacks, one for GET requests and another for POST requests. The first one displays a HTML form to the user. The second callback is invoked on a form submission and checks the login credentials the user entered into the form. The use of :attr:`Request.forms` is further described in the :ref:`tutorial-request` section.
 
@@ -450,14 +452,14 @@ If neither `expires` nor `max_age` is set, the cookie expires at the end of the 
 As mentioned above, cookies are easily forged by malicious clients. Bottle can cryptographically sign your cookies to prevent this kind of manipulation. All you have to do is to provide a signature key via the `secret` keyword argument whenever you read or set a cookie and keep that key a secret. As a result, :meth:`Request.get_cookie` will return ``None`` if the cookie is not signed or the signature keys don't match::
 
     @route('/login')
-    def login():
+    def do_login():
         username = request.forms.get('username')
         password = request.forms.get('password')
-        if check_user_credentials(username, password):
+        if check_login(username, password):
             response.set_cookie("account", username, secret='some-secret-key')
-            return template("Welcome {{name}}! You are now logged in.", name=username)
+            return template("<p>Welcome {{name}}! You are now logged in.</p>", name=username)
         else:
-            return "Login failed."
+            return "<p>Login failed.</p>"
 
     @route('/restricted')
     def restricted_area():
@@ -597,9 +599,9 @@ Let us start from the beginning. In HTML, a typical ``<form>`` looks something l
 .. code-block:: html
 
     <form action="/login" method="post">
-        Login:    <input type="text" name="login" />
-        Password: <input type="password" name="password" />
-        <input type="submit" value="Login" />
+        Username: <input name="username" type="text" />
+        Password: <input name="password" type="password" />
+        <input value="Login" type="submit" />
     </form>
 
 The ``action`` attribute specifies the URL that will receive the form data. ``method`` defines the HTTP method to use (``GET`` or ``POST``). With ``method="get"`` the form values are appended to the URL and available through :attr:`BaseRequest.query` as described above. This is considered insecure and has other limitations, so we use ``method="post"`` here. If in doubt, use ``POST`` forms.
@@ -612,20 +614,20 @@ Form fields transmitted via ``POST`` are stored in :attr:`BaseRequest.forms` as 
     def login():
         return '''
             <form action="/login" method="post">
-                Login:    <input type="text" name="login" />
-                Password: <input type="password" name="password" />
-                <input type="submit" value="Login" />
+                Username: <input name="username" type="text" />
+                Password: <input name="password" type="password" />
+                <input value="Login" type="submit" />
             </form>
         '''
 
     @route('/login', method='POST')
     def do_login():
-        login    = request.forms.get('login')
+        username = request.forms.get('username')
         password = request.forms.get('password')
-        if check_login(user, password):
-            return 'OK'
+        if check_login(username, password):
+            return "<p>Your login information was correct.</p>"
         else:
-            return 'LOGIN FAILED'
+            return "<p>Login failed.</p>"
 
 There are several other attributes used to access form data. Some of them combine values from different sources for easier access. The following table should give you a decent overview.
 
