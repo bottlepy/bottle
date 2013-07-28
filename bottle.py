@@ -3178,8 +3178,9 @@ class Jinja2Template(BaseTemplate):
 
 class SimpleTemplate(BaseTemplate):
 
-    def prepare(self, escape_func=html_escape, noescape=False, syntax=None, **ka):
-        self.cache = {}
+    def prepare(self, escape_func=html_escape, noescape=False, syntax=None, cache=None, chain=None, **ka):
+        self.cache = cache or {}
+        self.chain = chain or [self.name]
         enc = self.encoding
         self._str = lambda x: touni(x, enc)
         self._escape = lambda x: escape_func(touni(x, enc))
@@ -3210,9 +3211,13 @@ class SimpleTemplate(BaseTemplate):
     def _include(self, _env, _name, **kwargs):
         env = _env.copy()
         env.update(kwargs)
-        if _name not in self.cache:
-            self.cache[_name] = self.__class__(name=_name, lookup=self.lookup)
-        return self.cache[_name].execute(env['_stdout'], env)
+        if _name not in self.chain:
+            self.chain.append(_name)
+            if _name not in self.cache:
+                self.cache[_name] = self.__class__(name=_name, cache=self.cache, chain=self.chain, lookup=self.lookup)
+            newenv = self.cache[_name].execute(env['_stdout'], env)
+            del self.chain[-1]
+            return newenv
 
     def execute(self, _stdout, kwargs):
         env = self.defaults.copy()
@@ -3375,12 +3380,12 @@ class StplParser(object):
         return '_escape(%s)' % chunk
 
     def write_code(self, line, comment=''):
-        line, comment = self.fix_brackward_compatibility(line, comment)
+        line, comment = self.fix_backward_compatibility(line, comment)
         code  = '  ' * (self.indent+self.indent_mod)
         code += line.lstrip() + comment + '\n'
         self.code_buffer.append(code)
 
-    def fix_brackward_compatibility(self, line, comment):
+    def fix_backward_compatibility(self, line, comment):
         parts = line.strip().split(None, 2)
         if parts and parts[0] in ('include', 'rebase'):
             depr('The include and rebase keywords are functions now.')
@@ -3396,7 +3401,6 @@ class StplParser(object):
                 self.encoding = enc
                 return line, comment.replace('coding','coding*')
         return line, comment
-
 
 def template(*args, **kwargs):
     '''
