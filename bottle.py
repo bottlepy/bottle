@@ -2637,10 +2637,13 @@ class FlupFCGIServer(ServerAdapter):
 class WSGIRefServer(ServerAdapter):
     def run(self, handler): # pragma: no cover
         from wsgiref.simple_server import make_server, WSGIRequestHandler
-        if self.quiet:
-            class QuietHandler(WSGIRequestHandler):
-                def log_request(*args, **kw): pass
-            self.options['handler_class'] = QuietHandler
+        class FixedHandler(WSGIRequestHandler):
+            def address_string(self):
+                return self.client_address[0]
+            def log_request(*args, **kw):
+                if not self.quiet:
+                    return super(FixedHandler, self).log_request(*args, **kw)
+        self.options['handler_class'] = FixedHandler
         srv = make_server(self.host, self.port, handler, **self.options)
         srv.serve_forever()
 
