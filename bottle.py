@@ -234,11 +234,11 @@ class RouterUnknownModeError(RouteError): pass
 
 
 class RouteSyntaxError(RouteError):
-    """ The route parser found something not supported by this router """
+    """ The route parser found something not supported by this router. """
 
 
 class RouteBuildError(RouteError):
-    """ The route could not been built """
+    """ The route could not be built. """
 
 
 def _re_flatten(p):
