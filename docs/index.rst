@@ -3,7 +3,7 @@
 
 .. _mako: http://www.makotemplates.org/
 .. _cheetah: http://www.cheetahtemplate.org/
-.. _jinja2: http://jinja.pocoo.org/2/
+.. _jinja2: http://jinja.pocoo.org/
 .. _paste: http://pythonpaste.org/
 .. _fapws3: https://github.com/william-os4y/fapws3
 .. _bjoern: https://github.com/jonashaag/bjoern
