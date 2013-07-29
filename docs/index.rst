@@ -9,7 +9,7 @@
 .. _bjoern: https://github.com/jonashaag/bjoern
 .. _flup: http://trac.saddi.com/flup
 .. _cherrypy: http://www.cherrypy.org/
-.. _WSGI: http://www.wsgi.org/wsgi/
+.. _WSGI: http://www.wsgi.org/
 .. _Python: http://python.org/
 .. _testing: https://github.com/defnull/bottle/raw/master/bottle.py
 .. _issue_tracker: https://github.com/defnull/bottle/issues
