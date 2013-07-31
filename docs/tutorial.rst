@@ -36,7 +36,7 @@ Bottle does not depend on any external libraries. You can just download `bottle.
 
     $ wget http://bottlepy.org/bottle.py
 
-This will get you the latest development snapshot that includes all the new features. If you prefer a more stable environment, you should stick with the stable releases. These are available on `PyPi <http://pypi.python.org/pypi/bottle>`_ and can be installed via :command:`pip` (recommended), :command:`easy_install` or your package manager:
+This will get you the latest development snapshot that includes all the new features. If you prefer a more stable environment, you should stick with the stable releases. These are available on `PyPI <http://pypi.python.org/pypi/bottle>`_ and can be installed via :command:`pip` (recommended), :command:`easy_install` or your package manager:
 
 .. code-block:: bash
 
@@ -78,9 +78,9 @@ This tutorial assumes you have Bottle either :ref:`installed <installation>` or 
 
 This is it. Run this script, visit http://localhost:8080/hello and you will see "Hello World!" in your browser. Here is how it works:
 
-The :func:`route` decorator binds a piece of code to an URL path. In this case, we link the ``/hello`` URL to the ``hello()`` function. This is called a `route` (hence the decorator name) and is the most important concept of this framework. You can define as many routes as you want. Whenever a browser requests an URL, the associated function is called and the return value is sent back to the browser. Its as simple as that.
+The :func:`route` decorator binds a piece of code to an URL path. In this case, we link the ``/hello`` path to the ``hello()`` function. This is called a `route` (hence the decorator name) and is the most important concept of this framework. You can define as many routes as you want. Whenever a browser requests an URL, the associated function is called and the return value is sent back to the browser. Its as simple as that.
 
-The :func:`run` call in the last line starts a built-in development server. It runs on `localhost` port 8080 and serves requests until you hit :kbd:`Control-c`. You can switch the server backend later, but for now a development server is all we need. It requires no setup at all and is an incredibly painless way to get your application up and running for local tests.
+The :func:`run` call in the last line starts a built-in development server. It runs on ``localhost`` port ``8080`` and serves requests until you hit :kbd:`Control-c`. You can switch the server backend later, but for now a development server is all we need. It requires no setup at all and is an incredibly painless way to get your application up and running for local tests.
 
 The :ref:`tutorial-debugging` is very helpful during early development, but should be switched off for public applications. Keep that in mind.
 
@@ -88,12 +88,12 @@ Of course this is a very simple example, but it shows the basic concept of how a
 
 .. _tutorial-default:
 
-The `Default Application`
+The Default Application
 ------------------------------------------------------------------------------
 
 For the sake of simplicity, most examples in this tutorial use a module-level :func:`route` decorator to define routes. This adds routes to a global "default application", an instance of :class:`Bottle` that is automatically created the first time you call :func:`route`. Several other module-level decorators and functions relate to this default application, but if you prefer a more object oriented approach and don't mind the extra typing, you can create a separate application object and use that instead of the global one::
 
-    from bottle import Bottle, run, template
+    from bottle import Bottle, run
 
     app = Bottle()
 
@@ -199,24 +199,26 @@ The HTTP protocol defines several `request methods`__ (sometimes referred to as 
 
 The POST method is commonly used for HTML form submission. This example shows how to handle a login form using POST::
 
-    from bottle import get, post, request
+    from bottle import get, post, request # or route
 
     @get('/login') # or @route('/login')
-    def login_form():
-        return '''<form method="POST" action="/login">
-                    <input name="name"     type="text" />
-                    <input name="password" type="password" />
-                    <input type="submit" />
-                  </form>'''
+    def login():
+        return '''
+            <form action="/login" method="post">
+                Username: <input name="username" type="text" />
+                Password: <input name="password" type="password" />
+                <input value="Login" type="submit" />
+            </form>
+        '''
 
     @post('/login') # or @route('/login', method='POST')
-    def login_submit():
-        name     = request.forms.get('name')
+    def do_login():
+        username = request.forms.get('username')
         password = request.forms.get('password')
-        if check_login(name, password):
-            return "<p>Your login was correct</p>"
+        if check_login(username, password):
+            return "<p>Your login information was correct.</p>"
         else:
-            return "<p>Login failed</p>"
+            return "<p>Login failed.</p>"
 
 In this example the ``/login`` URL is linked to two distinct callbacks, one for GET requests and another for POST requests. The first one displays a HTML form to the user. The second callback is invoked on a form submission and checks the login credentials the user entered into the form. The use of :attr:`Request.forms` is further described in the :ref:`tutorial-request` section.
 
@@ -450,20 +452,20 @@ If neither `expires` nor `max_age` is set, the cookie expires at the end of the 
 As mentioned above, cookies are easily forged by malicious clients. Bottle can cryptographically sign your cookies to prevent this kind of manipulation. All you have to do is to provide a signature key via the `secret` keyword argument whenever you read or set a cookie and keep that key a secret. As a result, :meth:`Request.get_cookie` will return ``None`` if the cookie is not signed or the signature keys don't match::
 
     @route('/login')
-    def login():
+    def do_login():
         username = request.forms.get('username')
         password = request.forms.get('password')
-        if check_user_credentials(username, password):
+        if check_login(username, password):
             response.set_cookie("account", username, secret='some-secret-key')
-            return "Welcome %s! You are now logged in." % username
+            return template("<p>Welcome {{name}}! You are now logged in.</p>", name=username)
         else:
-            return "Login failed."
+            return "<p>Login failed.</p>"
 
     @route('/restricted')
     def restricted_area():
         username = request.get_cookie("account", secret='some-secret-key')
         if username:
-            return "Hello %s. Welcome back." % username
+            return template("Hello {{name}}. Welcome back.", name=username)
         else:
             return "You are not logged in. Access denied."
 
@@ -484,21 +486,71 @@ In addition, Bottle automatically pickles and unpickles any data stored to signe
 Request Data
 ==============================================================================
 
-Bottle provides access to HTTP-related metadata such as cookies, headers and POST form data through a global ``request`` object. This object always contains information about the *current* request, as long as it is accessed from within a callback function. This works even in multi-threaded environments where multiple requests are handled at the same time. For details on how a global object can be thread-safe, see :doc:`contextlocal`.
+Cookies, HTTP header, HTML ``<form>`` fields and other request data is available through the global :data:`request` object. This special object always refers to the *current* request, even in multi-threaded environments where multiple client connections are handled at the same time::
+
+  from bottle import request, route, template
+  
+  @route('/hello')
+  def hello():
+      name = request.cookies.username or 'Guest'
+      return template('Hello {{name}}', name=name)
+
+The :data:`request` object is a subclass of :class:`BaseRequest` and has a very rich API to access data. We only cover the most commonly used features here, but it should be enough to get started.
+
+
+
+Introducing :class:`FormsDict`
+--------------------------------------------------------------------------------
+
+Bottle uses a special type of dictionary to store form data and cookies. :class:`FormsDict` behaves like a normal dictionary, but has some additional features to make your life easier.
+
+**Attribute access**: All values in the dictionary are also accessible as attributes. These virtual attributes return unicode strings, even if the value is missing or unicode decoding fails. In that case, the string is empty, but still present::
+
+  name = request.cookies.name
+  
+  # is a shortcut for:
+  
+  name = request.cookies.getunicode('name') # encoding='utf-8' (default)
+
+  # which basically does this:
+
+  try:
+      name = request.cookies.get('name', '').decode('utf-8')
+  except UnicodeError:
+      name = u''
+
+**Multiple values per key:** :class:`FormsDict` is a subclass of :class:`MultiDict` and can store more than one value per key. The standard dictionary access methods will only return a single value, but the :meth:`~MultiDict.getall` method returns a (possibly empty) list of all values for a specific key::
+
+  for choice in request.forms.getall('multiple_choice'):
+      do_something(choice)
+
+**WTForms support:** Some libraries (e.g. `WTForms <http://wtforms.simplecodes.com/>`_) want all-unicode dictionaries as input. :meth:`FormsDict.decode` does that for you. It decodes all values and returns a copy of itself, while preserving multiple values per key and all the other features.
 
 .. note::
 
-    Bottle stores most of the parsed HTTP metadata in :class:`FormsDict` instances. These behave like normal dictionaries, but have some additional features: All values in the dictionary are available as attributes. These virtual attributes always return a unicode string, even if the value is missing. In that case, the string is empty.
+    In **Python 2** all keys and values are byte-strings. If you need unicode, you can call :meth:`FormsDict.getunicode` or fetch values via attribute access. Both methods try to decode the string (default: utf8) and return an empty string if that fails. No need to catch :exc:`UnicodeError`::
 
-    :class:`FormsDict` is a subclass of :class:`MultiDict` and can store more than one value per key. The standard dictionary access methods will only return a single value, but the :meth:`MultiDict.getall` method returns a (possibly empty) list of all values for a specific key.
+      >>> request.query['city']
+      'G\xc3\xb6ttingen'  # A utf8 byte string
+      >>> request.query.city
+      u'Göttingen'        # The same string as unicode
 
-The full API and feature list is described in the API section (see :class:`Request`), but the most common use cases and features are covered here, too.
+    In **Python 3** all strings are unicode, but HTTP is a byte-based wire protocol. The server has to decode the byte strings somehow before they are passed to the application. To be on the safe side, WSGI suggests ISO-8859-1 (aka latin1), a reversible single-byte codec that can be re-encoded with a different encoding later. Bottle does that for :meth:`FormsDict.getunicode` and attribute access, but not for the dict-access methods. These return the unchanged values as provided by the server implementation, which is probably not what you want.
+
+      >>> request.query['city']
+      'GÃ¶ttingen' # An utf8 string provisionally decoded as ISO-8859-1 by the server
+      >>> request.query.city
+      'Göttingen'  # The same string correctly re-encoded as utf8 by bottle
+
+    If you need the whole dictionary with correctly decoded values (e.g. for WTForms), you can call :meth:`FormsDict.decode` to get a re-encoded copy.
 
 
 Cookies
 --------------------------------------------------------------------------------
 
-Cookies are stored in :attr:`BaseRequest.cookies` as a :class:`FormsDict`. The :meth:`BaseRequest.get_cookie` method allows access to :ref:`signed cookies <tutorial-signed-cookies>` as described in a separate section. This example shows a simple cookie-based view counter::
+Cookies are small pieces of text stored in the clients browser and sent back to the server with each request. They are useful to keep some state around for more than one request (HTTP itself is stateless), but should not be used for security related stuff. They can be easily forged by the client.
+
+All cookies sent by the client are available through :attr:`BaseRequest.cookies` (a :class:`FormsDict`). This example shows a simple cookie-based view counter::
 
   from bottle import route, request, response
   @route('/counter')
@@ -508,11 +560,12 @@ Cookies are stored in :attr:`BaseRequest.cookies` as a :class:`FormsDict`. The :
       response.set_cookie('counter', str(count))
       return 'You visited this page %d times' % count
 
+The :meth:`BaseRequest.get_cookie` method is a different way do access cookies. It supports decoding :ref:`signed cookies <tutorial-signed-cookies>` as described in a separate section.
 
 HTTP Headers
 --------------------------------------------------------------------------------
 
-All HTTP headers sent by the client (e.g. ``Referer``, ``Agent`` or ``Accept-Language``) are stored in a :class:`WSGIHeaderDict` and accessible through :attr:`BaseRequest.headers`. A :class:`WSGIHeaderDict` is basically a dictionary with case-insensitive keys::
+All HTTP headers sent by the client (e.g. ``Referer``, ``Agent`` or ``Accept-Language``) are stored in a :class:`WSGIHeaderDict` and accessible through the :attr:`BaseRequest.headers` attribute. A :class:`WSGIHeaderDict` is basically a dictionary with case-insensitive keys::
 
   from bottle import route, request
   @route('/is_ajax')
@@ -526,44 +579,100 @@ All HTTP headers sent by the client (e.g. ``Referer``, ``Agent`` or ``Accept-Lan
 Query Variables
 --------------------------------------------------------------------------------
 
-The query string (as in ``/forum?id=1&page=5``) is commonly used to transmit a small number of key/value pairs to the server. You can use the :attr:`BaseRequest.query` (a :class:`FormsDict`) to access these values and the :attr:`BaseRequest.query_string` attribute to get the whole string.
+The query string (as in ``/forum?id=1&page=5``) is commonly used to transmit a small number of key/value pairs to the server. You can use the :attr:`BaseRequest.query` attribute (a :class:`FormsDict`) to access these values and the :attr:`BaseRequest.query_string` attribute to get the whole string.
 
 ::
 
-  from bottle import route, request, response
+  from bottle import route, request, response, template
   @route('/forum')
   def display_forum():
       forum_id = request.query.id
       page = request.query.page or '1'
-      return 'Forum ID: %s (page %s)' % (forum_id, page)
+      return template('Forum ID: {{id}} (page {{page}})', id=forum_id, page=page)
 
 
-POST Form Data and File Uploads
--------------------------------
+HTML `<form>` Handling
+----------------------
 
-The request body of ``POST`` and ``PUT`` requests may contain form data encoded in various formats. The :attr:`BaseRequest.forms` dictionary contains parsed textual form fields, :attr:`BaseRequest.files` stores file uploads and :attr:`BaseRequest.POST` combines both dictionaries into one. All three are :class:`FormsDict` instances and are created on demand. File uploads are saved as special :class:`cgi.FieldStorage` objects along with some metadata. Finally, you can access the raw body data as a file-like object via :attr:`BaseRequest.body`.
+Let us start from the beginning. In HTML, a typical ``<form>`` looks something like this:
 
-Here is an example for a simple file upload form:
+.. code-block:: html
+
+    <form action="/login" method="post">
+        Username: <input name="username" type="text" />
+        Password: <input name="password" type="password" />
+        <input value="Login" type="submit" />
+    </form>
+
+The ``action`` attribute specifies the URL that will receive the form data. ``method`` defines the HTTP method to use (``GET`` or ``POST``). With ``method="get"`` the form values are appended to the URL and available through :attr:`BaseRequest.query` as described above. This is considered insecure and has other limitations, so we use ``method="post"`` here. If in doubt, use ``POST`` forms.
+
+Form fields transmitted via ``POST`` are stored in :attr:`BaseRequest.forms` as a :class:`FormsDict`. The server side code may look like this::
+
+    from bottle import route, request
+
+    @route('/login')
+    def login():
+        return '''
+            <form action="/login" method="post">
+                Username: <input name="username" type="text" />
+                Password: <input name="password" type="password" />
+                <input value="Login" type="submit" />
+            </form>
+        '''
+
+    @route('/login', method='POST')
+    def do_login():
+        username = request.forms.get('username')
+        password = request.forms.get('password')
+        if check_login(username, password):
+            return "<p>Your login information was correct.</p>"
+        else:
+            return "<p>Login failed.</p>"
+
+There are several other attributes used to access form data. Some of them combine values from different sources for easier access. The following table should give you a decent overview.
+
+==============================   ===============   ================   ============
+Attribute                        GET Form fields   POST Form fields   File Uploads
+==============================   ===============   ================   ============
+:attr:`BaseRequest.query`        yes               no                 no
+:attr:`BaseRequest.forms`        no                yes                no
+:attr:`BaseRequest.files`        no                no                 yes
+:attr:`BaseRequest.params`       yes               yes                no
+:attr:`BaseRequest.GET`          yes               no                 no
+:attr:`BaseRequest.POST`         no                yes                yes
+==============================   ===============   ================   ============
+
+
+File uploads
+------------
+
+To support file uploads, we have to change the ``<form>`` tag a bit. First, we tell the browser to encode the form data in a different way by adding an ``enctype="multipart/form-data"`` attribute to the ``<form>`` tag. Then, we add ``<input type="file" />`` tags to allow the user to select a file. Here is an example:
 
 .. code-block:: html
 
     <form action="/upload" method="post" enctype="multipart/form-data">
-      <input type="text" name="name" />
-      <input type="file" name="data" />
+      Category:      <input type="text" name="category" />
+      Select a file: <input type="file" name="upload" />
+      <input type="submit" value="Start upload" />
     </form>
 
-::
+Bottle stores file uploads in :attr:`BaseRequest.files` as :class:`FileUpload` instances, along with some metadata about the upload. Let us assume you just want to save the file to disk::
 
-    from bottle import route, request
     @route('/upload', method='POST')
     def do_upload():
-        name = request.forms.name
-        data = request.files.data
-        if name and data and data.file:
-            raw = data.file.read() # This is dangerous for big files
-            filename = data.filename
-            return "Hello %s! You uploaded %s (%d bytes)." % (name, filename, len(raw))
-        return "You missed a field."
+        category   = request.forms.get('category')
+        upload     = request.files.get('upload')
+        name, ext = os.path.splitext(upload.filename)
+        if ext not in ('png','jpg','jpeg'):
+            return 'File extension not allowed.'
+
+        save_path = get_save_path_for_category(category)
+        upload.save(save_path) # appends upload.filename automatically
+        return 'OK'
+
+:attr:`FileUpload.filename` contains the name of the file on the clients file system, but is cleaned up and normalized to prevent bugs caused by unsupported characters or path segments in the filename. If you need the unmodified name as sent by the client, have a look at :attr:`FileUpload.raw_filename`.
+
+The :attr:`FileUpload.save` method is highly recommended if you want to store the file to disk. It prevents some common errors (e.g. it does not overwrite existing files unless you tell it to) and stores the file in a memory efficient way. You can access the file object directly via :attr:`FileUpload.file`. Just be careful. 
 
 
 Authentication
@@ -605,25 +714,17 @@ It returns a function that verifies the user name and password. If it fails, it 
 If authentication is correct, it executes the route, displaying the answer.
 
 
+JSON Content
+--------------------
 
-Unicode issues
------------------------
+Some JavaScript or REST clients send ``application/json`` content to the server. The :attr:`BaseRequest.json` attribute contains the parsed data structure, if available.
 
-In **Python 2** all keys and values are byte-strings. If you need unicode, you can call :meth:`FormsDict.getunicode` or fetch values via attribute access. Both methods try to decode the string (default: utf8) and return an empty string if that fails. No need to catch :exc:`UnicodeError`::
 
-  >>> request.query['city']
-  'G\xc3\xb6ttingen'  # A utf8 byte string
-  >>> request.query.city
-  u'Göttingen'        # The same string as unicode
+The raw request body
+--------------------
 
-In **Python 3** all strings are unicode, but HTTP is a byte-based wire protocol. The server has to decode the byte strings somehow before they are passed to the application. To be on the safe side, WSGI suggests ISO-8859-1 (aka latin1), a reversible single-byte codec that can be re-encoded with a different encoding later. Bottle does that for :meth:`FormsDict.getunicode` and attribute access, but not for the dict-access methods. These return the unchanged values as provided by the server implementation, which is probably not what you want.
+You can access the raw body data as a file-like object via :attr:`BaseRequest.body`. This is a :class:`BytesIO` buffer or a temporary file depending on the content length and :attr:`BaseRequest.MEMFILE_MAX` setting. In both cases the body is completely buffered before you can access the attribute. If you expect huge amounts of data and want to get direct unbuffered access to the stream, have a look at ``request['wsgi.input']``. 
 
-  >>> request.query['city']
-  'GÃ¶ttingen' # An utf8 string provisionally decoded as ISO-8859-1 by the server
-  >>> request.query.city
-  'Göttingen'  # The same string correctly re-encoded as utf8 by bottle
-
-If you need the whole dictionary with correctly decoded values (e.g. for WTForms), you can call :meth:`FormsDict.decode` to get a re-encoded copy.
 
 
 WSGI Environment
@@ -636,7 +737,7 @@ Each :class:`BaseRequest` instance wraps a WSGI environment dictionary. The orig
       ip = request.environ.get('REMOTE_ADDR')
       # or ip = request.get('REMOTE_ADDR')
       # or ip = request['REMOTE_ADDR']
-      return "Your IP is: %s" % ip
+      return template("Your IP is: {{ip}}", ip=ip)
 
 
 
@@ -775,17 +876,25 @@ Blacklisting Plugins
 
 You may want to explicitly disable a plugin for a number of routes. The :func:`route` decorator has a ``skip`` parameter for this purpose::
 
-    sqlite_plugin = SQLitePlugin(dbfile='/tmp/test.db')
+    sqlite_plugin = SQLitePlugin(dbfile='/tmp/test1.db')
     install(sqlite_plugin)
+
+    dbfile1 = '/tmp/test1.db'
+    dbfile2 = '/tmp/test2.db'
 
     @route('/open/<db>', skip=[sqlite_plugin])
     def open_db(db):
         # The 'db' keyword argument is not touched by the plugin this time.
-        if db in ('test', 'test2'):
-            # The plugin handle can be used for runtime configuration, too.
-            sqlite_plugin.dbfile = '/tmp/%s.db' % db
-            return "Database File switched to: /tmp/%s.db" % db
-        abort(404, "No such database.")
+
+        # The plugin handle can be used for runtime configuration, too.
+        if db == 'test1':
+            sqlite_plugin.dbfile = dbfile1
+        elif db == 'test2':
+            sqlite_plugin.dbfile = dbfile2
+        else:
+            abort(404, "No such database.")
+
+        return "Database File switched to: " + sqlite_plugin.dbfile
 
 The ``skip`` parameter accepts a single value or a list of values. You can use a name, class or instance to identify the plugin that is to be skipped. Set ``skip=True`` to skip all plugins at once.
 

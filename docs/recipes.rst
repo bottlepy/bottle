@@ -227,7 +227,7 @@ decorator and setup a callback function::
     def say_bar():
         return {'type': 'friendly', 'content': 'Hi!'}
 
-You can also use the ``before_callback`` to take an action before
+You can also use the ``before_request`` to take an action before
 every function gets called.
 
 

@@ -4,7 +4,6 @@
 *.log
 *.mo
 ._*
-.*
 *.*~
 dist/
 build/

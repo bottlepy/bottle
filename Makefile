@@ -2,7 +2,7 @@ PATH := build/python/bin:$(PATH)
 VERSION = $(shell python setup.py --version)
 ALLFILES = $(shell echo bottle.py test/*.py test/views/*.tpl)
 
-.PHONY: release install docs test test_all test_25 test_26 test_27 test_31 test_32 test_33 2to3 clean
+.PHONY: release coverage install docs test test_all test_25 test_26 test_27 test_31 test_32 test_33 2to3 clean
 
 release: test_all
 	python setup.py --version | egrep -q -v '[a-zA-Z]' # Fail on dev/rc versions
@@ -12,6 +12,14 @@ release: test_all
 	git push origin tag $(VERSION)                     # Fail on dublicate tag
 	python setup.py sdist register upload              # Release to pypi
 
+coverage:
+	-mkdir build/
+	coverage erase
+	COVERAGE_PROCESS_START=.coveragerc test/testall.py
+	coverage combine
+	coverage report
+	coverage html
+
 push: test_all
 	git push origin HEAD
 
@@ -19,7 +27,7 @@ install:
 	python setup.py install
 
 docs:
-	cd docs/; $(MAKE) html
+	sphinx-build -b html -d build/docs/doctrees docs build/docs/html
 
 test:
 	python test/testall.py
@@ -45,10 +53,11 @@ test_33:
 	python3.3 test/testall.py
 
 clean:
+	rm -rf build/ dist/ MANIFEST 2>/dev/null || true
+	find . -name '__pycache__' -exec rm -rf {} +
 	find . -name '*.pyc' -exec rm -f {} +
 	find . -name '*.pyo' -exec rm -f {} +
 	find . -name '*~' -exec rm -f {} +
 	find . -name '._*' -exec rm -f {} +
 	find . -name '.coverage*' -exec rm -f {} +
-	rm -rf build/ dist/ MANIFEST 2>/dev/null || true
 

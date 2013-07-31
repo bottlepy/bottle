@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 import unittest
-import bottle
 import tools
 
 
-class MyTestPlugin(object):
+class MyPlugin(object):
     def __init__(self):
         self.app = None
         self.add_args = {}
@@ -21,7 +20,7 @@ class MyTestPlugin(object):
         return wrapper
 
 
-def my_test_decorator(func):
+def my_decorator(func):
     def wrapper(*a, **ka):
         return list(func(*a, **ka))[-1]
 
@@ -36,49 +35,49 @@ class TestPluginManagement(tools.ServerTestBase):
         self.assertTrue(plugin in self.app.plugins)
 
     def test_install_plugin(self):
-        plugin = MyTestPlugin()
+        plugin = MyPlugin()
         installed = self.app.install(plugin)
         self.assertEqual(plugin, installed)
         self.assertTrue(plugin in self.app.plugins)
 
     def test_install_decorator(self):
-        installed = self.app.install(my_test_decorator)
-        self.assertEqual(my_test_decorator, installed)
-        self.assertTrue(my_test_decorator in self.app.plugins)
+        installed = self.app.install(my_decorator)
+        self.assertEqual(my_decorator, installed)
+        self.assertTrue(my_decorator in self.app.plugins)
 
     def test_install_non_plugin(self):
         self.assertRaises(TypeError, self.app.install, 'I am not a plugin')
 
     def test_uninstall_by_instance(self):
-        plugin  = self.app.install(MyTestPlugin())
-        plugin2 = self.app.install(MyTestPlugin())
+        plugin  = self.app.install(MyPlugin())
+        plugin2 = self.app.install(MyPlugin())
         self.app.uninstall(plugin)
         self.assertTrue(plugin not in self.app.plugins)
         self.assertTrue(plugin2 in self.app.plugins)
 
     def test_uninstall_by_type(self):
-        plugin = self.app.install(MyTestPlugin())
-        plugin2 = self.app.install(MyTestPlugin())
-        self.app.uninstall(MyTestPlugin)
+        plugin = self.app.install(MyPlugin())
+        plugin2 = self.app.install(MyPlugin())
+        self.app.uninstall(MyPlugin)
         self.assertTrue(plugin not in self.app.plugins)
         self.assertTrue(plugin2 not in self.app.plugins)
 
     def test_uninstall_by_name(self):
-        plugin = self.app.install(MyTestPlugin())
-        plugin2 = self.app.install(MyTestPlugin())
+        plugin = self.app.install(MyPlugin())
+        plugin2 = self.app.install(MyPlugin())
         plugin.name = 'myplugin'
         self.app.uninstall('myplugin')
         self.assertTrue(plugin not in self.app.plugins)
         self.assertTrue(plugin2 in self.app.plugins)
 
     def test_uninstall_all(self):
-        plugin = self.app.install(MyTestPlugin())
-        plugin2 = self.app.install(MyTestPlugin())
+        plugin = self.app.install(MyPlugin())
+        plugin2 = self.app.install(MyPlugin())
         self.app.uninstall(True)
         self.assertFalse(self.app.plugins)
 
     def test_route_plugin(self):
-        plugin = MyTestPlugin()
+        plugin = MyPlugin()
         plugin.add_content = ';foo'
         @self.app.route('/a')
         @self.app.route('/b', apply=[plugin])
@@ -87,11 +86,11 @@ class TestPluginManagement(tools.ServerTestBase):
         self.assertBody('plugin;foo', '/b')
 
     def test_plugin_oder(self):
-        self.app.install(MyTestPlugin()).add_content = ';global-1'
-        self.app.install(MyTestPlugin()).add_content = ';global-2'
-        l1 = MyTestPlugin()
+        self.app.install(MyPlugin()).add_content = ';global-1'
+        self.app.install(MyPlugin()).add_content = ';global-2'
+        l1 = MyPlugin()
         l1.add_content = ';local-1'
-        l2 = MyTestPlugin()
+        l2 = MyPlugin()
         l2.add_content = ';local-2'
         @self.app.route('/a')
         @self.app.route('/b', apply=[l1, l2])
@@ -100,13 +99,13 @@ class TestPluginManagement(tools.ServerTestBase):
         self.assertBody('plugin;local-2;local-1;global-2;global-1', '/b')
 
     def test_skip_by_instance(self):
-        g1 = self.app.install(MyTestPlugin())
+        g1 = self.app.install(MyPlugin())
         g1.add_content = ';global-1'
-        g2 = self.app.install(MyTestPlugin())
+        g2 = self.app.install(MyPlugin())
         g2.add_content = ';global-2'
-        l1 = MyTestPlugin()
+        l1 = MyPlugin()
         l1.add_content = ';local-1'
-        l2 = MyTestPlugin()
+        l2 = MyPlugin()
         l2.add_content = ';local-2'
         @self.app.route('/a', skip=[g2, l2])
         @self.app.route('/b', apply=[l1, l2], skip=[g2, l2])
@@ -115,16 +114,16 @@ class TestPluginManagement(tools.ServerTestBase):
         self.assertBody('plugin;local-1;global-1', '/b')
 
     def test_skip_by_class(self):
-        g1 = self.app.install(MyTestPlugin())
+        g1 = self.app.install(MyPlugin())
         g1.add_content = ';global-1'
         @self.app.route('/a')
-        @self.app.route('/b', skip=[MyTestPlugin])
+        @self.app.route('/b', skip=[MyPlugin])
         def a(): return 'plugin'
         self.assertBody('plugin;global-1', '/a')
         self.assertBody('plugin', '/b')
 
     def test_skip_by_name(self):
-        g1 = self.app.install(MyTestPlugin())
+        g1 = self.app.install(MyPlugin())
         g1.add_content = ';global-1'
         g1.name = 'test'
         @self.app.route('/a')
@@ -134,7 +133,7 @@ class TestPluginManagement(tools.ServerTestBase):
         self.assertBody('plugin', '/b')
 
     def test_skip_all(self):
-        g1 = self.app.install(MyTestPlugin())
+        g1 = self.app.install(MyPlugin())
         g1.add_content = ';global-1'
         @self.app.route('/a')
         @self.app.route('/b', skip=[True])
@@ -143,7 +142,7 @@ class TestPluginManagement(tools.ServerTestBase):
         self.assertBody('plugin', '/b')
 
     def test_skip_nonlist(self):
-        g1 = self.app.install(MyTestPlugin())
+        g1 = self.app.install(MyPlugin())
         g1.add_content = ';global-1'
         @self.app.route('/a')
         @self.app.route('/b', skip=g1)

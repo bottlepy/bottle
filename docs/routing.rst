@@ -86,26 +86,6 @@ Old Syntax          New Syntax
 Try to avoid the old syntax in future projects if you can. It is not currently deprecated, but will be eventually.
 
 
-Routing Order
---------------------------------------------------------------------------------
-
-With the power of wildcards and regular expressions it is possible to define overlapping routes. If multiple routes match the same URL, things get a bit tricky. To fully understand what happens in this case, you need to know in which order routes are checked by the router.
-
-First you should know that routes are grouped by their path rule. Two routes with the same path rule but different methods are grouped together and the first route determines the position of both routes. Fully identical routes (same path rule and method) replace previously defined routes, but keep the position of their predecessor.
-
-Static routes are checked first. This is mostly for performance reasons and can be switched off, but is currently the default. If no static route matches the request, the dynamic routes are checked in the order they were defined. The first hit ends the search. If no rule matched, a "404 Page not found" error is returned.
-
-In a second step, the request method is checked. If no exact match is found, and the request method is HEAD, the router checks for a GET route. Otherwise, it checks for an ANY route. If that fails too, a "405 Method not allowed" error is returned.
-
-Here is an example where this might bite you::
-
-    @route('/<action>/<name>', method='GET')
-    @route('/save/<name>', method='POST')
-
-The second route will never hit. Even POST requests don't arrive at the second route because the request method is checked in a separate step. The router stops at the first route which matches the request path, then checks for a valid request method, can't find one and raises a 405 error.
-
-Sounds complicated, and it is. That is the price for performance. It is best to avoid ambiguous routes at all and choose unique prefixes for each route. This implementation detail may change in the future, though. We are working on it.
-
 
 Explicit routing configuration
 --------------------------------------------------------------------------------
@@ -115,14 +95,14 @@ Route decorator can also be directly called as method. This way provides flexibi
 Here is a basic example of explicit routing configuration for default bottle application::
 
     def setup_routing():
-        bottle.route('/', method='GET', index)
-        bottle.route('/edit', method=['GET', 'POST'], edit)
+        bottle.route('/', 'GET', index)
+        bottle.route('/edit', ['GET', 'POST'], edit)
 
 In fact, any :class:`Bottle` instance routing can be configured same way::
 
     def setup_routing(app):
-        app.route('/new', method=['GET', 'POST'], form_new)
-        app.route('/edit', method=['GET', 'POST'], form_edit)
+        app.route('/new', ['GET', 'POST'], form_new)
+        app.route('/edit', ['GET', 'POST'], form_edit)
 
     app = Bottle()
     setup_routing(app)

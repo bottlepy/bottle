@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import unittest
-import bottle
 import time
 from tools import tob
 import sys
@@ -57,6 +56,7 @@ class TestServer(unittest.TestCase):
                 return
             if rv is 3: # Port in use
                 continue
+            raise AssertionError("Server exited with error code %d" % rv)
         raise AssertionError("Could not find a free port to test server.")
 
     def tearDown(self):
@@ -119,7 +119,7 @@ class TestRocketServer(TestServer):
 class TestFapwsServer(TestServer):
     server = 'fapws3'
 
-class TestFapwsServer(TestServer):
+class MeinheldServer(TestServer):
     server = 'meinheld'
 
 class TestBjoernServer(TestServer):

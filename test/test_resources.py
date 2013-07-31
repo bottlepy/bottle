@@ -1,5 +1,3 @@
-import bottle
-from tools import ServerTestBase
 from bottle import ResourceManager
 import os.path
 import unittest
@@ -74,7 +72,7 @@ class TestResourceManager(unittest.TestCase):
     def test_open(self):
         rm = ResourceManager()
         rm.add_path(__file__)
-        fp = rm.open(os.path.basename(__file__))
+        fp = rm.open(__file__)
         self.assertEqual(fp.read(), open(__file__).read())
 
 

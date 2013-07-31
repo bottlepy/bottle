@@ -23,11 +23,11 @@ Install bottle with ``pip install bottle`` or just `download bottle.py <http://p
 Example
 -------
 
-::
+.. code-block:: python
 
     from bottle import route, run
 
-    @route('/hello/:name')
+    @route('/hello/<name>')
     def hello(name):
         return '<h1>Hello %s!</h1>' % name.title()
 

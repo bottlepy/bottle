@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
 import bottle
-import threading
 import sys
-import time
 import unittest
 import wsgiref
-import wsgiref.simple_server
 import wsgiref.util
 import wsgiref.validate
 
@@ -20,6 +17,25 @@ def warn(msg):
 def tobs(data):
     ''' Transforms bytes or unicode into a byte stream. '''
     return BytesIO(tob(data))
+
+def api(introduced, deprecated=None, removed=None):
+    current    = tuple(map(int, bottle.__version__.split('-')[0].split('.')))
+    introduced = tuple(map(int, introduced.split('.')))
+    deprecated = tuple(map(int, deprecated.split('.'))) if deprecated else (99,99)
+    removed    = tuple(map(int, removed.split('.')))    if removed    else (99,100)
+    assert introduced < deprecated < removed
+
+    def decorator(func):
+        if   current < introduced:
+            return None
+        elif current < deprecated:
+            return func
+        elif current < removed:
+            func.__doc__ = '(deprecated) ' + (func.__doc__ or '')
+            return func
+        else:
+            return None
+    return decorator
 
 class ServerTestBase(unittest.TestCase):
     def setUp(self):

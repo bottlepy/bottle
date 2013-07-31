@@ -90,12 +90,12 @@ msgstr "下载和安装"
 # da4edbc4bf894ed09f69ff20784f656c
 #: ../../index.rst:50
 msgid ""
-"Install the latest stable release via PyPi_ (``easy_install -U bottle``) or "
+"Install the latest stable release via PyPI_ (``easy_install -U bottle``) or "
 "download `bottle.py`__ (unstable) into your project directory. There are no "
 "hard [1]_ dependencies other than the Python standard library. Bottle runs "
 "with **Python 2.5+ and 3.x**."
 msgstr ""
-"通过 PyPi_ (``easy_install -U bottle``)安装最新的稳定版，或下载 `bottle."
+"通过 PyPI_ (``easy_install -U bottle``)安装最新的稳定版，或下载 `bottle."
 "py`__ (开发版)到你的项目文件夹。 Bottle除了Python标准库无任何依赖 [1]_ ，同时"
 "支持 **Python 2.5+ and 3.x** 。"
 

@@ -7,14 +7,15 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Bottle 0.12-dev\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-11-09 18:23\n"
-"PO-Revision-Date: 2012-11-09 17:54+0800\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"POT-Creation-Date: 2013-04-20 16:35\n"
+"PO-Revision-Date: 2013-04-20 16:43+0800\n"
+"Last-Translator: \n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.5.5\n"
 
 # 5fc6bab7b7204b6ca1f300b3b00efa24
 #: ../../stpl.rst:3
@@ -347,4 +348,4 @@ msgstr ""
 # 404c1aa1c5d4489688aaeeeb8abfdff1
 #: ../../stpl.rst:231
 msgid "Multi-line strings are not supported yet."
-msgstr "不支持多行字符串(译者注:\"\"\"  \"\"\"这样的字符串)"
+msgstr "不支持多行字符串"

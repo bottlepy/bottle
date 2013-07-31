@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import unittest
 from bottle import SimpleTemplate, TemplateError, view, template, touni, tob
+import re
+import traceback
 
 class TestSimpleTemplate(unittest.TestCase):
     def assertRenders(self, tpl, to, *args, **vars):
@@ -11,7 +13,7 @@ class TestSimpleTemplate(unittest.TestCase):
     def test_string(self):
         """ Templates: Parse string"""
         self.assertRenders('start {{var}} end', 'start var end', var='var')
-    
+
     def test_self_as_variable_name(self):
         self.assertRenders('start {{self}} end', 'start var end', {'self':'var'})
 
@@ -93,10 +95,10 @@ class TestSimpleTemplate(unittest.TestCase):
 
     def test_dedentbug(self):
         ''' One-Line dednet blocks should not change indention '''
-        t = '%if x: a="if"\n%else: a="else"\n{{a}}'
+        t = '%if x: a="if"\n%else: a="else"\n%end\n{{a}}'
         self.assertRenders(t, "if", x=True)
         self.assertRenders(t, "else", x=False)
-        t = '%if x:\n%a="if"\n%else: a="else"\n{{a}}'
+        t = '%if x:\n%a="if"\n%else: a="else"\n%end\n{{a}}'
         self.assertRenders(t, "if", x=True)
         self.assertRenders(t, "else", x=False)
         t = SimpleTemplate('%if x: a="if"\n%else: a="else"\n%end')
@@ -106,7 +108,7 @@ class TestSimpleTemplate(unittest.TestCase):
         ''' One-Line blocks should not change indention '''
         t = '%if x:\n%a=1\n%end\n{{a}}'
         self.assertRenders(t, "1", x=True)
-        t = '%if x: a=1\n{{a}}'
+        t = '%if x: a=1; end\n{{a}}'
         self.assertRenders(t, "1", x=True)
         t = '%if x:\n%a=1\n%else:\n%a=2\n%end\n{{a}}'
         self.assertRenders(t, "1", x=True)
@@ -114,16 +116,16 @@ class TestSimpleTemplate(unittest.TestCase):
         t = '%if x:   a=1\n%else:\n%a=2\n%end\n{{a}}'
         self.assertRenders(t, "1", x=True)
         self.assertRenders(t, "2", x=False)
-        t = '%if x:\n%a=1\n%else:   a=2\n{{a}}'
+        t = '%if x:\n%a=1\n%else:   a=2; end\n{{a}}'
         self.assertRenders(t, "1", x=True)
         self.assertRenders(t, "2", x=False)
-        t = '%if x:   a=1\n%else:   a=2\n{{a}}'
+        t = '%if x:   a=1\n%else:   a=2; end\n{{a}}'
         self.assertRenders(t, "1", x=True)
         self.assertRenders(t, "2", x=False)
 
     def test_onelineblocks(self):
         """ Templates: one line code blocks """
-        t = "start\n%a=''\n%for i in l: a += str(i)\n{{a}}\nend"
+        t = "start\n%a=''\n%for i in l: a += str(i); end\n{{a}}\nend"
         self.assertRenders(t, 'start\n123\nend', l=[1,2,3])
         self.assertRenders(t, 'start\n\nend', l=[])
 
@@ -134,7 +136,7 @@ class TestSimpleTemplate(unittest.TestCase):
     def test_nobreak(self):
         """ Templates: Nobreak statements"""
         self.assertRenders("start\\\\\n%pass\nend", 'startend')
-        
+
     def test_nonobreak(self):
         """ Templates: Escaped nobreak statements"""
         self.assertRenders("start\\\\\n\\\\\n%pass\nend", 'start\\\\\nend')
@@ -171,20 +173,27 @@ class TestSimpleTemplate(unittest.TestCase):
         """ Templates: Exceptions"""
         self.assertRaises(SyntaxError, lambda: SimpleTemplate('%for badsyntax').co)
         self.assertRaises(IndexError, SimpleTemplate('{{i[5]}}').render, i=[0])
-    
+
     def test_winbreaks(self):
         """ Templates: Test windows line breaks """
         self.assertRenders('%var+=1\r\n{{var}}\r\n', '6\r\n', var=5)
 
+    def test_winbreaks_end_bug(self):
+        d = { 'test': [ 1, 2, 3 ] }
+        self.assertRenders('%for i in test:\n{{i}}\n%end\n', '1\n2\n3\n', **d)
+        self.assertRenders('%for i in test:\n{{i}}\r\n%end\n', '1\r\n2\r\n3\r\n', **d)
+        self.assertRenders('%for i in test:\r\n{{i}}\n%end\r\n', '1\n2\n3\n', **d)
+        self.assertRenders('%for i in test:\r\n{{i}}\r\n%end\r\n', '1\r\n2\r\n3\r\n', **d)
+
     def test_commentonly(self):
         """ Templates: Commentd should behave like code-lines (e.g. flush text-lines) """
         t = SimpleTemplate('...\n%#test\n...')
-        self.failIfEqual('#test', t.code.splitlines()[0])
+        self.assertNotEqual('#test', t.code.splitlines()[0])
 
     def test_detect_pep263(self):
         ''' PEP263 strings in code-lines change the template encoding on the fly '''
         t = SimpleTemplate(touni('%#coding: iso8859_15\nöäü?@€').encode('utf8'))
-        self.failIfEqual(touni('öäü?@€'), t.render())
+        self.assertNotEqual(touni('öäü?@€'), t.render())
         self.assertEqual(t.encoding, 'iso8859_15')
         t = SimpleTemplate(touni('%#coding: iso8859_15\nöäü?@€').encode('iso8859_15'))
         self.assertEqual(touni('öäü?@€'), t.render())
@@ -193,14 +202,12 @@ class TestSimpleTemplate(unittest.TestCase):
 
     def test_ignore_pep263_in_textline(self):
         ''' PEP263 strings in text-lines have no effect '''
-        self.assertRaises(UnicodeError, lambda: SimpleTemplate(touni('#coding: iso8859_15\nöäü?@€').encode('iso8859_15')).co)
         t = SimpleTemplate(touni('#coding: iso8859_15\nöäü?@€').encode('utf8'))
         self.assertEqual(touni('#coding: iso8859_15\nöäü?@€'), t.render())
         self.assertEqual(t.encoding, 'utf8')
 
     def test_ignore_late_pep263(self):
         ''' PEP263 strings must appear within the first two lines '''
-        self.assertRaises(UnicodeError, lambda: SimpleTemplate(touni('\n\n%#coding: iso8859_15\nöäü?@€').encode('iso8859_15')).co)
         t = SimpleTemplate(touni('\n\n%#coding: iso8859_15\nöäü?@€').encode('utf8'))
         self.assertEqual(touni('\n\nöäü?@€'), t.render())
         self.assertEqual(t.encoding, 'utf8')
@@ -234,6 +241,128 @@ class TestSimpleTemplate(unittest.TestCase):
         SimpleTemplate.global_config('meh', 1)
         t = SimpleTemplate('anything')
         self.assertEqual(touni('anything'), t.render())
+
+    def test_bug_no_whitespace_before_stmt(self):
+        self.assertRenders('\n{{var}}', '\nx', var='x')
+
+
+class TestSTPLDir(unittest.TestCase):
+    def fix_ident(self, string):
+        lines = string.splitlines(True)
+        if not lines: return string
+        if not lines[0].strip(): lines.pop(0)
+        whitespace = re.match('([ \t]*)', lines[0]).group(0)
+        if not whitespace: return string
+        for i in range(len(lines)):
+            lines[i] = lines[i][len(whitespace):]
+        return lines[0][:0].join(lines)
+
+    def assertRenders(self, source, result, syntax=None, *args, **vars):
+        source = self.fix_ident(source)
+        result = self.fix_ident(result)
+        tpl = SimpleTemplate(source, syntax=syntax)
+        try:
+            tpl.co
+            self.assertEqual(touni(result), tpl.render(*args, **vars))
+        except SyntaxError:
+            self.fail('Syntax error in template:\n%s\n\nTemplate code:\n##########\n%s\n##########' %
+                     (traceback.format_exc(), tpl.code))
+
+    def test_old_include(self):
+        t1 = SimpleTemplate('%include foo')
+        t1.cache['foo'] = SimpleTemplate('foo')
+        self.assertEqual(t1.render(), 'foo')
+
+    def test_old_include_with_args(self):
+        t1 = SimpleTemplate('%include foo x=y')
+        t1.cache['foo'] = SimpleTemplate('foo{{x}}')
+        self.assertEqual(t1.render(y='bar'), 'foobar')
+
+    def test_defect_coding(self):
+        t1 = SimpleTemplate('%#coding comment\nfoo{{y}}')
+        self.assertEqual(t1.render(y='bar'), 'foobar')
+
+    def test_multiline_block(self):
+        source = '''
+            <% a = 5
+            b = 6
+            c = 7 %>
+            {{a+b+c}}
+        '''; result = '''
+            18
+        '''
+        self.assertRenders(source, result)
+
+    def test_multiline_ignore_eob_in_string(self):
+        source = '''
+            <% x=5 # a comment
+               y = '%>' # a string
+               # this is still code
+               # lets end this %>
+            {{x}}{{!y}}
+        '''; result = '''
+            5%>
+        '''
+        self.assertRenders(source, result)
+
+    def test_multiline_find_eob_in_comments(self):
+        source = '''
+            <% # a comment
+               # %> ignore because not end of line
+               # this is still code
+               x=5
+               # lets end this here %>
+            {{x}}
+        '''; result = '''
+            5
+        '''
+        self.assertRenders(source, result)
+
+    def test_multiline_indention(self):
+        source = '''
+            <%   if True:
+                   a = 2
+                     else:
+                       a = 0
+                         end
+            %>
+            {{a}}
+        '''; result = '''
+            2
+        '''
+        self.assertRenders(source, result)
+
+    def test_multiline_eob_after_end(self):
+        source = '''
+            <%   if True:
+                   a = 2
+                 end %>
+            {{a}}
+        '''; result = '''
+            2
+        '''
+        self.assertRenders(source, result)
+
+    def test_multiline_eob_in_single_line_code(self):
+        # eob must be a valid python expression to allow this test.
+        source = '''
+            cline eob=5; eob
+            xxx
+        '''; result = '''
+            xxx
+        '''
+        self.assertRenders(source, result, syntax='sob eob cline foo bar')
+
+    def test_multiline_strings_in_code_line(self):
+        source = '''
+            % a = """line 1
+                  line 2"""
+            {{a}}
+        '''; result = '''
+            line 1
+                  line 2
+        '''
+        self.assertRenders(source, result)
 
 if __name__ == '__main__': #pragma: no cover
     unittest.main()

@@ -2,24 +2,35 @@
 ''' Tests for the BaseRequest and BaseResponse objects and their subclasses. '''
 
 import unittest
-import sys, os.path
+import sys
 import bottle
-from bottle import request, response, tob, touni, tonat, json_dumps, _e
+from bottle import request, tob, touni, tonat, json_dumps, _e, HTTPError, parse_date
 import tools
 import wsgiref.util
-import threading
 import base64
 
 from bottle import BaseRequest, BaseResponse, LocalRequest
 
 class TestRequest(unittest.TestCase):
 
-    def test_app(self):
+    def test_app_property(self):
         e = {}
         r = BaseRequest(e)
         self.assertRaises(RuntimeError, lambda: r.app)
         e.update({'bottle.app': 5})
         self.assertEqual(r.app, 5)
+
+    def test_route_property(self):
+        e = {'bottle.route': 5}
+        r = BaseRequest(e)
+        self.assertEqual(r.route, 5)
+
+    def test_url_for_property(self):
+        e = {}
+        r = BaseRequest(e)
+        self.assertRaises(RuntimeError, lambda: r.url_args)
+        e.update({'route.url_args': {'a': 5}})
+        self.assertEqual(r.url_args, {'a': 5})
 
     def test_path(self):
         """ PATH_INFO normalization. """
@@ -328,7 +339,7 @@ class TestRequest(unittest.TestCase):
         e['wsgi.input'].write(tob(json_dumps(test)))
         e['wsgi.input'].seek(0)
         e['CONTENT_LENGTH'] = str(len(json_dumps(test)))
-        self.assertEqual(BaseRequest(e).json, None)
+        self.assertRaises(HTTPError, lambda: BaseRequest(e).json)
 
     def test_json_valid(self):
         """ Environ: Request.json property. """
@@ -389,16 +400,16 @@ class TestRequest(unittest.TestCase):
         e['wsgi.input'].seek(0)
         e['CONTENT_LENGTH'] = '11'
         e['REQUEST_METHOD'] = "POST"
-        e['HTTP_COOKIE'] = 'a=1,b=1,c=1;d=1'
+        e['HTTP_COOKIE'] = 'a=1;b=1;c=1;d=1'
         e['QUERY_STRING'] = 'a&b&c&d'
         old_value = BaseRequest.MAX_PARAMS
         r = BaseRequest(e)
         try:
             BaseRequest.MAX_PARAMS = 2
-            self.assertEqual(len(list(r.query.allitems())), 2)
-            self.assertEqual(len(list(r.cookies.allitems())), 2)
-            self.assertEqual(len(list(r.forms.allitems())), 2)
-            self.assertEqual(len(list(r.params.allitems())), 4)
+            self.assertRaises(HTTPError, lambda: r.query)
+            self.assertRaises(HTTPError, lambda: r.cookies)
+            self.assertRaises(HTTPError, lambda: r.forms)
+            self.assertRaises(HTTPError, lambda: r.params)
         finally:
             BaseRequest.MAX_PARAMS = old_value
 
@@ -437,7 +448,7 @@ class TestResponse(unittest.TestCase):
 
         self.assertEqual('200 YAY',
             BaseResponse('YAY', '200 YAY').status_line)
-        
+
     def test_constructor_headerlist(self):
         from functools import partial
         make_res = partial(BaseResponse, '', 200)
@@ -614,7 +625,20 @@ class TestResponse(unittest.TestCase):
         response['x-test'] = None
         self.assertEqual('None', response['x-test'])
 
-
+    def test_expires_header(self):
+        import datetime
+        response = BaseResponse()
+        now = datetime.datetime.now()
+        response.expires = now
+        
+        def seconds(a, b):
+            td = max(a,b) - min(a,b)
+            return td.days*360*24 + td.seconds
+        
+        self.assertEqual(0, seconds(response.expires, now))
+        now2 = datetime.datetime.utcfromtimestamp(
+            parse_date(response.headers['Expires']))
+        self.assertEqual(0, seconds(now, now2))
 
 class TestRedirect(unittest.TestCase):
 
@@ -626,6 +650,7 @@ class TestRedirect(unittest.TestCase):
                 del args[key]
         env.update(args)
         request.bind(env)
+        bottle.response.bind()
         try:
             bottle.redirect(target, **(query or {}))
         except bottle.HTTPResponse:
@@ -711,6 +736,17 @@ class TestRedirect(unittest.TestCase):
         self.assertRedirect('./te st.html',
                             'http://example.com/a%20a/b%20b/te st.html',
                             HTTP_HOST='example.com', SCRIPT_NAME='/a a/', PATH_INFO='/b b/')
+
+    def test_redirect_preserve_cookies(self):
+        env = {'SERVER_PROTOCOL':'HTTP/1.1'}
+        request.bind(env)
+        bottle.response.bind()
+        try:
+            bottle.response.set_cookie('xxx', 'yyy')
+            bottle.redirect('...')
+        except bottle.HTTPResponse:
+            h = [v for (k, v) in _e().headerlist if k == 'Set-Cookie']
+            self.assertEqual(h, ['xxx=yyy'])
 
 class TestWSGIHeaderDict(unittest.TestCase):
     def setUp(self):

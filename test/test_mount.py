@@ -1,6 +1,6 @@
 import bottle
 from tools import ServerTestBase
-from bottle import Bottle
+from bottle import response
 
 class TestAppMounting(ServerTestBase):
     def setUp(self):
@@ -23,10 +23,10 @@ class TestAppMounting(ServerTestBase):
     def test_mount_meta(self):
         self.app.mount('/test/', self.subapp)
         self.assertEqual(
-            self.app.routes[0].config.mountpoint['prefix'],
+            self.app.routes[0].config['mountpoint.prefix'],
             '/test/')
         self.assertEqual(
-            self.app.routes[0].config.mountpoint['target'],
+            self.app.routes[0].config['mountpoint.target'],
             self.subapp)
 
     def test_no_slash_prefix(self):
@@ -61,7 +61,30 @@ class TestAppMounting(ServerTestBase):
         self.assertBody('WSGI /', '/test/')
         self.assertHeader('X-Test', 'WSGI', '/test/')
         self.assertBody('WSGI /test/bar', '/test/test/bar')
+            
+    def test_mount_wsgi(self):
+        @self.subapp.route('/cookie')
+        def test_cookie():
+            response.set_cookie('a', 'a')
+            response.set_cookie('b', 'b')
+        self.app.mount('/test', self.subapp)
+        c = self.urlopen('/test/cookie')['header']['Set-Cookie']
+        self.assertEqual(['a=a', 'b=b'], list(sorted(c.split(', '))))
 
+    def test_mount_wsgi_ctype_bug(self):
+        status = {}
+        def app(environ, start_response):
+            start_response('200 OK', [('Content-Type', 'test/test')])
+            return 'WSGI ' + environ['PATH_INFO']
+        self.app.mount('/test', app)
+        self.assertHeader('Content-Type', 'test/test', '/test/')
+
+    def test_mount_json_bug(self):
+        @self.subapp.route('/json')
+        def test_cookie():
+            return {'a':5}
+        self.app.mount('/test', self.subapp)
+        self.assertHeader('Content-Type', 'application/json', '/test/json')
 
 class TestAppMerging(ServerTestBase):
     def setUp(self):

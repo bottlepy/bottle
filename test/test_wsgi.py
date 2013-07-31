@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import unittest
-import sys, os.path
 import bottle
 from tools import ServerTestBase
 from bottle import tob
@@ -38,6 +37,17 @@ class TestWsgi(ServerTestBase):
         # HEAD -> GET
         self.assertStatus(200, '/get', method='HEAD')
         self.assertBody('', '/get', method='HEAD')
+
+    def test_request_attrs(self):
+        """ WSGI: POST routes"""
+        @bottle.route('/')
+        def test():
+            self.assertEqual(bottle.request.app,
+                             bottle.default_app())
+            self.assertEqual(bottle.request.route,
+                             bottle.default_app().routes[0])
+            return 'foo'
+        self.assertBody('foo', '/')
 
     def get304(self):
         """ 304 responses must not return entity headers """
@@ -239,7 +249,7 @@ class TestRouteDecorator(ServerTestBase):
         self.assertBody('test 5 6', '/test')
 
     def test_template_opts(self):
-        @bottle.route(template='test {{a}} {{b}}', template_opts={'b': 6})
+        @bottle.route(template=('test {{a}} {{b}}', {'b': 6}))
         def test(): return dict(a=5)
         self.assertBody('test 5 6', '/test')
 
@@ -315,10 +325,10 @@ class TestDecorators(ServerTestBase):
         def d(x, y=5): pass
         def e(x=5, y=6): pass
         self.assertEqual(['/a'],list(bottle.yieldroutes(a)))
-        self.assertEqual(['/b/:x'],list(bottle.yieldroutes(b)))
-        self.assertEqual(['/c/:x/:y'],list(bottle.yieldroutes(c)))
-        self.assertEqual(['/d/:x','/d/:x/:y'],list(bottle.yieldroutes(d)))
-        self.assertEqual(['/e','/e/:x','/e/:x/:y'],list(bottle.yieldroutes(e)))
+        self.assertEqual(['/b/<x>'],list(bottle.yieldroutes(b)))
+        self.assertEqual(['/c/<x>/<y>'],list(bottle.yieldroutes(c)))
+        self.assertEqual(['/d/<x>','/d/<x>/<y>'],list(bottle.yieldroutes(d)))
+        self.assertEqual(['/e','/e/<x>','/e/<x>/<y>'],list(bottle.yieldroutes(e)))
 
 
 

@@ -1,16 +1,17 @@
 if __name__ != '__main__':
     raise ImportError('This is not a module, but a script.')
 
+try:
+    import coverage
+    coverage.process_startup()
+except ImportError:
+    pass
+
 import sys, os, socket
 test_root = os.path.dirname(os.path.abspath(__file__))
 os.chdir(test_root)
 sys.path.insert(0, os.path.dirname(test_root))
 sys.path.insert(0, test_root)
-
-if 'coverage' in sys.argv:
-    import coverage
-    cov = coverage.coverage(data_suffix=True, branch=True)
-    cov.start()
 
 try:
     server = sys.argv[1]
@@ -25,13 +26,9 @@ try:
     run(port=port, server=server, quiet=True)
 
 except socket.error:
-    sys.exit(1)
+    sys.exit(3)
 except ImportError:
     sys.exit(128)
 except KeyboardInterrupt:
     pass
-finally:
-    if 'coverage' in sys.argv:
-        cov.stop()
-        cov.save()
 
