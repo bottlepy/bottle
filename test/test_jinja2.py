@@ -2,7 +2,7 @@
 import unittest
 from bottle import Jinja2Template, jinja2_template, jinja2_view, touni
 from tools import warn
-
+import os.path
 
 class TestJinja2Template(unittest.TestCase):
 
@@ -19,6 +19,10 @@ class TestJinja2Template(unittest.TestCase):
     def test_name(self):
         """ Templates: Jinja2 lookup by name """
         t = Jinja2Template(name='jinja2_simple', lookup=['./views/']).render(var='var')
+        self.assertEqual('start var end', ''.join(t))
+
+    def test_lookup_func(self):
+        t = Jinja2Template(name='jinja2_simple', lookup=lambda x:os.path.abspath(os.path.join('./views',x)+'.tpl')).render(var='var')
         self.assertEqual('start var end', ''.join(t))
 
     def test_notfound(self):

@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 import unittest
-from bottle import SimpleTemplate, TemplateError, view, template, touni, tob, html_quote
+from bottle import SimpleTemplate, TemplateError, view, template, touni, tob, TEMPLATES
 import re
 import traceback
+import os.path
 
 class TestSimpleTemplate(unittest.TestCase):
     def assertRenders(self, tpl, to, *args, **vars):
@@ -23,6 +24,10 @@ class TestSimpleTemplate(unittest.TestCase):
 
     def test_name(self):
         t = SimpleTemplate(name='stpl_simple', lookup=['./views/'])
+        self.assertRenders(t, 'start var end\n', var='var')
+
+    def test_lookup_func(self):
+        t = SimpleTemplate(name='stpl_simple', lookup=lambda x:os.path.abspath(os.path.join('./views',x)+'.tpl'))
         self.assertRenders(t, 'start var end\n', var='var')
 
     def test_unicode(self):
@@ -250,6 +255,20 @@ class TestSTPLDir(unittest.TestCase):
         except SyntaxError:
             self.fail('Syntax error in template:\n%s\n\nTemplate code:\n##########\n%s\n##########' %
                      (traceback.format_exc(), tpl.code))
+
+    def test_old_include(self):
+        t1 = SimpleTemplate('%include foo')
+        TEMPLATES[(id(t1.lookup),'foo')] = SimpleTemplate('foo')
+        self.assertEqual(t1.render(), 'foo')
+
+    def test_old_include_with_args(self):
+        t1 = SimpleTemplate('%include foo x=y')
+        TEMPLATES[(id(t1.lookup),'foo')] = SimpleTemplate('foo{{x}}')
+        self.assertEqual(t1.render(y='bar'), 'foobar')
+
+    def test_defect_coding(self):
+        t1 = SimpleTemplate('%#coding comment\nfoo{{y}}')
+        self.assertEqual(t1.render(y='bar'), 'foobar')
 
     def test_multiline_block(self):
         source = '''
