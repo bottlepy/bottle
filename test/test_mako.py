@@ -20,7 +20,8 @@ class TestMakoTemplate(unittest.TestCase):
         self.assertEqual('start var end\n', t)
 
     def test_lookup_func(self):
-        t = MakoTemplate(name='mako_simple', lookup=lambda x:os.path.abspath(os.path.join('./views',x)+'.tpl')).render(var='var')
+        t = MakoTemplate(name='mako_simple', 
+                lookup=lambda x,_in=True:os.path.abspath(os.path.join('./views',x)+'.tpl')).render(var='var')
         self.assertEqual('start var end\n', t)
 
     def test_notfound(self):

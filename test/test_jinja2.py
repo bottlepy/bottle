@@ -22,7 +22,8 @@ class TestJinja2Template(unittest.TestCase):
         self.assertEqual('start var end', ''.join(t))
 
     def test_lookup_func(self):
-        t = Jinja2Template(name='jinja2_simple', lookup=lambda x:os.path.abspath(os.path.join('./views',x)+'.tpl')).render(var='var')
+        t = Jinja2Template(name='jinja2_simple', 
+                lookup=lambda x,_in=True:os.path.abspath(os.path.join('./views',x)+'.tpl')).render(var='var')
         self.assertEqual('start var end', ''.join(t))
 
     def test_notfound(self):

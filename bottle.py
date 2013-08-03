@@ -3125,9 +3125,8 @@ class BaseTemplate(object):
         If the source parameter (str or buffer) is missing, the name argument
         is used to guess a template filename. Subclasses can assume that
         self.source and/or self.filename are set. Both are strings.
-        The lookup, encoding and settings parameters are stored as instance
-        variables.
-        The lookup parameter stores a list containing directory paths.
+        The lookup, encoding and settings parameters are stored as instance variables.
+        The lookup parameter is a list containing directory paths or a function returning a full path.
         The encoding parameter should be used to decode byte strings or files.
         The settings parameter contains a dict for engine-specific settings.
         """
@@ -3135,13 +3134,16 @@ class BaseTemplate(object):
         self.source = source.read() if hasattr(source, 'read') else source
         self.filename = source.filename if hasattr(source, 'filename') else None
         self.lookup = lookup
-        if not callable(lookup):
+        if not callable(self.lookup):
             self.lookup = [os.path.abspath(x) for x in lookup]
         self.encoding = encoding
         self.settings = self.settings.copy() # Copy from class variable
         self.settings.update(settings) # Apply
         if not self.source and self.name:
-            self.filename = self.search(self.name, self.lookup)
+            if callable(self.lookup):
+                self.filename = self.lookup(self.name)
+            else:
+                self.filename = self.search(self.name, self.lookup)
             if not self.filename:
                 raise TemplateError('Template %s not found.' % repr(name))
         if not self.source and not self.filename:
@@ -3160,9 +3162,6 @@ class BaseTemplate(object):
             depr('Absolute template path names are deprecated.', True) #0.12
             return os.path.abspath(name)
 
-        if callable(lookup):
-            return lookup(name)
-        
         for spath in lookup:
             spath = os.path.abspath(spath) + os.sep
             fname = os.path.abspath(os.path.join(spath, name))
@@ -3202,12 +3201,15 @@ class MakoTemplate(BaseTemplate):
     def prepare(self, **options):
         from mako.template import Template
         from mako.lookup import TemplateLookup
+        from mako.exceptions import TopLevelLookupException
         options.update({'input_encoding':self.encoding})
         class _TemplateLookup(TemplateLookup):
             def get_template(_self, uri):
-                return get_tpl(uri,
-                               template_adapter=self.__class__, 
-                               template_lookup=self.lookup).tpl
+                _tpl = get_tpl(uri, template_adapter=self.__class__, 
+                                   template_lookup=self.lookup)
+                if not _tpl:
+                    raise TopLevelLookupException(uri)
+                return _tpl.tpl
 
         if self.source:
             self.tpl = Template(self.source, 
@@ -3265,7 +3267,12 @@ class Jinja2Template(BaseTemplate):
         return self.tpl.render(**_defaults)
 
     def loader(self, name):
-        fname = self.search(name, self.lookup)
+        fname = name
+        if not os.path.isabs(fname):
+            if callable(self.lookup):
+                fname = self.lookup(name)
+            else:
+                fname = self.search(name, self.lookup)
         if not fname: return
         with open(fname, "rb") as f:
             return f.read().decode(self.encoding)
@@ -3308,7 +3315,10 @@ class SimpleTemplate(BaseTemplate):
         env = _env.copy()
         env.update(kwargs)
         tpl = get_tpl(_name,template_adapter=self.__class__,template_lookup=self.lookup)
-        return tpl.execute(env['_stdout'], env)
+        if not tpl: return env #end recursion controlled by lookup if callable
+        newenv = tpl.execute(env['_stdout'], env)
+        if callable(self.lookup): self.lookup(_name,False) #back
+        return newenv
 
     def execute(self, _stdout, kwargs):
         env = self.defaults.copy()
@@ -3553,15 +3563,20 @@ def get_tpl(*args, **kwargs):
             try:
                 TEMPLATES[tplid] = adapter(name=tpl, lookup=lookup, **settings)
             except TemplateError:
-                if DEBUG: pass
+                if DEBUG:
+                    if callable(lookup) and not lookup(tpl): return ''
+                    else: pass
                 else: raise
-    if not TEMPLATES[tplid]:
-        abort(500, 'Template (%s) not found' % tpl)
+    elif callable(lookup) and not lookup(tpl):
+        return '' #used to end recursion in include loop for SimpleTemplate
     return TEMPLATES[tplid]
 
 def template(*args, **kwargs):
     for dictarg in args[1:]: kwargs.update(dictarg)
-    return get_tpl(*args, **kwargs).render(**kwargs)
+    tpl = get_tpl(*args, **kwargs)
+    if not tpl:
+        abort(500, 'Template (%s) not found' % args[0])
+    return tpl.render(**kwargs)
 
 mako_template = functools.partial(template, template_adapter=MakoTemplate)
 cheetah_template = functools.partial(template, template_adapter=CheetahTemplate)
