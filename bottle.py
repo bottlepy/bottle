@@ -3280,6 +3280,8 @@ class Jinja2Template(BaseTemplate):
 
 class SimpleTemplate(BaseTemplate):
 
+    overrides = {}#callable lookup can update env after defaults and parent env
+
     def prepare(self, escape_func=html_escape, noescape=False, syntax=None, **ka):
         enc = self.encoding
         self._str = lambda x: touni(x, enc)
@@ -3323,6 +3325,7 @@ class SimpleTemplate(BaseTemplate):
     def execute(self, _stdout, kwargs):
         env = self.defaults.copy()
         env.update(kwargs)
+        env.update(self.overrides)
         env.update({'_stdout': _stdout, '_printlist': _stdout.extend,
             'include': functools.partial(self._include, env),
             'rebase': functools.partial(self._rebase, env), '_rebase': None,
