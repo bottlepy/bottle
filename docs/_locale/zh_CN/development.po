@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Bottle 0.12-dev\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-02-16 21:45\n"
+"POT-Creation-Date: 2013-08-09 17:22\n"
 "PO-Revision-Date: 2012-11-09 15:47+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -135,6 +135,7 @@ msgstr "发布和更新"
 
 # 60a5c2362c9446f1bd2139b978dc1089
 #: ../../development.rst:31
+#, fuzzy
 msgid ""
 "Bottle is released at irregular intervals and distributed through `PyPI "
 "<http://pypi.python.org/pypi/bottle>`_. Release candidates and bugfix-"

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Bottle 0.12-dev\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-11-09 18:23\n"
+"POT-Creation-Date: 2013-08-09 17:22\n"
 "PO-Revision-Date: 2012-11-09 16:09+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -259,98 +259,13 @@ msgid ""
 "currently deprecated, but will be eventually."
 msgstr "请尽量在新项目中避免使用旧的语法，虽然它现在还没被废弃，但终究会的。"
 
-# b368ae000c2a471c859da22a34176591
-#: ../../routing.rst:90
-msgid "Routing Order"
-msgstr "route的顺序 (URL映射的顺序)"
-
-# 9b457321443a4d62b7751efd260d21a9
-#: ../../routing.rst:92
-msgid ""
-"With the power of wildcards and regular expressions it is possible to define "
-"overlapping routes. If multiple routes match the same URL, things get a bit "
-"tricky. To fully understand what happens in this case, you need to know in "
-"which order routes are checked by the router."
-msgstr ""
-"在通配符和正则表达式的支持下，我们是可以定义重叠的route的。如果多个route匹配"
-"同一个URL，它们的行为也许会变得难以琢磨。为了了解这里面究竟发生了什么事情，你"
-"需要了解route被执行的顺序。(译者注：router会检查route的顺序)"
-
-# 992fd1ac2f7047c5944584ce8b539ddd
-#: ../../routing.rst:94
-msgid ""
-"First you should know that routes are grouped by their path rule. Two routes "
-"with the same path rule but different methods are grouped together and the "
-"first route determines the position of both routes. Fully identical routes "
-"(same path rule and method) replace previously defined routes, but keep the "
-"position of their predecessor."
-msgstr ""
-"首先，route是按照它们的路径规则来分组的。两个规则相同但回调函数不同的route分"
-"到同一组，第一个route决定这两个route的位置。如果两个route完全相同(同样的规"
-"则，同样的回调函数)，则先定义的route会被后来的route替换掉，但它们的先后顺序会"
-"被保留下来。"
-
-# 105f6ae2a6a8429db8f4acc8d2d0609a
-#: ../../routing.rst:96
-msgid ""
-"Static routes are checked first. This is mostly for performance reasons and "
-"can be switched off, but is currently the default. If no static route "
-"matches the request, the dynamic routes are checked in the order they were "
-"defined. The first hit ends the search. If no rule matched, a \"404 Page not "
-"found\" error is returned."
-msgstr ""
-"基于性能考虑，默认先查找静态route，这个默认设置可以被改掉。如果没有静态route"
-"匹配浏览器请求，则会按route被定义的顺序，去查找动态route，只要找到一个匹配的"
-"动态route，便不会继续查找。如果也找不到匹配请求的动态route，则返回一个404错"
-"误。"
-
-# 5be98f36dfec4d3d84562510d59569bf
-#: ../../routing.rst:98
-msgid ""
-"In a second step, the request method is checked. If no exact match is found, "
-"and the request method is HEAD, the router checks for a GET route. "
-"Otherwise, it checks for an ANY route. If that fails too, a \"405 Method not "
-"allowed\" error is returned."
-msgstr ""
-"第二步，会检查浏览器请求的HTTP方法。如果不能精确匹配，且浏览器发的是HEAD请"
-"求，那个router会按照GET方法去查找相应的route，否则便按照ANY方法去查找route。"
-"如果都失败了，则返回一个405错误。"
-
-# 9e5a42e18b2949a2b91e3f7b929318dd
-#: ../../routing.rst:100
-msgid "Here is an example where this might bite you::"
-msgstr "下面这个例子也许会令你迷惑"
-
-# 9da489b5d4d94eeba231d11e48577619
-#: ../../routing.rst:105
-msgid ""
-"The second route will never hit. Even POST requests don't arrive at the "
-"second route because the request method is checked in a separate step. The "
-"router stops at the first route which matches the request path, then checks "
-"for a valid request method, can't find one and raises a 405 error."
-msgstr ""
-"第二个route永远不会被命中，因为第一个route已经能匹配该URL，所以router会在查找"
-"到第一个route后停止查找，接着按照浏览器请求的HTTP方法来查找，如果找不到则返回"
-"405错误。"
-
-# 99ce58b0d94d48eba1fe52fc4e9a2b2d
-#: ../../routing.rst:107
-msgid ""
-"Sounds complicated, and it is. That is the price for performance. It is best "
-"to avoid ambiguous routes at all and choose unique prefixes for each route. "
-"This implementation detail may change in the future, though. We are working "
-"on it."
-msgstr ""
-"看起来挺复杂的，确实很复杂。这是为了性能而付出的代价。最好是避免创建容易造成"
-"歧义的route。将来或许会改变route实现的细节，我们在慢慢改善中。"
-
 # 37c609a0f4764f848e31917094d031be
-#: ../../routing.rst:111
+#: ../../routing.rst:91
 msgid "Explicit routing configuration"
 msgstr "显式的route配置"
 
 # 77437235365e4d40943f7fa62801f7c1
-#: ../../routing.rst:113
+#: ../../routing.rst:93
 msgid ""
 "Route decorator can also be directly called as method. This way provides "
 "flexibility in complex setups, allowing you to directly control, when and "
@@ -360,14 +275,91 @@ msgstr ""
 "由你来控制“何时”及“如何”配置route。"
 
 # 499e79b080ea49afbe682e5b737f8674
-#: ../../routing.rst:115
+#: ../../routing.rst:95
 msgid ""
 "Here is a basic example of explicit routing configuration for default bottle "
 "application::"
 msgstr "下面是一个简单的例子"
 
 # 6b60a336206e4c7dabf70f7cceca7a30
-#: ../../routing.rst:121
+#: ../../routing.rst:101
 msgid ""
 "In fact, any :class:`Bottle` instance routing can be configured same way::"
 msgstr "实际上，bottle可以是任何 :class:`Bottle` 类的实例"
+
+# b368ae000c2a471c859da22a34176591
+#~ msgid "Routing Order"
+#~ msgstr "route的顺序 (URL映射的顺序)"
+
+# 9b457321443a4d62b7751efd260d21a9
+#~ msgid ""
+#~ "With the power of wildcards and regular expressions it is possible to "
+#~ "define overlapping routes. If multiple routes match the same URL, things "
+#~ "get a bit tricky. To fully understand what happens in this case, you need "
+#~ "to know in which order routes are checked by the router."
+#~ msgstr ""
+#~ "在通配符和正则表达式的支持下，我们是可以定义重叠的route的。如果多个route匹"
+#~ "配同一个URL，它们的行为也许会变得难以琢磨。为了了解这里面究竟发生了什么事"
+#~ "情，你需要了解route被执行的顺序。(译者注：router会检查route的顺序)"
+
+# 992fd1ac2f7047c5944584ce8b539ddd
+#~ msgid ""
+#~ "First you should know that routes are grouped by their path rule. Two "
+#~ "routes with the same path rule but different methods are grouped together "
+#~ "and the first route determines the position of both routes. Fully "
+#~ "identical routes (same path rule and method) replace previously defined "
+#~ "routes, but keep the position of their predecessor."
+#~ msgstr ""
+#~ "首先，route是按照它们的路径规则来分组的。两个规则相同但回调函数不同的route"
+#~ "分到同一组，第一个route决定这两个route的位置。如果两个route完全相同(同样的"
+#~ "规则，同样的回调函数)，则先定义的route会被后来的route替换掉，但它们的先后"
+#~ "顺序会被保留下来。"
+
+# 105f6ae2a6a8429db8f4acc8d2d0609a
+#~ msgid ""
+#~ "Static routes are checked first. This is mostly for performance reasons "
+#~ "and can be switched off, but is currently the default. If no static route "
+#~ "matches the request, the dynamic routes are checked in the order they "
+#~ "were defined. The first hit ends the search. If no rule matched, a \"404 "
+#~ "Page not found\" error is returned."
+#~ msgstr ""
+#~ "基于性能考虑，默认先查找静态route，这个默认设置可以被改掉。如果没有静态"
+#~ "route匹配浏览器请求，则会按route被定义的顺序，去查找动态route，只要找到一"
+#~ "个匹配的动态route，便不会继续查找。如果也找不到匹配请求的动态route，则返回"
+#~ "一个404错误。"
+
+# 5be98f36dfec4d3d84562510d59569bf
+#~ msgid ""
+#~ "In a second step, the request method is checked. If no exact match is "
+#~ "found, and the request method is HEAD, the router checks for a GET route. "
+#~ "Otherwise, it checks for an ANY route. If that fails too, a \"405 Method "
+#~ "not allowed\" error is returned."
+#~ msgstr ""
+#~ "第二步，会检查浏览器请求的HTTP方法。如果不能精确匹配，且浏览器发的是HEAD请"
+#~ "求，那个router会按照GET方法去查找相应的route，否则便按照ANY方法去查找"
+#~ "route。如果都失败了，则返回一个405错误。"
+
+# 9e5a42e18b2949a2b91e3f7b929318dd
+#~ msgid "Here is an example where this might bite you::"
+#~ msgstr "下面这个例子也许会令你迷惑"
+
+# 9da489b5d4d94eeba231d11e48577619
+#~ msgid ""
+#~ "The second route will never hit. Even POST requests don't arrive at the "
+#~ "second route because the request method is checked in a separate step. "
+#~ "The router stops at the first route which matches the request path, then "
+#~ "checks for a valid request method, can't find one and raises a 405 error."
+#~ msgstr ""
+#~ "第二个route永远不会被命中，因为第一个route已经能匹配该URL，所以router会在"
+#~ "查找到第一个route后停止查找，接着按照浏览器请求的HTTP方法来查找，如果找不"
+#~ "到则返回405错误。"
+
+# 99ce58b0d94d48eba1fe52fc4e9a2b2d
+#~ msgid ""
+#~ "Sounds complicated, and it is. That is the price for performance. It is "
+#~ "best to avoid ambiguous routes at all and choose unique prefixes for each "
+#~ "route. This implementation detail may change in the future, though. We "
+#~ "are working on it."
+#~ msgstr ""
+#~ "看起来挺复杂的，确实很复杂。这是为了性能而付出的代价。最好是避免创建容易造"
+#~ "成歧义的route。将来或许会改变route实现的细节，我们在慢慢改善中。"
