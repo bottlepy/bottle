@@ -33,13 +33,14 @@ class TestSimpleTemplate(unittest.TestCase):
                 if name not in chain:
                     chain.append(name)
                     BaseTemplate.defaults.update({'for_'+name:name})
+                    SimpleTemplate.overrides.update({'after':'after '+name})
                     return os.path.abspath(os.path.join('./views',name,'en.tpl'))
             else:
                 if chain[-1]==name:
                     del chain[-1]
         res=template('t_1',template_lookup=lookup)
         self.assertEqual(res,
-                u'Here t_1.\nt_1 gets t_2:\nHere t_2.\nt_2 gets t_1:\nAfter.\nt_1 gets t_3:\nHere t_3.\nt_3 gets none.\n')
+                u'Here t_1.\nt_1 gets t_2:\nHere t_2.\nt_2 gets t_1:\nafter t_2\nt_1 gets t_3:\nHere t_3.\nt_3 gets none.\nafter t_3\nafter t_1\n')
 
     def test_unicode(self):
         self.assertRenders('start {{var}} end', 'start äöü end', var=touni('äöü'))
