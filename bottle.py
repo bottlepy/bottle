@@ -2653,9 +2653,9 @@ class WSGIRefServer(ServerAdapter):
 class CherryPyServer(ServerAdapter):
     def run(self, handler): # pragma: no cover
         from cherrypy import wsgiserver
-        self.options['options']['bind_addr'] = (self.host, self.port)
-	self.options['options']['wsgi_app'] = handler
-        server = wsgiserver.CherryPyWSGIServer(**self.options['options'])
+        self.options['bind_addr'] = (self.host, self.port)
+        self.options['wsgi_app'] = handler
+        server = wsgiserver.CherryPyWSGIServer(**self.options)
         try:
             server.start()
         finally:
