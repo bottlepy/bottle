@@ -2642,7 +2642,7 @@ class WSGIRefServer(ServerAdapter):
                 return self.client_address[0]
             def log_request(*args, **kw):
                 if not self.quiet:
-                    return super(FixedHandler, self).log_request(*args, **kw)
+                    return WSGIRequestHandler.log_request(*args, **kw)
         self.options['handler_class'] = FixedHandler
         srv = make_server(self.host, self.port, handler, **self.options)
         srv.serve_forever()
