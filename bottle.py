@@ -2335,12 +2335,26 @@ def _file_iter_range(fp, offset, bytes, maxread=1024*1024):
         yield part
 
 
-def static_file(filename, root, mimetype='auto', download=False, autocharset='UTF-8'):
+def static_file(filename, root, mimetype='auto', download=False, charset='UTF-8'):
     """ Open a file in a safe way and return :exc:`HTTPResponse` with status
-        code 200, 305, 401 or 404. Set Content-Type, Content-Encoding,
-        Content-Length and Last-Modified header. Obey If-Modified-Since header
-        and HEAD requests.
+        code 200, 305, 401 or 404. The ``Content-Type``, ``Content-Encoding``,
+        ``Content-Length`` and ``Last-Modified`` headers are set if possible.
+        Special support for ``If-Modified-Since``, ``Range`` and ``HEAD``
+        requests.
+
+        :param filename: Name or path of the file to send.
+        :param root: Root path for file lookups. Should be an absolute directory
+            path.
+        :param mimetype: Defines the content-type header (default: guess from
+            file extension)
+        :param download: If True, ask the browser to open a `Save as...` dialog
+            instead of opening the file with the associated program. You can
+            specify a custom filename as a string. If not specified, the
+            original filename is used (default: False).
+        :param charset: The charset to use for files with a ``text/*``
+            mime-type. (default: UTF-8)
     """
+
     root = os.path.abspath(root) + os.sep
     filename = os.path.abspath(os.path.join(root, filename.strip('/\\')))
     headers = dict()
@@ -2354,11 +2368,11 @@ def static_file(filename, root, mimetype='auto', download=False, autocharset='UT
 
     if mimetype == 'auto':
         mimetype, encoding = mimetypes.guess_type(filename)
-        if autocharset and mimetype.startswith('text/'):
-            mimetype += '; charset=%s' % autocharset
-        if mimetype: headers['Content-Type'] = mimetype
         if encoding: headers['Content-Encoding'] = encoding
-    elif mimetype:
+
+    if mimetype:
+        if mimetype[:5] == 'text/' and charset and 'charset' not in mimetype:
+            mimetype += '; charset=%s' % charset
         headers['Content-Type'] = mimetype
 
     if download:

@@ -58,9 +58,13 @@ class TestSendFile(unittest.TestCase):
     def test_mime(self):
         """ SendFile: Mime Guessing"""
         f = static_file(os.path.basename(__file__), root='./')
-        self.assertTrue(f.headers['Content-Type'] in ('application/x-python-code', 'text/x-python'))
+        self.assertTrue(f.headers['Content-Type'].split(';')[0] in ('application/x-python-code', 'text/x-python'))
         f = static_file(os.path.basename(__file__), root='./', mimetype='some/type')
         self.assertEqual('some/type', f.headers['Content-Type'])
+        f = static_file(os.path.basename(__file__), root='./', mimetype='text/foo')
+        self.assertEqual('text/foo; charset=UTF-8', f.headers['Content-Type'])
+        f = static_file(os.path.basename(__file__), root='./', mimetype='text/foo', charset='latin1')
+        self.assertEqual('text/foo; charset=latin1', f.headers['Content-Type'])
 
     def test_ims(self):
         """ SendFile: If-Modified-Since"""
