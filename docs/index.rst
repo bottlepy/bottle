@@ -3,13 +3,13 @@
 
 .. _mako: http://www.makotemplates.org/
 .. _cheetah: http://www.cheetahtemplate.org/
-.. _jinja2: http://jinja.pocoo.org/2/
+.. _jinja2: http://jinja.pocoo.org/
 .. _paste: http://pythonpaste.org/
 .. _fapws3: https://github.com/william-os4y/fapws3
 .. _bjoern: https://github.com/jonashaag/bjoern
 .. _flup: http://trac.saddi.com/flup
 .. _cherrypy: http://www.cherrypy.org/
-.. _WSGI: http://www.wsgi.org/wsgi/
+.. _WSGI: http://www.wsgi.org/
 .. _Python: http://python.org/
 .. _testing: https://github.com/defnull/bottle/raw/master/bottle.py
 .. _issue_tracker: https://github.com/defnull/bottle/issues
