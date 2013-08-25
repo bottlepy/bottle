@@ -2651,16 +2651,27 @@ class FlupFCGIServer(ServerAdapter):
 
 
 class WSGIRefServer(ServerAdapter):
-    def run(self, handler): # pragma: no cover
-        from wsgiref.simple_server import make_server, WSGIRequestHandler
+    def run(self, app): # pragma: no cover
+        from wsgiref.simple_server import WSGIRequestHandler, WSGIServer
+        from wsgiref.simple_server import make_server
+        import socket
+
         class FixedHandler(WSGIRequestHandler):
-            def address_string(self):
+            def address_string(self): # Prevent reverse DNS lookups please.
                 return self.client_address[0]
             def log_request(*args, **kw):
                 if not self.quiet:
                     return WSGIRequestHandler.log_request(*args, **kw)
-        self.options['handler_class'] = FixedHandler
-        srv = make_server(self.host, self.port, handler, **self.options)
+
+        handler_cls = self.options.get('handler_class', FixedHandler)
+        server_cls  = self.options.get('server_class', WSGIServer)
+
+        if ':' in self.host: # Fix wsgiref for IPv6 addresses.
+            if getattr(server_cls, 'address_family') == socket.AF_INET:
+                class server_cls(server_cls):
+                    address_family = socket.AF_INET6
+
+        srv = make_server(self.host, self.port, app, server_cls, handler_cls)
         srv.serve_forever()
 
 
@@ -3569,10 +3580,11 @@ if __name__ == '__main__':
     sys.modules.setdefault('bottle', sys.modules['__main__'])
 
     host, port = (opt.bind or 'localhost'), 8080
-    if ':' in host:
+    if ':' in host and host.rfind(']') < host.rfind(':'):
         host, port = host.rsplit(':', 1)
+    host = host.strip('[]')
 
-    run(args[0], host=host, port=port, server=opt.server,
+    run(args[0], host=host, port=int(port), server=opt.server,
         reloader=opt.reload, plugins=opt.plugin, debug=opt.debug)
 
 
