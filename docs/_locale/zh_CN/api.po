@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Bottle 0.12-dev\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-04-18 23:40\n"
+"POT-Creation-Date: 2013-08-09 17:22\n"
 "PO-Revision-Date: 2012-11-09 16:39+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -433,9 +433,9 @@ msgid ""
 "Instances are callable WSGI applications."
 msgstr ""
 
-# c85fb189289d4452994f37a93d29aa04
-#: ../../../bottle.py:docstring of bottle.Bottle.catchall:1
-msgid "If true, most exceptions are caught and returned as :exc:`HTTPError`"
+# e316cd279454454186fd767fe6663083
+#: ../../../bottle.py:docstring of bottle.Bottle.config:1
+msgid "A :class:`ConfigDict` for app specific configuration."
 msgstr ""
 
 # a54618bbe184416ea06fe641e3bc581f
@@ -443,9 +443,63 @@ msgstr ""
 msgid "A :class:`ResourceManager` for application files"
 msgstr ""
 
-# e316cd279454454186fd767fe6663083
-#: ../../../bottle.py:docstring of bottle.Bottle.config:1
-msgid "A :class:`ConfigDict` for app specific configuration."
+# c85fb189289d4452994f37a93d29aa04
+#: ../../../bottle.py:docstring of bottle.Bottle.catchall:1
+msgid "If true, most exceptions are caught and returned as :exc:`HTTPError`"
+msgstr ""
+
+# a153859ed6604e65ba9a9681e700a76f
+#: ../../../bottle.py:docstring of bottle.Bottle.add_hook:1
+msgid "Attach a callback to a hook. Three hooks are currently implemented:"
+msgstr ""
+
+# 6dc152c60013420abdb297caa28a3813
+#: ../../../bottle.py:docstring of bottle.Bottle.add_hook:4
+msgid "before_request"
+msgstr ""
+
+# 70abd3193e50425e82f98b3f68d4e4dc
+#: ../../../bottle.py:docstring of bottle.Bottle.add_hook:4
+msgid ""
+"Executed once before each request. The request context is available, but no "
+"routing has happened yet."
+msgstr ""
+
+# b8d91a10af2343399eaa8574f904e5d9
+#: ../../../bottle.py:docstring of bottle.Bottle.add_hook:6
+msgid "after_request"
+msgstr ""
+
+# 0e85cfc0a3bb4d9b97b68ae264a44ee3
+#: ../../../bottle.py:docstring of bottle.Bottle.add_hook:7
+msgid "Executed once after each request regardless of its outcome."
+msgstr ""
+
+# b580af375d614432bd1ac5e0f35f18fd
+#: ../../../bottle.py:docstring of bottle.Bottle.add_hook:8
+msgid "app_reset"
+msgstr ""
+
+# 9ce7e89d4e41419e85f0d9c338117c8c
+#: ../../../bottle.py:docstring of bottle.Bottle.add_hook:9
+msgid "Called whenever :meth:`Bottle.reset` is called."
+msgstr ""
+
+# 145ccba16d8f47729e885aa264b33a8f
+#: ../../../bottle.py:docstring of bottle.Bottle.remove_hook:1
+msgid "Remove a callback from a hook."
+msgstr ""
+
+# 55678852dd1541bda6a38d2d4f7902c0
+#: ../../../bottle.py:docstring of bottle.Bottle.trigger_hook:1
+msgid "Trigger a hook and return a list of results."
+msgstr ""
+
+# ec7d6127e3f44524bf25ce39f47a1fc8
+#: ../../../bottle.py:docstring of bottle.Bottle.hook:1
+msgid ""
+"Return a decorator that attaches a callback to a hook. See :meth:`add_hook` "
+"for details."
 msgstr ""
 
 # c071e835d9914cd1a24b606e57fc6e12
@@ -485,11 +539,6 @@ msgid ""
 "plugins. Return the list of removed plugins."
 msgstr ""
 
-# 9d904857add44dacbd2351fa34a9416d
-#: ../../../bottle.py:docstring of bottle.Bottle.run:1
-msgid "Calls :func:`run` with the same parameters."
-msgstr ""
-
 # b0f6b824b5bb48f5a73ce8df7cf1ecd2
 #: ../../../bottle.py:docstring of bottle.Bottle.reset:1
 msgid ""
@@ -500,6 +549,11 @@ msgstr ""
 # ea0b9e9a1cd845499900b9ae0650c1c9
 #: ../../../bottle.py:docstring of bottle.Bottle.close:1
 msgid "Close the application and all installed plugins."
+msgstr ""
+
+# 9d904857add44dacbd2351fa34a9416d
+#: ../../../bottle.py:docstring of bottle.Bottle.run:1
+msgid "Calls :func:`run` with the same parameters."
 msgstr ""
 
 # 579b86a9a0e74698b0bfa8685ae73562
@@ -561,28 +615,6 @@ msgstr ""
 # be193cc1118748e588bda1eb93dc0b18
 #: ../../../bottle.py:docstring of bottle.Bottle.error:1
 msgid "Decorator: Register an output handler for a HTTP error code"
-msgstr ""
-
-# bc2a9725b7f94b73b42a8e5fbce11b4d
-#: ../../../bottle.py:docstring of bottle.Bottle.hook:1
-msgid ""
-"Return a decorator that attaches a callback to a hook. Three hooks are "
-"currently implemented:"
-msgstr ""
-
-# 9446e9988ad04e32a3f845c2cfe72702
-#: ../../../bottle.py:docstring of bottle.Bottle.hook:4
-msgid "before_request: Executed once before each request"
-msgstr ""
-
-# af26921a8b0a4fa0bef662aa538efe5a
-#: ../../../bottle.py:docstring of bottle.Bottle.hook:5
-msgid "after_request: Executed once after each request"
-msgstr ""
-
-# 664f8d1ae37e42e0a05781ac76005049
-#: ../../../bottle.py:docstring of bottle.Bottle.hook:6
-msgid "app_reset: Called whenever :meth:`reset` is called."
 msgstr ""
 
 # ae4266c2a37f43f1b1fd10db27745ebf
@@ -674,6 +706,28 @@ msgstr ""
 # d63a0238d0634d47b8e5aec45248be7c
 #: ../../../bottle.py:docstring of bottle.Route.all_plugins:1
 msgid "Yield all Plugins affecting this route."
+msgstr ""
+
+# 1ec3c38fbcb849b1b43263e370ffd136
+#: ../../../bottle.py:docstring of bottle.Route.get_undecorated_callback:1
+msgid ""
+"Return the callback. If the callback is a decorated function, try to recover "
+"the original function."
+msgstr ""
+
+# d3c5328a4cab44989c52d2127b3544b4
+#: ../../../bottle.py:docstring of bottle.Route.get_callback_args:1
+msgid ""
+"Return a list of argument names the callback (most likely) accepts as "
+"keyword arguments. If the callback is a decorated function, try to recover "
+"the original function before inspection."
+msgstr ""
+
+# 96aa046ca3da4f6e8ee873d30bba2a36
+#: ../../../bottle.py:docstring of bottle.Route.get_config:1
+msgid ""
+"Lookup a config field and return its value, first checking the route.config, "
+"then route.app.config."
 msgstr ""
 
 # 62603aa4019e4732a6caa0083f27ceee
@@ -1068,6 +1122,11 @@ msgstr ""
 # 91f79c216555439f871d6ef43f6bda9f
 #: ../../../bottle.py:docstring of bottle.BaseResponse.headerlist:1
 msgid "WSGI conform list of (header, value) tuples."
+msgstr ""
+
+# 899832cd9ab0434481ab7dfa4a482d79
+#: ../../../bottle.py:docstring of bottle.BaseResponse.expires:1
+msgid "Current value of the 'Expires' header."
 msgstr ""
 
 # c9a8f8c5c29c4dfdbd5c77e910133ed9

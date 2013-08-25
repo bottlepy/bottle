@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Bottle 0.12-dev\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-04-20 16:35\n"
+"POT-Creation-Date: 2013-08-09 17:22\n"
 "PO-Revision-Date: 2013-04-20 16:43+0800\n"
 "Last-Translator: \n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -315,11 +315,6 @@ msgstr "下面是使用了这三个函数的例子，实现了模板中的可选
 msgid ":class:`SimpleTemplate` API"
 msgstr ":class:`SimpleTemplate` API"
 
-# 1db7677ae77c44f4ae0d6e63772af22e
-#: ../../../bottle.py:docstring of bottle.SimpleTemplate.split_comment:1
-msgid "Removes comments (#...) from python code."
-msgstr "从python代码中去除注释(#...)"
-
 # ba13c2fdbe9d454282446d03080fb37b
 #: ../../../bottle.py:docstring of bottle.SimpleTemplate.render:1
 msgid "Render the template using keyword arguments as local variables."
@@ -349,3 +344,7 @@ msgstr ""
 #: ../../stpl.rst:231
 msgid "Multi-line strings are not supported yet."
 msgstr "不支持多行字符串"
+
+# 1db7677ae77c44f4ae0d6e63772af22e
+#~ msgid "Removes comments (#...) from python code."
+#~ msgstr "从python代码中去除注释(#...)"

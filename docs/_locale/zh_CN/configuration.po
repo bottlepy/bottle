@@ -1,0 +1,297 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2009-2013, Marcel Hellkamp
+# This file is distributed under the same license as the Bottle package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Bottle 0.12-dev\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2013-08-09 18:12\n"
+"PO-Revision-Date: 2013-08-09 18:10+0800\n"
+"Last-Translator: \n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.5.7\n"
+
+# c1741ba1cf24423d937ac8eb7155aa10
+#: ../../configuration.rst:3
+msgid "Configuration (DRAFT)"
+msgstr "配置文件(初稿)"
+
+# 95c5c5957b604396a280c4987b0be08d
+#: ../../configuration.rst:8
+msgid ""
+"This is a draft for a new API. `Tell us <mailto:bottlepy@googlegroups.com>`_ "
+"what you think."
+msgstr ""
+"这是一个新的API， 可以 `告诉我们 <mailto:bottlepy@googlegroups.com>`_ 你的想"
+"法"
+
+# abf17b8e32a84f119f89fd9e54ae738a
+#: ../../configuration.rst:10
+msgid ""
+"Bottle applications can store their configuration in :attr:`Bottle.config`, "
+"a dict-like object and central place for application specific settings. This "
+"dictionary controls many aspects of the framework, tells (newer) plugins "
+"what to do, and can be used to store your own configuration as well."
+msgstr ""
+"Bottle应用可以在 :attr:`Bottle.config` 这个类似于字典的对象中，存储它们的配"
+"置。这个对象在很多方面，影响着Bottle框架和相应的插件。你也可以在这个对象中，"
+"存储你的自定义配置。"
+
+# d94af1e48ef146a3bf4b94258003de0f
+#: ../../configuration.rst:13
+msgid "Configuration Basics"
+msgstr "基础知识"
+
+# 8fa8b5ac47fb42ac93f250472bf34ba3
+#: ../../configuration.rst:15
+msgid ""
+"The :attr:`Bottle.config` object behaves a lot like an ordinary dictionary. "
+"All the common dict methods work as expected. Let us start with some "
+"examples::"
+msgstr ""
+" :attr:`Bottle.config` 这个对象，可以当成一个字典来使用，让我们举个例子::"
+
+# a10e871f1f0a42fd9e88a00777e031f8
+#: ../../configuration.rst:44
+msgid ""
+"The app object is not always available, but as long as you are within a "
+"request context, you can use the `request` object to get the current "
+"application and its configuration::"
+msgstr ""
+"app对象不一定总是可用的，但只要你在处理一个请求，你可以使用 `request` 对象来"
+"获得当前的应用对象和它的配置::"
+
+# 4510b753e1f843ae839da666fa8a96ea
+#: ../../configuration.rst:51
+msgid "Naming Convention"
+msgstr "命名约定"
+
+# f71bac781b854687aa55c961bb0cd7c3
+#: ../../configuration.rst:53
+msgid ""
+"To make life easier, plugins and applications should follow some simple "
+"rules when it comes to config parameter names:"
+msgstr ""
+"方便起见，插件和应用应该遵循一些简单的规则，特别是在给配置参数命名的时候:"
+
+# 4e47f429092a4402b928c616e1052bcd
+#: ../../configuration.rst:55
+msgid ""
+"All keys should be lowercase strings and follow the rules for python "
+"identifiers (no special characters but the underscore)."
+msgstr ""
+"所有的key都应该是小写的字符串，并符合Python的变量命名规则(除了下划线外，没有"
+"特殊字符)。"
+
+# 9162c80192d34a239d49822fde8ff2d5
+#: ../../configuration.rst:56
+msgid ""
+"Namespaces are separated by dots (e.g. ``namespace.field`` or ``namespace."
+"subnamespace.field``)."
+msgstr ""
+"命名空间通过点来区分(例如： ``namespace.field`` 或 ``namespace.subnamespacew."
+"field`` )。"
+
+# dc379020b8a7404fa4606731b772d9f8
+#: ../../configuration.rst:57
+msgid ""
+"Bottle uses the root namespace for its own configuration. Plugins should "
+"store all their variables in their own namespace (e.g. ``sqlite.db`` or "
+"``werkzeug.use_debugger``)."
+msgstr ""
+"Bottle框架，使用根命名空间来存储它的配置。插件应该在它们自己的命名空间中存储"
+"它们的变量(例如： `sqlite.db`` 或 ``werkzeug.use_debugger`` )。"
+
+# 93d339420982447bb137607a1b05aa4e
+#: ../../configuration.rst:58
+msgid ""
+"Your own application should use a separate namespace (e.g. ``myapp.*``)."
+msgstr "你的应用应该使用一个独立的命名空间(例如： ``myapp.*`` )。"
+
+# aff46481cbe04391926ec015d7aada17
+#: ../../configuration.rst:62
+msgid "Loading Configuration from a File"
+msgstr "从文件中加载配置"
+
+# 09f7f030d1054a308f955bd4f54221e6
+#: ../../configuration.rst:66
+msgid ""
+"Configuration files are useful if you want to enable non-programmers to "
+"configure your application, or just don't want to hack python module files "
+"just to change the database port. A very common syntax for configuration "
+"files is shown here:"
+msgstr ""
+"在你不想通过修改代码来修改配置的时候，配置文件是非常有用的。常见的配置文件语"
+"法如下:"
+
+# 7376404326fe4ae18113d7aa57c417a8
+#: ../../configuration.rst:78
+msgid ""
+"With :meth:`ConfigDict.load_config` you can load these ``*.ini`` style "
+"configuration files from disk and import their values into your existing "
+"configuration::"
+msgstr ""
+"通过 :meth:`ConfigDict.load_config` 方法，你可以从一些ini文件中导入配置::"
+
+# 7349ce363a5b424c97634c49c54c8f94
+#: ../../configuration.rst:84
+msgid "Loading Configuration from a nested :class:`dict`"
+msgstr "从字典中加载配置"
+
+# 5477eb75b0e54baf9afdd7013f946012
+#: ../../configuration.rst:88
+msgid ""
+"Another useful method is :meth:`ConfigDict.load_dict`. This method takes an "
+"entire structure of nested dictionaries and turns it into a flat list of "
+"keys and values with namespaced keys::"
+msgstr ""
+"另外一个有用的方法，是 :meth:`ConfigDict.load_dict` 。将字典中的配置，放到各"
+"自的命名空间下面::"
+
+# d8ac42150deb4bf8a3417f70f15e7452
+#: ../../configuration.rst:109
+msgid "Listening to configuration changes"
+msgstr "监听配置的变更"
+
+# 0130fae477d3494cb5f90534260ac3a2
+#: ../../configuration.rst:113
+msgid ""
+"The ``config`` hook on the application object is triggered each time a value "
+"in :attr:`Bottle.config` is changed. This hook can be used to react on "
+"configuration changes at runtime, for example reconnect to a new database, "
+"change the debug settings on a background service or resize worker thread "
+"pools. The hook callback receives two arguments (key, new_value) and is "
+"called before the value is actually changed in the dictionary. Raising an "
+"exception from a hook callback cancels the change and the old value is "
+"preserved."
+msgstr ""
+"每次 :attr:`Bottle.config` 中的值有变更的时候，会触发 ``config``  这个钩子。"
+"这个钩子可以用于在运行时，对配置的改动做出响应，例如连接到一个新的数据库，改"
+"变后台服务的debug配置，或更改线程池的大小。这个钩子接收两个参数(key, "
+"new_value)，在 :attr:`Bottle.config` 中的值被改动之前触发。如果这个钩子抛出了"
+"异常，那么 :attr:`Bottle.config` 中的值将不会被改动。"
+
+# 649c3d1653274f2b8447ff2e4c83e0d2
+#: ../../configuration.rst:122
+msgid ""
+"The hook callbacks cannot *change* the value that is to be stored to the "
+"dictionary. That is what filters are for."
+msgstr ""
+"这个钩子不能 *改变* 将要存到  :attr:`Bottle.config` 对象中的值。做这件事的是"
+"filter(过滤器)。"
+
+# c6eb3585a3214eaca881fbcc36bd6719
+#: ../../configuration.rst:128
+msgid "Filters and other Meta Data"
+msgstr "过滤器和其它元数据"
+
+# 5009754fd0a34a9baf4dddb9427176b1
+#: ../../configuration.rst:132
+msgid ""
+":class:`ConfigDict` allows you to store meta data along with configuration "
+"keys. Two meta fields are currently defined:"
+msgstr ""
+":class:`ConfigDict` 对象允许你给配置中每个key定义元数据。当前定义了help和"
+"filter:"
+
+# 3c150dd27a0343d3b27b76a2c497761a
+#: ../../configuration.rst:136
+msgid "help"
+msgstr ""
+
+# 6400abfe8a1046a1b8fc2d88411ed45e
+#: ../../configuration.rst:135
+msgid ""
+"A help or description string. May be used by debugging, introspection or "
+"admin tools to help the site maintainer configuring their application."
+msgstr "一个描述字符串。可以被debug或管理工具利用，来帮助网站管理员填写配置。"
+
+# e1fa67475b744125be6c8fd53881d5fd
+#: ../../configuration.rst:139
+msgid "filter"
+msgstr ""
+
+# 44aed643e8794ef59dcd36e1535562aa
+#: ../../configuration.rst:139
+msgid ""
+"A callable that accepts and returns a single value. If a filter is defined "
+"for a key, any new value stored to that key is first passed through the "
+"filter callback. The filter can be used to cast the value to a different "
+"type, check for invalid values (throw a ValueError) or trigger side effects."
+msgstr ""
+"一个可运行的对象，接受和返回一个值。如果一个key定义了一个filter，任何将要存到"
+"这个key中的值，都会先传给filter的相应回调函数。在回调函数中，可做类型转换，有"
+"效性检验等工作。"
+
+# 75aca8a53b774765a6190e7113f09250
+#: ../../configuration.rst:141
+msgid ""
+"This feature is most useful for plugins. They can validate their config "
+"parameters or trigger side effects using filters and document their "
+"configuration via ``help`` fields::"
+msgstr ""
+"这个功能比较适合被插件使用。它们可以检查它们的配置参数，或触发其它动作，或在 "
+"``help`` 字段中，给配置添加说明::"
+
+# 07ed111dcdf9476b9cc95fac5ca0826d
+#: ../../configuration.rst:163
+msgid "API Documentation"
+msgstr ""
+
+# 453a6899724348d887f2d5bd14a4e8c4
+#: ../../../bottle.py:docstring of bottle.ConfigDict:1
+msgid ""
+"A dict-like configuration storage with additional support for namespaces, "
+"validators, meta-data, on_change listeners and more."
+msgstr ""
+
+# 51f80fe3a49e49bb91e974a35ddfd599
+#: ../../../bottle.py:docstring of bottle.ConfigDict.load_config:1
+msgid "Load values from an *.ini style config file."
+msgstr ""
+
+# f43ab902d9dd4a5fb9cdffc36e0f0751
+#: ../../../bottle.py:docstring of bottle.ConfigDict.load_config:3
+msgid ""
+"If the config file contains sections, their names are used as namespaces for "
+"the values within. The two special sections ``DEFAULT`` and ``bottle`` refer "
+"to the root namespace (no prefix)."
+msgstr ""
+
+# 73c203a5f128460ca20ed9c837cf2321
+#: ../../../bottle.py:docstring of bottle.ConfigDict.load_dict:1
+msgid ""
+"Load values from a dictionary structure. Nesting can be used to represent "
+"namespaces."
+msgstr ""
+
+# dfc61134b7e942749147859f5df7c3f9
+#: ../../../bottle.py:docstring of bottle.ConfigDict.update:1
+msgid ""
+"If the first parameter is a string, all keys are prefixed with this "
+"namespace. Apart from that it works just as the usual dict.update(). "
+"Example: ``update('some.namespace', key='value')``"
+msgstr ""
+
+# fe2a8757060f427aab7545ff5ca638c2
+#: ../../../bottle.py:docstring of bottle.ConfigDict.meta_get:1
+msgid "Return the value of a meta field for a key."
+msgstr ""
+
+# aa48b60c60d94d0588afade295f2576d
+#: ../../../bottle.py:docstring of bottle.ConfigDict.meta_set:1
+msgid ""
+"Set the meta field for a key to a new value. This triggers the on-change "
+"handler for existing keys."
+msgstr ""
+
+# 75344d95f5874a6d89c05b64723ebf5d
+#: ../../../bottle.py:docstring of bottle.ConfigDict.meta_list:1
+msgid "Return an iterable of meta field names defined for a key."
+msgstr ""
