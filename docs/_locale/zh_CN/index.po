@@ -7,14 +7,15 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Bottle 0.12-dev\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-11-09 18:23\n"
-"PO-Revision-Date: 2012-11-09 19:04+0800\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"POT-Creation-Date: 2013-08-09 18:12\n"
+"PO-Revision-Date: 2013-08-09 17:25+0800\n"
+"Last-Translator: \n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.5.7\n"
 
 # 982a9ff09f57469ea201f9681c77d2c3
 #: ../../index.rst:20
@@ -116,39 +117,39 @@ msgstr ""
 "注：用英文哦）。"
 
 # cfb536e857dc41b0bf43f0e185d47e98
-#: ../../index.rst:67
+#: ../../index.rst:68
 msgid "Knowledge Base"
 msgstr "知识库"
 
 # baeb4c393ec246b690500089c6647096
-#: ../../index.rst:68
+#: ../../index.rst:69
 msgid "A collection of articles, guides and HOWTOs."
 msgstr "收集文章，使用指南和HOWTO"
 
 # 7c0f6a746c0f4a5da9fb8da7dec405da
-#: ../../index.rst:80
+#: ../../index.rst:81
 msgid "Development and Contribution"
 msgstr "开发和贡献"
 
 # 8c7445707fd945a4a8e0fdf6e5055edd
-#: ../../index.rst:82
+#: ../../index.rst:83
 msgid ""
 "These chapters are intended for developers interested in the bottle "
 "development and release workflow."
 msgstr "这些章节是为那些对Bottle的开发和发布流程感兴趣的开发者准备的。"
 
 # 5dc3afd489cb4053a42ab582b40e2985
-#: ../../index.rst:98
+#: ../../index.rst:99
 msgid "License"
 msgstr "许可证"
 
 # 04840f1a47654598a640bc3fd44bdb10
-#: ../../index.rst:100
+#: ../../index.rst:101
 msgid "Code and documentation are available according to the MIT License:"
 msgstr "代码和文件皆使用MIT许可证:"
 
 # 4eaa7176213e47189636c52b21aa9d0d
-#: ../../index.rst:105
+#: ../../index.rst:106
 msgid ""
 "The Bottle logo however is *NOT* covered by that license. It is allowed to "
 "use the logo as a link to the bottle homepage or in direct context with the "
@@ -158,12 +159,12 @@ msgstr ""
 "的类库。如要用于其它用途，请先请求许可。"
 
 # 9ede3f752bd74e2280f3b15cdbbe0796
-#: ../../index.rst:110
+#: ../../index.rst:111
 msgid "Footnotes"
 msgstr "脚注"
 
 # a8762741595242a89d72fa712bcf95dc
-#: ../../index.rst:111
+#: ../../index.rst:112
 msgid ""
 "Usage of the template or server adapter classes of course requires the "
 "corresponding template or server modules."
