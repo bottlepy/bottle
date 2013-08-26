@@ -3233,10 +3233,16 @@ class SimpleTemplate(BaseTemplate):
         self.encoding = parser.encoding
         return code
 
-    def _rebase(self, _env, _name, **kwargs):
+    def _rebase(self, _env, _name=None, **kwargs):
+        if _name is None:
+            depr('Rebase function called without arguments.'
+                 ' You were probably looking for {{base}}?', True)
         _env['_rebase'] = (_name, kwargs)
 
-    def _include(self, _env, _name, **kwargs):
+    def _include(self, _env, _name=None, **kwargs):
+        if _name is None:
+            depr('Rebase function called without arguments.'
+                 ' You were probably looking for {{base}}?', True)
         env = _env.copy()
         env.update(kwargs)
         if _name not in self.cache:
@@ -3293,7 +3299,7 @@ class StplParser(object):
     # 7: And finally, a single newline. The 8th token is 'everything else'
     _re_tok += '|(\\r?\\n)'
     # Match the start tokens of code areas in a template
-    _re_split = '(?m)^[ \t]*(?:(%(line_start)s)|(%(block_start)s))'
+    _re_split = '(?m)^[ \t]*(\\\\?)((%(line_start)s)|(%(block_start)s))(%%?)'
     # Match inline statements (may contain python strings)
     _re_inl = '%%(inline_start)s((?:%s|[^\'"\n]*?)+)%%(inline_end)s' % _re_inl
 
@@ -3332,13 +3338,19 @@ class StplParser(object):
                 text = self.source[self.offset:self.offset+m.start()]
                 self.text_buffer.append(text)
                 self.offset += m.end()
-                if self.source[self.offset] == '%': # Escaped code stuff
-                    line, sep, _ = self.source[self.offset+1:].partition('\n')
-                    self.text_buffer.append(m.group(0)+line+sep)
+                if m.group(1): # New escape syntax
+                    line, sep, _ = self.source[self.offset:].partition('\n')
+                    self.text_buffer.append(m.group(2)+m.group(5)+line+sep)
+                    self.offset += len(line+sep)+1
+                    continue
+                elif m.group(5): # Old escape syntax
+                    depr('Escape code lines with a backslash.')
+                    line, sep, _ = self.source[self.offset:].partition('\n')
+                    self.text_buffer.append(m.group(2)+line+sep)
                     self.offset += len(line+sep)+1
                     continue
                 self.flush_text()
-                self.read_code(multiline=bool(m.group(2)))
+                self.read_code(multiline=bool(m.group(4)))
             else: break
         self.text_buffer.append(self.source[self.offset:])
         self.flush_text()
