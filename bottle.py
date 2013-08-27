@@ -3260,7 +3260,7 @@ class SimpleTemplate(BaseTemplate):
         eval(self.co, env)
         if env.get('_rebase'):
             subtpl, rargs = env.pop('_rebase')
-            rargs['body'] = ''.join(_stdout) #copy stdout
+            rargs['base'] = ''.join(_stdout) #copy stdout
             del _stdout[:] # clear stdout
             return self._include(env, subtpl, **rargs)
         return env
@@ -3425,7 +3425,7 @@ class StplParser(object):
         parts = line.strip().split(None, 2)
         if parts and parts[0] in ('include', 'rebase'):
             depr('The include and rebase keywords are functions now.')
-            if len(parts) == 1:   return "_printlist([body])", comment
+            if len(parts) == 1:   return "_printlist([base])", comment
             elif len(parts) == 2: return "_=%s(%r)" % tuple(parts), comment
             else:                 return "_=%s(%r, %s)" % tuple(parts), comment
         if self.lineno <= 2 and not line.strip() and 'coding' in comment:
