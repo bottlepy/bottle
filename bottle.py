@@ -1050,7 +1050,7 @@ class BaseRequest(object):
         """ Cookies parsed into a :class:`FormsDict`. Signed cookies are NOT
             decoded. Use :meth:`get_cookie` if you expect signed cookies. """
         cookies = SimpleCookie(self.environ.get('HTTP_COOKIE','')).values()
-        if len(cookies) > self.MAX_PARAMS:
+        if len(cookies) > self.app.config.get('MAX_PARAMS', self.MAX_PARAMS):
             raise HTTPError(413, 'Too many cookies')
         return FormsDict((c.key, c.value) for c in cookies)
 
@@ -1073,7 +1073,7 @@ class BaseRequest(object):
             :class:`Router`. '''
         get = self.environ['bottle.get'] = FormsDict()
         pairs = _parse_qsl(self.environ.get('QUERY_STRING', ''))
-        if len(pairs) > self.MAX_PARAMS:
+        if len(pairs) > self.app.config.get('MAX_PARAMS', self.MAX_PARAMS):
             raise HTTPError(413, 'Too many parameters')
         for key, value in pairs:
             get[key] = value
@@ -1174,7 +1174,7 @@ class BaseRequest(object):
         # is not multipart and take the fast path (also: 3.1 workaround)
         if not self.content_type.startswith('multipart/'):
             pairs = _parse_qsl(tonat(self._get_body_string(), 'latin1'))
-            if len(pairs) > self.MAX_PARAMS:
+            if len(pairs) > self.app.config.get('MAX_PARAMS', self.MAX_PARAMS):
                 raise HTTPError(413, 'Too many parameters')
             for key, value in pairs:
                 post[key] = value
@@ -1191,7 +1191,7 @@ class BaseRequest(object):
             args['encoding'] = 'latin1'
         data = cgi.FieldStorage(**args)
         data = data.list or []
-        if len(data) > self.MAX_PARAMS:
+        if len(data) > self.app.config.get('MAX_PARAMS', self.MAX_PARAMS):
             raise HTTPError(413, 'Too many parameters')
         for item in data:
             if item.filename:
