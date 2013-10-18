@@ -663,7 +663,7 @@ Bottle stores file uploads in :attr:`BaseRequest.files` as :class:`FileUpload` i
         category   = request.forms.get('category')
         upload     = request.files.get('upload')
         name, ext = os.path.splitext(upload.filename)
-        if ext not in ('png','jpg','jpeg'):
+        if ext not in ('.png','.jpg','.jpeg'):
             return 'File extension not allowed.'
 
         save_path = get_save_path_for_category(category)
