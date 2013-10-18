@@ -392,27 +392,6 @@ class TestRequest(unittest.TestCase):
         del r.environ['HTTP_X_FORWARDED_FOR']
         self.assertEqual(r.remote_addr, ips[1])
 
-    def test_maxparam(self):
-        ips = ['1.2.3.4', '2.3.4.5', '3.4.5.6']
-        e = {}
-        wsgiref.util.setup_testing_defaults(e)
-        e['wsgi.input'].write(tob('a=a&b=b&c=c'))
-        e['wsgi.input'].seek(0)
-        e['CONTENT_LENGTH'] = '11'
-        e['REQUEST_METHOD'] = "POST"
-        e['HTTP_COOKIE'] = 'a=1;b=1;c=1;d=1'
-        e['QUERY_STRING'] = 'a&b&c&d'
-        old_value = BaseRequest.MAX_PARAMS
-        r = BaseRequest(e)
-        try:
-            BaseRequest.MAX_PARAMS = 2
-            self.assertRaises(HTTPError, lambda: r.query)
-            self.assertRaises(HTTPError, lambda: r.cookies)
-            self.assertRaises(HTTPError, lambda: r.forms)
-            self.assertRaises(HTTPError, lambda: r.params)
-        finally:
-            BaseRequest.MAX_PARAMS = old_value
-
     def test_user_defined_attributes(self):
         for cls in (BaseRequest, LocalRequest):
             r = cls()
