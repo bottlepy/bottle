@@ -2804,7 +2804,11 @@ class GeventServer(ServerAdapter):
         if not self.options.pop('fast', None): wsgi = pywsgi
         self.options['log'] = None if self.quiet else 'default'
         address = (self.host, self.port)
-        wsgi.WSGIServer(address, handler, **self.options).serve_forever()
+        server = wsgi.WSGIServer(address, handler, **self.options)
+        if 'BOTTLE_CHILD' in os.environ:
+            import signal
+            signal.signal(signal.SIGINT, lambda s, f: server.stop())
+        server.serve_forever()
 
 
 class GeventSocketIOServer(ServerAdapter):
