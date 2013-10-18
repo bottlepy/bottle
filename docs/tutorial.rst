@@ -335,7 +335,7 @@ You can directly return file objects, but :func:`static_file` is the recommended
 ::
 
     from bottle import static_file
-    @route('/images/<filename:re:.*\.png>#')
+    @route('/images/<filename:re:.*\.png>')
     def send_image(filename):
         return static_file(filename, root='/path/to/image/files', mimetype='image/png')
 
