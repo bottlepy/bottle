@@ -10,6 +10,7 @@ Python Standard Library.
 Homepage and documentation: http://bottlepy.org/
 
 Copyright (c) 2012, Marcel Hellkamp.
+Copyright (c) 2013, Juerg Haefliger, Hewlett-Packard Development Company, L.P.
 License: MIT (see LICENSE for details)
 """
 
@@ -1125,6 +1126,53 @@ class BaseRequest(object):
         return None
 
     @DictProperty('environ', 'bottle.request.body', read_only=True)
+    def _body_chunked(self):
+        """
+        Handle a chunked request body
+        """
+        def read_chunk(stream, length=None):
+            """
+            Read a chunk of data from a stream. If length is None, read until
+            an '\r\n' trailer is found. If length is specified, read that much
+            data plus 2 more bytes and check that those are the trailer.
+            """
+            if length:
+                data = stream.read(length)
+                if stream.read(2) != b'\r\n':
+                    raise ValueError("Malformed chunk in request")
+            else:
+                data = b''
+                while True:
+                    b1 = stream.read(1)
+                    if not b1:
+                        break
+                    if b1 == b'\r':
+                        b2 = stream.read(1)
+                        if not b2:
+                            data += b1
+                            break
+                        if b2 == b'\n':
+                            break
+                        data += b1 + b2
+                    else:
+                        data += b1
+            return data
+
+        stream = request.environ['wsgi.input']
+        # The total length of the request is unknown, so assume worst-case and
+        # use a temp file instead of a memory buffer
+        body = TemporaryFile(mode='w+b')
+        while True:
+            length = int(read_chunk(stream), 16)
+            chunk = read_chunk(stream, length)
+            if not chunk:
+                break
+            body.write(chunk)
+        request.environ['wsgi.input'] = body
+        body.seek(0)
+        return body
+
+    @DictProperty('environ', 'bottle.request.body', read_only=True)
     def _body(self):
         maxread = max(0, self.content_length)
         stream = self.environ['wsgi.input']
@@ -1157,8 +1205,9 @@ class BaseRequest(object):
             :class:`io.BytesIO` instance. Accessing this property for the first
             time reads and replaces the ``wsgi.input`` environ variable.
             Subsequent accesses just do a `seek(0)` on the file object. """
-        self._body.seek(0)
-        return self._body
+        _body = self._body_chunked if self.chunked else self._body
+        _body.seek(0)
+        return _body
 
     #: An alias for :attr:`query`.
     GET = query
@@ -1262,6 +1311,11 @@ class BaseRequest(object):
         '''
         script = self.environ.get('SCRIPT_NAME','/')
         self['SCRIPT_NAME'], self['PATH_INFO'] = path_shift(script, self.path, shift)
+
+    @property
+    def chunked(self):
+        ''' True if the (POST or PUT) request is chunked. '''
+        return self.environ.get('HTTP_TRANSFER_ENCODING', '').lower() == 'chunked'
 
     @property
     def content_length(self):
