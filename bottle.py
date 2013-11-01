@@ -463,7 +463,7 @@ class Route(object):
         #: The original callback with no plugins applied. Useful for introspection.
         self.callback = callback
         #: The name of the route (if specified) or ``None``.
-        self.name = name or None
+        self.names = makelist(name)
         #: A list of route-specific plugins (see :meth:`Bottle.route`).
         self.plugins = plugins or []
         #: A list of plugins to not apply to this route (see :meth:`Bottle.route`).
@@ -472,6 +472,10 @@ class Route(object):
         #: decorator are stored in this dictionary. Used for route-specific
         #: plugin configuration and meta-data.
         self.config = ConfigDict().load_dict(config)
+
+    @property
+    def name(self):
+        return self.names[-1] if self.names else None
 
     def __call__(self, *a, **ka):
         depr("Some APIs changed to return Route() instances instead of"\
@@ -503,14 +507,8 @@ class Route(object):
 
     def all_plugins(self):
         ''' Yield all Plugins affecting this route. '''
-        unique = set()
-        for p in reversed(self.app.plugins + self.plugins):
-            if True in self.skiplist: break
-            name = getattr(p, 'name', False)
-            if name and (name in self.skiplist or name in unique): continue
-            if p in self.skiplist or type(p) in self.skiplist: continue
-            if name: unique.add(name)
-            yield p
+        return _filter_plugins(reversed(self.app.plugins + self.plugins),
+            self.skiplist)
 
     def _make_callback(self):
         callback = self.callback
@@ -556,6 +554,15 @@ class Route(object):
         return '<%s %r %r>' % (self.method, self.rule, cb)
 
 
+def _filter_plugins(plugins, skiplist):
+    unique = set()
+    for plugin in plugins:
+        if True in skiplist: break
+        name = getattr(plugin, 'name', False)
+        if name and (name in skiplist or name in unique): continue
+        if plugin in skiplist or type(plugin) in skiplist: continue
+        if name: unique.add(name)
+        yield p
 
 
 
@@ -575,6 +582,8 @@ class Bottle(object):
     """
 
     def __init__(self, catchall=True, autojson=True):
+
+        self._group_stack = [];
 
         #: A :class:`ConfigDict` for app specific configuration.
         self.config = ConfigDict()
@@ -596,6 +605,7 @@ class Bottle(object):
         if self.config['autojson']:
             self.install(JSONPlugin())
         self.install(TemplatePlugin())
+        
 
     #: If true, most exceptions are caught and returned as :exc:`HTTPError`
     catchall = DictProperty('config', 'catchall')
@@ -760,9 +770,35 @@ class Bottle(object):
         location = self.router.build(routename, **kargs).lstrip('/')
         return urljoin(urljoin('/', scriptname), location)
 
+    def group(self, prefix=None, apply=None, skip=None, name=None):
+        if not prefix:
+            prefix = '?'
+        elif '?' not in prefix:
+            prefix = prefix + '?'
+        apply = makelist(apply)
+        skip = makelist(skip)
+        return GroupContext(app, locals())
+
+    def _enter_group(self, group):
+        self._group_stack.append(group)
+
+    def _exit_group(self, group):
+        self._group_stack.pop()
+
+    def _group_apply(self, route):
+        chain = reversed(filter(None, g.prefix for g in self._group_stack))
+        for group in reversed(self._group_stack):
+            route.rule = group.prefix.replace('?', route.rule)
+        for group in self._group_stack:
+            route.plugins.extend(group.apply)
+            route.skiplist.extend(group.skip)
+            if group.name:
+                route.names.insert(0, group.name)
+
     def add_route(self, route):
         ''' Add a route object, but do not change the :data:`Route.app`
             attribute.'''
+        self._group_apply(route)
         self.routes.append(route)
         self.router.add(route.rule, route.method, route, name=route.name)
         if DEBUG: route.prepare()
@@ -797,13 +833,13 @@ class Bottle(object):
         if callable(path): path, callback = None, path
         plugins = makelist(apply)
         skiplist = makelist(skip)
+
         def decorator(callback):
-            # TODO: Documentation and tests
             if isinstance(callback, basestring): callback = load(callback)
-            for rule in makelist(path) or yieldroutes(callback):
+            for rule in makelist(path) or list(yieldroutes(callback):
                 for verb in makelist(method):
                     verb = verb.upper()
-                    route = Route(self, rule, verb, callback, name=name,
+                    route = self.build_route(rule, verb, callback, name=name,
                                   plugins=plugins, skiplist=skiplist, **config)
                     self.add_route(route)
             return callback
@@ -2105,7 +2141,6 @@ class ConfigDict(dict):
         return self
 
 
-
 class AppStack(list):
     """ A stack-like list. Calling it returns the head of the stack. """
 
@@ -2113,12 +2148,30 @@ class AppStack(list):
         """ Return the current default application. """
         return self[-1]
 
-    def push(self, value=None):
+    def push(self, value=None, meta=None):
         """ Add a new :class:`Bottle` instance to the stack """
         if not isinstance(value, Bottle):
             value = Bottle()
         self.append(value)
         return value
+
+
+class GroupContext(object):
+    ''' The context manager returned by :meth:`Bottle.group` '''
+
+    def __init__(self, app, **meta):
+        self.__dict__.update(meta)
+        self.app = app
+
+    def __enter__(self):
+        default_app.push(self.app)
+        self.app._enter_group(self)
+        return self.app
+        
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.app._exit_group(self)
+        default_app.pop()
+        return
 
 
 class WSGIFileWrapper(object):
