@@ -1623,20 +1623,17 @@ class BaseResponse(object):
             out += '%s: %s\n' % (name.title(), value.strip())
         return out
 
-#: Thread-local storage for :class:`LocalRequest` and :class:`LocalResponse`
-#: attributes.
-_lctx = threading.local()
 
-def local_property(name):
+def local_property(name=None):
+    if name: dept('local_property() is deprecated and will be removed.') #0.12
+    ls = threading.local()
     def fget(self):
-        try:
-            return getattr(_lctx, name)
+        try: return ls.var
         except AttributeError:
             raise RuntimeError("Request context not initialized.")
-    def fset(self, value): setattr(_lctx, name, value)
-    def fdel(self): delattr(_lctx, name)
-    return property(fget, fset, fdel,
-        'Thread-local property stored in :data:`_lctx.%s`' % name)
+    def fset(self, value): ls.var = value
+    def fdel(self): del ls.var
+    return property(fget, fset, fdel, 'Thread-local property')
 
 
 class LocalRequest(BaseRequest):
@@ -1646,7 +1643,7 @@ class LocalRequest(BaseRequest):
         request/response cycle, this instance always refers to the *current*
         request (even on a multithreaded server). '''
     bind = BaseRequest.__init__
-    environ = local_property('request_environ')
+    environ = local_property()
 
 
 class LocalResponse(BaseResponse):
@@ -1656,11 +1653,11 @@ class LocalResponse(BaseResponse):
         to build the HTTP response at the end of the request/response cycle.
     '''
     bind = BaseResponse.__init__
-    _status_line = local_property('response_status_line')
-    _status_code = local_property('response_status_code')
-    _cookies     = local_property('response_cookies')
-    _headers     = local_property('response_headers')
-    body         = local_property('response_body')
+    _status_line = local_property()
+    _status_code = local_property()
+    _cookies     = local_property()
+    _headers     = local_property()
+    body         = local_property()
 
 
 Request = BaseRequest
@@ -2785,7 +2782,7 @@ class GeventServer(ServerAdapter):
     """
     def run(self, handler):
         from gevent import wsgi, pywsgi, local
-        if not isinstance(_lctx, local.local):
+        if not isinstance(threading.local(), local.local):
             msg = "Bottle requires gevent.monkey.patch_all() (before import)"
             raise RuntimeError(msg)
         if not self.options.pop('fast', None): wsgi = pywsgi
