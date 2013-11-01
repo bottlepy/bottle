@@ -1118,16 +1118,54 @@ class BaseRequest(object):
             return json_loads(self._get_body_string())
         return None
 
+    def _iter_body(self, read, bufsize):
+        maxread = max(0, self.content_length)
+        while maxread:
+            part = read(min(maxread, bufsize))
+            if not part: break
+            yield part
+            maxread -= len(part)
+
+    def _iter_chunked(self, read, bufsize):
+        err = HTTPError(400, 'Error while parsing chunked transfer body.')
+        rn, sem, bs = tob('\r\n'), tob(';'), tob('')
+        while True:
+            header = read(1)
+            while header[-2:] != rn:
+                c = read(1)
+                header += c
+                if not c: raise err
+                if len(header) > bufsize: raise err
+            size, sep, junk = header.partition(sem)
+            try:
+                maxread = int(tonat(size.strip()), 16)
+            except ValueError:
+                raise err
+            if maxread == 0: break
+            buffer = bs
+            while maxread > 0:
+                if not buffer:
+                    buffer = read(min(maxread, bufsize))
+                part, buffer = buffer[:maxread], buffer[maxread:]
+                if not part: raise err
+                yield part
+                maxread -= len(part)
+            if read(2) != rn:
+                raise err
+            
     @DictProperty('environ', 'bottle.request.body', read_only=True)
     def _body(self):
-        maxread = max(0, self.content_length)
-        stream = self.environ['wsgi.input']
-        body = BytesIO() if maxread < self.MEMFILE_MAX else TemporaryFile(mode='w+b')
-        while maxread > 0:
-            part = stream.read(min(maxread, self.MEMFILE_MAX))
-            if not part: break
+        body_iter = self._iter_chunked if self.chunked else self._iter_body
+        read_func = self.environ['wsgi.input'].read
+        body, body_size, is_temp_file = BytesIO(), 0, False
+        for part in body_iter(read_func, self.MEMFILE_MAX):
             body.write(part)
-            maxread -= len(part)
+            body_size += len(part)
+            if not is_temp_file and body_size > self.MEMFILE_MAX:
+                body, tmp = TemporaryFile(mode='w+b'), body
+                body.write(tmp.getvalue())
+                del tmp
+                is_temp_file = True
         self.environ['wsgi.input'] = body
         body.seek(0)
         return body
@@ -1153,6 +1191,11 @@ class BaseRequest(object):
             Subsequent accesses just do a `seek(0)` on the file object. """
         self._body.seek(0)
         return self._body
+
+    @property
+    def chunked(self):
+        ''' True if Chunked transfer encoding was. '''
+        return 'chunked' in self.environ.get('HTTP_TRANSFER_ENCODING', '').lower()
 
     #: An alias for :attr:`query`.
     GET = query

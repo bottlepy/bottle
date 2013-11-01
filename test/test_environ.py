@@ -279,6 +279,40 @@ class TestRequest(unittest.TestCase):
         self.assertEqual(42, len(request.body.readline()))
         self.assertEqual(42, len(request.body.readline(1024)))
 
+    def _test_chunked(self, body, expect):
+        e = {}
+        wsgiref.util.setup_testing_defaults(e)
+        e['wsgi.input'].write(tob(body))
+        e['wsgi.input'].seek(0)
+        e['HTTP_TRANSFER_ENCODING'] = 'chunked'
+        if isinstance(expect, str):
+            self.assertEquals(tob(expect), BaseRequest(e).body.read())
+        else:
+            self.assertRaises(expect, lambda: BaseRequest(e).body)
+
+    def test_chunked(self):
+        self._test_chunked('1\r\nx\r\nff\r\n' + 'y'*255 + '\r\n0\r\n',
+                           'x' + 'y'*255)
+        self._test_chunked('8\r\nxxxxxxxx\r\n0\r\n','xxxxxxxx')
+        self._test_chunked('0\r\n', '')
+
+    def test_chunked_meta_fields(self):
+        self._test_chunked('8 ; foo\r\nxxxxxxxx\r\n0\r\n','xxxxxxxx')
+        self._test_chunked('8;foo\r\nxxxxxxxx\r\n0\r\n','xxxxxxxx')
+        self._test_chunked('8;foo=bar\r\nxxxxxxxx\r\n0\r\n','xxxxxxxx')
+
+    def test_chunked_not_terminated(self):
+        self._test_chunked('1\r\nx\r\n', HTTPError)
+
+    def test_chunked_wrong_size(self):
+        self._test_chunked('2\r\nx\r\n', HTTPError)
+
+    def test_chunked_illegal_size(self):
+        self._test_chunked('x\r\nx\r\n', HTTPError)
+
+    def test_chunked_not_chunked_at_all(self):
+        self._test_chunked('abcdef', HTTPError)
+
     def test_multipart(self):
         """ Environ: POST (multipart files and multible values per key) """
         fields = [('field1','value1'), ('field2','value2'), ('field2','value3')]
