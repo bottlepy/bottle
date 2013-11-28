@@ -88,10 +88,10 @@ class TestWsgi(ServerTestBase):
         self.assertStatus(500, '/')
 
     def test_utf8_url(self):
-        """ WSGI: Exceptions within handler code (HTTP 500) """
-        @bottle.route('/my/:string')
+        """ WSGI: UTF-8 Characters in the URL """
+        @bottle.route('/my-öäü/:string')
         def test(string): return string
-        self.assertBody(tob('urf8-öäü'), '/my/urf8-öäü')
+        self.assertBody(tob('urf8-öäü'), '/my-öäü/urf8-öäü')
 
     def test_utf8_404(self):
         self.assertStatus(404, '/not-found/urf8-öäü')

@@ -847,11 +847,17 @@ class Bottle(object):
         return tob(template(ERROR_PAGE_TEMPLATE, e=res))
 
     def _handle(self, environ):
+        path = environ['bottle.raw_path'] = environ['PATH_INFO']
+        if py3k:
+            try:
+                environ['PATH_INFO'] = path.encode('latin1').decode('utf8')
+            except UnicodeError:
+                return HTTPError(400, 'Invalid path string. Expected UTF-8')
+
         try:
             environ['bottle.app'] = self
             request.bind(environ)
             response.bind()
-
             try:
                 self.trigger_hook('before_request')
                 route, args = self.router.match(environ)
@@ -1914,10 +1920,11 @@ class FormsDict(MultiDict):
 
     def _fix(self, s, encoding=None):
         if isinstance(s, unicode) and self.recode_unicode: # Python 3 WSGI
-            s = s.encode('latin1')
-        if isinstance(s, bytes): # Python 2 WSGI
+            return s.encode('latin1').decode(encoding or self.input_encoding)
+        elif isinstance(s, bytes): # Python 2 WSGI
             return s.decode(encoding or self.input_encoding)
-        return s
+        else:
+            return s
 
     def decode(self, encoding=None):
         ''' Returns a copy with all keys and values de- or recoded to match

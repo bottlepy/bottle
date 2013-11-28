@@ -9,7 +9,7 @@ import wsgiref.validate
 import mimetypes
 import uuid
 
-from bottle import tob, BytesIO
+from bottle import tob, tonat, BytesIO, py3k
 
 def warn(msg):
     sys.stderr.write('WARNING: %s\n' % msg.strip())
@@ -37,6 +37,13 @@ def api(introduced, deprecated=None, removed=None):
             return None
     return decorator
 
+
+def wsgistr(s):
+    if py3k:
+        return s.encode('utf8').decode('latin1')
+    else:
+        return s
+
 class ServerTestBase(unittest.TestCase):
     def setUp(self):
         ''' Create a new Bottle app set it as default_app '''
@@ -58,9 +65,9 @@ class ServerTestBase(unittest.TestCase):
                     result['header'][name] = value
         env = env if env else {}
         wsgiref.util.setup_testing_defaults(env)
-        env['REQUEST_METHOD'] = method.upper().strip()
-        env['PATH_INFO'] = path
-        env['QUERY_STRING'] = ''
+        env['REQUEST_METHOD'] = wsgistr(method.upper().strip())
+        env['PATH_INFO'] = wsgistr(path)
+        env['QUERY_STRING'] = wsgistr('')
         if post:
             env['REQUEST_METHOD'] = 'POST'
             env['CONTENT_LENGTH'] = str(len(tob(post)))
