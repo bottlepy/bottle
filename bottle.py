@@ -2305,7 +2305,7 @@ class FileUpload(object):
 ###############################################################################
 
 
-def abort(code=500, text='Unknown Error: Application stopped.'):
+def abort(code=500, text='Unknown Error.'):
     """ Aborts execution and causes a HTTP error. """
     raise HTTPError(code, text)
 
