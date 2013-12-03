@@ -14,8 +14,6 @@ Release 0.13
 Release 0.12
 ==============
 
-.. warning: Not released yet.
-
 * New SimpleTemplate parser implementation
   * Support for multi-line code blocks (`<% ... %>`).
   * The keywords `include` and `rebase` are functions now and can accept variable template names.
@@ -24,8 +22,6 @@ Release 0.12
 
 Release 0.11
 ==============
-
-.. warning: Not released yet.
 
 * Native support for Python 2.x and 3.x syntax. No need to run 2to3 anymore.
 * Support for partial downloads (``Range`` header) in :func:`static_file`.
