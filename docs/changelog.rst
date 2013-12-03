@@ -17,8 +17,12 @@ Release 0.12
 * New SimpleTemplate parser implementation
   * Support for multi-line code blocks (`<% ... %>`).
   * The keywords `include` and `rebase` are functions now and can accept variable template names.
-* The new :meth:`BaseRequest.route` property returns the :class:`Route` that matched the request.
+* The new :meth:`BaseRequest.route` property returns the :class:`Route` that originally matched the request.
 * Removed the ``BaseRequest.MAX_PARAMS`` limit. The hash collision bug in CPythons dict() implementation was fixed over a year ago. If you are still using Python 2.5 in production, consider upgrading or at least make sure that you get security fixed from your distributor.
+* New :class:`ConfigDict` API (see :doc:`configuration`)
+
+More information can be found in this `development blog post <http://blog.bottlepy.org/2013/07/19/preview-bottle-012.html>`_.
+
 
 Release 0.11
 ==============
