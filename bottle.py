@@ -476,7 +476,7 @@ class Route(object):
     def __call__(self, *a, **ka):
         depr("Some APIs changed to return Route() instances instead of"\
              " callables. Make sure to use the Route.call method and not to"\
-             " call Route instances directly.")
+             " call Route instances directly.") #0.12
         return self.call(*a, **ka)
 
     @cached_property
@@ -496,7 +496,7 @@ class Route(object):
 
     @property
     def _context(self):
-        depr('Switch to Plugin API v2 and access the Route object directly.')
+        depr('Switch to Plugin API v2 and access the Route object directly.')  #0.12
         return dict(rule=self.rule, method=self.method, callback=self.callback,
                     name=self.name, app=self.app, config=self.config,
                     apply=self.plugins, skip=self.skiplist)
@@ -831,17 +831,6 @@ class Bottle(object):
             self.error_handler[int(code)] = handler
             return handler
         return wrapper
-
-    def handle(self, path, method='GET'):
-        """ (deprecated) Execute the first matching route callback and return
-            the result. :exc:`HTTPResponse` exceptions are caught and returned.
-            If :attr:`Bottle.catchall` is true, other exceptions are caught as
-            well and returned as :exc:`HTTPError` instances (500).
-        """
-        depr("This method will change semantics in 0.10. Try to avoid it.")
-        if isinstance(path, dict):
-            return self._handle(path)
-        return self._handle({'PATH_INFO': path, 'REQUEST_METHOD': method.upper()})
 
     def default_error_handler(self, res):
         return tob(template(ERROR_PAGE_TEMPLATE, e=res))
@@ -1241,12 +1230,6 @@ class BaseRequest(object):
         return post
 
     @property
-    def COOKIES(self):
-        ''' Alias for :attr:`cookies` (deprecated). '''
-        depr('BaseRequest.COOKIES was renamed to BaseRequest.cookies (lowercase).')
-        return self.cookies
-
-    @property
     def url(self):
         """ The full request URI including hostname and scheme. If your app
             lives behind a reverse proxy or load balancer and you get confusing
@@ -1476,7 +1459,9 @@ class BaseResponse(object):
         copy = cls()
         copy.status = self.status
         copy._headers = dict((k, v[:]) for (k, v) in self._headers.items())
-        copy.COOKIES.load(self.COOKIES.output())
+        if self._cookies:
+            copy._cookies = SimpleCookie()
+            copy._cookies.load(self._cookies.output())
         return copy
 
     def __iter__(self):
@@ -1551,10 +1536,6 @@ class BaseResponse(object):
             allowed with the current response status code. '''
         return self.headerlist
 
-    def wsgiheader(self):
-        depr('The wsgiheader method is deprecated. See headerlist.') #0.10
-        return self.headerlist
-
     @property
     def headerlist(self):
         ''' WSGI conform list of (header, value) tuples. '''
@@ -1583,15 +1564,6 @@ class BaseResponse(object):
         if 'charset=' in self.content_type:
             return self.content_type.split('charset=')[-1].split(';')[0].strip()
         return default
-
-    @property
-    def COOKIES(self):
-        """ A dict-like SimpleCookie instance. This should not be used directly.
-            See :meth:`set_cookie`. """
-        depr('The COOKIES dict is deprecated. Use `set_cookie()` instead.') # 0.10
-        if not self._cookies:
-            self._cookies = SimpleCookie()
-        return self._cookies
 
     def set_cookie(self, name, value, secret=None, **options):
         ''' Create a new cookie or replace an old one. If the `secret` parameter is
@@ -1664,7 +1636,7 @@ class BaseResponse(object):
 
 
 def local_property(name=None):
-    if name: dept('local_property() is deprecated and will be removed.') #0.12
+    if name: depr('local_property() is deprecated and will be removed.') #0.12
     ls = threading.local()
     def fget(self):
         try: return ls.var
@@ -1704,12 +1676,7 @@ Response = BaseResponse
 
 
 class HTTPResponse(Response, BottleException):
-    def __init__(self, body='', status=None, headers=None,
-                 header=None, **more_headers):
-        if header or 'output' in more_headers:
-            depr('Call signature changed (for the better). See BaseResponse')
-            if header: more_headers.update(header)
-            if 'output' in more_headers: body = more_headers.pop('output')
+    def __init__(self, body='', status=None, headers=None, **more_headers):
         super(HTTPResponse, self).__init__(body, status, headers, **more_headers)
 
     def apply(self, response):
@@ -1718,13 +1685,6 @@ class HTTPResponse(Response, BottleException):
         response._headers = self._headers
         response._cookies = self._cookies
         response.body = self.body
-
-    def _output(self, value=None):
-        depr('Use HTTPResponse.body instead of HTTPResponse.output')
-        if value is None: return self.body
-        self.body = value
-
-    output = property(_output, _output, doc='Alias for .body')
 
 
 class HTTPError(HTTPResponse):
@@ -2036,7 +1996,7 @@ class ConfigDict(dict):
         self._meta = {}
         self._on_change = lambda name, value: None
         if a or ka:
-            depr('Constructor does no longer accept parameters.')
+            depr('Constructor does no longer accept parameters.') #0.12
             self.update(*a, **ka)
 
     def load_config(self, filename):
@@ -3159,11 +3119,11 @@ class BaseTemplate(object):
         """ Search name in all directories specified in lookup.
         First without, then with common extensions. Return first hit. """
         if not lookup:
-            depr('The template lookup path list should not be empty.')
+            depr('The template lookup path list should not be empty.') #0.12
             lookup = ['.']
 
         if os.path.isabs(name) and os.path.isfile(name):
-            depr('Absolute template path names are deprecated.')
+            depr('Absolute template path names are deprecated.') #0.12
             return os.path.abspath(name)
 
         for spath in lookup:
@@ -3288,7 +3248,7 @@ class SimpleTemplate(BaseTemplate):
         try:
             source, encoding = touni(source), 'utf8'
         except UnicodeError:
-            depr('Template encodings other than utf8 are no longer supported.')
+            depr('Template encodings other than utf8 are no longer supported.') #0.11
             source, encoding = touni(source, 'latin1'), 'latin1'
         parser = StplParser(source, encoding=encoding, syntax=self.syntax)
         code = parser.translate()
@@ -3298,13 +3258,13 @@ class SimpleTemplate(BaseTemplate):
     def _rebase(self, _env, _name=None, **kwargs):
         if _name is None:
             depr('Rebase function called without arguments.'
-                 ' You were probably looking for {{base}}?', True)
+                 ' You were probably looking for {{base}}?', True) #0.12
         _env['_rebase'] = (_name, kwargs)
 
     def _include(self, _env, _name=None, **kwargs):
         if _name is None:
             depr('Rebase function called without arguments.'
-                 ' You were probably looking for {{base}}?', True)
+                 ' You were probably looking for {{base}}?', True) #0.12
         env = _env.copy()
         env.update(kwargs)
         if _name not in self.cache:
@@ -3406,7 +3366,7 @@ class StplParser(object):
                     self.offset += len(line+sep)+1
                     continue
                 elif m.group(5): # Old escape syntax
-                    depr('Escape code lines with a backslash.')
+                    depr('Escape code lines with a backslash.') #0.12
                     line, sep, _ = self.source[self.offset:].partition('\n')
                     self.text_buffer.append(m.group(2)+line+sep)
                     self.offset += len(line+sep)+1
@@ -3486,14 +3446,14 @@ class StplParser(object):
     def fix_backward_compatibility(self, line, comment):
         parts = line.strip().split(None, 2)
         if parts and parts[0] in ('include', 'rebase'):
-            depr('The include and rebase keywords are functions now.')
+            depr('The include and rebase keywords are functions now.') #0.12
             if len(parts) == 1:   return "_printlist([base])", comment
             elif len(parts) == 2: return "_=%s(%r)" % tuple(parts), comment
             else:                 return "_=%s(%r, %s)" % tuple(parts), comment
         if self.lineno <= 2 and not line.strip() and 'coding' in comment:
             m = re.match(r"#.*coding[:=]\s*([-\w.]+)", comment)
             if m:
-                depr('PEP263 encoding strings in templates are deprecated.')
+                depr('PEP263 encoding strings in templates are deprecated.') #0.12
                 enc = m.group(1)
                 self.source = self.source.encode(self.encoding).decode(enc)
                 self.encoding = enc
