@@ -130,8 +130,6 @@ class TestSimpleTemplate(unittest.TestCase):
         self.assertRenders(t, 'start\n\nend', l=[])
 
     def test_escaped_codelines(self):
-        self.assertRenders('%% test', '% test')
-        self.assertRenders('%%% test', '%% test')
         self.assertRenders('\\% test', '% test')
         self.assertRenders('\\%% test', '%% test')
 
@@ -192,33 +190,6 @@ class TestSimpleTemplate(unittest.TestCase):
         t = SimpleTemplate('...\n%#test\n...')
         self.assertNotEqual('#test', t.code.splitlines()[0])
 
-    def test_detect_pep263(self):
-        ''' PEP263 strings in code-lines change the template encoding on the fly '''
-        t = SimpleTemplate(touni('%#coding: iso8859_15\nöäü?@€').encode('utf8'))
-        self.assertNotEqual(touni('öäü?@€'), t.render())
-        self.assertEqual(t.encoding, 'iso8859_15')
-        t = SimpleTemplate(touni('%#coding: iso8859_15\nöäü?@€').encode('iso8859_15'))
-        self.assertEqual(touni('öäü?@€'), t.render())
-        self.assertEqual(t.encoding, 'iso8859_15')
-        self.assertEqual(2, len(t.code.splitlines()))
-
-    def test_ignore_pep263_in_textline(self):
-        ''' PEP263 strings in text-lines have no effect '''
-        t = SimpleTemplate(touni('#coding: iso8859_15\nöäü?@€').encode('utf8'))
-        self.assertEqual(touni('#coding: iso8859_15\nöäü?@€'), t.render())
-        self.assertEqual(t.encoding, 'utf8')
-
-    def test_ignore_late_pep263(self):
-        ''' PEP263 strings must appear within the first two lines '''
-        t = SimpleTemplate(touni('\n\n%#coding: iso8859_15\nöäü?@€').encode('utf8'))
-        self.assertEqual(touni('\n\nöäü?@€'), t.render())
-        self.assertEqual(t.encoding, 'utf8')
-
-    def test_coding_stress(self):
-        self.assertRenders('%a=1\n%coding=a\nok', 'ok')
-        self.assertRenders('a %coding:b', 'a %coding:b')
-        self.assertRenders(' % #coding:utf-8', '')
-
     def test_template_shortcut(self):
         result = template('start {{var}} end', var='middle')
         self.assertEqual(touni('start middle end'), result)
@@ -269,20 +240,6 @@ class TestSTPLDir(unittest.TestCase):
         except SyntaxError:
             self.fail('Syntax error in template:\n%s\n\nTemplate code:\n##########\n%s\n##########' %
                      (traceback.format_exc(), tpl.code))
-
-    def test_old_include(self):
-        t1 = SimpleTemplate('%include foo')
-        t1.cache['foo'] = SimpleTemplate('foo')
-        self.assertEqual(t1.render(), 'foo')
-
-    def test_old_include_with_args(self):
-        t1 = SimpleTemplate('%include foo x=y')
-        t1.cache['foo'] = SimpleTemplate('foo{{x}}')
-        self.assertEqual(t1.render(y='bar'), 'foobar')
-
-    def test_defect_coding(self):
-        t1 = SimpleTemplate('%#coding comment\nfoo{{y}}')
-        self.assertEqual(t1.render(y='bar'), 'foobar')
 
     def test_multiline_block(self):
         source = '''

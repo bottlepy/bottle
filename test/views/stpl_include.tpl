@@ -1,3 +1,3 @@
 before
-%include stpl_simple var=var
+%include('stpl_simple', var=var)
 after
