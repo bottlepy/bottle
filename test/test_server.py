@@ -19,13 +19,15 @@ serverscript = os.path.join(os.path.dirname(__file__), 'servertest.py')
 
 def ping(server, port):
     ''' Check if a server accepts connections on a specific TCP port '''
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((server, port))
-        s.close()
         return True
     except socket.error:
         return False
+    finally:
+        s.close()
+
 
 class TestServer(unittest.TestCase):
     server = 'wsgiref'
