@@ -8,8 +8,6 @@ Release Notes and Changelog
 Release 0.11
 ==============
 
-.. warning: Not released yet.
-
 * Native support for Python 2.x and 3.x syntax. No need to run 2to3 anymore.
 * Support for partial downloads (``Range`` header) in :func:`static_file`.
 * The new :class:`ResourceManager` interface helps locating files bundled with an application.
