@@ -44,7 +44,7 @@ class TestSimpleTemplate(unittest.TestCase):
         t = SimpleTemplate('<{{var}}>')
         self.assertRenders('<{{var}}>', '<True>', var=True)
         self.assertRenders('<{{var}}>', '<False>', var=False)
-        self.assertRenders('<{{var}}>', '<None>', var=None)
+        self.assertRenders('<{{var}}>', '<>', var=None)
         self.assertRenders('<{{var}}>', '<0>', var=0)
         self.assertRenders('<{{var}}>', '<5>', var=5)
         self.assertRenders('<{{var}}>', '<b>', var=tob('b'))

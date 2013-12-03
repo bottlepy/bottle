@@ -116,8 +116,13 @@ else: # 2.x
 # Some helpers for string/byte handling
 def tob(s, enc='utf8'):
     return s.encode(enc) if isinstance(s, unicode) else bytes(s)
+
 def touni(s, enc='utf8', err='strict'):
-    return s.decode(enc, err) if isinstance(s, bytes) else unicode(s or "")
+    if isinstance(s, bytes):
+        return s.decode(enc, err)
+    else:
+        return unicode(s or ("" if s is None else s))
+
 tonat = touni if py3k else tob
 
 # 3.2 fixes cgi.FieldStorage to accept bytes (which makes a lot of sense).
