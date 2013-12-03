@@ -70,8 +70,9 @@ In order to conform to the WSGI standard, all we have to do is to return a body 
     def fetch():
         body = gevent.queue.Queue()
         worker = SomeAsyncWorker()
-        worker.on_data(lambda chunk: body.put(chunk))
+        worker.on_data(body.put)
         worker.on_finish(lambda: body.put(StopIteration))
+        worker.start()
         return body
 
 From the server perspective, the queue object is iterable. It blocks if empty and stops as soon as it reaches ``StopIteration``. This conforms to WSGI. On the application side, the queue object behaves like a non-blocking socket. You can write to it at any time, pass it around and even start a new (pseudo)thread that writes to it asynchronously. This is how long-polling is implemented most of the time.
