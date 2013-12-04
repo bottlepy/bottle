@@ -3160,11 +3160,12 @@ class CheetahTemplate(BaseTemplate):
 
 
 class Jinja2Template(BaseTemplate):
-    def prepare(self, filters=None, tests=None, **kwargs):
+    def prepare(self, filters=None, tests=None, globals={}, **kwargs):
         from jinja2 import Environment, FunctionLoader
         self.env = Environment(loader=FunctionLoader(self.loader), **kwargs)
         if filters: self.env.filters.update(filters)
         if tests: self.env.tests.update(tests)
+        if globals: self.env.globals.update(globals)
         if self.source:
             self.tpl = self.env.from_string(self.source)
         else:
