@@ -316,7 +316,7 @@ class TestRequest(unittest.TestCase):
     def test_multipart(self):
         """ Environ: POST (multipart files and multible values per key) """
         fields = [('field1','value1'), ('field2','value2'), ('field2','value3')]
-        files = [('file1','filename1.txt','content1'), ('file2','filename2.py',touni('ä\nö\rü'))]
+        files = [('file1','filename1.txt','content1'), ('万难','万难foo.py', 'ä\nö\rü')]
         e = tools.multipart_environ(fields=fields, files=files)
         request = BaseRequest(e)
         # File content
@@ -326,16 +326,16 @@ class TestRequest(unittest.TestCase):
         cmp = tob('content1') if sys.version_info >= (3,2,0) else 'content1'
         self.assertEqual(cmp, request.POST['file1'].file.read())
         # File name and meta data
-        self.assertTrue('file2' in request.POST)
-        self.assertTrue('file2' in request.files)
-        self.assertTrue('file2' not in request.forms)
-        self.assertEqual('filename2.py', request.POST['file2'].filename)
-        self.assertTrue(request.files.file2)
+        self.assertTrue('万难' in request.POST)
+        self.assertTrue('万难' in request.files)
+        self.assertTrue('万难' not in request.forms)
+        self.assertEqual('foo.py', request.POST['万难'].filename)
+        self.assertTrue(request.files['万难'])
         self.assertFalse(request.files.file77)
         # UTF-8 files
-        x = request.POST['file2'].file.read()
+        x = request.POST['万难'].file.read()
         if (3,2,0) > sys.version_info >= (3,0,0):
-            x = x.encode('ISO-8859-1')
+            x = x.encode('utf8')
         self.assertEqual(tob('ä\nö\rü'), x)
         # No file
         self.assertTrue('file3' not in request.POST)

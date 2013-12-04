@@ -110,6 +110,7 @@ else: # 2.x
         bytes = str
     else: # 2.6, 2.7
         from collections import MutableMapping as DictMixin
+    unicode = unicode
     json_loads = json_lds
     eval(compile('def _raise(*a): raise a[0], a[1], a[2]', '<py3fix>', 'exec'))
 
@@ -1215,10 +1216,10 @@ class BaseRequest(object):
             if key in self.environ: safe_env[key] = self.environ[key]
         args = dict(fp=self.body, environ=safe_env, keep_blank_values=True)
         if py31:
-            args['fp'] = NCTextIOWrapper(args['fp'], encoding='latin1',
+            args['fp'] = NCTextIOWrapper(args['fp'], encoding='utf8',
                                          newline='\n')
         elif py3k:
-            args['encoding'] = 'latin1'
+            args['encoding'] = 'utf8'
         data = cgi.FieldStorage(**args)
         data = data.list or []
         for item in data:

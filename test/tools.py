@@ -9,7 +9,7 @@ import wsgiref.validate
 import mimetypes
 import uuid
 
-from bottle import tob, tonat, BytesIO, py3k
+from bottle import tob, tonat, BytesIO, py3k, unicode
 
 def warn(msg):
     sys.stderr.write('WARNING: %s\n' % msg.strip())
@@ -126,14 +126,14 @@ def multipart_environ(fields, files):
         body += 'Content-Disposition: form-data; name="%s"\n\n' % name
         body += value + '\n'
     for name, filename, content in files:
-        mimetype = mimetypes.guess_type(filename)[0] or 'application/octet-stream'
+        mimetype = str(mimetypes.guess_type(filename)[0]) or 'application/octet-stream'
         body += boundary + '\n'
         body += 'Content-Disposition: file; name="%s"; filename="%s"\n' % \
              (name, filename)
         body += 'Content-Type: %s\n\n' % mimetype
         body += content + '\n'
     body += boundary + '--\n'
-    if hasattr(body, 'encode'):
+    if isinstance(body, unicode):
         body = body.encode('utf8')
     env['CONTENT_LENGTH'] = str(len(body))
     env['wsgi.input'].write(body)
