@@ -961,6 +961,13 @@ class Bottle(object):
         ''' Each instance of :class:'Bottle' is a WSGI application. '''
         return self.wsgi(environ, start_response)
 
+    def __enter__(self):
+        ''' Use this application as default for all module-level shortcuts. '''
+        default_app.push(self)
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        default_app.pop()
 
 
 

@@ -887,7 +887,7 @@ Development
 ================================================================================
 
 So you have learned the basics and want to write your own application? Here are
-some tips that might help you to be more productive.
+some tips that might help you beeing more productive.
 
 .. _default-app:
 
@@ -900,7 +900,9 @@ Bottle maintains a global stack of :class:`Bottle` instances and uses the top of
     def hello():
         return 'Hello World'
 
-This is very convenient for small applications and saves you some typing, but also means that, as soon as your module is imported, routes are installed to the global application. To avoid this kind of import side-effects, Bottle offers a second, more explicit way to build applications::
+    run()
+
+This is very convenient for small applications and saves you some typing, but also means that, as soon as your module is imported, routes are installed to the global default application. To avoid this kind of import side-effects, Bottle offers a second, more explicit way to build applications::
 
     app = Bottle()
 
@@ -908,25 +910,32 @@ This is very convenient for small applications and saves you some typing, but al
     def hello():
         return 'Hello World'
 
+    app.run()
+
 Separating the application object improves re-usability a lot, too. Other developers can safely import the ``app`` object from your module and use :meth:`Bottle.mount` to merge applications together.
 
-As an alternative, you can make use of the application stack to isolate your routes while still using the convenient shortcuts::
 
-    default_app.push()
+.. versionadded:: 0.13
 
-    @route('/')
-    def hello():
-        return 'Hello World'
+Starting with bottle-0.13 you can use :class:`Bottle` instances as context managers::
 
-    app = default_app.pop()
+    app = Bottle()
 
-Both :func:`app` and :func:`default_app` are instance of :class:`AppStack` and implement a stack-like API. You can push and pop applications from and to the stack as needed. This also helps if you want to import a third party module that does not offer a separate application object::
+    with app:
 
-    default_app.push()
+        # Our application object is now the default
+        # for all shortcut functions and decorators
 
-    import some.module
+        assert my_app is default_app()
 
-    app = default_app.pop()
+        @route('/')
+        def hello():
+            return 'Hello World'
+
+        # Also useful to capture routes defined in other modules
+        import some_package.more_routes
+
+
 
 
 .. _tutorial-debugging:
