@@ -666,6 +666,10 @@ class Bottle(object):
         if not segments: raise ValueError('Empty path prefix.')
         path_depth = len(segments)
 
+        def unshift():
+            yield
+            request.path_shift(-path_depth)
+
         def mountpoint_wrapper():
             try:
                 request.path_shift(path_depth)
@@ -677,11 +681,12 @@ class Bottle(object):
                     for name, value in headerlist: rs.add_header(name, value)
                     return rs.body.append
                 body = app(request.environ, start_response)
-                if body and rs.body: body = itertools.chain(rs.body, body)
-                rs.body = body or rs.body
+                if body and rs.body: rs.body = itertools.chain(rs.body, body, unshift)
+                else: rs.body = itertools.chain(body or rs.body, unshift)
                 return rs
-            finally:
+            except:
                 request.path_shift(-path_depth)
+                raise
 
         options.setdefault('skip', True)
         options.setdefault('method', 'PROXY')
