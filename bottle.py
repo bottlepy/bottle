@@ -1644,7 +1644,7 @@ def _local_property():
 
 class LocalRequest(BaseRequest):
     ''' A thread-local subclass of :class:`BaseRequest` with a different
-        set of attribues for each thread. There is usually only one global
+        set of attributes for each thread. There is usually only one global
         instance of this class (:data:`request`). If accessed during a
         request/response cycle, this instance always refers to the *current*
         request (even on a multithreaded server). '''
@@ -1654,7 +1654,7 @@ class LocalRequest(BaseRequest):
 
 class LocalResponse(BaseResponse):
     ''' A thread-local subclass of :class:`BaseResponse` with a different
-        set of attribues for each thread. There is usually only one global
+        set of attributes for each thread. There is usually only one global
         instance of this class (:data:`response`). Its attributes are used
         to build the HTTP response at the end of the request/response cycle.
     '''
