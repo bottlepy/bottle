@@ -1163,7 +1163,7 @@ class BaseRequest(object):
                 maxread -= len(part)
             if read(2) != rn:
                 raise err
-            
+
     @DictProperty('environ', 'bottle.request.body', read_only=True)
     def _body(self):
         body_iter = self._iter_chunked if self.chunked else self._iter_body
@@ -2045,6 +2045,7 @@ class ConfigDict(dict):
             >>> c.load_dict({'some': {'namespace': {'key': 'value'} } })
             {'some.namespace.key': 'value'}
         """
+
         for key, value in source.items():
             if isinstance(key, str):
                 nskey = (namespace + '.' + key).strip('.')
@@ -2653,34 +2654,46 @@ class FlupFCGIServer(ServerAdapter):
 
 
 class WSGIRefServer(ServerAdapter):
+    def __init__(self, *args, **kargs):
+        super().__init__(*args, **kargs)
+        self.server = None
 
-    def run(self, app): # pragma: no cover
+    def initialize(self, app):
+        from wsgiref.simple_server import WSGIRequestHandler, WSGIServer
         from wsgiref.simple_server import make_server
         from wsgiref.simple_server import WSGIRequestHandler, WSGIServer
         import socket
 
         class FixedHandler(WSGIRequestHandler):
-            def address_string(self): # Prevent reverse DNS lookups please.
+            def address_string(self):  # Prevent reverse DNS lookups please.
                 return self.client_address[0]
+
             def log_request(*args, **kw):
                 if not self.quiet:
                     return WSGIRequestHandler.log_request(*args, **kw)
 
         handler_cls = self.options.get('handler_class', FixedHandler)
-        server_cls  = self.options.get('server_class', WSGIServer)
+        server_cls = self.options.get('server_class', WSGIServer)
 
-        if ':' in self.host: # Fix wsgiref for IPv6 addresses.
+        if ':' in self.host:  # Fix wsgiref for IPv6 addresses.
             if getattr(server_cls, 'address_family') == socket.AF_INET:
                 class server_cls(server_cls):
                     address_family = socket.AF_INET6
 
-        self.srv = make_server(self.host, self.port, app, server_cls, handler_cls)
-        self.port = self.srv.server_port # update port actual port (0 means random)
-        try:
-            self.srv.serve_forever()
-        except KeyboardInterrupt:
-            self.srv.server_close() # Prevent ResourceWarning: unclosed socket
-            raise
+        self.server = make_server(self.host,
+                                  self.port,
+                                  app,
+                                  server_cls,
+                                  handler_cls)
+        self.port = self.server.server_port
+
+    def run(self, app):  # pragma: no cover
+        if self.server is None:
+            self.initialize(app)
+
+        assert self.server is not None
+
+        self.server.serve_forever()
 
 
 class CherryPyServer(ServerAdapter):
@@ -2688,20 +2701,20 @@ class CherryPyServer(ServerAdapter):
         from cherrypy import wsgiserver
         self.options['bind_addr'] = (self.host, self.port)
         self.options['wsgi_app'] = handler
-        
+
         certfile = self.options.get('certfile')
         if certfile:
             del self.options['certfile']
         keyfile = self.options.get('keyfile')
         if keyfile:
             del self.options['keyfile']
-        
+
         server = wsgiserver.CherryPyWSGIServer(**self.options)
         if certfile:
             server.ssl_certificate = certfile
         if keyfile:
             server.ssl_private_key = keyfile
-        
+
         try:
             server.start()
         finally:
@@ -2965,6 +2978,37 @@ def load_app(target):
         NORUN = nr_old
 
 _debug = debug
+
+
+def create_server(app=None, server='wsgiref',
+                  host='127.0.0.1', port=8080,
+                  plugins=None,
+                  debug=None, **kargs):
+    if debug is not None: _debug(debug)
+    app = app or default_app()
+    if isinstance(app, basestring):
+        app = load_app(app)
+    if not callable(app):
+        raise ValueError("Application is not callable: %r" % app)
+
+    for plugin in plugins or []:
+        if isinstance(plugin, basestring):
+            plugin = load(plugin)
+        app.install(plugin)
+
+    if server in server_names:
+        server = server_names.get(server)
+    if isinstance(server, basestring):
+        server = load(server)
+    if isinstance(server, type):
+        server = server(host=host, port=port, **kargs)
+    if not isinstance(server, ServerAdapter):
+        raise ValueError("Unknown or unsupported server: %r" % server)
+
+    server.initialize(app)
+    return server
+
+
 def run(app=None, server='wsgiref', host='127.0.0.1', port=8080,
         interval=1, reloader=False, quiet=False, plugins=None,
         debug=None, **kargs):
@@ -3010,26 +3054,10 @@ def run(app=None, server='wsgiref', host='127.0.0.1', port=8080,
         return
 
     try:
-        if debug is not None: _debug(debug)
-        app = app or default_app()
-        if isinstance(app, basestring):
-            app = load_app(app)
-        if not callable(app):
-            raise ValueError("Application is not callable: %r" % app)
-
-        for plugin in plugins or []:
-            if isinstance(plugin, basestring):
-                plugin = load(plugin)
-            app.install(plugin)
-
-        if server in server_names:
-            server = server_names.get(server)
-        if isinstance(server, basestring):
-            server = load(server)
-        if isinstance(server, type):
-            server = server(host=host, port=port, **kargs)
-        if not isinstance(server, ServerAdapter):
-            raise ValueError("Unknown or unsupported server: %r" % server)
+        server = create_server(app, server,
+                               host, port,
+                               plugins, debug,
+                               **kargs)
 
         server.quiet = server.quiet or quiet
         if not server.quiet:
