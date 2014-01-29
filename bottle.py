@@ -2641,7 +2641,7 @@ class WSGIRefServer(ServerAdapter):
 class CherryPyServer(ServerAdapter):
     def run(self, handler): # pragma: no cover
         from cherrypy import wsgiserver
-        self.options['bind_addr'] = (self.host, self.port)
+        self.options.setdefault('bind_addr', (self.host, self.port))
         self.options['wsgi_app'] = handler
         
         certfile = self.options.get('certfile')
