@@ -2335,7 +2335,7 @@ def _file_iter_range(fp, offset, bytes, maxread=1024*1024):
 
 def static_file(filename, root, mimetype='auto', download=False, charset='UTF-8'):
     """ Open a file in a safe way and return :exc:`HTTPResponse` with status
-        code 200, 305, 401 or 404. The ``Content-Type``, ``Content-Encoding``,
+        code 200, 305, 403 or 404. The ``Content-Type``, ``Content-Encoding``,
         ``Content-Length`` and ``Last-Modified`` headers are set if possible.
         Special support for ``If-Modified-Since``, ``Range`` and ``HEAD``
         requests.
