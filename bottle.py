@@ -3380,6 +3380,7 @@ class StplParser(object):
             prefix = text[pos:]
             lines = prefix.splitlines(True)
             if lines[-1].endswith('\\\\\n'): lines[-1] = lines[-1][:-3]
+            elif lines[-1].endswith('\\\\\r\n'): lines[-1] = lines[-1][:-4]
             parts.append(nl.join(map(repr, lines)))
         code = '_printlist((%s,))' % ', '.join(parts)
         self.lineno += code.count('\n')+1
