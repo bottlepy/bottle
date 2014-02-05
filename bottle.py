@@ -411,7 +411,10 @@ class Router(object):
         verb = environ['REQUEST_METHOD'].upper()
         path = environ['PATH_INFO'] or '/'
         target = None
-        methods = [verb, 'GET', 'ANY'] if verb == 'HEAD' else [verb, 'ANY']
+        if verb == 'HEAD':
+            methods = ['PROXY', verb, 'GET', 'ANY']
+        else:
+            methods = ['PROXY', verb, 'ANY']
 
         for method in methods:
             if method in self.static and path in self.static[method]:
@@ -682,7 +685,7 @@ class Bottle(object):
                 request.path_shift(-path_depth)
 
         options.setdefault('skip', True)
-        options.setdefault('method', 'ANY')
+        options.setdefault('method', 'PROXY')
         options.setdefault('mountpoint', {'prefix': prefix, 'target': app})
         options['callback'] = mountpoint_wrapper
 
