@@ -11,6 +11,16 @@ class TestAppMounting(ServerTestBase):
         def test(test='foo'):
             return test
 
+
+    def test_mount_order_bug581(self):
+        self.app.mount('/test/', self.subapp)
+
+        # This should not match
+        self.app.route('/<test:path>', callback=lambda test: test)
+
+        self.assertStatus(200, '/test/')
+        self.assertBody('foo', '/test/')
+
     def test_mount(self):
         self.app.mount('/test/', self.subapp)
         self.assertStatus(404, '/')
