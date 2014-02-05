@@ -172,7 +172,7 @@ Let's have a look at some practical examples::
     def callback(path):
         return static_file(path, ...)
 
-You can add your own filters as well. See :doc:`Routing` for details.
+You can add your own filters as well. See :ref:`tutorial-routing` for details.
 
 .. versionchanged:: 0.10
 
@@ -673,6 +673,45 @@ Bottle stores file uploads in :attr:`BaseRequest.files` as :class:`FileUpload` i
 :attr:`FileUpload.filename` contains the name of the file on the clients file system, but is cleaned up and normalized to prevent bugs caused by unsupported characters or path segments in the filename. If you need the unmodified name as sent by the client, have a look at :attr:`FileUpload.raw_filename`.
 
 The :attr:`FileUpload.save` method is highly recommended if you want to store the file to disk. It prevents some common errors (e.g. it does not overwrite existing files unless you tell it to) and stores the file in a memory efficient way. You can access the file object directly via :attr:`FileUpload.file`. Just be careful. 
+
+
+Authentication
+---------------------
+
+To protect a route with digest authentication (for example for a REST site), a checking routine must be added to a route, for example::
+
+    @route('/secret', method='GET')
+    @protected(check_user)
+    def secret():
+        return "The secret answer is here."
+
+This very secret answer page gets protected by means of the ``@protected`` decorator, which takes a user name and password checking function as argument. For illustration purposes only, the following ``check_function`` suffices::
+
+    def check_user(path, method, user, pwd):
+        return user == 'admin' and pwd == 'secret'
+
+The ``protected`` decorator function looks like::
+
+    realm = "Secret site" # Realm is shown to the user during the login
+
+    @error(401)
+    def handle401(error):
+        response.set_header('WWW-Authenticate', 'Basic realm="' + realm + '"')
+        return 'Access denied'
+
+    def protected(check_fn):
+        ''' Decorator for adding digest authentication protection to a route. '''
+        def decorator(func):
+            def wrapper(*a, **ka):
+                user, pwd = request.auth or (None, None)
+                if user is None or not check_fn(request.path, request.method, user, pwd):
+                    bottle.abort(401, "Access denied")
+                return func(*a, **ka)
+            return wrapper
+        return decorator
+
+It returns a function that verifies the user name and password. If it fails, it returns a 401 error code through the :ref:`tutorial-errorhandling` mechanism, which causes the web browser to query for authentication, displaying the ``realm`` to the user.
+If authentication is correct, it executes the route, displaying the answer.
 
 
 JSON Content
