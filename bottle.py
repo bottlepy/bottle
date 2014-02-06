@@ -42,6 +42,8 @@ from datetime import date as datedate, datetime, timedelta
 from tempfile import TemporaryFile
 from traceback import format_exc, print_exc
 from inspect import getargspec
+from unicodedata import normalize
+
 
 try: from simplejson import dumps as json_dumps, loads as json_lds
 except ImportError: # pragma: no cover
@@ -2258,19 +2260,21 @@ class FileUpload(object):
     @cached_property
     def filename(self):
         ''' Name of the file on the client file system, but normalized to ensure
-            file system compatibility (lowercase, no whitespace, no path
-            separators, no unsafe characters, ASCII only). An empty filename
-            is returned as 'empty'.
+            file system compatibility. An empty filename is returned as 'empty'.
+            
+            Only ASCII letters, digits, dashes, underscores and dots are
+            allowed in the final filename. Accents are removed, if possible.
+            Whitespace is replaced by a single dash. Leading or tailing dots
+            or dashes are removed. The filename is limited to 255 characters.
         '''
-        from unicodedata import normalize #TODO: Module level import?
         fname = self.raw_filename
-        if isinstance(fname, unicode):
-            fname = normalize('NFKD', fname).encode('ASCII', 'ignore')
-        fname = fname.decode('ASCII', 'ignore')
+        if not isinstance(fname, unicode):
+            fname = fname.decode('utf8', 'ignore')
+        fname = normalize('NFKD', fname).encode('ASCII', 'ignore').decode('ASCII')
         fname = os.path.basename(fname.replace('\\', os.path.sep))
-        fname = re.sub(r'[^a-zA-Z0-9-_.\s]', '', fname).strip().lower()
-        fname = re.sub(r'[-\s]+', '-', fname.strip('.').strip())
-        return fname or 'empty'
+        fname = re.sub(r'[^a-zA-Z0-9-_.\s]', '', fname).strip()
+        fname = re.sub(r'[-\s]+', '-', fname).strip('.-')
+        return fname[:255] or 'empty'
 
     def _copy_file(self, fp, chunk_size=2**16):
         read, write, offset = self.file.read, fp.write, self.file.tell()
