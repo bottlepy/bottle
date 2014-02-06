@@ -9,6 +9,7 @@ python:
   - "3.3"
 
 install:
+  - pip install -r .travis-requirements.txt
   - pip install .
 
 script: make test
