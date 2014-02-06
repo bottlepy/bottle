@@ -11,7 +11,7 @@ bjoern
 cherrypy
 diesel
 eventlet
-fapws3
+fapws3==0.11.dev
 gevent
 gunicorn
 paste
