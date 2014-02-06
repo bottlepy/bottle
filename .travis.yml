@@ -9,8 +9,6 @@ python:
   - "3.3"
 
 install:
-  - sudo apt-get install -qq libev-dev
-  - pip install -r .travis-requirements.txt
   - pip install .
 
 script: make test
