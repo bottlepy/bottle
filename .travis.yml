@@ -6,8 +6,14 @@ python:
   - "3.2"
   - "3.3"
 
+matrix:
+  include:
+    - python: 2.7
+      env: PY=2.5
+    - python: 2.7
+      env: PY=3.1
+
 install:
-  - pip install .
+  - sh test/travis_setup.sh
 
-script: make test
-
+script: python${PY:-} test/testall.py fast
