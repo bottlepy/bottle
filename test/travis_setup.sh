@@ -10,7 +10,7 @@ if test -n "$PY"; then
   sudo apt-get install python$PY-dev
 
   if test "$PY" = 2.5; then
-    wget -O - http://python-distribute.org/distribute_setup.py | sudo python$USEPY
+    wget -O - http://python-distribute.org/distribute_setup.py | sudo python$PY
     sudo easy_install-$PY simplejson
   fi
 fi
