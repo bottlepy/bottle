@@ -550,7 +550,7 @@ class Route(object):
             to recover the original function before inspection. '''
         return getargspec(self.get_undecorated_callback())[0]
 
-    def get_config(key, default=None):
+    def get_config(self, key, default=None):
         ''' Lookup a config field and return its value, first checking the
             route.config, then route.app.config.'''
         for conf in (self.config, self.app.conifg):
@@ -1137,17 +1137,17 @@ class BaseRequest(object):
                 header += c
                 if not c: raise err
                 if len(header) > bufsize: raise err
-            size, sep, junk = header.partition(sem)
+            size, _, _ = header.partition(sem)
             try:
                 maxread = int(tonat(size.strip()), 16)
             except ValueError:
                 raise err
             if maxread == 0: break
-            buffer = bs
+            buff = bs
             while maxread > 0:
-                if not buffer:
-                    buffer = read(min(maxread, bufsize))
-                part, buffer = buffer[:maxread], buffer[maxread:]
+                if not buff:
+                    buff = read(min(maxread, bufsize))
+                part, buff = buff[:maxread], buff[maxread:]
                 if not part: raise err
                 yield part
                 maxread -= len(part)
@@ -1773,13 +1773,13 @@ class _ImportRedirect(object):
 
     def find_module(self, fullname, path=None):
         if '.' not in fullname: return
-        packname, modname = fullname.rsplit('.', 1)
+        packname = fullname.rsplit('.', 1)[0]
         if packname != self.name: return
         return self
 
     def load_module(self, fullname):
         if fullname in sys.modules: return sys.modules[fullname]
-        packname, modname = fullname.rsplit('.', 1)
+        modname = fullname.rsplit('.', 1)[1]
         realname = self.impmask % modname
         __import__(realname)
         module = sys.modules[fullname] = sys.modules[realname]
@@ -3388,7 +3388,7 @@ class StplParser(object):
         return ''.join(self.code_buffer)
 
     def read_code(self, multiline):
-        code_line, comment, start_line = '', '', self.lineno
+        code_line, comment = '', ''
         while True:
             m = self.re_tok.search(self.source[self.offset:])
             if not m:
