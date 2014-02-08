@@ -3075,7 +3075,7 @@ class BaseTemplate(object):
         self.name = name
         self.source = source.read() if hasattr(source, 'read') else source
         self.filename = source.filename if hasattr(source, 'filename') else None
-        self.lookup = [os.path.abspath(x) for x in lookup]
+        self.lookup = [os.path.abspath(x) for x in (lookup + [''])]
         self.encoding = encoding
         self.settings = self.settings.copy() # Copy from class variable
         self.settings.update(settings) # Apply
@@ -3215,7 +3215,12 @@ class SimpleTemplate(BaseTemplate):
 
     @cached_property
     def code(self):
-        source = self.source or open(self.filename, 'rb').read()
+        if self.source:
+            source = self.source
+        else:
+            filehandle = open(self.filename, 'rb')
+            source= filehandle.read()
+            filehandle.close()
         try:
             source, encoding = touni(source), 'utf8'
         except UnicodeError:
