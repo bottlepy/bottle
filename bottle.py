@@ -3219,7 +3219,7 @@ class SimpleTemplate(BaseTemplate):
             source = self.source
         else:
             filehandle = open(self.filename, 'rb')
-            source= filehandle.read()
+            source = filehandle.read()
             filehandle.close()
         try:
             source, encoding = touni(source), 'utf8'
