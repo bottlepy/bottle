@@ -3075,7 +3075,7 @@ class BaseTemplate(object):
         self.name = name
         self.source = source.read() if hasattr(source, 'read') else source
         self.filename = source.filename if hasattr(source, 'filename') else None
-        self.lookup = [os.path.abspath(x) for x in (lookup + [''])]
+        self.lookup = [os.path.abspath(x) for x in lookup]  if lookup else [os.path.abspath('.'),]
         self.encoding = encoding
         self.settings = self.settings.copy() # Copy from class variable
         self.settings.update(settings) # Apply
