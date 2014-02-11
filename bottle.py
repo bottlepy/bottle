@@ -77,6 +77,15 @@ except IOError:
     _stderr = lambda x: sys.stderr.write(x)
 
 # Lots of stdlib and builtin differences.
+if py < (3, 2, 0):
+    def _update_wrap(f):
+        @functools.wraps(functools.update_wrapper)
+        def _update_wrapper(wrapper, wrapped, *args, **kwargs):
+            wrapper.__wrapped__ = wrapped
+            return f(wrapper=wrapper, wrapped=wrapped, *args, **kwargs)
+        return _update_wrapper
+    functools.update_wrapper = _update_wrap(functools.update_wrapper)
+
 if py3k:
     import http.client as httplib
     import _thread as thread
@@ -529,9 +538,8 @@ class Route(object):
             recover the original function. '''
         func = self.callback
         func = getattr(func, '__func__' if py3k else 'im_func', func)
-        closure_attr = '__closure__' if py3k else 'func_closure'
-        while hasattr(func, closure_attr) and getattr(func, closure_attr):
-            func = getattr(func, closure_attr)[0].cell_contents
+        while hasattr(func, '__wrapped__') and getattr(func, '__wrapped__'):
+            func = getattr(func, '__wrapped__')
         return func
 
     def get_callback_args(self):
