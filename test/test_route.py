@@ -28,3 +28,9 @@ class TestRoute(unittest.TestCase):
         self.assertEqual(route.get_undecorated_callback(), x)
         self.assertEqual(set(route.get_callback_args()), set(['a', 'b']))
 
+        def d3(a, b):
+            return ''
+
+        route = bottle.Route(None, None, None, bottle.view(d3))
+        self.assertEqual(route.get_undecorated_callback(), d3)
+        self.assertEqual(set(route.get_callback_args()), set(['a', 'b']))
