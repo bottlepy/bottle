@@ -33,7 +33,6 @@ __license__ = 'MIT'
 ### CUT HERE (see setup.py)
 
 import sqlite3
-import inspect
 from bottle import HTTPError, PluginError
 
 
@@ -74,7 +73,7 @@ class SQLitePlugin(object):
 
         # Test if the original callback accepts a 'db' keyword.
         # Ignore it if it does not need a database handle.
-        args = inspect.getargspec(route.callback)[0]
+        args = route.get_callback_args()
         if keyword not in args:
             return callback
 
