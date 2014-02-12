@@ -2544,6 +2544,7 @@ def auth_basic(check, realm="private", text="Access denied"):
     ''' Callback decorator to require HTTP auth (basic).
         TODO: Add route(check_auth=...) parameter. '''
     def decorator(func):
+        @functools.wraps(func)
         def wrapper(*a, **ka):
             user, password = request.auth or (None, None)
             if user is None or not check(user, password):
