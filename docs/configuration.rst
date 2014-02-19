@@ -4,9 +4,6 @@ Configuration (DRAFT)
 
 .. currentmodule:: bottle
 
-.. warning::
-    This is a draft for a new API. `Tell us <mailto:bottlepy@googlegroups.com>`_ what you think.
-
 Bottle applications can store their configuration in :attr:`Bottle.config`, a dict-like object and central place for application specific settings. This dictionary controls many aspects of the framework, tells (newer) plugins what to do, and can be used to store your own configuration as well.
 
 Configuration Basics
@@ -68,10 +65,13 @@ or just don't want to hack python module files just to change the database port.
 
 .. code-block:: ini
 
+    [bottle]
+    debug = True
+
     [sqlite]
     db = /tmp/test.db
     commit = auto
- 
+
     [myapp]
     admin_user = defnull
 

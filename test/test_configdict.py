@@ -1,7 +1,11 @@
 import unittest
 from bottle import ConfigDict
 
+def setitem(d, key, value):
+    d[key] = value
+
 class TestConfigDict(unittest.TestCase):
+
     def test_isadict(self):
         """ ConfigDict should behaves like a normal dict. """
         # It is a dict-subclass, so this kind of pointless, but it doen't hurt.
@@ -19,7 +23,7 @@ class TestConfigDict(unittest.TestCase):
         self.assertEqual('key' in d, 'key' in m)
         self.assertEqual('cay' in d, 'cay' in m)
         self.assertRaises(KeyError, lambda: m['cay'])
-       
+
     def test_attr_access(self):
         """ ConfigDict allow attribute access to keys. """
         c = ConfigDict()
@@ -36,7 +40,7 @@ class TestConfigDict(unittest.TestCase):
     def test_namespaces(self):
         """ Access to a non-existent uppercase attribute creates a new namespace. """
         c = ConfigDict()
-        self.assertEqual(c.__class__, c.Name.Space.__class__)
+        self.assertEqual(ConfigDict.Namespace, c.Name.Space.__class__)
         c.Name.Space.value = 5
         self.assertEqual(5, c.Name.Space.value)
         self.assertTrue('value' in c.Name.Space)
@@ -58,10 +62,20 @@ class TestConfigDict(unittest.TestCase):
         self.assertTrue('a' in c)
         self.assertEqual(1, c.a)
 
+    def test_issue588(self):
+        """`ConfigDict` namespaces break route options"""
+        c = ConfigDict()
+        c.load_dict({'a': {'b': 'c'}}, make_namespaces=True)
+        self.assertEqual('c', c['a.b'])
+        self.assertEqual('c', c['a']['b'])
+        self.assertEqual({'b': 'c'}, c['a'])
+
+    def test_string_key_only(self):
+        c = ConfigDict()
+        self.assertRaises(TypeError, lambda: setitem(c, 5, 6))
+        self.assertRaises(TypeError, lambda: c.load_dict({5:6}))
 
 
-
-   
 if __name__ == '__main__': #pragma: no cover
     unittest.main()
 
