@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import unittest
-from bottle import SimpleTemplate, TemplateError, view, template, touni, tob
+from bottle import SimpleTemplate, TemplateError, view, template, touni, tob, html_quote
 import re
 import traceback
 
@@ -50,6 +50,9 @@ class TestSimpleTemplate(unittest.TestCase):
         self.assertRenders('<{{var}}>', '<b>', var=tob('b'))
         self.assertRenders('<{{var}}>', '<1.0>', var=1.0)
         self.assertRenders('<{{var}}>', '<[1, 2]>', var=[1,2])
+
+    def test_htmlutils_quote(self):
+        self.assertEquals('"&lt;&#039;&#13;&#10;&#9;&quot;\\&gt;"', html_quote('<\'\r\n\t"\\>'));
 
     def test_escape(self):
         self.assertRenders('<{{var}}>', '<b>', var='b')

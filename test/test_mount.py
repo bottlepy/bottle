@@ -19,6 +19,15 @@ class TestAppMounting(ServerTestBase):
                 yield '%s\n' % bottle.request.environ["SCRIPT_NAME"]
         self.assertBody('/test\n'*2, '/test/unshift')
 
+    def test_mount_order_bug581(self):
+        self.app.mount('/test/', self.subapp)
+
+        # This should not match
+        self.app.route('/<test:path>', callback=lambda test: test)
+
+        self.assertStatus(200, '/test/')
+        self.assertBody('foo', '/test/')
+
     def test_mount(self):
         self.app.mount('/test/', self.subapp)
         self.assertStatus(404, '/')
