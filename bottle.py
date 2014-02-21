@@ -667,8 +667,19 @@ class Bottle(object):
                     for name, value in headerlist: rs.add_header(name, value)
                     return rs.body.append
                 body = app(request.environ, start_response)
-                if body and rs.body: rs.body = itertools.chain(rs.body, body, unshift())
-                else: rs.body = itertools.chain(body or rs.body, unshift())
+                if body and rs.body:
+                    close = filter(None, (getattr(rs.body, "close", None), getattr(body, "close", None)))
+                    chained_body = itertools.chain(
+                        (rs.body,) if isinstance(rs.body, basestring) else rs.body,
+                        (body,) if isinstance(body, basestring) else body,
+                        unshift())
+                else:
+                    body = body or rs.body
+                    close = getattr(body, "close", None)
+                    chained_body = itertools.chain(
+                        (body,) if isinstance(body, basestring) else body,
+                        unshift())
+                rs.body = _closeiter(chained_body, close=close)
                 return rs
             except:
                 request.path_shift(-path_depth)
@@ -1148,7 +1159,7 @@ class BaseRequest(object):
                 maxread -= len(part)
             if read(2) != rn:
                 raise err
-            
+
     @DictProperty('environ', 'bottle.request.body', read_only=True)
     def _body(self):
         body_iter = self._iter_chunked if self.chunked else self._iter_body
@@ -2015,9 +2026,9 @@ class ConfigDict(dict):
     def load_dict(self, source, namespace=''):
         ''' Load values from a dictionary structure. Nesting can be used to
             represent namespaces.
-            
+
             >>> c.load_dict({'some': {'namespace': {'key': 'value'} } })
-            {'some.namespace.key': 'value'}            
+            {'some.namespace.key': 'value'}
         '''
         for key, value in source.items():
             if isinstance(key, str):
@@ -2648,20 +2659,20 @@ class CherryPyServer(ServerAdapter):
         from cherrypy import wsgiserver
         self.options['bind_addr'] = (self.host, self.port)
         self.options['wsgi_app'] = handler
-        
+
         certfile = self.options.get('certfile')
         if certfile:
             del self.options['certfile']
         keyfile = self.options.get('keyfile')
         if keyfile:
             del self.options['keyfile']
-        
+
         server = wsgiserver.CherryPyWSGIServer(**self.options)
         if certfile:
             server.ssl_certificate = certfile
         if keyfile:
             server.ssl_private_key = keyfile
-        
+
         try:
             server.start()
         finally:
