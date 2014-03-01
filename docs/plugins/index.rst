@@ -52,8 +52,3 @@ Have a look at :ref:`plugins` for general questions about plugins (installation,
 
 Plugins listed here are not part of Bottle or the Bottle project, but developed and maintained by third parties.
 
-.. toctree::
-    :glob:
-    :hidden:
-    
-    /plugins/*

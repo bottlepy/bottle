@@ -1997,7 +1997,7 @@ class ConfigDict(dict):
         self._on_change = lambda name, value: None
 
     def load_config(self, filename):
-        ''' Load values from an *.ini style config file.
+        ''' Load values from an ``*.ini`` style config file.
 
             If the config file contains sections, their names are used as
             namespaces for the values within. The two special sections
@@ -2015,7 +2015,8 @@ class ConfigDict(dict):
     def load_dict(self, source, namespace=''):
         ''' Load values from a dictionary structure. Nesting can be used to
             represent namespaces.
-            
+
+            >>> c = ConfigDict()
             >>> c.load_dict({'some': {'namespace': {'key': 'value'} } })
             {'some.namespace.key': 'value'}            
         '''

@@ -41,16 +41,16 @@ The built-in default server is based on `wsgiref WSGIServer <http://docs.python.
 * Start multiple server processes and spread the load with a load-balancer.
 * Do both.
 
-**Multi-threaded** servers are the 'classic' way to do it. They are very robust, reasonably fast and easy to manage. As a drawback, they can only handle a limited number of connections at the same time and utilize only one CPU core due to the "Global Interpreter Lock" (GIL). This does not hurt most applications, they are waiting for network IO most of the time anyway, but may slow down CPU intensive tasks (e.g. image processing).
+**Multi-threaded** servers are the 'classic' way to do it. They are very robust, reasonably fast and easy to manage. As a drawback, they can only handle a limited number of connections at the same time and utilize only one CPU core due to the "Global Interpreter Lock" (GIL) of the Python runtime. This does not hurt most applications, they are waiting for network IO most of the time anyway, but may slow down CPU intensive tasks (e.g. image processing).
 
-**Asynchronous** servers are very fast, can handle a virtually unlimited number of concurrent connections and are easy to manage, but can get a bit tricky. To take full advantage of their potential, you need to design your application accordingly and understand the concepts of the specific server.
+**Asynchronous** servers are very fast, can handle a virtually unlimited number of concurrent connections and are easy to manage. To take full advantage of their potential, you need to design your application accordingly and understand the concepts of the specific server.
 
 **Multi-processing** (forking) servers are not limited by the GIL and utilize more than one CPU core, but make communication between server instances more expensive. You need a database or external message query to share state between processes, or design your application so that it does not need any shared state. The setup is also a bit more complicated, but there are good tutorials available. 
 
 Switching the Server Backend
 ================================================================================
 
-The easiest way to increase performance is to install a multi-threaded server library like paste_ or cherrypy_ and tell Bottle to use that instead of the single-threaded server::
+The easiest way to increase performance is to install a multi-threaded server library like paste_ or cherrypy_ and tell Bottle to use that instead of the single-threaded default server::
 
     bottle.run(server='paste')
 
@@ -178,8 +178,8 @@ Pound example::
 Apache example::
 
     <Proxy balancer://mycluster>
-    BalancerMember http://192.168.1.50:80
-    BalancerMember http://192.168.1.51:80
+    BalancerMember http://127.0.0.1:8080
+    BalancerMember http://127.0.0.1:8081
     </Proxy>
     ProxyPass / balancer://mycluster 
 

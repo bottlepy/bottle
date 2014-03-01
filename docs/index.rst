@@ -58,6 +58,7 @@ Start here if you want to learn how to use the bottle framework for web developm
    configuration
    routing
    stpl
+   deployment
    api
    plugins/index
 
