@@ -2719,9 +2719,15 @@ class FapwsServer(ServerAdapter):
 class TornadoServer(ServerAdapter):
     """ The super hyped asynchronous server by facebook. Untested. """
     def run(self, handler): # pragma: no cover
+        kwargs = {}
+        if 'keyfile' in self.options and 'certfile' in self.options:
+            kwargs['ssl_options'] = {
+                'certfile': self.options['certfile'],
+                'keyfile': self.options['keyfile'],
+            }
         import tornado.wsgi, tornado.httpserver, tornado.ioloop
         container = tornado.wsgi.WSGIContainer(handler)
-        server = tornado.httpserver.HTTPServer(container)
+        server = tornado.httpserver.HTTPServer(container, **kwargs)
         server.listen(port=self.port,address=self.host)
         tornado.ioloop.IOLoop.instance().start()
 
