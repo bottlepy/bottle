@@ -3351,6 +3351,9 @@ class StplParser(object):
             code_line += self.source[self.offset:self.offset+m.start()]
             self.offset += m.end()
             _str, _com, _blk1, _blk2, _end, _cend, _nl = m.groups()
+            if code_line and (_blk1 or _blk2): # a if b else c
+                code_line += _blk1 or _blk2
+                continue
             if _str:    # Python string
                 code_line += _str
             elif _com:  # Python comment (up to EOL)
