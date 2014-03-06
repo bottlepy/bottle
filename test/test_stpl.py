@@ -250,6 +250,12 @@ class TestSimpleTemplate(unittest.TestCase):
     def test_bug_no_whitespace_before_stmt(self):
         self.assertRenders('\n{{var}}', '\nx', var='x')
 
+    def test_bug_block_keywords_eat_prefixed_code(self):
+        ''' #595: Everything before an 'if' statement is removed, resulting in
+            SyntaxError. '''
+        tpl = "% m = 'x' if True else 'y'\n{{m}}"
+        self.assertRenders(tpl, 'x')
+
 
 class TestSTPLDir(unittest.TestCase):
     def fix_ident(self, string):
