@@ -26,7 +26,7 @@ Have a look at :ref:`plugins` for general questions about plugins (installation,
 `Bottle-Memcache <http://pypi.python.org/pypi/bottle-memcache/>`_
 	Memcache integration for Bottle.
 
-`Bottle-MongoDB <http://pypi.python.org/pypi/bottle-mongodb/>`_
+`Bottle-Mongo <http://pypi.python.org/pypi/bottle-mongo/>`_
 	MongoDB integration for Bottle
 
 `Bottle-Redis <http://pypi.python.org/pypi/bottle-redis/>`_
