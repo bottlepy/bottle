@@ -102,7 +102,8 @@ Thankfully the `gevent-websocket <http://pypi.python.org/pypi/gevent-websocket/>
                 break
 
     from gevent.pywsgi import WSGIServer
-    from geventwebsocket import WebSocketHandler, WebSocketError
+    from geventwebsocket import WebSocketError
+    from geventwebsocket.handler import WebSocketHandler
     server = WSGIServer(("0.0.0.0", 8080), app,
                         handler_class=WebSocketHandler)
     server.serve_forever()
