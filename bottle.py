@@ -3493,13 +3493,13 @@ _HTTP_STATUS_LINES = dict((k, '%d %s'%(k,v)) for (k,v) in HTTP_CODES.items())
 #: The default template used for error pages. Override with @error()
 ERROR_PAGE_TEMPLATE = """
 %%try:
-    %%from %s import DEBUG, HTTP_CODES, request, touni
+    %%from %s import DEBUG, request
     <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
     <html>
         <head>
             <title>Error: {{e.status}}</title>
             <style type="text/css">
-              html {background-color: #eee; font-family: sans;}
+              html {background-color: #eee; font-family: sans-serif;}
               body {background-color: #fff; border: 1px solid #ddd;
                     padding: 15px; margin: 15px;}
               pre {background-color: #eee; border: 1px solid #ddd; padding: 5px;}
