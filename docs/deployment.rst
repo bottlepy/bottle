@@ -129,11 +129,32 @@ Google AppEngine
 
 .. versionadded:: 0.9
 
-The ``gae`` server adapter is used to run applications on Google App Engine. It works similar to the ``cgi`` adapter in that it does not start a new HTTP server, but prepares and optimizes your application for Google App Engine and makes sure it conforms to their API::
+New App Engine applications using the Python 2.7 runtime environment support any WSGI application and should be configured to use the Bottle application object directly. For example suppose your application's main module is ``myapp.py``::
+
+    import bottle
+
+    @bottle.route('/')
+    def home():
+        return '<html><head></head><body>Hello world!</body></html>'
+
+    app = bottle.default_app()
+
+Then you can configure App Engine's ``app.yaml`` to use the ``app`` object like so::
+
+    application: myapp
+    version: 1
+    runtime: python27
+    api_version: 1
+
+    handlers:
+    - url: /.*
+      script: myapp.app
+
+Bottle also provides a ``gae`` server adapter for legacy App Engine applications using the Python 2.5 runtime environment. It works similar to the ``cgi`` adapter in that it does not start a new HTTP server, but prepares and optimizes your application for Google App Engine and makes sure it conforms to their API::
 
     bottle.run(server='gae') # No need for a host or port setting.
 
-It is always a good idea to let GAE serve static files directly. Here is example for a working  ``app.yaml``::
+It is always a good idea to let GAE serve static files directly. Here is example for a working  ``app.yaml`` (using the legacy Python 2.5 runtime environment)::
 
     application: myapp
     version: 1
