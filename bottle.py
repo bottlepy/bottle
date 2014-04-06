@@ -2750,7 +2750,8 @@ class TwistedServer(ServerAdapter):
         reactor.addSystemEventTrigger('after', 'shutdown', thread_pool.stop)
         factory = server.Site(wsgi.WSGIResource(reactor, thread_pool, handler))
         reactor.listenTCP(self.port, factory, interface=self.host)
-        reactor.run()
+        if not reactor.running:
+            reactor.run()
 
 
 class DieselServer(ServerAdapter):
