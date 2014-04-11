@@ -3340,7 +3340,10 @@ class SimpleTemplate(BaseTemplate):
 
     @cached_property
     def code(self):
-        source = self.source or open(self.filename, 'rb').read()
+        source = self.source
+        if not source:
+            with open(self.filename, 'rb') as f:
+                source = f.read()
         try:
             source, encoding = touni(source), 'utf8'
         except UnicodeError:
