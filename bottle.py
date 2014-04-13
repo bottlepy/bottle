@@ -3558,7 +3558,7 @@ if __name__ == '__main__':
         sys.exit(0)
     if not args:
         parser.print_help()
-        _stderr('\nError: No application specified.\n')
+        _stderr('\nError: No application entry point specified.\n')
         sys.exit(1)
 
     sys.path.insert(0, '.')
