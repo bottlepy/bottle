@@ -172,7 +172,7 @@ Let's have a look at some practical examples::
     def callback(path):
         return static_file(path, ...)
 
-You can add your own filters as well. See :doc:`Routing` for details.
+You can add your own filters as well. See :doc:`routing` for details.
 
 .. versionchanged:: 0.10
 
@@ -195,7 +195,7 @@ HTTP Request Methods
 
 .. __: http_method_
 
-The HTTP protocol defines several `request methods`__ (sometimes referred to as "verbs") for different tasks. GET is the default for all routes with no other method specified. These routes will match GET requests only. To handle other methods such as POST, PUT or DELETE, add a ``method`` keyword argument to the :func:`route` decorator or use one of the four alternative decorators: :func:`get`, :func:`post`, :func:`put` or :func:`delete`.
+The HTTP protocol defines several `request methods`__ (sometimes referred to as "verbs") for different tasks. GET is the default for all routes with no other method specified. These routes will match GET requests only. To handle other methods such as POST, PUT, DELETE or PATCH, add a ``method`` keyword argument to the :func:`route` decorator or use one of the four alternative decorators: :func:`get`, :func:`post`, :func:`put`, :func:`delete` or :func:`patch`.
 
 The POST method is commonly used for HTML form submission. This example shows how to handle a login form using POST::
 

@@ -94,6 +94,7 @@ These chapters are intended for developers interested in the bottle development 
    :hidden:
 
    plugins/index
+   contact
 
 License
 ==================

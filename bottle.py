@@ -819,6 +819,10 @@ class Bottle(object):
         """ Equals :meth:`route` with a ``DELETE`` method parameter. """
         return self.route(path, method, **options)
 
+    def patch(self, path=None, method='PATCH', **options):
+        """ Equals :meth:`route` with a ``PATCH`` method parameter. """
+        return self.route(path, method, **options)
+
     def error(self, code=500):
         """ Decorator: Register an output handler for a HTTP error code"""
         def wrapper(handler):
@@ -850,7 +854,6 @@ class Bottle(object):
                 return route.call(**args)
             finally:
                 self.trigger_hook('after_request')
-
         except HTTPResponse:
             return _e()
         except RouteReset:
@@ -2572,6 +2575,7 @@ get       = make_default_app_wrapper('get')
 post      = make_default_app_wrapper('post')
 put       = make_default_app_wrapper('put')
 delete    = make_default_app_wrapper('delete')
+patch     = make_default_app_wrapper('patch')
 error     = make_default_app_wrapper('error')
 mount     = make_default_app_wrapper('mount')
 hook      = make_default_app_wrapper('hook')
