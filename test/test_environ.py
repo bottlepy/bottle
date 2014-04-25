@@ -385,6 +385,15 @@ class TestRequest(unittest.TestCase):
         e['CONTENT_LENGTH'] = str(len(json_dumps(test)))
         self.assertEqual(BaseRequest(e).json, test)
 
+    def test_json_forged_header_issue616(self):
+        test = dict(a=5, b='test', c=[1,2,3])
+        e = {'CONTENT_TYPE': 'text/plain;application/json'}
+        wsgiref.util.setup_testing_defaults(e)
+        e['wsgi.input'].write(tob(json_dumps(test)))
+        e['wsgi.input'].seek(0)
+        e['CONTENT_LENGTH'] = str(len(json_dumps(test)))
+        self.assertEqual(BaseRequest(e).json, None)
+
     def test_isajax(self):
         e = {}
         wsgiref.util.setup_testing_defaults(e)
