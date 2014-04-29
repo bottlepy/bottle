@@ -32,7 +32,7 @@ docs:
 test:
 	python test/testall.py
 
-test_all: test_25 test_26 test_27 test_31 test_32 test_33
+test_all: test_25 test_26 test_27 test_31 test_32 test_33 test_34
 
 test_25:
 	python2.5 test/testall.py
@@ -51,6 +51,9 @@ test_32:
 
 test_33:
 	python3.3 test/testall.py
+
+test_34:
+	python3.4 test/testall.py
 
 clean:
 	rm -rf build/ dist/ MANIFEST 2>/dev/null || true
