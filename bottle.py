@@ -2975,6 +2975,8 @@ def run(app=None, server='wsgiref', host='127.0.0.1', port=8080,
             raise ValueError("Application is not callable: %r" % app)
 
         for plugin in plugins or []:
+            if isinstance(plugin, basestring):
+                plugin = load(plugin)
             app.install(plugin)
 
         if server in server_names:
