@@ -2830,12 +2830,13 @@ class EventletServer(ServerAdapter):
         if not patcher.is_monkey_patched(os):
             msg = "Bottle requires eventlet.monkey_patch() (before import)"
             raise RuntimeError(msg)
+        address = (self.host, self.port)
         try:
-            wsgi.server(listen((self.host, self.port)), handler,
+            wsgi.server(listen(address), handler,
                         log_output=(not self.quiet))
         except TypeError:
             # Fallback, if we have old version of eventlet
-            wsgi.server(listen((self.host, self.port)), handler)
+            wsgi.server(listen(address), handler)
 
 
 class RocketServer(ServerAdapter):
