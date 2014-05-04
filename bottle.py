@@ -3051,7 +3051,7 @@ class FileCheckerThread(threading.Thread):
 
     def __exit__(self, exc_type, *_):
         if not self.status: self.status = 'exit' # silent exit
-        self.join()
+        self.join(self.interval)
         return exc_type is not None and issubclass(exc_type, KeyboardInterrupt)
 
 
