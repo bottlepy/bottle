@@ -2824,15 +2824,28 @@ class GunicornServer(ServerAdapter):
 
 
 class EventletServer(ServerAdapter):
-    """ Untested """
+    """ Untested. Options:
+
+        * `backlog` adjust the eventlet backlog parameter which is the maximum
+          number of queued connections. Should be at least 1; the maximum
+          value is system-dependent.
+        * `family`: (default is 2) socket family, optional. See socket
+          documentation for available families.
+    """
     def run(self, handler):
         from eventlet import wsgi, listen, patcher
         if not patcher.is_monkey_patched(os):
             msg = "Bottle requires eventlet.monkey_patch() (before import)"
             raise RuntimeError(msg)
+        socket_args = {}
+        for arg in ('backlog', 'family'):
+            try:
+                socket_args[arg] = self.options.pop(arg)
+            except KeyError:
+                pass
         address = (self.host, self.port)
         try:
-            wsgi.server(listen(address), handler,
+            wsgi.server(listen(address, **socket_args), handler,
                         log_output=(not self.quiet))
         except TypeError:
             # Fallback, if we have old version of eventlet
