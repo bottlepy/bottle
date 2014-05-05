@@ -83,7 +83,6 @@ except IOError:
 # Lots of stdlib and builtin differences.
 if py3k:
     import http.client as httplib
-    import _thread as thread
     from urllib.parse import urljoin, SplitResult as UrlSplitResult
     from urllib.parse import urlencode, quote as urlquote, unquote as urlunquote
     urlunquote = functools.partial(urlunquote, encoding='latin1')
@@ -100,7 +99,6 @@ if py3k:
     def _raise(*a): raise a[0](a[1]).with_traceback(a[2])
 else: # 2.x
     import httplib
-    import thread
     from urlparse import urljoin, SplitResult as UrlSplitResult
     from urllib import urlencode, quote as urlquote, unquote as urlunquote
     from Cookie import SimpleCookie
@@ -3020,8 +3018,6 @@ def run(app=None, server='wsgiref', host='127.0.0.1', port=8080,
             bgcheck = FileCheckerThread(lockfile, interval)
             with bgcheck:
                 server.run(app)
-            if bgcheck.status == 'reload':
-                sys.exit(3)
         else:
             server.run(app)
     except KeyboardInterrupt:
@@ -3038,7 +3034,7 @@ def run(app=None, server='wsgiref', host='127.0.0.1', port=8080,
 
 
 class FileCheckerThread(threading.Thread):
-    """ Interrupt main-thread as soon as a changed module file is detected,
+    """ Exit current process as soon as a changed module file is detected,
         the lockfile gets deleted or gets to old. """
 
     def __init__(self, lockfile, interval):
@@ -3061,11 +3057,11 @@ class FileCheckerThread(threading.Thread):
             if not exists(self.lockfile)\
             or mtime(self.lockfile) < time.time() - self.interval - 5:
                 self.status = 'error'
-                thread.interrupt_main()
+                sys.exit(1)
             for path, lmtime in list(files.items()):
                 if not exists(path) or mtime(path) > lmtime:
                     self.status = 'reload'
-                    thread.interrupt_main()
+                    sys.exit(3)
                     break
             time.sleep(self.interval)
 
