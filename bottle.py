@@ -19,8 +19,9 @@ __author__ = 'Marcel Hellkamp'
 __version__ = '0.13-dev'
 __license__ = 'MIT'
 
-# The gevent server adapter needs to patch some modules before they are imported
-# This is why we parse the commandline parameters here but handle them later
+# The gevent and eventlet server adapters need to patch some modules before
+# they are imported. This is why we parse the commandline parameters here but
+# handle them later
 if __name__ == '__main__':
     from optparse import OptionParser
     _cmd_parser = OptionParser(usage="usage: %prog [options] package.module:app")
@@ -32,8 +33,11 @@ if __name__ == '__main__':
     _opt("--debug", action="store_true", help="start server in debug mode.")
     _opt("--reload", action="store_true", help="auto-reload on file changes.")
     _cmd_options, _cmd_args = _cmd_parser.parse_args()
-    if _cmd_options.server and _cmd_options.server.startswith('gevent'):
-        import gevent.monkey; gevent.monkey.patch_all()
+    if _cmd_options.server:
+        if _cmd_options.server.startswith('gevent'):
+            import gevent.monkey; gevent.monkey.patch_all()
+        elif _cmd_options.server.startswith('eventlet'):
+            import eventlet; eventlet.monkey_patch()
 
 import base64, cgi, email.utils, functools, hmac, imp, itertools, mimetypes,\
         os, re, subprocess, sys, tempfile, threading, time, warnings
@@ -2820,15 +2824,32 @@ class GunicornServer(ServerAdapter):
 
 
 class EventletServer(ServerAdapter):
-    """ Untested """
+    """ Untested. Options:
+
+        * `backlog` adjust the eventlet backlog parameter which is the maximum
+          number of queued connections. Should be at least 1; the maximum
+          value is system-dependent.
+        * `family`: (default is 2) socket family, optional. See socket
+          documentation for available families.
+    """
     def run(self, handler):
-        from eventlet import wsgi, listen
+        from eventlet import wsgi, listen, patcher
+        if not patcher.is_monkey_patched(os):
+            msg = "Bottle requires eventlet.monkey_patch() (before import)"
+            raise RuntimeError(msg)
+        socket_args = {}
+        for arg in ('backlog', 'family'):
+            try:
+                socket_args[arg] = self.options.pop(arg)
+            except KeyError:
+                pass
+        address = (self.host, self.port)
         try:
-            wsgi.server(listen((self.host, self.port)), handler,
+            wsgi.server(listen(address, **socket_args), handler,
                         log_output=(not self.quiet))
         except TypeError:
             # Fallback, if we have old version of eventlet
-            wsgi.server(listen((self.host, self.port)), handler)
+            wsgi.server(listen(address), handler)
 
 
 class RocketServer(ServerAdapter):
