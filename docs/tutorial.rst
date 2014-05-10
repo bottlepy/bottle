@@ -119,7 +119,7 @@ In the last chapter we built a very simple web application with only a single ro
     def hello():
         return "Hello World!"
 
-The :func:`route` decorator links an URL path to a callback function, and adds a new route to the :ref:`default application <tutorial-default>`. An application with just one route is kind of boring, though. Let's add some more::
+The :func:`route` decorator links an URL path to a callback function, and adds a new route to the :ref:`default application <tutorial-default>`. An application with just one route is kind of boring, though. Let's add some more (don't forget ``from bottle imoport template``)::
 
     @route('/')
     @route('/hello/<name>')
