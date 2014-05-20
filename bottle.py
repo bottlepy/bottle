@@ -3043,6 +3043,7 @@ class FileCheckerThread(threading.Thread):
 
     def __init__(self, lockfile, interval):
         threading.Thread.__init__(self)
+        self.daemon = True
         self.lockfile, self.interval = lockfile, interval
         #: Is one of 'reload', 'error' or 'exit'
         self.status = None
