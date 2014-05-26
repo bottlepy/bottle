@@ -1117,7 +1117,10 @@ class BaseRequest(object):
             exhaustion. '''
         ctype = self.environ.get('CONTENT_TYPE', '').lower().split(';')[0]
         if ctype == 'application/json':
-            return json_loads(self._get_body_string())
+            b = self._get_body_string()
+            if not b:
+                return None
+            return json_loads(b)
         return None
 
     def _iter_body(self, read, bufsize):

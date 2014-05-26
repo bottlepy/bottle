@@ -394,6 +394,14 @@ class TestRequest(unittest.TestCase):
         e['CONTENT_LENGTH'] = str(len(json_dumps(test)))
         self.assertEqual(BaseRequest(e).json, None)
 
+    def test_json_header_empty_body(self):
+        """Request Content-Type is application/json but body is empty"""
+        e = {'CONTENT_TYPE': 'application/json'}
+        wsgiref.util.setup_testing_defaults(e)
+        wsgiref.util.setup_testing_defaults(e)
+        e['CONTENT_LENGTH'] = "0"
+        self.assertEqual(BaseRequest(e).json, None)
+
     def test_isajax(self):
         e = {}
         wsgiref.util.setup_testing_defaults(e)
