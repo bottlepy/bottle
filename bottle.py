@@ -1157,7 +1157,7 @@ class BaseRequest(object):
                 maxread -= len(part)
             if read(2) != rn:
                 raise err
-            
+
     @DictProperty('environ', 'bottle.request.body', read_only=True)
     def _body(self):
         body_iter = self._iter_chunked if self.chunked else self._iter_body
@@ -2097,7 +2097,7 @@ class ConfigDict(dict):
     def load_dict(self, source, namespace='', make_namespaces=False):
         ''' Import values from a dictionary structure. Nesting can be used to
             represent namespaces.
-            
+
             >>> ConfigDict().load_dict({'name': {'space': {'key': 'value'}}})
             {'name.space.key': 'value'}
         '''
@@ -2353,7 +2353,7 @@ class FileUpload(object):
     def filename(self):
         ''' Name of the file on the client file system, but normalized to ensure
             file system compatibility. An empty filename is returned as 'empty'.
-            
+
             Only ASCII letters, digits, dashes, underscores and dots are
             allowed in the final filename. Accents are removed, if possible.
             Whitespace is replaced by a single dash. Leading or tailing dots
@@ -2777,20 +2777,20 @@ class CherryPyServer(ServerAdapter):
         from cherrypy import wsgiserver
         self.options['bind_addr'] = (self.host, self.port)
         self.options['wsgi_app'] = handler
-        
+
         certfile = self.options.get('certfile')
         if certfile:
             del self.options['certfile']
         keyfile = self.options.get('keyfile')
         if keyfile:
             del self.options['keyfile']
-        
+
         server = wsgiserver.CherryPyWSGIServer(**self.options)
         if certfile:
             server.ssl_certificate = certfile
         if keyfile:
             server.ssl_private_key = keyfile
-        
+
         try:
             server.start()
         finally:
@@ -3645,6 +3645,7 @@ NORUN = False # If set, run() does nothing. Used by load_app()
 #: A dict to map HTTP status codes (e.g. 404) to phrases (e.g. 'Not Found')
 HTTP_CODES = httplib.responses
 HTTP_CODES[418] = "I'm a teapot" # RFC 2324
+HTTP_CODES[422] = "Unprocessable Entity" # RFC 4918
 HTTP_CODES[428] = "Precondition Required"
 HTTP_CODES[429] = "Too Many Requests"
 HTTP_CODES[431] = "Request Header Fields Too Large"
