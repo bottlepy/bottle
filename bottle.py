@@ -2640,7 +2640,8 @@ class FlupFCGIServer(ServerAdapter):
 
 
 class WSGIRefServer(ServerAdapter):
-    def run(self, app): # pragma: no cover
+    def __init__(self, *args, **kwargs):
+        super(WSGIRefServer, self).__init__(*args, **kwargs)
         from wsgiref.simple_server import WSGIRequestHandler, WSGIServer
         from wsgiref.simple_server import make_server
         import socket
@@ -2660,8 +2661,11 @@ class WSGIRefServer(ServerAdapter):
                 class server_cls(server_cls):
                     address_family = socket.AF_INET6
 
-        srv = make_server(self.host, self.port, app, server_cls, handler_cls)
-        srv.serve_forever()
+        self.srv = make_server(self.host, self.port, app, server_cls, handler_cls)
+        self.port = self.srv.server_port # update port actual port (0 means random)
+    
+    def run(self, app): # pragma: no cover
+        self.srv.serve_forever()
 
 
 class CherryPyServer(ServerAdapter):
