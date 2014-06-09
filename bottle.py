@@ -3369,11 +3369,12 @@ class StplParser(object):
             if m:
                 text = self.source[self.offset:self.offset+m.start()]
                 self.text_buffer.append(text)
+                offs = self.offset
                 self.offset += m.end()
                 if m.group(1): # Escape syntax
                     line, sep, _ = self.source[self.offset:].partition('\n')
-                    self.text_buffer.append(m.group(2)+line+sep)
-                    self.offset += len(line+sep)+1
+                    self.text_buffer.append(self.source[offs+m.start():offs+m.start(1)]+m.group(2)+line+sep)
+                    self.offset += len(line+sep)
                     continue
                 self.flush_text()
                 self.read_code(multiline=bool(m.group(4)))

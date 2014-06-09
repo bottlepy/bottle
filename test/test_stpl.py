@@ -135,6 +135,7 @@ class TestSimpleTemplate(unittest.TestCase):
     def test_escaped_codelines(self):
         self.assertRenders('\\% test', '% test')
         self.assertRenders('\\%% test', '%% test')
+        self.assertRenders('    \\% test', '    % test')
 
     def test_nobreak(self):
         """ Templates: Nobreak statements"""
