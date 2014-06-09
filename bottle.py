@@ -2640,7 +2640,7 @@ class FlupFCGIServer(ServerAdapter):
 
 
 class WSGIRefServer(ServerAdapter):
-    
+
     def run(self, app): # pragma: no cover
         from wsgiref.simple_server import make_server
         from wsgiref.simple_server import WSGIRequestHandler, WSGIServer
@@ -3333,7 +3333,7 @@ class StplParser(object):
     # Match the start tokens of code areas in a template
     _re_split = '(?m)^[ \t]*(\\\\?)((%(line_start)s)|(%(block_start)s))'
     # Match inline statements (may contain python strings)
-    _re_inl = '%%(inline_start)s((?:%s|[^\'"\n]*?)+)%%(inline_end)s' % _re_inl
+    _re_inl = '%%(inline_start)s((?:%s|[^\'"\n]+?)*?)%%(inline_end)s' % _re_inl
 
     default_syntax = '<% %> % {{ }}'
 
