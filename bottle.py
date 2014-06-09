@@ -2640,10 +2640,10 @@ class FlupFCGIServer(ServerAdapter):
 
 
 class WSGIRefServer(ServerAdapter):
-    def __init__(self, *args, **kwargs):
-        super(WSGIRefServer, self).__init__(*args, **kwargs)
-        from wsgiref.simple_server import WSGIRequestHandler, WSGIServer
+    
+    def run(self, app): # pragma: no cover
         from wsgiref.simple_server import make_server
+        from wsgiref.simple_server import WSGIRequestHandler, WSGIServer
         import socket
 
         class FixedHandler(WSGIRequestHandler):
@@ -2663,8 +2663,6 @@ class WSGIRefServer(ServerAdapter):
 
         self.srv = make_server(self.host, self.port, app, server_cls, handler_cls)
         self.port = self.srv.server_port # update port actual port (0 means random)
-    
-    def run(self, app): # pragma: no cover
         self.srv.serve_forever()
 
 
