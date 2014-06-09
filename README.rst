@@ -2,6 +2,18 @@
   :alt: Bottle Logo
   :align: right
 
+.. image:: https://pypip.in/download/bottle/badge.png
+    :target: https://pypi.python.org/pypi/bottle/
+    :alt: Downloads
+
+.. image:: https://pypip.in/version/bottle/badge.png
+    :target: https://pypi.python.org/pypi/bottle/
+    :alt: Latest Version
+
+.. image:: https://pypip.in/license/bottle/badge.png
+    :target: https://pypi.python.org/pypi/bottle/
+    :alt: License
+
 .. _mako: http://www.makotemplates.org/
 .. _cheetah: http://www.cheetahtemplate.org/
 .. _jinja2: http://jinja.pocoo.org/
