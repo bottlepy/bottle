@@ -286,7 +286,7 @@ class TestRequest(unittest.TestCase):
         e['wsgi.input'].seek(0)
         e['HTTP_TRANSFER_ENCODING'] = 'chunked'
         if isinstance(expect, str):
-            self.assertEquals(tob(expect), BaseRequest(e).body.read())
+            self.assertEqual(tob(expect), BaseRequest(e).body.read())
         else:
             self.assertRaises(expect, lambda: BaseRequest(e).body)
 
@@ -384,6 +384,23 @@ class TestRequest(unittest.TestCase):
         e['wsgi.input'].seek(0)
         e['CONTENT_LENGTH'] = str(len(json_dumps(test)))
         self.assertEqual(BaseRequest(e).json, test)
+
+    def test_json_forged_header_issue616(self):
+        test = dict(a=5, b='test', c=[1,2,3])
+        e = {'CONTENT_TYPE': 'text/plain;application/json'}
+        wsgiref.util.setup_testing_defaults(e)
+        e['wsgi.input'].write(tob(json_dumps(test)))
+        e['wsgi.input'].seek(0)
+        e['CONTENT_LENGTH'] = str(len(json_dumps(test)))
+        self.assertEqual(BaseRequest(e).json, None)
+
+    def test_json_header_empty_body(self):
+        """Request Content-Type is application/json but body is empty"""
+        e = {'CONTENT_TYPE': 'application/json'}
+        wsgiref.util.setup_testing_defaults(e)
+        wsgiref.util.setup_testing_defaults(e)
+        e['CONTENT_LENGTH'] = "0"
+        self.assertEqual(BaseRequest(e).json, None)
 
     def test_isajax(self):
         e = {}
@@ -548,7 +565,7 @@ class TestResponse(unittest.TestCase):
     def test_content_type(self):
         rs = BaseResponse()
         rs.content_type = 'test/some'
-        self.assertEquals('test/some', rs.headers.get('Content-Type'))
+        self.assertEqual('test/some', rs.headers.get('Content-Type'))
 
     def test_charset(self):
         rs = BaseResponse()

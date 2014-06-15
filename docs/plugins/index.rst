@@ -8,6 +8,9 @@ This is a list of third-party plugins that add extend Bottles core functionality
 
 Have a look at :ref:`plugins` for general questions about plugins (installation, usage). If you plan to develop a new plugin, the :doc:`/plugindev` may help you.
 
+`Bottle-Beaker <http://pypi.python.org/pypi/bottle-beaker/>`_
+    Beaker to session and caching library with WSGI Middleware
+
 `Bottle-Cork <http://cork.firelet.net/>`_
 	Cork provides a simple set of methods to implement Authentication and Authorization in web applications based on Bottle.
 
@@ -26,7 +29,7 @@ Have a look at :ref:`plugins` for general questions about plugins (installation,
 `Bottle-Memcache <http://pypi.python.org/pypi/bottle-memcache/>`_
 	Memcache integration for Bottle.
 
-`Bottle-MongoDB <http://pypi.python.org/pypi/bottle-mongodb/>`_
+`Bottle-Mongo <http://pypi.python.org/pypi/bottle-mongo/>`_
 	MongoDB integration for Bottle
 
 `Bottle-Redis <http://pypi.python.org/pypi/bottle-redis/>`_
@@ -52,8 +55,3 @@ Have a look at :ref:`plugins` for general questions about plugins (installation,
 
 Plugins listed here are not part of Bottle or the Bottle project, but developed and maintained by third parties.
 
-.. toctree::
-    :glob:
-    :hidden:
-    
-    /plugins/*

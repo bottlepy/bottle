@@ -41,16 +41,16 @@ The built-in default server is based on `wsgiref WSGIServer <http://docs.python.
 * Start multiple server processes and spread the load with a load-balancer.
 * Do both.
 
-**Multi-threaded** servers are the 'classic' way to do it. They are very robust, reasonably fast and easy to manage. As a drawback, they can only handle a limited number of connections at the same time and utilize only one CPU core due to the "Global Interpreter Lock" (GIL). This does not hurt most applications, they are waiting for network IO most of the time anyway, but may slow down CPU intensive tasks (e.g. image processing).
+**Multi-threaded** servers are the 'classic' way to do it. They are very robust, reasonably fast and easy to manage. As a drawback, they can only handle a limited number of connections at the same time and utilize only one CPU core due to the "Global Interpreter Lock" (GIL) of the Python runtime. This does not hurt most applications, they are waiting for network IO most of the time anyway, but may slow down CPU intensive tasks (e.g. image processing).
 
-**Asynchronous** servers are very fast, can handle a virtually unlimited number of concurrent connections and are easy to manage, but can get a bit tricky. To take full advantage of their potential, you need to design your application accordingly and understand the concepts of the specific server.
+**Asynchronous** servers are very fast, can handle a virtually unlimited number of concurrent connections and are easy to manage. To take full advantage of their potential, you need to design your application accordingly and understand the concepts of the specific server.
 
 **Multi-processing** (forking) servers are not limited by the GIL and utilize more than one CPU core, but make communication between server instances more expensive. You need a database or external message query to share state between processes, or design your application so that it does not need any shared state. The setup is also a bit more complicated, but there are good tutorials available. 
 
 Switching the Server Backend
 ================================================================================
 
-The easiest way to increase performance is to install a multi-threaded server library like paste_ or cherrypy_ and tell Bottle to use that instead of the single-threaded server::
+The easiest way to increase performance is to install a multi-threaded server library like paste_ or cherrypy_ and tell Bottle to use that instead of the single-threaded default server::
 
     bottle.run(server='paste')
 
@@ -129,11 +129,32 @@ Google AppEngine
 
 .. versionadded:: 0.9
 
-The ``gae`` server adapter is used to run applications on Google App Engine. It works similar to the ``cgi`` adapter in that it does not start a new HTTP server, but prepares and optimizes your application for Google App Engine and makes sure it conforms to their API::
+New App Engine applications using the Python 2.7 runtime environment support any WSGI application and should be configured to use the Bottle application object directly. For example suppose your application's main module is ``myapp.py``::
+
+    import bottle
+
+    @bottle.route('/')
+    def home():
+        return '<html><head></head><body>Hello world!</body></html>'
+
+    app = bottle.default_app()
+
+Then you can configure App Engine's ``app.yaml`` to use the ``app`` object like so::
+
+    application: myapp
+    version: 1
+    runtime: python27
+    api_version: 1
+
+    handlers:
+    - url: /.*
+      script: myapp.app
+
+Bottle also provides a ``gae`` server adapter for legacy App Engine applications using the Python 2.5 runtime environment. It works similar to the ``cgi`` adapter in that it does not start a new HTTP server, but prepares and optimizes your application for Google App Engine and makes sure it conforms to their API::
 
     bottle.run(server='gae') # No need for a host or port setting.
 
-It is always a good idea to let GAE serve static files directly. Here is example for a working  ``app.yaml``::
+It is always a good idea to let GAE serve static files directly. Here is example for a working  ``app.yaml`` (using the legacy Python 2.5 runtime environment)::
 
     application: myapp
     version: 1
@@ -178,8 +199,8 @@ Pound example::
 Apache example::
 
     <Proxy balancer://mycluster>
-    BalancerMember http://192.168.1.50:80
-    BalancerMember http://192.168.1.51:80
+    BalancerMember http://127.0.0.1:8080
+    BalancerMember http://127.0.0.1:8081
     </Proxy>
     ProxyPass / balancer://mycluster 
 

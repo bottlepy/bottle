@@ -127,7 +127,7 @@ Each template is preloaded with a bunch of functions that help with the most com
 .. currentmodule:: stpl
 
 .. versionchanged:: 0.12
-   Prior to this release, :func:`include` and :func:`rebase` were sytnax keywords, not functions.
+   Prior to this release, :func:`include` and :func:`rebase` were syntax keywords, not functions.
 
 .. function:: include(sub_template, **variables)
 
@@ -151,7 +151,7 @@ Each template is preloaded with a bunch of functions that help with the most com
       <title>{{title or 'No title'}}</title>
     </head>
     <body>
-      {{base}}
+      {{!base}}
     </body>
     </html>
 
