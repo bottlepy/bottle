@@ -2663,7 +2663,11 @@ class WSGIRefServer(ServerAdapter):
 
         self.srv = make_server(self.host, self.port, app, server_cls, handler_cls)
         self.port = self.srv.server_port # update port actual port (0 means random)
-        self.srv.serve_forever()
+        try:
+            self.srv.serve_forever()
+        except (KeyboardInterrupt) as e:
+            self.srv.server_close() # Prevent ResourceWarning: unclosed socket
+            raise
 
 
 class CherryPyServer(ServerAdapter):
