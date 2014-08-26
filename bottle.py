@@ -2665,7 +2665,7 @@ class WSGIRefServer(ServerAdapter):
         self.port = self.srv.server_port # update port actual port (0 means random)
         try:
             self.srv.serve_forever()
-        except (KeyboardInterrupt) as e:
+        except KeyboardInterrupt:
             self.srv.server_close() # Prevent ResourceWarning: unclosed socket
             raise
 
