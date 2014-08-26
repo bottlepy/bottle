@@ -1991,9 +1991,9 @@ class WSGIHeaderDict(DictMixin):
     def __iter__(self):
         for key in self.environ:
             if key[:5] == 'HTTP_':
-                yield key[5:].replace('_', '-').title()
+                yield _hkey(key[5:])
             elif key in self.cgikeys:
-                yield key.replace('_', '-').title()
+                yield _hkey(key)
 
     def keys(self): return [x for x in self]
     def __len__(self): return len(self.keys())
