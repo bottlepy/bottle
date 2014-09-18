@@ -494,7 +494,7 @@ class Route(object):
         #: Additional keyword arguments passed to the :meth:`Bottle.route`
         #: decorator are stored in this dictionary. Used for route-specific
         #: plugin configuration and meta-data.
-        self.config = ConfigDict().load_dict(config)
+        self.config = ConfigDict(unsafe=True).load_dict(config)
 
     @cached_property
     def call(self):
@@ -2004,12 +2004,21 @@ class WSGIHeaderDict(DictMixin):
 class ConfigDict(dict):
     """ A dict-like configuration storage with additional support for
         namespaces, validators, meta-data, on_change listeners and more.
+
+        Meta-keywords:
+        * ``unsafe`` (bool) if True, this key may contain mutables types.
+        * ``append`` (callable(a, b) -> a) Custom function to implement the 'append'
+            functionality for types other than list/tuple and set/frozenset.
+        * ``missing`` (callable(cfg, key) -> value) Custom function to generate missing
+            values. Generated values are not stored to the config automatically. The 
+            custom function should do that to avoid beeing called again for the same key.
     """
 
-    __slots__ = ('_meta', '_on_change')
+    __slots__ = ('_meta', '_unsafe', '_on_change')
 
-    def __init__(self):
+    def __init__(self, unsafe=False):
         self._meta = {}
+        self._unsafe = unsafe
         self._on_change = lambda name, value: None
 
     def load_config(self, filename):
@@ -2047,6 +2056,17 @@ class ConfigDict(dict):
                 raise TypeError('Key has type %r (not a string)' % type(key))
         return self
 
+    def append(self, key, value):
+        """ Change a list-like value so that it contains a new value."""
+        if key not in self:
+            self[key] = [value]
+        elif isinstance(self[key], (tuple, frozenset)):
+            self[key] = self[key] + type(self[key])([value])
+        elif self.meta_get(key, 'append') is not None:
+            self[key] = self.meta_get(key, 'append')(self[key], value)
+        else:
+            raise TypeError("Value of %r is not a list or set" % key)
+
     def update(self, *a, **ka):
         """ If the first parameter is a string, all keys are prefixed with this
             namespace. Apart from that it works just as the usual dict.update().
@@ -2062,10 +2082,28 @@ class ConfigDict(dict):
         if key not in self:
             self[key] = value
 
+    def _freeze(self, key, value):
+        for _type in (bool, int, float, basestring):
+            if isinstance(value, _type):
+                return value
+        if isinstance(value, (list, tuple)):
+            return tuple((self._freeze(key, val) for val in value))
+        if isinstance(value, (set, frozenset)):
+            return frozenset((self._freeze(key, val) for val in value))
+        if self._unsafe or self.meta_get(key, 'unsafe'):
+            return value
+        raise TypeError('Unsupported value type: %r' % type(value))
+
+    def __missing__(self, key):
+        if self.meta_get(key, 'missing'):
+            return self.meta_get(key, 'missing')(self, key)
+        raise KeyError(key)
+
     def __setitem__(self, key, value):
         if not isinstance(key, str):
             raise TypeError('Key has type %r (not a string)' % type(key))
         value = self.meta_get(key, 'filter', lambda x: x)(value)
+        value = self._freeze(key, value)
         if key in self and self[key] is value:
             return
         self._on_change(key, value)

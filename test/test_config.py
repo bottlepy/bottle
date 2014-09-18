@@ -1,5 +1,5 @@
 import unittest
-from bottle import ConfigDict
+from bottle import ConfigDict, tob, touni
 
 class TestConfDict(unittest.TestCase):
     
@@ -28,6 +28,28 @@ class TestConfDict(unittest.TestCase):
         self.assertTrue('key' in c)
         c['key'] = 'value2'
         self.assertEqual(c['key'], 'value2')
+
+    def test_save_types(self):
+        """ Types that are considered save (immutable) are stored as is
+            (but may still be copied). """
+        c = ConfigDict()
+        for value in (True, False,
+                      1, -1024, 0.5,
+                      tob('abc'), touni('abc'),
+                      (1,2,3), frozenset([3,4,5]),
+                      (1,2,3,(4,5),'6', frozenset([3,(4,5),6]))):
+            c['key'] = value
+            self.assertEquals(c['key'], value)
+
+    def test_immutable_values(self):
+        """ Config values must be immutable. For some types (list, set) we do this
+            automagically, even for nested structures. For others, we don't. """
+        c = ConfigDict()
+        c['key'] = [1,2,set([3,4]),5, '6']
+        self.assertEquals(c['key'], (1,2,frozenset([3,4]),5, '6'))
+        self.assertRaises(TypeError, c.__setitem__, 'key', dict())
+        self.assertRaises(TypeError, c.__setitem__, 'key', ['a', {}])
+        self.assertRaises(TypeError, c.__setitem__, 'key', ('a', {}))
 
     def test_update(self):
         c = ConfigDict()
