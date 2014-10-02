@@ -2061,6 +2061,7 @@ class ConfigDict(dict):
     def setdefault(self, key, value):
         if key not in self:
             self[key] = value
+        return self[key]
 
     def __setitem__(self, key, value):
         if not isinstance(key, str):
