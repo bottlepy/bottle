@@ -10,7 +10,7 @@ release: test_all
 	git tag -a -m "Release of $(VERSION)" $(VERSION)   # Fail on existing tags
 	git push origin HEAD                               # Fail on out-of-sync upstream
 	git push origin tag $(VERSION)                     # Fail on dublicate tag
-	python setup.py sdist register upload              # Release to pypi
+	python setup.py sdist bdist_wheel register upload  # Release to pypi
 
 coverage:
 	-mkdir build/
