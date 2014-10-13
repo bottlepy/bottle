@@ -94,6 +94,17 @@ class TestWsgi(ServerTestBase):
         def test(string): return string
         self.assertBody(tob('urf8-öäü'), '/my-öäü/urf8-öäü')
 
+    def test_utf8_header(self):
+        header = 'öäü'
+        if bottle.py3k:
+            header = header.encode('utf8').decode('latin1')
+        @bottle.route('/test')
+        def test():
+            h = bottle.request.get_header('X-Test')
+            self.assertEqual(h, 'öäü')
+            bottle.response.set_header('X-Test', h)
+        self.assertHeader('X-Test', header, '/test', env={'HTTP_X_TEST': header})
+
     def test_utf8_404(self):
         self.assertStatus(404, '/not-found/urf8-öäü')
 

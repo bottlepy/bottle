@@ -1542,7 +1542,7 @@ class BaseResponse(object):
     def set_header(self, name, value):
         """ Create a new response header, replacing any previously defined
             headers with the same name. """
-        self._headers[_hkey(name)] = [str(value)]
+        self._headers[_hkey(name)] = [value if isinstance(value, unicode) else str(value)]
 
     def add_header(self, name, value):
         """ Add an additional response header, not removing duplicates. """
@@ -1563,10 +1563,14 @@ class BaseResponse(object):
         if self._status_code in self.bad_headers:
             bad_headers = self.bad_headers[self._status_code]
             headers = [h for h in headers if h[0] not in bad_headers]
-        out += [(name, val) for name, vals in headers for val in vals]
+        out += [(name, val) for (name, vals) in headers for val in vals]
         if self._cookies:
             for c in self._cookies.values():
                 out.append(('Set-Cookie', c.OutputString()))
+        if py3k:
+            out = [
+                (k, v.encode('utf8').decode('latin1')
+                if isinstance(v, unicode) else v) for (k, v) in out]
         return out
 
     content_type = HeaderProperty('Content-Type')
@@ -1980,7 +1984,13 @@ class WSGIHeaderDict(DictMixin):
         return self.environ.get(self._ekey(key), default)
 
     def __getitem__(self, key):
-        return tonat(self.environ[self._ekey(key)], 'latin1')
+        val = self.environ[self._ekey(key)]
+        if py3k:
+            if isinstance(val, unicode):
+                val = val.encode('latin1').decode('utf8')
+            else:
+                val = val.decode('utf8')
+        return val
 
     def __setitem__(self, key, value):
         raise TypeError("%s is read-only." % self.__class__)
