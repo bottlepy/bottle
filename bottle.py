@@ -157,7 +157,7 @@ def update_wrapper(wrapper, wrapped, *a, **ka):
 def depr(message, strict=False):
     warnings.warn(message, DeprecationWarning, stacklevel=3)
 
-def makelist(data): # This is just to handy
+def makelist(data): # This is just too handy
     if isinstance(data, (tuple, list, set, dict)):
         return list(data)
     elif data:
