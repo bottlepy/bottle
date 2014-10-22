@@ -2709,7 +2709,7 @@ class CherryPyServer(ServerAdapter):
 class WaitressServer(ServerAdapter):
     def run(self, handler):
         from waitress import serve
-        serve(handler, host=self.host, port=self.port)
+        serve(handler, host=self.host, port=self.port, _quiet=self.quiet)
 
 
 class PasteServer(ServerAdapter):
