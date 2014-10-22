@@ -426,7 +426,7 @@ class Router(object):
             raise RouteBuildError('Missing URL argument: %r' % _e().args[0])
 
     def match(self, environ):
-        """ Return a (target, url_agrs) tuple or raise HTTPError(400/404/405). """
+        """ Return a (target, url_args) tuple or raise HTTPError(400/404/405). """
         verb = environ['REQUEST_METHOD'].upper()
         path = environ['PATH_INFO'] or '/'
 
