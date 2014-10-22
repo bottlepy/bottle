@@ -479,7 +479,7 @@ class Route(object):
                  plugins=None, skiplist=None, **config):
         #: The application this route is installed to.
         self.app = app
-        #: The path-rule string (e.g. ``/wiki/:page``).
+        #: The path-rule string (e.g. ``/wiki/<page>``).
         self.rule = rule
         #: The HTTP method as a string (e.g. ``GET``).
         self.method = method
@@ -773,7 +773,7 @@ class Bottle(object):
               apply=None, skip=None, **config):
         """ A decorator to bind a function to a request URL. Example::
 
-                @app.route('/hello/:name')
+                @app.route('/hello/<name>')
                 def hello(name):
                     return 'Hello %s' % name
 
