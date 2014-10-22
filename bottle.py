@@ -2673,6 +2673,10 @@ class WSGIRefServer(ServerAdapter):
                     address_family = socket.AF_INET6
 
         self.srv = make_server(self.host, self.port, app, server_cls, handler_cls)
+        certfile = self.options.get('certfile', None)
+        if certfile:
+            import ssl
+            self.srv.socket = ssl.wrap_socket(self.srv.socket, certfile=certfile, server_side=True)
         self.port = self.srv.server_port # update port actual port (0 means random)
         try:
             self.srv.serve_forever()
