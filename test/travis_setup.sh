@@ -10,7 +10,9 @@ if test -n "$PY"; then
   sudo apt-get install python$PY-dev
 
   if test "$PY" = 2.5; then
-    wget -O - http://python-distribute.org/distribute_setup.py | sudo python$PY
-    sudo easy_install-$PY simplejson
+    wget https://pypi.python.org/packages/source/s/simplejson/simplejson-3.6.3.tar.gz
+    tar -xvzf simplejson-3.6.3.tar.gz
+    cd simplejson-3.6.3
+    sudo python$PY setup.py install
   fi
 fi
