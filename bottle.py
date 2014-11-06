@@ -2889,6 +2889,34 @@ class BjoernServer(ServerAdapter):
         run(handler, self.host, self.port)
 
 
+class AiohttpServer(ServerAdapter):
+    """ Untested. 
+        aiohttp
+        https://pypi.python.org/pypi/aiohttp/
+    """
+    def run(self, handler):
+        import asyncio
+        from aiohttp.wsgi import WSGIServerHttpProtocol
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
+
+        protocol_factory = lambda: WSGIServerHttpProtocol(handler,
+                                                          readpayload=True,
+                                                          debug=(not self.quiet))
+        self.loop.run_until_complete(self.loop.create_server(protocol_factory,
+                                                             self.host, self.port))
+        
+        if 'BOTTLE_CHILD' in os.environ:
+            import signal
+            signal.signal(signal.SIGINT, 
+                          lambda s, f: self.loop.stop())
+
+        try:
+            self.loop.run_forever()
+        except KeyboardInterrupt:
+            self.loop.stop()
+
+
 class AutoServer(ServerAdapter):
     """ Untested. """
     adapters = [WaitressServer, PasteServer, TwistedServer, CherryPyServer, WSGIRefServer]
@@ -2918,6 +2946,7 @@ server_names = {
     'geventSocketIO':GeventSocketIOServer,
     'rocket': RocketServer,
     'bjoern' : BjoernServer,
+    'aiohttp': AiohttpServer,
     'auto': AutoServer,
 }
 
