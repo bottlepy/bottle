@@ -18,3 +18,4 @@ paste
 rocket
 tornado
 twisted
+aiohttp
