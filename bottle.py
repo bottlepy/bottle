@@ -2365,7 +2365,10 @@ def static_file(filename, root, mimetype='auto', download=False, charset='UTF-8'
         return HTTPError(403, "You do not have permission to access this file.")
 
     if mimetype == 'auto':
-        mimetype, encoding = mimetypes.guess_type(filename)
+        if download and download != True:
+            mimetype, encoding = mimetypes.guess_type(download)
+        else:
+            mimetype, encoding = mimetypes.guess_type(filename)
         if encoding: headers['Content-Encoding'] = encoding
 
     if mimetype:

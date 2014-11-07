@@ -78,6 +78,8 @@ class TestSendFile(unittest.TestCase):
 
     def test_download(self):
         """ SendFile: Download as attachment """
+        f = static_file(os.path.basename(__file__), root='./', download="foo.mp3")
+        self.assertEqual('audio/mpeg', f.headers['Content-Type'])
         basename = os.path.basename(__file__)
         f = static_file(basename, root='./', download=True)
         self.assertEqual('attachment; filename="%s"' % basename, f.headers['Content-Disposition'])
