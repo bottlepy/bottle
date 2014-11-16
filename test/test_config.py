@@ -1,8 +1,9 @@
 import unittest
 from bottle import ConfigDict
 
+
 class TestConfDict(unittest.TestCase):
-    
+
     def test_isadict(self):
         """ ConfigDict should behaves like a normal dict. """
         # It is a dict-subclass, so this kind of pointless, but it doen't hurt.
@@ -46,7 +47,7 @@ class TestConfDict(unittest.TestCase):
         c.meta_set('bool', 'filter', bool)
         c.meta_set('int', 'filter', int)
         c['bool'] = 'I am so true!'
-        c['int']  = '6'
+        c['int'] = '6'
         self.assertTrue(c['bool'] is True)
         self.assertEqual(c['int'], 6)
         self.assertRaises(ValueError, lambda: c.update(int='not an int'))
@@ -58,7 +59,6 @@ class TestConfDict(unittest.TestCase):
         self.assertEqual(c['a.b.foo'], 5)
         self.assertEqual(c['a.b.bar'], 6)
         self.assertEqual(c['a.baz'], 7)
-   
-if __name__ == '__main__': #pragma: no cover
-    unittest.main()
 
+if __name__ == '__main__':  # pragma: no cover
+    unittest.main()

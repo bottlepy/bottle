@@ -2,6 +2,7 @@ from bottle import ResourceManager
 import os.path
 import unittest
 
+
 class TestResourceManager(unittest.TestCase):
 
     def test_path_normalize(self):
@@ -12,7 +13,8 @@ class TestResourceManager(unittest.TestCase):
             self.assertEqual(rm.path, ['/foo/bar/'])
 
     def test_path_create(self):
-        import tempfile, shutil
+        import tempfile
+        import shutil
         tempdir = tempfile.mkdtemp()
         try:
             rm = ResourceManager()
@@ -76,5 +78,5 @@ class TestResourceManager(unittest.TestCase):
         self.assertEqual(fp.read(), open(__file__).read())
 
 
-if __name__ == '__main__': #pragma: no cover
+if __name__ == '__main__':  # pragma: no cover
     unittest.main()

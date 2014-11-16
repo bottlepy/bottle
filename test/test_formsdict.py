@@ -4,7 +4,9 @@
 import unittest
 from bottle import FormsDict, touni, tob
 
+
 class TestFormsDict(unittest.TestCase):
+
     def test_attr_access(self):
         """ FomsDict.attribute returs string values as unicode. """
         d = FormsDict(py2=tob('瓶'), py3=tob('瓶').decode('latin1'))
@@ -30,6 +32,5 @@ class TestFormsDict(unittest.TestCase):
         self.assertTrue(hasattr(list(d.keys())[0], 'encode'))
         self.assertTrue(hasattr(list(d.values())[0], 'encode'))
 
-if __name__ == '__main__': #pragma: no cover
+if __name__ == '__main__':  # pragma: no cover
     unittest.main()
-

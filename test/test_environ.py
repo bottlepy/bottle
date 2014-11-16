@@ -11,6 +11,7 @@ import base64
 
 from bottle import BaseRequest, BaseResponse, LocalRequest
 
+
 class TestRequest(unittest.TestCase):
 
     def test_app_property(self):
@@ -35,11 +36,12 @@ class TestRequest(unittest.TestCase):
     def test_path(self):
         """ PATH_INFO normalization. """
         # Legal paths
-        tests = [('', '/'), ('x','/x'), ('x/', '/x/'), ('/x', '/x'), ('/x/', '/x/')]
+        tests = [('', '/'), ('x', '/x'), ('x/', '/x/'),
+                 ('/x', '/x'), ('/x/', '/x/')]
         for raw, norm in tests:
             self.assertEqual(norm, BaseRequest({'PATH_INFO': raw}).path)
         # Strange paths
-        tests = [('///', '/'), ('//x','/x')]
+        tests = [('///', '/'), ('//x', '/x')]
         for raw, norm in tests:
             self.assertEqual(norm, BaseRequest({'PATH_INFO': raw}).path)
         # No path at all
@@ -47,22 +49,27 @@ class TestRequest(unittest.TestCase):
 
     def test_method(self):
         self.assertEqual(BaseRequest({}).method, 'GET')
-        self.assertEqual(BaseRequest({'REQUEST_METHOD':'GET'}).method, 'GET')
-        self.assertEqual(BaseRequest({'REQUEST_METHOD':'GeT'}).method, 'GET')
-        self.assertEqual(BaseRequest({'REQUEST_METHOD':'get'}).method, 'GET')
-        self.assertEqual(BaseRequest({'REQUEST_METHOD':'POst'}).method, 'POST')
-        self.assertEqual(BaseRequest({'REQUEST_METHOD':'FanTASY'}).method, 'FANTASY')
+        self.assertEqual(BaseRequest({'REQUEST_METHOD': 'GET'}).method, 'GET')
+        self.assertEqual(BaseRequest({'REQUEST_METHOD': 'GeT'}).method, 'GET')
+        self.assertEqual(BaseRequest({'REQUEST_METHOD': 'get'}).method, 'GET')
+        self.assertEqual(
+            BaseRequest({'REQUEST_METHOD': 'POst'}).method, 'POST')
+        self.assertEqual(
+            BaseRequest({'REQUEST_METHOD': 'FanTASY'}).method, 'FANTASY')
 
     def test_script_name(self):
         """ SCRIPT_NAME normalization. """
         # Legal paths
-        tests = [('', '/'), ('x','/x/'), ('x/', '/x/'), ('/x', '/x/'), ('/x/', '/x/')]
+        tests = [('', '/'), ('x', '/x/'), ('x/', '/x/'),
+                 ('/x', '/x/'), ('/x/', '/x/')]
         for raw, norm in tests:
-            self.assertEqual(norm, BaseRequest({'SCRIPT_NAME': raw}).script_name)
+            self.assertEqual(
+                norm, BaseRequest({'SCRIPT_NAME': raw}).script_name)
         # Strange paths
-        tests = [('///', '/'), ('///x///','/x/')]
+        tests = [('///', '/'), ('///x///', '/x/')]
         for raw, norm in tests:
-            self.assertEqual(norm, BaseRequest({'SCRIPT_NAME': raw}).script_name)
+            self.assertEqual(
+                norm, BaseRequest({'SCRIPT_NAME': raw}).script_name)
         # No path at all
         self.assertEqual('/', BaseRequest({}).script_name)
 
@@ -87,19 +94,21 @@ class TestRequest(unittest.TestCase):
 
     def test_url(self):
         """ Environ: URL building """
-        request = BaseRequest({'HTTP_HOST':'example.com'})
+        request = BaseRequest({'HTTP_HOST': 'example.com'})
         self.assertEqual('http://example.com/', request.url)
-        request = BaseRequest({'SERVER_NAME':'example.com'})
+        request = BaseRequest({'SERVER_NAME': 'example.com'})
         self.assertEqual('http://example.com/', request.url)
-        request = BaseRequest({'SERVER_NAME':'example.com', 'SERVER_PORT':'81'})
+        request = BaseRequest(
+            {'SERVER_NAME': 'example.com', 'SERVER_PORT': '81'})
         self.assertEqual('http://example.com:81/', request.url)
-        request = BaseRequest({'wsgi.url_scheme':'https', 'SERVER_NAME':'example.com'})
+        request = BaseRequest(
+            {'wsgi.url_scheme': 'https', 'SERVER_NAME': 'example.com'})
         self.assertEqual('https://example.com/', request.url)
-        request = BaseRequest({'HTTP_HOST':'example.com', 'PATH_INFO':'/path',
-                               'QUERY_STRING':'1=b&c=d', 'SCRIPT_NAME':'/sp'})
+        request = BaseRequest({'HTTP_HOST': 'example.com', 'PATH_INFO': '/path',
+                               'QUERY_STRING': '1=b&c=d', 'SCRIPT_NAME': '/sp'})
         self.assertEqual('http://example.com/sp/path?1=b&c=d', request.url)
-        request = BaseRequest({'HTTP_HOST':'example.com', 'PATH_INFO':'/pa th',
-                               'SCRIPT_NAME':'/s p'})
+        request = BaseRequest({'HTTP_HOST': 'example.com', 'PATH_INFO': '/pa th',
+                               'SCRIPT_NAME': '/s p'})
         self.assertEqual('http://example.com/s%20p/pa%20th', request.url)
 
     def test_dict_access(self):
@@ -118,8 +127,10 @@ class TestRequest(unittest.TestCase):
         self.assertTrue('PATH_INFO' not in request)
 
     def test_readonly_environ(self):
-        request = BaseRequest({'bottle.request.readonly':True})
-        def test(): request['x']='y'
+        request = BaseRequest({'bottle.request.readonly': True})
+
+        def test():
+            request['x'] = 'y'
         self.assertRaises(KeyError, test)
 
     def test_header_access(self):
@@ -131,7 +142,8 @@ class TestRequest(unittest.TestCase):
         request['HTTP_SOME_OTHER_HEADER'] = 'some other value'
         self.assertTrue('Some-Header' in request.headers)
         self.assertTrue(request.headers['Some-Header'] == 'some value')
-        self.assertTrue(request.headers['Some-Other-Header'] == 'some other value')
+        self.assertTrue(
+            request.headers['Some-Other-Header'] == 'some other value')
 
     def test_header_access_special(self):
         e = {}
@@ -145,8 +157,8 @@ class TestRequest(unittest.TestCase):
     def test_cookie_dict(self):
         """ Environ: Cookie dict """
         t = dict()
-        t['a=a']      = {'a': 'a'}
-        t['a=a; b=b'] = {'a': 'a', 'b':'b'}
+        t['a=a'] = {'a': 'a'}
+        t['a=a; b=b'] = {'a': 'a', 'b': 'b'}
         t['a=a; a=b'] = {'a': 'b'}
         for k, v in t.items():
             request = BaseRequest({'HTTP_COOKIE': k})
@@ -157,10 +169,10 @@ class TestRequest(unittest.TestCase):
     def test_get(self):
         """ Environ: GET data """
         qs = tonat(tob('a=a&a=1&b=b&c=c&cn=%e7%93%b6'), 'latin1')
-        request = BaseRequest({'QUERY_STRING':qs})
+        request = BaseRequest({'QUERY_STRING': qs})
         self.assertTrue('a' in request.query)
         self.assertTrue('b' in request.query)
-        self.assertEqual(['a','1'], request.query.getall('a'))
+        self.assertEqual(['a', '1'], request.query.getall('a'))
         self.assertEqual(['b'], request.query.getall('b'))
         self.assertEqual('1', request.query['a'])
         self.assertEqual('b', request.query['b'])
@@ -179,7 +191,7 @@ class TestRequest(unittest.TestCase):
         request = BaseRequest(e)
         self.assertTrue('a' in request.POST)
         self.assertTrue('b' in request.POST)
-        self.assertEqual(['a','1'], request.POST.getall('a'))
+        self.assertEqual(['a', '1'], request.POST.getall('a'))
         self.assertEqual(['b'], request.POST.getall('b'))
         self.assertEqual('1', request.POST['a'])
         self.assertEqual('b', request.POST['b'])
@@ -210,7 +222,7 @@ class TestRequest(unittest.TestCase):
         e['REQUEST_METHOD'] = "POST"
         request = BaseRequest(e)
         self.assertEqual(sq, request.body.read())
-        request.POST # This caused a body.close() with Python 3.x
+        request.POST  # This caused a body.close() with Python 3.x
         self.assertEqual(sq, request.body.read())
 
     def test_params(self):
@@ -223,7 +235,7 @@ class TestRequest(unittest.TestCase):
         e['QUERY_STRING'] = 'a=a&c=g'
         e['REQUEST_METHOD'] = "POST"
         request = BaseRequest(e)
-        self.assertEqual(['a','b','c'], sorted(request.params.keys()))
+        self.assertEqual(['a', 'b', 'c'], sorted(request.params.keys()))
         self.assertEqual('p', request.params['c'])
 
     def test_getpostleak(self):
@@ -256,21 +268,21 @@ class TestRequest(unittest.TestCase):
         """ Environ: Request.body should handle big uploads using files """
         e = {}
         wsgiref.util.setup_testing_defaults(e)
-        e['wsgi.input'].write(tob('x')*1024*1000)
+        e['wsgi.input'].write(tob('x') * 1024 * 1000)
         e['wsgi.input'].seek(0)
-        e['CONTENT_LENGTH'] = str(1024*1000)
+        e['CONTENT_LENGTH'] = str(1024 * 1000)
         request = BaseRequest(e)
         self.assertTrue(hasattr(request.body, 'fileno'))
-        self.assertEqual(1024*1000, len(request.body.read()))
+        self.assertEqual(1024 * 1000, len(request.body.read()))
         self.assertEqual(1024, len(request.body.read(1024)))
-        self.assertEqual(1024*1000, len(request.body.readline()))
+        self.assertEqual(1024 * 1000, len(request.body.readline()))
         self.assertEqual(1024, len(request.body.readline(1024)))
 
     def test_tobigbody(self):
         """ Environ: Request.body should truncate to Content-Length bytes """
         e = {}
         wsgiref.util.setup_testing_defaults(e)
-        e['wsgi.input'].write(tob('x')*1024)
+        e['wsgi.input'].write(tob('x') * 1024)
         e['wsgi.input'].seek(0)
         e['CONTENT_LENGTH'] = '42'
         request = BaseRequest(e)
@@ -291,15 +303,15 @@ class TestRequest(unittest.TestCase):
             self.assertRaises(expect, lambda: BaseRequest(e).body)
 
     def test_chunked(self):
-        self._test_chunked('1\r\nx\r\nff\r\n' + 'y'*255 + '\r\n0\r\n',
-                           'x' + 'y'*255)
-        self._test_chunked('8\r\nxxxxxxxx\r\n0\r\n','xxxxxxxx')
+        self._test_chunked('1\r\nx\r\nff\r\n' + 'y' * 255 + '\r\n0\r\n',
+                           'x' + 'y' * 255)
+        self._test_chunked('8\r\nxxxxxxxx\r\n0\r\n', 'xxxxxxxx')
         self._test_chunked('0\r\n', '')
 
     def test_chunked_meta_fields(self):
-        self._test_chunked('8 ; foo\r\nxxxxxxxx\r\n0\r\n','xxxxxxxx')
-        self._test_chunked('8;foo\r\nxxxxxxxx\r\n0\r\n','xxxxxxxx')
-        self._test_chunked('8;foo=bar\r\nxxxxxxxx\r\n0\r\n','xxxxxxxx')
+        self._test_chunked('8 ; foo\r\nxxxxxxxx\r\n0\r\n', 'xxxxxxxx')
+        self._test_chunked('8;foo\r\nxxxxxxxx\r\n0\r\n', 'xxxxxxxx')
+        self._test_chunked('8;foo=bar\r\nxxxxxxxx\r\n0\r\n', 'xxxxxxxx')
 
     def test_chunked_not_terminated(self):
         self._test_chunked('1\r\nx\r\n', HTTPError)
@@ -315,15 +327,17 @@ class TestRequest(unittest.TestCase):
 
     def test_multipart(self):
         """ Environ: POST (multipart files and multible values per key) """
-        fields = [('field1','value1'), ('field2','value2'), ('field2','value3')]
-        files = [('file1','filename1.txt','content1'), ('万难','万难foo.py', 'ä\nö\rü')]
+        fields = [
+            ('field1', 'value1'), ('field2', 'value2'), ('field2', 'value3')]
+        files = [('file1', 'filename1.txt', 'content1'),
+                 ('万难', '万难foo.py', 'ä\nö\rü')]
         e = tools.multipart_environ(fields=fields, files=files)
         request = BaseRequest(e)
         # File content
         self.assertTrue('file1' in request.POST)
         self.assertTrue('file1' in request.files)
         self.assertTrue('file1' not in request.forms)
-        cmp = tob('content1') if sys.version_info >= (3,2,0) else 'content1'
+        cmp = tob('content1') if sys.version_info >= (3, 2, 0) else 'content1'
         self.assertEqual(cmp, request.POST['file1'].file.read())
         # File name and meta data
         self.assertTrue('万难' in request.POST)
@@ -334,7 +348,7 @@ class TestRequest(unittest.TestCase):
         self.assertFalse(request.files.file77)
         # UTF-8 files
         x = request.POST['万难'].file.read()
-        if (3,2,0) > sys.version_info >= (3,0,0):
+        if (3, 2, 0) > sys.version_info >= (3, 0, 0):
             x = x.encode('utf8')
         self.assertEqual(tob('ä\nö\rü'), x)
         # No file
@@ -357,7 +371,7 @@ class TestRequest(unittest.TestCase):
 
     def test_json_noheader(self):
         """ Environ: Request.json property with missing content-type header. """
-        test = dict(a=5, b='test', c=[1,2,3])
+        test = dict(a=5, b='test', c=[1, 2, 3])
         e = {}
         wsgiref.util.setup_testing_defaults(e)
         e['wsgi.input'].write(tob(json_dumps(test)))
@@ -377,7 +391,7 @@ class TestRequest(unittest.TestCase):
 
     def test_json_valid(self):
         """ Environ: Request.json property. """
-        test = dict(a=5, b='test', c=[1,2,3])
+        test = dict(a=5, b='test', c=[1, 2, 3])
         e = {'CONTENT_TYPE': 'application/json; charset=UTF-8'}
         wsgiref.util.setup_testing_defaults(e)
         e['wsgi.input'].write(tob(json_dumps(test)))
@@ -386,7 +400,7 @@ class TestRequest(unittest.TestCase):
         self.assertEqual(BaseRequest(e).json, test)
 
     def test_json_forged_header_issue616(self):
-        test = dict(a=5, b='test', c=[1,2,3])
+        test = dict(a=5, b='test', c=[1, 2, 3])
         e = {'CONTENT_TYPE': 'text/plain;application/json'}
         wsgiref.util.setup_testing_defaults(e)
         e['wsgi.input'].write(tob(json_dumps(test)))
@@ -456,42 +470,40 @@ class TestRequest(unittest.TestCase):
             self.assertRaises(AttributeError, getattr, r, 'somevalue')
 
 
-
 class TestResponse(unittest.TestCase):
 
     def test_constructor_body(self):
         self.assertEqual('',
-            BaseResponse('').body)
+                         BaseResponse('').body)
 
         self.assertEqual('YAY',
-            BaseResponse('YAY').body)
+                         BaseResponse('YAY').body)
 
     def test_constructor_status(self):
         self.assertEqual(200,
-            BaseResponse('YAY', 200).status_code)
+                         BaseResponse('YAY', 200).status_code)
 
         self.assertEqual('200 OK',
-            BaseResponse('YAY', 200).status_line)
+                         BaseResponse('YAY', 200).status_line)
 
         self.assertEqual('200 YAY',
-            BaseResponse('YAY', '200 YAY').status_line)
+                         BaseResponse('YAY', '200 YAY').status_line)
 
         self.assertEqual('200 YAY',
-            BaseResponse('YAY', '200 YAY').status_line)
+                         BaseResponse('YAY', '200 YAY').status_line)
 
     def test_constructor_headerlist(self):
         from functools import partial
         make_res = partial(BaseResponse, '', 200)
 
         self.assertTrue('yay',
-            make_res([('x-test','yay')])['x-test'])
+                        make_res([('x-test', 'yay')])['x-test'])
 
     def test_constructor_headerlist(self):
         from functools import partial
         make_res = partial(BaseResponse, '', 200)
 
         self.assertTrue('yay', make_res(x_test='yay')['x-test'])
-
 
     def test_set_status(self):
         rs = BaseResponse()
@@ -511,56 +523,63 @@ class TestResponse(unittest.TestCase):
         self.assertEqual(rs.status_code, 404)
         self.assertEqual(rs.status_line, '404 Not Found')
 
-        def test(): rs.status = -200
+        def test():
+            rs.status = -200
         self.assertRaises(ValueError, test)
-        self.assertEqual(rs.status, rs.status_line) # last value
-        self.assertEqual(rs.status_code, 404) # last value
-        self.assertEqual(rs.status_line, '404 Not Found') # last value
+        self.assertEqual(rs.status, rs.status_line)  # last value
+        self.assertEqual(rs.status_code, 404)  # last value
+        self.assertEqual(rs.status_line, '404 Not Found')  # last value
 
-        def test(): rs.status = 5
+        def test():
+            rs.status = 5
         self.assertRaises(ValueError, test)
-        self.assertEqual(rs.status, rs.status_line) # last value
-        self.assertEqual(rs.status_code, 404) # last value
-        self.assertEqual(rs.status_line, '404 Not Found') # last value
+        self.assertEqual(rs.status, rs.status_line)  # last value
+        self.assertEqual(rs.status_code, 404)  # last value
+        self.assertEqual(rs.status_line, '404 Not Found')  # last value
 
-        rs.status = '999 Who knows?' # Illegal, but acceptable three digit code
+        # Illegal, but acceptable three digit code
+        rs.status = '999 Who knows?'
         self.assertEqual(rs.status, rs.status_line)
         self.assertEqual(rs.status_code, 999)
         self.assertEqual(rs.status_line, '999 Who knows?')
 
-        rs.status = 555 # Strange code
+        rs.status = 555  # Strange code
         self.assertEqual(rs.status, rs.status_line)
         self.assertEqual(rs.status_code, 555)
         self.assertEqual(rs.status_line, '555 Unknown')
 
-        rs.status = '404 Brain not Found' # Custom reason
+        rs.status = '404 Brain not Found'  # Custom reason
         self.assertEqual(rs.status, rs.status_line)
         self.assertEqual(rs.status_code, 404)
         self.assertEqual(rs.status_line, '404 Brain not Found')
 
-        def test(): rs.status = '5 Illegal Code'
+        def test():
+            rs.status = '5 Illegal Code'
         self.assertRaises(ValueError, test)
-        self.assertEqual(rs.status, rs.status_line) # last value
-        self.assertEqual(rs.status_code, 404) # last value
-        self.assertEqual(rs.status_line, '404 Brain not Found') # last value
+        self.assertEqual(rs.status, rs.status_line)  # last value
+        self.assertEqual(rs.status_code, 404)  # last value
+        self.assertEqual(rs.status_line, '404 Brain not Found')  # last value
 
-        def test(): rs.status = '-99 Illegal Code'
+        def test():
+            rs.status = '-99 Illegal Code'
         self.assertRaises(ValueError, test)
-        self.assertEqual(rs.status, rs.status_line) # last value
-        self.assertEqual(rs.status_code, 404) # last value
-        self.assertEqual(rs.status_line, '404 Brain not Found') # last value
+        self.assertEqual(rs.status, rs.status_line)  # last value
+        self.assertEqual(rs.status_code, 404)  # last value
+        self.assertEqual(rs.status_line, '404 Brain not Found')  # last value
 
-        def test(): rs.status = '1000 Illegal Code'
+        def test():
+            rs.status = '1000 Illegal Code'
         self.assertRaises(ValueError, test)
-        self.assertEqual(rs.status, rs.status_line) # last value
-        self.assertEqual(rs.status_code, 404) # last value
-        self.assertEqual(rs.status_line, '404 Brain not Found') # last value
+        self.assertEqual(rs.status, rs.status_line)  # last value
+        self.assertEqual(rs.status_code, 404)  # last value
+        self.assertEqual(rs.status_line, '404 Brain not Found')  # last value
 
-        def test(): rs.status = '555' # No reason
+        def test():
+            rs.status = '555'  # No reason
         self.assertRaises(ValueError, test)
-        self.assertEqual(rs.status, rs.status_line) # last value
-        self.assertEqual(rs.status_code, 404) # last value
-        self.assertEqual(rs.status_line, '404 Brain not Found') # last value
+        self.assertEqual(rs.status, rs.status_line)  # last value
+        self.assertEqual(rs.status_code, 404)  # last value
+        self.assertEqual(rs.status_line, '404 Brain not Found')  # last value
 
     def test_content_type(self):
         rs = BaseResponse()
@@ -591,7 +610,7 @@ class TestResponse(unittest.TestCase):
         r.set_cookie('name1', 'value', max_age=5)
         r.set_cookie('name2', 'value', max_age=datetime.timedelta(days=1))
         cookies = sorted([value for name, value in r.headerlist
-                   if name.title() == 'Set-Cookie'])
+                          if name.title() == 'Set-Cookie'])
         self.assertEqual(cookies[0], 'name1=value; Max-Age=5')
         self.assertEqual(cookies[1], 'name2=value; Max-Age=86400')
 
@@ -599,11 +618,14 @@ class TestResponse(unittest.TestCase):
         import datetime
         r = BaseResponse()
         r.set_cookie('name1', 'value', expires=42)
-        r.set_cookie('name2', 'value', expires=datetime.datetime(1970,1,1,0,0,43))
+        r.set_cookie(
+            'name2', 'value', expires=datetime.datetime(1970, 1, 1, 0, 0, 43))
         cookies = sorted([value for name, value in r.headerlist
-                   if name.title() == 'Set-Cookie'])
-        self.assertEqual(cookies[0], 'name1=value; expires=Thu, 01 Jan 1970 00:00:42 GMT')
-        self.assertEqual(cookies[1], 'name2=value; expires=Thu, 01 Jan 1970 00:00:43 GMT')
+                          if name.title() == 'Set-Cookie'])
+        self.assertEqual(
+            cookies[0], 'name1=value; expires=Thu, 01 Jan 1970 00:00:42 GMT')
+        self.assertEqual(
+            cookies[1], 'name2=value; expires=Thu, 01 Jan 1970 00:00:43 GMT')
 
     def test_delete_cookie(self):
         response = BaseResponse()
@@ -660,20 +682,21 @@ class TestResponse(unittest.TestCase):
         response = BaseResponse()
         now = datetime.datetime.now()
         response.expires = now
-        
+
         def seconds(a, b):
-            td = max(a,b) - min(a,b)
-            return td.days*360*24 + td.seconds
-        
+            td = max(a, b) - min(a, b)
+            return td.days * 360 * 24 + td.seconds
+
         self.assertEqual(0, seconds(response.expires, now))
         now2 = datetime.datetime.utcfromtimestamp(
             parse_date(response.headers['Expires']))
         self.assertEqual(0, seconds(now, now2))
 
+
 class TestRedirect(unittest.TestCase):
 
     def assertRedirect(self, target, result, query=None, status=303, **args):
-        env = {'SERVER_PROTOCOL':'HTTP/1.1'}
+        env = {'SERVER_PROTOCOL': 'HTTP/1.1'}
         for key in list(args):
             if key.startswith('wsgi'):
                 args[key.replace('_', '.', 1)] = args[key]
@@ -713,7 +736,8 @@ class TestRedirect(unittest.TestCase):
                             SCRIPT_NAME='/foo/')
         self.assertRedirect('./test.html', 'http://127.0.0.1/foo/bar/test.html',
                             SCRIPT_NAME='/foo/', PATH_INFO='/bar/baz.html')
-        self.assertRedirect('./foo/test.html', 'http://127.0.0.1/foo/test.html')
+        self.assertRedirect(
+            './foo/test.html', 'http://127.0.0.1/foo/test.html')
         self.assertRedirect('./foo/test.html', 'http://127.0.0.1/bar/foo/test.html',
                             PATH_INFO='/bar/file.html')
         self.assertRedirect('../test.html', 'http://127.0.0.1/test.html',
@@ -768,7 +792,7 @@ class TestRedirect(unittest.TestCase):
                             HTTP_HOST='example.com', SCRIPT_NAME='/a a/', PATH_INFO='/b b/')
 
     def test_redirect_preserve_cookies(self):
-        env = {'SERVER_PROTOCOL':'HTTP/1.1'}
+        env = {'SERVER_PROTOCOL': 'HTTP/1.1'}
         request.bind(env)
         bottle.response.bind()
         try:
@@ -778,7 +802,9 @@ class TestRedirect(unittest.TestCase):
             h = [v for (k, v) in _e().headerlist if k == 'Set-Cookie']
             self.assertEqual(h, ['xxx=yyy'])
 
+
 class TestWSGIHeaderDict(unittest.TestCase):
+
     def setUp(self):
         self.env = {}
         self.headers = bottle.WSGIHeaderDict(self.env)
@@ -811,6 +837,5 @@ class TestWSGIHeaderDict(unittest.TestCase):
             self.assertEqual(self.headers.get(key, 5), 'test')
 
 
-
-if __name__ == '__main__': #pragma: no cover
+if __name__ == '__main__':  # pragma: no cover
     unittest.main()

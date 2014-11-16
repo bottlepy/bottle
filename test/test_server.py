@@ -17,6 +17,7 @@ except:
 
 serverscript = os.path.join(os.path.dirname(__file__), 'servertest.py')
 
+
 def ping(server, port):
     ''' Check if a server accepts connections on a specific TCP port '''
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -31,38 +32,42 @@ def ping(server, port):
 
 class TestServer(unittest.TestCase):
     server = 'wsgiref'
-    skip   = False
+    skip = False
 
     def setUp(self):
-        if self.skip: return
+        if self.skip:
+            return
         # Find a free port
         for port in range(8800, 8900):
             self.port = port
             # Start servertest.py in a subprocess
             cmd = [sys.executable, serverscript, self.server, str(port)]
-            cmd += sys.argv[1:] # pass cmdline arguments to subprocesses
+            cmd += sys.argv[1:]  # pass cmdline arguments to subprocesses
             self.p = Popen(cmd, stdout=PIPE, stderr=PIPE)
             # Wait for the socket to accept connections
             for i in range(100):
                 time.sleep(0.1)
                 # Accepts connections?
-                if ping('127.0.0.1', port): return
+                if ping('127.0.0.1', port):
+                    return
                 # Server died for some reason...
-                if not self.p.poll() is None: break
+                if not self.p.poll() is None:
+                    break
             rv = self.p.poll()
             if rv is None:
                 raise AssertionError("Server took too long to start up.")
-            if rv is 128: # Import error
+            if rv is 128:  # Import error
                 tools.warn("Skipping %r test (ImportError)." % self.server)
                 self.skip = True
                 return
-            if rv is 3: # Port in use
+            if rv is 3:  # Port in use
                 continue
             raise AssertionError("Server exited with error code %d" % rv)
         raise AssertionError("Could not find a free port to test server.")
 
     def tearDown(self):
-        if self.skip: return
+        if self.skip:
+            return
 
         if self.p.poll() == None:
             os.kill(self.p.pid, signal.SIGINT)
@@ -86,46 +91,57 @@ class TestServer(unittest.TestCase):
 
     def test_simple(self):
         ''' Test a simple static page with this server adapter. '''
-        if self.skip: return
+        if self.skip:
+            return
         self.assertEqual(tob('OK'), self.fetch('test'))
-
 
 
 class TestCherryPyServer(TestServer):
     server = 'cherrypy'
 
+
 class TestPasteServer(TestServer):
     server = 'paste'
+
 
 class TestTornadoServer(TestServer):
     server = 'tornado'
 
+
 class TestTwistedServer(TestServer):
     server = 'twisted'
+
 
 class TestDieselServer(TestServer):
     server = 'diesel'
 
+
 class TestGunicornServer(TestServer):
     server = 'gunicorn'
+
 
 class TestGeventServer(TestServer):
     server = 'gevent'
 
+
 class TestEventletServer(TestServer):
     server = 'eventlet'
+
 
 class TestRocketServer(TestServer):
     server = 'rocket'
 
+
 class TestFapwsServer(TestServer):
     server = 'fapws3'
+
 
 class MeinheldServer(TestServer):
     server = 'meinheld'
 
+
 class TestBjoernServer(TestServer):
     server = 'bjoern'
 
-if __name__ == '__main__': #pragma: no cover
+if __name__ == '__main__':  # pragma: no cover
     unittest.main()

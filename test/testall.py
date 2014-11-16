@@ -8,7 +8,9 @@ except ImportError:
     pass
 
 import unittest
-import sys, os, glob
+import sys
+import os
+import glob
 
 test_root = os.path.dirname(os.path.abspath(__file__))
 test_files = glob.glob(os.path.join(test_root, 'test_*.py'))
@@ -31,6 +33,7 @@ if 'fast' in sys.argv:
 
 suite = unittest.defaultTestLoader.loadTestsFromNames(test_names)
 
+
 def run():
     import bottle
 
@@ -42,4 +45,3 @@ def run():
 
 if __name__ == '__main__':
     run()
-
