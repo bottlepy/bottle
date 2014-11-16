@@ -6,10 +6,10 @@ import bottle
 
 class TestRouter(unittest.TestCase):
     CGI = False
-    
+
     def setUp(self):
         self.r = bottle.Router()
-    
+
     def add(self, path, target, method='GET', **ka):
         self.r.add(path, method, target, **ka)
 
@@ -30,11 +30,11 @@ class TestRouter(unittest.TestCase):
         self.assertMatches('/\\:its/:#.+#/:test/:name#[a-z]+#/',
                            '/:its/a/cruel/world/',
                            test='cruel', name='world')
-        self.assertMatches('/:test', '/test', test='test') # No tail
-        self.assertMatches(':test/', 'test/', test='test') # No head
-        self.assertMatches('/:test/', '/test/', test='test') # Middle
-        self.assertMatches(':test', 'test', test='test') # Full wildcard
-        self.assertMatches('/:#anon#/match', '/anon/match') # Anon wildcards
+        self.assertMatches('/:test', '/test', test='test')  # No tail
+        self.assertMatches(':test/', 'test/', test='test')  # No head
+        self.assertMatches('/:test/', '/test/', test='test')  # Middle
+        self.assertMatches(':test', 'test', test='test')  # Full wildcard
+        self.assertMatches('/:#anon#/match', '/anon/match')  # Anon wildcards
         self.assertRaises(bottle.HTTPError, self.match, '//no/m/at/ch/')
 
     def testNewSyntax(self):
@@ -42,11 +42,12 @@ class TestRouter(unittest.TestCase):
         self.assertMatches('/\\<its>/<:re:.+>/<test>/<name:re:[a-z]+>/',
                            '/<its>/a/cruel/world/',
                            test='cruel', name='world')
-        self.assertMatches('/<test>', '/test', test='test') # No tail
-        self.assertMatches('<test>/', 'test/', test='test') # No head
-        self.assertMatches('/<test>/', '/test/', test='test') # Middle
-        self.assertMatches('<test>', 'test', test='test') # Full wildcard
-        self.assertMatches('/<:re:anon>/match', '/anon/match') # Anon wildcards
+        self.assertMatches('/<test>', '/test', test='test')  # No tail
+        self.assertMatches('<test>/', 'test/', test='test')  # No head
+        self.assertMatches('/<test>/', '/test/', test='test')  # Middle
+        self.assertMatches('<test>', 'test', test='test')  # Full wildcard
+        # Anon wildcards
+        self.assertMatches('/<:re:anon>/match', '/anon/match')
         self.assertRaises(bottle.HTTPError, self.match, '//no/m/at/ch/')
 
     def testUnicode(self):
@@ -55,7 +56,7 @@ class TestRouter(unittest.TestCase):
     def testValueErrorInFilter(self):
         self.r.add_filter('test', lambda x: ('.*', int, int))
 
-        self.assertMatches('/int/<i:test>', '/int/5', i=5) # No tail
+        self.assertMatches('/int/<i:test>', '/int/5', i=5)  # No tail
         self.assertRaises(bottle.HTTPError, self.match, '/int/noint')
 
     def testIntFilter(self):
@@ -81,8 +82,10 @@ class TestRouter(unittest.TestCase):
 
     def testParentheses(self):
         self.assertMatches('/func(:param)', '/func(foo)', param='foo')
-        self.assertMatches('/func2(:param#(foo|bar)#)', '/func2(foo)', param='foo')
-        self.assertMatches('/func2(:param#(foo|bar)#)', '/func2(bar)', param='bar')
+        self.assertMatches(
+            '/func2(:param#(foo|bar)#)', '/func2(foo)', param='foo')
+        self.assertMatches(
+            '/func2(:param#(foo|bar)#)', '/func2(bar)', param='bar')
         self.assertRaises(bottle.HTTPError, self.match, '/func2(baz)')
 
     def testErrorInPattern(self):
@@ -148,12 +151,14 @@ class TestRouter(unittest.TestCase):
         self.assertEqual(self.match('/foox')[0], 'foo')
 
     def test_lots_of_routes(self):
-        n = bottle.Router._MAX_GROUPS_PER_PATTERN+10
-        for i in range(n):        
-            self.add('/<:>/'+str(i), str(i), 'GET')
-        self.assertEqual(self.match('/foo/'+str(n-1))[0], str(n-1))
+        n = bottle.Router._MAX_GROUPS_PER_PATTERN + 10
+        for i in range(n):
+            self.add('/<:>/' + str(i), str(i), 'GET')
+        self.assertEqual(self.match('/foo/' + str(n - 1))[0], str(n - 1))
+
 
 class TestRouterInCGIMode(TestRouter):
+
     ''' Makes no sense since the default route does not optimize CGI anymore.'''
     CGI = True
 

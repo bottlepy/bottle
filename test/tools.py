@@ -11,22 +11,26 @@ import uuid
 
 from bottle import tob, tonat, BytesIO, py3k, unicode
 
+
 def warn(msg):
     sys.stderr.write('WARNING: %s\n' % msg.strip())
+
 
 def tobs(data):
     ''' Transforms bytes or unicode into a byte stream. '''
     return BytesIO(tob(data))
 
+
 def api(introduced, deprecated=None, removed=None):
-    current    = tuple(map(int, bottle.__version__.split('-')[0].split('.')))
+    current = tuple(map(int, bottle.__version__.split('-')[0].split('.')))
     introduced = tuple(map(int, introduced.split('.')))
-    deprecated = tuple(map(int, deprecated.split('.'))) if deprecated else (99,99)
-    removed    = tuple(map(int, removed.split('.')))    if removed    else (99,100)
+    deprecated = tuple(
+        map(int, deprecated.split('.'))) if deprecated else (99, 99)
+    removed = tuple(map(int, removed.split('.'))) if removed else (99, 100)
     assert introduced < deprecated < removed
 
     def decorator(func):
-        if   current < introduced:
+        if current < introduced:
             return None
         elif current < deprecated:
             return func
@@ -44,7 +48,9 @@ def wsgistr(s):
     else:
         return s
 
+
 class ServerTestBase(unittest.TestCase):
+
     def setUp(self):
         ''' Create a new Bottle app set it as default_app '''
         self.port = 8080
@@ -53,7 +59,8 @@ class ServerTestBase(unittest.TestCase):
         self.wsgiapp = wsgiref.validate.validator(self.app)
 
     def urlopen(self, path, method='GET', post='', env=None):
-        result = {'code':0, 'status':'error', 'header':{}, 'body':tob('')}
+        result = {'code': 0, 'status': 'error', 'header': {}, 'body': tob('')}
+
         def start_response(status, header):
             result['code'] = int(status.split()[0])
             result['status'] = status.split(None, 1)[-1]
@@ -78,7 +85,8 @@ class ServerTestBase(unittest.TestCase):
             try:
                 result['body'] += part
             except TypeError:
-                raise TypeError('WSGI app yielded non-byte object %s', type(part))
+                raise TypeError(
+                    'WSGI app yielded non-byte object %s', type(part))
         if hasattr(response, 'close'):
             response.close()
             del response
@@ -100,10 +108,12 @@ class ServerTestBase(unittest.TestCase):
     def assertInBody(self, body, route='/', **kargs):
         result = self.urlopen(route, **kargs)['body']
         if tob(body) not in result:
-            self.fail('The search pattern "%s" is not included in body:\n%s' % (body, result))
+            self.fail(
+                'The search pattern "%s" is not included in body:\n%s' % (body, result))
 
     def assertHeader(self, name, value, route='/', **kargs):
-        self.assertEqual(value, self.urlopen(route, **kargs)['header'].get(name))
+        self.assertEqual(
+            value, self.urlopen(route, **kargs)['header'].get(name))
 
     def assertHeaderAny(self, name, route='/', **kargs):
         self.assertTrue(self.urlopen(route, **kargs)['header'].get(name, None))
@@ -112,12 +122,14 @@ class ServerTestBase(unittest.TestCase):
         bottle.request.environ['wsgi.errors'].errors.seek(0)
         err = bottle.request.environ['wsgi.errors'].errors.read()
         if search not in err:
-            self.fail('The search pattern "%s" is not included in wsgi.error: %s' % (search, err))
+            self.fail(
+                'The search pattern "%s" is not included in wsgi.error: %s' % (search, err))
+
 
 def multipart_environ(fields, files):
     boundary = str(uuid.uuid1())
-    env = {'REQUEST_METHOD':'POST',
-           'CONTENT_TYPE':  'multipart/form-data; boundary='+boundary}
+    env = {'REQUEST_METHOD': 'POST',
+           'CONTENT_TYPE':  'multipart/form-data; boundary=' + boundary}
     wsgiref.util.setup_testing_defaults(env)
     boundary = '--' + boundary
     body = ''
@@ -126,10 +138,11 @@ def multipart_environ(fields, files):
         body += 'Content-Disposition: form-data; name="%s"\n\n' % name
         body += value + '\n'
     for name, filename, content in files:
-        mimetype = str(mimetypes.guess_type(filename)[0]) or 'application/octet-stream'
+        mimetype = str(
+            mimetypes.guess_type(filename)[0]) or 'application/octet-stream'
         body += boundary + '\n'
         body += 'Content-Disposition: file; name="%s"; filename="%s"\n' % \
-             (name, filename)
+            (name, filename)
         body += 'Content-Type: %s\n\n' % mimetype
         body += content + '\n'
     body += boundary + '--\n'
