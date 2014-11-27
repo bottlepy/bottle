@@ -1186,11 +1186,11 @@ class BaseRequest(object):
             HTTPError(413) on requests that are to large. """
         clen = self.content_length
         if clen > self.MEMFILE_MAX:
-            raise HTTPError(413, 'Request too large')
+            raise HTTPError(413, 'Request entity too large')
         if clen < 0: clen = self.MEMFILE_MAX + 1
         data = self.body.read(clen)
         if len(data) > self.MEMFILE_MAX: # Fail fast
-            raise HTTPError(413, 'Request too large')
+            raise HTTPError(413, 'Request entity too large')
         return data
 
     @property
