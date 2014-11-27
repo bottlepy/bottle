@@ -555,7 +555,7 @@ class Route(object):
     def get_config(self, key, default=None):
         """ Lookup a config field and return its value, first checking the
             route.config, then route.app.config."""
-        for conf in (self.config, self.app.conifg):
+        for conf in (self.config, self.app.config):
             if key in conf: return conf[key]
         return default
 
