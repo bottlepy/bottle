@@ -3424,7 +3424,7 @@ class StplParser(object):
     # 7: Our special 'end' keyword (but only if it stands alone)
     _re_tok += '|((?:^|;)[ \\t]*end[ \\t]*(?=(?:%(block_close)s[ \\t]*)?\\r?$|;|#))'
     # 8: A customizable end-of-code-block template token (only end of line)
-    _re_tok += '|(%(block_close)s[ \\t]*(?=$))'
+    _re_tok += '|(%(block_close)s[ \\t]*(?=\\r?$))'
     # 9: And finally, a single newline. The 10th token is 'everything else'
     _re_tok += '|(\\r?\\n)'
 
