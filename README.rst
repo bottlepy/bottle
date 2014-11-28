@@ -2,6 +2,10 @@
   :alt: Bottle Logo
   :align: right
 
+.. image:: https://travis-ci.org/defnull/bottle.svg?branch=master
+    :target: https://travis-ci.org/defnull/bottle
+    :alt: Bottle Build
+
 .. image:: https://pypip.in/download/bottle/badge.png
     :target: https://pypi.python.org/pypi/bottle/
     :alt: Downloads
