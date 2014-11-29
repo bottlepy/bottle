@@ -303,6 +303,9 @@ class TestSTPLDir(unittest.TestCase):
             18
         '''
         self.assertRenders(source, result)
+        source_wineol = '<% a = 5\r\nb = 6\r\nc = 7\r\n%>\r\n{{a+b+c}}'
+        result_wineol = '18'
+        self.assertRenders(source_wineol, result_wineol)
 
     def test_multiline_ignore_eob_in_string(self):
         source = '''
