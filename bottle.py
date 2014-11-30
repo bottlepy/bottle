@@ -2698,10 +2698,9 @@ class CherryPyServer(ServerAdapter):
             del self.options['keyfile']
         
         server = wsgiserver.CherryPyWSGIServer(**self.options)
-        if certfile:
-            server.ssl_certificate = certfile
-        if keyfile:
-            server.ssl_private_key = keyfile
+        if certfile and keyfile:
+            ssl_adapter = wsgiserver.get_ssl_adapter_class()
+            server.ssl_adapter = ssl_adapter(certificate=certfile, private_key=keyfile)
         
         try:
             server.start()
