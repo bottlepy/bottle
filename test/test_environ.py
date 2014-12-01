@@ -483,15 +483,24 @@ class TestResponse(unittest.TestCase):
         from functools import partial
         make_res = partial(BaseResponse, '', 200)
 
-        self.assertTrue('yay',
-            make_res([('x-test','yay')])['x-test'])
+        self.assertEquals('yay', make_res(x_test='yay')['x-test'])
 
-    def test_constructor_headerlist(self):
-        from functools import partial
-        make_res = partial(BaseResponse, '', 200)
+    def test_wsgi_header_values(self):
+        def cmp(app, wire):
+            rs = BaseResponse()
+            rs.set_header('x-test', app)
+            result = [v for (h, v) in rs.headerlist if h.lower()=='x-test'][0]
+            self.assertEquals(wire, result)
 
-        self.assertTrue('yay', make_res(x_test='yay')['x-test'])
-
+        if bottle.py3k:
+            cmp(1, tonat('1', 'latin1'))
+            cmp('öäü', 'öäü'.encode('utf8').decode('latin1'))
+            # Dropped byte header support in Python 3:
+            #cmp(tob('äöü'), 'äöü'.encode('utf8').decode('latin1'))
+        else:
+            cmp(1, '1')
+            cmp('öäü', 'öäü')
+            cmp(touni('äöü'), 'äöü')
 
     def test_set_status(self):
         rs = BaseResponse()

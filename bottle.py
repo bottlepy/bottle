@@ -1532,7 +1532,7 @@ class BaseResponse(object):
     def __contains__(self, name): return _hkey(name) in self._headers
     def __delitem__(self, name):  del self._headers[_hkey(name)]
     def __getitem__(self, name):  return self._headers[_hkey(name)][-1]
-    def __setitem__(self, name, value): self._headers[_hkey(name)] = [str(value)]
+    def __setitem__(self, name, value): self._headers[_hkey(name)] = [value if isinstance(value, unicode) else str(value)]
 
     def get_header(self, name, default=None):
         """ Return the value of a previously defined header. If there is no
@@ -1546,7 +1546,7 @@ class BaseResponse(object):
 
     def add_header(self, name, value):
         """ Add an additional response header, not removing duplicates. """
-        self._headers.setdefault(_hkey(name), []).append(str(value))
+        self._headers.setdefault(_hkey(name), []).append(value if isinstance(value, unicode) else str(value))
 
     def iter_headers(self):
         """ Yield (header, value) tuples, skipping headers that are not
@@ -1568,10 +1568,9 @@ class BaseResponse(object):
             for c in self._cookies.values():
                 out.append(('Set-Cookie', c.OutputString()))
         if py3k:
-            out = [
-                (k, v.encode('utf8').decode('latin1')
-                if isinstance(v, unicode) else v) for (k, v) in out]
-        return out
+            return [(k, v.encode('utf8').decode('latin1')) for (k, v) in out]
+        else:
+            return [(k, v.encode('utf8') if isinstance(v, unicode) else v) for (k, v) in out]
 
     content_type = HeaderProperty('Content-Type')
     content_length = HeaderProperty('Content-Length', reader=int)
@@ -1942,10 +1941,10 @@ class HeaderDict(MultiDict):
     def __contains__(self, key): return _hkey(key) in self.dict
     def __delitem__(self, key): del self.dict[_hkey(key)]
     def __getitem__(self, key): return self.dict[_hkey(key)][-1]
-    def __setitem__(self, key, value): self.dict[_hkey(key)] = [str(value)]
+    def __setitem__(self, key, value): self.dict[_hkey(key)] = [value if isinstance(value, unicode) else str(value)]
     def append(self, key, value):
-        self.dict.setdefault(_hkey(key), []).append(str(value))
-    def replace(self, key, value): self.dict[_hkey(key)] = [str(value)]
+        self.dict.setdefault(_hkey(key), []).append(value if isinstance(value, unicode) else str(value))
+    def replace(self, key, value): self.dict[_hkey(key)] = [value if isinstance(value, unicode) else str(value)]
     def getall(self, key): return self.dict.get(_hkey(key)) or []
     def get(self, key, default=None, index=-1):
         return MultiDict.get(self, _hkey(key), default, index)
