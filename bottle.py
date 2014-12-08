@@ -841,115 +841,122 @@ class Bottle(object):
         return tob(template(ERROR_PAGE_TEMPLATE, e=res))
 
     def _handle(self, environ):
+        path = environ['bottle.raw_path'] = environ['PATH_INFO']
+        if py3k:
+            try:
+                environ['PATH_INFO'] = path.encode('latin1').decode('utf8')
+            except UnicodeError:
+                return HTTPError(400, 'Invalid path string. Expected UTF-8')
+
         try:
             environ['bottle.app'] = self
-            environ['bottle.raw_path'] = environ.get('PATH_INFO')
             request.bind(environ)
             response.bind()
-            self.trigger_hook('before_request')
-
             try:
-                if py3k:
-                    try:
-                        environ['PATH_INFO'] = environ['PATH_INFO'].encode('latin1').decode('utf8')
-                    except UnicodeError:
-                        raise HTTPError(400, 'Invalid path string. Expected UTF-8')
+                self.trigger_hook('before_request')
                 route, args = self.router.match(environ)
                 environ['route.handle'] = route
                 environ['bottle.route'] = route
                 environ['route.url_args'] = args
-                out = route.call(**args)
-            except HTTPResponse:
-                out = _e()
-            except RouteReset:
-                route.reset()
-                return self._handle(environ)
-            except (KeyboardInterrupt, SystemExit, MemoryError, RouteReset):
-                raise
-            except:
-                if not self.catchall: raise
-                stacktrace = format_exc()
-                environ['wsgi.errors'].write(stacktrace)
-                out = HTTPError(500, "Internal Server Error", _e(), stacktrace)
+                return route.call(**args)
+            finally:
+                self.trigger_hook('after_request')
+        except HTTPResponse:
+            return _e()
+        except RouteReset:
+            route.reset()
+            return self._handle(environ)
+        except (KeyboardInterrupt, SystemExit, MemoryError):
+            raise
+        except Exception:
+            if not self.catchall: raise
+            stacktrace = format_exc()
+            environ['wsgi.errors'].write(stacktrace)
+            return HTTPError(500, "Internal Server Error", _e(), stacktrace)
 
-            out = response.body = self._unpack(out or response.body, response)
-            if 'content-length' not in response and out and isinstance(out, list):
-                response['content_length'] = len(out[0])
-            # rfc2616 section 4.3
-            if response._status_code in (100, 101, 204, 304)\
-            or environ['REQUEST_METHOD'] == 'HEAD':
-                if hasattr(out, 'close'): out.close()
-                response.body = []
-            return response
+    def _cast(self, out, peek=None):
+        """ Try to convert the parameter into something WSGI compatible and set
+        correct HTTP headers when possible.
+        Support: False, str, unicode, dict, HTTPResponse, HTTPError, file-like,
+        iterable of strings and iterable of unicodes
+        """
 
-        finally:
-            self.trigger_hook('after_request')
-
-    def _unpack(self, body, target):
-        if not body:
+        # Empty output is done here
+        if not out:
+            if 'Content-Length' not in response:
+                response['Content-Length'] = 0
             return []
-        if isinstance(body, bytes):
-            return [body]
-        if isinstance(body, unicode):
-            return [body.encode(target.charset)]
-        if isinstance(body, (tuple, list)):
-            body = body[0][0:0].join(body) # b'abc'[0:0] -> b''
-            if isinstance(body, unicode):
-                return [body.encode(target.charset)]
-            return [body]
+        # Join lists of byte or unicode strings. Mixed lists are NOT supported
+        if isinstance(out, (tuple, list))\
+        and isinstance(out[0], (bytes, unicode)):
+            out = out[0][0:0].join(out) # b'abc'[0:0] -> b''
+        # Encode unicode strings
+        if isinstance(out, unicode):
+            out = out.encode(response.charset)
+        # Byte Strings are just returned
+        if isinstance(out, bytes):
+            if 'Content-Length' not in response:
+                response['Content-Length'] = len(out)
+            return [out]
+        # HTTPError or HTTPException (recursive, because they may wrap anything)
+        # TODO: Handle these explicitly in handle() or make them iterable.
+        if isinstance(out, HTTPError):
+            out.apply(response)
+            out = self.error_handler.get(out.status_code, self.default_error_handler)(out)
+            return self._cast(out)
+        if isinstance(out, HTTPResponse):
+            out.apply(response)
+            return self._cast(out.body)
 
-        if isinstance(body, HTTPError):
-            body.apply(target)
-            body = self.error_handler.get(target.status_code, self.default_error_handler)(body)
-            return self._unpack(body, target)
-        if isinstance(body, HTTPResponse):
-            body.apply(target)
-            return self._unpack(body.body, target)
-
-        if hasattr(body, 'read'):
+        # File-like objects.
+        if hasattr(out, 'read'):
             if 'wsgi.file_wrapper' in request.environ:
-                return request.environ['wsgi.file_wrapper'](body)
-            elif hasattr(body, 'close') or not hasattr(body, '__iter__'):
-                return WSGIFileWrapper(body)
+                return request.environ['wsgi.file_wrapper'](out)
+            elif hasattr(out, 'close') or not hasattr(out, '__iter__'):
+                return WSGIFileWrapper(out)
 
+        # Handle Iterables. We peek into them to detect their inner type.
         try:
-            iout = iter(body)
+            iout = iter(out)
             first = next(iout)
             while not first:
                 first = next(iout)
-            # These are the inner types allowed in iterator or generator objects.
-            if isinstance(first, HTTPResponse):
-                return self._unpack(first, target)
-            elif isinstance(first, bytes):
-                new_iter = itertools.chain([first], iout)
-            elif isinstance(first, unicode):
-                encoder = lambda x: x.encode(response.charset)
-                new_iter = imap(encoder, itertools.chain([first], iout))
-            else:
-                msg = 'Unsupported response type: %s' % type(first)
-                return self._unpack(HTTPError(500, msg), target)
-            if hasattr(body, 'close'):
-                new_iter = _closeiter(new_iter, body.close)
-            return new_iter
-
         except StopIteration:
-            return self._unpack('', target)
+            return self._cast('')
         except HTTPResponse:
-            return self._unpack(_e(), target)
+            first = _e()
         except (KeyboardInterrupt, SystemExit, MemoryError):
             raise
         except:
             if not self.catchall: raise
-            stacktrace = format_exc()
-            request.environ['wsgi.errors'].write(stacktrace)
-            return self._unpack(HTTPError(500, "Internal Server Error", _e(), stacktrace), target)
+            first = HTTPError(500, 'Unhandled exception', _e(), format_exc())
+
+        # These are the inner types allowed in iterator or generator objects.
+        if isinstance(first, HTTPResponse):
+            return self._cast(first)
+        elif isinstance(first, bytes):
+            new_iter = itertools.chain([first], iout)
+        elif isinstance(first, unicode):
+            encoder = lambda x: x.encode(response.charset)
+            new_iter = imap(encoder, itertools.chain([first], iout))
+        else:
+            msg = 'Unsupported response type: %s' % type(first)
+            return self._cast(HTTPError(500, msg))
+        if hasattr(out, 'close'):
+            new_iter = _closeiter(new_iter, out.close)
+        return new_iter
 
     def wsgi(self, environ, start_response):
         """ The bottle WSGI-interface. """
         try:
-            response = self._handle(environ)
+            out = self._cast(self._handle(environ))
+            # rfc2616 section 4.3
+            if response._status_code in (100, 101, 204, 304)\
+            or environ['REQUEST_METHOD'] == 'HEAD':
+                if hasattr(out, 'close'): out.close()
+                out = []
             start_response(response._status_line, response.headerlist)
-            return response.body
+            return out
         except (KeyboardInterrupt, SystemExit, MemoryError):
             raise
         except:
