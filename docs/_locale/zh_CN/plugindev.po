@@ -38,11 +38,11 @@ msgid ""
 "This is a draft. If you see any errors or find that a specific part is not "
 "explained clear enough, please tell the `mailing-list <mailto:"
 "bottlepy@googlegroups.com>`_ or file a `bug report <https://github.com/"
-"defnull/bottle/issues>`_."
+"bottlepy/bottle/issues>`_."
 msgstr ""
 "这是一份初稿。如果你发现了任何错误，或某些部分解释的不够清楚，请通过 `邮件列"
 "表 <mailto:bottlepy@googlegroups.com>`_ 或  `bug report <https://github.com/"
-"defnull/bottle/issues>`_ 告知。"
+"bottlepy/bottle/issues>`_ 告知。"
 
 # 070f3ff0fa644258b9d14ac422645f9d
 #: ../../plugindev.rst:16

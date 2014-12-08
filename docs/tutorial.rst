@@ -14,10 +14,10 @@
 .. _Paste: http://pythonpaste.org/
 .. _Pound: http://www.apsis.ch/pound/
 .. _`WSGI Specification`: http://www.wsgi.org/
-.. _issue: http://github.com/defnull/bottle/issues
+.. _issue: http://github.com/bottlepy/bottle/issues
 .. _Python: http://python.org/
 .. _SimpleCookie: http://docs.python.org/library/cookie.html#morsel-objects
-.. _testing: http://github.com/defnull/bottle/raw/master/bottle.py
+.. _testing: http://github.com/bottlepy/bottle/raw/master/bottle.py
 
 ========
 Tutorial

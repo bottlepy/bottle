@@ -7,7 +7,7 @@
 .. _paste: http://pythonpaste.org/modules/evalexception.html
 .. _pylons: http://pylonshq.com/
 .. _gevent: http://www.gevent.org/
-.. _compression: https://github.com/defnull/bottle/issues/92
+.. _compression: https://github.com/bottlepy/bottle/issues/92
 .. _GzipFilter: http://www.cherrypy.org/wiki/GzipFilter
 .. _cherrypy: http://www.cherrypy.org
 .. _heroku: http://heroku.com

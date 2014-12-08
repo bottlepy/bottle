@@ -11,8 +11,8 @@
 .. _cherrypy: http://www.cherrypy.org/
 .. _WSGI: http://www.wsgi.org/
 .. _Python: http://python.org/
-.. _testing: https://github.com/defnull/bottle/raw/master/bottle.py
-.. _issue_tracker: https://github.com/defnull/bottle/issues
+.. _testing: https://github.com/bottlepy/bottle/raw/master/bottle.py
+.. _issue_tracker: https://github.com/bottlepy/bottle/issues
 .. _PyPI: http://pypi.python.org/pypi/bottle
 .. _gae: https://developers.google.com/appengine/
 
@@ -44,7 +44,7 @@ Run this script or paste it into a Python console, then point your browser to `<
 
 .. rubric:: Download and Install
 
-.. __: https://github.com/defnull/bottle/raw/master/bottle.py
+.. __: https://github.com/bottlepy/bottle/raw/master/bottle.py
 
 Install the latest stable release with ``pip install bottle``, ``easy_install -U bottle`` or download `bottle.py`__ (unstable) into your project directory. There are no hard [1]_ dependencies other than the Python standard library. Bottle runs with **Python 2.5+ and 3.x**.
 

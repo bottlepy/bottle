@@ -92,40 +92,40 @@ msgstr "获取源代码"
 # 94af39778f4a450c8e6b485247e41890
 #: ../../development.rst:21
 msgid ""
-"The bottle `development repository <https://github.com/defnull/bottle>`_ and "
-"the `issue tracker <https://github.com/defnull/bottle/issues>`_ are both "
-"hosted at `github <https://github.com/defnull/bottle>`_. If you plan to "
+"The bottle `development repository <https://github.com/bottlepy/bottle>`_ and "
+"the `issue tracker <https://github.com/bottlepy/bottle/issues>`_ are both "
+"hosted at `github <https://github.com/bottlepy/bottle>`_. If you plan to "
 "contribute, it is a good idea to create an account there and fork the main "
 "repository. This way your changes and ideas are visible to other developers "
 "and can be discussed openly. Even without an account, you can clone the "
 "repository or just download the latest development version as a source "
 "archive."
 msgstr ""
-"Bottle的 `开发仓库 <https://github.com/defnull/bottle>`_ 和 `问题追踪 "
-"<https://github.com/defnull/bottle/issues>`_ 都搭建在 `github <https://"
-"github.com/defnull/bottle>`_ 上面。如果你打算做贡献，创建一个github帐号然后"
+"Bottle的 `开发仓库 <https://github.com/bottlepy/bottle>`_ 和 `问题追踪 "
+"<https://github.com/bottlepy/bottle/issues>`_ 都搭建在 `github <https://"
+"github.com/bottlepy/bottle>`_ 上面。如果你打算做贡献，创建一个github帐号然后"
 "fork一下吧。你做出的更改或建议都可被其他开发者看到，可以一起讨论。即使没有"
 "github帐号，你也可以clone代码仓库，或下载最新开发版本的压缩包。"
 
 # d38ec2e3482c4399827e822ca8d24462
 #: ../../development.rst:23
-msgid "**git:** ``git clone git://github.com/defnull/bottle.git``"
-msgstr "**git:** ``git clone git://github.com/defnull/bottle.git``"
+msgid "**git:** ``git clone git://github.com/bottlepy/bottle.git``"
+msgstr "**git:** ``git clone git://github.com/bottlepy/bottle.git``"
 
 # d97bf4077a5245568712e25474970ae7
 #: ../../development.rst:24
-msgid "**git/https:** ``git clone https://github.com/defnull/bottle.git``"
-msgstr "**git/https:** ``git clone https://github.com/defnull/bottle.git``"
+msgid "**git/https:** ``git clone https://github.com/bottlepy/bottle.git``"
+msgstr "**git/https:** ``git clone https://github.com/bottlepy/bottle.git``"
 
 # 2f508c13f6744d71b7d1721d42c6fb50
 #: ../../development.rst:25
 msgid ""
-"**Download:** Development branch as `tar archive <http://github.com/defnull/"
-"bottle/tarball/master>`_ or `zip file <http://github.com/defnull/bottle/"
+"**Download:** Development branch as `tar archive <http://github.com/bottlepy/"
+"bottle/tarball/master>`_ or `zip file <http://github.com/bottlepy/bottle/"
 "zipball/master>`_."
 msgstr ""
-"**Download:** Development branch as `tar archive <http://github.com/defnull/"
-"bottle/tarball/master>`_ or `zip file <http://github.com/defnull/bottle/"
+"**Download:** Development branch as `tar archive <http://github.com/bottlepy/"
+"bottle/tarball/master>`_ or `zip file <http://github.com/bottlepy/bottle/"
 "zipball/master>`_."
 
 # 7acb921ae73c4b8d903e7e7812eab5c2
@@ -447,11 +447,11 @@ msgstr ""
 msgid ""
 "First of all you need to create a fork (a personal clone) of the official "
 "repository. To do this, you simply click the \"fork\" button on the `bottle "
-"project page <https://github.com/defnull/bottle>`_. When the fork is done, "
+"project page <https://github.com/bottlepy/bottle>`_. When the fork is done, "
 "you will be presented with a short introduction to your new repository."
 msgstr ""
 "首先，你需要从官方代码仓库创建一个fork。只需在 `bottle项目页面 <https://"
-"github.com/defnull/bottle>`_ 点击一下\"fork\"按钮就行了。创建玩fork之后，会得"
+"github.com/bottlepy/bottle>`_ 点击一下\"fork\"按钮就行了。创建玩fork之后，会得"
 "到一个关于这个新仓库的简介。"
 
 # 2f59f7bd45db4611a0137da8ca0fa908
