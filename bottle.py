@@ -2376,8 +2376,14 @@ def static_file(filename, root, mimetype='auto', download=False, charset='UTF-8'
         headers['Content-Type'] = mimetype
 
     if download:
-        download = os.path.basename(filename if download == True else download)
-        headers['Content-Disposition'] = 'attachment; filename="%s"' % download
+        basename = os.path.basename(filename)
+        if isinstance(download, str):
+            download_name = download
+        else:
+            download_name = urlquote(basename)
+        # Support multiple charset encodings in http header, based on RFC 5987
+        # http://tools.ietf.org/html/rfc5987
+        headers['Content-Disposition'] = '''attachment; filename="%s"; filename*=utf-8''%s''' % (basename, download_name)
 
     stats = os.stat(filename)
     headers['Content-Length'] = clen = stats.st_size
