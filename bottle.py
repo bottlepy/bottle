@@ -3330,27 +3330,45 @@ class StplParser(object):
     """ Parser for stpl templates. """
     _re_cache = {} #: Cache for compiled re patterns
     # This huge pile of voodoo magic splits python code into 8 different tokens.
-    # 1: All kinds of python strings (trust me, it works)
-    _re_tok = '((?m)[urbURB]?(?:\'\'(?!\')|""(?!")|\'{6}|"{6}' \
-               '|\'(?:[^\\\\\']|\\\\.)+?\'|"(?:[^\\\\"]|\\\\.)+?"' \
-               '|\'{3}(?:[^\\\\]|\\\\.|\\n)+?\'{3}' \
-               '|"{3}(?:[^\\\\]|\\\\.|\\n)+?"{3}))'
-    _re_inl = _re_tok.replace('|\\n','') # We re-use this string pattern later
-    # 2: Comments (until end of line, but not the newline itself)
-    _re_tok += '|(#.*)'
-    # 3,4: Keywords that start or continue a python block (only start of line)
-    _re_tok += '|^([ \\t]*(?:if|for|while|with|try|def|class)\\b)' \
-               '|^([ \\t]*(?:elif|else|except|finally)\\b)'
-    # 5: Our special 'end' keyword (but only if it stands alone)
-    _re_tok += '|((?:^|;)[ \\t]*end[ \\t]*(?=(?:%(block_close)s[ \\t]*)?\\r?$|;|#))'
-    # 6: A customizable end-of-code-block template token (only end of line)
-    _re_tok += '|(%(block_close)s[ \\t]*(?=\\r?$))'
-    # 7: And finally, a single newline. The 8th token is 'everything else'
-    _re_tok += '|(\\r?\\n)'
+    # We use the verbose (?x) regex mode to make this more manageable
+
+    _re_tok = r'''((?mx)
+        # 1: All kinds of python strings (trust me, it works)
+        [urbURB]*
+        (?:
+            ''(?!')
+            |""(?!")
+            |'{6}
+            |"{6}
+            |'(?:[^\\']|\\.)+?'
+            |"(?:[^\\"]|\\.)+?"
+            |'{3}(?:[^\\]|\\.|\n)+?'{3}
+            |"{3}(?:[^\\]|\\.|\n)+?"{3}
+        )
+    )'''
+    _re_inl = _re_tok.replace(r'|\n','') # We re-use this string pattern later
+
+    _re_tok += r'''
+        # 2: Comments (until end of line, but not the newline itself)
+        |(\#.*)
+        
+        # 3,4: Keywords that start or continue a python block (only start of line)
+        |^([\ \t]*(?:if|for|while|with|try|def|class)\b)
+        |^([\ \t]*(?:elif|else|except|finally)\b)
+
+        # 5: Our special 'end' keyword (but only if it stands alone)
+        |((?:^|;)[\ \t]*end[\ \t]*(?=(?:%(block_close)s[\ \t]*)?\r?$|;|\#))
+
+        # 6: A customizable end-of-code-block template token (only end of line)
+        |(%(block_close)s[\ \t]*(?=\r?$))
+
+        # 7: And finally, a single newline. The 8th token is 'everything else'
+        |(\r?\n)
+    '''
     # Match the start tokens of code areas in a template
-    _re_split = '(?m)^[ \t]*(\\\\?)((%(line_start)s)|(%(block_start)s))'
+    _re_split = r'''(?m)^[ \t]*(\\?)((%(line_start)s)|(%(block_start)s))'''
     # Match inline statements (may contain python strings)
-    _re_inl = '%%(inline_start)s((?:%s|[^\'"\n]+?)*?)%%(inline_end)s' % _re_inl
+    _re_inl = r'''%%(inline_start)s((?:%s|[^'"\n]+?)*?)%%(inline_end)s''' % _re_inl
 
     default_syntax = '<% %> % {{ }}'
 
