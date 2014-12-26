@@ -336,6 +336,18 @@ class TestSTPLDir(unittest.TestCase):
         '''
         self.assertRenders(source, result)
 
+    def test_multiline_comprehensions_in_code_line(self):
+        self.assertRenders(source='''
+            % a = [
+            %    (i + 1)
+            %    for i in range(5)
+            %    if i%2 == 0
+            % ]
+            {{a}}
+        ''', result='''
+            [1, 3, 5]
+        ''')
+
 if __name__ == '__main__': #pragma: no cover
     unittest.main()
 
