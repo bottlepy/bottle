@@ -348,6 +348,15 @@ class TestSTPLDir(unittest.TestCase):
             [1, 3, 5]
         ''')
 
+    def test_line_continuation_ternary(self):
+        self.assertRenders(source='''
+            % a = 1 \\
+            % if False else 2
+            {{a}}
+        ''', result='''
+            2
+        ''')
+
 if __name__ == '__main__': #pragma: no cover
     unittest.main()
 

@@ -3355,18 +3355,21 @@ class StplParser(object):
         # 3: Open and close (4) grouping tokens
         |([\[\{\(])
         |([\]\}\)])
+    
+        # 5: Line continuation character
+        |(\\(?=\r?\n))
         
-        # 5,6: Keywords that start or continue a python block (only start of line)
+        # 6,7: Keywords that start or continue a python block (only start of line)
         |^([\ \t]*(?:if|for|while|with|try|def|class)\b)
         |^([\ \t]*(?:elif|else|except|finally)\b)
 
-        # 7: Our special 'end' keyword (but only if it stands alone)
+        # 8: Our special 'end' keyword (but only if it stands alone)
         |((?:^|;)[\ \t]*end[\ \t]*(?=(?:%(block_close)s[\ \t]*)?\r?$|;|\#))
 
-        # 8: A customizable end-of-code-block template token (only end of line)
+        # 9: A customizable end-of-code-block template token (only end of line)
         |(%(block_close)s[\ \t]*(?=\r?$))
 
-        # 9: And finally, a single newline. The 10th token is 'everything else'
+        # 10: And finally, a single newline. The 11th token is 'everything else'
         |(\r?\n)
     '''
     # Match the start tokens of code areas in a template
@@ -3383,6 +3386,7 @@ class StplParser(object):
         self.lineno, self.offset = 1, 0
         self.indent, self.indent_mod = 0, 0
         self.paren_depth = 0
+        self.line_cont = False
 
     def get_syntax(self):
         """ Tokens as a space separated string (default: <% %> % {{ }}) """
@@ -3434,8 +3438,8 @@ class StplParser(object):
                 return
             code_line += self.source[self.offset:self.offset+m.start()]
             self.offset += m.end()
-            _str, _com, _po, _pc, _blk1, _blk2, _end, _cend, _nl = m.groups()
-            if (code_line or self.paren_depth > 0) and (_blk1 or _blk2): # a if b else c
+            _str, _com, _po, _pc, _lc, _blk1, _blk2, _end, _cend, _nl = m.groups()
+            if (code_line or self.line_cont) and (_blk1 or _blk2): # a if b else c
                 code_line += _blk1 or _blk2
                 continue
             if _str:    # Python string
@@ -3444,16 +3448,23 @@ class StplParser(object):
                 comment = _com
                 if multiline and _com.strip().endswith(self._tokens[1]):
                     multiline = False # Allow end-of-block in comments
-            elif _po:
+            elif _po:  # Open parenthesis
                 self.paren_depth += 1
+                self.line_cont = True
                 code_line += _po
-            elif _pc:
-                if self.paren_depth > 0:
-                    # we could check for matching parentheses here, but it's
-                    # easier to leave that to python - just check counts
-                    self.paren_depth -= 1
-                code_line += _pc
+            elif _pc:  # Close parenthesis
+                # we could check for matching parentheses here, but it's
+                # easier to leave that to python - just check counts
+                self.paren_depth -= 1
 
+                if self.paren_depth <= 0:
+                    self.line_cont = False
+                    self.paren_depth = 0
+
+                code_line += _pc
+            elif _lc:  # Line continuation
+                self.line_cont = True
+                code_line += _lc
             elif _blk1: # Start-block keyword (if/for/while/def/try/...)
                 code_line, self.indent_mod = _blk1, -1
                 self.indent += 1
