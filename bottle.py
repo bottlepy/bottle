@@ -3405,15 +3405,14 @@ class StplParser(object):
     def translate(self):
         if self.offset: raise RuntimeError('Parser is a one time instance.')
         while True:
-            m = self.re_split.search(self.source[self.offset:])
+            m = self.re_split.search(self.source, pos=self.offset)
             if m:
-                text = self.source[self.offset:self.offset+m.start()]
+                text = self.source[self.offset:m.start()]
                 self.text_buffer.append(text)
-                offs = self.offset
-                self.offset += m.end()
+                self.offset = m.end()
                 if m.group(1): # Escape syntax
                     line, sep, _ = self.source[self.offset:].partition('\n')
-                    self.text_buffer.append(self.source[offs+m.start():offs+m.start(1)]+m.group(2)+line+sep)
+                    self.text_buffer.append(self.source[m.start():m.start(1)]+m.group(2)+line+sep)
                     self.offset += len(line+sep)
                     continue
                 self.flush_text()
