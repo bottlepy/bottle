@@ -1478,7 +1478,7 @@ class BaseResponse(object):
         copy._headers = dict((k, v[:]) for (k, v) in self._headers.items())
         if self._cookies:
             copy._cookies = SimpleCookie()
-            copy._cookies.load(self._cookies.output())
+            copy._cookies.load(self._cookies.output(header=''))
         return copy
 
     def __iter__(self):
