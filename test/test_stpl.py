@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 import unittest
+import sys
+import os
+sys.path.insert(0, '..')
 from bottle import SimpleTemplate, TemplateError, view, template, touni, tob, html_quote
 import re
 import traceback
@@ -90,11 +93,11 @@ class TestSimpleTemplate(unittest.TestCase):
 
     def test_multiline(self):
         ''' Block statements with non-terminating newlines '''
-        self.assertRenders("%if 1\\\n%and 1:\nyes\n%end\n", "yes\n")
+        self.assertRenders("%if 1\\\nand 1:\nyes\n%end\n", "yes\n")
 
     def test_newline_in_parameterlist(self):
         ''' Block statements with non-terminating newlines in list '''
-        self.assertRenders("%a=[1,\n%2]\n{{len(a)}}", "2")
+        self.assertRenders("%a=[1,\n2]\n{{len(a)}}", "2")
 
     def test_dedentbug(self):
         ''' One-Line dednet blocks should not change indention '''
@@ -335,6 +338,27 @@ class TestSTPLDir(unittest.TestCase):
                   line 2
         '''
         self.assertRenders(source, result)
+
+    def test_multiline_comprehensions_in_code_line(self):
+        self.assertRenders(source='''
+            % a = [
+               (i + 1)
+               for i in range(5)
+               if i%2 == 0
+            ]
+            {{a}}
+        ''', result='''
+            [1, 3, 5]
+        ''')
+
+    def test_line_continuation_ternary(self):
+        self.assertRenders(source='''
+            % a = 1 \\
+            if False else 2
+            {{a}}
+        ''', result='''
+            2
+        ''')
 
 if __name__ == '__main__': #pragma: no cover
     unittest.main()
