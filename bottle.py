@@ -667,8 +667,9 @@ class Bottle(object):
         path_depth = len(segments)
 
         def unshift():
-            yield ""
             request.path_shift(-path_depth)
+            return
+            yield  # make this an empty generator
 
         def mountpoint_wrapper():
             try:
