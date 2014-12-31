@@ -4,6 +4,7 @@ from bottle import Jinja2Template, jinja2_template, jinja2_view, touni
 from tools import warn
 import os.path
 
+
 class TestJinja2Template(unittest.TestCase):
 
     def test_string(self):
@@ -21,11 +22,6 @@ class TestJinja2Template(unittest.TestCase):
         t = Jinja2Template(name='jinja2_simple', lookup=['./views/']).render(var='var')
         self.assertEqual('start var end', ''.join(t))
 
-    def test_lookup_func(self):
-        t = Jinja2Template(name='jinja2_simple', 
-                lookup=lambda x,_in=True:os.path.abspath(os.path.join('./views',x)+'.tpl')).render(var='var')
-        self.assertEqual('start var end', ''.join(t))
-
     def test_notfound(self):
         """ Templates: Unavailable templates"""
         self.assertRaises(Exception, Jinja2Template, name="abcdef")
@@ -38,6 +34,16 @@ class TestJinja2Template(unittest.TestCase):
         """ Templates: Jinja2 lookup and inherience """
         t = Jinja2Template(name='jinja2_inherit', lookup=['./views/']).render()
         self.assertEqual('begin abc end', ''.join(t))
+
+    def test_lookup_func(self):
+        t = Jinja2Template(name='jinja2_simple', 
+                lookup=lambda x:os.path.abspath(os.path.join('./views',x)+'.tpl')).render(var='var')
+        self.assertEqual('start var end', ''.join(t))
+
+    def test_inherit_lookup_func(self):
+        """ Templates: Jinja2 lookup and inherience """
+        self.assertRaises(TypeError,Jinja2Template(name='jinja2_inherit', 
+                lookup=lambda x:os.path.abspath(os.path.join('./views',x)+'.tpl')))
 
     def test_custom_filters(self):
         """Templates: jinja2 custom filters """
@@ -74,4 +80,3 @@ except ImportError:
 
 if __name__ == '__main__': #pragma: no cover
     unittest.main()
-

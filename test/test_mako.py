@@ -1,7 +1,6 @@
 import unittest
 from tools import warn
 from bottle import MakoTemplate, mako_template, mako_view, touni
-import os.path
 
 class TestMakoTemplate(unittest.TestCase):
     def test_string(self):
@@ -17,11 +16,6 @@ class TestMakoTemplate(unittest.TestCase):
     def test_name(self):
         """ Templates: Mako lookup by name """
         t = MakoTemplate(name='mako_simple', lookup=['./views/']).render(var='var')
-        self.assertEqual('start var end\n', t)
-
-    def test_lookup_func(self):
-        t = MakoTemplate(name='mako_simple', 
-                lookup=lambda x,_in=True:os.path.abspath(os.path.join('./views',x)+'.tpl')).render(var='var')
         self.assertEqual('start var end\n', t)
 
     def test_notfound(self):
