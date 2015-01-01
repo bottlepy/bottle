@@ -3405,37 +3405,37 @@ class StplParser(object):
     def translate(self):
         if self.offset: raise RuntimeError('Parser is a one time instance.')
         while True:
-            m = self.re_split.search(self.source[self.offset:])
+            m = self.re_split.search(self.source, pos=self.offset)
             if m:
-                text = self.source[self.offset:self.offset+m.start()]
+                text = self.source[self.offset:m.start()]
                 self.text_buffer.append(text)
-                offs = self.offset
-                self.offset += m.end()
+                self.offset = m.end()
                 if m.group(1): # Escape syntax
                     line, sep, _ = self.source[self.offset:].partition('\n')
-                    self.text_buffer.append(self.source[offs+m.start():offs+m.start(1)]+m.group(2)+line+sep)
+                    self.text_buffer.append(self.source[m.start():m.start(1)]+m.group(2)+line+sep)
                     self.offset += len(line+sep)
                     continue
                 self.flush_text()
-                self.read_code(multiline=bool(m.group(4)))
+                self.offset += self.read_code(self.source[self.offset:], multiline=bool(m.group(4)))
             else: break
         self.text_buffer.append(self.source[self.offset:])
         self.flush_text()
         return ''.join(self.code_buffer)
 
-    def read_code(self, multiline):
+    def read_code(self, pysource, multiline):
         code_line, comment = '', ''
+        offset = 0
         while True:
-            m = self.re_tok.search(self.source[self.offset:])
+            m = self.re_tok.search(pysource, pos=offset)
             if not m:
-                code_line += self.source[self.offset:]
-                self.offset = len(self.source)
+                code_line += pysource[offset:]
+                offset = len(pysource)
                 self.write_code(code_line.strip(), comment)
-                return
-            code_line += self.source[self.offset:self.offset+m.start()]
-            self.offset += m.end()
+                break
+            code_line += pysource[offset:m.start()]
+            offset = m.end()
             _str, _com, _po, _pc, _blk1, _blk2, _end, _cend, _nl = m.groups()
-            if (code_line or self.paren_depth > 0) and (_blk1 or _blk2): # a if b else c
+            if self.paren_depth > 0 and (_blk1 or _blk2): # a if b else c
                 code_line += _blk1 or _blk2
                 continue
             if _str:    # Python string
@@ -3470,6 +3470,8 @@ class StplParser(object):
                 code_line, comment, self.indent_mod = '', '', 0
                 if not multiline:
                     break
+
+        return offset
 
     def flush_text(self):
         text = ''.join(self.text_buffer)
