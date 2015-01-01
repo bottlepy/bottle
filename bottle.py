@@ -3328,15 +3328,14 @@ class StplSyntaxError(TemplateError): pass
 
 class StplParser(object):
     """ Parser for stpl templates. """
-    _re_cache = {} #: Cache for compiled re patterns
+    _re_cache = {}  #: Cache for compiled re patterns
+
     # This huge pile of voodoo magic splits python code into 8 different tokens.
     # We use the verbose (?x) regex mode to make this more manageable
 
-    _re_tok = r'''((?mx)
-        # 1: All kinds of python strings (trust me, it works)
+    _re_tok = _re_inl = r'''((?mx)         # verbose and dot-matches-newline mode
         [urbURB]*
-        (?:
-            ''(?!')
+        (?:  ''(?!')
             |""(?!")
             |'{6}
             |"{6}
@@ -3346,7 +3345,8 @@ class StplParser(object):
             |"{3}(?:[^\\]|\\.|\n)+?"{3}
         )
     )'''
-    _re_inl = _re_tok.replace(r'|\n','') # We re-use this string pattern later
+
+    _re_inl = _re_tok.replace(r'|\n', '')  # We re-use this string pattern later
 
     _re_tok += r'''
         # 2: Comments (until end of line, but not the newline itself)
@@ -3355,7 +3355,7 @@ class StplParser(object):
         # 3: Open and close (4) grouping tokens
         |([\[\{\(])
         |([\]\}\)])
-        
+
         # 5,6: Keywords that start or continue a python block (only start of line)
         |^([\ \t]*(?:if|for|while|with|try|def|class)\b)
         |^([\ \t]*(?:elif|else|except|finally)\b)
@@ -3369,6 +3369,7 @@ class StplParser(object):
         # 9: And finally, a single newline. The 10th token is 'everything else'
         |(\r?\n)
     '''
+
     # Match the start tokens of code areas in a template
     _re_split = r'''(?m)^[ \t]*(\\?)((%(line_start)s)|(%(block_start)s))'''
     # Match inline statements (may contain python strings)
@@ -3453,7 +3454,6 @@ class StplParser(object):
                     # easier to leave that to python - just check counts
                     self.paren_depth -= 1
                 code_line += _pc
-
             elif _blk1: # Start-block keyword (if/for/while/def/try/...)
                 code_line, self.indent_mod = _blk1, -1
                 self.indent += 1
