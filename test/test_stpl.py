@@ -32,7 +32,7 @@ class TestSimpleTemplate(unittest.TestCase):
             SimpleTemplate.overrides.update({'after':'after '+name})
             return os.path.abspath(os.path.join('./views',name,'en.tpl'))
         res=template('t_3',template_lookup=lookup)
-        self.assertEqual(res, u'Here t_3.\nt_3 gets none.\nafter t_3\n')
+        self.assertEqual(res, u"Here t_3.\nt_3 gets none.\nafter t_3\n")
         res=template("%include('t_3')\n%include('t_3')",template_lookup=lookup)
         self.assertEqual(res, ''.join(2*[u'Here t_3.\nt_3 gets none.\nafter t_3\n']))
 

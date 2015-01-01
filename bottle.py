@@ -737,7 +737,7 @@ class Bottle(object):
         elif isinstance(route, Route): routes = [route]
         else: routes = [self.routes[route]]
         for route in routes: route.reset()
-        if DEBUG: 
+        if DEBUG:
             for route in routes: route.prepare()
 
         self.trigger_hook('app_reset')
