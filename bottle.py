@@ -3163,7 +3163,7 @@ class BaseTemplate(object):
                 self.filename = self.search(self.name, self.lookup)
             try: #whether lookup returned generator
                 self.cleanup, self.filename = self.filename, next(self.filename)
-            except TypeError: pass #but forward StopIteration
+            except (TypeError,AttributeError): pass #but forward StopIteration
             if not self.filename:
                 raise TemplateError('Template %s not found.' % repr(name))
         if not self.source and not self.filename:
