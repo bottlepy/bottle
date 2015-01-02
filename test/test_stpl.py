@@ -32,9 +32,9 @@ class TestSimpleTemplate(unittest.TestCase):
             SimpleTemplate.overrides.update({'after':'after '+name})
             return os.path.abspath(os.path.join('./views',name,'en.tpl'))
         res=template('t_3',template_lookup=lookup)
-        self.assertEqual(res, u"Here t_3.\nt_3 gets none.\nafter t_3\n")
+        self.assertEqual(res, 'Here t_3.\nt_3 gets none.\nafter t_3\n')
         res=template("%include('t_3')\n%include('t_3')",template_lookup=lookup)
-        self.assertEqual(res, ''.join(2*[u'Here t_3.\nt_3 gets none.\nafter t_3\n']))
+        self.assertEqual(res, ''.join(2*['Here t_3.\nt_3 gets none.\nafter t_3\n']))
 
     def test_lookup_genfunc(self):
         chain=[]
@@ -47,10 +47,10 @@ class TestSimpleTemplate(unittest.TestCase):
                 del chain[-1]
         res=template('t_1',template_lookup=lookup)
         self.assertEqual(res,
-                u'Here t_1.\nt_1 gets t_2:\nHere t_2.\nt_2 gets t_1:\nafter t_2\nt_1 gets t_3:\nHere t_3.\nt_3 gets none.\nafter t_3\nafter t_1\n')
+                'Here t_1.\nt_1 gets t_2:\nHere t_2.\nt_2 gets t_1:\nafter t_2\nt_1 gets t_3:\nHere t_3.\nt_3 gets none.\nafter t_3\nafter t_1\n')
         res=template("%include('t_1')\n%include('t_1')",template_lookup=lookup)
         self.assertEqual(res,
-                ''.join(2*[u'Here t_1.\nt_1 gets t_2:\nHere t_2.\nt_2 gets t_1:\nafter t_2\nt_1 gets t_3:\nHere t_3.\nt_3 gets none.\nafter t_3\nafter t_1\n']))
+                ''.join(2*['Here t_1.\nt_1 gets t_2:\nHere t_2.\nt_2 gets t_1:\nafter t_2\nt_1 gets t_3:\nHere t_3.\nt_3 gets none.\nafter t_3\nafter t_1\n']))
 
     def test_unicode(self):
         self.assertRenders('start {{var}} end', 'start äöü end', var=touni('äöü'))
