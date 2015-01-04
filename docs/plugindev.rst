@@ -227,7 +227,7 @@ This plugin is actually useful and very similar to the version bundled with Bott
             return template('showpage', page=row)
         return HTTPError(404, "Page not found")
 
-    @route('/static/<fname:re:.*>')
+    @route('/static/<fname:path>')
     def static(fname):
         return static_file(fname, root='/some/path')
 
