@@ -37,7 +37,7 @@ so bottle searches the right paths.
 Dynamic Routes and Slashes
 --------------------------------------------------------------------------------
 
-In :ref:`dynamic route syntax <tutorial-dynamic-routes>`, a placeholder token (``:name``) matches everything up to the next slash. This equals to ``[^/]+`` in regular expression syntax. To accept slashes too, you have to add a custom regular pattern to the placeholder. An example: ``/images/:filepath#.*#`` would match ``/images/icons/error.png`` but ``/images/:filename`` won't.
+In :ref:`dynamic route syntax <tutorial-dynamic-routes>`, a placeholder token (``<name>``) matches everything up to the next slash. This equals to ``[^/]+`` in regular expression syntax. To accept slashes too, you have to add a custom regular pattern to the placeholder. An example: ``/images/<filepath:re:.*>`` would match ``/images/icons/error.png`` but ``/images/<filename>`` won't.
 
 Problems with reverse proxies
 --------------------------------------------------------------------------------
