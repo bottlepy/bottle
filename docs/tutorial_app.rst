@@ -21,12 +21,12 @@ Tutorial: Todo-List Application
 
 .. note::
 
-   This tutorial is a work in progess and written by `noisefloor <http://github.com/noisefloor>`_.
+   This tutorial is a work in progress and written by `noisefloor <http://github.com/noisefloor>`_.
 
 
 This tutorial should give a brief introduction to the Bottle_ WSGI Framework. The main goal is to be able, after reading through this tutorial, to create a project using Bottle. Within this document, not all abilities will be shown, but at least the main and important ones like routing, utilizing the Bottle template abilities to format output and handling GET / POST parameters.
 
-To understand the content here, it is not necessary to have a basic knowledge of WSGI, as Bottle tries to keep WSGI away from the user anyway. You should have a fair understanding of the Python_ programming language. Furthermore, the example used in the tutorial retrieves and stores data in a SQL databse, so a basic idea about SQL helps, but is not a must to understand the concepts of Bottle. Right here, SQLite_ is used. The output of Bottle sent to the browser is formatted in some examples by the help of HTML. Thus, a basic idea about the common HTML tags does help as well.
+To understand the content here, it is not necessary to have a basic knowledge of WSGI, as Bottle tries to keep WSGI away from the user anyway. You should have a fair understanding of the Python_ programming language. Furthermore, the example used in the tutorial retrieves and stores data in a SQL database, so a basic idea about SQL helps, but is not a must to understand the concepts of Bottle. Right here, SQLite_ is used. The output of Bottle sent to the browser is formatted in some examples by the help of HTML. Thus, a basic idea about the common HTML tags does help as well.
 
 For the sake of introducing Bottle, the Python code "in between" is kept short, in order to keep the focus. Also all code within the tutorial is working fine, but you may not necessarily use it "in the wild", e.g. on a public web server. In order to do so, you may add e.g. more error handling, protect the database with a password, test and escape the input etc.
 
@@ -45,8 +45,7 @@ We will end up with an application with the following pages and functionality:
 
  * start page ``http://localhost:8080/todo``
  * adding new items to the list: ``http://localhost:8080/new``
- * page for editing items: ``http://localhost:8080/edit/:no``
- * validating data assigned by dynamic routes with the @validate decorator
+ * page for editing items: ``http://localhost:8080/edit/<no>``
  * catching errors
 
 Before We Start...
@@ -230,7 +229,7 @@ To do so, we first add a new route to our script and tell the route that it shou
         conn = sqlite3.connect('todo.db')
         c = conn.cursor()
 
-        c.execute("INSERT INTO todo (task,status) VALUES (?,?)", (new,1))
+        c.execute("INSERT INTO todo (task,status) VALUES (?,?)", (new, 1))
         new_id = c.lastrowid
 
         conn.commit()
@@ -271,8 +270,8 @@ The code needs to be extended to::
 
     <p>Add a new task to the ToDo list:</p>
     <form action="/new" method="GET">
-    <input type="text" size="100" maxlength="100" name="task">
-    <input type="submit" name="save" value="save">
+      <input type="text" size="100" maxlength="100" name="task">
+      <input type="submit" name="save" value="save">
     </form>
 
 That's all. As you can see, the template is plain HTML this time.
@@ -290,20 +289,20 @@ By using only the routes we know so far it is possible, but may be quite tricky.
 
 The basic statement for a dynamic route looks like this::
 
-    @route('/myroute/:something')
+    @route('/myroute/<something>')
 
-The key point here is the colon. This tells Bottle to accept for ``:something`` any string up to the next slash. Furthermore, the value of ``something`` will be passed to the function assigned to that route, so the data can be processed within the function.
+This tells Bottle to accept for ``<something>`` any string up to the next slash. Furthermore, the value of ``something`` will be passed to the function assigned to that route, so the data can be processed within the function.
 
-For our ToDo list, we will create a route ``@route('/edit/:no)``, where ``no`` is the id of the item to edit.
+For our ToDo list, we will create a route ``@route('/edit/<no>)``, where ``no`` is the id of the item to edit.
 
 The code looks like this::
 
-    @route('/edit/:no', method='GET')
+    @route('/edit/<no>', method='GET')
     def edit_item(no):
 
-        if request.GET.get('save','').strip():
-            edit = request.GET.get('task','').strip()
-            status = request.GET.get('status','').strip()
+        if request.GET.get('save', '').strip():
+            edit = request.GET.get('task', '').strip()
+            status = request.GET.get('status', '').strip()
 
             if status == 'open':
                 status = 1
@@ -324,7 +323,7 @@ The code looks like this::
 
             return template('edit_task', old=cur_data, no=no)
 
-It is basically pretty much the same what we already did above when adding new items, like using ``GET`` data etc. The main addition here is using the dynamic route ``:no``, which here passes the number to the corresponding function. As you can see, ``no`` is used within the function to access the right row of data within the database.
+It is basically pretty much the same what we already did above when adding new items, like using ``GET`` data etc. The main addition here is using the dynamic route ``<no>``, which here passes the number to the corresponding function. As you can see, ``no`` is used within the function to access the right row of data within the database.
 
 The template ``edit_task.tpl`` called within the function looks like this::
 
@@ -332,13 +331,13 @@ The template ``edit_task.tpl`` called within the function looks like this::
     %#the template expects to receive a value for "no" as well a "old", the text of the selected ToDo item
     <p>Edit the task with ID = {{no}}</p>
     <form action="/edit/{{no}}" method="get">
-    <input type="text" name="task" value="{{old[0]}}" size="100" maxlength="100">
-    <select name="status">
-    <option>open</option>
-    <option>closed</option>
-    </select>
-    <br/>
-    <input type="submit" name="save" value="save">
+      <input type="text" name="task" value="{{old[0]}}" size="100" maxlength="100">
+      <select name="status">
+        <option>open</option>
+        <option>closed</option>
+      </select>
+      <br>
+      <input type="submit" name="save" value="save">
     </form>
 
 Again, this template is a mix of Python statements and HTML, as already explained above.
@@ -350,18 +349,15 @@ A last word on dynamic routes: you can even use a regular expression for a dynam
 
 Using dynamic routes is fine, but for many cases it makes sense to validate the dynamic part of the route. For example, we expect an integer number in our route for editing above. But if a float, characters or so are received, the Python interpreter throws an exception, which is not what we want.
 
-For those cases, Bottle offers the ``@validate`` decorator, which validates the "input" prior to passing it to the function. In order to apply the validator, extend the code as follows::
+For those cases, Bottle offers the ``<name:int>`` wildcard filter, which matches (signed) digits and converts the value to integer. In order to apply the wildcard filter, extend the code as follows::
 
-    from bottle import route, run, debug, template, request, validate
+    from bottle import route, run, debug, template, request
     ...
-    @route('/edit/:no', method='GET')
-    @validate(no=int)
+    @route('/edit/<no:int>', method='GET')
     def edit_item(no):
     ...
 
-At first, we imported ``validate`` from the Bottle framework, than we apply the @validate-decorator. Right here, we validate if ``no`` is an integer. Basically, the validation works with all types of data like floats, lists etc.
-
-Save the code and call the page again using a "403 forbidden" value for ``:no``, e.g. a float. You will receive not an exception, but a "403 - Forbidden" error, saying that an integer was expected.
+Save the code and call the page again using incorrect value for ``<no:int>``, e.g. a float. You will receive not an exception, but a "404 Not Found" error.
 
 .. rubric:: Dynamic Routes Using Regular Expressions
 
@@ -371,26 +367,26 @@ So, just to demonstrate that, let's assume that all single items in our ToDo lis
 
 As said above, the solution is a regular expression::
 
-    @route('/item:item#[0-9]+#')
+    @route('/item<item:re:[0-9]+>')
     def show_item(item):
         conn = sqlite3.connect('todo.db')
         c = conn.cursor()
-        c.execute("SELECT task FROM todo WHERE id LIKE ?", (item))
+        c.execute("SELECT task FROM todo WHERE id LIKE ?", (item,))
         result = c.fetchall()
         c.close()
         if not result:
             return 'This item number does not exist!'
         else:
-            return 'Task: %s' %result[0]
+            return 'Task: %s' % result[0]
 
-Of course, this example is somehow artificially constructed - it would be easier to use a plain dynamic route only combined with a validation. Nevertheless, we want to see how regular expression routes work: the line ``@route(/item:item_#[0-9]+#)`` starts like a normal route, but the part surrounded by # is interpreted as a regular expression, which is the dynamic part of the route. So in this case, we want to match any digit between 0 and 9. The following function "show_item" just checks whether the given item is present in the database or not. In case it is present, the corresponding text of the task is returned. As you can see, only the regular expression part of the route is passed forward. Furthermore, it is always forwarded as a string, even if it is a plain integer number, like in this case.
+The line ``@route(/item<item:re:[0-9]+>)`` starts like a normal route, but the part surrounded by < > is interpreted as a regular expression, which is the dynamic part of the route. So in this case, we want to match any digit between 0 and 9. The following function "show_item" just checks whether the given item is present in the database or not. In case it is present, the corresponding text of the task is returned. As you can see, only the regular expression part of the route is passed forward. Furthermore, it is always forwarded as a string, even if it is a plain integer number, like in this case.
 
 
 .. rubric:: Returning Static Files
 
 Sometimes it may become necessary to associate a route not to a Python function, but just return a static file. So if you have for example a help page for your application, you may want to return this page as plain HTML. This works as follows::
 
-    from bottle import route, run, debug, template, request, validate, static_file
+    from bottle import route, run, debug, template, request, static_file
 
     @route('/help')
     def help():
@@ -405,20 +401,20 @@ There may be cases where you do not want your application to generate the output
 
 So, let's assume we want to return the data generated in the regular expression route example as a JSON object. The code looks like this::
 
-    @route('/json:json#[0-9]+#')
+    @route('/json<json:re:[0-9]+>')
     def show_json(json):
         conn = sqlite3.connect('todo.db')
         c = conn.cursor()
-        c.execute("SELECT task FROM todo WHERE id LIKE ?", (json))
+        c.execute("SELECT task FROM todo WHERE id LIKE ?", (json,))
         result = c.fetchall()
         c.close()
 
         if not result:
-            return {'task':'This item number does not exist!'}
+            return {'task': 'This item number does not exist!'}
         else:
-            return {'Task': result[0]}
+            return {'task': result[0]}
 
-As you can, that is fairly simple: just return a regular Python dictionary and Bottle will convert it automatically into a JSON object prior to sending. So if you e.g. call "http://localhost/json1" Bottle should in this case return the JSON object ``{"Task": ["Read A-byte-of-python to get a good introduction into Python"]}``.
+As you can, that is fairly simple: just return a regular Python dictionary and Bottle will convert it automatically into a JSON object prior to sending. So if you e.g. call "http://localhost/json1" Bottle should in this case return the JSON object ``{"task": ["Read A-byte-of-python to get a good introduction into Python"]}``.
 
 
 
@@ -560,33 +556,35 @@ As the ToDo list example was developed piece by piece, here is the complete list
 Main code for the application ``todo.py``::
 
     import sqlite3
-    from bottle import route, run, debug, template, request, validate, static_file, error
+    from bottle import route, run, debug, template, request, static_file, error
 
     # only needed when you run Bottle on mod_wsgi
     from bottle import default_app
+
 
     @route('/todo')
     def todo_list():
 
         conn = sqlite3.connect('todo.db')
         c = conn.cursor()
-        c.execute("SELECT id, task FROM todo WHERE status LIKE '1';")
+        c.execute("SELECT id, task FROM todo WHERE status LIKE '1'")
         result = c.fetchall()
         c.close()
 
         output = template('make_table', rows=result)
         return output
 
+
     @route('/new', method='GET')
     def new_item():
 
-        if request.GET.get('save','').strip():
+        if request.GET.get('save', '').strip():
 
             new = request.GET.get('task', '').strip()
             conn = sqlite3.connect('todo.db')
             c = conn.cursor()
 
-            c.execute("INSERT INTO todo (task,status) VALUES (?,?)", (new,1))
+            c.execute("INSERT INTO todo (task,status) VALUES (?,?)", (new, 1))
             new_id = c.lastrowid
 
             conn.commit()
@@ -597,13 +595,13 @@ Main code for the application ``todo.py``::
         else:
             return template('new_task.tpl')
 
-    @route('/edit/:no', method='GET')
-    @validate(no=int)
+
+    @route('/edit/<no:int>', method='GET')
     def edit_item(no):
 
-        if request.GET.get('save','').strip():
-            edit = request.GET.get('task','').strip()
-            status = request.GET.get('status','').strip()
+        if request.GET.get('save', '').strip():
+            edit = request.GET.get('task', '').strip()
+            status = request.GET.get('status', '').strip()
 
             if status == 'open':
                 status = 1
@@ -612,56 +610,59 @@ Main code for the application ``todo.py``::
 
             conn = sqlite3.connect('todo.db')
             c = conn.cursor()
-            c.execute("UPDATE todo SET task = ?, status = ? WHERE id LIKE ?", (edit,status,no))
+            c.execute("UPDATE todo SET task = ?, status = ? WHERE id LIKE ?", (edit, status, no))
             conn.commit()
 
-            return '<p>The item number %s was successfully updated</p>' %no
-
+            return '<p>The item number %s was successfully updated</p>' % no
         else:
             conn = sqlite3.connect('todo.db')
             c = conn.cursor()
             c.execute("SELECT task FROM todo WHERE id LIKE ?", (str(no)))
             cur_data = c.fetchone()
 
-            return template('edit_task', old = cur_data, no = no)
+            return template('edit_task', old=cur_data, no=no)
 
-    @route('/item:item#[0-9]+#')
+
+    @route('/item<item:re:[0-9]+>')
     def show_item(item):
 
             conn = sqlite3.connect('todo.db')
             c = conn.cursor()
-            c.execute("SELECT task FROM todo WHERE id LIKE ?", (item))
+            c.execute("SELECT task FROM todo WHERE id LIKE ?", (item,))
             result = c.fetchall()
             c.close()
 
             if not result:
                 return 'This item number does not exist!'
             else:
-                return 'Task: %s' %result[0]
+                return 'Task: %s' % result[0]
+
 
     @route('/help')
     def help():
 
         static_file('help.html', root='.')
 
-    @route('/json:json#[0-9]+#')
+
+    @route('/json<json:re:[0-9]+>')
     def show_json(json):
 
         conn = sqlite3.connect('todo.db')
         c = conn.cursor()
-        c.execute("SELECT task FROM todo WHERE id LIKE ?", (json))
+        c.execute("SELECT task FROM todo WHERE id LIKE ?", (json,))
         result = c.fetchall()
         c.close()
 
         if not result:
-            return {'task':'This item number does not exist!'}
+            return {'task': 'This item number does not exist!'}
         else:
-            return {'Task': result[0]}
+            return {'task': result[0]}
 
 
     @error(403)
     def mistake403(code):
         return 'There is a mistake in your url!'
+
 
     @error(404)
     def mistake404(code):
@@ -670,7 +671,8 @@ Main code for the application ``todo.py``::
 
     debug(True)
     run(reloader=True)
-    #remember to remove reloader=True and debug(True) when you move your application from development to a productive environment
+    # remember to remove reloader=True and debug(True) when you move your
+    # application from development to a productive environment
 
 Template ``make_table.tpl``::
 
@@ -692,13 +694,13 @@ Template ``edit_task.tpl``::
     %#the template expects to receive a value for "no" as well a "old", the text of the selected ToDo item
     <p>Edit the task with ID = {{no}}</p>
     <form action="/edit/{{no}}" method="get">
-    <input type="text" name="task" value="{{old[0]}}" size="100" maxlength="100">
-    <select name="status">
-    <option>open</option>
-    <option>closed</option>
-    </select>
-    <br/>
-    <input type="submit" name="save" value="save">
+      <input type="text" name="task" value="{{old[0]}}" size="100" maxlength="100">
+      <select name="status">
+        <option>open</option>
+        <option>closed</option>
+      </select>
+      <br>
+      <input type="submit" name="save" value="save">
     </form>
 
 Template ``new_task.tpl``::
@@ -706,6 +708,6 @@ Template ``new_task.tpl``::
     %#template for the form for a new task
     <p>Add a new task to the ToDo list:</p>
     <form action="/new" method="GET">
-    <input type="text" size="100" maxlength="100" name="task">
-    <input type="submit" name="save" value="save">
+      <input type="text" size="100" maxlength="100" name="task">
+      <input type="submit" name="save" value="save">
     </form>
