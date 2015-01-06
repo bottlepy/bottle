@@ -2045,7 +2045,6 @@ class ConfigDict(dict):
             >>> c.load_dict({'some': {'namespace': {'key': 'value'} } })
             {'some.namespace.key': 'value'}
         """
-
         for key, value in source.items():
             if isinstance(key, str):
                 nskey = (namespace + '.' + key).strip('.')
@@ -3000,6 +2999,7 @@ def create_server(app=None, server='wsgiref',
         server = server_names.get(server)
     if isinstance(server, basestring):
         server = load(server)
+
     if isinstance(server, type):
         server = server(host=host, port=port, **kargs)
     if not isinstance(server, ServerAdapter):
