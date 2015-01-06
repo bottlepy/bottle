@@ -224,7 +224,7 @@ To do so, we first add a new route to our script and tell the route that it shou
     @route('/new', method='GET')
     def new_item():
 
-        new = request.GET.get('task', '').strip()
+        new = request.GET.task.strip()
 
         conn = sqlite3.connect('todo.db')
         c = conn.cursor()
@@ -237,7 +237,7 @@ To do so, we first add a new route to our script and tell the route that it shou
 
         return '<p>The new task was inserted into the database, the ID is %s</p>' % new_id
 
-To access GET (or POST) data, we need to import ``request`` from Bottle. To assign the actual data to a variable, we use the statement ``request.GET.get('task','').strip()`` statement, where ``task`` is the name of the GET data we want to access. That's all. If your GET data has more than one variable, multiple ``request.GET.get()`` statements can be used and assigned to other variables.
+To access GET (or POST) data, we need to import ``request`` from Bottle. To assign the actual data to a variable, we use the statement ``request.GET.task.strip()`` statement, where ``task`` is the name of the GET data we want to access. That's all. If your GET data has more than one variable, multiple ``request.GET.get()`` statements can be used and assigned to other variables.
 
 The rest of this piece of code is just processing of the gained data: writing to the database, retrieve the corresponding id from the database and generate the output.
 
@@ -249,9 +249,9 @@ The code needs to be extended to::
     @route('/new', method='GET')
     def new_item():
 
-        if request.GET.get('save','').strip():
+        if request.GET.save:
 
-            new = request.GET.get('task', '').strip()
+            new = request.GET.task.strip()
             conn = sqlite3.connect('todo.db')
             c = conn.cursor()
 
@@ -300,9 +300,9 @@ The code looks like this::
     @route('/edit/<no>', method='GET')
     def edit_item(no):
 
-        if request.GET.get('save', '').strip():
-            edit = request.GET.get('task', '').strip()
-            status = request.GET.get('status', '').strip()
+        if request.GET.save:
+            edit = request.task.strip()
+            status = request.status.strip()
 
             if status == 'open':
                 status = 1
@@ -578,9 +578,9 @@ Main code for the application ``todo.py``::
     @route('/new', method='GET')
     def new_item():
 
-        if request.GET.get('save', '').strip():
+        if request.GET.save:
 
-            new = request.GET.get('task', '').strip()
+            new = request.GET.task.strip()
             conn = sqlite3.connect('todo.db')
             c = conn.cursor()
 
@@ -599,9 +599,9 @@ Main code for the application ``todo.py``::
     @route('/edit/<no:int>', method='GET')
     def edit_item(no):
 
-        if request.GET.get('save', '').strip():
-            edit = request.GET.get('task', '').strip()
-            status = request.GET.get('status', '').strip()
+        if request.GET.save:
+            edit = request.GET.task.strip()
+            status = request.GET.status.strip()
 
             if status == 'open':
                 status = 1
