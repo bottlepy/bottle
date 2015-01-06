@@ -108,7 +108,7 @@ The :class:`Route` instance passed to :meth:`Plugin.apply` provides detailed inf
 Attribute    Description
 ===========  =================================================================
 app          The application object this route is installed to.
-rule         The rule string (e.g. ``/wiki/:page``).
+rule         The rule string (e.g. ``/wiki/<page>``).
 method       The HTTP method as a string (e.g. ``GET``).
 callback     The original callback with no plugins applied. Useful for
              introspection.
@@ -138,7 +138,7 @@ Runtime optimizations
 
 Once all plugins are applied to a route, the wrapped route callback is cached to speed up subsequent requests. If the behavior of your plugin depends on configuration, and you want to be able to change that configuration at runtime, you need to read the configuration on each request. Easy enough.
 
-For performance reasons, however, it might be worthwhile to choose a different wrapper based on current needs, work with closures, or enable or disable a plugin at runtime. Let's take the built-in HooksPlugin as an example: If no hooks are installed, the plugin removes itself from all affected routes and has virtaully no overhead. As soon as you install the first hook, the plugin activates itself and takes effect again.
+For performance reasons, however, it might be worthwhile to choose a different wrapper based on current needs, work with closures, or enable or disable a plugin at runtime. Let's take the built-in HooksPlugin as an example: If no hooks are installed, the plugin removes itself from all affected routes and has virtually no overhead. As soon as you install the first hook, the plugin activates itself and takes effect again.
 
 To achieve this, you need control over the callback cache: :meth:`Route.reset` clears the cache for a single route and :meth:`Bottle.reset` clears all caches for all routes of an application at once. On the next request, all plugins are re-applied to the route as if it were requested for the first time.
 
@@ -220,18 +220,18 @@ This plugin is actually useful and very similar to the version bundled with Bott
     sqlite = SQLitePlugin(dbfile='/tmp/test.db')
     bottle.install(sqlite)
 
-    @route('/show/:page')
+    @route('/show/<page>')
     def show(page, db):
         row = db.execute('SELECT * from pages where name=?', page).fetchone()
         if row:
             return template('showpage', page=row)
         return HTTPError(404, "Page not found")
 
-    @route('/static/:fname#.*#')
+    @route('/static/<fname:path>')
     def static(fname):
         return static_file(fname, root='/some/path')
 
-    @route('/admin/set/:db#[a-zA-Z]+#', skip=[sqlite])
+    @route('/admin/set/<db:re:[a-zA-Z]+>', skip=[sqlite])
     def change_dbfile(db):
         sqlite.dbfile = '/tmp/%s.db' % db
         return "Switched DB to %s.db" % db
