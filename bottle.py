@@ -154,7 +154,7 @@ def update_wrapper(wrapper, wrapped, *a, **ka):
 # These helpers are used at module level and need to be defined first.
 # And yes, I know PEP-8, but sometimes a lower-case classname makes more sense.
 
-def depr(message, strict=False):
+def depr(message):
     warnings.warn(message, DeprecationWarning, stacklevel=3)
 
 def makelist(data): # This is just too handy
@@ -3151,11 +3151,11 @@ class BaseTemplate(object):
         """ Search name in all directories specified in lookup.
         First without, then with common extensions. Return first hit. """
         if not lookup:
-            depr('The template lookup path list should not be empty.', True) #0.12
+            depr('The template lookup path list should not be empty.') #0.12
             lookup = ['.']
 
         if os.path.isabs(name) and os.path.isfile(name):
-            depr('Absolute template path names are deprecated.', True) #0.12
+            depr('Absolute template path names are deprecated.') #0.12
             return os.path.abspath(name)
 
         for spath in lookup:
