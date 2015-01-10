@@ -472,7 +472,7 @@ class Router(object):
 class Route(object):
     """ This class wraps a route callback along with route specific metadata and
         configuration and applies Plugins on demand. It is also responsible for
-        turing an URL path rule into a regular expression usable by the Router.
+        turning an URL path rule into a regular expression usable by the Router.
     """
 
     def __init__(self, app, rule, method, callback, name=None,
