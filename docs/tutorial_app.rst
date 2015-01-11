@@ -560,7 +560,7 @@ As the ToDo list example was developed piece by piece, here is the complete list
 Main code for the application ``todo.py``::
 
     import sqlite3
-    from bottle import route, run, debug, template, request, validate, static_file, error
+    from bottle import route, run, debug, template, request, static_file, error
 
     # only needed when you run Bottle on mod_wsgi
     from bottle import default_app
@@ -598,7 +598,6 @@ Main code for the application ``todo.py``::
             return template('new_task.tpl')
 
     @route('/edit/:no', method='GET')
-    @validate(no=int)
     def edit_item(no):
 
         if request.GET.get('save','').strip():
