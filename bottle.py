@@ -876,7 +876,7 @@ class Bottle(object):
             out = HTTPError(500, "Internal Server Error", _e(), stacktrace)
             return out
         finally:
-            if out:
+            if isinstance(out, HTTPResponse):
                 out.apply(response)
             self.trigger_hook('after_request')
 
