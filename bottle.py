@@ -2780,33 +2780,26 @@ class TwistedServer(ServerAdapter):
     def run(self, handler):
         from twisted.web import server, wsgi
         from twisted.python.threadpool import ThreadPool
-        # CHANGE: ilovetux
         from twisted.internet import reactor, ssl
         thread_pool = ThreadPool()
         thread_pool.start()
         reactor.addSystemEventTrigger('after', 'shutdown', thread_pool.stop)
         factory = server.Site(wsgi.WSGIResource(reactor, thread_pool, handler))
-        # CHANGE: ilovetux
-        # Grab certfile and keyfile (try to stick to convention by copying
-        # code from CherryPyServer)
+
         certfile = self.options.get('certfile')
         if certfile:
             del self.options['certfile']
         keyfile = self.options.get('keyfile')
         if keyfile:
             del self.options['keyfile']
-        # CHANGE: ilovetux
-        # if cerfile and keyfile were provided in options, then have the
-        # reactor listen using SSL/TLS, otherwise fallback to listenTCP
-        # This is as per recomendations from:
-        #
-        # http://twistedmatrix.com/documents/12.3.0/core/howto/ssl.html
+
         if certfile and keyfile:
             reactor.listenSSL(self.port, factory,
                 ssl.DefaultOpenSSLContextFactory(keyfile, certfile))
         else:
             reactor.listenTCP(self.port, factory, interface=self.host)
-        reactor.run()
+        if not reactor.running:
+            reactor.run()
 
 
 class DieselServer(ServerAdapter):
