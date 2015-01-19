@@ -105,6 +105,8 @@ an entire structure of nested dictionaries and turns it into a flat list of keys
         app.config.load_dict(json.load(fp))
 
 
+.. _conf-listen:
+
 Listening to configuration changes
 ==================================
 
