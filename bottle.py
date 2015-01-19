@@ -2787,17 +2787,14 @@ class TwistedServer(ServerAdapter):
         factory = server.Site(wsgi.WSGIResource(reactor, thread_pool, handler))
 
         certfile = self.options.get('certfile')
-        if certfile:
-            del self.options['certfile']
         keyfile = self.options.get('keyfile')
-        if keyfile:
-            del self.options['keyfile']
 
         if certfile and keyfile:
             reactor.listenSSL(self.port, factory,
                 ssl.DefaultOpenSSLContextFactory(keyfile, certfile))
         else:
             reactor.listenTCP(self.port, factory, interface=self.host)
+
         if not reactor.running:
             reactor.run()
 
