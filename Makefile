@@ -28,6 +28,9 @@ install:
 	python setup.py install
 
 docs:
+	# Generates documentation for all versions
+	# EN: build/docs/html/
+	# <langs>: build/docs/html/<langs>
 	sphinx-build -b html -d build/docs/doctrees docs build/docs/html/;
 	for lang in $(LANGS); do \
 		sphinx-build -b html -d build/docs/doctrees/$$lang -D language='$$lang' docs build/docs/html/$$lang; \
