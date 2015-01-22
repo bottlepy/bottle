@@ -1,0 +1,159 @@
+# 
+msgid ""
+msgstr ""
+"Project-Id-Version: Bottle 0.13-dev\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2015-01-22 16:45-0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../plugins/index.rst:5
+msgid "List of available Plugins"
+msgstr ""
+
+#: ../../plugins/index.rst:7
+msgid ""
+"This is a list of third-party plugins that add extend Bottles core "
+"functionality or integrate other libraries with the Bottle framework."
+msgstr ""
+
+#: ../../plugins/index.rst:9
+msgid ""
+"Have a look at :ref:`plugins` for general questions about plugins "
+"(installation, usage). If you plan to develop a new plugin, the "
+":doc:`/plugindev` may help you."
+msgstr ""
+
+#: ../../plugins/index.rst:12
+msgid "`Bottle-Beaker <http://pypi.python.org/pypi/bottle-beaker/>`_"
+msgstr ""
+
+#: ../../plugins/index.rst:12
+msgid "Beaker to session and caching library with WSGI Middleware"
+msgstr ""
+
+#: ../../plugins/index.rst:15
+msgid "`Bottle-Cork <http://cork.firelet.net/>`_"
+msgstr ""
+
+#: ../../plugins/index.rst:15
+msgid ""
+"Cork provides a simple set of methods to implement Authentication and "
+"Authorization in web applications based on Bottle."
+msgstr ""
+
+#: ../../plugins/index.rst:18
+msgid "`Bottle-Extras <http://pypi.python.org/pypi/bottle-extras/>`_"
+msgstr ""
+
+#: ../../plugins/index.rst:18
+msgid "Meta package to install the bottle plugin collection."
+msgstr ""
+
+#: ../../plugins/index.rst:21
+msgid "`Bottle-Flash <http://pypi.python.org/pypi/bottle-flash/>`_"
+msgstr ""
+
+#: ../../plugins/index.rst:21
+msgid "flash plugin for bottle"
+msgstr ""
+
+#: ../../plugins/index.rst:24
+msgid "`Bottle-Hotqueue <http://pypi.python.org/pypi/bottle-hotqueue/>`_"
+msgstr ""
+
+#: ../../plugins/index.rst:24
+msgid "FIFO Queue for Bottle built upon redis"
+msgstr ""
+
+#: ../../plugins/index.rst:27
+msgid "`Macaron <http://nobrin.github.com/macaron/webapp.html>`_"
+msgstr ""
+
+#: ../../plugins/index.rst:27
+msgid "Macaron is an object-relational mapper (ORM) for SQLite."
+msgstr ""
+
+#: ../../plugins/index.rst:30
+msgid "`Bottle-Memcache <http://pypi.python.org/pypi/bottle-memcache/>`_"
+msgstr ""
+
+#: ../../plugins/index.rst:30
+msgid "Memcache integration for Bottle."
+msgstr ""
+
+#: ../../plugins/index.rst:33
+msgid "`Bottle-Mongo <http://pypi.python.org/pypi/bottle-mongo/>`_"
+msgstr ""
+
+#: ../../plugins/index.rst:33
+msgid "MongoDB integration for Bottle"
+msgstr ""
+
+#: ../../plugins/index.rst:36
+msgid "`Bottle-Redis <http://pypi.python.org/pypi/bottle-redis/>`_"
+msgstr ""
+
+#: ../../plugins/index.rst:36
+msgid "Redis integration for Bottle."
+msgstr ""
+
+#: ../../plugins/index.rst:39
+msgid "`Bottle-Renderer <http://pypi.python.org/pypi/bottle-renderer/>`_"
+msgstr ""
+
+#: ../../plugins/index.rst:39
+msgid "Renderer plugin for bottle"
+msgstr ""
+
+#: ../../plugins/index.rst:42
+msgid "`Bottle-Servefiles <http://pypi.python.org/pypi/bottle-servefiles/>`_"
+msgstr ""
+
+#: ../../plugins/index.rst:42
+msgid "A reusable app that serves static files for bottle apps"
+msgstr ""
+
+#: ../../plugins/index.rst:45
+msgid "`Bottle-Sqlalchemy <http://pypi.python.org/pypi/bottle-sqlalchemy/>`_"
+msgstr ""
+
+#: ../../plugins/index.rst:45
+msgid "SQLAlchemy integration for Bottle."
+msgstr ""
+
+#: ../../plugins/index.rst:48
+msgid "`Bottle-Sqlite <http://pypi.python.org/pypi/bottle-sqlite/>`_"
+msgstr ""
+
+#: ../../plugins/index.rst:48
+msgid "SQLite3 database integration for Bottle."
+msgstr ""
+
+#: ../../plugins/index.rst:51
+msgid "`Bottle-Web2pydal <http://pypi.python.org/pypi/bottle-web2pydal/>`_"
+msgstr ""
+
+#: ../../plugins/index.rst:51
+msgid "Web2py Dal integration for Bottle."
+msgstr ""
+
+#: ../../plugins/index.rst:54
+msgid "`Bottle-Werkzeug <http://pypi.python.org/pypi/bottle-werkzeug/>`_"
+msgstr ""
+
+#: ../../plugins/index.rst:54
+msgid ""
+"Integrates the `werkzeug` library (alternative request and response objects,"
+" advanced debugging middleware and more)."
+msgstr ""
+
+#: ../../plugins/index.rst:56
+msgid ""
+"Plugins listed here are not part of Bottle or the Bottle project, but "
+"developed and maintained by third parties."
+msgstr ""
