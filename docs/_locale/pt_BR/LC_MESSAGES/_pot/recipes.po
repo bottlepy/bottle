@@ -1,0 +1,281 @@
+# 
+msgid ""
+msgstr ""
+"Project-Id-Version: Bottle 0.13-dev\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2015-01-22 16:45-0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../recipes.rst:16
+msgid "Recipes"
+msgstr ""
+
+#: ../../recipes.rst:18
+msgid ""
+"This is a collection of code snippets and examples for common use cases."
+msgstr ""
+
+#: ../../recipes.rst:21
+msgid "Keeping track of Sessions"
+msgstr ""
+
+#: ../../recipes.rst:23
+msgid ""
+"There is no built-in support for sessions because there is no *right* way to"
+" do it (in a micro framework). Depending on requirements and environment you"
+" could use beaker_ middleware with a fitting backend or implement it "
+"yourself. Here is an example for beaker sessions with a file-based backend::"
+msgstr ""
+
+#: ../../recipes.rst:46
+msgid "Debugging with Style: Debugging Middleware"
+msgstr ""
+
+#: ../../recipes.rst:48
+msgid ""
+"Bottle catches all Exceptions raised in your app code to prevent your WSGI "
+"server from crashing. If the built-in :func:`debug` mode is not enough and "
+"you need exceptions to propagate to a debugging middleware, you can turn off"
+" this behaviour::"
+msgstr ""
+
+#: ../../recipes.rst:56
+msgid ""
+"Now, bottle only catches its own exceptions (:exc:`HTTPError`, "
+":exc:`HTTPResponse` and :exc:`BottleException`) and your middleware can "
+"handle the rest."
+msgstr ""
+
+#: ../../recipes.rst:58
+msgid ""
+"The werkzeug_ and paste_ libraries both ship with very powerful debugging "
+"WSGI middleware. Look at :class:`werkzeug.debug.DebuggedApplication` for "
+"werkzeug_ and :class:`paste.evalexception.middleware.EvalException` for "
+"paste_. They both allow you do inspect the stack and even execute python "
+"code within the stack context, so **do not use them in production**."
+msgstr ""
+
+#: ../../recipes.rst:62
+msgid "Unit-Testing Bottle Applications"
+msgstr ""
+
+#: ../../recipes.rst:64
+msgid ""
+"Unit-testing is usually performed against methods defined in your web "
+"application without running a WSGI environment."
+msgstr ""
+
+#: ../../recipes.rst:66
+msgid "A simple example using `Nose <http://readthedocs.org/docs/nose>`_::"
+msgstr ""
+
+#: ../../recipes.rst:77
+msgid "Test script::"
+msgstr ""
+
+#: ../../recipes.rst:84
+msgid ""
+"In the example the Bottle route() method is never executed - only index() is"
+" tested."
+msgstr ""
+
+#: ../../recipes.rst:88
+msgid "Functional Testing Bottle Applications"
+msgstr ""
+
+#: ../../recipes.rst:90
+msgid ""
+"Any HTTP-based testing system can be used with a running WSGI server, but "
+"some testing frameworks work more intimately with WSGI, and provide the "
+"ability the call WSGI applications in a controlled environment, with "
+"tracebacks and full use of debugging tools. `Testing tools for WSGI "
+"<http://www.wsgi.org/en/latest/testing.html>`_ is a good starting point."
+msgstr ""
+
+#: ../../recipes.rst:92
+msgid ""
+"Example using `WebTest <http://webtest.pythonpaste.org/>`_ and `Nose "
+"<http://readthedocs.org/docs/nose>`_::"
+msgstr ""
+
+#: ../../recipes.rst:112
+msgid "Embedding other WSGI Apps"
+msgstr ""
+
+#: ../../recipes.rst:114
+msgid ""
+"This is not the recommend way (you should use a middleware in front of "
+"bottle to do this) but you can call other WSGI applications from within your"
+" bottle app and let bottle act as a pseudo-middleware. Here is an example::"
+msgstr ""
+
+#: ../../recipes.rst:130
+msgid ""
+"Again, this is not the recommend way to implement subprojects. It is only "
+"here because many people asked for this and to show how bottle maps to WSGI."
+msgstr ""
+
+#: ../../recipes.rst:134
+msgid "Ignore trailing slashes"
+msgstr ""
+
+#: ../../recipes.rst:136
+msgid ""
+"For Bottle, ``/example`` and ``/example/`` are two different routes [1]_. To"
+" treat both URLs the same you can add two ``@route`` decorators::"
+msgstr ""
+
+#: ../../recipes.rst:142
+msgid "or add a WSGI middleware that strips trailing slashes from all URLs::"
+msgstr ""
+
+#: ../../recipes.rst:156
+msgid "Footnotes"
+msgstr ""
+
+#: ../../recipes.rst:157
+msgid "Because they are. See <http://www.ietf.org/rfc/rfc3986.txt>"
+msgstr ""
+
+#: ../../recipes.rst:161
+msgid "Keep-alive requests"
+msgstr ""
+
+#: ../../recipes.rst:165
+msgid "For a more detailed explanation, see :doc:`async`."
+msgstr ""
+
+#: ../../recipes.rst:167
+msgid ""
+"Several \"push\" mechanisms like XHR multipart need the ability to write "
+"response data without closing the connection in conjunction with the "
+"response header \"Connection: keep-alive\". WSGI does not easily lend itself"
+" to this behavior, but it is still possible to do so in Bottle by using the "
+"gevent_ async framework. Here is a sample that works with either the gevent_"
+" HTTP server or the paste_ HTTP server (it may work with others, but I have "
+"not tried). Just change ``server='gevent'`` to ``server='paste'`` to use the"
+" paste_ server::"
+msgstr ""
+
+#: ../../recipes.rst:184
+msgid ""
+"If you browse to ``http://localhost:8080/stream``, you should see 'START', "
+"'MIDDLE', and 'END' show up one at a time (rather than waiting 8 seconds to "
+"see them all at once)."
+msgstr ""
+
+#: ../../recipes.rst:187
+msgid "Gzip Compression in Bottle"
+msgstr ""
+
+#: ../../recipes.rst:190
+msgid "For a detailed discussion, see compression_"
+msgstr ""
+
+#: ../../recipes.rst:192
+msgid ""
+"A common feature request is for Bottle to support Gzip compression, which "
+"speeds up sites by compressing static resources (like CSS and JS files) "
+"during a request."
+msgstr ""
+
+#: ../../recipes.rst:194
+msgid ""
+"Supporting Gzip compression is not a straightforward proposition, due to a "
+"number of corner cases that crop up frequently. A proper Gzip implementation"
+" must:"
+msgstr ""
+
+#: ../../recipes.rst:196
+msgid "Compress on the fly and be fast doing so."
+msgstr ""
+
+#: ../../recipes.rst:197
+msgid "Do not compress for browsers that don't support it."
+msgstr ""
+
+#: ../../recipes.rst:198
+msgid "Do not compress files that are compressed already (images, videos)."
+msgstr ""
+
+#: ../../recipes.rst:199
+msgid "Do not compress dynamic files."
+msgstr ""
+
+#: ../../recipes.rst:200
+msgid "Support two differed compression algorithms (gzip and deflate)."
+msgstr ""
+
+#: ../../recipes.rst:201
+msgid "Cache compressed files that don't change often."
+msgstr ""
+
+#: ../../recipes.rst:202
+msgid "De-validate the cache if one of the files changed anyway."
+msgstr ""
+
+#: ../../recipes.rst:203
+msgid "Make sure the cache does not get to big."
+msgstr ""
+
+#: ../../recipes.rst:204
+msgid ""
+"Do not cache small files because a disk seek would take longer than on-the-"
+"fly compression."
+msgstr ""
+
+#: ../../recipes.rst:206
+msgid ""
+"Because of these requirements, it is the recommendation of the Bottle "
+"project that Gzip compression is best handled by the WSGI server Bottle runs"
+" on top of. WSGI servers such as cherrypy_ provide a GzipFilter_ middleware "
+"that can be used to accomplish this."
+msgstr ""
+
+#: ../../recipes.rst:210
+msgid "Using the hooks plugin"
+msgstr ""
+
+#: ../../recipes.rst:212
+msgid ""
+"For example, if you want to allow Cross-Origin Resource Sharing for the "
+"content returned by all of your URL, you can use the hook decorator and "
+"setup a callback function::"
+msgstr ""
+
+#: ../../recipes.rst:230
+msgid ""
+"You can also use the ``before_request`` to take an action before every "
+"function gets called."
+msgstr ""
+
+#: ../../recipes.rst:235
+msgid "Using Bottle with Heroku"
+msgstr ""
+
+#: ../../recipes.rst:237
+msgid ""
+"Heroku_, a popular cloud application platform now provides support for "
+"running Python applications on their infastructure."
+msgstr ""
+
+#: ../../recipes.rst:240
+msgid ""
+"This recipe is based upon the `Heroku Quickstart "
+"<http://devcenter.heroku.com/articles/quickstart>`_, with Bottle specific "
+"code replacing the `Write Your App "
+"<http://devcenter.heroku.com/articles/python#write_your_app>`_ section of "
+"the `Getting Started with Python on Heroku/Cedar "
+"<http://devcenter.heroku.com/articles/python>`_ guide::"
+msgstr ""
+
+#: ../../recipes.rst:256
+msgid ""
+"Heroku's app stack passes the port that the application needs to listen on "
+"for requests, using the `os.environ` dictionary."
+msgstr ""

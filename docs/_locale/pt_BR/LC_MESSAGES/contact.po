@@ -1,0 +1,100 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2009-2015, Marcel Hellkamp
+# This file is distributed under the same license as the Bottle package.
+# 
+# Translators:
+msgid ""
+msgstr ""
+"Project-Id-Version: bottle\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2015-01-22 16:45-0200\n"
+"PO-Revision-Date: 2015-01-22 19:18+0000\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: Portuguese (Brazil) (http://www.transifex.com/projects/p/bottle/language/pt_BR/)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: pt_BR\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+# 6b58c3178f6648849e59258a3b24e455
+#: ../../contact.rst:3
+msgid "Contact"
+msgstr ""
+
+# 98fd8a5636b6428780c7175cc59aaaa6
+#: ../../contact.rst:6
+msgid "About the Autor"
+msgstr ""
+
+# d821640796b94958962716f806f836b2
+#: ../../contact.rst:7
+msgid ""
+"Hi, I'm *Marcel Hellkamp* (aka *defnull*), author of Bottle and the guy "
+"behind this website. I'm 27 years old and studying computer science at the "
+"Georg-August-University in Göttingen, Germany. Python is my favorite "
+"language, but I also code in ruby and JavaScript a lot. Watch me on `twitter"
+" <http://twitter.com/bottlepy>`_ or visit my profile at `GitHub "
+"<http://github.com/defnull>`_ to get in contact. A `mailinglist "
+"<http://groups.google.de/group/bottlepy>`_ is open for Bottle related "
+"questions, too."
+msgstr ""
+
+# 75e2d7ba8f2442409d069db93d984126
+#: ../../contact.rst:10
+msgid "About Bottle"
+msgstr ""
+
+# e9120958891e4e85b095dc32966a22a7
+#: ../../contact.rst:11
+msgid ""
+"This is my first open source project so far. It started and a small "
+"experiment but soon got so much positive feedback I decided to make "
+"something real out of it. Here it is."
+msgstr ""
+
+# 0f1e65cdebe241ca86f50b07a8fa94e3
+#: ../../contact.rst:14
+msgid "Impressum und Kontaktdaten"
+msgstr ""
+
+# ad906898692142c78550fd2baecb92b4
+#: ../../contact.rst:15
+msgid ""
+"(This is required by `German law "
+"<http://bundesrecht.juris.de/tmg/__5.html>`_)"
+msgstr ""
+
+# f8c7cf81b92846889d7a579a42505390
+#: ../../contact.rst:17
+msgid ""
+"Die Nutzung der folgenden Kontaktdaten ist ausschließlich für die "
+"Kontaktaufnahme mit dem Betreiber dieser Webseite bei rechtlichen Problemen "
+"vorgesehen. Insbesondere die Nutzung zu Werbe- oder ähnlichen Zwecken ist "
+"ausdrücklich untersagt."
+msgstr ""
+
+# 5d663554a0e94f4f95efef2ba864c049
+#: ../../contact.rst:22
+msgid "**Betreiber**: Marcel Hellkamp"
+msgstr ""
+
+# 591eedd4e3c643fc819f95162eb9cbbd
+#: ../../contact.rst:23
+msgid "**Ort**: D - 37075 Göttingen"
+msgstr ""
+
+# 51f07c42c1fb475481731944c11ab991
+#: ../../contact.rst:24
+msgid "**Strasse**: Theodor-Heuss Strasse 13"
+msgstr ""
+
+# 8ba88827b8734a97922565b31c1b11fc
+#: ../../contact.rst:25
+msgid "**Telefon**: +49 (0) 551 20005915"
+msgstr ""
+
+# a15072e670e848fca2a902ad6817a487
+#: ../../contact.rst:26
+msgid "**E-Mail**: marc at gsites dot de"
+msgstr ""

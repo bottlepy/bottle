@@ -1,0 +1,101 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2009-2015, Marcel Hellkamp
+# This file is distributed under the same license as the Bottle package.
+# 
+# Translators:
+msgid ""
+msgstr ""
+"Project-Id-Version: bottle\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2015-01-22 16:45-0200\n"
+"PO-Revision-Date: 2015-01-22 19:19+0000\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: Portuguese (Brazil) (http://www.transifex.com/projects/p/bottle/language/pt_BR/)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: pt_BR\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+# 52e83ba5006348dba53082cf44d160ba
+#: ../../faq.rst:10
+msgid "Frequently Asked Questions"
+msgstr ""
+
+# 80a5a5a1091b4e2e80bb1d93320ccfb4
+#: ../../faq.rst:13
+msgid "About Bottle"
+msgstr ""
+
+# 85de266ae4bb4564a9c33f98d9f8244f
+#: ../../faq.rst:16
+msgid "Is bottle suitable for complex applications?"
+msgstr ""
+
+# e0d0c22633a34c4eb6d7a57ea1dd1599
+#: ../../faq.rst:18
+msgid ""
+"Bottle is a *micro* framework designed for prototyping and building small "
+"web applications and services. It stays out of your way and allows you to "
+"get things done fast, but misses some advanced features and ready-to-use "
+"solutions found in other frameworks (MVC, ORM, form validation, scaffolding,"
+" XML-RPC). Although it *is* possible to add these features and build complex"
+" applications with Bottle, you should consider using a full-stack Web "
+"framework like pylons_ or paste_ instead."
+msgstr ""
+
+# ec3b8ccdedb64fc181132d3eec8c25f5
+#: ../../faq.rst:22
+msgid "Common Problems and Pitfalls"
+msgstr ""
+
+# c9ea3f021fb64708a14092b0bb340ba5
+#: ../../faq.rst:29
+msgid "\"Template Not Found\" in mod_wsgi/mod_python"
+msgstr ""
+
+# 7ae535c473864aeead086bfbd9c1610a
+#: ../../faq.rst:31
+msgid ""
+"Bottle searches in ``./`` and ``./views/`` for templates. In a mod_python_ "
+"or mod_wsgi_ environment, the working directory (``./``) depends on your "
+"Apache settings. You should add an absolute path to the template search "
+"path::"
+msgstr ""
+
+# c10be0d717be43f28fd03f218a7ec161
+#: ../../faq.rst:35
+msgid "so bottle searches the right paths."
+msgstr ""
+
+# 7049a06646bc43c6b19697fcaecbfde2
+#: ../../faq.rst:38
+msgid "Dynamic Routes and Slashes"
+msgstr ""
+
+# ec1977a0fb194f37a84914ed0cbfa693
+#: ../../faq.rst:40
+msgid ""
+"In :ref:`dynamic route syntax <tutorial-dynamic-routes>`, a placeholder "
+"token (``:name``) matches everything up to the next slash. This equals to "
+"``[^/]+`` in regular expression syntax. To accept slashes too, you have to "
+"add a custom regular pattern to the placeholder. An example: "
+"``/images/:filepath#.*#`` would match ``/images/icons/error.png`` but "
+"``/images/:filename`` won't."
+msgstr ""
+
+# c66abb0a46474797bda8875024694350
+#: ../../faq.rst:43
+msgid "Problems with reverse proxies"
+msgstr ""
+
+# 30ed7c0f41cd409f8af531e174fa75fd
+#: ../../faq.rst:45
+msgid ""
+"Redirects and url-building only works if bottle knows the public address and"
+" location of your application. If you run bottle locally behind a reverse "
+"proxy or load balancer, some information might get lost along the way. For "
+"example, the ``wsgi.url_scheme`` value or the ``Host`` header might reflect "
+"the local request by your proxy, not the real request by the client. Here is"
+" a small WSGI middleware snippet that helps to fix these values::"
+msgstr ""

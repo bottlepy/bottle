@@ -1,0 +1,921 @@
+# 
+msgid ""
+msgstr ""
+"Project-Id-Version: Bottle 0.13-dev\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2015-01-22 16:45-0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../tutorial_app.rst:20
+msgid "Tutorial: Todo-List Application"
+msgstr ""
+
+#: ../../tutorial_app.rst:24
+msgid ""
+"This tutorial is a work in progess and written by `noisefloor "
+"<http://github.com/noisefloor>`_."
+msgstr ""
+
+#: ../../tutorial_app.rst:27
+msgid ""
+"This tutorial should give a brief introduction to the Bottle_ WSGI "
+"Framework. The main goal is to be able, after reading through this tutorial,"
+" to create a project using Bottle. Within this document, not all abilities "
+"will be shown, but at least the main and important ones like routing, "
+"utilizing the Bottle template abilities to format output and handling GET / "
+"POST parameters."
+msgstr ""
+
+#: ../../tutorial_app.rst:29
+msgid ""
+"To understand the content here, it is not necessary to have a basic "
+"knowledge of WSGI, as Bottle tries to keep WSGI away from the user anyway. "
+"You should have a fair understanding of the Python_ programming language. "
+"Furthermore, the example used in the tutorial retrieves and stores data in a"
+" SQL databse, so a basic idea about SQL helps, but is not a must to "
+"understand the concepts of Bottle. Right here, SQLite_ is used. The output "
+"of Bottle sent to the browser is formatted in some examples by the help of "
+"HTML. Thus, a basic idea about the common HTML tags does help as well."
+msgstr ""
+
+#: ../../tutorial_app.rst:31
+msgid ""
+"For the sake of introducing Bottle, the Python code \"in between\" is kept "
+"short, in order to keep the focus. Also all code within the tutorial is "
+"working fine, but you may not necessarily use it \"in the wild\", e.g. on a "
+"public web server. In order to do so, you may add e.g. more error handling, "
+"protect the database with a password, test and escape the input etc."
+msgstr ""
+
+#: ../../tutorial_app.rst:0
+msgid "Table of Contents"
+msgstr ""
+
+#: ../../tutorial_app.rst:36
+msgid "Goals"
+msgstr ""
+
+#: ../../tutorial_app.rst:38
+msgid ""
+"At the end of this tutorial, we will have a simple, web-based ToDo list. The"
+" list contains a text (with max 100 characters) and a status (0 for closed, "
+"1 for open) for each item. Through the web-based user interface, open items "
+"can be view and edited and new items can be added."
+msgstr ""
+
+#: ../../tutorial_app.rst:40
+msgid ""
+"During development, all pages will be available on ``localhost`` only, but "
+"later on it will be shown how to adapt the application for a \"real\" "
+"server, including how to use with Apache's mod_wsgi."
+msgstr ""
+
+#: ../../tutorial_app.rst:42
+msgid ""
+"Bottle will do the routing and format the output, with the help of "
+"templates. The items of the list will be stored inside a SQLite database. "
+"Reading and  writing the database will be done by Python code."
+msgstr ""
+
+#: ../../tutorial_app.rst:44
+msgid ""
+"We will end up with an application with the following pages and "
+"functionality:"
+msgstr ""
+
+#: ../../tutorial_app.rst:46
+msgid "start page ``http://localhost:8080/todo``"
+msgstr ""
+
+#: ../../tutorial_app.rst:47
+msgid "adding new items to the list: ``http://localhost:8080/new``"
+msgstr ""
+
+#: ../../tutorial_app.rst:48
+msgid "page for editing items: ``http://localhost:8080/edit/:no``"
+msgstr ""
+
+#: ../../tutorial_app.rst:49
+msgid ""
+"validating data assigned by dynamic routes with the @validate decorator"
+msgstr ""
+
+#: ../../tutorial_app.rst:50
+msgid "catching errors"
+msgstr ""
+
+#: ../../tutorial_app.rst:53
+msgid "Before We Start..."
+msgstr ""
+
+#: ../../tutorial_app.rst:57
+msgid "Install Bottle"
+msgstr ""
+
+#: ../../tutorial_app.rst:58
+msgid ""
+"Assuming that you have a fairly new installation of Python (version 2.5 or "
+"higher), you only need to install Bottle in addition to that. Bottle has no "
+"other dependencies than Python itself."
+msgstr ""
+
+#: ../../tutorial_app.rst:60
+msgid ""
+"You can either manually install Bottle or use Python's easy_install: "
+"``easy_install bottle``"
+msgstr ""
+
+#: ../../tutorial_app.rst:64
+msgid "Further Software Necessities"
+msgstr ""
+
+#: ../../tutorial_app.rst:65
+msgid ""
+"As we use SQLite3 as a database, make sure it is installed. On Linux "
+"systems, most distributions have SQLite3 installed by default. SQLite is "
+"available for Windows and MacOS X as well and the `sqlite3` module is part "
+"of the python standard library."
+msgstr ""
+
+#: ../../tutorial_app.rst:68
+msgid "Create An SQL Database"
+msgstr ""
+
+#: ../../tutorial_app.rst:69
+msgid ""
+"First, we need to create the database we use later on. To do so, save the "
+"following script in your project directory and run it with python. You can "
+"use the interactive interpreter too::"
+msgstr ""
+
+#: ../../tutorial_app.rst:80
+msgid ""
+"This generates a database-file `todo.db` with tables called ``todo`` and "
+"three columns ``id``, ``task``, and ``status``. ``id`` is a unique id for "
+"each row, which is used later on to reference the rows. The column ``task`` "
+"holds the text which describes the task, it can be max 100 characters long. "
+"Finally, the column ``status`` is used to mark a task as open (value 1) or "
+"closed (value 0)."
+msgstr ""
+
+#: ../../tutorial_app.rst:83
+msgid "Using Bottle for a Web-Based ToDo List"
+msgstr ""
+
+#: ../../tutorial_app.rst:85
+msgid ""
+"Now it is time to introduce Bottle in order to create a web-based "
+"application. But first, we need to look into a basic concept of Bottle: "
+"routes."
+msgstr ""
+
+#: ../../tutorial_app.rst:89
+msgid "Understanding routes"
+msgstr ""
+
+#: ../../tutorial_app.rst:90
+msgid ""
+"Basically, each page visible in the browser is dynamically generated when "
+"the page address is called. Thus, there is no static content. That is "
+"exactly what is called a \"route\" within Bottle: a certain address on the "
+"server. So, for example, when the page ``http://localhost:8080/todo`` is "
+"called from the browser, Bottle \"grabs\" the call and checks if there is "
+"any (Python) function defined for the route \"todo\". If so, Bottle will "
+"execute the corresponding Python code and return its result."
+msgstr ""
+
+#: ../../tutorial_app.rst:94
+msgid "First Step - Showing All Open Items"
+msgstr ""
+
+#: ../../tutorial_app.rst:95
+msgid ""
+"So, after understanding the concept of routes, let's create the first one. "
+"The goal is to see all open items from the ToDo list::"
+msgstr ""
+
+#: ../../tutorial_app.rst:110
+msgid ""
+"Save the code a ``todo.py``, preferably in the same directory as the file "
+"``todo.db``. Otherwise, you need to add the path to ``todo.db`` in the "
+"``sqlite3.connect()`` statement."
+msgstr ""
+
+#: ../../tutorial_app.rst:112
+msgid ""
+"Let's have a look what we just did: We imported the necessary module "
+"``sqlite3`` to access to SQLite database and from Bottle we imported "
+"``route`` and ``run``. The ``run()`` statement simply starts the web server "
+"included in Bottle. By default, the web server serves the pages on localhost"
+" and port 8080. Furthermore, we imported ``route``, which is the function "
+"responsible for Bottle's routing. As you can see, we defined one function, "
+"``todo_list()``, with a few lines of code reading from the database. The "
+"important point is the `decorator statement`_ ``@route('/todo')`` right "
+"before the ``def todo_list()`` statement. By doing this, we bind this "
+"function to the route ``/todo``, so every time the browsers calls "
+"``http://localhost:8080/todo``, Bottle returns the result of the function "
+"``todo_list()``. That is how routing within bottle works."
+msgstr ""
+
+#: ../../tutorial_app.rst:114
+msgid ""
+"Actually you can bind more than one route to a function. So the following "
+"code::"
+msgstr ""
+
+#: ../../tutorial_app.rst:121
+msgid ""
+"will work fine, too. What will not work is to bind one route to more than "
+"one function."
+msgstr ""
+
+#: ../../tutorial_app.rst:123
+msgid ""
+"What you will see in the browser is what is returned, thus the value given "
+"by the ``return`` statement. In this example, we need to convert ``result`` "
+"in to a string by ``str()``, as Bottle expects a string or a list of strings"
+" from the return statement. But here, the result of the database query is a "
+"list of tuples, which is the standard defined by the `Python DB API`_."
+msgstr ""
+
+#: ../../tutorial_app.rst:125
+msgid ""
+"Now, after understanding the little script above, it is time to execute it "
+"and watch the result yourself. Remember that on Linux- / Unix-based systems "
+"the file ``todo.py`` needs to be executable first. Then, just run ``python "
+"todo.py`` and call the page ``http://localhost:8080/todo`` in your browser. "
+"In case you made no mistake writing the script, the output should look like "
+"this::"
+msgstr ""
+
+#: ../../tutorial_app.rst:129
+msgid ""
+"If so - congratulations! You are now a successful user of Bottle. In case it"
+" did not work and you need to make some changes to the script, remember to "
+"stop Bottle serving the page, otherwise the revised version will not be "
+"loaded."
+msgstr ""
+
+#: ../../tutorial_app.rst:131
+msgid ""
+"Actually, the output is not really exciting nor nice to read. It is the raw "
+"result returned from the SQL query."
+msgstr ""
+
+#: ../../tutorial_app.rst:133
+msgid ""
+"So, in the next step we format the output in a nicer way. But before we do "
+"that, we make our life easier."
+msgstr ""
+
+#: ../../tutorial_app.rst:137
+msgid "Debugging and Auto-Reload"
+msgstr ""
+
+#: ../../tutorial_app.rst:138
+msgid ""
+"Maybe you already noticed that Bottle sends a short error message to the "
+"browser in case something within the script is wrong, e.g. the connection to"
+" the database is not working. For debugging purposes it is quite helpful to "
+"get more details. This can be easily achieved by adding the following "
+"statement to the script::"
+msgstr ""
+
+#: ../../tutorial_app.rst:146
+msgid ""
+"By enabling \"debug\", you will get a full stacktrace of the Python "
+"interpreter, which usually contains useful information for finding bugs. "
+"Furthermore, templates (see below) are not cached, thus changes to templates"
+" will take effect without stopping the server."
+msgstr ""
+
+#: ../../tutorial_app.rst:150
+msgid ""
+"That ``debug(True)`` is supposed to be used for development only, it should "
+"*not* be used in production environments."
+msgstr ""
+
+#: ../../tutorial_app.rst:154
+msgid ""
+"Another quite nice feature is auto-reloading, which is enabled by modifying "
+"the ``run()`` statement to"
+msgstr ""
+
+#: ../../tutorial_app.rst:160
+msgid ""
+"This will automatically detect changes to the script and reload the new "
+"version once it is called again, without the need to stop and start the "
+"server."
+msgstr ""
+
+#: ../../tutorial_app.rst:162
+msgid ""
+"Again, the feature is mainly supposed to be used while developing, not on "
+"production systems."
+msgstr ""
+
+#: ../../tutorial_app.rst:166
+msgid "Bottle Template To Format The Output"
+msgstr ""
+
+#: ../../tutorial_app.rst:167
+msgid ""
+"Now let's have a look at casting the output of the script into a proper "
+"format."
+msgstr ""
+
+#: ../../tutorial_app.rst:169
+msgid ""
+"Actually Bottle expects to receive a string or a list of strings from a "
+"function and returns them by the help of the built-in server to the browser."
+" Bottle does not bother about the content of the string itself, so it can be"
+" text formatted with HTML markup, too."
+msgstr ""
+
+#: ../../tutorial_app.rst:171
+msgid ""
+"Bottle brings its own easy-to-use template engine with it. Templates are "
+"stored as separate files having a ``.tpl`` extension. The template can be "
+"called then from within a function. Templates can contain any type of text "
+"(which will be most likely HTML-markup mixed with Python statements). "
+"Furthermore, templates can take arguments, e.g. the result set of a database"
+" query, which will be then formatted nicely within the template."
+msgstr ""
+
+#: ../../tutorial_app.rst:173
+msgid ""
+"Right here, we are going to cast the result of our query showing the open "
+"ToDo items into a simple table with two columns: the first column will "
+"contain the ID of the item, the second column the text. The result set is, "
+"as seen above, a list of tuples, each tuple contains one set of results."
+msgstr ""
+
+#: ../../tutorial_app.rst:175
+msgid "To include the template in our example, just add the following lines::"
+msgstr ""
+
+#: ../../tutorial_app.rst:185
+msgid ""
+"So we do here two things: first, we import ``template`` from Bottle in order"
+" to be able to use templates. Second, we assign the output of the template "
+"``make_table`` to the variable ``output``, which is then returned. In "
+"addition to calling the template, we assign ``result``, which we received "
+"from the database query, to the variable ``rows``, which is later on used "
+"within the template. If necessary, you can assign more than one variable / "
+"value to a template."
+msgstr ""
+
+#: ../../tutorial_app.rst:187
+msgid ""
+"Templates always return a list of strings, thus there is no need to convert "
+"anything. Of course, we can save one line of code by writing ``return "
+"template('make_table', rows=result)``, which gives exactly the same result "
+"as above."
+msgstr ""
+
+#: ../../tutorial_app.rst:189
+msgid ""
+"Now it is time to write the corresponding template, which looks like this::"
+msgstr ""
+
+#: ../../tutorial_app.rst:203
+msgid ""
+"Save the code as ``make_table.tpl`` in the same directory where ``todo.py`` "
+"is stored."
+msgstr ""
+
+#: ../../tutorial_app.rst:205
+msgid ""
+"Let's have a look at the code: every line starting with % is interpreted as "
+"Python code. Please note that, of course, only valid Python statements are "
+"allowed, otherwise the template will raise an exception, just as any other "
+"Python code. The other lines are plain HTML markup."
+msgstr ""
+
+#: ../../tutorial_app.rst:207
+msgid ""
+"As you can see, we use Python's ``for`` statement two times, in order to go "
+"through ``rows``. As seen above, ``rows`` is a variable which holds the "
+"result of the database query, so it is a list of tuples. The first ``for`` "
+"statement accesses the tuples within the list, the second one the items "
+"within the tuple, which are put each into a cell of the table. It is "
+"important that you close all ``for``, ``if``, ``while`` etc. statements with"
+" ``%end``, otherwise the output may not be what you expect."
+msgstr ""
+
+#: ../../tutorial_app.rst:209
+msgid ""
+"If you need to access a variable within a non-Python code line inside the "
+"template, you need to put it into double curly braces. This tells the "
+"template to insert the actual value of the variable right in place."
+msgstr ""
+
+#: ../../tutorial_app.rst:211
+msgid ""
+"Run the script again and look at the output. Still not really nice, but at "
+"least more readable than the list of tuples. Of course, you can spice-up the"
+" very simple HTML markup above, e.g. by using in-line styles to get a better"
+" looking output."
+msgstr ""
+
+#: ../../tutorial_app.rst:215
+msgid "Using GET and POST Values"
+msgstr ""
+
+#: ../../tutorial_app.rst:216
+msgid ""
+"As we can review all open items properly, we move to the next step, which is"
+" adding new items to the ToDo list. The new item should be received from a "
+"regular HTML-based form, which sends its data by the GET method."
+msgstr ""
+
+#: ../../tutorial_app.rst:218
+msgid ""
+"To do so, we first add a new route to our script and tell the route that it "
+"should get GET data::"
+msgstr ""
+
+#: ../../tutorial_app.rst:241
+msgid ""
+"To access GET (or POST) data, we need to import ``request`` from Bottle. To "
+"assign the actual data to a variable, we use the statement "
+"``request.GET.get('task','').strip()`` statement, where ``task`` is the name"
+" of the GET data we want to access. That's all. If your GET data has more "
+"than one variable, multiple ``request.GET.get()`` statements can be used and"
+" assigned to other variables."
+msgstr ""
+
+#: ../../tutorial_app.rst:243
+msgid ""
+"The rest of this piece of code is just processing of the gained data: "
+"writing to the database, retrieve the corresponding id from the database and"
+" generate the output."
+msgstr ""
+
+#: ../../tutorial_app.rst:245
+msgid ""
+"But where do we get the GET data from? Well, we can use a static HTML page "
+"holding the form. Or, what we do right now, is to use a template which is "
+"output when the route ``/new`` is called without GET data."
+msgstr ""
+
+#: ../../tutorial_app.rst:247
+msgid "The code needs to be extended to::"
+msgstr ""
+
+#: ../../tutorial_app.rst:270
+msgid "``new_task.tpl`` looks like this::"
+msgstr ""
+
+#: ../../tutorial_app.rst:278
+msgid "That's all. As you can see, the template is plain HTML this time."
+msgstr ""
+
+#: ../../tutorial_app.rst:280
+msgid "Now we are able to extend our to do list."
+msgstr ""
+
+#: ../../tutorial_app.rst:282
+msgid ""
+"By the way, if you prefer to use POST data: this works exactly the same way,"
+" just use ``request.POST.get()`` instead."
+msgstr ""
+
+#: ../../tutorial_app.rst:286
+msgid "Editing Existing Items"
+msgstr ""
+
+#: ../../tutorial_app.rst:287
+msgid "The last point to do is to enable editing of existing items."
+msgstr ""
+
+#: ../../tutorial_app.rst:289
+msgid ""
+"By using only the routes we know so far it is possible, but may be quite "
+"tricky. But Bottle knows something called \"dynamic routes\", which makes "
+"this task quite easy."
+msgstr ""
+
+#: ../../tutorial_app.rst:291
+msgid "The basic statement for a dynamic route looks like this::"
+msgstr ""
+
+#: ../../tutorial_app.rst:295
+msgid ""
+"The key point here is the colon. This tells Bottle to accept for "
+"``:something`` any string up to the next slash. Furthermore, the value of "
+"``something`` will be passed to the function assigned to that route, so the "
+"data can be processed within the function."
+msgstr ""
+
+#: ../../tutorial_app.rst:297
+msgid ""
+"For our ToDo list, we will create a route ``@route('/edit/:no)``, where "
+"``no`` is the id of the item to edit."
+msgstr ""
+
+#: ../../tutorial_app.rst:299
+msgid "The code looks like this::"
+msgstr ""
+
+#: ../../tutorial_app.rst:327
+msgid ""
+"It is basically pretty much the same what we already did above when adding "
+"new items, like using ``GET`` data etc. The main addition here is using the "
+"dynamic route ``:no``, which here passes the number to the corresponding "
+"function. As you can see, ``no`` is used within the function to access the "
+"right row of data within the database."
+msgstr ""
+
+#: ../../tutorial_app.rst:329
+msgid ""
+"The template ``edit_task.tpl`` called within the function looks like this::"
+msgstr ""
+
+#: ../../tutorial_app.rst:344
+msgid ""
+"Again, this template is a mix of Python statements and HTML, as already "
+"explained above."
+msgstr ""
+
+#: ../../tutorial_app.rst:346
+msgid ""
+"A last word on dynamic routes: you can even use a regular expression for a "
+"dynamic route, as demonstrated later."
+msgstr ""
+
+#: ../../tutorial_app.rst:350
+msgid "Validating Dynamic Routes"
+msgstr ""
+
+#: ../../tutorial_app.rst:351
+msgid ""
+"Using dynamic routes is fine, but for many cases it makes sense to validate "
+"the dynamic part of the route. For example, we expect an integer number in "
+"our route for editing above. But if a float, characters or so are received, "
+"the Python interpreter throws an exception, which is not what we want."
+msgstr ""
+
+#: ../../tutorial_app.rst:353
+msgid ""
+"For those cases, Bottle offers the ``@validate`` decorator, which validates "
+"the \"input\" prior to passing it to the function. In order to apply the "
+"validator, extend the code as follows::"
+msgstr ""
+
+#: ../../tutorial_app.rst:362
+msgid ""
+"At first, we imported ``validate`` from the Bottle framework, than we apply "
+"the @validate-decorator. Right here, we validate if ``no`` is an integer. "
+"Basically, the validation works with all types of data like floats, lists "
+"etc."
+msgstr ""
+
+#: ../../tutorial_app.rst:364
+msgid ""
+"Save the code and call the page again using a \"403 forbidden\" value for "
+"``:no``, e.g. a float. You will receive not an exception, but a \"403 - "
+"Forbidden\" error, saying that an integer was expected."
+msgstr ""
+
+#: ../../tutorial_app.rst:367
+msgid "Dynamic Routes Using Regular Expressions"
+msgstr ""
+
+#: ../../tutorial_app.rst:368
+msgid ""
+"Bottle can also handle dynamic routes, where the \"dynamic part\" of the "
+"route can be a regular expression."
+msgstr ""
+
+#: ../../tutorial_app.rst:370
+msgid ""
+"So, just to demonstrate that, let's assume that all single items in our ToDo"
+" list should be accessible by their plain number, by a term like e.g. "
+"\"item1\". For obvious reasons, you do not want to create a route for every "
+"item. Furthermore, the simple dynamic routes do not work either, as part of "
+"the route, the term \"item\" is static."
+msgstr ""
+
+#: ../../tutorial_app.rst:372
+msgid "As said above, the solution is a regular expression::"
+msgstr ""
+
+#: ../../tutorial_app.rst:386
+msgid ""
+"Of course, this example is somehow artificially constructed - it would be "
+"easier to use a plain dynamic route only combined with a validation. "
+"Nevertheless, we want to see how regular expression routes work: the line "
+"``@route(/item:item_#[0-9]+#)`` starts like a normal route, but the part "
+"surrounded by # is interpreted as a regular expression, which is the dynamic"
+" part of the route. So in this case, we want to match any digit between 0 "
+"and 9. The following function \"show_item\" just checks whether the given "
+"item is present in the database or not. In case it is present, the "
+"corresponding text of the task is returned. As you can see, only the regular"
+" expression part of the route is passed forward. Furthermore, it is always "
+"forwarded as a string, even if it is a plain integer number, like in this "
+"case."
+msgstr ""
+
+#: ../../tutorial_app.rst:390
+msgid "Returning Static Files"
+msgstr ""
+
+#: ../../tutorial_app.rst:391
+msgid ""
+"Sometimes it may become necessary to associate a route not to a Python "
+"function, but just return a static file. So if you have for example a help "
+"page for your application, you may want to return this page as plain HTML. "
+"This works as follows::"
+msgstr ""
+
+#: ../../tutorial_app.rst:399
+msgid ""
+"At first, we need to import the ``static_file`` function from Bottle. As you"
+" can see, the ``return static_file`` statement replaces the ``return`` "
+"statement. It takes at least two arguments: the name of the file to be "
+"returned and the path to the file. Even if the file is in the same directory"
+" as your application, the path needs to be stated. But in this case, you can"
+" use ``'.'`` as a path, too. Bottle guesses the MIME-type of the file "
+"automatically, but in case you like to state it explicitly, add a third "
+"argument to ``static_file``, which would be here ``mimetype='text/html'``. "
+"``static_file`` works with any type of route, including the dynamic ones."
+msgstr ""
+
+#: ../../tutorial_app.rst:403
+msgid "Returning JSON Data"
+msgstr ""
+
+#: ../../tutorial_app.rst:404
+msgid ""
+"There may be cases where you do not want your application to generate the "
+"output directly, but return data to be processed further on, e.g. by "
+"JavaScript. For those cases, Bottle offers the possibility to return JSON "
+"objects, which is sort of standard for exchanging data between web "
+"applications. Furthermore, JSON can be processed by many programming "
+"languages, including Python"
+msgstr ""
+
+#: ../../tutorial_app.rst:406
+msgid ""
+"So, let's assume we want to return the data generated in the regular "
+"expression route example as a JSON object. The code looks like this::"
+msgstr ""
+
+#: ../../tutorial_app.rst:421
+msgid ""
+"As you can, that is fairly simple: just return a regular Python dictionary "
+"and Bottle will convert it automatically into a JSON object prior to "
+"sending. So if you e.g. call \"http://localhost/json1\" Bottle should in "
+"this case return the JSON object ``{\"Task\": [\"Read A-byte-of-python to "
+"get a good introduction into Python\"]}``."
+msgstr ""
+
+#: ../../tutorial_app.rst:426
+msgid "Catching Errors"
+msgstr ""
+
+#: ../../tutorial_app.rst:427
+msgid ""
+"The next step may is to catch the error with Bottle itself, to keep away any"
+" type of error message from the user of your application. To do that, Bottle"
+" has an \"error-route\", which can be a assigned to a HTML-error."
+msgstr ""
+
+#: ../../tutorial_app.rst:429
+msgid "In our case, we want to catch a 403 error. The code is as follows::"
+msgstr ""
+
+#: ../../tutorial_app.rst:437
+msgid ""
+"So, at first we need to import ``error`` from Bottle and define a route by "
+"``error(403)``, which catches all \"403 forbidden\" errors. The function "
+"\"mistake\" is assigned to that. Please note that ``error()`` always passes "
+"the error-code to the function - even if you do not need it. Thus, the "
+"function always needs to accept one argument, otherwise it will not work."
+msgstr ""
+
+#: ../../tutorial_app.rst:439
+msgid ""
+"Again, you can assign more than one error-route to a function, or catch "
+"various errors with one function each. So this code::"
+msgstr ""
+
+#: ../../tutorial_app.rst:446
+msgid "works fine, the following one as well::"
+msgstr ""
+
+#: ../../tutorial_app.rst:458
+msgid "Summary"
+msgstr ""
+
+#: ../../tutorial_app.rst:459
+msgid ""
+"After going through all the sections above, you should have a brief "
+"understanding how the Bottle WSGI framework works. Furthermore you have all "
+"the knowledge necessary to use Bottle for your applications."
+msgstr ""
+
+#: ../../tutorial_app.rst:461
+msgid ""
+"The following chapter give a short introduction how to adapt Bottle for "
+"larger projects. Furthermore, we will show how to operate Bottle with web "
+"servers which perform better on a higher load / more web traffic than the "
+"one we used so far."
+msgstr ""
+
+#: ../../tutorial_app.rst:464
+msgid "Server Setup"
+msgstr ""
+
+#: ../../tutorial_app.rst:466
+msgid ""
+"So far, we used the standard server used by Bottle, which is the `WSGI "
+"reference Server`_ shipped along with Python. Although this server is "
+"perfectly suitable for development purposes, it is not really suitable for "
+"larger applications. But before we have a look at the alternatives, let's "
+"have a look how to tweak the settings of the standard server first."
+msgstr ""
+
+#: ../../tutorial_app.rst:470
+msgid "Running Bottle on a different port and IP"
+msgstr ""
+
+#: ../../tutorial_app.rst:471
+msgid ""
+"As standard, Bottle serves the pages on the IP adress 127.0.0.1, also known "
+"as ``localhost``, and on port ``8080``. To modify the setting is pretty "
+"simple, as additional parameters can be passed to Bottle's ``run()`` "
+"function to change the port and the address."
+msgstr ""
+
+#: ../../tutorial_app.rst:473
+msgid ""
+"To change the port, just add ``port=portnumber`` to the run command. So, for"
+" example::"
+msgstr ""
+
+#: ../../tutorial_app.rst:477
+msgid "would make Bottle listen to port 80."
+msgstr ""
+
+#: ../../tutorial_app.rst:479
+msgid "To change the IP address where Bottle is listening::"
+msgstr ""
+
+#: ../../tutorial_app.rst:483
+msgid "Of course, both parameters can be combined, like::"
+msgstr ""
+
+#: ../../tutorial_app.rst:487
+msgid ""
+"The ``port`` and ``host`` parameter can also be applied when Bottle is "
+"running with a different server, as shown in the following section."
+msgstr ""
+
+#: ../../tutorial_app.rst:491
+msgid "Running Bottle with a different server"
+msgstr ""
+
+#: ../../tutorial_app.rst:492
+msgid ""
+"As said above, the standard server is perfectly suitable for development, "
+"personal use or a small group of people only using your application based on"
+" Bottle. For larger tasks, the standard server may become a bottleneck, as "
+"it is single-threaded, thus it can only serve one request at a time."
+msgstr ""
+
+#: ../../tutorial_app.rst:494
+msgid ""
+"But Bottle has already various adapters to multi-threaded servers on board, "
+"which perform better on higher load. Bottle supports Cherrypy_, Fapws3_, "
+"Flup_ and Paste_."
+msgstr ""
+
+#: ../../tutorial_app.rst:496
+msgid ""
+"If you want to run for example Bottle with the Paste server, use the "
+"following code::"
+msgstr ""
+
+#: ../../tutorial_app.rst:502
+msgid ""
+"This works exactly the same way with ``FlupServer``, ``CherryPyServer`` and "
+"``FapwsServer``."
+msgstr ""
+
+#: ../../tutorial_app.rst:506
+msgid "Running Bottle on Apache with mod_wsgi"
+msgstr ""
+
+#: ../../tutorial_app.rst:507
+msgid ""
+"Maybe you already have an Apache_ or you want to run a Bottle-based "
+"application large scale - then it is time to think about Apache with "
+"mod_wsgi_."
+msgstr ""
+
+#: ../../tutorial_app.rst:509
+msgid ""
+"We assume that your Apache server is up and running and mod_wsgi is working "
+"fine as well. On a lot of Linux distributions, mod_wsgi can be easily "
+"installed via whatever package management system is in use."
+msgstr ""
+
+#: ../../tutorial_app.rst:511
+msgid ""
+"Bottle brings an adapter for mod_wsgi with it, so serving your application "
+"is an easy task."
+msgstr ""
+
+#: ../../tutorial_app.rst:513
+msgid ""
+"In the following example, we assume that you want to make your application "
+"\"ToDo list\" accessible through ``http://www.mypage.com/todo`` and your "
+"code, templates and SQLite database are stored in the path "
+"``/var/www/todo``."
+msgstr ""
+
+#: ../../tutorial_app.rst:515
+msgid ""
+"When you run your application via mod_wsgi, it is imperative to remove the "
+"``run()`` statement from your code, otherwise it won't work here."
+msgstr ""
+
+#: ../../tutorial_app.rst:517
+msgid ""
+"After that, create a file called ``adapter.wsgi`` with the following "
+"content::"
+msgstr ""
+
+#: ../../tutorial_app.rst:528
+msgid ""
+"and save it in the same path, ``/var/www/todo``. Actually the name of the "
+"file can be anything, as long as the extension is ``.wsgi``. The name is "
+"only used to reference the file from your virtual host."
+msgstr ""
+
+#: ../../tutorial_app.rst:530
+msgid ""
+"Finally, we need to add a virtual host to the Apache configuration, which "
+"looks like this::"
+msgstr ""
+
+#: ../../tutorial_app.rst:546
+msgid ""
+"After restarting the server, your ToDo list should be accessible at "
+"``http://www.mypage.com/todo``"
+msgstr ""
+
+#: ../../tutorial_app.rst:549
+msgid "Final Words"
+msgstr ""
+
+#: ../../tutorial_app.rst:551
+msgid ""
+"Now we are at the end of this introduction and tutorial to Bottle. We "
+"learned about the basic concepts of Bottle and wrote a first application "
+"using the Bottle framework. In addition to that, we saw how to adapt Bottle "
+"for large tasks and serve Bottle through an Apache web server with mod_wsgi."
+msgstr ""
+
+#: ../../tutorial_app.rst:553
+msgid ""
+"As said in the introduction, this tutorial is not showing all shades and "
+"possibilities of Bottle. What we skipped here is e.g. receiving file objects"
+" and streams and how to handle authentication data. Furthermore, we did not "
+"show how templates can be called from within another template. For an "
+"introduction into those points, please refer to the full `Bottle "
+"documentation`_ ."
+msgstr ""
+
+#: ../../tutorial_app.rst:556
+msgid "Complete Example Listing"
+msgstr ""
+
+#: ../../tutorial_app.rst:558
+msgid ""
+"As the ToDo list example was developed piece by piece, here is the complete "
+"listing:"
+msgstr ""
+
+#: ../../tutorial_app.rst:560
+msgid "Main code for the application ``todo.py``::"
+msgstr ""
+
+#: ../../tutorial_app.rst:675
+msgid "Template ``make_table.tpl``::"
+msgstr ""
+
+#: ../../tutorial_app.rst:689
+msgid "Template ``edit_task.tpl``::"
+msgstr ""
+
+#: ../../tutorial_app.rst:704
+msgid "Template ``new_task.tpl``::"
+msgstr ""
