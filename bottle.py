@@ -1499,7 +1499,7 @@ class BaseResponse(object):
         return self._status_code
 
     def _set_status(self, status):
-        if isinstance(status, int):
+        if isinstance(status, (int, long)):
             code, status = status, _HTTP_STATUS_LINES.get(status)
         elif ' ' in status:
             status = status.strip()
