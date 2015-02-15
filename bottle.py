@@ -840,6 +840,19 @@ class Bottle(object):
     def default_error_handler(self, res):
         return tob(template(ERROR_PAGE_TEMPLATE, e=res))
 
+    def _inner_handle(self, environ):
+        try:
+            route, args = self.router.match(environ)
+            environ['route.handle'] = route
+            environ['bottle.route'] = route
+            environ['route.url_args'] = args
+            return route.call(**args)
+        except HTTPResponse:
+            return _e()
+        except RouteReset:
+            route.reset()
+            return self._inner_handle(environ)
+
     def _handle(self, environ):
         path = environ['bottle.raw_path'] = environ['PATH_INFO']
         if py3k:
@@ -849,30 +862,27 @@ class Bottle(object):
                 return HTTPError(400, 'Invalid path string. Expected UTF-8')
 
         try:
+            out = exc = None
             environ['bottle.app'] = self
             request.bind(environ)
             response.bind()
-            try:
-                self.trigger_hook('before_request')
-                route, args = self.router.match(environ)
-                environ['route.handle'] = route
-                environ['bottle.route'] = route
-                environ['route.url_args'] = args
-                return route.call(**args)
-            finally:
-                self.trigger_hook('after_request')
-        except HTTPResponse:
-            return _e()
-        except RouteReset:
-            route.reset()
-            return self._handle(environ)
+            self.trigger_hook('before_request')
+            out = self._inner_handle(environ)
+            return out
         except (KeyboardInterrupt, SystemExit, MemoryError):
+            exc = _e()
             raise
         except Exception:
+            exc = _e()
             if not self.catchall: raise
             stacktrace = format_exc()
             environ['wsgi.errors'].write(stacktrace)
-            return HTTPError(500, "Internal Server Error", _e(), stacktrace)
+            out = HTTPError(500, "Internal Server Error", exc, stacktrace)
+            return out
+        finally:
+            if isinstance(out, HTTPResponse):
+                out.apply(response)
+            self.trigger_hook('after_request', exc)
 
     def _cast(self, out, peek=None):
         """ Try to convert the parameter into something WSGI compatible and set
