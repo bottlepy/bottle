@@ -250,7 +250,7 @@ class TestRouteDecorator(ServerTestBase):
         def hook():
             bottle.request.environ['hooktest'] = 'before'
         @bottle.hook('after_request')
-        def hook():
+        def hook(*args, **kwargs):
             bottle.response.headers['X-Hook'] = 'after'
         self.assertBody('before', '/test')
         self.assertHeader('X-Hook', 'after', '/test')
