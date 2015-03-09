@@ -290,7 +290,7 @@ By using only the routes we know so far it is possible, but may be quite tricky.
 
 The basic statement for a dynamic route looks like this::
 
-    @route('/myroute/:something')
+    @route('/myroute/<something>')
 
 The key point here is the colon. This tells Bottle to accept for ``:something`` any string up to the next slash. Furthermore, the value of ``something`` will be passed to the function assigned to that route, so the data can be processed within the function.
 
@@ -371,7 +371,7 @@ So, just to demonstrate that, let's assume that all single items in our ToDo lis
 
 As said above, the solution is a regular expression::
 
-    @route('/item:item#[0-9]+#')
+    @route('/item<item:re:[0-9]+>')
     def show_item(item):
         conn = sqlite3.connect('todo.db')
         c = conn.cursor()
@@ -383,7 +383,7 @@ As said above, the solution is a regular expression::
         else:
             return 'Task: %s' %result[0]
 
-Of course, this example is somehow artificially constructed - it would be easier to use a plain dynamic route only combined with a validation. Nevertheless, we want to see how regular expression routes work: the line ``@route(/item:item_#[0-9]+#)`` starts like a normal route, but the part surrounded by # is interpreted as a regular expression, which is the dynamic part of the route. So in this case, we want to match any digit between 0 and 9. The following function "show_item" just checks whether the given item is present in the database or not. In case it is present, the corresponding text of the task is returned. As you can see, only the regular expression part of the route is passed forward. Furthermore, it is always forwarded as a string, even if it is a plain integer number, like in this case.
+Of course, this example is somehow artificially constructed - it would be easier to use a plain dynamic route only combined with a validation. Nevertheless, we want to see how regular expression routes work: the line ``@route(/item<item_:re:[0-9]+>)`` starts like a normal route, but the part surrounded by # is interpreted as a regular expression, which is the dynamic part of the route. So in this case, we want to match any digit between 0 and 9. The following function "show_item" just checks whether the given item is present in the database or not. In case it is present, the corresponding text of the task is returned. As you can see, only the regular expression part of the route is passed forward. Furthermore, it is always forwarded as a string, even if it is a plain integer number, like in this case.
 
 
 .. rubric:: Returning Static Files
@@ -405,7 +405,7 @@ There may be cases where you do not want your application to generate the output
 
 So, let's assume we want to return the data generated in the regular expression route example as a JSON object. The code looks like this::
 
-    @route('/json:json#[0-9]+#')
+    @route('/json<json:re:[0-9]+>')
     def show_json(json):
         conn = sqlite3.connect('todo.db')
         c = conn.cursor()
@@ -624,7 +624,7 @@ Main code for the application ``todo.py``::
 
             return template('edit_task', old = cur_data, no = no)
 
-    @route('/item:item#[0-9]+#')
+    @route('/item<item:re:[0-9]+>')
     def show_item(item):
 
             conn = sqlite3.connect('todo.db')
@@ -643,7 +643,7 @@ Main code for the application ``todo.py``::
 
         static_file('help.html', root='.')
 
-    @route('/json:json#[0-9]+#')
+    @route('/json<json:re:[0-9]+>')
     def show_json(json):
 
         conn = sqlite3.connect('todo.db')
