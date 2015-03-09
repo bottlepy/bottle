@@ -2,7 +2,12 @@
 Tests & demonstrates various OO approaches to routes
 """
 import unittest
-from io import BytesIO
+import sys
+
+if sys.version_info >= (3, 0, 0):
+    from io import BytesIO
+else:
+    from StringIO import StringIO as BytesIO
 
 __author__ = 'atc'
 
