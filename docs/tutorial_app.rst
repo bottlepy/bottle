@@ -45,7 +45,7 @@ We will end up with an application with the following pages and functionality:
 
  * start page ``http://localhost:8080/todo``
  * adding new items to the list: ``http://localhost:8080/new``
- * page for editing items: ``http://localhost:8080/edit/:no``
+ * page for editing items: ``http://localhost:8080/edit/<no:int>``
  * validating data assigned by dynamic routes with the @validate decorator
  * catching errors
 
@@ -294,11 +294,11 @@ The basic statement for a dynamic route looks like this::
 
 The key point here is the colon. This tells Bottle to accept for ``:something`` any string up to the next slash. Furthermore, the value of ``something`` will be passed to the function assigned to that route, so the data can be processed within the function.
 
-For our ToDo list, we will create a route ``@route('/edit/:no)``, where ``no`` is the id of the item to edit.
+For our ToDo list, we will create a route ``@route('/edit/<no:int>)``, where ``no`` is the id (integer) of the item to edit.
 
 The code looks like this::
 
-    @route('/edit/:no', method='GET')
+    @route('/edit/<no:int>', method='GET')
     def edit_item(no):
 
         if request.GET.get('save','').strip():
@@ -324,7 +324,7 @@ The code looks like this::
 
             return template('edit_task', old=cur_data, no=no)
 
-It is basically pretty much the same what we already did above when adding new items, like using ``GET`` data etc. The main addition here is using the dynamic route ``:no``, which here passes the number to the corresponding function. As you can see, ``no`` is used within the function to access the right row of data within the database.
+It is basically pretty much the same what we already did above when adding new items, like using ``GET`` data etc. The main addition here is using the dynamic route ``<no:int>``, which here passes the number to the corresponding function. As you can see, ``no`` is integer ID and used within the function to access the right row of data within the database.
 
 The template ``edit_task.tpl`` called within the function looks like this::
 
@@ -354,14 +354,14 @@ For those cases, Bottle offers the ``@validate`` decorator, which validates the 
 
     from bottle import route, run, debug, template, request, validate
     ...
-    @route('/edit/:no', method='GET')
+    @route('/edit/<no:int>', method='GET')
     @validate(no=int)
     def edit_item(no):
     ...
 
 At first, we imported ``validate`` from the Bottle framework, than we apply the @validate-decorator. Right here, we validate if ``no`` is an integer. Basically, the validation works with all types of data like floats, lists etc.
 
-Save the code and call the page again using a "403 forbidden" value for ``:no``, e.g. a float. You will receive not an exception, but a "403 - Forbidden" error, saying that an integer was expected.
+Save the code and call the page again using a "403 forbidden" value for ``<no:int>``, e.g. a float. You will receive not an exception, but a "403 - Forbidden" error, saying that an integer was expected.
 
 .. rubric:: Dynamic Routes Using Regular Expressions
 
@@ -597,7 +597,7 @@ Main code for the application ``todo.py``::
         else:
             return template('new_task.tpl')
 
-    @route('/edit/:no', method='GET')
+    @route('/edit/<no:int>', method='GET')
     def edit_item(no):
 
         if request.GET.get('save','').strip():
