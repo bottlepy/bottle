@@ -739,6 +739,7 @@ class Bottle(object):
         for route in routes: route.reset()
         if DEBUG:
             for route in routes: route.prepare()
+
         self.trigger_hook('app_reset')
 
     def close(self):
@@ -3127,19 +3128,42 @@ class BaseTemplate(object):
         self.source and/or self.filename are set. Both are strings.
         The lookup, encoding and settings parameters are stored as instance
         variables.
-        The lookup parameter stores a list containing directory paths.
+
+        The lookup parameter is a list containing directory paths or a 
+        function returning a full path or a possibly empty generator for a full path.
+        The empty generator allows to guard against recursive inclusions.
+        >>> class lookup:
+        >>>     def __init__(self):
+        >>>         self.chain = []
+        >>>     def __call__(self,name):
+        >>>         if name not in self.chain:
+        >>>             self.chain.append(name)
+        >>>             yield self._path(name)
+        >>>             del self.chain[-1]
+        >>>     def _path(self,name):
+        >>>         ...
+
+
         The encoding parameter should be used to decode byte strings or files.
         The settings parameter contains a dict for engine-specific settings.
         """
         self.name = name
         self.source = source.read() if hasattr(source, 'read') else source
         self.filename = source.filename if hasattr(source, 'filename') else None
-        self.lookup = [os.path.abspath(x) for x in lookup] if lookup else []
+        try: self.lookup = [os.path.abspath(x) for x in lookup] if lookup else []
+        except TypeError: self.lookup = lookup
         self.encoding = encoding
         self.settings = self.settings.copy() # Copy from class variable
         self.settings.update(settings) # Apply
+        self.cleanup = None
         if not self.source and self.name:
-            self.filename = self.search(self.name, self.lookup)
+            try: #whether callable
+                self.filename = self.lookup(self.name)
+            except TypeError: 
+                self.filename = self.search(self.name, self.lookup)
+            try: #whether lookup returned generator
+                self.cleanup, self.filename = self.filename, next(self.filename)
+            except (TypeError,AttributeError): pass #but forward StopIteration
             if not self.filename:
                 raise TemplateError('Template %s not found.' % repr(name))
         if not self.source and not self.filename:
@@ -3259,8 +3283,9 @@ class Jinja2Template(BaseTemplate):
 
 class SimpleTemplate(BaseTemplate):
 
+    overrides = {} #callable lookup can update env after defaults and parent env
+
     def prepare(self, escape_func=html_escape, noescape=False, syntax=None, **ka):
-        self.cache = {}
         enc = self.encoding
         self._str = lambda x: touni(x, enc)
         self._escape = lambda x: escape_func(touni(x, enc))
@@ -3294,13 +3319,17 @@ class SimpleTemplate(BaseTemplate):
     def _include(self, _env, _name=None, **kwargs):
         env = _env.copy()
         env.update(kwargs)
-        if _name not in self.cache:
-            self.cache[_name] = self.__class__(name=_name, lookup=self.lookup)
-        return self.cache[_name].execute(env['_stdout'], env)
+        try:
+            tpl = get_tpl(_name, template_adapter=self.__class__, template_lookup=self.lookup)
+            env = tpl.execute(env['_stdout'], env)
+        except StopIteration:#from get_tpl
+            pass
+        return env
 
     def execute(self, _stdout, kwargs):
         env = self.defaults.copy()
         env.update(kwargs)
+        env.update(self.overrides)
         env.update({'_stdout': _stdout, '_printlist': _stdout.extend,
             'include': functools.partial(self._include, env),
             'rebase': functools.partial(self._rebase, env), '_rebase': None,
@@ -3311,7 +3340,11 @@ class SimpleTemplate(BaseTemplate):
             subtpl, rargs = env.pop('_rebase')
             rargs['base'] = ''.join(_stdout) #copy stdout
             del _stdout[:] # clear stdout
-            return self._include(env, subtpl, **rargs)
+            env = self._include(env, subtpl, **rargs)
+        if self.cleanup:
+            try: #to do second part of lookup with yield
+                next(self.cleanup)
+            except StopIteration: pass
         return env
 
     def render(self, *args, **kwargs):
@@ -3505,7 +3538,7 @@ class StplParser(object):
         self.code_buffer.append(code)
 
 
-def template(*args, **kwargs):
+def get_tpl(*args, **kwargs):
     """
     Get a rendered template as a string iterator.
     You can use a name, a filename or a template string as first parameter.
@@ -3519,16 +3552,28 @@ def template(*args, **kwargs):
     if tplid not in TEMPLATES or DEBUG:
         settings = kwargs.pop('template_settings', {})
         if isinstance(tpl, adapter):
-            TEMPLATES[tplid] = tpl
-            if settings: TEMPLATES[tplid].prepare(**settings)
+            TEMPLATES[tplid] = res = tpl
+            if settings: res.prepare(**settings)
         elif "\n" in tpl or "{" in tpl or "%" in tpl or '$' in tpl:
-            TEMPLATES[tplid] = adapter(source=tpl, lookup=lookup, **settings)
+            TEMPLATES[tplid] = res = adapter(source=tpl, lookup=lookup, **settings)
         else:
-            TEMPLATES[tplid] = adapter(name=tpl, lookup=lookup, **settings)
-    if not TEMPLATES[tplid]:
-        abort(500, 'Template (%s) not found' % tpl)
+            TEMPLATES[tplid] = res = adapter(name=tpl, lookup=lookup, **settings)
+    else:
+        res = TEMPLATES[tplid]
+        if callable(lookup):# call lookup also for cached templates
+            try: #.. to guard against infinite recursion
+                filename = lookup(tpl)
+                cleanup, filename = filename, next(filename)
+                res.cleanup = cleanup
+            except TypeError: pass #and forward StopIteration exception
+    return res
+
+def template(*args, **kwargs):
     for dictarg in args[1:]: kwargs.update(dictarg)
-    return TEMPLATES[tplid].render(kwargs)
+    tpl = get_tpl(*args, **kwargs)
+    if not tpl:
+        abort(500, 'Template (%s) not found' % args[0])
+    return tpl.render(**kwargs)
 
 mako_template = functools.partial(template, template_adapter=MakoTemplate)
 cheetah_template = functools.partial(template, template_adapter=CheetahTemplate)

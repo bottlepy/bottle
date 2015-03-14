@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 import unittest
-from bottle import SimpleTemplate, TemplateError, view, template, touni, tob, html_quote
+from bottle import SimpleTemplate, TemplateError, view, template, touni, tob, html_quote, BaseTemplate
 import re
 import traceback
+import os.path
 
 class TestSimpleTemplate(unittest.TestCase):
     def assertRenders(self, tpl, to, *args, **vars):
@@ -24,6 +25,32 @@ class TestSimpleTemplate(unittest.TestCase):
     def test_name(self):
         t = SimpleTemplate(name='stpl_simple', lookup=['./views/'])
         self.assertRenders(t, 'start var end\n', var='var')
+
+    def test_lookup_func(self):
+        def lookup(name):
+            BaseTemplate.defaults.update({'for_'+name:name})
+            SimpleTemplate.overrides.update({'after':'after '+name})
+            return os.path.abspath(os.path.join('./views',name,'en.tpl'))
+        res=template('t_3',template_lookup=lookup)
+        self.assertEqual(res, 'Here t_3.\nt_3 gets none.\nafter t_3\n')
+        res=template("%include('t_3')\n%include('t_3')",template_lookup=lookup)
+        self.assertEqual(res, ''.join(2*['Here t_3.\nt_3 gets none.\nafter t_3\n']))
+
+    def test_lookup_genfunc(self):
+        chain=[]
+        def lookup(name):
+            if name not in chain:
+                chain.append(name)
+                BaseTemplate.defaults.update({'for_'+name:name})
+                SimpleTemplate.overrides.update({'after':'after '+name})
+                yield os.path.abspath(os.path.join('./views',name,'en.tpl'))
+                del chain[-1]
+        res=template('t_1',template_lookup=lookup)
+        self.assertEqual(res,
+                'Here t_1.\nt_1 gets t_2:\nHere t_2.\nt_2 gets t_1:\nafter t_2\nt_1 gets t_3:\nHere t_3.\nt_3 gets none.\nafter t_3\nafter t_1\n')
+        res=template("%include('t_1')\n%include('t_1')",template_lookup=lookup)
+        self.assertEqual(res,
+                ''.join(2*['Here t_1.\nt_1 gets t_2:\nHere t_2.\nt_2 gets t_1:\nafter t_2\nt_1 gets t_3:\nHere t_3.\nt_3 gets none.\nafter t_3\nafter t_1\n']))
 
     def test_unicode(self):
         self.assertRenders('start {{var}} end', 'start äöü end', var=touni('äöü'))
