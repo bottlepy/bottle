@@ -17,7 +17,7 @@ How Plugins Work: The Basics
 
 The plugin API builds on the concept of `decorators <http://docs.python.org/glossary.html#term-decorator>`_. To put it briefly, a plugin is a decorator applied to every single route callback of an application.
 
-Of course, this is just a simplification. Plugins can do a lot more than just decorating route callbacks, but it is a good starting point. Lets have a look at some code::
+This is just a simplification. Plugins can do a lot more than just decorating route callbacks, but it is a good starting point. Lets have a look at some code::
 
     from bottle import response, install
     import time
