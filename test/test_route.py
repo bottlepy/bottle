@@ -51,7 +51,6 @@ class TestRoute(unittest.TestCase):
             return pretty_dump_wrapper
 
         # multiple decorators
-        @bottle.get("somepath")
         @d2(filename='foo', table='bar')
         @pretty_dump
         def x(a, b):
