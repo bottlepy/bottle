@@ -548,7 +548,7 @@ class Route(object):
             func = attributes[0].cell_contents
 
             # in case of decorators with multiple arguments
-            if not isinstance(func, FunctionType) and func is not None:
+            if not isinstance(func, FunctionType):
                 # pick first FunctionType instance from multiple arguments
                 func = filter(
                     lambda x: isinstance(x, FunctionType),
