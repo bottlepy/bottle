@@ -18,3 +18,7 @@ install:
   - bash test/travis_setup.sh
 
 script: python${PY:-} test/testall.py fast
+
+notifications:
+  irc: "irc.freenode.org#bottlepy"
+  on_success: "never"
