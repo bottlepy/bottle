@@ -45,7 +45,7 @@ We will end up with an application with the following pages and functionality:
 
  * start page ``http://localhost:8080/todo``
  * adding new items to the list: ``http://localhost:8080/new``
- * page for editing items: ``http://localhost:8080/edit/:no``
+ * page for editing items: ``http://localhost:8080/edit/<no:int>``
  * validating data assigned by dynamic routes with the @validate decorator
  * catching errors
 
@@ -290,15 +290,15 @@ By using only the routes we know so far it is possible, but may be quite tricky.
 
 The basic statement for a dynamic route looks like this::
 
-    @route('/myroute/:something')
+    @route('/myroute/<something>')
 
 The key point here is the colon. This tells Bottle to accept for ``:something`` any string up to the next slash. Furthermore, the value of ``something`` will be passed to the function assigned to that route, so the data can be processed within the function.
 
-For our ToDo list, we will create a route ``@route('/edit/:no)``, where ``no`` is the id of the item to edit.
+For our ToDo list, we will create a route ``@route('/edit/<no:int>)``, where ``no`` is the id (integer) of the item to edit.
 
 The code looks like this::
 
-    @route('/edit/:no', method='GET')
+    @route('/edit/<no:int>', method='GET')
     def edit_item(no):
 
         if request.GET.get('save','').strip():
@@ -324,7 +324,7 @@ The code looks like this::
 
             return template('edit_task', old=cur_data, no=no)
 
-It is basically pretty much the same what we already did above when adding new items, like using ``GET`` data etc. The main addition here is using the dynamic route ``:no``, which here passes the number to the corresponding function. As you can see, ``no`` is used within the function to access the right row of data within the database.
+It is basically pretty much the same what we already did above when adding new items, like using ``GET`` data etc. The main addition here is using the dynamic route ``<no:int>``, which here passes the number to the corresponding function. As you can see, ``no`` is integer ID and used within the function to access the right row of data within the database.
 
 The template ``edit_task.tpl`` called within the function looks like this::
 
@@ -354,14 +354,14 @@ For those cases, Bottle offers the ``@validate`` decorator, which validates the 
 
     from bottle import route, run, debug, template, request, validate
     ...
-    @route('/edit/:no', method='GET')
+    @route('/edit/<no:int>', method='GET')
     @validate(no=int)
     def edit_item(no):
     ...
 
 At first, we imported ``validate`` from the Bottle framework, than we apply the @validate-decorator. Right here, we validate if ``no`` is an integer. Basically, the validation works with all types of data like floats, lists etc.
 
-Save the code and call the page again using a "403 forbidden" value for ``:no``, e.g. a float. You will receive not an exception, but a "403 - Forbidden" error, saying that an integer was expected.
+Save the code and call the page again using a "403 forbidden" value for ``<no:int>``, e.g. a float. You will receive not an exception, but a "403 - Forbidden" error, saying that an integer was expected.
 
 .. rubric:: Dynamic Routes Using Regular Expressions
 
@@ -371,7 +371,7 @@ So, just to demonstrate that, let's assume that all single items in our ToDo lis
 
 As said above, the solution is a regular expression::
 
-    @route('/item:item#[0-9]+#')
+    @route('/item<item:re:[0-9]+>')
     def show_item(item):
         conn = sqlite3.connect('todo.db')
         c = conn.cursor()
@@ -383,7 +383,7 @@ As said above, the solution is a regular expression::
         else:
             return 'Task: %s' %result[0]
 
-This example is somehow artificially constructed - it would be easier to use a plain dynamic route only combined with a validation. Nevertheless, we want to see how regular expression routes work: the line ``@route(/item:item_#[0-9]+#)`` starts like a normal route, but the part surrounded by # is interpreted as a regular expression, which is the dynamic part of the route. So in this case, we want to match any digit between 0 and 9. The following function "show_item" just checks whether the given item is present in the database or not. In case it is present, the corresponding text of the task is returned. As you can see, only the regular expression part of the route is passed forward. Furthermore, it is always forwarded as a string, even if it is a plain integer number, like in this case.
+This example is somehow artificially constructed - it would be easier to use a plain dynamic route only combined with a validation. Nevertheless, we want to see how regular expression routes work: the line ``@route(/item<item_:re:[0-9]+>)`` starts like a normal route, but the part surrounded by # is interpreted as a regular expression, which is the dynamic part of the route. So in this case, we want to match any digit between 0 and 9. The following function "show_item" just checks whether the given item is present in the database or not. In case it is present, the corresponding text of the task is returned. As you can see, only the regular expression part of the route is passed forward. Furthermore, it is always forwarded as a string, even if it is a plain integer number, like in this case.
 
 
 .. rubric:: Returning Static Files
@@ -405,7 +405,7 @@ There may be cases where you do not want your application to generate the output
 
 So, let's assume we want to return the data generated in the regular expression route example as a JSON object. The code looks like this::
 
-    @route('/json:json#[0-9]+#')
+    @route('/json<json:re:[0-9]+>')
     def show_json(json):
         conn = sqlite3.connect('todo.db')
         c = conn.cursor()
@@ -560,7 +560,7 @@ As the ToDo list example was developed piece by piece, here is the complete list
 Main code for the application ``todo.py``::
 
     import sqlite3
-    from bottle import route, run, debug, template, request, validate, static_file, error
+    from bottle import route, run, debug, template, request, static_file, error
 
     # only needed when you run Bottle on mod_wsgi
     from bottle import default_app
@@ -597,8 +597,7 @@ Main code for the application ``todo.py``::
         else:
             return template('new_task.tpl')
 
-    @route('/edit/:no', method='GET')
-    @validate(no=int)
+    @route('/edit/<no:int>', method='GET')
     def edit_item(no):
 
         if request.GET.get('save','').strip():
@@ -625,7 +624,7 @@ Main code for the application ``todo.py``::
 
             return template('edit_task', old = cur_data, no = no)
 
-    @route('/item:item#[0-9]+#')
+    @route('/item<item:re:[0-9]+>')
     def show_item(item):
 
             conn = sqlite3.connect('todo.db')
@@ -644,7 +643,7 @@ Main code for the application ``todo.py``::
 
         static_file('help.html', root='.')
 
-    @route('/json:json#[0-9]+#')
+    @route('/json<json:re:[0-9]+>')
     def show_json(json):
 
         conn = sqlite3.connect('todo.db')
