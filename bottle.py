@@ -1177,8 +1177,12 @@ class BaseRequest(object):
             
     @DictProperty('environ', 'bottle.request.body', read_only=True)
     def _body(self):
+        try:
+          read_func = self.environ['wsgi.input'].read
+        except KeyError:
+          self.environ['wsgi.input'] = BytesIO()
+          return self.environ['wsgi.input']
         body_iter = self._iter_chunked if self.chunked else self._iter_body
-        read_func = self.environ.get('wsgi.input', BytesIO()).read
         body, body_size, is_temp_file = BytesIO(), 0, False
         for part in body_iter(read_func, self.MEMFILE_MAX):
             body.write(part)
