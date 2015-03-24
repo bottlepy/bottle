@@ -28,3 +28,23 @@ class TestRoute(unittest.TestCase):
         self.assertEqual(route.get_undecorated_callback(), x)
         self.assertEqual(set(route.get_callback_args()), set(['a', 'b']))
 
+    def test_callback_inspection_multiple_args(self):
+        # decorator with argument, modifying kwargs
+        def d2(f="1"):
+            def d(fn):
+                def w(*args, **kwargs):
+                    # modification of kwargs WITH the decorator argument
+                    # is necessary requirement for the error
+                    kwargs["a"] = f
+                    return fn(*args, **kwargs)
+                return w
+            return d
+
+        @d2(f='foo')
+        def x(a, b):
+            return
+
+        route = bottle.Route(None, None, None, x)
+
+        # triggers the "TypeError: 'foo' is not a Python function"
+        self.assertEqual(set(route.get_callback_args()), set(['a', 'b']))

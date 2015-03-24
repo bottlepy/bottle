@@ -110,5 +110,5 @@ the unmodified library. In all other cases please ask first.
 
 .. rubric:: Footnotes
 
-.. [1] Usage of the template or server adapter classes of course requires the corresponding template or server modules.
+.. [1] Usage of the template or server adapter classes requires the corresponding template or server modules.
 
