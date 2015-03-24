@@ -40,7 +40,7 @@ if __name__ == '__main__':
             import eventlet; eventlet.monkey_patch()
 
 import base64, cgi, email.utils, functools, hmac, imp, itertools, mimetypes,\
-        os, re, subprocess, sys, tempfile, threading, time, warnings
+        os, re, sys, tempfile, threading, time, warnings
 
 from datetime import date as datedate, datetime, timedelta
 from tempfile import TemporaryFile
@@ -2986,6 +2986,7 @@ def run(app=None, server='wsgiref', host='127.0.0.1', port=8080,
      """
     if NORUN: return
     if reloader and not os.environ.get('BOTTLE_CHILD'):
+        import subprocess
         lockfile = None
         try:
             fd, lockfile = tempfile.mkstemp(prefix='bottle.', suffix='.lock')
