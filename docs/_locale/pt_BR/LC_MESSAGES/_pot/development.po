@@ -1,0 +1,434 @@
+# 
+msgid ""
+msgstr ""
+"Project-Id-Version: Bottle 0.13-dev\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2015-01-22 16:45-0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../development.rst:2
+msgid "Developer Notes"
+msgstr ""
+
+#: ../../development.rst:4
+msgid ""
+"This document is intended for developers and package maintainers interested "
+"in the bottle development and release workflow. If you want to contribute, "
+"you are just right!"
+msgstr ""
+
+#: ../../development.rst:8
+msgid "Get involved"
+msgstr ""
+
+#: ../../development.rst:10
+msgid ""
+"There are several ways to join the community and stay up to date. Here are "
+"some of them:"
+msgstr ""
+
+#: ../../development.rst:12
+msgid ""
+"**Mailing list**: Join our mailing list by sending an email to "
+"`bottlepy+subscribe@googlegroups.com "
+"<mailto:bottlepy+subscribe@googlegroups.com>`_ (no google account required)."
+msgstr ""
+
+#: ../../development.rst:13
+msgid ""
+"**Twitter**: `Follow us on Twitter <https://twitter.com/bottlepy>`_ or "
+"search for the `#bottlepy <https://twitter.com/#!/search/%23bottlepy>`_ tag."
+msgstr ""
+
+#: ../../development.rst:14
+msgid ""
+"**IRC**: Join `#bottlepy on irc.freenode.net "
+"<irc://irc.freenode.net/bottlepy>`_ or use the `web chat interface "
+"<http://webchat.freenode.net/?channels=bottlepy>`_."
+msgstr ""
+
+#: ../../development.rst:15
+msgid ""
+"**Google plus**: We sometimes `blog about Bottle, releases and technical "
+"stuff "
+"<https://plus.google.com/b/104025895326575643538/104025895326575643538/posts>`_"
+" on our Google+ page."
+msgstr ""
+
+#: ../../development.rst:19
+msgid "Get the Sources"
+msgstr ""
+
+#: ../../development.rst:21
+msgid ""
+"The bottle `development repository <https://github.com/bottlepy/bottle>`_ "
+"and the `issue tracker <https://github.com/bottlepy/bottle/issues>`_ are "
+"both hosted at `github <https://github.com/bottlepy/bottle>`_. If you plan "
+"to contribute, it is a good idea to create an account there and fork the "
+"main repository. This way your changes and ideas are visible to other "
+"developers and can be discussed openly. Even without an account, you can "
+"clone the repository or just download the latest development version as a "
+"source archive."
+msgstr ""
+
+#: ../../development.rst:23
+msgid "**git:** ``git clone git://github.com/bottlepy/bottle.git``"
+msgstr ""
+
+#: ../../development.rst:24
+msgid "**git/https:** ``git clone https://github.com/bottlepy/bottle.git``"
+msgstr ""
+
+#: ../../development.rst:25
+msgid ""
+"**Download:** Development branch as `tar archive "
+"<http://github.com/bottlepy/bottle/tarball/master>`_ or `zip file "
+"<http://github.com/bottlepy/bottle/zipball/master>`_."
+msgstr ""
+
+#: ../../development.rst:29
+msgid "Releases and Updates"
+msgstr ""
+
+#: ../../development.rst:31
+msgid ""
+"Bottle is released at irregular intervals and distributed through `PyPI "
+"<http://pypi.python.org/pypi/bottle>`_. Release candidates and bugfix-"
+"revisions of outdated releases are only available from the git repository "
+"mentioned above. Some Linux distributions may offer packages for outdated "
+"releases, though."
+msgstr ""
+
+#: ../../development.rst:33
+msgid ""
+"The Bottle version number splits into three parts "
+"(**major.minor.revision**). These are *not* used to promote new features but"
+" to indicate important bug-fixes and/or API changes. Critical bugs are fixed"
+" in at least the two latest minor releases and announced in all available "
+"channels (mailinglist, twitter, github). Non-critical bugs or features are "
+"not guaranteed to be backported. This may change in the future, through."
+msgstr ""
+
+#: ../../development.rst:36
+msgid "Major Release (x.0)"
+msgstr ""
+
+#: ../../development.rst:36
+msgid ""
+"The major release number is increased on important milestones or updates "
+"that completely break backward compatibility. You probably have to work over"
+" your entire application to use a new release. These releases are very rare,"
+" through."
+msgstr ""
+
+#: ../../development.rst:39
+msgid "Minor Release (x.y)"
+msgstr ""
+
+#: ../../development.rst:39
+msgid ""
+"The minor release number is increased on updates that change the API or "
+"behaviour in some way. You might get some depreciation warnings any may have"
+" to tweak some configuration settings to restore the old behaviour, but in "
+"most cases these changes are designed to be backward compatible for at least"
+" one minor release. You should update to stay up do date, but don't have to."
+" An exception is 0.8, which *will* break backward compatibility hard. (This "
+"is why 0.7 was skipped). Sorry about that."
+msgstr ""
+
+#: ../../development.rst:42
+msgid "Revision (x.y.z)"
+msgstr ""
+
+#: ../../development.rst:42
+msgid ""
+"The revision number is increased on bug-fixes and other patches that do not "
+"change the API or behaviour. You can safely update without editing your "
+"application code. In fact, you really should as soon as possible, because "
+"important security fixes are released this way."
+msgstr ""
+
+#: ../../development.rst:46
+msgid "Pre-Release Versions"
+msgstr ""
+
+#: ../../development.rst:45
+msgid ""
+"Release candidates are marked by an ``rc`` in their revision number. These "
+"are API stable most of the time and open for testing, but not officially "
+"released yet. You should not use these for production."
+msgstr ""
+
+#: ../../development.rst:49
+msgid "Repository Structure"
+msgstr ""
+
+#: ../../development.rst:51
+msgid "The source repository is structured as follows:"
+msgstr ""
+
+#: ../../development.rst:54
+msgid "``master`` branch"
+msgstr ""
+
+#: ../../development.rst:54
+msgid ""
+"This is the integration, testing and development branch. All changes that "
+"are planned to be part of the next release are merged and tested here."
+msgstr ""
+
+#: ../../development.rst:57
+msgid "``release-x.y`` branches"
+msgstr ""
+
+#: ../../development.rst:57
+msgid ""
+"As soon as the master branch is (almost) ready for a new release, it is "
+"branched into a new release branch. This \"release candidate\" is feature-"
+"frozen but may receive bug-fixes and last-minute changes until it is "
+"considered production ready and officially released. From that point on it "
+"is called a \"support branch\" and still receives bug-fixes, but only "
+"important ones. The revision number is increased on each push to these "
+"branches, so you can keep up with important changes."
+msgstr ""
+
+#: ../../development.rst:60
+msgid "``bugfix_name-x.y`` branches"
+msgstr ""
+
+#: ../../development.rst:60
+msgid ""
+"These branches are only temporary and used to develop and share non-trivial "
+"bug-fixes for existing releases. They are merged into the corresponding "
+"release branch and deleted soon after that."
+msgstr ""
+
+#: ../../development.rst:64
+msgid "Feature branches"
+msgstr ""
+
+#: ../../development.rst:63
+msgid ""
+"All other branches are feature branches. These are based on the master "
+"branch and only live as long as they are still active and not merged back "
+"into ``master``."
+msgstr ""
+
+#: ../../development.rst:67
+msgid "What does this mean for a developer?"
+msgstr ""
+
+#: ../../development.rst:68
+msgid ""
+"If you want to add a feature, create a new branch from ``master``. If you "
+"want to fix a bug, branch ``release-x.y`` for each affected release. Please "
+"use a separate branch for each feature or bug to make integration as easy as"
+" possible. Thats all. There are git workflow examples at the bottom of this "
+"page."
+msgstr ""
+
+#: ../../development.rst:70
+msgid ""
+"Oh, and never ever change the release number. We'll do that on integration. "
+"You never know in which order we pull pending requests anyway :)"
+msgstr ""
+
+#: ../../development.rst:74
+msgid "What does this mean for a maintainer ?"
+msgstr ""
+
+#: ../../development.rst:75
+msgid ""
+"Watch the tags (and the mailing list) for bug-fixes and new releases. If you"
+" want to fetch a specific release from the git repository, trust the tags, "
+"not the branches. A branch may contain changes that are not released yet, "
+"but a tag marks the exact commit which changed the version number."
+msgstr ""
+
+#: ../../development.rst:79
+msgid "Submitting Patches"
+msgstr ""
+
+#: ../../development.rst:81
+msgid ""
+"The best way to get your changes integrated into the main development branch"
+" is to fork the main repository at github, create a new feature-branch, "
+"apply your changes and send a pull-request. Further down this page is a "
+"small collection of git workflow examples that may guide you. Submitting "
+"git-compatible patches to the mailing list is fine too. In any case, please "
+"follow some basic rules:"
+msgstr ""
+
+#: ../../development.rst:83
+msgid ""
+"**Documentation:** Tell us what your patch does. Comment your code. If you "
+"introduced a new feature, add to the documentation so others can learn about"
+" it."
+msgstr ""
+
+#: ../../development.rst:84
+msgid ""
+"**Test:** Write tests to prove that your code works as expected and does not"
+" break anything. If you fixed a bug, write at least one test-case that "
+"triggers the bug. Make sure that all tests pass before you submit a patch."
+msgstr ""
+
+#: ../../development.rst:85
+msgid ""
+"**One patch at a time:** Only fix one bug or add one feature at a time. "
+"Design your patches so that they can be applyed as a whole. Keep your "
+"patches clean, small and focused."
+msgstr ""
+
+#: ../../development.rst:86
+msgid ""
+"**Sync with upstream:** If the ``upstream/master`` branch changed while you "
+"were working on your patch, rebase or pull to make sure that your patch "
+"still applies without conflicts."
+msgstr ""
+
+#: ../../development.rst:90
+msgid "Building the Documentation"
+msgstr ""
+
+#: ../../development.rst:92
+msgid ""
+"You need a recent version of Sphinx to build the documentation. The "
+"recommended way is to install :command:`virtualenv` using your distribution "
+"package repository and install sphinx manually to get an up-to-date version."
+msgstr ""
+
+#: ../../development.rst:123
+msgid "GIT Workflow Examples"
+msgstr ""
+
+#: ../../development.rst:125
+msgid ""
+"The following examples assume that you have an (free) `github account "
+"<https://github.com>`_. This is not mandatory, but makes things a lot "
+"easier."
+msgstr ""
+
+#: ../../development.rst:127
+msgid ""
+"First of all you need to create a fork (a personal clone) of the official "
+"repository. To do this, you simply click the \"fork\" button on the `bottle "
+"project page <https://github.com/bottlepy/bottle>`_. When the fork is done, "
+"you will be presented with a short introduction to your new repository."
+msgstr ""
+
+#: ../../development.rst:129
+msgid ""
+"The fork you just created is hosted at github and read-able by everyone, but"
+" write-able only by you. Now you need to clone the fork locally to actually "
+"make changes to it. Make sure you use the private (read-write) URL and *not*"
+" the public (read-only) one::"
+msgstr ""
+
+#: ../../development.rst:133
+msgid ""
+"Once the clone is complete your repository will have a remote named "
+"\"origin\" that points to your fork on github. Don’t let the name confuse "
+"you, this does not point to the original bottle repository, but to your own "
+"fork. To keep track of the official repository, add another remote named "
+"\"upstream\"::"
+msgstr ""
+
+#: ../../development.rst:139
+msgid ""
+"Note that \"upstream\" is a public clone URL, which is read-only. You cannot"
+" push changes directly to it. Instead, we will pull from your public "
+"repository. This is described later."
+msgstr ""
+
+#: ../../development.rst:142
+msgid "Submit a Feature"
+msgstr ""
+
+#: ../../development.rst:143
+msgid ""
+"New features are developed in separate feature-branches to make integration "
+"easy. Because they are going to be integrated into the ``master`` branch, "
+"they must be based on ``upstream/master``. To create a new feature-branch, "
+"type the following::"
+msgstr ""
+
+#: ../../development.rst:147
+msgid ""
+"Now implement your feature, write tests, update the documentation, make sure"
+" that all tests pass and commit your changes::"
+msgstr ""
+
+#: ../../development.rst:151
+msgid ""
+"If the ``upstream/master`` branch changed in the meantime, there may be "
+"conflicts with your changes. To solve these, 'rebase' your feature-branch "
+"onto the top of the updated ``upstream/master`` branch::"
+msgstr ""
+
+#: ../../development.rst:156
+msgid ""
+"This is equivalent to undoing all your changes, updating your branch to the "
+"latest version and reapplying all your patches again. If you released your "
+"branch already (see next step), this is not an option because it rewrites "
+"your history. You can do a normal pull instead. Resolve any conflicts, run "
+"the tests again and commit."
+msgstr ""
+
+#: ../../development.rst:158
+msgid ""
+"Now you are almost ready to send a pull request. But first you need to make "
+"your feature-branch public by pushing it to your github fork::"
+msgstr ""
+
+#: ../../development.rst:162
+msgid ""
+"After you’ve pushed your commit(s) you need to inform us about the new "
+"feature. One way is to send a pull-request using github. Another way would "
+"be to start a thread in the mailing-list, which is recommended. It allows "
+"other developers to see and discuss your patches and you get some feedback "
+"for free :)"
+msgstr ""
+
+#: ../../development.rst:164
+msgid ""
+"If we accept your patch, we will integrate it into the official development "
+"branch and make it part of the next release."
+msgstr ""
+
+#: ../../development.rst:167
+msgid "Fix a Bug"
+msgstr ""
+
+#: ../../development.rst:168
+msgid ""
+"The workflow for bug-fixes is very similar to the one for features, but "
+"there are some differences:"
+msgstr ""
+
+#: ../../development.rst:170
+msgid ""
+"Branch off of the affected release branches instead of just the development "
+"branch."
+msgstr ""
+
+#: ../../development.rst:171
+msgid "Write at least one test-case that triggers the bug."
+msgstr ""
+
+#: ../../development.rst:172
+msgid ""
+"Do this for each affected branch including ``upstream/master`` if it is "
+"affected. ``git cherry-pick`` may help you reducing repetitive work."
+msgstr ""
+
+#: ../../development.rst:173
+msgid ""
+"Name your branch after the release it is based on to avoid confusion. "
+"Examples: ``my_bugfix-x.y`` or ``my_bugfix-dev``."
+msgstr ""

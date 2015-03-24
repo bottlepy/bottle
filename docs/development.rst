@@ -23,6 +23,7 @@ The bottle `development repository <https://github.com/bottlepy/bottle>`_ and th
 * **git:** ``git clone git://github.com/bottlepy/bottle.git``
 * **git/https:** ``git clone https://github.com/bottlepy/bottle.git``
 * **Download:** Development branch as `tar archive <http://github.com/bottlepy/bottle/tarball/master>`_ or `zip file <http://github.com/bottlepy/bottle/zipball/master>`_.
+* **Translations:** `transifex.com/projects/p/bottle <https://www.transifex.com/projects/p/bottle/>`_
 
 
 Releases and Updates

@@ -1,0 +1,202 @@
+# 
+msgid ""
+msgstr ""
+"Project-Id-Version: Bottle 0.13-dev\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2015-01-22 16:45-0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../async.rst:2
+msgid "Primer to Asynchronous Applications"
+msgstr ""
+
+#: ../../async.rst:4
+msgid ""
+"Asynchronous design patterns don't mix well with the synchronous nature of "
+"`WSGI <http://www.python.org/dev/peps/pep-3333/>`_. This is why most "
+"asynchronous frameworks (tornado, twisted, ...) implement a specialized API "
+"to expose their asynchronous features. Bottle is a WSGI framework and shares"
+" the synchronous nature of WSGI, but thanks to the awesome `gevent project "
+"<http://www.gevent.org/>`_, it is still possible to write asynchronous "
+"applications with bottle. This article documents the usage of Bottle with "
+"Asynchronous WSGI."
+msgstr ""
+
+#: ../../async.rst:7
+msgid "The Limits of Synchronous WSGI"
+msgstr ""
+
+#: ../../async.rst:9
+msgid ""
+"Briefly worded, the `WSGI specification (pep 3333) "
+"<http://www.python.org/dev/peps/pep-3333/>`_ defines a request/response "
+"circle as follows: The application callable is invoked once for each request"
+" and must return a body iterator. The server then iterates over the body and"
+" writes each chunk to the socket. As soon as the body iterator is exhausted,"
+" the client connection is closed."
+msgstr ""
+
+#: ../../async.rst:11
+msgid ""
+"Simple enough, but there is a snag: All this happens synchronously. If your "
+"application needs to wait for data (IO, sockets, databases, ...), it must "
+"either yield empty strings (busy wait) or block the current thread. Both "
+"solutions occupy the handling thread and prevent it from answering new "
+"requests. There is consequently only one ongoing request per thread."
+msgstr ""
+
+#: ../../async.rst:13
+msgid ""
+"Most servers limit the number of threads to avoid their relatively high "
+"overhead. Pools of 20 or less threads are common. As soon as all threads are"
+" occupied, any new connection is stalled. The server is effectively dead for"
+" everyone else. If you want to implement a chat that uses long-polling ajax "
+"requests to get real-time updates, you'd reach the limited at 20 concurrent "
+"connections. That's a pretty small chat."
+msgstr ""
+
+#: ../../async.rst:16
+msgid "Greenlets to the rescue"
+msgstr ""
+
+#: ../../async.rst:18
+msgid ""
+"Most servers limit the size of their worker pools to a relatively low number"
+" of concurrent threads, due to the high overhead involved in switching "
+"between and creating new threads. While threads are cheap compared to "
+"processes (forks), they are still expensive to create for each new "
+"connection."
+msgstr ""
+
+#: ../../async.rst:20
+msgid ""
+"The `gevent <http://www.gevent.org/>`_ module adds *greenlets* to the mix. "
+"Greenlets behave similar to traditional threads, but are very cheap to "
+"create. A gevent-based server can spawn thousands of greenlets (one for each"
+" connection) with almost no overhead. Blocking individual greenlets has no "
+"impact on the servers ability to accept new requests. The number of "
+"concurrent connections is virtually unlimited."
+msgstr ""
+
+#: ../../async.rst:22
+msgid ""
+"This makes creating asynchronous applications incredibly easy, because they "
+"look and feel like synchronous applications. A gevent-based server is "
+"actually not asynchronous, but massively multi-threaded. Here is an "
+"example::"
+msgstr ""
+
+#: ../../async.rst:39
+msgid ""
+"The first line is important. It causes gevent to monkey-patch most of "
+"Python's blocking APIs to not block the current thread, but pass the CPU to "
+"the next greenlet instead. It actually replaces Python's threading with "
+"gevent-based pseudo-threads. This is why you can still use ``time.sleep()`` "
+"which would normally block the whole thread. If you don't feel comfortable "
+"with monkey-patching python built-ins, you can use the corresponding gevent "
+"functions (``gevent.sleep()`` in this case)."
+msgstr ""
+
+#: ../../async.rst:41
+msgid ""
+"If you run this script and point your browser to "
+"``http://localhost:8080/stream``, you should see `START`, `MIDDLE`, and "
+"`END` show up one by one (rather than waiting 8 seconds to see them all at "
+"once). It works exactly as with normal threads, but now your server can "
+"handle thousands of concurrent requests without any problems."
+msgstr ""
+
+#: ../../async.rst:45
+msgid ""
+"Some browsers buffer a certain amount of data before they start rendering a "
+"page. You might need to yield more than a few bytes to see an effect in "
+"these browsers. Additionally, many browsers have a limit of one concurrent "
+"connection per URL. If this is the case, you can use a second browser or a "
+"benchmark tool (e.g. `ab` or `httperf`) to measure performance."
+msgstr ""
+
+#: ../../async.rst:52
+msgid "Event Callbacks"
+msgstr ""
+
+#: ../../async.rst:54
+msgid ""
+"A very common design pattern in asynchronous frameworks (including tornado, "
+"twisted, node.js and friends) is to use non-blocking APIs and bind callbacks"
+" to asynchronous events. The socket object is kept open until it is closed "
+"explicitly to allow callbacks to write to the socket at a later point. Here "
+"is an example based on the `tornado library "
+"<http://www.tornadoweb.org/documentation#non-blocking-asynchronous-"
+"requests>`_::"
+msgstr ""
+
+#: ../../async.rst:63
+msgid ""
+"The main benefit is that the request handler terminates early. The handling "
+"thread can move on and accept new requests while the callbacks continue to "
+"write to sockets of previous requests. This is how these frameworks manage "
+"to process a lot of concurrent requests with only a small number of OS "
+"threads."
+msgstr ""
+
+#: ../../async.rst:65
+msgid ""
+"With Gevent+WSGI, things are different: First, terminating early has no "
+"benefit because we have an unlimited pool of (pseudo)threads to accept new "
+"connections. Second, we cannot terminate early because that would close the "
+"socket (as required by WSGI). Third, we must return an iterable to conform "
+"to WSGI."
+msgstr ""
+
+#: ../../async.rst:67
+msgid ""
+"In order to conform to the WSGI standard, all we have to do is to return a "
+"body iterable that we can write to asynchronously. With the help of "
+"`gevent.queue <http://www.gevent.org/gevent.queue.html>`_, we can *simulate*"
+" a detached socket and rewrite the previous example as follows::"
+msgstr ""
+
+#: ../../async.rst:78
+msgid ""
+"From the server perspective, the queue object is iterable. It blocks if "
+"empty and stops as soon as it reaches ``StopIteration``. This conforms to "
+"WSGI. On the application side, the queue object behaves like a non-blocking "
+"socket. You can write to it at any time, pass it around and even start a new"
+" (pseudo)thread that writes to it asynchronously. This is how long-polling "
+"is implemented most of the time."
+msgstr ""
+
+#: ../../async.rst:82
+msgid "Finally: WebSockets"
+msgstr ""
+
+#: ../../async.rst:84
+msgid ""
+"Lets forget about the low-level details for a while and speak about "
+"WebSockets. Since you are reading this article, you probably know what "
+"WebSockets are: A bidirectional communication channel between a browser "
+"(client) and a web application (server)."
+msgstr ""
+
+#: ../../async.rst:86
+msgid ""
+"Thankfully the `gevent-websocket <http://pypi.python.org/pypi/gevent-"
+"websocket/>`_ package does all the hard work for us. Here is a simple "
+"WebSocket endpoint that receives messages and just sends them back to the "
+"client::"
+msgstr ""
+
+#: ../../async.rst:111
+msgid ""
+"The while-loop runs until the client closes the connection. You get the idea"
+" :)"
+msgstr ""
+
+#: ../../async.rst:113
+msgid "The client-site JavaScript API is really straight forward, too::"
+msgstr ""

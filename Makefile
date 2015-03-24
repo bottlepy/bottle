@@ -1,6 +1,7 @@
 PATH := build/python/bin:$(PATH)
 VERSION = $(shell python setup.py --version)
 ALLFILES = $(shell echo bottle.py test/*.py test/views/*.tpl)
+LANGS = zh_CN pt_BR
 
 .PHONY: release coverage install docs test test_all test_25 test_26 test_27 test_31 test_32 test_33 2to3 clean
 
@@ -27,7 +28,13 @@ install:
 	python setup.py install
 
 docs:
-	sphinx-build -b html -d build/docs/doctrees docs build/docs/html
+	# Generates documentation for all versions
+	# EN: build/docs/html/
+	# <langs>: build/docs/html/<langs>
+	sphinx-build -b html -d build/docs/doctrees docs build/docs/html/;
+	for lang in $(LANGS); do \
+		sphinx-build -b html -d build/docs/doctrees/$$lang -D language='$$lang' docs build/docs/html/$$lang; \
+	done
 
 test:
 	python test/testall.py
