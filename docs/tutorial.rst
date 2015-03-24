@@ -84,7 +84,7 @@ The :func:`run` call in the last line starts a built-in development server. It r
 
 The :ref:`tutorial-debugging` is very helpful during early development, but should be switched off for public applications. Keep that in mind.
 
-Of course this is a very simple example, but it shows the basic concept of how applications are built with Bottle. Continue reading and you'll see what else is possible.
+This is just a demonstration of the basic concept of how applications are built with Bottle. Continue reading and you'll see what else is possible.
 
 .. _tutorial-default:
 

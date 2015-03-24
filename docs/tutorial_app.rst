@@ -184,7 +184,7 @@ To include the template in our example, just add the following lines::
 
 So we do here two things: first, we import ``template`` from Bottle in order to be able to use templates. Second, we assign the output of the template ``make_table`` to the variable ``output``, which is then returned. In addition to calling the template, we assign ``result``, which we received from the database query, to the variable ``rows``, which is later on used within the template. If necessary, you can assign more than one variable / value to a template.
 
-Templates always return a list of strings, thus there is no need to convert anything. Of course, we can save one line of code by writing ``return template('make_table', rows=result)``, which gives exactly the same result as above.
+Templates always return a list of strings, thus there is no need to convert anything. We can save one line of code by writing ``return template('make_table', rows=result)``, which gives exactly the same result as above.
 
 Now it is time to write the corresponding template, which looks like this::
 
@@ -202,13 +202,13 @@ Now it is time to write the corresponding template, which looks like this::
 
 Save the code as ``make_table.tpl`` in the same directory where ``todo.py`` is stored.
 
-Let's have a look at the code: every line starting with % is interpreted as Python code. Please note that, of course, only valid Python statements are allowed, otherwise the template will raise an exception, just as any other Python code. The other lines are plain HTML markup.
+Let's have a look at the code: every line starting with % is interpreted as Python code. Because it is effectively Python, only valid Python statements are allowed. The template will raise exceptions, just as any other Python code would. The other lines are plain HTML markup.
 
 As you can see, we use Python's ``for`` statement two times, in order to go through ``rows``. As seen above, ``rows`` is a variable which holds the result of the database query, so it is a list of tuples. The first ``for`` statement accesses the tuples within the list, the second one the items within the tuple, which are put each into a cell of the table. It is important that you close all ``for``, ``if``, ``while`` etc. statements with ``%end``, otherwise the output may not be what you expect.
 
 If you need to access a variable within a non-Python code line inside the template, you need to put it into double curly braces. This tells the template to insert the actual value of the variable right in place.
 
-Run the script again and look at the output. Still not really nice, but at least more readable than the list of tuples. Of course, you can spice-up the very simple HTML markup above, e.g. by using in-line styles to get a better looking output.
+Run the script again and look at the output. Still not really nice, but at least more readable than the list of tuples. You can spice-up the very simple HTML markup above, e.g. by using in-line styles to get a better looking output.
 
 
 .. rubric:: Using GET and POST Values
@@ -383,7 +383,7 @@ As said above, the solution is a regular expression::
         else:
             return 'Task: %s' %result[0]
 
-Of course, this example is somehow artificially constructed - it would be easier to use a plain dynamic route only combined with a validation. Nevertheless, we want to see how regular expression routes work: the line ``@route(/item:item_#[0-9]+#)`` starts like a normal route, but the part surrounded by # is interpreted as a regular expression, which is the dynamic part of the route. So in this case, we want to match any digit between 0 and 9. The following function "show_item" just checks whether the given item is present in the database or not. In case it is present, the corresponding text of the task is returned. As you can see, only the regular expression part of the route is passed forward. Furthermore, it is always forwarded as a string, even if it is a plain integer number, like in this case.
+This example is somehow artificially constructed - it would be easier to use a plain dynamic route only combined with a validation. Nevertheless, we want to see how regular expression routes work: the line ``@route(/item:item_#[0-9]+#)`` starts like a normal route, but the part surrounded by # is interpreted as a regular expression, which is the dynamic part of the route. So in this case, we want to match any digit between 0 and 9. The following function "show_item" just checks whether the given item is present in the database or not. In case it is present, the corresponding text of the task is returned. As you can see, only the regular expression part of the route is passed forward. Furthermore, it is always forwarded as a string, even if it is a plain integer number, like in this case.
 
 
 .. rubric:: Returning Static Files
@@ -480,7 +480,7 @@ To change the IP address where Bottle is listening::
 
     run(host='123.45.67.89')
 
-Of course, both parameters can be combined, like::
+If needed, both parameters can be combined, like::
 
    run(port=80, host='123.45.67.89')
 
