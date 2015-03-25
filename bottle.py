@@ -2641,6 +2641,7 @@ class ServerAdapter(object):
         self.options = options
         self.host = host
         self.port = int(port)
+        self.protocol = 'https' if 'certfile' in self.options else 'http'
 
     def run(self, handler): # pragma: no cover
         pass
@@ -2668,7 +2669,6 @@ class FlupFCGIServer(ServerAdapter):
 
 
 class WSGIRefServer(ServerAdapter):
-
     def run(self, app): # pragma: no cover
         from wsgiref.simple_server import make_server
         from wsgiref.simple_server import WSGIRequestHandler, WSGIServer
@@ -2681,6 +2681,7 @@ class WSGIRefServer(ServerAdapter):
                 if not self.quiet:
                     return WSGIRequestHandler.log_request(*args, **kw)
 
+        certfile = self.options.get('certfile')
         handler_cls = self.options.get('handler_class', FixedHandler)
         server_cls  = self.options.get('server_class', WSGIServer)
 
@@ -2690,6 +2691,12 @@ class WSGIRefServer(ServerAdapter):
                     address_family = socket.AF_INET6
 
         self.srv = make_server(self.host, self.port, app, server_cls, handler_cls)
+        if certfile:
+            import ssl
+            self.srv.socket = ssl.wrap_socket(
+                self.srv.socket,
+                certfile=certfile,  # path to certificate
+                server_side=True)
         self.port = self.srv.server_port # update port actual port (0 means random)
         try:
             self.srv.serve_forever()
@@ -3079,7 +3086,7 @@ def run(app=None, server='wsgiref', host='127.0.0.1', port=8080,
         server.quiet = server.quiet or quiet
         if not server.quiet:
             _stderr("Bottle v%s server starting up (using %s)...\n" % (__version__, repr(server)))
-            _stderr("Listening on http://%s:%d/\n" % (server.host, server.port))
+            _stderr("Listening on %s://%s:%d/\n" % (server.protocol, server.host, server.port))
             _stderr("Hit Ctrl-C to quit.\n\n")
 
         if reloader:
