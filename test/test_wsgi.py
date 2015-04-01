@@ -255,6 +255,18 @@ class TestRouteDecorator(ServerTestBase):
         self.assertBody('before', '/test')
         self.assertHeader('X-Hook', 'after', '/test')
 
+    def test_environ_reflects_correct_response_after_request_in_hooks(self):
+        """ Issue #671  """
+
+        @bottle.hook('after_request')
+        def log_request_a():
+            self.assertStatus(400)
+            self.assertBody("test")
+
+        @bottle.get('/')
+        def _get():
+            bottle.abort(400, 'test')
+
     def test_template(self):
         @bottle.route(template='test {{a}} {{b}}')
         def test(): return dict(a=5, b=6)

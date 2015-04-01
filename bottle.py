@@ -948,7 +948,19 @@ class Bottle(object):
             request.bind(environ)
             response.bind()
             self.trigger_hook('before_request')
-            out = self._inner_handle(environ)
+            
+            try:
+                route, args = self.router.match(environ)
+                environ['route.handle'] = route
+                environ['bottle.route'] = route
+                environ['route.url_args'] = args
+                out = route.call(**args)
+            except HTTPResponse:
+                out = _e()
+            except RouteReset:
+                route.reset()
+                return self._handle(environ)
+
             return out
         except (KeyboardInterrupt, SystemExit, MemoryError):
             exc = _e()
