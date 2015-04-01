@@ -98,6 +98,7 @@ All you need is an ``app.wsgi`` file that provides an ``application`` object. Th
 
 File ``/var/www/yourapp/app.wsgi``::
 
+    import os
     # Change working directory so relative paths (and template lookup) work again
     os.chdir(os.path.dirname(__file__))
     
