@@ -876,6 +876,16 @@ class Bottle(object):
 
         return wrapper
 
+    def all_errors(self):
+        """ Decorator: Register a new default handler for all HTTP errors"""
+
+        def wrapper(handler):
+            self.default_error_handler = handler
+            return handler
+
+        return wrapper
+        
+
     def default_error_handler(self, res):
         return tob(template(ERROR_PAGE_TEMPLATE, e=res))
 
