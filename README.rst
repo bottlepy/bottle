@@ -1,4 +1,5 @@
 .. image:: http://bottlepy.org/docs/dev/_static/logo_nav.png
+  :target: http://bottlepy.org/
   :alt: Bottle Logo
   :align: right
 
