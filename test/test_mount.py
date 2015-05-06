@@ -11,7 +11,6 @@ class TestAppMounting(ServerTestBase):
         def test(test='foo'):
             return test
 
-
     def test_mount_order_bug581(self):
         self.app.mount('/test/', self.subapp)
 
@@ -21,6 +20,14 @@ class TestAppMounting(ServerTestBase):
         self.assertStatus(200, '/test/')
         self.assertBody('foo', '/test/')
 
+    def test_unshift(self):
+        self.app.mount('/test/', self.subapp)
+        @self.subapp.route('/unshift')
+        def test():
+            for i in xrange(2):
+                yield '%s\n' % bottle.request.environ["SCRIPT_NAME"]
+        self.assertBody('/test\n'*2, '/test/unshift')
+        
     def test_mount(self):
         self.app.mount('/test/', self.subapp)
         self.assertStatus(404, '/')
@@ -71,7 +78,7 @@ class TestAppMounting(ServerTestBase):
         self.assertBody('WSGI /', '/test/')
         self.assertHeader('X-Test', 'WSGI', '/test/')
         self.assertBody('WSGI /test/bar', '/test/test/bar')
-            
+
     def test_mount_wsgi(self):
         @self.subapp.route('/cookie')
         def test_cookie():

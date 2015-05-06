@@ -689,6 +689,11 @@ class Bottle(object):
         if not segments: raise ValueError('Empty path prefix.')
         path_depth = len(segments)
 
+        def unshift():
+            request.path_shift(-path_depth)
+            return
+            yield  # make this an empty generator
+
         def mountpoint_wrapper():
             try:
                 request.path_shift(path_depth)
@@ -703,11 +708,23 @@ class Bottle(object):
                     return rs.body.append
 
                 body = app(request.environ, start_response)
-                if body and rs.body: body = itertools.chain(rs.body, body)
-                rs.body = body or rs.body
+                if body and rs.body:
+                    close = filter(None, (getattr(rs.body, "close", None), getattr(body, "close", None)))
+                    chained_body = itertools.chain(
+                        (rs.body,) if isinstance(rs.body, basestring) else rs.body,
+                        (body,) if isinstance(body, basestring) else body,
+                        unshift())
+                else:
+                    body = body or rs.body
+                    close = getattr(body, "close", None)
+                    chained_body = itertools.chain(
+                        (body,) if isinstance(body, basestring) else body,
+                        unshift())
+                rs.body = _closeiter(chained_body, close=close)
                 return rs
-            finally:
+            except:
                 request.path_shift(-path_depth)
+                raise
 
         options.setdefault('skip', True)
         options.setdefault('method', 'PROXY')
