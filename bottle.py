@@ -810,7 +810,7 @@ class Bottle(object):
                 def hello(name):
                     return 'Hello %s' % name
 
-            The ``:name`` part is a wildcard. See :class:`Router` for syntax
+            The ``<name>`` part is a wildcard. See :class:`Router` for syntax
             details.
 
             :param path: Request path or a list of paths to listen to. If no
