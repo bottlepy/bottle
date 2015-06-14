@@ -1708,6 +1708,8 @@ class BaseResponse(object):
                 elif isinstance(value, (int, float)):
                     value = time.gmtime(value)
                 value = time.strftime("%a, %d %b %Y %H:%M:%S GMT", value)
+            if key in ('secure', 'httponly') and not value:
+                continue
             self._cookies[name][key.replace('_', '-')] = value
 
     def delete_cookie(self, key, **kwargs):
