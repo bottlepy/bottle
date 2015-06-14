@@ -703,8 +703,7 @@ class Bottle(object):
                     return rs.body.append
 
                 body = app(request.environ, start_response)
-                if body and rs.body: body = itertools.chain(rs.body, body)
-                rs.body = body or rs.body
+                rs.body = itertools.chain(rs.body, body) if rs.body else body
                 return rs
             finally:
                 request.path_shift(-path_depth)
