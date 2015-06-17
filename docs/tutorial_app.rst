@@ -46,7 +46,6 @@ We will end up with an application with the following pages and functionality:
  * start page ``http://localhost:8080/todo``
  * adding new items to the list: ``http://localhost:8080/new``
  * page for editing items: ``http://localhost:8080/edit/<no:int>``
- * validating data assigned by dynamic routes with the @validate decorator
  * catching errors
 
 Before We Start...
@@ -345,24 +344,6 @@ Again, this template is a mix of Python statements and HTML, as already explaine
 
 A last word on dynamic routes: you can even use a regular expression for a dynamic route, as demonstrated later.
 
-
-.. rubric:: Validating Dynamic Routes
-
-Using dynamic routes is fine, but for many cases it makes sense to validate the dynamic part of the route. For example, we expect an integer number in our route for editing above. But if a float, characters or so are received, the Python interpreter throws an exception, which is not what we want.
-
-For those cases, Bottle offers the ``@validate`` decorator, which validates the "input" prior to passing it to the function. In order to apply the validator, extend the code as follows::
-
-    from bottle import route, run, debug, template, request, validate
-    ...
-    @route('/edit/<no:int>', method='GET')
-    @validate(no=int)
-    def edit_item(no):
-    ...
-
-At first, we imported ``validate`` from the Bottle framework, than we apply the @validate-decorator. Right here, we validate if ``no`` is an integer. Basically, the validation works with all types of data like floats, lists etc.
-
-Save the code and call the page again using a "403 forbidden" value for ``<no:int>``, e.g. a float. You will receive not an exception, but a "403 - Forbidden" error, saying that an integer was expected.
-
 .. rubric:: Dynamic Routes Using Regular Expressions
 
 Bottle can also handle dynamic routes, where the "dynamic part" of the route can be a regular expression.
@@ -390,7 +371,7 @@ This example is somehow artificially constructed - it would be easier to use a p
 
 Sometimes it may become necessary to associate a route not to a Python function, but just return a static file. So if you have for example a help page for your application, you may want to return this page as plain HTML. This works as follows::
 
-    from bottle import route, run, debug, template, request, validate, static_file
+    from bottle import route, run, debug, template, request, static_file
 
     @route('/help')
     def help():
