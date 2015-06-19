@@ -120,7 +120,7 @@ But embedding code still requires you to start a new line, which may not what yo
    %end
   </div>
 
-THis time the rendered template looks like this::
+This time the rendered template looks like this::
 
   <div><span>content</span></div>
 
