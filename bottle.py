@@ -2457,10 +2457,8 @@ def _file_iter_range(fp, offset, bytes, maxread=1024 * 1024):
         yield part
 
 
-def static_file(filename, root,
-                mimetype='auto',
-                download=False,
-                charset='UTF-8'):
+def static_file(filename, root, mimetype='auto', download=False,
+                charset='UTF-8', code=200):
     """ Open a file in a safe way and return :exc:`HTTPResponse` with status
         code 200, 305, 403 or 404. The ``Content-Type``, ``Content-Encoding``,
         ``Content-Length`` and ``Last-Modified`` headers are set if possible.
@@ -2533,7 +2531,7 @@ def static_file(filename, root,
         headers["Content-Length"] = str(end - offset)
         if body: body = _file_iter_range(body, offset, end - offset)
         return HTTPResponse(body, status=206, **headers)
-    return HTTPResponse(body, **headers)
+    return HTTPResponse(body, status=code, **headers)
 
 ###############################################################################
 # HTTP Utilities and MISC (TODO) ###############################################
