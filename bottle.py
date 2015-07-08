@@ -1269,12 +1269,14 @@ class BaseRequest(object):
 
     @DictProperty('environ', 'bottle.request.json', read_only=True)
     def json(self):
-        """ If the ``Content-Type`` header is ``application/json``, this
-            property holds the parsed content of the request body. Only requests
-            smaller than :attr:`MEMFILE_MAX` are processed to avoid memory
-            exhaustion. Invalid JSON raises a 400 error response. """
+        """ If the ``Content-Type`` header is ``application/json`` or
+            ``application/json-rpc``, this property holds the parsed content 
+            of the request body. Only requests smaller than :attr:`MEMFILE_MAX`
+            are processed to avoid memory exhaustion.
+            Invalid JSON raises a 400 error response.
+        """
         ctype = self.environ.get('CONTENT_TYPE', '').lower().split(';')[0]
-        if ctype == 'application/json':
+        if ctype in ('application/json', 'application/json-rpc'):
             b = self._get_body_string()
             if not b:
                 return None
