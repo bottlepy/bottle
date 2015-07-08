@@ -1157,7 +1157,7 @@ class BaseRequest(object):
             of the request body. Only requests smaller than :attr:`MEMFILE_MAX`
             are processed to avoid memory exhaustion. '''
         ctype = self.environ.get('CONTENT_TYPE', '').lower().split(';')[0]
-        if ctype in ['application/json', 'application/json-rpc']:
+        if ctype in ('application/json', 'application/json-rpc'):
             b = self._get_body_string()
             if not b:
                 return None
