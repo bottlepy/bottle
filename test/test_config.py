@@ -58,6 +58,17 @@ class TestConfDict(unittest.TestCase):
         self.assertEqual(c['a.b.foo'], 5)
         self.assertEqual(c['a.b.bar'], 6)
         self.assertEqual(c['a.baz'], 7)
+        # unicode keys (see issue #720)
+        try:
+            key = unichr(12354)
+        except NameError:
+            key = chr(12354)
+        c = ConfigDict()
+        c.load_dict({key: 'value'})
+        self.assertEqual('value', c[key])
+        c = ConfigDict()
+        c.load_dict({key: {'subkey': 'value'}})
+        self.assertEqual('value', c[key + '.subkey'])
    
 if __name__ == '__main__': #pragma: no cover
     unittest.main()
