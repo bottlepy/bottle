@@ -75,6 +75,19 @@ class TestConfigDict(unittest.TestCase):
         self.assertRaises(TypeError, lambda: setitem(c, 5, 6))
         self.assertRaises(TypeError, lambda: c.load_dict({5:6}))
 
+    def test_issue720(self):
+        """Accept unicode keys."""
+        try:
+            key = unichr(12354)
+        except NameError:
+            key = chr(12354)
+        c = ConfigDict()
+        c.load_dict({key: 'value'})
+        self.assertEqual('value', c[key])
+        c = ConfigDict()
+        c.load_dict({key: {'subkey': 'value'}})
+        self.assertEqual('value', c[key + '.subkey'])
+
 
 if __name__ == '__main__': #pragma: no cover
     unittest.main()

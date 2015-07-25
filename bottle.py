@@ -2107,7 +2107,7 @@ class ConfigDict(dict):
             if not isinstance(source, dict):
                 raise TypeError('Source is not a dict (r)' % type(key))
             for key, value in source.items():
-                if not isinstance(key, str):
+                if not isinstance(key, basestring):
                     raise TypeError('Key is not a string (%r)' % type(key))
                 full_key = prefix + '.' + key if prefix else key
                 if isinstance(value, dict):
@@ -2123,7 +2123,7 @@ class ConfigDict(dict):
             namespace. Apart from that it works just as the usual dict.update().
             Example: ``update('some.namespace', key='value')`` '''
         prefix = ''
-        if a and isinstance(a[0], str):
+        if a and isinstance(a[0], basestring):
             prefix = a[0].strip('.') + '.'
             a = a[1:]
         for key, value in dict(*a, **ka).items():
@@ -2135,7 +2135,7 @@ class ConfigDict(dict):
         return self[key]
 
     def __setitem__(self, key, value):
-        if not isinstance(key, str):
+        if not isinstance(key, basestring):
             raise TypeError('Key has type %r (not a string)' % type(key))
 
         value = self.meta_get(key, 'filter', lambda x: x)(value)
