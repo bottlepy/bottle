@@ -629,7 +629,9 @@ class Bottle(object):
     #: If true, most exceptions are caught and returned as :exc:`HTTPError`
     catchall = DictProperty('config', 'catchall')
 
-    __hook_names = 'before_request', 'after_request', 'app_reset', 'config'
+    __hook_names = (
+        'before_request', 'after_request', 'app_reset', 'config', 'startup'
+    )
     __hook_reversed = 'after_request'
 
     @cached_property
@@ -637,7 +639,7 @@ class Bottle(object):
         return dict((name, []) for name in self.__hook_names)
 
     def add_hook(self, name, func):
-        """ Attach a callback to a hook. Three hooks are currently implemented:
+        """ Attach a callback to a hook. Five hooks are currently implemented:
 
             before_request
                 Executed once before each request. The request context is
@@ -646,6 +648,17 @@ class Bottle(object):
                 Executed once after each request regardless of its outcome.
             app_reset
                 Called whenever :meth:`Bottle.reset` is called.
+            config
+                Called whenever a value in :attr:`Bottle.config` is changed.
+                For more information, see :ref:`the Configuration documentation <conf-listen>`.
+            startup
+                If the application is run using :func:`run` or
+                :meth:`Bottle.run`, this hook will be executed exactly once
+                for each time the application is run.
+
+                .. note:: If the application is run using some other manner,
+                          for example by directly calling :meth:`Bottle.wsgi`,
+                          this hook will not be triggered.
         """
         if name in self.__hook_reversed:
             self._hooks[name].insert(0, func)
@@ -3213,6 +3226,10 @@ def run(app=None,
             if isinstance(plugin, basestring):
                 plugin = load(plugin)
             app.install(plugin)
+
+        # No more modifications should be made to the app (e.g. loading
+        # plugins) after we call this.
+        app.trigger_hook('startup')
 
         if server in server_names:
             server = server_names.get(server)
