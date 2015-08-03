@@ -489,7 +489,7 @@ Request Data
 Cookies, HTTP header, HTML ``<form>`` fields and other request data is available through the global :data:`request` object. This special object always refers to the *current* request, even in multi-threaded environments where multiple client connections are handled at the same time::
 
   from bottle import request, route, template
-  
+
   @route('/hello')
   def hello():
       name = request.cookies.username or 'Guest'
@@ -507,9 +507,9 @@ Bottle uses a special type of dictionary to store form data and cookies. :class:
 **Attribute access**: All values in the dictionary are also accessible as attributes. These virtual attributes return unicode strings, even if the value is missing or unicode decoding fails. In that case, the string is empty, but still present::
 
   name = request.cookies.name
-  
+
   # is a shortcut for:
-  
+
   name = request.cookies.getunicode('name') # encoding='utf-8' (default)
 
   # which basically does this:
@@ -672,7 +672,7 @@ Bottle stores file uploads in :attr:`BaseRequest.files` as :class:`FileUpload` i
 
 :attr:`FileUpload.filename` contains the name of the file on the clients file system, but is cleaned up and normalized to prevent bugs caused by unsupported characters or path segments in the filename. If you need the unmodified name as sent by the client, have a look at :attr:`FileUpload.raw_filename`.
 
-The :attr:`FileUpload.save` method is highly recommended if you want to store the file to disk. It prevents some common errors (e.g. it does not overwrite existing files unless you tell it to) and stores the file in a memory efficient way. You can access the file object directly via :attr:`FileUpload.file`. Just be careful. 
+The :attr:`FileUpload.save` method is highly recommended if you want to store the file to disk. It prevents some common errors (e.g. it does not overwrite existing files unless you tell it to) and stores the file in a memory efficient way. You can access the file object directly via :attr:`FileUpload.file`. Just be careful.
 
 
 JSON Content
@@ -684,7 +684,7 @@ Some JavaScript or REST clients send ``application/json`` content to the server.
 The raw request body
 --------------------
 
-You can access the raw body data as a file-like object via :attr:`BaseRequest.body`. This is a :class:`BytesIO` buffer or a temporary file depending on the content length and :attr:`BaseRequest.MEMFILE_MAX` setting. In both cases the body is completely buffered before you can access the attribute. If you expect huge amounts of data and want to get direct unbuffered access to the stream, have a look at ``request['wsgi.input']``. 
+You can access the raw body data as a file-like object via :attr:`BaseRequest.body`. This is a :class:`BytesIO` buffer or a temporary file depending on the content length and :attr:`BaseRequest.MEMFILE_MAX` setting. In both cases the body is completely buffered before you can access the attribute. If you expect huge amounts of data and want to get direct unbuffered access to the stream, have a look at ``request['wsgi.input']``.
 
 
 
@@ -1015,8 +1015,12 @@ Starting with version 0.10 you can use bottle as a command-line tool:
                             use SERVER as backend.
       -p PLUGIN, --plugin=PLUGIN
                             install additional plugin/s.
+      -c FILE, --conf=FILE  load config values from FILE.
+      -C NAME=VALUE, --param=NAME=VALUE
+                            override config values.
       --debug               start server in debug mode.
       --reload              auto-reload on file changes.
+
 
 The `ADDRESS` field takes an IP address or an IP:PORT pair and defaults to ``localhost:8080``. The other parameters should be self-explanatory.
 

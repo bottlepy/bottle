@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 Bottle is a fast and simple micro-framework for small web applications. It
-offers request dispatching (Routes) with url parameter support, templates,
+offers request dispatching (Routes) with URL parameter support, templates,
 a built-in HTTP Server and adapters for many third party WSGI/HTTP-server and
 template engines - all in a single file and with no dependencies other than the
 Python Standard Library.
@@ -14,38 +14,61 @@ License: MIT (see LICENSE for details)
 """
 
 from __future__ import with_statement
+import sys
 
 __author__ = 'Marcel Hellkamp'
 __version__ = '0.13-dev'
 __license__ = 'MIT'
 
-# The gevent and eventlet server adapters need to patch some modules before
-# they are imported. This is why we parse the commandline parameters here but
-# handle them later
-if __name__ == '__main__':
+###############################################################################
+# Command-line interface ########################################################
+###############################################################################
+# INFO: Some server adapters need to monkey-patch std-lib modules before they
+# are imported. This is why some of the command-line handling is done here, but
+# the actual call to main() is at the end of the file.
+
+
+def _cli_parse(args):
     from optparse import OptionParser
-    _cmd_parser = OptionParser(
+    parser = OptionParser(
         usage="usage: %prog [options] package.module:app")
-    _opt = _cmd_parser.add_option
-    _opt("--version", action="store_true", help="show version number.")
-    _opt("-b", "--bind", metavar="ADDRESS", help="bind socket to ADDRESS.")
-    _opt("-s", "--server", default='wsgiref', help="use SERVER as backend.")
-    _opt("-p", "--plugin",
-         action="append",
-         help="install additional plugin/s.")
-    _opt("--debug", action="store_true", help="start server in debug mode.")
-    _opt("--reload", action="store_true", help="auto-reload on file changes.")
-    _cmd_options, _cmd_args = _cmd_parser.parse_args()
-    if _cmd_options.server:
-        if _cmd_options.server.startswith('gevent'):
+    opt = parser.add_option
+    opt("--version", action="store_true", help="show version number.")
+    opt("-b", "--bind", metavar="ADDRESS", help="bind socket to ADDRESS.")
+    opt("-s", "--server", default='wsgiref', help="use SERVER as backend.")
+    opt("-p", "--plugin", action="append", help="install additional plugin/s.")
+    opt("-c", "--conf", action="append", metavar="FILE",
+        help="load config values from FILE.")
+    opt("-C", "--param", action="append", metavar="NAME=VALUE",
+        help="override config values.")
+    opt("--debug", action="store_true", help="start server in debug mode.")
+    opt("--reload", action="store_true", help="auto-reload on file changes.")
+    opts, args = parser.parse_args(args[1:])
+
+    return opts, args, parser
+
+
+def _cli_patch(args):
+    opts, _, _ = _cli_parse(args)
+    if opts.server:
+        if opts.server.startswith('gevent'):
             import gevent.monkey
             gevent.monkey.patch_all()
-        elif _cmd_options.server.startswith('eventlet'):
+        elif opts.server.startswith('eventlet'):
             import eventlet
             eventlet.monkey_patch()
 
+
+if __name__ == '__main__':
+    _cli_patch(sys.argv)
+
+###############################################################################
+# Imports and Python 2/3 unification ###########################################
+###############################################################################
+
+
 import base64, cgi, email.utils, functools, hmac, imp, itertools, mimetypes,\
-        os, re, sys, tempfile, threading, time, warnings
+        os, re, tempfile, threading, time, warnings
 
 from types import FunctionType
 from datetime import date as datedate, datetime, timedelta
@@ -101,7 +124,7 @@ if py3k:
     from collections import MutableMapping as DictMixin
     import pickle
     from io import BytesIO
-    from configparser import ConfigParser
+    from configparser import ConfigParser, Error as ConfigParserError
     basestring = str
     unicode = str
     json_loads = lambda s: json_lds(touni(s))
@@ -119,7 +142,8 @@ else:  # 2.x
     from itertools import imap
     import cPickle as pickle
     from StringIO import StringIO as BytesIO
-    from ConfigParser import SafeConfigParser as ConfigParser
+    from ConfigParser import SafeConfigParser as ConfigParser, \
+                             Error as ConfigParserError
     if py25:
         msg = "Python 2.5 support may be dropped in future versions of Bottle."
         warnings.warn(msg, DeprecationWarning)
@@ -3042,7 +3066,7 @@ class BjoernServer(ServerAdapter):
 
 
 class AiohttpServer(ServerAdapter):
-    """ Untested. 
+    """ Untested.
         aiohttp
         https://pypi.python.org/pypi/aiohttp/
     """
@@ -3158,7 +3182,8 @@ def run(app=None,
         reloader=False,
         quiet=False,
         plugins=None,
-        debug=None, **kargs):
+        debug=None,
+        config=None, **kargs):
     """ Start a server instance. This method blocks until the server terminates.
 
         :param app: WSGI application or target string supported by
@@ -3213,6 +3238,9 @@ def run(app=None,
             if isinstance(plugin, basestring):
                 plugin = load(plugin)
             app.install(plugin)
+
+        if config:
+            app.config.update(config)
 
         if server in server_names:
             server = server_names.get(server)
@@ -3843,7 +3871,7 @@ ERROR_PAGE_TEMPLATE = """
 
 #: A thread-safe instance of :class:`LocalRequest`. If accessed from within a
 #: request callback, this instance always refers to the *current* request
-#: (even on a multithreaded server).
+#: (even on a multi-threaded server).
 request = LocalRequest()
 
 #: A thread-safe instance of :class:`LocalResponse`. It is used to change the
@@ -3863,15 +3891,21 @@ app.push()
 ext = _ImportRedirect('bottle.ext' if __name__ == '__main__' else
                       __name__ + ".ext", 'bottle_%s').module
 
+
+
 if __name__ == '__main__':
-    opt, args, parser = _cmd_options, _cmd_args, _cmd_parser
+    opt, args, parser = _cli_parse(sys.argv)
+
+    def _cli_error(msg):
+        parser.print_help()
+        _stderr('\nError: %s\n' % msg)
+        sys.exit(1)
+
     if opt.version:
         _stdout('Bottle %s\n' % __version__)
         sys.exit(0)
     if not args:
-        parser.print_help()
-        _stderr('\nError: No application entry point specified.\n')
-        sys.exit(1)
+        _cli_error("No application entry point specified.")
 
     sys.path.insert(0, '.')
     sys.modules.setdefault('bottle', sys.modules['__main__'])
@@ -3881,12 +3915,35 @@ if __name__ == '__main__':
         host, port = host.rsplit(':', 1)
     host = host.strip('[]')
 
+    config = ConfigDict()
+
+    for cfile in opt.conf or []:
+        try:
+            if cfile.endswith('.json'):
+                with open(cfile, 'rb') as fp:
+                    config.load_dict(json_loads(fp.read()))
+            else:
+                config.load_config(cfile)
+        except ConfigParserError:
+            _cli_error(str(_e()))
+        except IOError:
+            _cli_error("Unable to read config file %r" % cfile)
+        except (UnicodeError, TypeError, ValueError):
+            _cli_error("Unable to parse config file %r: %s" % (cfile, _e()))
+
+    for cval in opt.param or []:
+        if '=' in cval:
+            config.update((cval.split('=', 1),))
+        else:
+            config[cval] = True
+
     run(args[0],
         host=host,
         port=int(port),
         server=opt.server,
         reloader=opt.reload,
         plugins=opt.plugin,
-        debug=opt.debug)
+        debug=opt.debug,
+        config=config)
 
 # THE END
