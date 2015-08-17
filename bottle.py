@@ -1864,7 +1864,7 @@ class JSONPlugin(object):
                 return json_response
             elif isinstance(rv, HTTPResponse) and isinstance(rv.body, dict):
                 if self.pretty:
-                    json_response = dumps(rv, sort_keys=True, indent=4, separators=(',', ': '))
+                    rv.body = dumps(rv.body, sort_keys=True, indent=4, separators=(',', ': '))
                 else:
                     rv.body = dumps(rv.body)
                 rv.content_type = 'application/json'
