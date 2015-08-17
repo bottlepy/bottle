@@ -627,15 +627,17 @@ class Bottle(object):
                          let debugging middleware handle exceptions.
     """
 
-    def __init__(self, catchall=True, autojson=True):
+    def __init__(self, catchall=True, autojson=True, autojsonpretty=False):
 
         #: A :class:`ConfigDict` for app specific configuration.
         self.config = ConfigDict()
         self.config._on_change = functools.partial(self.trigger_hook, 'config')
         self.config.meta_set('autojson', 'validate', bool)
+        self.config.meta_set('autojsonpretty', 'validate', bool)
         self.config.meta_set('catchall', 'validate', bool)
         self.config['catchall'] = catchall
         self.config['autojson'] = autojson
+        self.config['autojsonpretty'] = autojsonpretty
 
         #: A :class:`ResourceManager` for application files
         self.resources = ResourceManager()
@@ -647,7 +649,10 @@ class Bottle(object):
         # Core plugins
         self.plugins = []  # List of installed plugins.
         if self.config['autojson']:
-            self.install(JSONPlugin())
+            if self.config['autojsonpretty']:
+                self.install(JSONPlugin(pretty=True))
+            else:
+                self.install(JSONPlugin())
         self.install(TemplatePlugin())
 
     #: If true, most exceptions are caught and returned as :exc:`HTTPError`
@@ -1833,12 +1838,14 @@ class JSONPlugin(object):
     name = 'json'
     api = 2
 
-    def __init__(self, json_dumps=json_dumps):
+    def __init__(self, json_dumps=json_dumps, pretty=False):
         self.json_dumps = json_dumps
+        self.pretty = pretty
 
     def apply(self, callback, _):
         dumps = self.json_dumps
-        if not dumps: return callback
+        if not dumps:
+            return callback
 
         def wrapper(*a, **ka):
             try:
@@ -1848,12 +1855,18 @@ class JSONPlugin(object):
 
             if isinstance(rv, dict):
                 #Attempt to serialize, raises exception on failure
-                json_response = dumps(rv)
+                if self.pretty:
+                    json_response = dumps(rv, sort_keys=True, indent=4, separators=(',', ': '))
+                else:
+                    json_response = dumps(rv)
                 #Set content type only if serialization successful
                 response.content_type = 'application/json'
                 return json_response
             elif isinstance(rv, HTTPResponse) and isinstance(rv.body, dict):
-                rv.body = dumps(rv.body)
+                if self.pretty:
+                    json_response = dumps(rv, sort_keys=True, indent=4, separators=(',', ': '))
+                else:
+                    rv.body = dumps(rv.body)
                 rv.content_type = 'application/json'
             return rv
 
