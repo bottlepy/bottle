@@ -69,7 +69,34 @@ class TestConfDict(unittest.TestCase):
         c = ConfigDict()
         c.load_dict({key: {'subkey': 'value'}})
         self.assertEqual('value', c[key + '.subkey'])
-   
+
+    @classmethod
+    def setUpClass(self):
+        # create config file
+        from configparser import ConfigParser
+        config = ConfigParser()
+        # two special section
+        config['DEFAULT'] = {'interval': '45'}
+        config['bottle'] = {'port': '8080'}
+        # ordinary section
+        config['compression'] = {'status': 'single'}
+        with open('example.ini', 'w') as config_file:
+            config.write(config_file)
+
+    @classmethod
+    def tearDownClass(self):
+        # remove config file
+        import os
+        os.remove('example.ini')
+
+    def test_load_config(self):
+        """`DEFAULT` section should refer to the root namespace."""
+        c = ConfigDict()
+        c.load_config('example.ini')
+        self.assertEqual('45', c['interval'])
+        self.assertEqual('8080', c['port'])
+        self.assertTrue('compression.interval' not in c)
+
 if __name__ == '__main__': #pragma: no cover
     unittest.main()
 
