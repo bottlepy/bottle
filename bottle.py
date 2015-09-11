@@ -2186,6 +2186,7 @@ class ConfigDict(dict):
         obj = {key: getattr(config_obj, key)
             for key in dir(config_obj) if key.isupper()}
         self.update(obj)
+        return self
 
     def load_config(self, filename):
         """ Load values from an ``*.ini`` style config file.
