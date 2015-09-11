@@ -1,0 +1,2 @@
+HELLO = 'world'
+WORLD = 'hello'
