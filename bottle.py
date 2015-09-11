@@ -115,7 +115,6 @@ except IOError:
 
 # Lots of stdlib and builtin differences.
 if py3k:
-    import importlib
     import http.client as httplib
     import _thread as thread
     from urllib.parse import urljoin, SplitResult as UrlSplitResult
@@ -137,7 +136,6 @@ if py3k:
 else:  # 2.x
     import httplib
     import thread
-    import importlib
     from urlparse import urljoin, SplitResult as UrlSplitResult
     from urllib import urlencode, quote as urlquote, unquote as urlunquote
     from Cookie import SimpleCookie
@@ -2182,7 +2180,7 @@ class ConfigDict(dict):
         """ Load values from a Python module.
             Example: load_config('my.app.settings')
         """
-        config_obj = importlib.import_module(path)
+        config_obj = __import__(path)
         obj = dict([(key, getattr(config_obj, key))
                 for key in dir(config_obj) if key.isupper()])
         self.update(obj)
