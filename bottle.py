@@ -2183,8 +2183,8 @@ class ConfigDict(dict):
             Example: load_config('my.app.settings')
         """
         config_obj = importlib.import_module(path)
-        obj = {key: getattr(config_obj, key)
-            for key in dir(config_obj) if key.isupper()}
+        obj = dict([(key, getattr(config_obj, key))
+                for key in dir(config_obj) if key.isupper()])
         self.update(obj)
         return self
 
