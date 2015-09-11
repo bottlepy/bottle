@@ -1,2 +1,5 @@
-HELLO = 'world'
-WORLD = 'hello'
+A = {
+    "B": {
+        "C": 3
+    }
+}

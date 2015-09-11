@@ -73,9 +73,13 @@ class TestConfDict(unittest.TestCase):
 
     def test_load_module(self):
         c = ConfigDict()
-        c.load_module('example_settings')
-        self.assertEqual(c['HELLO'], 'world')
-        self.assertEqual(c['WORLD'], 'hello')
+        c.load_module('example_settings', True)
+        self.assertEqual(c['A.B.C'], 3)
+
+        c = ConfigDict()
+        c.load_module('example_settings', False)
+        self.assertEqual(c['A']['B']['C'], 3)
+
 
    
 if __name__ == '__main__': #pragma: no cover
