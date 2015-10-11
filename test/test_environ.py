@@ -620,7 +620,7 @@ class TestResponse(unittest.TestCase):
         r.set_cookie('name2', 'value', secure=False)
         cookies = sorted([value for name, value in r.headerlist
                    if name.title() == 'Set-Cookie'])
-        self.assertEqual(cookies[0], 'name1=value; secure')
+        self.assertEqual(cookies[0].lower(), 'name1=value; secure')
         self.assertEqual(cookies[1], 'name2=value')
 
     def test_set_cookie_httponly(self):
@@ -631,7 +631,7 @@ class TestResponse(unittest.TestCase):
         r.set_cookie('name2', 'value', httponly=False)
         cookies = sorted([value for name, value in r.headerlist
                    if name.title() == 'Set-Cookie'])
-        self.assertEqual(cookies[0], 'name1=value; httponly')
+        self.assertEqual(cookies[0].lower(), 'name1=value; httponly')
         self.assertEqual(cookies[1], 'name2=value')
 
     def test_delete_cookie(self):
@@ -640,7 +640,7 @@ class TestResponse(unittest.TestCase):
         response.delete_cookie('name')
         cookies = [value for name, value in response.headerlist
                    if name.title() == 'Set-Cookie']
-        self.assertTrue('name=;' in cookies[0])
+        self.assertTrue('Max-Age=-1' in cookies[0])
 
     def test_set_header(self):
         response = BaseResponse()
