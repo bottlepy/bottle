@@ -1,3 +1,4 @@
+import sys
 import unittest
 from bottle import ConfigDict
 
@@ -69,6 +70,17 @@ class TestConfDict(unittest.TestCase):
         c = ConfigDict()
         c.load_dict({key: {'subkey': 'value'}})
         self.assertEqual('value', c[key + '.subkey'])
+
+    def test_load_module(self):
+        c = ConfigDict()
+        c.load_module('example_settings', True)
+        self.assertEqual(c['A.B.C'], 3)
+
+        c = ConfigDict()
+        c.load_module('example_settings', False)
+        self.assertEqual(c['A']['B']['C'], 3)
+
+
    
 if __name__ == '__main__': #pragma: no cover
     unittest.main()

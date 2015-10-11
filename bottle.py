@@ -2195,6 +2195,22 @@ class ConfigDict(dict):
         self._meta = {}
         self._on_change = lambda name, value: None
 
+    def load_module(self, path, squash):
+        """ Load values from a Python module.
+            :param squash: Squash nested dicts into namespaces by using
+                           load_dict(), otherwise use update()
+            Example: load_config('my.app.settings', True)
+            Example: load_config('my.app.settings', False)
+        """
+        config_obj = __import__(path)
+        obj = dict([(key, getattr(config_obj, key))
+                for key in dir(config_obj) if key.isupper()])
+        if squash:
+            self.load_dict(obj)
+        else:
+            self.update(obj)
+        return self
+
     def load_config(self, filename):
         """ Load values from an ``*.ini`` style config file.
 
