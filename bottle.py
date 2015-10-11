@@ -92,7 +92,7 @@ try:
                 args.append(name)
                 if param.default is not param.empty:
                     defaults.append(param.default)
-        return (args, varargs, keywords, tuple(defaults) or defaults)
+        return (args, varargs, keywords, tuple(defaults) or None)
 except ImportError:
     from inspect import getargspec
     
