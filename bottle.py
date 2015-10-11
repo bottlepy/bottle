@@ -1741,7 +1741,8 @@ class BaseResponse(object):
         elif not isinstance(value, basestring):
             raise TypeError('Secret key missing for non-string Cookie.')
 
-        if len(value) > 4096: raise ValueError('Cookie value to long.')
+        if len(name) > 4096: raise ValueError('Cookie name is too long.')
+        if len(value) > 4096: raise ValueError('Cookie value is too long.')
         self._cookies[name] = value
 
         for key, value in options.items():

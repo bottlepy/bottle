@@ -594,6 +594,14 @@ class TestResponse(unittest.TestCase):
         self.assertEqual(cookies[0], 'name1=value; Max-Age=5')
         self.assertEqual(cookies[1], 'name2="value 2"; Path=/foo')
 
+    def test_set_cookie_value_long_string(self):
+        r = BaseResponse()
+        self.assertRaises(ValueError, r.set_cookie, name='test', value='x' * 4097)
+
+    def test_set_cookie_name_long_string(self):
+        r = BaseResponse()
+        self.assertRaises(ValueError, r.set_cookie, name='x' * 4097, value='simple_value')
+
     def test_set_cookie_maxage(self):
         import datetime
         r = BaseResponse()
@@ -689,11 +697,11 @@ class TestResponse(unittest.TestCase):
         response = BaseResponse()
         now = datetime.datetime.now()
         response.expires = now
-        
+
         def seconds(a, b):
             td = max(a,b) - min(a,b)
             return td.days*360*24 + td.seconds
-        
+
         self.assertEqual(0, seconds(response.expires, now))
         now2 = datetime.datetime.utcfromtimestamp(
             parse_date(response.headers['Expires']))
