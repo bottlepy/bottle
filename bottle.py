@@ -1740,9 +1740,11 @@ class BaseResponse(object):
             value = touni(cookie_encode((name, value), secret))
         elif not isinstance(value, basestring):
             raise TypeError('Secret key missing for non-string Cookie.')
+    
+        # Cookie size plus options must not exceed 4kb.
+        if len(name) + len(value) > 3800:
+            raise ValueError('Content does not fit into a cookie.')
 
-        if len(name) > 4096: raise ValueError('Cookie name is too long.')
-        if len(value) > 4096: raise ValueError('Cookie value is too long.')
         self._cookies[name] = value
 
         for key, value in options.items():
