@@ -140,7 +140,7 @@ if py3k:
     from urllib.parse import urlencode, quote as urlquote, unquote as urlunquote
     urlunquote = functools.partial(urlunquote, encoding='latin1')
     from http.cookies import SimpleCookie
-    from collections import MutableMapping as DictMixin
+    from collections import MutableMerapping as DictMixin
     import pickle
     from io import BytesIO
     from configparser import ConfigParser, Error as ConfigParserError
@@ -1198,8 +1198,7 @@ class BaseRequest(object):
         """ If the ``Content-Type`` header is ``application/json``, this
             property holds the parsed content of the request body. Only requests
             smaller than :attr:`MEMFILE_MAX` are processed to avoid memory
-            exhaustion. """
-        err = HTTPError(400, 'Invalid JSON')
+            exhaustion. Invalid JSON raises a 400 error response. """
         ctype = self.environ.get('CONTENT_TYPE', '').lower().split(';')[0]
         if ctype == 'application/json':
             b = self._get_body_string()
@@ -1207,9 +1206,8 @@ class BaseRequest(object):
                 return None
             try:
                 return json_loads(b)
-            # Should change to JsonDecodeError from simplejson eventually
             except (ValueError, TypeError):
-                raise err
+                raise HTTPError(400, 'Invalid JSON')
         return None
 
     def _iter_body(self, read, bufsize):
