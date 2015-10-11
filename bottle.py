@@ -74,9 +74,28 @@ from types import FunctionType
 from datetime import date as datedate, datetime, timedelta
 from tempfile import TemporaryFile
 from traceback import format_exc, print_exc
-from inspect import getargspec
 from unicodedata import normalize
 
+# inspect.getargspec was removed in Python 3.6, use
+# Signature-based version where we can (Python 3.3+)
+try:
+    from inspect import signature
+    def getargspec(func):
+        params = signature(func).parameters
+        args, varargs, keywords, defaults = [], None, None, []
+        for name, param in params.items():
+            if param.kind == param.VAR_POSITIONAL:
+                varargs = name
+            elif param.kind == param.VAR_KEYWORD:
+                keywords = name
+            else:
+                args.append(name)
+                if param.default is not param.empty:
+                    defaults.append(param.default)
+        return (args, varargs, keywords, tuple(defaults) or defaults)
+except ImportError:
+    from inspect import getargspec
+    
 try:
     from simplejson import dumps as json_dumps, loads as json_lds
 except ImportError:  # pragma: no cover
