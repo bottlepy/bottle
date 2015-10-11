@@ -1199,12 +1199,17 @@ class BaseRequest(object):
             property holds the parsed content of the request body. Only requests
             smaller than :attr:`MEMFILE_MAX` are processed to avoid memory
             exhaustion. """
+        err = HTTPError(400, 'Invalid JSON')
         ctype = self.environ.get('CONTENT_TYPE', '').lower().split(';')[0]
         if ctype == 'application/json':
             b = self._get_body_string()
             if not b:
                 return None
-            return json_loads(b)
+            try:
+                return json_loads(b)
+            # Should change to JsonDecodeError from simplejson eventually
+            except (ValueError, TypeError):
+                raise err
         return None
 
     def _iter_body(self, read, bufsize):
