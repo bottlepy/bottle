@@ -923,11 +923,15 @@ class Bottle(object):
 
     def _handle(self, environ):
         path = environ['bottle.raw_path'] = environ['PATH_INFO']
+        
         if py3k:
             try:
                 environ['PATH_INFO'] = path.encode('latin1').decode('utf8')
-            except UnicodeError:
-                return HTTPError(400, 'Invalid path string. Expected UTF-8')
+            except UnicodeError: 
+                try: # BUG 602 encoding path to latin1 may contain char not in utf8
+                    environ['PATH_INFO'] = urlunquote(path) 
+                except: # Really really can't convert the path variable
+                    return HTTPError(400, 'Invalid path string. Expected UTF-8')
 
         try:
             environ['bottle.app'] = self

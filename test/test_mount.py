@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import bottle
 from tools import ServerTestBase
 from bottle import response
@@ -11,6 +13,11 @@ class TestAppMounting(ServerTestBase):
         def test(test='foo'):
             return test
 
+    def test_mount_unicode_path_bug602(self):
+        self.app.mount('/test', self.subapp)
+        self.assertBody('äöü', '/test/test/äöü')
+        self.app.route('/:test', callback=lambda test: test)
+        self.assertBody('äöü', '/äöü')
 
     def test_mount_order_bug581(self):
         self.app.mount('/test/', self.subapp)
