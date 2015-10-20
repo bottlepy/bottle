@@ -11,3 +11,4 @@ MANIFEST
 bottle.egg-info/
 .htmlcoverage/
 docs/_locale/_pot/.doctrees/
+.tox/
