@@ -115,7 +115,7 @@ except ImportError:  # pragma: no cover
 try:
     from umsgpack import dumps as msgpack_dumps, loads as msgpack_loads
 except ImportError:
-    def msgpack_dumps():
+    def msgpack_dumps(data):
         raise ImportError("MsgPack support requires u-msgpack-python.")
 
     msgpack_loads = msgpack_dumps
