@@ -36,21 +36,19 @@ pushd $PREFIX || exit 1
 
     echo "Running make && make install ..."
     (make -j8 && make install) || exit 1
-
-    echo "Installing distribute and pip..."
     hash -r
-    wget -N -O $PREFIX/distribute_setup.py \
-      http://python-distribute.org/distribute_setup.py || exit 1
-      
-    $PREFIX/bin/python$VERSION $PREFIX/distribute_setup.py || exit 1
+
     if [ $VERSION = "2.5" ]; then
-        $PREFIX/bin/easy_install-$VERSION simplejson || exit 1
+        wget https://pypi.python.org/packages/source/s/simplejson/simplejson-3.6.3.tar.gz
+        tar -xvzf simplejson-3.6.3.tar.gz
+        cd simplejson-3.6.3
+        $PREFIX/bin/python$VERSION setup.py install
     fi
-    
+
   popd
 
   echo "Cleaning up..."
-  rm -rf $VERSION.tar.gz distribute_setup.py cpython-$VERSION
+  rm -rf $VERSION.tar.gz cpython-$VERSION
 popd
 
 
