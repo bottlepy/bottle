@@ -942,7 +942,6 @@ class Bottle(object):
             except (KeyboardInterrupt, SystemExit, MemoryError):
                 raise
             except Exception:
-                exc = 
                 if not self.catchall: raise
                 stacktrace = format_exc()
                 environ['wsgi.errors'].write(stacktrace)
@@ -959,7 +958,7 @@ class Bottle(object):
         finally:
             if isinstance(out, HTTPResponse):
                 out.apply(response)
-            self.trigger_hook('after_request', exc)
+            self.trigger_hook('after_request')
 
     def _cast(self, out, peek=None):
         """ Try to convert the parameter into something WSGI compatible and set
@@ -1746,7 +1745,7 @@ class BaseResponse(object):
             value = touni(cookie_encode((name, value), secret))
         elif not isinstance(value, basestring):
             raise TypeError('Secret key missing for non-string Cookie.')
-    
+
         # Cookie size plus options must not exceed 4kb.
         if len(name) + len(value) > 3800:
             raise ValueError('Content does not fit into a cookie.')
@@ -1846,10 +1845,10 @@ class HTTPError(HTTPResponse):
                  status=None,
                  body=None,
                  exception=None,
-                 traceback=None, **options):
+                 traceback=None, **more_headers):
         self.exception = exception
         self.traceback = traceback
-        super(HTTPError, self).__init__(body, status, **options)
+        super(HTTPError, self).__init__(body, status, **more_headers)
 
 ###############################################################################
 # Plugins ######################################################################
