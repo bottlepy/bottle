@@ -452,8 +452,12 @@ class TestRequest(unittest.TestCase):
             self.assertEqual(r.foo, 'somevalue')
             self.assertTrue('somevalue' in r.environ.values())
 
+            # Attributes are read-only once set.
+            self.assertRaises(AttributeError, setattr, r, 'foo', 'x')
+
             # Unknown attributes raise AttributeError.
             self.assertRaises(AttributeError, getattr, r, 'somevalue')
+
 
 
 

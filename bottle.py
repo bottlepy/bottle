@@ -647,7 +647,6 @@ class Bottle(object):
     """
 
     def __init__(self, catchall=True, autojson=True):
-
         #: A :class:`ConfigDict` for app specific configuration.
         self.config = ConfigDict()
         self.config._on_change = functools.partial(self.trigger_hook, 'config')
@@ -1070,6 +1069,12 @@ class Bottle(object):
 
     def __exit__(self, exc_type, exc_value, traceback):
         default_app.pop()
+
+    def __setattr__(self, name, value):
+        if name in self.__dict__:
+            raise AttributeError("Attribute %s already defined. Plugin conflict?" % name)
+        self.__dict__[name] = value
+
 
 ###############################################################################
 # HTTP and WSGI Tools ##########################################################
@@ -1897,6 +1902,9 @@ class TemplatePlugin(object):
         or default variables for the template. """
     name = 'template'
     api = 2
+
+    def setup(self, app):
+        app.tpl = self
 
     def apply(self, callback, route):
         conf = route.config.get('template')
