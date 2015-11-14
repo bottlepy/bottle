@@ -95,7 +95,7 @@ try:
         return (args, varargs, keywords, tuple(defaults) or None)
 except ImportError:
     from inspect import getargspec
-    
+
 try:
     from simplejson import dumps as json_dumps, loads as json_lds
 except ImportError:  # pragma: no cover
@@ -926,7 +926,7 @@ class Bottle(object):
             environ['PATH_INFO'] = path.encode('latin1').decode('utf8', 'ignore')
 
         def _inner_handle():
-            # Maybe pass variables as locals for better performance? 
+            # Maybe pass variables as locals for better performance?
             try:
                 route, args = self.router.match(environ)
                 environ['route.handle'] = route
@@ -1205,12 +1205,15 @@ class BaseRequest(object):
 
     @DictProperty('environ', 'bottle.request.json', read_only=True)
     def json(self):
-        """ If the ``Content-Type`` header is ``application/json``, this
-            property holds the parsed content of the request body. Only requests
+        """ If the ``Content-Type`` header is ``application/json`` or ``application/*+json``,
+            this property holds the parsed content of the request body. Only requests
             smaller than :attr:`MEMFILE_MAX` are processed to avoid memory
             exhaustion. Invalid JSON raises a 400 error response. """
         ctype = self.environ.get('CONTENT_TYPE', '').lower().split(';')[0]
-        if ctype == 'application/json':
+        if (
+            ctype == 'application/json' or
+            (ctype.startswith('application/') and ctype.endswith('+json'))
+        ):
             b = self._get_body_string()
             if not b:
                 return None
