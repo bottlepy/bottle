@@ -62,6 +62,9 @@ test_33:
 test_34:
 	python3.4 test/testall.py
 
+test_35:
+	python3.5 test/testall.py
+
 clean:
 	rm -rf build/ dist/ MANIFEST 2>/dev/null || true
 	find . -name '__pycache__' -exec rm -rf {} +
