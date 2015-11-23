@@ -95,7 +95,7 @@ try:
         return (args, varargs, keywords, tuple(defaults) or None)
 except ImportError:
     from inspect import getargspec
-    
+
 try:
     from simplejson import dumps as json_dumps, loads as json_lds
 except ImportError:  # pragma: no cover
@@ -111,6 +111,14 @@ except ImportError:  # pragma: no cover
                     "JSON support requires Python 2.6 or simplejson.")
 
             json_lds = json_dumps
+
+try:
+    from umsgpack import dumps as msgpack_dumps, loads as msgpack_loads
+except ImportError:
+    def msgpack_dumps(data):
+        raise ImportError("MsgPack support requires u-msgpack-python.")
+
+    msgpack_loads = msgpack_dumps
 
 # We now try to fix 2.5/2.6/3.1/3.2 incompatibilities.
 # It ain't pretty but it works... Sorry for the mess.
@@ -1218,6 +1226,23 @@ class BaseRequest(object):
                 return json_loads(b)
             except (ValueError, TypeError):
                 raise HTTPError(400, 'Invalid JSON')
+        return None
+
+    @DictProperty('environ', 'bottle.request.msgpack', read_only=True)
+    def msgpack(self):
+        """ If the ``Content-Type`` header is ``application/msgpack``, this
+            property holds the parsed content of the request body. Only requests
+            smaller than :attr:`MEMFILE_MAX` are processed to avoid memory
+            exhaustion. Invalid MsgPack raises a 400 error response. """
+        ctype = self.environ.get('CONTENT_TYPE', '').lower().split(';')[0]
+        if ctype == 'application/msgpack':
+            b = self._get_body_string()
+            if not b:
+                return None
+            try:
+                return msgpack_loads(b)
+            except (ValueError, TypeError):
+                raise HTTPError(400, 'Invalid MsgPack')
         return None
 
     def _iter_body(self, read, bufsize):

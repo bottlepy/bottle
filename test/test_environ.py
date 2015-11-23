@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
 ''' Tests for the BaseRequest and BaseResponse objects and their subclasses. '''
 
-import unittest
-import sys
-import bottle
-from bottle import request, tob, touni, tonat, json_dumps, _e, HTTPError, parse_date
-import tools
-import wsgiref.util
 import base64
+import sys
+import unittest
+import wsgiref.util
 
-from bottle import BaseRequest, BaseResponse, LocalRequest
+import bottle
+import tools
+from bottle import (BaseRequest, BaseResponse, HTTPError, LocalRequest, _e,
+                    json_dumps, msgpack_dumps, parse_date, request, tob, tonat,
+                    touni)
+
 
 class TestRequest(unittest.TestCase):
 
@@ -350,6 +352,30 @@ class TestRequest(unittest.TestCase):
         self.assertEqual(['value2', 'value3'], request.POST.getall('field2'))
         self.assertEqual(['value2', 'value3'], request.forms.getall('field2'))
         self.assertTrue('field2' not in request.files)
+
+    def test_msgpack_empty(self):
+        """Environ: Request.msgpack property with empty body. """
+        self.assertEqual(BaseRequest({}).msgpack, None)
+
+    def test_msgpack_noheader(self):
+        """ Environ: Request.msgpack property with missing content-type header. """
+        test = dict(a=5, b='test', c=[1,2,3])
+        e = {}
+        wsgiref.util.setup_testing_defaults(e)
+        e['wsgi.input'].write(tob(msgpack_dumps(test)))
+        e['wsgi.input'].seek(0)
+        e['CONTENT_LENGTH'] = str(len(msgpack_dumps(test)))
+        self.assertEqual(BaseRequest(e).msgpack, None)
+
+    def test_msgpack_valid(self):
+        """ Environ: Request.msgpack property. """
+        test = dict(a=5, b='test', c=[1,2,3])
+        e = {'CONTENT_TYPE': 'application/msgpack; charset=UTF-8'}
+        wsgiref.util.setup_testing_defaults(e)
+        e['wsgi.input'].write(tob(msgpack_dumps(test)))
+        e['wsgi.input'].seek(0)
+        e['CONTENT_LENGTH'] = str(len(msgpack_dumps(test)))
+        self.assertEqual(BaseRequest(e).msgpack, test)
 
     def test_json_empty(self):
         """ Environ: Request.json property with empty body. """
