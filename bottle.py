@@ -656,7 +656,7 @@ class Bottle(object):
     def __init__(self, catchall=True, autojson=True):
         #: A :class:`ConfigDict` for app specific configuration.
         self.config = ConfigDict()
-        self.config._on_change = functools.partial(self.trigger_hook, 'config')
+        self.config._add_change_listener(functools.partial(self.trigger_hook, 'config'))
         self.config.meta_set('autojson', 'validate', bool)
         self.config.meta_set('catchall', 'validate', bool)
         self.config['catchall'] = catchall
@@ -1931,6 +1931,8 @@ class TemplatePlugin(object):
             return callback
 
 
+
+
 #: Not a plugin, but part of the plugin API. TODO: Find a better place.
 class _ImportRedirect(object):
     def __init__(self, name, impmask):
@@ -2223,11 +2225,12 @@ class ConfigDict(dict):
         namespaces, validators, meta-data, on_change listeners and more.
     """
 
-    __slots__ = ('_meta', '_on_change')
+    __slots__ = ('_meta', '_change_listener', '_fallbacks')
 
     def __init__(self):
         self._meta = {}
-        self._on_change = lambda name, value: None
+        self._change_listener = []
+        self._fallbacks = []
 
     def load_module(self, path, squash):
         """ Load values from a Python module.
@@ -2299,6 +2302,7 @@ class ConfigDict(dict):
     def __setitem__(self, key, value):
         if not isinstance(key, basestring):
             raise TypeError('Key has type %r (not a string)' % type(key))
+
         value = self.meta_get(key, 'filter', lambda x: x)(value)
         if key in self and self[key] is value:
             return
@@ -2309,16 +2313,44 @@ class ConfigDict(dict):
         self._on_change(key, None)
         dict.__delitem__(self, key)
 
+    def __missing__(self, key):
+        for fallback in self._fallbacks:
+            if key in fallback:
+                value = self[key] = fallback[key]
+                self.meta_set(key, 'fallback', fallback)
+                return value
+        raise KeyError(key)
+
+    def _on_change(self, key, value):
+        for cb in self._change_listener:
+            if cb(self, key, value):
+                return True
+
+    def _add_change_listener(self, func):
+        self._change_listener.append(func)
+        return func
+
+    def _set_fallback(self, fallback):
+        self._fallbacks.append(fallback)
+
+        @fallback._add_change_listener
+        def fallback_update(conf, key, value):
+            if self.meta_get(key, 'fallback') is conf:
+                self.meta_set(key, 'fallback', None)
+                dict.__delitem__(self, key)
+
+        @self._add_change_listener
+        def self_update(conf, key, value):
+            if conf.meta_get(key, 'fallback'):
+                conf.meta_set(key, 'fallback', None)
+
     def meta_get(self, key, metafield, default=None):
         """ Return the value of a meta field for a key. """
         return self._meta.get(key, {}).get(metafield, default)
 
     def meta_set(self, key, metafield, value):
-        """ Set the meta field for a key to a new value. This triggers the
-            on-change handler for existing keys. """
+        """ Set the meta field for a key to a new value. """
         self._meta.setdefault(key, {})[metafield] = value
-        if key in self:
-            self[key] = self[key]
 
     def meta_list(self, key):
         """ Return an iterable of meta field names defined for a key. """
