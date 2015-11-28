@@ -48,3 +48,10 @@ class TestRoute(unittest.TestCase):
 
         # triggers the "TypeError: 'foo' is not a Python function"
         self.assertEqual(set(route.get_callback_args()), set(['a', 'b']))
+
+    if bottle.py3k:
+        def test_callback_inspection_newsig(self):
+            env = {}
+            eval(compile('def foo(a, *, b=5): pass', '<foo>', 'exec'), env, env)
+            route = bottle.Route(None, None, None, env['foo'])
+            self.assertEqual(set(route.get_callback_args()), set(['a', 'b']))

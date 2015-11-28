@@ -94,8 +94,15 @@ try:
                     defaults.append(param.default)
         return (args, varargs, keywords, tuple(defaults) or None)
 except ImportError:
-    from inspect import getargspec
-    
+    try:
+        from inspect import getfullargspec
+        def getargspec(func):
+            spec = getfullargspec(func)
+            kwargs = makelist(spec[0]) + makelist(spec.kwonlyargs)
+            return kwargs, spec[1], spec[2], spec[3]
+    except ImportError:
+        from inspect import getargspec
+
 try:
     from simplejson import dumps as json_dumps, loads as json_lds
 except ImportError:  # pragma: no cover
