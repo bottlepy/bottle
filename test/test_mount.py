@@ -72,7 +72,7 @@ class TestAppMounting(ServerTestBase):
         self.assertHeader('X-Test', 'WSGI', '/test/')
         self.assertBody('WSGI /test/bar', '/test/test/bar')
             
-    def test_mount_wsgi(self):
+    def test_mount_cookie(self):
         @self.subapp.route('/cookie')
         def test_cookie():
             response.set_cookie('a', 'a')
