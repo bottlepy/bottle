@@ -67,6 +67,3 @@ except ImportError:
   warn("No Jinja2 template support. Skipping tests.")
   del TestJinja2Template
 
-if __name__ == '__main__': #pragma: no cover
-    unittest.main()
-

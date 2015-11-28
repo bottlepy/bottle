@@ -111,8 +111,3 @@ class TestAppMerging(ServerTestBase):
         self.assertBody('foo', '/')
         self.assertStatus(200, '/test/bar')
         self.assertBody('bar', '/test/bar')
-
-
-
-if __name__ == '__main__': #pragma: no cover
-    unittest.main()

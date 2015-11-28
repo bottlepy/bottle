@@ -65,6 +65,16 @@ test_34:
 test_35:
 	python3.5 test/testall.py
 
+test_setup:
+	bash test/build_python.sh 2.5 build/python
+	bash test/build_python.sh 2.6 build/python
+	bash test/build_python.sh 2.7 build/python
+	bash test/build_python.sh 3.1 build/python
+	bash test/build_python.sh 3.2 build/python
+	bash test/build_python.sh 3.3 build/python
+	bash test/build_python.sh 3.4 build/python
+	bash test/build_python.sh 3.5 build/python
+
 clean:
 	rm -rf build/ dist/ MANIFEST 2>/dev/null || true
 	find . -name '__pycache__' -exec rm -rf {} +

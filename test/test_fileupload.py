@@ -63,4 +63,3 @@ class TestFileUpload(unittest.TestCase):
         self.assertEqual(fu.file.read(), open(filepath, 'rb').read())
         os.unlink(filepath)
         os.rmdir(dirpath)
-                

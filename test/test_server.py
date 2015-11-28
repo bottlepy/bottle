@@ -129,6 +129,3 @@ class TestBjoernServer(TestServer):
 
 class TestAiohttpServer(TestServer):
     server = 'aiohttp'
-
-if __name__ == '__main__': #pragma: no cover
-    unittest.main()

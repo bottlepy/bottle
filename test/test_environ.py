@@ -5,7 +5,7 @@ import unittest
 import sys
 import bottle
 from bottle import request, tob, touni, tonat, json_dumps, _e, HTTPError, parse_date
-import tools
+from test import tools
 import wsgiref.util
 import base64
 
@@ -850,8 +850,3 @@ class TestWSGIHeaderDict(unittest.TestCase):
             self.assertTrue(key in self.headers)
             self.assertEqual(self.headers.get(key), 'test')
             self.assertEqual(self.headers.get(key, 5), 'test')
-
-
-
-if __name__ == '__main__': #pragma: no cover
-    unittest.main()

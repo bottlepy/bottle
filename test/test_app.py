@@ -18,9 +18,3 @@ class TestApplicationObject(unittest.TestCase):
         del app.test
         app.test = 6
         self.assertEquals(6, app.test)
-
-
-   
-if __name__ == '__main__': #pragma: no cover
-    unittest.main()
-
