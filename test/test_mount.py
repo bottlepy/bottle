@@ -6,6 +6,7 @@ class TestAppMounting(ServerTestBase):
     def setUp(self):
         ServerTestBase.setUp(self)
         self.subapp = bottle.Bottle()
+        @self.subapp.route('')
         @self.subapp.route('/')
         @self.subapp.route('/test/:test')
         def test(test='foo'):
@@ -33,11 +34,9 @@ class TestAppMounting(ServerTestBase):
     def test_mount_meta(self):
         self.app.mount('/test/', self.subapp)
         self.assertEqual(
-            self.app.routes[0].config['mountpoint.prefix'],
-            '/test/')
+            self.subapp.config['_mount.prefix'], '/test/')
         self.assertEqual(
-            self.app.routes[0].config['mountpoint.target'],
-            self.subapp)
+            self.subapp.config['_mount.app'], self.app)
 
     def test_no_slash_prefix(self):
         self.app.mount('/test', self.subapp)

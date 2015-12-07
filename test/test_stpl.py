@@ -10,7 +10,7 @@ from tools import chdir
 class TestSimpleTemplate(unittest.TestCase):
     def assertRenders(self, tpl, to, *args, **vars):
         if isinstance(tpl, str):
-            tpl = SimpleTemplate(tpl)
+            tpl = SimpleTemplate(tpl, lookup=[os.path.join(os.path.dirname(__file__), 'views')])
         self.assertEqual(touni(to), tpl.render(*args, **vars))
 
     def test_string(self):
@@ -22,7 +22,7 @@ class TestSimpleTemplate(unittest.TestCase):
 
     def test_file(self):
         with chdir(__file__):
-            t = SimpleTemplate(name='./views/stpl_simple.tpl')
+            t = SimpleTemplate(name='./views/stpl_simple.tpl', lookup=['.'])
             self.assertRenders(t, 'start var end\n', var='var')
 
     def test_name(self):
@@ -37,7 +37,7 @@ class TestSimpleTemplate(unittest.TestCase):
     def test_unicode_code(self):
         """ Templates: utf8 code in file"""
         with chdir(__file__):
-            t = SimpleTemplate(name='./views/stpl_unicode.tpl')
+            t = SimpleTemplate(name='./views/stpl_unicode.tpl', lookup=['.'])
             self.assertRenders(t, 'start ñç äöü end\n', var=touni('äöü'))
 
     def test_import(self):
@@ -179,12 +179,12 @@ class TestSimpleTemplate(unittest.TestCase):
 
     def test_notfound(self):
         """ Templates: Unavailable templates"""
-        self.assertRaises(TemplateError, SimpleTemplate, name="abcdef")
+        self.assertRaises(TemplateError, SimpleTemplate, name="abcdef", lookup=['.'])
 
     def test_error(self):
         """ Templates: Exceptions"""
         self.assertRaises(SyntaxError, lambda: SimpleTemplate('%for badsyntax').co)
-        self.assertRaises(IndexError, SimpleTemplate('{{i[5]}}').render, i=[0])
+        self.assertRaises(IndexError, SimpleTemplate('{{i[5]}}', lookup=['.']).render, i=[0])
 
     def test_winbreaks(self):
         """ Templates: Test windows line breaks """

@@ -221,8 +221,14 @@ def update_wrapper(wrapper, wrapped, *a, **ka):
 # And yes, I know PEP-8, but sometimes a lower-case classname makes more sense.
 
 
-def depr(message, strict=False):
-    warnings.warn(message, DeprecationWarning, stacklevel=3)
+def depr(major, minor, cause, fix):
+    text = "Warning: Use of deprecated feature or API. (Deprecated in Bottle-%d.%d)\n"\
+           "Cause: %s\n"\
+           "Fix: %s\n" %  (major, minor, cause, fix)
+    if DEBUG == 'strict':
+        raise DeprecationWarning(text)
+    warnings.warn(text, DeprecationWarning, stacklevel=3)
+    return DeprecationWarning(text)
 
 
 def makelist(data):  # This is just too handy
@@ -662,6 +668,8 @@ class Bottle(object):
         self.config['catchall'] = catchall
         self.config['autojson'] = autojson
 
+        self._mounts = []
+
         #: A :class:`ResourceManager` for application files
         self.resources = ResourceManager()
 
@@ -721,21 +729,10 @@ class Bottle(object):
 
         return decorator
 
-    def mount(self, prefix, app, **options):
-        """ Mount an application (:class:`Bottle` or plain WSGI) to a specific
-            URL prefix. Example::
-
-                root_app.mount('/admin/', admin_app)
-
-            :param prefix: path prefix or `mount-point`. If it ends in a slash,
-                that slash is mandatory.
-            :param app: an instance of :class:`Bottle` or a WSGI application.
-
-            All other parameters are passed to the underlying :meth:`route` call.
-        """
-
+    def _mount_wsgi(self, prefix, app, **options):
         segments = [p for p in prefix.split('/') if p]
-        if not segments: raise ValueError('Empty path prefix.')
+        if not segments:
+            raise ValueError('WSGI applications cannot be mounted to "/".')
         path_depth = len(segments)
 
         def mountpoint_wrapper():
@@ -765,6 +762,59 @@ class Bottle(object):
         self.route('/%s/<:re:.*>' % '/'.join(segments), **options)
         if not prefix.endswith('/'):
             self.route('/' + '/'.join(segments), **options)
+
+    def _mount_app(self, prefix, app, **options):
+        if app in self._mounts or '_mount.app' in app.config:
+            depr(0, 13, "Application mounted multiple times. Falling back to WSGI mount.",
+                 "Clone application before mounting to a different location.")
+            return self._mount_wsgi(prefix, app, **options)
+
+        if options:
+            depr(0, 13, "Unsupported mount options. Falling back to WSGI mount.",
+                 "Do not specify any route options when mounting bottle application.")
+            return self._mount_wsgi(prefix, app, **options)
+
+        if not prefix.endswith("/"):
+            depr(0, 13, "Prefix must end in '/'. Falling back to WSGI mount.",
+                 "Consider adding an explicit redirect from '/prefix' to '/prefix/' in the parent application.")
+            return self._mount_wsgi(prefix, app, **options)
+
+        self._mounts.append(app)
+        app.config['_mount.prefix'] = prefix
+        app.config['_mount.app'] = self
+        for route in app.routes:
+            route.rule = prefix + route.rule.lstrip('/')
+            self.add_route(route)
+
+    def mount(self, prefix, app, **options):
+        """ Mount an application (:class:`Bottle` or plain WSGI) to a specific
+            URL prefix. Example::
+
+                parent_app.mount('/prefix/', child_app)
+
+            :param prefix: path prefix or `mount-point`.
+            :param app: an instance of :class:`Bottle` or a WSGI application.
+
+            Plugins from the parent application are not applied to the routes
+            of the mounted child application. If you need plugins in the child
+            application, install them separately.
+
+            While it is possible to use path wildcards within the prefix path
+            (:class:`Bottle` childs only), it is highly discouraged.
+
+            The prefix path must end with a slash. If you want to access the
+            root of the child application via `/prefix` in addition to
+            `/prefix/`, consider adding a route with a 307 redirect to the
+            parent application.
+        """
+
+        if not prefix.startswith('/'):
+            raise ValueError("Prefix must start with '/'")
+
+        if isinstance(app, Bottle):
+            return self._mount_app(prefix, app, **options)
+        else:
+            return self._mount_wsgi(prefix, app, **options)
 
     def merge(self, routes):
         """ Merge the routes of another :class:`Bottle` application or a list of
@@ -3473,13 +3523,11 @@ class BaseTemplate(object):
         """ Search name in all directories specified in lookup.
         First without, then with common extensions. Return first hit. """
         if not lookup:
-            depr('The template lookup path list should not be empty.',
-                 True)  #0.12
-            lookup = ['.']
+            raise depr(0, 12, "Empty template lookup path.", "Configure a template lookup path.")
 
-        if os.path.isabs(name) and os.path.isfile(name):
-            depr('Absolute template path names are deprecated.', True)  #0.12
-            return os.path.abspath(name)
+        if os.path.isabs(name):
+            raise depr(0, 12, "Use of absolute path for template name.",
+                       "Refer to templates with names or paths relative to the lookup path.")
 
         for spath in lookup:
             spath = os.path.abspath(spath) + os.sep
@@ -3611,8 +3659,7 @@ class SimpleTemplate(BaseTemplate):
         try:
             source, encoding = touni(source), 'utf8'
         except UnicodeError:
-            depr('Template encodings other than utf8 are not supported.')  #0.11
-            source, encoding = touni(source, 'latin1'), 'latin1'
+            raise depr(0, 11, 'Unsupported template encodings.', 'Use utf-8 for templates.')
         parser = StplParser(source, encoding=encoding, syntax=self.syntax)
         code = parser.translate()
         self.encoding = parser.encoding
