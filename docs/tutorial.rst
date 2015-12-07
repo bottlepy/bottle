@@ -147,9 +147,7 @@ Each wildcard passes the covered part of the URL as a keyword argument to the re
     def user_api(action, user):
         ...
 
-.. versionadded:: 0.10
-
-Filters are used to define more specific wildcards, and/or transform the covered part of the URL before it is passed to the callback. A filtered wildcard is declared as ``<name:filter>`` or ``<name:filter:config>``. The syntax for the optional config part depends on the filter used.
+Filters can be used to define more specific wildcards, and/or transform the covered part of the URL before it is passed to the callback. A filtered wildcard is declared as ``<name:filter>`` or ``<name:filter:config>``. The syntax for the optional config part depends on the filter used.
 
 The following filters are implemented by default and more may be added:
 
@@ -173,21 +171,6 @@ Let's have a look at some practical examples::
         return static_file(path, ...)
 
 You can add your own filters as well. See :doc:`routing` for details.
-
-.. versionchanged:: 0.10
-
-The new rule syntax was introduced in **Bottle 0.10** to simplify some common use cases, but the old syntax still works and you can find a lot of code examples still using it. The differences are best described by example:
-
-=================== ====================
-Old Syntax          New Syntax
-=================== ====================
-``:name``           ``<name>``
-``:name#regexp#``   ``<name:re:regexp>``
-``:#regexp#``       ``<:re:regexp>``
-``:##``             ``<:re>``
-=================== ====================
-
-Try to avoid the old syntax in future projects if you can. It is not currently deprecated, but will be eventually.
 
 
 HTTP Request Methods

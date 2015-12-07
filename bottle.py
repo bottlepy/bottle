@@ -390,6 +390,9 @@ class Router(object):
         for match in self.rule_syntax.finditer(rule):
             prefix += rule[offset:match.start()]
             g = match.groups()
+            if g[2] is not None:
+                depr(0, 13, "Use of old route syntax.",
+                            "Use <name> instead of :name in routes.")
             if len(g[0]) % 2:  # Escaped wildcard
                 prefix += match.group(0)[len(g[0]):]
                 offset = match.end()
