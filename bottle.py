@@ -734,7 +734,11 @@ class Bottle(object):
             All other parameters are passed to the underlying :meth:`route` call.
         """
 
-        segments = [p for p in prefix.split('/') if p]
+        if hasattr(prefix,'__iter__'):
+            segments = [p for p in prefix if p]
+            prefix = '/' + '/'.join(prefix)
+        else:
+            segments = [p for p in prefix.split('/') if p]
         if not segments: raise ValueError('Empty path prefix.')
         path_depth = len(segments)
 

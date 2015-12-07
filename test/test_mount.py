@@ -30,7 +30,16 @@ class TestAppMounting(ServerTestBase):
         self.assertStatus(200, '/test/test/bar')
         self.assertBody('bar', '/test/test/bar')
 
-    def test_mount_meta(self):
+    def test_mount_segmented_prefix(self):
+        self.app.mount(['test',''], self.subapp)
+        self.assertStatus(404, '/')
+        self.assertStatus(404, '/test')
+        self.assertStatus(200, '/test/')
+        self.assertBody('foo', '/test/')
+        self.assertStatus(200, '/test/test/bar')
+        self.assertBody('bar', '/test/test/bar')
+
+        def test_mount_meta(self):
         self.app.mount('/test/', self.subapp)
         self.assertEqual(
             self.app.routes[0].config['mountpoint.prefix'],
