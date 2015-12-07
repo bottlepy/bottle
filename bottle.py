@@ -171,8 +171,6 @@ else:  # 2.x
     from ConfigParser import SafeConfigParser as ConfigParser, \
                              Error as ConfigParserError
     if py25:
-        msg = "Python 2.5 support may be dropped in future versions of Bottle."
-        warnings.warn(msg, DeprecationWarning)
         from UserDict import DictMixin
 
         def next(it):
@@ -185,6 +183,9 @@ else:  # 2.x
     json_loads = json_lds
     eval(compile('def _raise(*a): raise a[0], a[1], a[2]', '<py3fix>', 'exec'))
 
+if py25 or py31:
+    msg = "Python 2.5 and 3.1 support will be dropped in future versions of Bottle."
+    warnings.warn(msg, DeprecationWarning)
 
 # Some helpers for string/byte handling
 def tob(s, enc='utf8'):
