@@ -820,7 +820,7 @@ class Bottle(object):
         else:
             return self._mount_wsgi(prefix, app, **options)
 
-    def merge(self, routes):
+    def merge(self, routes, namespace=''):
         """ Merge the routes of another :class:`Bottle` application or a list of
             :class:`Route` objects into this application. The routes keep their
             'owner', meaning that the :data:`Route.app` attribute is not
@@ -828,6 +828,8 @@ class Bottle(object):
         if isinstance(routes, Bottle):
             routes = routes.routes
         for route in routes:
+            if namespace and not route.rule.startswith(namespace):
+                route.rule = namespace + route.rule
             self.add_route(route)
 
     def install(self, plugin):
