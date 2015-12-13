@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Bottle 0.13-dev\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-01-22 16:45-0200\n"
+"POT-Creation-Date: 2015-12-13 21:30+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,302 +17,242 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #: ../../plugindev.rst:6
-# 724a888f6f244bedbdf2cd290e209c7e
 msgid "Plugin Development Guide"
 msgstr ""
 
 #: ../../plugindev.rst:8
-# 368be250f7074fdc8b4049c522a715ed
 msgid "This guide explains the plugin API and how to write custom plugins. I suggest reading :ref:`plugins` first if you have not done that already. You might also want to have a look at the :doc:`/plugins/index` for some practical examples."
 msgstr ""
 
 #: ../../plugindev.rst:12
-# a51e6b69ef714b7fbe9ac5135eb0b436
 msgid "This is a draft. If you see any errors or find that a specific part is not explained clear enough, please tell the `mailing-list <mailto:bottlepy@googlegroups.com>`_ or file a `bug report <https://github.com/bottlepy/bottle/issues>`_."
 msgstr ""
 
 #: ../../plugindev.rst:16
-# 61248acd95e14614ac7ebddc2df94535
 msgid "How Plugins Work: The Basics"
 msgstr ""
 
 #: ../../plugindev.rst:18
-# 3cd1f808667d4b539d26d4b5d8c51b55
 msgid "The plugin API builds on the concept of `decorators <http://docs.python.org/glossary.html#term-decorator>`_. To put it briefly, a plugin is a decorator applied to every single route callback of an application."
 msgstr ""
 
 #: ../../plugindev.rst:20
-# 25cfdadfbfc54e47ae7b2f75ce1aeaf9
-msgid "Of course, this is just a simplification. Plugins can do a lot more than just decorating route callbacks, but it is a good starting point. Lets have a look at some code::"
+msgid "This is just a simplification. Plugins can do a lot more than just decorating route callbacks, but it is a good starting point. Lets have a look at some code::"
 msgstr ""
 
 #: ../../plugindev.rst:36
-# 27708e12ba14412cb4719108df66afa9
 msgid "This plugin measures the execution time for each request and adds an appropriate ``X-Exec-Time`` header to the response. As you can see, the plugin returns a wrapper and the wrapper calls the original callback recursively. This is how decorators usually work."
 msgstr ""
 
 #: ../../plugindev.rst:38
-# 2445317c24d34ee498ff8950f8dc380a
 msgid "The last line tells Bottle to install the plugin to the default application. This causes the plugin to be automatically applied to all routes of that application. In other words, ``stopwatch()`` is called once for each route callback and the return value is used as a replacement for the original callback."
 msgstr ""
 
 #: ../../plugindev.rst:40
-# 7249d9edc92a423b946dd8e6cfad2e1c
 msgid "Plugins are applied on demand, that is, as soon as a route is requested for the first time. For this to work properly in multi-threaded environments, the plugin should be thread-safe. This is not a problem most of the time, but keep it in mind."
 msgstr ""
 
 #: ../../plugindev.rst:42
-# 6eb5cb31ccde494c8d52e33ee8cc2dfd
 msgid "Once all plugins are applied to a route, the wrapped callback is cached and subsequent requests are handled by the cached version directly. This means that a plugin is usually applied only once to a specific route. That cache, however, is cleared every time the list of installed plugins changes. Your plugin should be able to decorate the same route more than once."
 msgstr ""
 
 #: ../../plugindev.rst:44
-# f851c3ad8ab640e588dcff205f111fd5
 msgid "The decorator API is quite limited, though. You don't know anything about the route being decorated or the associated application object and have no way to efficiently store data that is shared among all routes. But fear not! Plugins are not limited to just decorator functions. Bottle accepts anything as a plugin as long as it is callable or implements an extended API. This API is described below and gives you a lot of control over the whole process."
 msgstr ""
 
 #: ../../plugindev.rst:48
-# 675ae743064a4bfbbf9b350578a01ca1
 msgid "Plugin API"
 msgstr ""
 
 #: ../../plugindev.rst:50
-# a11416c086c843dd99a5223cc9030ad5
 msgid ":class:`Plugin` is not a real class (you cannot import it from :mod:`bottle`) but an interface that plugins are expected to implement. Bottle accepts any object of any type as a plugin, as long as it conforms to the following API."
 msgstr ""
 
 #: ../../plugindev.rst:54
-# 5e8053c9384e4736912abd7f32fcb7b6
 msgid "Plugins must be callable or implement :meth:`apply`. If :meth:`apply` is defined, it is always preferred over calling the plugin directly. All other methods and attributes are optional."
 msgstr ""
 
 #: ../../plugindev.rst:58
-# 3897d70201c747b1a41453e52423bc5b
 msgid "Both :meth:`Bottle.uninstall` and the `skip` parameter of :meth:`Bottle.route()` accept a name string to refer to a plugin or plugin type. This works only for plugins that have a name attribute."
 msgstr ""
 
 #: ../../plugindev.rst:62
-# be2dc4e40e084ddc9f07393b6efce35b
 msgid "The Plugin API is still evolving. This integer attribute tells bottle which version to use. If it is missing, bottle defaults to the first version. The current version is ``2``. See :ref:`plugin-changelog` for details."
 msgstr ""
 
 #: ../../plugindev.rst:66
-# 9ba2ab15ab7d4b049b311debeb23f5fe
 msgid "Called as soon as the plugin is installed to an application (see :meth:`Bottle.install`). The only parameter is the associated application object."
 msgstr ""
 
 #: ../../plugindev.rst:70
-# c8cc76d4706946d6b5493bc77cfb1e84
 msgid "As long as :meth:`apply` is not defined, the plugin itself is used as a decorator and applied directly to each route callback. The only parameter is the callback to decorate. Whatever is returned by this method replaces the original callback. If there is no need to wrap or replace a given callback, just return the unmodified callback parameter."
 msgstr ""
 
 #: ../../plugindev.rst:74
-# ec160c1de06842a6a0faab401eeba95d
 msgid "If defined, this method is used in favor of :meth:`__call__` to decorate route callbacks. The additional `route` parameter is an instance of :class:`Route` and provides a lot of meta-information and context for that route. See :ref:`route-context` for details."
 msgstr ""
 
 #: ../../plugindev.rst:78
-# e8fe78bcc7184c3d8944b63c3e6b90fc
 msgid "Called immediately before the plugin is uninstalled or the application is closed (see :meth:`Bottle.uninstall` or :meth:`Bottle.close`)."
 msgstr ""
 
 #: ../../plugindev.rst:81
-# 1442674b5fd94afaa32a5e5ba458d35f
 msgid "Both :meth:`Plugin.setup` and :meth:`Plugin.close` are *not* called for plugins that are applied directly to a route via the :meth:`Bottle.route()` decorator, but only for plugins installed to an application."
 msgstr ""
 
 #: ../../plugindev.rst:87
-# 39afd073632e422983679d667f611f45
 msgid "Plugin API changes"
 msgstr ""
 
 #: ../../plugindev.rst:89
-# 5a2e3821b7c04d8594b74e84f3a192c0
 msgid "The Plugin API is still evolving and changed with Bottle 0.10 to address certain issues with the route context dictionary. To ensure backwards compatibility with 0.9 Plugins, we added an optional :attr:`Plugin.api` attribute to tell bottle which API to use. The API differences are summarized here."
 msgstr ""
 
 #: ../../plugindev.rst:91
-# b7ec3312da3f4c62a49576b28a0eccbf
 msgid "**Bottle 0.9 API 1** (:attr:`Plugin.api` not present)"
 msgstr ""
 
 #: ../../plugindev.rst:93
-# 7cd904121cfc4bb4923895e987c3df84
 msgid "Original Plugin API as described in the 0.9 docs."
 msgstr ""
 
 #: ../../plugindev.rst:95
-# d76036131f584da5b65a7bee4c6d660a
 msgid "**Bottle 0.10 API 2** (:attr:`Plugin.api` equals 2)"
 msgstr ""
 
 #: ../../plugindev.rst:97
-# 0adf5a88853749f0b2ada4418a806c1c
 msgid "The `context` parameter of the :meth:`Plugin.apply` method is now an instance of :class:`Route` instead of a context dictionary."
 msgstr ""
 
 #: ../../plugindev.rst:103
-# bb971ae0699a41a7a4976966bb84851c
 msgid "The Route Context"
 msgstr ""
 
 #: ../../plugindev.rst:105
-# 62a7c4cdc97a4573afb6d9a15fea2ae8
 msgid "The :class:`Route` instance passed to :meth:`Plugin.apply` provides detailed informations about the associated route. The most important attributes are summarized here:"
 msgstr ""
 
 #: ../../plugindev.rst:108
-# 9120916c00ef434f931ff790db9af633
 msgid "Attribute"
 msgstr ""
 
 #: ../../plugindev.rst:108
-# 9f23c4f00c904466ac8f3ad91819a22e
 msgid "Description"
 msgstr ""
 
 #: ../../plugindev.rst:110
-# 6cb6502e58644c3fa48da03a3258f5d7
 msgid "app"
 msgstr ""
 
 #: ../../plugindev.rst:110
-# 0d0ada7cdffc4fb9af29ecb70045c27d
 msgid "The application object this route is installed to."
 msgstr ""
 
 #: ../../plugindev.rst:111
-# 07a99e475539489ba5ed1fd1cc5d7256
 msgid "rule"
 msgstr ""
 
 #: ../../plugindev.rst:111
-# 2b6d874caf2d4b59bd3db8bc7240efe6
 msgid "The rule string (e.g. ``/wiki/:page``)."
 msgstr ""
 
 #: ../../plugindev.rst:112
-# 43ce181e578244068ca12ecea59250f8
 msgid "method"
 msgstr ""
 
 #: ../../plugindev.rst:112
-# e136d218597c4262a36140db15463f1b
 msgid "The HTTP method as a string (e.g. ``GET``)."
 msgstr ""
 
 #: ../../plugindev.rst:113
-# 071d4f857e2c4308aab4c36249498723
 msgid "callback"
 msgstr ""
 
 #: ../../plugindev.rst:113
-# 14d338299dd04c42b6bfebcdb3915f0b
 msgid "The original callback with no plugins applied. Useful for introspection."
 msgstr ""
 
 #: ../../plugindev.rst:115
-# 73abe7abd0d14590bda472492af54ac5
 msgid "name"
 msgstr ""
 
 #: ../../plugindev.rst:115
-# 0a3c0091101e4c8e800bfcd723092364
 msgid "The name of the route (if specified) or ``None``."
 msgstr ""
 
 #: ../../plugindev.rst:116
-# 8d6220105696488bb5c740f0b72951a3
 msgid "plugins"
 msgstr ""
 
 #: ../../plugindev.rst:116
-# 357aa236af1d4a3eac2c962a48838cb7
 msgid "A list of route-specific plugins. These are applied in addition to application-wide plugins. (see :meth:`Bottle.route`)."
 msgstr ""
 
 #: ../../plugindev.rst:118
-# f227ac40108a400fb9c0d18d19b65e7a
 msgid "skiplist"
 msgstr ""
 
 #: ../../plugindev.rst:118
-# 4dceff0754b74941be7203f950e05c3a
 msgid "A list of plugins to not apply to this route (again, see :meth:`Bottle.route`)."
 msgstr ""
 
 #: ../../plugindev.rst:120
-# b3507e808f81481a93fb3b91dabdb63f
 msgid "config"
 msgstr ""
 
 #: ../../plugindev.rst:120
-# 7f63f4ef70184b89bd324563d4f1aeb1
 msgid "Additional keyword arguments passed to the :meth:`Bottle.route` decorator are stored in this dictionary. Used for route-specific configuration and meta-data."
 msgstr ""
 
 #: ../../plugindev.rst:125
-# 5ce566ef96844f02be60f6eec84db4c2
 msgid "For your plugin, :attr:`Route.config` is probably the most important attribute. Keep in mind that this dictionary is local to the route, but shared between all plugins. It is always a good idea to add a unique prefix or, if your plugin needs a lot of configuration, store it in a separate namespace within the `config` dictionary. This helps to avoid naming collisions between plugins."
 msgstr ""
 
 #: ../../plugindev.rst:129
-# ce4922e879da46c7921c2e0d5dbe1519
 msgid "Changing the :class:`Route` object"
 msgstr ""
 
 #: ../../plugindev.rst:131
-# 39add98f24e746649d7e15b1cf0eb1a9
 msgid "While some :class:`Route` attributes are mutable, changes may have unwanted effects on other plugins. It is most likely a bad idea to monkey-patch a broken route instead of providing a helpful error message and let the user fix the problem."
 msgstr ""
 
 #: ../../plugindev.rst:133
-# 2c39ccee7ced450681e18408b6c85dc2
 msgid "In some rare cases, however, it might be justifiable to break this rule. After you made your changes to the :class:`Route` instance, raise :exc:`RouteReset` as an exception. This removes the current route from the cache and causes all plugins to be re-applied. The router is not updated, however. Changes to `rule` or `method` values have no effect on the router, but only on plugins. This may change in the future, though."
 msgstr ""
 
 #: ../../plugindev.rst:137
-# 0d5b5161e94f4362908702e7b4bb9226
 msgid "Runtime optimizations"
 msgstr ""
 
 #: ../../plugindev.rst:139
-# 9017f3ac343c4e55ac0b3f915b72efc5
 msgid "Once all plugins are applied to a route, the wrapped route callback is cached to speed up subsequent requests. If the behavior of your plugin depends on configuration, and you want to be able to change that configuration at runtime, you need to read the configuration on each request. Easy enough."
 msgstr ""
 
 #: ../../plugindev.rst:141
-# 2de28ae6ea5c4e58b47324c93e77735d
 msgid "For performance reasons, however, it might be worthwhile to choose a different wrapper based on current needs, work with closures, or enable or disable a plugin at runtime. Let's take the built-in HooksPlugin as an example: If no hooks are installed, the plugin removes itself from all affected routes and has virtaully no overhead. As soon as you install the first hook, the plugin activates itself and takes effect again."
 msgstr ""
 
 #: ../../plugindev.rst:143
-# 1da8899f11364d79abb27fcf92dfe55d
 msgid "To achieve this, you need control over the callback cache: :meth:`Route.reset` clears the cache for a single route and :meth:`Bottle.reset` clears all caches for all routes of an application at once. On the next request, all plugins are re-applied to the route as if it were requested for the first time."
 msgstr ""
 
 #: ../../plugindev.rst:145
-# a2b0779b12b74953a7067967ed792e54
 msgid "Both methods won't affect the current request if called from within a route callback, of cause. To force a restart of the current request, raise :exc:`RouteReset` as an exception."
 msgstr ""
 
 #: ../../plugindev.rst:149
-# 5715121898c2453abe02ed12eab1786c
 msgid "Plugin Example: SQLitePlugin"
 msgstr ""
 
 #: ../../plugindev.rst:151
-# 97965f4bc9be4ebc86bb2803b9473a20
 msgid "This plugin provides an sqlite3 database connection handle as an additional keyword argument to wrapped callbacks, but only if the callback expects it. If not, the route is ignored and no overhead is added. The wrapper does not affect the return value, but handles plugin-related exceptions properly. :meth:`Plugin.setup` is used to inspect the application and search for conflicting plugins."
 msgstr ""
 
 #: ../../plugindev.rst:218
-# db14b5dc1ac944a4a81732940e845dd2
 msgid "This plugin is actually useful and very similar to the version bundled with Bottle. Not bad for less than 60 lines of code, don't you think? Here is a usage example::"
 msgstr ""
 
 #: ../../plugindev.rst:239
-# 4345acc2cc734179a0e326180ab1c6e5
 msgid "The first route needs a database connection and tells the plugin to create a handle by requesting a ``db`` keyword argument. The second route does not need a database and is therefore ignored by the plugin. The third route does expect a 'db' keyword argument, but explicitly skips the sqlite plugin. This way the argument is not overruled by the plugin and still contains the value of the same-named url argument."
 msgstr ""
 

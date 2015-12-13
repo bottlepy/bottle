@@ -1,7 +1,7 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) 2009-2015, Marcel Hellkamp
 # This file is distributed under the same license as the Bottle package.
-# 
+#
 # Translators:
 msgid ""
 msgstr ""
@@ -250,14 +250,32 @@ msgstr ""
 msgid "Return the value of a meta field for a key."
 msgstr ""
 
-# 5d9c253ad9254a7fb6e7e2fde5c96511
-#: ../../../bottle.pydocstring of bottle.ConfigDict.meta_set:1
-msgid ""
-"Set the meta field for a key to a new value. This triggers the on-change "
-"handler for existing keys."
-msgstr ""
-
 # 6ff07db9d5a04ad1b67e891192c722e6
 #: ../../../bottle.pydocstring of bottle.ConfigDict.meta_list:1
 msgid "Return an iterable of meta field names defined for a key."
 msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.ConfigDict.load_module:1
+msgid ""
+"Load values from a Python module. :param squash: Squash nested dicts into "
+"namespaces by using"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.ConfigDict.load_module:3
+msgid "load_dict(), otherwise use update()"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.ConfigDict.load_module:4
+msgid ""
+"Example: load_config('my.app.settings', True) Example: "
+"load_config('my.app.settings', False)"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.ConfigDict.meta_set:1
+msgid "Set the meta field for a key to a new value."
+msgstr ""
+
+#~ msgid ""
+#~ "Set the meta field for a key to a new value. This triggers the on-change "
+#~ "handler for existing keys."
+#~ msgstr ""

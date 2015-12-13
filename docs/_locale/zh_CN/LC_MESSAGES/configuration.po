@@ -1,7 +1,7 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) 2009-2015, Marcel Hellkamp
 # This file is distributed under the same license as the Bottle package.
-# 
+#
 # Translators:
 msgid ""
 msgstr ""
@@ -36,7 +36,9 @@ msgid ""
 "a dict-like object and central place for application specific settings. This"
 " dictionary controls many aspects of the framework, tells (newer) plugins "
 "what to do, and can be used to store your own configuration as well."
-msgstr "Bottle应用可以在 :attr:`Bottle.config` 这个类似于字典的对象中，存储它们的配置。这个对象在很多方面，影响着Bottle框架和相应的插件。你也可以在这个对象中，存储你的自定义配置。"
+msgstr ""
+"Bottle应用可以在 :attr:`Bottle.config` "
+"这个类似于字典的对象中，存储它们的配置。这个对象在很多方面，影响着Bottle框架和相应的插件。你也可以在这个对象中，存储你的自定义配置。"
 
 # 7de19ce5de5146328e6daa85560853b1
 #: ../../configuration.rst:13
@@ -83,7 +85,8 @@ msgstr "所有的key都应该是小写的字符串，并符合Python的变量命
 msgid ""
 "Namespaces are separated by dots (e.g. ``namespace.field`` or "
 "``namespace.subnamespace.field``)."
-msgstr "命名空间通过点来区分(例如： ``namespace.field`` 或 ``namespace.subnamespacew.field`` )。"
+msgstr ""
+"命名空间通过点来区分(例如： ``namespace.field`` 或 ``namespace.subnamespacew.field`` )。"
 
 # 237bffb361414e67988117fb945c93b4
 #: ../../configuration.rst:57
@@ -91,7 +94,9 @@ msgid ""
 "Bottle uses the root namespace for its own configuration. Plugins should "
 "store all their variables in their own namespace (e.g. ``sqlite.db`` or "
 "``werkzeug.use_debugger``)."
-msgstr "Bottle框架，使用根命名空间来存储它的配置。插件应该在它们自己的命名空间中存储它们的变量(例如： `sqlite.db`` 或 ``werkzeug.use_debugger`` )。"
+msgstr ""
+"Bottle框架，使用根命名空间来存储它的配置。插件应该在它们自己的命名空间中存储它们的变量(例如： `sqlite.db`` 或 "
+"``werkzeug.use_debugger`` )。"
 
 # cd76f935f79c4e269b988be703f5d741
 #: ../../configuration.rst:58
@@ -150,7 +155,11 @@ msgid ""
 "called before the value is actually changed in the dictionary. Raising an "
 "exception from a hook callback cancels the change and the old value is "
 "preserved."
-msgstr "每次 :attr:`Bottle.config` 中的值有变更的时候，会触发 ``config``  这个钩子。这个钩子可以用于在运行时，对配置的改动做出响应，例如连接到一个新的数据库，改变后台服务的debug配置，或更改线程池的大小。这个钩子接收两个参数(key, new_value)，在 :attr:`Bottle.config` 中的值被改动之前触发。如果这个钩子抛出了异常，那么 :attr:`Bottle.config` 中的值将不会被改动。"
+msgstr ""
+"每次 :attr:`Bottle.config` 中的值有变更的时候，会触发 ``config``  "
+"这个钩子。这个钩子可以用于在运行时，对配置的改动做出响应，例如连接到一个新的数据库，改变后台服务的debug配置，或更改线程池的大小。这个钩子接收两个参数(key,"
+" new_value)，在 :attr:`Bottle.config` 中的值被改动之前触发。如果这个钩子抛出了异常，那么 "
+":attr:`Bottle.config` 中的值将不会被改动。"
 
 # c7f9316bc6a045bf8e9215a0597b7b38
 #: ../../configuration.rst:122
@@ -195,7 +204,8 @@ msgid ""
 "for a key, any new value stored to that key is first passed through the "
 "filter callback. The filter can be used to cast the value to a different "
 "type, check for invalid values (throw a ValueError) or trigger side effects."
-msgstr "一个可运行的对象，接受和返回一个值。如果一个key定义了一个filter，任何将要存到这个key中的值，都会先传给filter的相应回调函数。在回调函数中，可做类型转换，有效性检验等工作。"
+msgstr ""
+"一个可运行的对象，接受和返回一个值。如果一个key定义了一个filter，任何将要存到这个key中的值，都会先传给filter的相应回调函数。在回调函数中，可做类型转换，有效性检验等工作。"
 
 # c394622ffc8f46e7a9d3538ea73155fe
 #: ../../configuration.rst:141
@@ -250,14 +260,32 @@ msgstr ""
 msgid "Return the value of a meta field for a key."
 msgstr ""
 
-# 5d9c253ad9254a7fb6e7e2fde5c96511
-#: ../../../bottle.pydocstring of bottle.ConfigDict.meta_set:1
-msgid ""
-"Set the meta field for a key to a new value. This triggers the on-change "
-"handler for existing keys."
-msgstr ""
-
 # 6ff07db9d5a04ad1b67e891192c722e6
 #: ../../../bottle.pydocstring of bottle.ConfigDict.meta_list:1
 msgid "Return an iterable of meta field names defined for a key."
 msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.ConfigDict.load_module:1
+msgid ""
+"Load values from a Python module. :param squash: Squash nested dicts into "
+"namespaces by using"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.ConfigDict.load_module:3
+msgid "load_dict(), otherwise use update()"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.ConfigDict.load_module:4
+msgid ""
+"Example: load_config('my.app.settings', True) Example: "
+"load_config('my.app.settings', False)"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.ConfigDict.meta_set:1
+msgid "Set the meta field for a key to a new value."
+msgstr ""
+
+#~ msgid ""
+#~ "Set the meta field for a key to a new value. This triggers the on-change "
+#~ "handler for existing keys."
+#~ msgstr ""

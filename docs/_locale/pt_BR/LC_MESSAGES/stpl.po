@@ -1,7 +1,7 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) 2009-2015, Marcel Hellkamp
 # This file is distributed under the same license as the Bottle package.
-# 
+#
 # Translators:
 msgid ""
 msgstr ""
@@ -192,11 +192,6 @@ msgid ""
 " of a code segment, end the text line with a double-backslash::"
 msgstr ""
 
-# 0a8c68359c0f46229baa5bf89cea417c
-#: ../../stpl.rst:123
-msgid "THis time the rendered template looks like this::"
-msgstr ""
-
 # 2a97642550b64e8298aeadbb2ee4030b
 #: ../../stpl.rst:127
 msgid ""
@@ -294,3 +289,10 @@ msgstr ""
 #: ../../../bottle.pydocstring of bottle.SimpleTemplate.render:1
 msgid "Render the template using keyword arguments as local variables."
 msgstr ""
+
+#: ../../stpl.rst:123
+msgid "This time the rendered template looks like this::"
+msgstr ""
+
+#~ msgid "THis time the rendered template looks like this::"
+#~ msgstr ""

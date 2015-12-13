@@ -1,7 +1,7 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) 2009-2015, Marcel Hellkamp
 # This file is distributed under the same license as the Bottle package.
-# 
+#
 # Translators:
 msgid ""
 msgstr ""
@@ -52,14 +52,6 @@ msgid ""
 "<http://docs.python.org/glossary.html#term-decorator>`_. To put it briefly, "
 "a plugin is a decorator applied to every single route callback of an "
 "application."
-msgstr ""
-
-# 25cfdadfbfc54e47ae7b2f75ce1aeaf9
-#: ../../plugindev.rst:20
-msgid ""
-"Of course, this is just a simplification. Plugins can do a lot more than "
-"just decorating route callbacks, but it is a good starting point. Lets have "
-"a look at some code::"
 msgstr ""
 
 # 27708e12ba14412cb4719108df66afa9
@@ -454,3 +446,16 @@ msgid ""
 "This way the argument is not overruled by the plugin and still contains the "
 "value of the same-named url argument."
 msgstr ""
+
+#: ../../plugindev.rst:20
+msgid ""
+"This is just a simplification. Plugins can do a lot more than just "
+"decorating route callbacks, but it is a good starting point. Lets have a "
+"look at some code::"
+msgstr ""
+
+#~ msgid ""
+#~ "Of course, this is just a simplification. Plugins can do a lot more than "
+#~ "just decorating route callbacks, but it is a good starting point. Lets have "
+#~ "a look at some code::"
+#~ msgstr ""

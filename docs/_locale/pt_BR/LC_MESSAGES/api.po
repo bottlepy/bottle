@@ -1,7 +1,7 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) 2009-2015, Marcel Hellkamp
 # This file is distributed under the same license as the Bottle package.
-# 
+#
 # Translators:
 msgid ""
 msgstr ""
@@ -134,16 +134,6 @@ msgid ""
 "Load a bottle application from a module and make sure that the import does "
 "not affect the current default application, but returns a separate "
 "application object. See :func:`load` for the target parameter."
-msgstr ""
-
-# 60c30ba8932547c3a60d1800c94dd5f7
-# 4671fdf2ebd94882bbd784e5ae3cb701
-#: ../../../bottle.pydocstring of bottle.request:1 ../../../bottle.pydocstring
-#: of bottle.request:1
-msgid ""
-"A thread-safe instance of :class:`LocalRequest`. If accessed from within a "
-"request callback, this instance always refers to the *current* request (even"
-" on a multithreaded server)."
 msgstr ""
 
 # 872bf1ee18254cc0a6277cc0984e8ce0
@@ -669,21 +659,9 @@ msgid ""
 "prefix. Example::"
 msgstr ""
 
-# ea34ccfb3d2542779ad5efcf51306bf2
-#: ../../../bottle.pydocstring of bottle.Bottle.mount:6
-msgid ""
-"path prefix or `mount-point`. If it ends in a slash, that slash is "
-"mandatory."
-msgstr ""
-
 # cde929a6d4bb42d6aa8987bee536ea69
-#: ../../../bottle.pydocstring of bottle.Bottle.mount:8
+#: ../../../bottle.pydocstring of bottle.Bottle.mount:7
 msgid "an instance of :class:`Bottle` or a WSGI application."
-msgstr ""
-
-# d2230da7b83944f08e4c319e99500a49
-#: ../../../bottle.pydocstring of bottle.Bottle.mount:10
-msgid "All other parameters are passed to the underlying :meth:`route` call."
 msgstr ""
 
 # a857bad1f0e64f568190ca94195fa516
@@ -749,12 +727,6 @@ msgstr ""
 # 1de8bb1c833d41f2a70f3f54decb19e7
 #: ../../../bottle.pydocstring of bottle.Bottle.route:1
 msgid "A decorator to bind a function to a request URL. Example::"
-msgstr ""
-
-# c2876a4a016f4e6bbebdbd881e5ee946
-#: ../../../bottle.pydocstring of bottle.Bottle.route:7
-msgid ""
-"The ``:name`` part is a wildcard. See :class:`Router` for syntax details."
 msgstr ""
 
 # f70c2bea86824b62b40f5cb9b29b2b51
@@ -1064,14 +1036,6 @@ msgid ""
 "body. The values are instances of :class:`FileUpload`."
 msgstr ""
 
-# 133c3a0b8f5b497abe29c8ffd3bf7636
-#: ../../../bottle.pydocstring of bottle.BaseRequest.json:1
-msgid ""
-"If the ``Content-Type`` header is ``application/json``, this property holds "
-"the parsed content of the request body. Only requests smaller than "
-":attr:`MEMFILE_MAX` are processed to avoid memory exhaustion."
-msgstr ""
-
 # 5729e49a74ca4056b6c96004e54ef01c
 #: ../../../bottle.pydocstring of bottle.BaseRequest.body:1
 msgid ""
@@ -1134,11 +1098,6 @@ msgid ""
 "The initial portion of the URL's `path` that was removed by a higher level "
 "(server or routing middleware) before the application was called. This "
 "script path is returned with leading and tailing slashes."
-msgstr ""
-
-# 541f3baa8331490eb8cfa0c82b984f6c
-#: ../../../bottle.pydocstring of bottle.BaseRequest.path_shift:2
-msgid "Shift path segments from :attr:`path` to :attr:`script_name` and"
 msgstr ""
 
 # d25eb7998ea74a1599f0dae0dc366998
@@ -1680,3 +1639,79 @@ msgid ""
 "To use :class:`MakoTemplate` as your default template engine, just import "
 "its specialised decorator and render function::"
 msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.request:1 ../../../bottle.pydocstring
+#: of bottle.request:1
+msgid ""
+"A thread-safe instance of :class:`LocalRequest`. If accessed from within a "
+"request callback, this instance always refers to the *current* request (even"
+" on a multi-threaded server)."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle.mount:6
+msgid "path prefix or `mount-point`."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle.mount:9
+msgid ""
+"Plugins from the parent application are not applied to the routes of the "
+"mounted child application. If you need plugins in the child application, "
+"install them separately."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle.mount:13
+msgid ""
+"While it is possible to use path wildcards within the prefix path "
+"(:class:`Bottle` childs only), it is highly discouraged."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle.mount:16
+msgid ""
+"The prefix path must end with a slash. If you want to access the root of the"
+" child application via `/prefix` in addition to `/prefix/`, consider adding "
+"a route with a 307 redirect to the parent application."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle.route:7
+msgid ""
+"The ``<name>`` part is a wildcard. See :class:`Router` for syntax details."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseRequest.json:1
+msgid ""
+"If the ``Content-Type`` header is ``application/json``, this property holds "
+"the parsed content of the request body. Only requests smaller than "
+":attr:`MEMFILE_MAX` are processed to avoid memory exhaustion. Invalid JSON "
+"raises a 400 error response."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseRequest.path_shift:2
+msgid "Shift path segments from path to script_name and"
+msgstr ""
+
+#~ msgid ""
+#~ "A thread-safe instance of :class:`LocalRequest`. If accessed from within a "
+#~ "request callback, this instance always refers to the *current* request (even"
+#~ " on a multithreaded server)."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "path prefix or `mount-point`. If it ends in a slash, that slash is "
+#~ "mandatory."
+#~ msgstr ""
+
+#~ msgid "All other parameters are passed to the underlying :meth:`route` call."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "The ``:name`` part is a wildcard. See :class:`Router` for syntax details."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "If the ``Content-Type`` header is ``application/json``, this property holds "
+#~ "the parsed content of the request body. Only requests smaller than "
+#~ ":attr:`MEMFILE_MAX` are processed to avoid memory exhaustion."
+#~ msgstr ""
+
+#~ msgid "Shift path segments from :attr:`path` to :attr:`script_name` and"
+#~ msgstr ""

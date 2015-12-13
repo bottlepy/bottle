@@ -1,7 +1,7 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) 2009-2015, Marcel Hellkamp
 # This file is distributed under the same license as the Bottle package.
-# 
+#
 # Translators:
 msgid ""
 msgstr ""
@@ -37,19 +37,9 @@ msgid ""
 ":doc:`/plugindev` may help you."
 msgstr ""
 
-# 310905cd02d1454c93b15ebfa6162f05
-#: ../../plugins/index.rst:12
-msgid "`Bottle-Beaker <http://pypi.python.org/pypi/bottle-beaker/>`_"
-msgstr ""
-
 # d8ed078cbb8142db8027885e6c8e5644
 #: ../../plugins/index.rst:12
 msgid "Beaker to session and caching library with WSGI Middleware"
-msgstr ""
-
-# 401c231e9f07456796d74d968e70ea93
-#: ../../plugins/index.rst:15
-msgid "`Bottle-Cork <http://cork.firelet.net/>`_"
 msgstr ""
 
 # 023e0b7bc19e4494ac819b5cf344b9fd
@@ -59,19 +49,9 @@ msgid ""
 "Authorization in web applications based on Bottle."
 msgstr ""
 
-# 7c88efc9de61464da5adcfd9c2e80ec4
-#: ../../plugins/index.rst:18
-msgid "`Bottle-Extras <http://pypi.python.org/pypi/bottle-extras/>`_"
-msgstr ""
-
 # a5735468ec8b4c89a8a99f3e014f3c9b
 #: ../../plugins/index.rst:18
 msgid "Meta package to install the bottle plugin collection."
-msgstr ""
-
-# 5923bcda580f4c769d070b6d0f27641f
-#: ../../plugins/index.rst:21
-msgid "`Bottle-Flash <http://pypi.python.org/pypi/bottle-flash/>`_"
 msgstr ""
 
 # 792df86f7f0440a0b9200ad73331a703
@@ -79,19 +59,9 @@ msgstr ""
 msgid "flash plugin for bottle"
 msgstr ""
 
-# 9e61cdc471f24b8d996952f68b8c8878
-#: ../../plugins/index.rst:24
-msgid "`Bottle-Hotqueue <http://pypi.python.org/pypi/bottle-hotqueue/>`_"
-msgstr ""
-
 # 1af2300151374bc2a018ac9cbb3689cf
 #: ../../plugins/index.rst:24
 msgid "FIFO Queue for Bottle built upon redis"
-msgstr ""
-
-# 46b0947914b843e6b2ec818cdfd8194c
-#: ../../plugins/index.rst:27
-msgid "`Macaron <http://nobrin.github.com/macaron/webapp.html>`_"
 msgstr ""
 
 # 86615d4370cb40eba2baae5c07c7cf90
@@ -99,19 +69,9 @@ msgstr ""
 msgid "Macaron is an object-relational mapper (ORM) for SQLite."
 msgstr ""
 
-# 9068f5374d88411080ee26f46af5309e
-#: ../../plugins/index.rst:30
-msgid "`Bottle-Memcache <http://pypi.python.org/pypi/bottle-memcache/>`_"
-msgstr ""
-
 # 644b19d66de8490aa581c3341c085be8
 #: ../../plugins/index.rst:30
 msgid "Memcache integration for Bottle."
-msgstr ""
-
-# deb110a275ef414bae145d9f2a63cc52
-#: ../../plugins/index.rst:33
-msgid "`Bottle-Mongo <http://pypi.python.org/pypi/bottle-mongo/>`_"
 msgstr ""
 
 # 9e0f2c737eb14c13869d9769248261f4
@@ -119,19 +79,9 @@ msgstr ""
 msgid "MongoDB integration for Bottle"
 msgstr ""
 
-# 888f294e997246208ae964ed00a913e7
-#: ../../plugins/index.rst:36
-msgid "`Bottle-Redis <http://pypi.python.org/pypi/bottle-redis/>`_"
-msgstr ""
-
 # f56c13b1ef4441778ed6e5cbed43ee93
 #: ../../plugins/index.rst:36
 msgid "Redis integration for Bottle."
-msgstr ""
-
-# 38ddf6190b4d44e08fbd0e44cfcd3807
-#: ../../plugins/index.rst:39
-msgid "`Bottle-Renderer <http://pypi.python.org/pypi/bottle-renderer/>`_"
 msgstr ""
 
 # a0e8210860a14abaa36d1fd06b2dd85f
@@ -139,19 +89,9 @@ msgstr ""
 msgid "Renderer plugin for bottle"
 msgstr ""
 
-# 8066c6cfc6d44356a120e878f5dc22dd
-#: ../../plugins/index.rst:42
-msgid "`Bottle-Servefiles <http://pypi.python.org/pypi/bottle-servefiles/>`_"
-msgstr ""
-
 # cef5eeed3b86452faa0e502e525957b5
 #: ../../plugins/index.rst:42
 msgid "A reusable app that serves static files for bottle apps"
-msgstr ""
-
-# b075ceee7eac47eeb8cc5432277a74a3
-#: ../../plugins/index.rst:45
-msgid "`Bottle-Sqlalchemy <http://pypi.python.org/pypi/bottle-sqlalchemy/>`_"
 msgstr ""
 
 # 912c1aaa7cb049e39b6fc132d9514e34
@@ -159,29 +99,14 @@ msgstr ""
 msgid "SQLAlchemy integration for Bottle."
 msgstr ""
 
-# f926fab7bceb444ea42fb3f8a2e524c8
-#: ../../plugins/index.rst:48
-msgid "`Bottle-Sqlite <http://pypi.python.org/pypi/bottle-sqlite/>`_"
-msgstr ""
-
 # 7404a2a0a17d4717bb8758e0c9b79420
 #: ../../plugins/index.rst:48
 msgid "SQLite3 database integration for Bottle."
 msgstr ""
 
-# 62faa0679f43409e82791f3d3816ee54
-#: ../../plugins/index.rst:51
-msgid "`Bottle-Web2pydal <http://pypi.python.org/pypi/bottle-web2pydal/>`_"
-msgstr ""
-
 # 1f0769e936d54ddab43ed553b5cf4b7f
 #: ../../plugins/index.rst:51
 msgid "Web2py Dal integration for Bottle."
-msgstr ""
-
-# bbad81741d54479aaa2bfbd9aa4f4055
-#: ../../plugins/index.rst:54
-msgid "`Bottle-Werkzeug <http://pypi.python.org/pypi/bottle-werkzeug/>`_"
 msgstr ""
 
 # 43cd0c19d20b4ed09758a6514026e54b
@@ -197,3 +122,108 @@ msgid ""
 "Plugins listed here are not part of Bottle or the Bottle project, but "
 "developed and maintained by third parties."
 msgstr ""
+
+#: ../../plugins/index.rst:12
+msgid "Bottle-Beaker"
+msgstr ""
+
+#: ../../plugins/index.rst:15
+msgid "Bottle-Cork"
+msgstr ""
+
+#: ../../plugins/index.rst:18
+msgid "Bottle-Extras"
+msgstr ""
+
+#: ../../plugins/index.rst:21
+msgid "Bottle-Flash"
+msgstr ""
+
+#: ../../plugins/index.rst:24
+msgid "Bottle-Hotqueue"
+msgstr ""
+
+#: ../../plugins/index.rst:27
+msgid "Macaron"
+msgstr ""
+
+#: ../../plugins/index.rst:30
+msgid "Bottle-Memcache"
+msgstr ""
+
+#: ../../plugins/index.rst:33
+msgid "Bottle-Mongo"
+msgstr ""
+
+#: ../../plugins/index.rst:36
+msgid "Bottle-Redis"
+msgstr ""
+
+#: ../../plugins/index.rst:39
+msgid "Bottle-Renderer"
+msgstr ""
+
+#: ../../plugins/index.rst:42
+msgid "Bottle-Servefiles"
+msgstr ""
+
+#: ../../plugins/index.rst:45
+msgid "Bottle-Sqlalchemy"
+msgstr ""
+
+#: ../../plugins/index.rst:48
+msgid "Bottle-Sqlite"
+msgstr ""
+
+#: ../../plugins/index.rst:51
+msgid "Bottle-Web2pydal"
+msgstr ""
+
+#: ../../plugins/index.rst:54
+msgid "Bottle-Werkzeug"
+msgstr ""
+
+#~ msgid "`Bottle-Beaker <http://pypi.python.org/pypi/bottle-beaker/>`_"
+#~ msgstr ""
+
+#~ msgid "`Bottle-Cork <http://cork.firelet.net/>`_"
+#~ msgstr ""
+
+#~ msgid "`Bottle-Extras <http://pypi.python.org/pypi/bottle-extras/>`_"
+#~ msgstr ""
+
+#~ msgid "`Bottle-Flash <http://pypi.python.org/pypi/bottle-flash/>`_"
+#~ msgstr ""
+
+#~ msgid "`Bottle-Hotqueue <http://pypi.python.org/pypi/bottle-hotqueue/>`_"
+#~ msgstr ""
+
+#~ msgid "`Macaron <http://nobrin.github.com/macaron/webapp.html>`_"
+#~ msgstr ""
+
+#~ msgid "`Bottle-Memcache <http://pypi.python.org/pypi/bottle-memcache/>`_"
+#~ msgstr ""
+
+#~ msgid "`Bottle-Mongo <http://pypi.python.org/pypi/bottle-mongo/>`_"
+#~ msgstr ""
+
+#~ msgid "`Bottle-Redis <http://pypi.python.org/pypi/bottle-redis/>`_"
+#~ msgstr ""
+
+#~ msgid "`Bottle-Renderer <http://pypi.python.org/pypi/bottle-renderer/>`_"
+#~ msgstr ""
+
+#~ msgid "`Bottle-Servefiles <http://pypi.python.org/pypi/bottle-servefiles/>`_"
+#~ msgstr ""
+
+#~ msgid "`Bottle-Sqlalchemy <http://pypi.python.org/pypi/bottle-sqlalchemy/>`_"
+#~ msgstr ""
+
+#~ msgid "`Bottle-Sqlite <http://pypi.python.org/pypi/bottle-sqlite/>`_"
+#~ msgstr ""
+
+#~ msgid "`Bottle-Web2pydal <http://pypi.python.org/pypi/bottle-web2pydal/>`_"
+#~ msgstr ""
+
+#~ msgid "`Bottle-Werkzeug <http://pypi.python.org/pypi/bottle-werkzeug/>`_"
+#~ msgstr ""

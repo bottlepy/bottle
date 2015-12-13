@@ -1,9 +1,8 @@
 PATH := build/python/bin:$(PATH)
 VERSION = $(shell python setup.py --version)
 ALLFILES = $(shell echo bottle.py test/*.py test/views/*.tpl)
-LANGS = zh_CN pt_BR
 
-.PHONY: release coverage install docs test test_all test_25 test_26 test_27 test_31 test_32 test_33 2to3 clean
+.PHONY: release coverage install docs intl test test_all test_25 test_26 test_27 test_31 test_32 test_33 2to3 clean
 
 release: test_all
 	python setup.py --version | egrep -q -v '[a-zA-Z]' # Fail on dev/rc versions
@@ -35,6 +34,9 @@ docs:
 	for lang in $(LANGS); do \
 		sphinx-build -b html -d build/docs/doctrees/$$lang -D language=$$lang docs build/docs/html/$$lang; \
 	done
+
+intl:
+	./docs/_locale/update.sh
 
 test:
 	python test/testall.py
@@ -82,5 +84,4 @@ clean:
 	find . -name '*.pyo' -exec rm -f {} +
 	find . -name '*~' -exec rm -f {} +
 	find . -name '._*' -exec rm -f {} +
-	find . -name '.coverage*' -exec rm -f {} +
 

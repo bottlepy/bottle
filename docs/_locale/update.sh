@@ -1,19 +1,22 @@
 #!/bin/bash
 cd "$( cd "$( dirname "$0" )" && pwd )"
 
-LANGUAGES='zh_CN'
+if [ ! $# -eq 1 ]; then
+    LNG=$(ls -1 | egrep '[a-z]{2}_[A-Z]{2}')
+elif [[ $1 =~ ^[a-z]{2}_[A-Z]{2}$ ]]; then
+    LNG=$1
+else
+    echo "$1: Language must be of form xx_XX (e.g. en_US or de_DE)"
+    exit 1
+fi
 
 echo 'Generating new POT files ...'
 sphinx-build -q -b gettext -E .. _pot
-
-echo 'Merging and compiling *.po files ...'
-for LANG in $LANGUAGES; do
-  for POT in _pot/*.pot; do
-    DOC=`basename $POT .pot`
-    echo $LANG/$DOC.po
-    test -d $LANG/LC_MESSAGES || mkdir -p $LANG/LC_MESSAGES
-    test -f $LANG/$DOC.po || cp $POT $LANG/$DOC.po
-    msgmerge --quiet --backup=none -U $LANG/$DOC.po $POT
-    msgfmt $LANG/$DOC.po -o "$LANG/LC_MESSAGES/$DOC.mo"
-  done
+for L in $LNG; do
+    echo
+    echo "Updating po files for $L ..."
+    sphinx-intl update -p _pot -d . -l $L
 done
+echo
+echo 'Building ...'
+sphinx-intl build

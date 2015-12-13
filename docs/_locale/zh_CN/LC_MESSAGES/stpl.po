@@ -1,7 +1,7 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) 2009-2015, Marcel Hellkamp
 # This file is distributed under the same license as the Bottle package.
-# 
+#
 # Translators:
 msgid ""
 msgstr ""
@@ -30,7 +30,9 @@ msgid ""
 " used by the :func:`view` and :func:`template` helpers but can be used as a "
 "stand-alone general purpose template engine too. This document explains the "
 "template syntax and shows examples for common use cases."
-msgstr "Bottle自带了一个快速，强大，易用的模板引擎，名为 *SimpleTemplate* 或简称为 *stpl* 。它是 :func:`view` 和 :func:`template` 两个函数默认调用的模板引擎。接下来会介绍该引擎的模板语法和一些常见用例。"
+msgstr ""
+"Bottle自带了一个快速，强大，易用的模板引擎，名为 *SimpleTemplate* 或简称为 *stpl* 。它是 :func:`view` 和 "
+":func:`template` 两个函数默认调用的模板引擎。接下来会介绍该引擎的模板语法和一些常见用例。"
 
 # 043167051da74bf091b4335265fdc480
 #: ../../stpl.rst:10
@@ -62,7 +64,9 @@ msgid ""
 "actions, even if the :func:`template` helper hides this fact. Templates are "
 "usually compiled only once and cached internally, but rendered many times "
 "with different keyword arguments."
-msgstr "注意，编译模板和渲染模板是两件事情，尽管 :func:`template` 函数隐藏了这一事实。通常，模板只会被编译一次，然后会被缓存起来，但是会根据不同的参数，被多次渲染。"
+msgstr ""
+"注意，编译模板和渲染模板是两件事情，尽管 :func:`template` "
+"函数隐藏了这一事实。通常，模板只会被编译一次，然后会被缓存起来，但是会根据不同的参数，被多次渲染。"
 
 # 73a50f2356454ce299b96556ee792c8d
 #: ../../stpl.rst:34
@@ -77,7 +81,8 @@ msgid ""
 "these restrictions and allows you to write clean, readable and maintainable "
 "templates while preserving full access to the features, libraries and speed "
 "of the Python language."
-msgstr "虽然Python是一门强大的语言，但它对空白敏感的语法令其很难作为一个模板语言。SimpleTemplate移除了一些限制，允许你写出干净的，有可读性的，可维护的模板，且保留了Python的强大功能。"
+msgstr ""
+"虽然Python是一门强大的语言，但它对空白敏感的语法令其很难作为一个模板语言。SimpleTemplate移除了一些限制，允许你写出干净的，有可读性的，可维护的模板，且保留了Python的强大功能。"
 
 # d59894cc4ac74618954a352aa42645b1
 #: ../../stpl.rst:40
@@ -85,7 +90,9 @@ msgid ""
 "The :class:`SimpleTemplate` syntax compiles directly to python bytecode and "
 "is executed on each :meth:`SimpleTemplate.render` call. Do not render "
 "untrusted templates! They may contain and execute harmful python code."
-msgstr " :class:`SimpleTemplate` 模板会被编译为Python字节码，且在每次通过 :meth:`SimpleTemplate.render` 渲染的时候执行。请不要渲染不可靠的模板！它们也许包含恶意代码。"
+msgstr ""
+" :class:`SimpleTemplate` 模板会被编译为Python字节码，且在每次通过 "
+":meth:`SimpleTemplate.render` 渲染的时候执行。请不要渲染不可靠的模板！它们也许包含恶意代码。"
 
 # 9ead45a0161545fd920a2a758a0a8f8f
 #: ../../stpl.rst:43
@@ -110,7 +117,10 @@ msgid ""
 "<http://en.wikipedia.org/wiki/Cross-Site_Scripting>`_ attacks. You can start"
 " the expression with an exclamation mark to disable escaping for that "
 "expression::"
-msgstr "{{}}中的Python语句会在渲染的时候被执行，可访问传递给 :meth:`SimpleTemplate.render` 方法的所有参数。默认情况下，自动转义HTML标签以防止 `XSS <http://en.wikipedia.org/wiki/Cross-Site_Scripting>`_ 攻击。可在语句前加上\"!\"来关闭自动转义。"
+msgstr ""
+"{{}}中的Python语句会在渲染的时候被执行，可访问传递给 :meth:`SimpleTemplate.render` "
+"方法的所有参数。默认情况下，自动转义HTML标签以防止 `XSS <http://en.wikipedia.org/wiki/Cross-"
+"Site_Scripting>`_ 攻击。可在语句前加上\"!\"来关闭自动转义。"
 
 # 0a028087d6554513bc1695948b55303a
 #: ../../stpl.rst:62
@@ -190,11 +200,6 @@ msgid ""
 "But embedding code still requires you to start a new line, which may not "
 "what you want to see in your rendered template. To skip the newline in front"
 " of a code segment, end the text line with a double-backslash::"
-msgstr ""
-
-# 0a8c68359c0f46229baa5bf89cea417c
-#: ../../stpl.rst:123
-msgid "THis time the rendered template looks like this::"
 msgstr ""
 
 # 2a97642550b64e8298aeadbb2ee4030b
@@ -294,3 +299,10 @@ msgstr ":class:`SimpleTemplate` API"
 #: ../../../bottle.pydocstring of bottle.SimpleTemplate.render:1
 msgid "Render the template using keyword arguments as local variables."
 msgstr ""
+
+#: ../../stpl.rst:123
+msgid "This time the rendered template looks like this::"
+msgstr ""
+
+#~ msgid "THis time the rendered template looks like this::"
+#~ msgstr ""

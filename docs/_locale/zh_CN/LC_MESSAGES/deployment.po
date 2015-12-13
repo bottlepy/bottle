@@ -1,7 +1,7 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) 2009-2015, Marcel Hellkamp
 # This file is distributed under the same license as the Bottle package.
-# 
+#
 # Translators:
 msgid ""
 msgstr ""
@@ -28,7 +28,9 @@ msgid ""
 "The bottle :func:`run` function, when called without any parameters, starts "
 "a local development server on port 8080. You can access and test your "
 "application via http://localhost:8080/ if you are on the same host."
-msgstr "不添加任何参数，直接运行Bottle的 :func:`run` 函数，会启动一个本地的开发服务器，监听8080端口。你可在同一部主机上访问http://localhost:8080/来测试你的应用。"
+msgstr ""
+"不添加任何参数，直接运行Bottle的 :func:`run` "
+"函数，会启动一个本地的开发服务器，监听8080端口。你可在同一部主机上访问http://localhost:8080/来测试你的应用。"
 
 # 68543f932d8e45bab1fe941eb39fd6a3
 #: ../../deployment.rst:31
@@ -39,7 +41,10 @@ msgid ""
 "``run(host='0.0.0.0')``). The listening port can be changed in a similar "
 "way, but you need root or admin rights to choose a port below 1024. Port 80 "
 "is the standard for HTTP servers::"
-msgstr "可更改服务器监听的IP地址(例如： ``run(host='192.168.0.1')`` )，来让应用对其可访问，或者让服务器接受所有地址的请求(例如： ``run(host='0.0.0.0')`` )。可通过类似的方法改变服务器监听的端口，但如果你选择了一个小于1024的端口，则需要root权限。HTTP服务器的标准端口是80端口::"
+msgstr ""
+"可更改服务器监听的IP地址(例如： ``run(host='192.168.0.1')`` "
+")，来让应用对其可访问，或者让服务器接受所有地址的请求(例如： ``run(host='0.0.0.0')`` "
+")。可通过类似的方法改变服务器监听的端口，但如果你选择了一个小于1024的端口，则需要root权限。HTTP服务器的标准端口是80端口::"
 
 # a412e290cfdf4741a5032f6f67a403a3
 #: ../../deployment.rst:36
@@ -55,7 +60,10 @@ msgid ""
 "for development and early production, but may become a performance "
 "bottleneck when server load increases. There are three ways to eliminate "
 "this bottleneck:"
-msgstr "内置的服务器基于 `wsgiref WSGIServer <http://docs.python.org/library/wsgiref.html#module-wsgiref.simple_server>`_ 。这个单线程的HTTP服务器很适合用于开发，但当服务器的负载上升的时候，会成为一个性能瓶颈。有三种方法可消除这一瓶颈："
+msgstr ""
+"内置的服务器基于 `wsgiref WSGIServer <http://docs.python.org/library/wsgiref.html"
+"#module-wsgiref.simple_server>`_ "
+"。这个单线程的HTTP服务器很适合用于开发，但当服务器的负载上升的时候，会成为一个性能瓶颈。有三种方法可消除这一瓶颈："
 
 # 963e934e4b7e47d2ac33e527aca3f860
 #: ../../deployment.rst:40
@@ -103,7 +111,9 @@ msgid ""
 "share state between processes, or design your application so that it does "
 "not need any shared state. The setup is also a bit more complicated, but "
 "there are good tutorials available."
-msgstr "**多进程** (forking) 服务器就没有受到GIL的限制，能利用多个CPU核心，但服务器实例之间的交流代价比较高昂。你需要一个数据库或消息队列来在进程之间共享状态，或将你的应用设计成根本不需要共享状态。多进程服务器的安装也比较负责，但已经有很多好的教程了。"
+msgstr ""
+"**多进程** (forking) "
+"服务器就没有受到GIL的限制，能利用多个CPU核心，但服务器实例之间的交流代价比较高昂。你需要一个数据库或消息队列来在进程之间共享状态，或将你的应用设计成根本不需要共享状态。多进程服务器的安装也比较负责，但已经有很多好的教程了。"
 
 # 8cf18dd5b75d4d4d98cdd72b9cf56dd2
 #: ../../deployment.rst:51
@@ -408,7 +418,9 @@ msgid ""
 "over the server setup, you may want to start the server manually. Refer to "
 "the server documentation on how to run WSGI applications. Here is an example"
 " for paste_::"
-msgstr "如果没有适合你的服务器的适配器，或者你需要更多地控制服务器的安装，你也许需要手动启动服务器。可参考你的服务器的文档，看看是如何运行一个WSGI应用。下面是一个使用 paste_ 的例子。"
+msgstr ""
+"如果没有适合你的服务器的适配器，或者你需要更多地控制服务器的安装，你也许需要手动启动服务器。可参考你的服务器的文档，看看是如何运行一个WSGI应用。下面是一个使用"
+" paste_ 的例子。"
 
 # 37aaf02738404aa4945fe65bf7791dcd
 #: ../../deployment.rst:93
@@ -428,7 +440,9 @@ msgid ""
 "All you need is an ``app.wsgi`` file that provides an ``application`` "
 "object. This object is used by mod_wsgi to start your application and should"
 " be a WSGI-compatible Python callable."
-msgstr "你需要的只是提供一个 ``application`` 对象的 ``app.wsgi`` 文件。mod_wsgi会使用这个对象来启动你的应用，这个对象必须是兼容WSGI的 callable对象。"
+msgstr ""
+"你需要的只是提供一个 ``application`` 对象的 ``app.wsgi`` "
+"文件。mod_wsgi会使用这个对象来启动你的应用，这个对象必须是兼容WSGI的 callable对象。"
 
 # 2a8da94c51b648c59afe0b70af743396
 #: ../../deployment.rst:99
@@ -436,17 +450,17 @@ msgid "File ``/var/www/yourapp/app.wsgi``::"
 msgstr " ``/var/www/yourapp/app.wsgi`` 文件 "
 
 # ecc8b03f39f3420d9ba455c1b13ece1f
-#: ../../deployment.rst:109
+#: ../../deployment.rst:110
 msgid "The Apache configuration may look like this::"
 msgstr "Apache的配置"
 
 # ee835f1387fa4be69701b4aede11ebf8
-#: ../../deployment.rst:128
+#: ../../deployment.rst:144
 msgid "Google AppEngine"
 msgstr ""
 
 # d0ee0715d19c4fc991c54b9e328ff0bd
-#: ../../deployment.rst:132
+#: ../../deployment.rst:148
 msgid ""
 "New App Engine applications using the Python 2.7 runtime environment support"
 " any WSGI application and should be configured to use the Bottle application"
@@ -455,14 +469,14 @@ msgid ""
 msgstr ""
 
 # 57dc546c7cf74d9fa80fd96f80a8e70d
-#: ../../deployment.rst:142
+#: ../../deployment.rst:158
 msgid ""
 "Then you can configure App Engine's ``app.yaml`` to use the ``app`` object "
 "like so::"
 msgstr ""
 
 # 4cbc7b59b70e4564900fe247fa8d10d7
-#: ../../deployment.rst:153
+#: ../../deployment.rst:169
 msgid ""
 "Bottle also provides a ``gae`` server adapter for legacy App Engine "
 "applications using the Python 2.5 runtime environment. It works similar to "
@@ -472,7 +486,7 @@ msgid ""
 msgstr ""
 
 # ecd80ebf66f843dfa0c2bab351e8546a
-#: ../../deployment.rst:157
+#: ../../deployment.rst:173
 msgid ""
 "It is always a good idea to let GAE serve static files directly. Here is "
 "example for a working  ``app.yaml`` (using the legacy Python 2.5 runtime "
@@ -480,12 +494,12 @@ msgid ""
 msgstr ""
 
 # 27d6ad740fd4413596b73bed70cab2d0
-#: ../../deployment.rst:173
+#: ../../deployment.rst:189
 msgid "Load Balancer (Manual Setup)"
 msgstr "负载均衡 (手动安装)"
 
 # afed46d2164b47b0a254abf40990601c
-#: ../../deployment.rst:175
+#: ../../deployment.rst:191
 msgid ""
 "A single Python process can utilize only one CPU at a time, even if there "
 "are more CPU cores available. The trick is to balance the load between "
@@ -493,7 +507,7 @@ msgid ""
 msgstr "单一的Python进程一次只能使用一个CPU内核，即使CPU是多核的。我们的方法就是在多核CPU的机器上，使用多线程来实现负载均衡。"
 
 # 4d5e478b13d44326a19aecea46b89e78
-#: ../../deployment.rst:177
+#: ../../deployment.rst:193
 msgid ""
 "Instead of a single Bottle application server, you start one instance for "
 "each CPU core available using different local port (localhost:8080, 8081, "
@@ -502,40 +516,49 @@ msgid ""
 "forwards each new requests to a random port, spreading the load between all "
 "available back-ends. This way you can use all of your CPU cores and even "
 "spread out the load between different physical servers."
-msgstr "不只是启动一个应用服务器，你需要同时启动多个应用服务器，监听不同的端口(localhost:8080, 8081, 8082, ...)。你可选择任何服务器，甚至那些异步服务器。然后一个高性能的负载均衡器，像一个反向代理那样工作，将新的请求发送到一个随机端口，在多个服务器之间分散压力。这样你就可以利用所有的CPU核心，甚至在多个机器上实现负载均衡。"
+msgstr ""
+"不只是启动一个应用服务器，你需要同时启动多个应用服务器，监听不同的端口(localhost:8080, 8081, 8082, "
+"...)。你可选择任何服务器，甚至那些异步服务器。然后一个高性能的负载均衡器，像一个反向代理那样工作，将新的请求发送到一个随机端口，在多个服务器之间分散压力。这样你就可以利用所有的CPU核心，甚至在多个机器上实现负载均衡。"
 
 # e5d495710d6e49459b37dc32606480a5
-#: ../../deployment.rst:179
+#: ../../deployment.rst:195
 msgid ""
 "One of the fastest load balancers available is Pound_ but most common web "
 "servers have a proxy-module that can do the work just fine."
 msgstr " Pound_ 是最快的负载均衡器之一，但是只要有代理模块的Web服务器，也可以充当这一角色。"
 
 # 0abd9e59e9404392be15c6d60068f4f6
-#: ../../deployment.rst:181
+#: ../../deployment.rst:197
 msgid "Pound example::"
 msgstr "Pound的例子::"
 
 # 0ae649a3b6a64f57a5f306c7aef7cd83
-#: ../../deployment.rst:199
+#: ../../deployment.rst:215
 msgid "Apache example::"
 msgstr "Apache的例子::"
 
 # 72a12c37e6d942f4a30cdbf4d1511a7b
-#: ../../deployment.rst:207
+#: ../../deployment.rst:223
 msgid "Lighttpd example::"
 msgstr "Lighttpd的例子::"
 
 # 6ac39d6e2d534ec4a75316966250ed66
-#: ../../deployment.rst:219
+#: ../../deployment.rst:235
 msgid "Good old CGI"
 msgstr "CGI这个老好人"
 
 # ccf4d6681a6844e085d1a35639e2cdc7
-#: ../../deployment.rst:221
+#: ../../deployment.rst:237
 msgid ""
 "A CGI server starts a new process for each request. This adds a lot of "
 "overhead but is sometimes the only option, especially on cheap hosting "
 "packages. The `cgi` server adapter does not actually start a CGI server, but"
 " transforms your bottle application into a valid CGI application::"
-msgstr "CGI服务器会为每个请求启动一个进程。虽然这样代价高昂，但有时这是唯一的选择。 `cgi` 这个适配器实际上并没有启动一个CGI服务器，只是将你的Bottle应用转换成了一个有效的CGI应用。"
+msgstr ""
+"CGI服务器会为每个请求启动一个进程。虽然这样代价高昂，但有时这是唯一的选择。 `cgi` "
+"这个适配器实际上并没有启动一个CGI服务器，只是将你的Bottle应用转换成了一个有效的CGI应用。"
+
+#: ../../deployment.rst:126
+msgid ""
+"With newer versions of Apache (2.4) use a configuration similar to this::"
+msgstr ""

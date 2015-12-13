@@ -1,7 +1,7 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) 2009-2015, Marcel Hellkamp
 # This file is distributed under the same license as the Bottle package.
-# 
+#
 # Translators:
 msgid ""
 msgstr ""
@@ -436,17 +436,17 @@ msgid "File ``/var/www/yourapp/app.wsgi``::"
 msgstr ""
 
 # ecc8b03f39f3420d9ba455c1b13ece1f
-#: ../../deployment.rst:109
+#: ../../deployment.rst:110
 msgid "The Apache configuration may look like this::"
 msgstr ""
 
 # ee835f1387fa4be69701b4aede11ebf8
-#: ../../deployment.rst:128
+#: ../../deployment.rst:144
 msgid "Google AppEngine"
 msgstr ""
 
 # d0ee0715d19c4fc991c54b9e328ff0bd
-#: ../../deployment.rst:132
+#: ../../deployment.rst:148
 msgid ""
 "New App Engine applications using the Python 2.7 runtime environment support"
 " any WSGI application and should be configured to use the Bottle application"
@@ -455,14 +455,14 @@ msgid ""
 msgstr ""
 
 # 57dc546c7cf74d9fa80fd96f80a8e70d
-#: ../../deployment.rst:142
+#: ../../deployment.rst:158
 msgid ""
 "Then you can configure App Engine's ``app.yaml`` to use the ``app`` object "
 "like so::"
 msgstr ""
 
 # 4cbc7b59b70e4564900fe247fa8d10d7
-#: ../../deployment.rst:153
+#: ../../deployment.rst:169
 msgid ""
 "Bottle also provides a ``gae`` server adapter for legacy App Engine "
 "applications using the Python 2.5 runtime environment. It works similar to "
@@ -472,7 +472,7 @@ msgid ""
 msgstr ""
 
 # ecd80ebf66f843dfa0c2bab351e8546a
-#: ../../deployment.rst:157
+#: ../../deployment.rst:173
 msgid ""
 "It is always a good idea to let GAE serve static files directly. Here is "
 "example for a working  ``app.yaml`` (using the legacy Python 2.5 runtime "
@@ -480,12 +480,12 @@ msgid ""
 msgstr ""
 
 # 27d6ad740fd4413596b73bed70cab2d0
-#: ../../deployment.rst:173
+#: ../../deployment.rst:189
 msgid "Load Balancer (Manual Setup)"
 msgstr ""
 
 # afed46d2164b47b0a254abf40990601c
-#: ../../deployment.rst:175
+#: ../../deployment.rst:191
 msgid ""
 "A single Python process can utilize only one CPU at a time, even if there "
 "are more CPU cores available. The trick is to balance the load between "
@@ -493,7 +493,7 @@ msgid ""
 msgstr ""
 
 # 4d5e478b13d44326a19aecea46b89e78
-#: ../../deployment.rst:177
+#: ../../deployment.rst:193
 msgid ""
 "Instead of a single Bottle application server, you start one instance for "
 "each CPU core available using different local port (localhost:8080, 8081, "
@@ -505,37 +505,42 @@ msgid ""
 msgstr ""
 
 # e5d495710d6e49459b37dc32606480a5
-#: ../../deployment.rst:179
+#: ../../deployment.rst:195
 msgid ""
 "One of the fastest load balancers available is Pound_ but most common web "
 "servers have a proxy-module that can do the work just fine."
 msgstr ""
 
 # 0abd9e59e9404392be15c6d60068f4f6
-#: ../../deployment.rst:181
+#: ../../deployment.rst:197
 msgid "Pound example::"
 msgstr ""
 
 # 0ae649a3b6a64f57a5f306c7aef7cd83
-#: ../../deployment.rst:199
+#: ../../deployment.rst:215
 msgid "Apache example::"
 msgstr ""
 
 # 72a12c37e6d942f4a30cdbf4d1511a7b
-#: ../../deployment.rst:207
+#: ../../deployment.rst:223
 msgid "Lighttpd example::"
 msgstr ""
 
 # 6ac39d6e2d534ec4a75316966250ed66
-#: ../../deployment.rst:219
+#: ../../deployment.rst:235
 msgid "Good old CGI"
 msgstr ""
 
 # ccf4d6681a6844e085d1a35639e2cdc7
-#: ../../deployment.rst:221
+#: ../../deployment.rst:237
 msgid ""
 "A CGI server starts a new process for each request. This adds a lot of "
 "overhead but is sometimes the only option, especially on cheap hosting "
 "packages. The `cgi` server adapter does not actually start a CGI server, but"
 " transforms your bottle application into a valid CGI application::"
+msgstr ""
+
+#: ../../deployment.rst:126
+msgid ""
+"With newer versions of Apache (2.4) use a configuration similar to this::"
 msgstr ""
