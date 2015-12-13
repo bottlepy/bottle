@@ -7,22 +7,20 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-01-22 16:45-0200\n"
+"POT-Creation-Date: 2015-12-13 21:49+0100\n"
 "PO-Revision-Date: 2015-01-22 19:17+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: Portuguese (Brazil) (http://www.transifex.com/projects/p/bottle/language/pt_BR/)\n"
+"Language-Team: Portuguese (Brazil) (http://www.transifex.com/bottle/bottle/language/pt_BR/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: pt_BR\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-# 9ef51644f5aa49d0bed387b81261b720
 #: ../../async.rst:2
 msgid "Primer to Asynchronous Applications"
 msgstr ""
 
-# 326fa8e554264115a9f691a1e7b495b8
 #: ../../async.rst:4
 msgid ""
 "Asynchronous design patterns don't mix well with the synchronous nature of "
@@ -35,12 +33,10 @@ msgid ""
 "Asynchronous WSGI."
 msgstr ""
 
-# eca9a72c2e334ede82136e2d21f78bae
 #: ../../async.rst:7
 msgid "The Limits of Synchronous WSGI"
 msgstr ""
 
-# f9177359b41143c9898c956242aacd25
 #: ../../async.rst:9
 msgid ""
 "Briefly worded, the `WSGI specification (pep 3333) "
@@ -51,7 +47,6 @@ msgid ""
 " the client connection is closed."
 msgstr ""
 
-# 46adf9077b4740c8ac6e5b005dc90fc2
 #: ../../async.rst:11
 msgid ""
 "Simple enough, but there is a snag: All this happens synchronously. If your "
@@ -61,7 +56,6 @@ msgid ""
 "requests. There is consequently only one ongoing request per thread."
 msgstr ""
 
-# 8473666079c046aeb6687c9e3fbe4c13
 #: ../../async.rst:13
 msgid ""
 "Most servers limit the number of threads to avoid their relatively high "
@@ -72,12 +66,10 @@ msgid ""
 "connections. That's a pretty small chat."
 msgstr ""
 
-# fa2e6158e95540fb86d3c7ad4024d96c
 #: ../../async.rst:16
 msgid "Greenlets to the rescue"
 msgstr ""
 
-# 6687d2939eb14b9e81db1267b3f7688c
 #: ../../async.rst:18
 msgid ""
 "Most servers limit the size of their worker pools to a relatively low number"
@@ -87,7 +79,6 @@ msgid ""
 "connection."
 msgstr ""
 
-# 45d387fb238a4cf7bda7cbb3beb509f6
 #: ../../async.rst:20
 msgid ""
 "The `gevent <http://www.gevent.org/>`_ module adds *greenlets* to the mix. "
@@ -98,7 +89,6 @@ msgid ""
 "concurrent connections is virtually unlimited."
 msgstr ""
 
-# 2995c29d96c74dc79acb98f1caccb005
 #: ../../async.rst:22
 msgid ""
 "This makes creating asynchronous applications incredibly easy, because they "
@@ -107,7 +97,6 @@ msgid ""
 "example::"
 msgstr ""
 
-# 96d4ce96ac9e4bceabf3fc24e316eb3d
 #: ../../async.rst:39
 msgid ""
 "The first line is important. It causes gevent to monkey-patch most of "
@@ -119,7 +108,6 @@ msgid ""
 "functions (``gevent.sleep()`` in this case)."
 msgstr ""
 
-# 76dda76cf4e44d87928e801f068c91e7
 #: ../../async.rst:41
 msgid ""
 "If you run this script and point your browser to "
@@ -129,7 +117,6 @@ msgid ""
 "handle thousands of concurrent requests without any problems."
 msgstr ""
 
-# 0bc5eaa7c35e413e827c405eece57562
 #: ../../async.rst:45
 msgid ""
 "Some browsers buffer a certain amount of data before they start rendering a "
@@ -139,12 +126,10 @@ msgid ""
 "benchmark tool (e.g. `ab` or `httperf`) to measure performance."
 msgstr ""
 
-# 6f7fcfa983f04956b9eda0483f9b0f9a
 #: ../../async.rst:52
 msgid "Event Callbacks"
 msgstr ""
 
-# 95882d8f7cf14e09855ddb6cc9cfff02
 #: ../../async.rst:54
 msgid ""
 "A very common design pattern in asynchronous frameworks (including tornado, "
@@ -156,7 +141,6 @@ msgid ""
 "requests>`_::"
 msgstr ""
 
-# 5629af45ae8a4894b3e0692ec13676f7
 #: ../../async.rst:63
 msgid ""
 "The main benefit is that the request handler terminates early. The handling "
@@ -166,7 +150,6 @@ msgid ""
 "threads."
 msgstr ""
 
-# 8cbcaebbe9674c20aba305da49360261
 #: ../../async.rst:65
 msgid ""
 "With Gevent+WSGI, things are different: First, terminating early has no "
@@ -176,7 +159,6 @@ msgid ""
 "to WSGI."
 msgstr ""
 
-# b6bd074c929f474baf72d996186f6c20
 #: ../../async.rst:67
 msgid ""
 "In order to conform to the WSGI standard, all we have to do is to return a "
@@ -185,7 +167,6 @@ msgid ""
 " a detached socket and rewrite the previous example as follows::"
 msgstr ""
 
-# 677daa10ef8f439a93b1214de9dbc632
 #: ../../async.rst:78
 msgid ""
 "From the server perspective, the queue object is iterable. It blocks if "
@@ -196,12 +177,10 @@ msgid ""
 "is implemented most of the time."
 msgstr ""
 
-# 115abb39c9194794b5b5d1773a8133f0
 #: ../../async.rst:82
 msgid "Finally: WebSockets"
 msgstr ""
 
-# a223597e7ecf4066a5b56272628ab6f9
 #: ../../async.rst:84
 msgid ""
 "Lets forget about the low-level details for a while and speak about "
@@ -210,7 +189,6 @@ msgid ""
 "(client) and a web application (server)."
 msgstr ""
 
-# 3444ce49a5094189aaa0c57aa172bb77
 #: ../../async.rst:86
 msgid ""
 "Thankfully the `gevent-websocket <http://pypi.python.org/pypi/gevent-"
@@ -219,14 +197,12 @@ msgid ""
 "client::"
 msgstr ""
 
-# a724effbdaef48dda7d4372ee0f0f0fa
 #: ../../async.rst:111
 msgid ""
 "The while-loop runs until the client closes the connection. You get the idea"
 " :)"
 msgstr ""
 
-# fe643adfe30648988c735c48875ec9c2
 #: ../../async.rst:113
 msgid "The client-site JavaScript API is really straight forward, too::"
 msgstr ""

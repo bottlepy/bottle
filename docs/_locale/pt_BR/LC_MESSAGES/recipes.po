@@ -1,39 +1,35 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) 2009-2015, Marcel Hellkamp
 # This file is distributed under the same license as the Bottle package.
-#
+# 
 # Translators:
 msgid ""
 msgstr ""
 "Project-Id-Version: bottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-01-22 16:45-0200\n"
-"PO-Revision-Date: 2015-01-22 19:19+0000\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: Portuguese (Brazil) (http://www.transifex.com/projects/p/bottle/language/pt_BR/)\n"
+"POT-Creation-Date: 2015-12-13 21:49+0100\n"
+"PO-Revision-Date: 2015-12-13 21:06+0000\n"
+"Last-Translator: defnull <marc@gsites.de>\n"
+"Language-Team: Portuguese (Brazil) (http://www.transifex.com/bottle/bottle/language/pt_BR/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: pt_BR\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-# 09674aa31ab3451f82cc52710d36a843
 #: ../../recipes.rst:16
 msgid "Recipes"
 msgstr ""
 
-# f750e8d989494ff28ac31298bd69d391
 #: ../../recipes.rst:18
 msgid ""
 "This is a collection of code snippets and examples for common use cases."
 msgstr ""
 
-# e52061e39f3943d6a559287b1b8b8727
 #: ../../recipes.rst:21
 msgid "Keeping track of Sessions"
 msgstr ""
 
-# 9317f423607d409ea17631c7c49941de
 #: ../../recipes.rst:23
 msgid ""
 "There is no built-in support for sessions because there is no *right* way to"
@@ -42,12 +38,10 @@ msgid ""
 "yourself. Here is an example for beaker sessions with a file-based backend::"
 msgstr ""
 
-# 3d1ec9502b1241d8975d8fbdd8ce8265
 #: ../../recipes.rst:46
 msgid "Debugging with Style: Debugging Middleware"
 msgstr ""
 
-# ac247bbae1e8412c9f9d5b786073ecd5
 #: ../../recipes.rst:48
 msgid ""
 "Bottle catches all Exceptions raised in your app code to prevent your WSGI "
@@ -56,7 +50,6 @@ msgid ""
 " this behaviour::"
 msgstr ""
 
-# b9b8be146f7744a19c14a1462bc712ac
 #: ../../recipes.rst:56
 msgid ""
 "Now, bottle only catches its own exceptions (:exc:`HTTPError`, "
@@ -64,7 +57,6 @@ msgid ""
 "handle the rest."
 msgstr ""
 
-# bb6dca79ccf645fdb9f2cc5c14e607f4
 #: ../../recipes.rst:58
 msgid ""
 "The werkzeug_ and paste_ libraries both ship with very powerful debugging "
@@ -74,41 +66,34 @@ msgid ""
 "code within the stack context, so **do not use them in production**."
 msgstr ""
 
-# 516604814f5647d7b25e61c8a6a9fec4
 #: ../../recipes.rst:62
 msgid "Unit-Testing Bottle Applications"
 msgstr ""
 
-# 2ad2e602b9f443fa94137b6bbf0be3e3
 #: ../../recipes.rst:64
 msgid ""
 "Unit-testing is usually performed against methods defined in your web "
 "application without running a WSGI environment."
 msgstr ""
 
-# 4c22dca2875f4b9ba1e731c6f4e65113
 #: ../../recipes.rst:66
 msgid "A simple example using `Nose <http://readthedocs.org/docs/nose>`_::"
 msgstr ""
 
-# 6d035fdeae4a409ebfc710a5fd82236b
 #: ../../recipes.rst:77
 msgid "Test script::"
 msgstr ""
 
-# 0d18b02ae5304507ae782b2703d32db0
 #: ../../recipes.rst:84
 msgid ""
 "In the example the Bottle route() method is never executed - only index() is"
 " tested."
 msgstr ""
 
-# 4863b88863224a4bbe611e868f783b0b
 #: ../../recipes.rst:88
 msgid "Functional Testing Bottle Applications"
 msgstr ""
 
-# 89313bab540445ed9ad528f1800265ac
 #: ../../recipes.rst:90
 msgid ""
 "Any HTTP-based testing system can be used with a running WSGI server, but "
@@ -118,19 +103,16 @@ msgid ""
 "<http://www.wsgi.org/en/latest/testing.html>`_ is a good starting point."
 msgstr ""
 
-# f0578d003384429983afd879f5be1319
 #: ../../recipes.rst:92
 msgid ""
 "Example using `WebTest <http://webtest.pythonpaste.org/>`_ and `Nose "
 "<http://readthedocs.org/docs/nose>`_::"
 msgstr ""
 
-# bd774a007e1c44ebbc5f2b79a3ea1238
 #: ../../recipes.rst:112
 msgid "Embedding other WSGI Apps"
 msgstr ""
 
-# 192cf12c3b9944509a0715ae0dfeb3a6
 #: ../../recipes.rst:114
 msgid ""
 "This is not the recommend way (you should use a middleware in front of "
@@ -138,46 +120,46 @@ msgid ""
 " bottle app and let bottle act as a pseudo-middleware. Here is an example::"
 msgstr ""
 
-# 8f9c30f08a6645e1b7bed4a39401b44b
 #: ../../recipes.rst:130
 msgid ""
 "Again, this is not the recommend way to implement subprojects. It is only "
 "here because many people asked for this and to show how bottle maps to WSGI."
 msgstr ""
 
-# af81fbf808254eb8875e28e17eca5f88
 #: ../../recipes.rst:134
 msgid "Ignore trailing slashes"
 msgstr ""
 
-# be436fa9f1f54fe4b306ca030a86094b
 #: ../../recipes.rst:136
 msgid ""
 "For Bottle, ``/example`` and ``/example/`` are two different routes [1]_. To"
 " treat both URLs the same you can add two ``@route`` decorators::"
 msgstr ""
 
-# 1ed4f054f22a4ac79ec3d47ad65a1708
-#: ../../recipes.rst:162
-msgid "Footnotes"
+#: ../../recipes.rst:142
+msgid "add a WSGI middleware that strips trailing slashes from all URLs::"
 msgstr ""
 
-# 62e7f6b0c3434eb89f130688da977f15
+#: ../../recipes.rst:155
+msgid "or add a ``before_request`` hook to strip the trailing slashes::"
+msgstr ""
+
+#: ../../recipes.rst:162
+msgid "Footnotes"
+msgstr "Notas de rodapé"
+
 #: ../../recipes.rst:163
 msgid "Because they are. See <http://www.ietf.org/rfc/rfc3986.txt>"
 msgstr ""
 
-# 41064858a8dc49c68eb43fa917bddd43
 #: ../../recipes.rst:167
 msgid "Keep-alive requests"
 msgstr ""
 
-# 952f277371514a0c989a7301e0f96c12
 #: ../../recipes.rst:171
 msgid "For a more detailed explanation, see :doc:`async`."
 msgstr ""
 
-# da9e6dddd8b543799423af1561cab613
 #: ../../recipes.rst:173
 msgid ""
 "Several \"push\" mechanisms like XHR multipart need the ability to write "
@@ -190,7 +172,6 @@ msgid ""
 " paste_ server::"
 msgstr ""
 
-# 48e6abce73f34c21bae196f63ec86a4a
 #: ../../recipes.rst:190
 msgid ""
 "If you browse to ``http://localhost:8080/stream``, you should see 'START', "
@@ -198,17 +179,14 @@ msgid ""
 "see them all at once)."
 msgstr ""
 
-# e0a4b2c194754d18b665c49f859caf4f
 #: ../../recipes.rst:193
 msgid "Gzip Compression in Bottle"
 msgstr ""
 
-# 49f80fef30d9495ba02ec60f7d417821
 #: ../../recipes.rst:196
 msgid "For a detailed discussion, see compression_"
 msgstr ""
 
-# ab6e0ad26e0e43248ecf6bf63a09ac37
 #: ../../recipes.rst:198
 msgid ""
 "A common feature request is for Bottle to support Gzip compression, which "
@@ -216,7 +194,6 @@ msgid ""
 "during a request."
 msgstr ""
 
-# ea4b850a16d845c9b35384770c7f7c03
 #: ../../recipes.rst:200
 msgid ""
 "Supporting Gzip compression is not a straightforward proposition, due to a "
@@ -224,54 +201,44 @@ msgid ""
 " must:"
 msgstr ""
 
-# 7b6cbef81a9f413089f7025fd2c2779f
 #: ../../recipes.rst:202
 msgid "Compress on the fly and be fast doing so."
 msgstr ""
 
-# d9a5a2336fb34d0fa4e68c2a3bb26eac
 #: ../../recipes.rst:203
 msgid "Do not compress for browsers that don't support it."
 msgstr ""
 
-# 65d79afcf2d248a4b048060302b593e4
 #: ../../recipes.rst:204
 msgid "Do not compress files that are compressed already (images, videos)."
 msgstr ""
 
-# 103aa5633aab49c98defd178f3b8419a
 #: ../../recipes.rst:205
 msgid "Do not compress dynamic files."
 msgstr ""
 
-# 5df651510f31452ba7bb46f2cacb08b5
 #: ../../recipes.rst:206
 msgid "Support two differed compression algorithms (gzip and deflate)."
 msgstr ""
 
-# 8828f21fbd9749868425dd18767e03a4
 #: ../../recipes.rst:207
 msgid "Cache compressed files that don't change often."
 msgstr ""
 
-# 14590c3194a4466ea72e1d4a54622164
 #: ../../recipes.rst:208
 msgid "De-validate the cache if one of the files changed anyway."
 msgstr ""
 
-# c86800c8df5341bfa2f6031182597bcb
 #: ../../recipes.rst:209
 msgid "Make sure the cache does not get to big."
 msgstr ""
 
-# e083757d1ff74523985760815f6ce4c0
 #: ../../recipes.rst:210
 msgid ""
 "Do not cache small files because a disk seek would take longer than on-the-"
 "fly compression."
 msgstr ""
 
-# 20f755960a744915995b2b163f42f4c9
 #: ../../recipes.rst:212
 msgid ""
 "Because of these requirements, it is the recommendation of the Bottle "
@@ -280,12 +247,10 @@ msgid ""
 "that can be used to accomplish this."
 msgstr ""
 
-# fe52ccf19e01458ba2c987709dd29eda
 #: ../../recipes.rst:216
 msgid "Using the hooks plugin"
 msgstr ""
 
-# 08bc14b1cfc3417fa218d3b26dcfac52
 #: ../../recipes.rst:218
 msgid ""
 "For example, if you want to allow Cross-Origin Resource Sharing for the "
@@ -293,26 +258,22 @@ msgid ""
 "setup a callback function::"
 msgstr ""
 
-# 899b3bcef9bc422a8c305d51e4a58c90
 #: ../../recipes.rst:236
 msgid ""
 "You can also use the ``before_request`` to take an action before every "
 "function gets called."
 msgstr ""
 
-# b08bf3a9f25646cc9324f70239238d88
 #: ../../recipes.rst:241
 msgid "Using Bottle with Heroku"
 msgstr ""
 
-# a06da0ff39b64d37bc06d241c0b78f5d
 #: ../../recipes.rst:243
 msgid ""
 "Heroku_, a popular cloud application platform now provides support for "
 "running Python applications on their infastructure."
 msgstr ""
 
-# c34c5372a3a44a0198b3cf71432daf9c
 #: ../../recipes.rst:246
 msgid ""
 "This recipe is based upon the `Heroku Quickstart "
@@ -323,20 +284,8 @@ msgid ""
 "<http://devcenter.heroku.com/articles/python>`_ guide::"
 msgstr ""
 
-# afba5ebd9fd34dc2864557520d73a4a1
 #: ../../recipes.rst:262
 msgid ""
 "Heroku's app stack passes the port that the application needs to listen on "
 "for requests, using the `os.environ` dictionary."
 msgstr ""
-
-#: ../../recipes.rst:142
-msgid "add a WSGI middleware that strips trailing slashes from all URLs::"
-msgstr ""
-
-#: ../../recipes.rst:155
-msgid "or add a ``before_request`` hook to strip the trailing slashes::"
-msgstr ""
-
-#~ msgid "or add a WSGI middleware that strips trailing slashes from all URLs::"
-#~ msgstr ""

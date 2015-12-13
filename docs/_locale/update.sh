@@ -20,3 +20,8 @@ done
 echo
 echo 'Building ...'
 sphinx-intl build
+
+echo
+echo "Updating transiflex stuff. This might fail. Don't worry."
+sphinx-intl update-txconfig-resources -p _pot -d . --transifex-project-name bottle
+tx push -s

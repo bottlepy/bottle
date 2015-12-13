@@ -1,229 +1,166 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) 2009-2015, Marcel Hellkamp
 # This file is distributed under the same license as the Bottle package.
-#
+# 
 # Translators:
+# Igor P. Leroy <ip.leroy@gmail.com>, 2015
 msgid ""
 msgstr ""
 "Project-Id-Version: bottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-01-22 16:45-0200\n"
-"PO-Revision-Date: 2015-01-22 19:23+0000\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: Portuguese (Brazil) (http://www.transifex.com/projects/p/bottle/language/pt_BR/)\n"
+"POT-Creation-Date: 2015-12-13 21:49+0100\n"
+"PO-Revision-Date: 2015-12-13 21:05+0000\n"
+"Last-Translator: defnull <marc@gsites.de>\n"
+"Language-Team: Portuguese (Brazil) (http://www.transifex.com/bottle/bottle/language/pt_BR/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: pt_BR\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-# 9462ae2d01ff49aa9eff0e6d044af389
 #: ../../plugins/index.rst:5
 msgid "List of available Plugins"
-msgstr ""
+msgstr "Lista de Plugins disponíveis"
 
-# eb0fdc5fcbac4501b5567ea6b2bcfb78
 #: ../../plugins/index.rst:7
 msgid ""
 "This is a list of third-party plugins that add extend Bottles core "
 "functionality or integrate other libraries with the Bottle framework."
-msgstr ""
+msgstr "Essa é uma lista de plugins terceiros que estendem funcionalidades de core do Bottle ou integra com outras bibliotecas com o framework Bottle."
 
-# 945b70702a344ab695e6134c51b71e57
 #: ../../plugins/index.rst:9
 msgid ""
 "Have a look at :ref:`plugins` for general questions about plugins "
 "(installation, usage). If you plan to develop a new plugin, the "
 ":doc:`/plugindev` may help you."
-msgstr ""
-
-# d8ed078cbb8142db8027885e6c8e5644
-#: ../../plugins/index.rst:12
-msgid "Beaker to session and caching library with WSGI Middleware"
-msgstr ""
-
-# 023e0b7bc19e4494ac819b5cf344b9fd
-#: ../../plugins/index.rst:15
-msgid ""
-"Cork provides a simple set of methods to implement Authentication and "
-"Authorization in web applications based on Bottle."
-msgstr ""
-
-# a5735468ec8b4c89a8a99f3e014f3c9b
-#: ../../plugins/index.rst:18
-msgid "Meta package to install the bottle plugin collection."
-msgstr ""
-
-# 792df86f7f0440a0b9200ad73331a703
-#: ../../plugins/index.rst:21
-msgid "flash plugin for bottle"
-msgstr ""
-
-# 1af2300151374bc2a018ac9cbb3689cf
-#: ../../plugins/index.rst:24
-msgid "FIFO Queue for Bottle built upon redis"
-msgstr ""
-
-# 86615d4370cb40eba2baae5c07c7cf90
-#: ../../plugins/index.rst:27
-msgid "Macaron is an object-relational mapper (ORM) for SQLite."
-msgstr ""
-
-# 644b19d66de8490aa581c3341c085be8
-#: ../../plugins/index.rst:30
-msgid "Memcache integration for Bottle."
-msgstr ""
-
-# 9e0f2c737eb14c13869d9769248261f4
-#: ../../plugins/index.rst:33
-msgid "MongoDB integration for Bottle"
-msgstr ""
-
-# f56c13b1ef4441778ed6e5cbed43ee93
-#: ../../plugins/index.rst:36
-msgid "Redis integration for Bottle."
-msgstr ""
-
-# a0e8210860a14abaa36d1fd06b2dd85f
-#: ../../plugins/index.rst:39
-msgid "Renderer plugin for bottle"
-msgstr ""
-
-# cef5eeed3b86452faa0e502e525957b5
-#: ../../plugins/index.rst:42
-msgid "A reusable app that serves static files for bottle apps"
-msgstr ""
-
-# 912c1aaa7cb049e39b6fc132d9514e34
-#: ../../plugins/index.rst:45
-msgid "SQLAlchemy integration for Bottle."
-msgstr ""
-
-# 7404a2a0a17d4717bb8758e0c9b79420
-#: ../../plugins/index.rst:48
-msgid "SQLite3 database integration for Bottle."
-msgstr ""
-
-# 1f0769e936d54ddab43ed553b5cf4b7f
-#: ../../plugins/index.rst:51
-msgid "Web2py Dal integration for Bottle."
-msgstr ""
-
-# 43cd0c19d20b4ed09758a6514026e54b
-#: ../../plugins/index.rst:54
-msgid ""
-"Integrates the `werkzeug` library (alternative request and response objects,"
-" advanced debugging middleware and more)."
-msgstr ""
-
-# 47d761a823a042faa2e4a5f5e42bcb85
-#: ../../plugins/index.rst:56
-msgid ""
-"Plugins listed here are not part of Bottle or the Bottle project, but "
-"developed and maintained by third parties."
-msgstr ""
+msgstr "Dê uma olhada nos :ref:`plugins` para perguntas gerais sobre plugins (instalação, utilização). Se você pretende desenvolver um novo plugin, a página de :doc:`/plugindev` pode ajudá-lo."
 
 #: ../../plugins/index.rst:12
 msgid "Bottle-Beaker"
 msgstr ""
 
+#: ../../plugins/index.rst:12
+msgid "Beaker to session and caching library with WSGI Middleware"
+msgstr "Beaker para sessões e biblioteca de cache com Middleware WSGI"
+
 #: ../../plugins/index.rst:15
 msgid "Bottle-Cork"
 msgstr ""
+
+#: ../../plugins/index.rst:15
+msgid ""
+"Cork provides a simple set of methods to implement Authentication and "
+"Authorization in web applications based on Bottle."
+msgstr "Cork fornece um simples conjunto de métodos para implementar Autenticação e Autorização em aplicações web baseadas em Bottle."
 
 #: ../../plugins/index.rst:18
 msgid "Bottle-Extras"
 msgstr ""
 
+#: ../../plugins/index.rst:18
+msgid "Meta package to install the bottle plugin collection."
+msgstr "Meta pacotes para instalar a coleção de plugins do Bottle."
+
 #: ../../plugins/index.rst:21
 msgid "Bottle-Flash"
 msgstr ""
+
+#: ../../plugins/index.rst:21
+msgid "flash plugin for bottle"
+msgstr "plugin flash para bottle"
 
 #: ../../plugins/index.rst:24
 msgid "Bottle-Hotqueue"
 msgstr ""
 
+#: ../../plugins/index.rst:24
+msgid "FIFO Queue for Bottle built upon redis"
+msgstr "Fila FIFO para Bottle escrita sobre Redis."
+
 #: ../../plugins/index.rst:27
 msgid "Macaron"
 msgstr ""
+
+#: ../../plugins/index.rst:27
+msgid "Macaron is an object-relational mapper (ORM) for SQLite."
+msgstr "Macaron é um mapeamento objeto-relacional (ORM) para SQLite."
 
 #: ../../plugins/index.rst:30
 msgid "Bottle-Memcache"
 msgstr ""
 
+#: ../../plugins/index.rst:30
+msgid "Memcache integration for Bottle."
+msgstr "Integração com Memcache para Bottle."
+
 #: ../../plugins/index.rst:33
 msgid "Bottle-Mongo"
 msgstr ""
+
+#: ../../plugins/index.rst:33
+msgid "MongoDB integration for Bottle"
+msgstr "Integração com MongoDB para Bottle"
 
 #: ../../plugins/index.rst:36
 msgid "Bottle-Redis"
 msgstr ""
 
+#: ../../plugins/index.rst:36
+msgid "Redis integration for Bottle."
+msgstr "Integração com Redis para Bottle."
+
 #: ../../plugins/index.rst:39
 msgid "Bottle-Renderer"
 msgstr ""
+
+#: ../../plugins/index.rst:39
+msgid "Renderer plugin for bottle"
+msgstr "Renderer plugin para bottle"
 
 #: ../../plugins/index.rst:42
 msgid "Bottle-Servefiles"
 msgstr ""
 
+#: ../../plugins/index.rst:42
+msgid "A reusable app that serves static files for bottle apps"
+msgstr "App reutilizável que serve arquivos estáticos para aplicações bottle"
+
 #: ../../plugins/index.rst:45
 msgid "Bottle-Sqlalchemy"
 msgstr ""
+
+#: ../../plugins/index.rst:45
+msgid "SQLAlchemy integration for Bottle."
+msgstr "Integração com SQLAlchemy para Bottle."
 
 #: ../../plugins/index.rst:48
 msgid "Bottle-Sqlite"
 msgstr ""
 
+#: ../../plugins/index.rst:48
+msgid "SQLite3 database integration for Bottle."
+msgstr "Integração com bancos de dados SQLite3 para Bottle."
+
 #: ../../plugins/index.rst:51
 msgid "Bottle-Web2pydal"
 msgstr ""
+
+#: ../../plugins/index.rst:51
+msgid "Web2py Dal integration for Bottle."
+msgstr "Integração com Web2py Dal para Bottle."
 
 #: ../../plugins/index.rst:54
 msgid "Bottle-Werkzeug"
 msgstr ""
 
-#~ msgid "`Bottle-Beaker <http://pypi.python.org/pypi/bottle-beaker/>`_"
-#~ msgstr ""
+#: ../../plugins/index.rst:54
+msgid ""
+"Integrates the `werkzeug` library (alternative request and response objects,"
+" advanced debugging middleware and more)."
+msgstr "Integra a biblioteca `werkzeug` (request alternativo and objetos de response, middleware de debugging avançados e etc)."
 
-#~ msgid "`Bottle-Cork <http://cork.firelet.net/>`_"
-#~ msgstr ""
-
-#~ msgid "`Bottle-Extras <http://pypi.python.org/pypi/bottle-extras/>`_"
-#~ msgstr ""
-
-#~ msgid "`Bottle-Flash <http://pypi.python.org/pypi/bottle-flash/>`_"
-#~ msgstr ""
-
-#~ msgid "`Bottle-Hotqueue <http://pypi.python.org/pypi/bottle-hotqueue/>`_"
-#~ msgstr ""
-
-#~ msgid "`Macaron <http://nobrin.github.com/macaron/webapp.html>`_"
-#~ msgstr ""
-
-#~ msgid "`Bottle-Memcache <http://pypi.python.org/pypi/bottle-memcache/>`_"
-#~ msgstr ""
-
-#~ msgid "`Bottle-Mongo <http://pypi.python.org/pypi/bottle-mongo/>`_"
-#~ msgstr ""
-
-#~ msgid "`Bottle-Redis <http://pypi.python.org/pypi/bottle-redis/>`_"
-#~ msgstr ""
-
-#~ msgid "`Bottle-Renderer <http://pypi.python.org/pypi/bottle-renderer/>`_"
-#~ msgstr ""
-
-#~ msgid "`Bottle-Servefiles <http://pypi.python.org/pypi/bottle-servefiles/>`_"
-#~ msgstr ""
-
-#~ msgid "`Bottle-Sqlalchemy <http://pypi.python.org/pypi/bottle-sqlalchemy/>`_"
-#~ msgstr ""
-
-#~ msgid "`Bottle-Sqlite <http://pypi.python.org/pypi/bottle-sqlite/>`_"
-#~ msgstr ""
-
-#~ msgid "`Bottle-Web2pydal <http://pypi.python.org/pypi/bottle-web2pydal/>`_"
-#~ msgstr ""
-
-#~ msgid "`Bottle-Werkzeug <http://pypi.python.org/pypi/bottle-werkzeug/>`_"
-#~ msgstr ""
+#: ../../plugins/index.rst:56
+msgid ""
+"Plugins listed here are not part of Bottle or the Bottle project, but "
+"developed and maintained by third parties."
+msgstr "Plugins listados aqui não são parte do Bottle ou do projeto Bottle, mas desenvolvidos e mantidos por terceiros."
