@@ -3631,7 +3631,10 @@ class Jinja2Template(BaseTemplate):
         return self.tpl.render(**_defaults)
 
     def loader(self, name):
-        fname = self.search(name, self.lookup)
+        if name == self.filename:
+            fname = name
+        else:
+            fname = self.search(name, self.lookup)
         if not fname: return
         with open(fname, "rb") as f:
             return f.read().decode(self.encoding)
