@@ -2678,7 +2678,7 @@ def static_file(filename, root,
         if encoding: headers['Content-Encoding'] = encoding
 
     if mimetype:
-        if mimetype[:5] == 'text/' and charset and 'charset' not in mimetype:
+        if (mimetype[:5] == 'text/' or mimetype == 'application/javascript') and charset and 'charset' not in mimetype:
             mimetype += '; charset=%s' % charset
         headers['Content-Type'] = mimetype
 
