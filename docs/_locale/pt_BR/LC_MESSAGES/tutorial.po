@@ -3,14 +3,15 @@
 # This file is distributed under the same license as the Bottle package.
 # 
 # Translators:
+# alephmelo <alephmelo@icloud.com>, 2015
 # Igor P. Leroy <ip.leroy@gmail.com>, 2015
 msgid ""
 msgstr ""
 "Project-Id-Version: bottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-12-13 21:49+0100\n"
-"PO-Revision-Date: 2015-12-13 21:06+0000\n"
-"Last-Translator: defnull <marc@gsites.de>\n"
+"POT-Creation-Date: 2015-12-19 14:15+0100\n"
+"PO-Revision-Date: 2015-12-14 18:13+0000\n"
+"Last-Translator: alephmelo <alephmelo@icloud.com>\n"
 "Language-Team: Portuguese (Brazil) (http://www.transifex.com/bottle/bottle/language/pt_BR/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -61,7 +62,7 @@ msgid ""
 "applications. If you do not have permissions to install packages system-wide"
 " or simply don't want to, create a `virtualenv "
 "<http://pypi.python.org/pypi/virtualenv>`_ first:"
-msgstr ""
+msgstr "De qualquer maneira, você irá precisar do Python 2.6 ou mais recente (incluindo 3.2+) para executar aplicações bottle. Se você não tem permissões para instalar pacotes globalmente no sistema ou simplesmente não deseja fazer, crie uma `virtualenv <http://pypi.python.org/pypi/virtualenv>`_ primeiro:"
 
 #: ../../tutorial.rst:55
 msgid "Or, if virtualenv is not installed on your system:"
@@ -118,7 +119,7 @@ msgstr ""
 
 #: ../../tutorial.rst:92
 msgid "The Default Application"
-msgstr ""
+msgstr "A Aplicação Padrão"
 
 #: ../../tutorial.rst:94
 msgid ""

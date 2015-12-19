@@ -2,7 +2,7 @@ PATH := build/python/bin:$(PATH)
 VERSION = $(shell python setup.py --version)
 ALLFILES = $(shell echo bottle.py test/*.py test/views/*.tpl)
 
-.PHONY: release coverage install docs intl test test_all test_25 test_26 test_27 test_31 test_32 test_33 2to3 clean
+.PHONY: release coverage install docs test test_all test_25 test_26 test_27 test_31 test_32 test_33 2to3 clean
 
 release: test_all
 	python setup.py --version | egrep -q -v '[a-zA-Z]' # Fail on dev/rc versions
@@ -27,16 +27,7 @@ install:
 	python setup.py install
 
 docs:
-	# Generates documentation for all versions
-	# EN: build/docs/html/
-	# <langs>: build/docs/html/<langs>
 	sphinx-build -b html -d build/docs/doctrees docs build/docs/html/;
-	for lang in $(LANGS); do \
-		sphinx-build -b html -d build/docs/doctrees/$$lang -D language=$$lang docs build/docs/html/$$lang; \
-	done
-
-intl:
-	./docs/_locale/update.sh
 
 test:
 	python test/testall.py

@@ -3,6 +3,7 @@
 # This file is distributed under the same license as the Bottle package.
 # 
 # Translators:
+# alephmelo <alephmelo@icloud.com>, 2015
 # Igor P. Leroy <ip.leroy@gmail.com>, 2015
 # Igor P. Leroy <ip.leroy@gmail.com>, 2015
 # Thiago Avelino <thiago@avelino.xxx>, 2015
@@ -10,9 +11,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-12-13 21:49+0100\n"
-"PO-Revision-Date: 2015-12-13 21:06+0000\n"
-"Last-Translator: defnull <marc@gsites.de>\n"
+"POT-Creation-Date: 2015-12-19 14:15+0100\n"
+"PO-Revision-Date: 2015-12-14 18:04+0000\n"
+"Last-Translator: alephmelo <alephmelo@icloud.com>\n"
 "Language-Team: Portuguese (Brazil) (http://www.transifex.com/bottle/bottle/language/pt_BR/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -75,7 +76,7 @@ msgid ""
 "``easy_install -U bottle`` or download `bottle.py`__ (unstable) into your "
 "project directory. There are no hard [1]_ dependencies other than the Python"
 " standard library. Bottle runs with **Python 2.6+ and 3.2+**."
-msgstr ""
+msgstr "Instale a última versão estável com ``pip install bottle``, ``easy_install -U bottle`` ou faça o download do `bottle.py`__(instável) dentro do diretório do seu projeto. Não há depedências [1]_ além das bibliotecas padrões do Python. Bottle é compatível com **Python 2.6+ e 3.2+**."
 
 #: ../../index.rst:52
 msgid "User's Guide"
@@ -129,4 +130,4 @@ msgstr "Notas de rodapé"
 msgid ""
 "Usage of the template or server adapter classes requires the corresponding "
 "template or server modules."
-msgstr ""
+msgstr "Uso das classes adaptadoras de templates ou de servidores requerem os módulos do template ou servidor correspondentes."
