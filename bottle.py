@@ -1012,7 +1012,10 @@ class Bottle(object):
             environ['bottle.app'] = self
             request.bind(environ)
             response.bind()
-            self.trigger_hook('before_request')
+            try:
+                self.trigger_hook('before_request')
+            except HTTPResponse:
+                return  _e()
             out = _inner_handle()
             return out;
         finally:
