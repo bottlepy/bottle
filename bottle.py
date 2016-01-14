@@ -68,7 +68,7 @@ if __name__ == '__main__':
 
 
 import base64, cgi, email.utils, functools, hmac, imp, itertools, mimetypes,\
-        os, re, tempfile, threading, time, warnings
+        os, re, tempfile, threading, time, warnings, hashlib
 
 from types import FunctionType
 from datetime import date as datedate, datetime, timedelta
@@ -2798,19 +2798,22 @@ def _lscmp(a, b):
                    for x, y in zip(a, b)) and len(a) == len(b)
 
 
-def cookie_encode(data, key):
+def cookie_encode(data, key, digestmod=None):
     """ Encode and sign a pickle-able object. Return a (byte) string """
+    digestmod = digestmod or hashlib.sha256
     msg = base64.b64encode(pickle.dumps(data, -1))
-    sig = base64.b64encode(hmac.new(tob(key), msg).digest())
+    sig = base64.b64encode(hmac.new(tob(key), msg, digestmod=digestmod).digest())
     return tob('!') + sig + tob('?') + msg
 
 
-def cookie_decode(data, key):
+def cookie_decode(data, key, digestmod=None):
     """ Verify and decode an encoded string. Return an object or None."""
     data = tob(data)
     if cookie_is_encoded(data):
         sig, msg = data.split(tob('?'), 1)
-        if _lscmp(sig[1:], base64.b64encode(hmac.new(tob(key), msg).digest())):
+        digestmod = digestmod or hashlib.sha256
+        hashed = hmac.new(tob(key), msg, digestmod=digestmod).digest()
+        if _lscmp(sig[1:], base64.b64encode(hashed)):
             return pickle.loads(base64.b64decode(msg))
     return None
 
