@@ -1588,6 +1588,66 @@ class BaseRequest(object):
         except KeyError:
             raise AttributeError("Attribute not defined: %s" % name)
 
+
+class Header(str): pass
+
+
+
+
+
+
+
+class AcceptHeader(Header):
+    __slots__ = ['values']
+
+    @cached_property
+    def values(self):
+
+    def best_match(self, variants, default=None):
+        """ Given a list of mime types, returns the best match against the clients Accept-Header.
+            A default of ``None`` is returned only if the Accept header was present but there was no match.
+        """
+        tests = [v.lower().split('/', 1) for v in variants if '/' in v]
+        assert len(tests) == len(variants), "Some variants did not contain a '/' and are no valid mime types."
+        for accept, q in self.values:
+            for test in variants:
+                if accept == test or accept == (test[0], '*') or accept == ('*', '*'):
+                    return test
+        return default
+
+
+
+
+
+
+class AcceptHeader(Header):
+    __slots__ = ['values']
+
+    @cached_property
+    def values(self):
+        try:
+            parsed = [(mime.lower().split('/', 1), float(args.get('q', '1.0')))
+                      for (mime, args) in _parse_http_header(self or '*/*')
+                      if '/' in mime]
+            parsed.sort(key=lambda x: -x[1])
+            return parsed
+        except ValueError:  # float() failed
+            raise HTTPError(400, "Invalid accept header")
+
+    def best_match(self, variants, default=None):
+        """ Given a list of mime types, returns the best match against the clients Accept-Header.
+            A default of ``None`` is returned only if the Accept header was present but there was no match.
+        """
+        tests = [v.lower().split('/', 1) for v in variants if '/' in v]
+        assert len(tests) == len(variants), "Some variants did not contain a '/' and are no valid mime types."
+        for accept, q in self.values:
+            for test in variants:
+                if accept == test or accept == (test[0], '*') or accept == ('*', '*'):
+                    return test
+        return default
+
+
+
 def _hkey(s):
     return s.title().replace('_', '-')
 
@@ -2813,6 +2873,51 @@ def _parse_http_header(h):
                 key = None
             lop = tok
     return values
+
+
+class _HttpAcceptHeader(list):
+    """ Parses an HTTP Accept-* header and returns a list of accepted variants
+        ordered by preference (high preference first).
+        The list subclass also has a best_match() method that helps finding
+        the best match out of several variants.
+    """
+
+    def __init__(self, header):
+        values = _parse_http_header(header.lower()) if header else ('*', {})
+        values = sorted([(-float(p.get('q', 1.0)), v.count('*'), v) for (v,p) in values])
+        self[:] = [v[2] for v in values if v[0] > 0]
+
+    def best_match(self, variants, default=None):
+        """ Given a list of variants, returns the best match against the client Accept-Header.
+            A default of ``None`` is returned there was no match.
+        """
+        for accept in self:
+            for variant in variants:
+                if self._matches(accept, variant.lower()):
+                    return variant
+        return default
+
+    def _matches(self, accept, variant):
+        accept = accept.split('/', 1) if '/' in accept else (accept, '*')
+        variant = variant.split('/', 1) if '/' in variant else (variant, '*')
+        return accept == variant or accept == (variant[0], '*') or accept == ('*', '*')
+
+
+class _HttpAcceptLanguageHeader(_HttpAcceptHeader):
+    def _matches(self, accept, variant):
+        accept = accept.split('-', 1) if '-' in accept else (accept, '*')
+        variant = variant.lower().split('-', 1) if '-' in variant else (variant.lower(), '*')
+        return accept == variant or accept == (variant[0], '*') or accept == ('*', '*')
+
+
+class _HttpAcceptEncodingHeader(_HttpAcceptHeader):
+    def _matches(self, accept, variant):
+        return accept == variant.lower() or accept == '*'
+
+
+class _HttpAcceptCharsetHeader(_HttpAcceptHeader):
+    def _matches(self, accept, variant):
+        return accept == variant.lower() or accept == '*'
 
 
 def _parse_qsl(qs):
