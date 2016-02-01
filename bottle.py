@@ -2779,6 +2779,42 @@ def parse_range_header(header, maxlen=0):
             pass
 
 
+#: Header tokenizer used by _parse_http_header()
+_hsplit = re.compile('(?:(?:"((?:[^"\\\\]+|\\\\.)*)")|([^;,=]+))([;,=]?)').findall
+
+def _parse_http_header(h):
+    """ Parses a typical multi-valued and parametrised HTTP header (e.g. Accept headers) and returns a list of values
+        and parameters. For non-standard or broken input, this implementation may return partial results.
+    :param h: A header string (e.g. ``text/html,text/plain;q=0.9,*/*;q=0.8``)
+    :return: List of (value, params) tuples. The second element is a (possibly empty) dict.
+    """
+    values = []
+    if '"' not in h:  # INFO: Fast path without regexp (~2x faster)
+        for value in h.split(','):
+            parts = value.split(';')
+            values.append((parts[0].strip(), {}))
+            for attr in parts[1:]:
+                name, value = attr.split('=', 1)
+                values[-1][1][name.strip()] = value.strip()
+    else:
+        lop, key, attrs = ',', None, {}
+        for quoted, plain, tok in _hsplit(h):
+            value = plain.strip() if plain else quoted.replace('\\"', '"')
+            if lop == ',':
+                attrs = {}
+                values.append((value, attrs))
+            elif lop == ';':
+                if tok == '=':
+                    key = value
+                else:
+                    attrs[value] = ''
+            elif lop == '=' and key:
+                attrs[key] = value
+                key = None
+            lop = tok
+    return values
+
+
 def _parse_qsl(qs):
     r = []
     for pair in qs.replace(';', '&').split('&'):
