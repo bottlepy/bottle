@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-""" Tests for the functionalityof the application object.
+""" Tests for the functionality of the application object.
 
     TODO: Move other tests here.
 """ 
