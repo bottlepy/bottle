@@ -49,6 +49,16 @@ class TestWsgi(ServerTestBase):
             return 'foo'
         self.assertBody('foo', '/')
 
+    def get204(self):
+        """ 204 responses must not return some entity headers """
+        bad = ('content-length', 'content-type')
+        for h in bad:
+            bottle.response.set_header(h, 'foo')
+        bottle.status = 204
+        for h, v in bottle.response.headerlist:
+            self.assertFalse(h.lower() in bad, "Header %s not deleted" % h)
+
+
     def get304(self):
         """ 304 responses must not return entity headers """
         bad = ('allow', 'content-encoding', 'content-language',

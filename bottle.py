@@ -1017,7 +1017,7 @@ class Bottle(object):
             except HTTPResponse:
                 return  _e()
             out = _inner_handle()
-            return out;
+            return out
         finally:
             if isinstance(out, HTTPResponse):
                 out.apply(response)
@@ -1634,7 +1634,7 @@ class BaseResponse(object):
     # Header blacklist for specific response codes
     # (rfc2616 section 10.2.3 and 10.3.5)
     bad_headers = {
-        204: set(('Content-Type', )),
+        204: set(('Content-Type', 'Content-Length')),
         304: set(('Allow', 'Content-Encoding', 'Content-Language',
                   'Content-Length', 'Content-Range', 'Content-Type',
                   'Content-Md5', 'Last-Modified'))
