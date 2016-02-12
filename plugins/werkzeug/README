@@ -40,12 +40,13 @@ module object, so you don't have to import werkzeug in your application. Here
 is an example::
 
     import bottle
+    from bottle.ext import werkzeug
 
     app = bottle.Bottle()
-    werkzeug = bottle.ext.werkzeug.Plugin()
+    werkzeug = werkzeug.Plugin()
     app.install(werkzeug)
 
-    req = werkzueg.request # For the lazy.
+    req = werkzeug.request # For the lazy.
 
     @app.route('/hello/:name')
     def say_hello(name):
