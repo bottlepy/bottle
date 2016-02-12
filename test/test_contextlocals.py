@@ -39,7 +39,3 @@ class TestThreadLocals(unittest.TestCase):
         self.assertEqual(bottle.response.headers['Content-Type'], 'test/main')
         run_thread(run)
         self.assertEqual(bottle.response.headers['Content-Type'], 'test/main')
-
-
-if __name__ == '__main__': #pragma: no cover
-    unittest.main()

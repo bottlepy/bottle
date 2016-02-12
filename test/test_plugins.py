@@ -207,7 +207,3 @@ class TestPluginAPI(tools.ServerTestBase):
         self.assertTrue(getattr(plugin, 'closed', False))
         self.app.close()
         self.assertTrue(getattr(plugin2, 'closed', False))
-
-
-if __name__ == '__main__': #pragma: no cover
-    unittest.main()

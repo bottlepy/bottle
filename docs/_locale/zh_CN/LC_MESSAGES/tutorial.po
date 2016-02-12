@@ -7,22 +7,20 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-01-22 16:45-0200\n"
-"PO-Revision-Date: 2015-01-22 19:38+0000\n"
-"Last-Translator: Thiago Avelino <thiago@avelino.xxx>\n"
-"Language-Team: Chinese (China) (http://www.transifex.com/projects/p/bottle/language/zh_CN/)\n"
+"POT-Creation-Date: 2015-12-19 14:15+0100\n"
+"PO-Revision-Date: 2015-12-13 21:06+0000\n"
+"Last-Translator: defnull <marc@gsites.de>\n"
+"Language-Team: Chinese (China) (http://www.transifex.com/bottle/bottle/language/zh_CN/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: zh_CN\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-# 916ac7f3b8144f5098d68578868e93d3
 #: ../../tutorial.rst:24
 msgid "Tutorial"
 msgstr "教程"
 
-# e41456f5f98149fbbced99bf6f3ad9a2
 #: ../../tutorial.rst:26
 msgid ""
 "This tutorial introduces you to the concepts and features of the Bottle web "
@@ -36,19 +34,16 @@ msgid ""
 "<http://webchat.freenode.net/?channels=bottlepy>`_."
 msgstr "这份教程将向你介绍Bottle的开发理念和功能特性。既介绍Bottle的基本用法，也包含了进阶用法。你可以从头到尾通读一遍，也可当做开发时的参考。你也许对自动生成的 :doc:`api` 感兴趣。它包含了更多的细节，但解释没有这份教程详细。在 :doc:`recipes` 或 :doc:`faq` 可找到常见问题的解决办法。如果需要任何帮助，可加入我们的 `邮件列表 <mailto:bottlepy@googlegroups.com>`_ 或在 `IRC频道 <http://webchat.freenode.net/?channels=bottlepy>`_ 和我们交流。"
 
-# af7ea57ddc8648bf8148b2a520f009b0
 #: ../../tutorial.rst:31
 msgid "Installation"
 msgstr "安装"
 
-# a3e393a63d73430f970beb1206e88eae
 #: ../../tutorial.rst:33
 msgid ""
 "Bottle does not depend on any external libraries. You can just download "
 "`bottle.py </bottle.py>`_ into your project directory and start coding:"
 msgstr "Bottle不依赖其他库，你需要做的仅是下载 `bottle.py </bottle.py>`_ (开发版)到你的项目文件夹，然后开始写代码。"
 
-# b22d1ab386ac41a0bb7a62049cd90685
 #: ../../tutorial.rst:39
 msgid ""
 "This will get you the latest development snapshot that includes all the new "
@@ -59,26 +54,22 @@ msgid ""
 "manager:"
 msgstr "在终端运行以上命令，即可下载到Bottle的最新开发版，包含了所有新功能特性。如果更需要稳定性，你应该坚持使用Bottle的稳定版本。可在 `PyPI <http://pypi.python.org/pypi/bottle>`_ 下载稳定版本，然后通过 :command:`pip` (推荐), :command:`easy_install` 或你的包管理软件安装。"
 
-# 6370b74c81174ef7b73564ca52e77f30
 #: ../../tutorial.rst:47
 msgid ""
-"Either way, you'll need Python 2.5 or newer (including 3.x) to run bottle "
+"Either way, you'll need Python 2.6 or newer (including 3.2+) to run bottle "
 "applications. If you do not have permissions to install packages system-wide"
 " or simply don't want to, create a `virtualenv "
 "<http://pypi.python.org/pypi/virtualenv>`_ first:"
-msgstr "你需要Python 2.5或以上版本（包括3.x）来运行bottle应用。如果你没有管理员权限或你不想将Bottle安装为整个系统范围内可用，可先创建一个 `virtualenv <http://pypi.python.org/pypi/virtualenv>`_ :"
+msgstr ""
 
-# 231776fdacc64529a13944d3994fe4c4
 #: ../../tutorial.rst:55
 msgid "Or, if virtualenv is not installed on your system:"
 msgstr "如果还未安装virtualenv:"
 
-# b05bd61e6a17484ea34fa6b69cf8a627
 #: ../../tutorial.rst:67
 msgid "Quickstart: \"Hello World\""
 msgstr ""
 
-# 25c51a08cddf4d4fad50ad205234cb72
 #: ../../tutorial.rst:69
 msgid ""
 "This tutorial assumes you have Bottle either :ref:`installed <installation>`"
@@ -86,14 +77,12 @@ msgid ""
 "\"Hello World\" example::"
 msgstr "到目前为止，我假设你已经 :ref:`安装 <installation>` 好了bottle或已将bottle.py拷贝到你的项目文件夹。接下来我们就可以写一个非常简单的\"Hello World\"了::"
 
-# ecd1dd3fb42943d29e75552e60652099
 #: ../../tutorial.rst:79
 msgid ""
 "This is it. Run this script, visit http://localhost:8080/hello and you will "
 "see \"Hello World!\" in your browser. Here is how it works:"
 msgstr "就这么简单！保存为py文件并执行，用浏览器访问 http://localhost:8080/hello 就可以看到\"Hello World!\"。它的执行流程大致如下:"
 
-# cf840688614b4d5c9adef7a962b8bcb8
 #: ../../tutorial.rst:81
 msgid ""
 "The :func:`route` decorator binds a piece of code to an URL path. In this "
@@ -104,7 +93,6 @@ msgid ""
 " return value is sent back to the browser. It's as simple as that."
 msgstr ""
 
-# 528edb20b41743459e90d06fd9750c7c
 #: ../../tutorial.rst:83
 msgid ""
 "The :func:`run` call in the last line starts a built-in development server. "
@@ -115,27 +103,22 @@ msgid ""
 "tests."
 msgstr "最后一行调用的 :func:`run` 函数启动了内置的开发服务器。它监听 `localhost` 的8080端口并响应请求， :kbd:`Control-c` 可将其关闭。到目前为止，这个内置的开发服务器已经足够用于日常的开发测试了。它根本不需要安装，就可以让你的应用跑起来。在教程的后面，你将学会如何让你的应用跑在其他服务器上面（译者注：内置服务器不能满足生产环境的要求）"
 
-# 3172226b91454392a5deb3bc643ed166
 #: ../../tutorial.rst:85
 msgid ""
 "The :ref:`tutorial-debugging` is very helpful during early development, but "
 "should be switched off for public applications. Keep that in mind."
 msgstr ":ref:`tutorial-debugging` 在早期开发的时候非常有用，但请务必记得，在生产环境中将其关闭。"
 
-# a5019875879b47689a401f7267240e8c
 #: ../../tutorial.rst:87
 msgid ""
-"Of course this is a very simple example, but it shows the basic concept of "
-"how applications are built with Bottle. Continue reading and you'll see what"
-" else is possible."
-msgstr "毫无疑问，这是一个十分简单例子，但它展示了用Bottle做应用开发的基本理念。接下来你将了解到其他开发方式。"
+"This is just a demonstration of the basic concept of how applications are "
+"built with Bottle. Continue reading and you'll see what else is possible."
+msgstr ""
 
-# e837dae88a164a05bc74f0601c582444
 #: ../../tutorial.rst:92
 msgid "The Default Application"
 msgstr "`默认应用`"
 
-# 806b156066ff4cd29e6f56b97e6c45e3
 #: ../../tutorial.rst:94
 msgid ""
 "For the sake of simplicity, most examples in this tutorial use a module-"
@@ -148,19 +131,16 @@ msgid ""
 " the global one::"
 msgstr "基于简单性考虑，这份教程中的大部分例子都使用一个模块层面的 :func:`route` 修饰器函数来定义route。这样的话，所有route都添加到了一个全局的“默认应用”里面，即是在第一次调用 :func:`route` 函数时，创建的一个 :class:`Bottle` 类的实例。其他几个模块层面的修饰器函数都与这个“默认应用”有关，如果你偏向于面向对象的做法且不介意多打点字，你可以创建一个独立的应用对象，这样就可避免使用全局范围的“默认应用”。"
 
-# 2df3acc8f64f433b95d45e91d94e00e8
 #: ../../tutorial.rst:106
 msgid ""
 "The object-oriented approach is further described in the :ref:`default-app` "
 "section. Just keep in mind that you have a choice."
 msgstr "接下来的 :ref:`default-app` 章节中将更详细地介绍这种做法。现在，你只需知道不止有一种选择就好了。"
 
-# 5922fca14a164fcda76b0a6a56f4ec70
 #: ../../tutorial.rst:114
 msgid "Request Routing"
 msgstr "URL映射"
 
-# 8c34fd27ba1e4c0088ceab4bd99826fa
 #: ../../tutorial.rst:116
 msgid ""
 "In the last chapter we built a very simple web application with only a "
@@ -168,7 +148,6 @@ msgid ""
 "again::"
 msgstr "在上一章中，我们实现了一个十分简单的web应用，只有一个URL映射(route)。让我们再来看一下“Hello World”中与routing有关的部分::"
 
-# 8b418053759e4a729ebaefa794f9b5b7
 #: ../../tutorial.rst:122
 msgid ""
 "The :func:`route` decorator links an URL path to a callback function, and "
@@ -177,7 +156,6 @@ msgid ""
 "more (don't forget ``from bottle import template``)::"
 msgstr ""
 
-# 0d5c38469b44413d9754d4e77a28cb8d
 #: ../../tutorial.rst:129
 msgid ""
 "This example demonstrates two things: You can bind more than one route to a "
@@ -185,12 +163,10 @@ msgid ""
 "keyword arguments."
 msgstr "这个例子说明了两件事情，一个回调函数可绑定多个route，你也可以在URL中添加通配符，然后在回调函数中使用它们。"
 
-# bf73f39f2c9344819c3cf0a0ce4987a9
 #: ../../tutorial.rst:136
 msgid "Dynamic Routes"
 msgstr "动态URL映射"
 
-# 0181039f5b65482495809c4101fe74b9
 #: ../../tutorial.rst:138
 msgid ""
 "Routes that contain wildcards are called `dynamic routes` (as opposed to "
@@ -201,7 +177,6 @@ msgid ""
 " ``/hello/bob``, but not for ``/hello``, ``/hello/`` or ``/hello/mr/smith``."
 msgstr "包含通配符的route，我们称之为动态route(与之对应的是静态route)，它能匹配多个URL地址。一个通配符包含在一对尖括号里面(像这样 ``<name>`` )，通配符之间用\"/\"分隔开来。如果我们将URL定义为 ``/hello/<name>`` 这样，那么它就能匹配 ``/hello/alice`` 和 ``/hello/bob`` 这样的浏览器请求，但不能匹配 ``/hello`` , ``/hello/`` 和 ``/hello/mr/smith`` 。"
 
-# 9ea21ed0ef2c4c2ab84d14a522c987de
 #: ../../tutorial.rst:140
 msgid ""
 "Each wildcard passes the covered part of the URL as a keyword argument to "
@@ -210,147 +185,70 @@ msgid ""
 "along with the URLs they'd match::"
 msgstr "URL中的通配符都会当作参数传给回调函数，直接在回调函数中使用。这样可以漂亮地实现RESTful形式的URL。例子如下::"
 
-# a5c653d0a2584d829ca0b004a096659d
-#: ../../tutorial.rst:152
+#: ../../tutorial.rst:150
 msgid ""
-"Filters are used to define more specific wildcards, and/or transform the "
+"Filters can be used to define more specific wildcards, and/or transform the "
 "covered part of the URL before it is passed to the callback. A filtered "
 "wildcard is declared as ``<name:filter>`` or ``<name:filter:config>``. The "
 "syntax for the optional config part depends on the filter used."
-msgstr "过滤器(Filter)可被用来定义特殊类型的通配符，在传通配符给回调函数之前，先自动转换通配符类型。包含过滤器的通配符定义一般像 ``<name:filter>`` 或 ``<name:filter:config>`` 这样。config部分是可选的，其语法由你使用的过滤器决定。"
+msgstr ""
 
-# e9b34bc84c024ac284534285631c6310
-#: ../../tutorial.rst:154
+#: ../../tutorial.rst:152
 msgid ""
 "The following filters are implemented by default and more may be added:"
 msgstr "已实现下面几种形式的过滤器，后续可能会继续添加:"
 
-# bf08294f4c7c4bd1908c4c376f9aada9
-#: ../../tutorial.rst:156
+#: ../../tutorial.rst:154
 msgid ""
 "**:int** matches (signed) digits only and converts the value to integer."
 msgstr "**:int** 匹配一个数字，自动将其转换为int类型。"
 
-# 74e3fee4663b41599cd01c95499c7f0f
-#: ../../tutorial.rst:157
+#: ../../tutorial.rst:155
 msgid "**:float** similar to :int but for decimal numbers."
 msgstr "**:float** 与:int类似，用于浮点数。"
 
-# 9968ec2829bc43e9a604f8dd2775e82d
-#: ../../tutorial.rst:158
+#: ../../tutorial.rst:156
 msgid ""
 "**:path** matches all characters including the slash character in a non-"
 "greedy way and can be used to match more than one path segment."
 msgstr "**:path** 匹配一个路径(包含\"/\")"
 
-# c7c58c9cd1804ef19f7fb4e6909d5314
-#: ../../tutorial.rst:159
+#: ../../tutorial.rst:157
 msgid ""
 "**:re** allows you to specify a custom regular expression in the config "
 "field. The matched value is not modified."
 msgstr "**:re** 匹配config部分的一个正则表达式，不更改被匹配到的值"
 
-# d1664b21f95640b9b7848224150a1c2a
-#: ../../tutorial.rst:161
+#: ../../tutorial.rst:159
 msgid "Let's have a look at some practical examples::"
 msgstr "让我们来看看具体的使用例子::"
 
-# e2c015426d62427b8baf07a6dca84c98
-#: ../../tutorial.rst:175
+#: ../../tutorial.rst:173
 msgid "You can add your own filters as well. See :doc:`routing` for details."
 msgstr ""
 
-# dce499c468e547689f8f1f76fa72fb79
-#: ../../tutorial.rst:179
-msgid ""
-"The new rule syntax was introduced in **Bottle 0.10** to simplify some "
-"common use cases, but the old syntax still works and you can find a lot of "
-"code examples still using it. The differences are best described by example:"
-msgstr "从 **Bottle 0.10** 版本开始，可以用新的语法来在URL中定义通配符，更简单了。新旧语法之间的对比如下:"
-
-# 4fdcb0127e6743288e7c1d6b6165107d
-#: ../../tutorial.rst:182
-msgid "Old Syntax"
-msgstr "旧语法"
-
-# bb8641cc26f2463f8c616a4b7642c861
-#: ../../tutorial.rst:182
-msgid "New Syntax"
-msgstr "新语法"
-
-# 7c941561a45c4970b776e5f84f5a366e
-#: ../../tutorial.rst:184
-msgid "``:name``"
-msgstr ""
-
-# 0627940e3f3242afa41e781fa4713a85
-#: ../../tutorial.rst:184
-msgid "``<name>``"
-msgstr ""
-
-# d6e36ed6f0004129b81ec00a06259588
-#: ../../tutorial.rst:185
-msgid "``:name#regexp#``"
-msgstr ""
-
-# f141cc72cbaa4d3289dcde6e261fd516
-#: ../../tutorial.rst:185
-msgid "``<name:re:regexp>``"
-msgstr ""
-
-# dd11228910bb40bb800f000ab651c362
-#: ../../tutorial.rst:186
-msgid "``:#regexp#``"
-msgstr ""
-
-# 6856882d9711448e8a8b209229571aef
-#: ../../tutorial.rst:186
-msgid "``<:re:regexp>``"
-msgstr ""
-
-# 743f807f038d405ebd72fafc986ea77a
-#: ../../tutorial.rst:187
-msgid "``:##``"
-msgstr ""
-
-# 696dc779cccf40deb80bb15f28de0847
-#: ../../tutorial.rst:187
-msgid "``<:re>``"
-msgstr ""
-
-# 130a34b229ec4ad2b259dea070431d03
-#: ../../tutorial.rst:190
-msgid ""
-"Try to avoid the old syntax in future projects if you can. It is not "
-"currently deprecated, but will be eventually."
-msgstr "请尽可能在新项目中使用新的语法。虽然现在依然兼容旧语法，但终究会将其废弃的。"
-
-# 864af2a245c54a00a3e1427f7a2d0727
-#: ../../tutorial.rst:194
+#: ../../tutorial.rst:177
 msgid "HTTP Request Methods"
 msgstr "HTTP请求方法"
 
-# 395fb41a1c104235a5aa04013b4b3a2f
-#: ../../tutorial.rst:198
+#: ../../tutorial.rst:181
 msgid ""
 "The HTTP protocol defines several `request methods`__ (sometimes referred to"
 " as \"verbs\") for different tasks. GET is the default for all routes with "
 "no other method specified. These routes will match GET requests only. To "
 "handle other methods such as POST, PUT, DELETE or PATCH, add a ``method`` "
-"keyword argument to the :func:`route` decorator or use one of the four "
+"keyword argument to the :func:`route` decorator or use one of the five "
 "alternative decorators: :func:`get`, :func:`post`, :func:`put`, "
 ":func:`delete` or :func:`patch`."
 msgstr ""
 
-# 38ed35133fb44f9a9bf5d2c9a6be2f32
-#: ../../tutorial.rst:200
+#: ../../tutorial.rst:183
 msgid ""
 "The POST method is commonly used for HTML form submission. This example "
 "shows how to handle a login form using POST::"
 msgstr "POST方法一般用于HTML表单的提交。下面是一个使用POST来实现用户登录的例子::"
 
-# d17059ed777642ab94f518b284840688
-#: ../../tutorial.rst:223
+#: ../../tutorial.rst:206
 msgid ""
 "In this example the ``/login`` URL is linked to two distinct callbacks, one "
 "for GET requests and another for POST requests. The first one displays a "
@@ -360,13 +258,11 @@ msgid ""
 "section."
 msgstr "在这个例子中， ``/login`` 绑定了两个回调函数，一个回调函数响应GET请求，一个回调函数响应POST请求。如果浏览器使用GET请求访问 ``/login`` ，则调用login_form()函数来返回登录页面，浏览器使用POST方法提交表单后，调用login_submit()函数来检查用户有效性，并返回登录结果。接下来的 :ref:`tutorial-request` 章节中，会详细介绍 :attr:`Request.forms` 的用法。"
 
-# e32d9ac6f2ee43dcb1398f0b9a0211bb
-#: ../../tutorial.rst:226
+#: ../../tutorial.rst:209
 msgid "Special Methods: HEAD and ANY"
 msgstr "特殊请求方法: HEAD 和 ANY"
 
-# 8a4bd657eb1444fca9f73e476ce83add
-#: ../../tutorial.rst:227
+#: ../../tutorial.rst:210
 msgid ""
 "The HEAD method is used to ask for the response identical to the one that "
 "would correspond to a GET request, but without the response body. This is "
@@ -376,8 +272,7 @@ msgid ""
 "body, if present. You don't have to specify any HEAD routes yourself."
 msgstr "HEAD方法类似于GET方法，但服务器不会返回HTTP响应正文，一般用于获取HTTP原数据而不用下载整个页面。Bottle像处理GET请求那样处理HEAD请求，但是会自动去掉HTTP响应正文。你无需亲自处理HEAD请求。"
 
-# 13d5ec233f9142a0a72d7c51d5b81aaf
-#: ../../tutorial.rst:229
+#: ../../tutorial.rst:212
 msgid ""
 "Additionally, the non-standard ANY method works as a low priority fallback: "
 "Routes that listen to ANY will match requests regardless of their HTTP "
@@ -385,29 +280,25 @@ msgid ""
 "for *proxy-routes* that redirect requests to more specific sub-applications."
 msgstr "另外，非标准的ANY方法做为一个低优先级的fallback：在没有其它route的时候，监听ANY方法的route会匹配所有请求，而不管请求的方法是什么。这对于用做代理的route很有用，可将所有请求都重定向给子应用。"
 
-# 2f5973de9de64648aed357b34a9bdb7f
-#: ../../tutorial.rst:231
+#: ../../tutorial.rst:214
 msgid ""
 "To sum it up: HEAD requests fall back to GET routes and all requests fall "
 "back to ANY routes, but only if there is no matching route for the original "
 "request method. It's as simple as that."
 msgstr "总而言之：HEAD请求被响应GET请求的route来处理，响应ANY请求的route处理所有请求，但仅限于没有其它route来匹配原先的请求的情况。就这么简单。"
 
-# ad164662e90f4041a85a2a11db1ee0c0
-#: ../../tutorial.rst:236
+#: ../../tutorial.rst:219
 msgid "Routing Static Files"
 msgstr "静态文件映射"
 
-# cd0e402ae2e540ec97c12063e42d6126
-#: ../../tutorial.rst:238
+#: ../../tutorial.rst:221
 msgid ""
 "Static files such as images or CSS files are not served automatically. You "
 "have to add a route and a callback to control which files get served and "
 "where to find them::"
 msgstr "Bottle不会处理像图片或CSS文件的静态文件请求。你需要给静态文件提供一个route，一个回调函数(用于查找和控制静态文件的访问)。"
 
-# 3a2559a5b63d4ee9acb4440e8fe1a96b
-#: ../../tutorial.rst:245
+#: ../../tutorial.rst:228
 msgid ""
 "The :func:`static_file` function is a helper to serve files in a safe and "
 "convenient way (see :ref:`tutorial-static-files`). This example is limited "
@@ -417,29 +308,25 @@ msgid ""
 "filter::"
 msgstr ":func:`static_file` 函数用于响应静态文件的请求。 (详见 :ref:`tutorial-static-files` )这个例子只能响应在 ``/path/to/your/static/files`` 目录下的文件请求，因为 ``<filename>`` 这样的通配符定义不能匹配一个路径(路径中包含\"/\")。 为了响应子目录下的文件请求，我们需要更改 `path` 过滤器的定义::"
 
-# f94439ce4dd24a4686de019b5220de9f
-#: ../../tutorial.rst:251
+#: ../../tutorial.rst:234
 msgid ""
 "Be careful when specifying a relative root-path such as "
 "``root='./static/files'``. The working directory (``./``) and the project "
 "directory are not always the same."
 msgstr "使用 ``root='./static/files'`` 这样的相对路径的时候，请注意当前工作目录 (``./``) 不一定是项目文件夹。"
 
-# 7190cf7dbf864ebd8b6c170aabbd3cd4
-#: ../../tutorial.rst:259
+#: ../../tutorial.rst:242
 msgid "Error Pages"
 msgstr "错误页面"
 
-# 5952f6f875ba4e9680b422c6eaf3433f
-#: ../../tutorial.rst:261
+#: ../../tutorial.rst:244
 msgid ""
 "If anything goes wrong, Bottle displays an informative but fairly plain "
 "error page. You can override the default for a specific HTTP status code "
 "with the :func:`error` decorator::"
 msgstr "如果出错了，Bottle会显示一个默认的错误页面，提供足够的debug信息。你也可以使用 :func:`error` 函数来自定义你的错误页面::"
 
-# 426ced6e32c64e6dbe403e8d78fcc294
-#: ../../tutorial.rst:268
+#: ../../tutorial.rst:251
 msgid ""
 "From now on, `404 File not Found` errors will display a custom error page to"
 " the user. The only parameter passed to the error-handler is an instance of "
@@ -449,8 +336,7 @@ msgid ""
 ":exc:`HTTPError` instances."
 msgstr "从现在开始，在遇到404错误的时候，将会返回你在上面自定义的页面。传给error404函数的唯一参数，是一个 :exc:`HTTPError` 对象的实例。除此之外，这个回调函数与我们用来响应普通请求的回调函数没有任何不同。你可以从 :data:`request` 中读取数据， 往 :data:`response` 中写入数据和返回所有支持的数据类型，除了 :exc:`HTTPError` 的实例。"
 
-# 9a3f76d9b41c4aac95bf8f66199040f8
-#: ../../tutorial.rst:270
+#: ../../tutorial.rst:253
 msgid ""
 "Error handlers are used only if your application returns or raises an "
 ":exc:`HTTPError` exception (:func:`abort` does just that). Changing "
@@ -458,13 +344,11 @@ msgid ""
 "error handler."
 msgstr "只有在你的应用返回或raise一个 :exc:`HTTPError` 异常的时候(就像 :func:`abort` 函数那样)，处理Error的函数才会被调用。更改 :attr:`Request.status` 或返回 :exc:`HTTPResponse` 不会触发错误处理函数。"
 
-# f1092bc764cc43eb8282b79e64fdd6b1
-#: ../../tutorial.rst:280
+#: ../../tutorial.rst:263
 msgid "Generating content"
 msgstr "生成内容"
 
-# 56668c66a418409daf59198d87bddcd7
-#: ../../tutorial.rst:282
+#: ../../tutorial.rst:265
 msgid ""
 "In pure WSGI, the range of types you may return from your application is "
 "very limited. Applications must return an iterable yielding byte strings. "
@@ -473,8 +357,7 @@ msgid ""
 "allowed at all. This is not very practical."
 msgstr "在纯WSGI环境里，你的应用能返回的内容类型相当有限。应用必须返回一个iterable的字节型字符串。你可以返回一个字符串(因为字符串是iterable的)，但这会导致服务器按字符来传输你的内容。Unicode字符串根本不允许。这不是很实用。"
 
-# f83bbefffadd44088cae7bad2965ef44
-#: ../../tutorial.rst:284
+#: ../../tutorial.rst:267
 msgid ""
 "Bottle is much more flexible and supports a wide range of types. It even "
 "adds a ``Content-Length`` header if possible and encodes unicode "
@@ -483,13 +366,11 @@ msgid ""
 "how these are handled by the framework:"
 msgstr "Bottle支持返回更多的内容类型，更具弹性。它甚至能在合适的情况下，在HTTP头中添加 `Content-Length` 字段和自动转换unicode编码。下面列出了所有你能返回的内容类型，以及框架处理方式的一个简述。"
 
-# 5582a4ab861b4a0e95d77f4cc88d656b
-#: ../../tutorial.rst:287
+#: ../../tutorial.rst:270
 msgid "Dictionaries"
 msgstr ""
 
-# 0af07cab0f9c480190e8a9be3918e772
-#: ../../tutorial.rst:287
+#: ../../tutorial.rst:270
 msgid ""
 "As mentioned above, Python dictionaries (or subclasses thereof) are "
 "automatically transformed into JSON strings and returned to the browser with"
@@ -498,37 +379,31 @@ msgid ""
 "too. See the :ref:`tutorial-output-filter` to learn more."
 msgstr "上面已经提及，Python中的字典类型(或其子类)会被自动转换为JSON字符串。返回给浏览器的时候，HTTP头的 ``Content-Type`` 字段被自动设置为 `` application/json`` 。可十分简单地实现基于JSON的API。Bottle同时支持json之外的数据类型，详见 :ref:`tutorial-output-filter` 。"
 
-# b20177cad06a4b3b90c53a2f8f58b81c
-#: ../../tutorial.rst:290
-msgid "Empty Strings, ``False``, ``None`` or other non-true values:"
+#: ../../tutorial.rst:273
+msgid "Empty Strings, False, None or other non-true values:"
 msgstr ""
 
-# cb9f588a721642e58e31a5528cf0aa4c
-#: ../../tutorial.rst:290
+#: ../../tutorial.rst:273
 msgid ""
 "These produce an empty output with the ``Content-Length`` header set to 0."
 msgstr "输出为空， ``Content-Length`` 设为0。"
 
-# 28cba6ed4b7b4957b430bb232ee63da1
-#: ../../tutorial.rst:293
+#: ../../tutorial.rst:276
 msgid "Unicode strings"
 msgstr "Unicode的问题"
 
-# 9c2199e8fa46413bab1ea8298b4ee004
-#: ../../tutorial.rst:293
+#: ../../tutorial.rst:276
 msgid ""
 "Unicode strings (or iterables yielding unicode strings) are automatically "
 "encoded with the codec specified in the ``Content-Type`` header (utf8 by "
 "default) and then treated as normal byte strings (see below)."
 msgstr "Unicode字符串 (or iterables yielding unicode strings) 被自动转码， ``Content-Type`` 被默认设置为utf8，接着视之为普通字符串(见下文)。"
 
-# a698affc9a2c42339ec92d0731899f6f
-#: ../../tutorial.rst:296
+#: ../../tutorial.rst:279
 msgid "Byte strings"
 msgstr ""
 
-# d262affdb36c451a8019b09562c8256a
-#: ../../tutorial.rst:296
+#: ../../tutorial.rst:279
 msgid ""
 "Bottle returns strings as a whole (instead of iterating over each char) and "
 "adds a ``Content-Length`` header based on the string length. Lists of byte "
@@ -537,26 +412,22 @@ msgid ""
 "Length`` header is not set in this case."
 msgstr "Bottle将字符串当作一个整体来返回(而不是按字符来遍历)，并根据字符串长度添加 ``Content-Length`` 字段。包含字节型字符串的列表先被合并。其它iterable的字节型字符串不会被合并，因为它们也许太大来，耗内存。在这种情况下， ``Content-Length`` 字段不会被设置。"
 
-# 59157588717e485aabb23d0f768e5ced
-#: ../../tutorial.rst:299
-msgid "Instances of :exc:`HTTPError` or :exc:`HTTPResponse`"
+#: ../../tutorial.rst:282
+msgid "Instances of HTTPError or HTTPResponse"
 msgstr ""
 
-# 9d8efc187aec4989be3e1288c4c026fc
-#: ../../tutorial.rst:299
+#: ../../tutorial.rst:282
 msgid ""
 "Returning these has the same effect as when raising them as an exception. In"
 " case of an :exc:`HTTPError`, the error handler is applied. See :ref"
 ":`tutorial-errorhandling` for details."
 msgstr "返回它们和直接raise出来有一样的效果。对于 :exc:`HTTPError` 来说，会调用错误处理程序。详见 :ref:`tutorial-errorhandling` 。"
 
-# 4c3d3fba4cc2450892b64b0a9223c274
-#: ../../tutorial.rst:302
+#: ../../tutorial.rst:285
 msgid "File objects"
 msgstr ""
 
-# 3574557ba4ac4fb386adcd8624e4b9be
-#: ../../tutorial.rst:302
+#: ../../tutorial.rst:285
 msgid ""
 "Everything that has a ``.read()`` method is treated as a file or file-like "
 "object and passed to the ``wsgi.file_wrapper`` callable defined by the WSGI "
@@ -567,13 +438,11 @@ msgid ""
 ":func:`send_file` if possible. See :ref:`tutorial-static-files` for details."
 msgstr "任何有 ``.read()`` 方法的对象都被当成一个file-like对象来对待，会被传给 WSGI Server 框架定义的 ``wsgi.file_wrapper`` callable对象来处理。一些WSGI Server实现会利用优化过的系统调用(sendfile)来更有效地传输文件，另外就是分块遍历。可选的HTTP头，例如 ``Content-Length`` 和 ``Content-Type`` 不会被自动设置。尽可能使用 :func:`send_file` 。详见 :ref:`tutorial-static-files` 。"
 
-# 7be34241e15f4b699d4540bee296437a
-#: ../../tutorial.rst:305
+#: ../../tutorial.rst:288
 msgid "Iterables and generators"
 msgstr ""
 
-# ac0488d7101847eeb1a33474a2bec821
-#: ../../tutorial.rst:305
+#: ../../tutorial.rst:288
 msgid ""
 "You are allowed to use ``yield`` within your callbacks or return an "
 "iterable, as long as the iterable yields byte strings, unicode strings, "
@@ -583,21 +452,18 @@ msgid ""
 "value. Changing these later has no effect."
 msgstr "你可以在回调函数中使用 ``yield`` 语句，或返回一个iterable的对象，只要该对象返回的是字节型字符串，unicode字符串， :exc:`HTTPError` 或 :exc:`HTTPResponse` 实例。不支持嵌套iterable对象，不好意思。注意，在iterable对象返回第一个非空值的时候，就会把HTTP状态码和HTTP头发送给浏览器。稍后再更改它们就起不到什么作用了。"
 
-# 4904796ade9540ed9abbd72f956d39b0
-#: ../../tutorial.rst:307
+#: ../../tutorial.rst:290
 msgid ""
 "The ordering of this list is significant. You may for example return a "
 "subclass of :class:`str` with a ``read()`` method. It is still treated as a "
 "string instead of a file, because strings are handled first."
 msgstr "以上列表的顺序非常重要。在你返回一个 :class:`str` 类的子类的时候，即使它有 ``.read()`` 方法，它依然会被当成一个字符串对待，而不是文件，因为字符串先被处理。"
 
-# 22fd5efc83884c8aade1ae0816f3382a
-#: ../../tutorial.rst:310
+#: ../../tutorial.rst:293
 msgid "Changing the Default Encoding"
 msgstr "改变默认编码"
 
-# b886ac8e69f7421ea52d0aac4e02eb7b
-#: ../../tutorial.rst:311
+#: ../../tutorial.rst:294
 msgid ""
 "Bottle uses the `charset` parameter of the ``Content-Type`` header to decide"
 " how to encode unicode strings. This header defaults to ``text/html; "
@@ -607,8 +473,7 @@ msgid ""
 "response`.)"
 msgstr "Bottle使用 ``Content-Type`` 的 `charset` 参数来决定编码unicode字符串的方式。默认的 ``Content-Type`` 是 ``text/html;charset=UTF8`` ，可在 :attr:`Response.content_type` 属性中修改，或直接设置 :attr:`Response.charset` 的值。关于 :class:`Response` 对象的介绍，详见 :ref:`tutorial-response` 。"
 
-# 9fb228f33a6b4d36bad93c056e913d85
-#: ../../tutorial.rst:326
+#: ../../tutorial.rst:309
 msgid ""
 "In some rare cases the Python encoding names differ from the names supported"
 " by the HTTP specification. Then, you have to do both: first set the "
@@ -617,13 +482,11 @@ msgid ""
 "encode unicode)."
 msgstr "在极少情况下，Python中定义的编码名字和HTTP标准中的定义不一样。这样，你就必须同时修改 :attr:`Response.content_type`` (发送给客户端的)和设置 :attr:`Response.charset` 属性 (用于编码unicode)。"
 
-# 6246a9980df8482a9d21b476e860e934
-#: ../../tutorial.rst:331
+#: ../../tutorial.rst:314
 msgid "Static Files"
 msgstr "静态文件"
 
-# 6577ce77ebce4154bea308e783a8f2c4
-#: ../../tutorial.rst:333
+#: ../../tutorial.rst:316
 msgid ""
 "You can directly return file objects, but :func:`static_file` is the "
 "recommended way to serve static files. It automatically guesses a mime-type,"
@@ -634,71 +497,60 @@ msgid ""
 "response. You can pass a custom MIME type to disable guessing."
 msgstr ""
 
-# d16e71e083184059bbf08afc0fb9a57d
-#: ../../tutorial.rst:346
+#: ../../tutorial.rst:329
 msgid ""
 "You can raise the return value of :func:`static_file` as an exception if you"
 " really need to."
 msgstr "如果确实需要，你可将 :func:`static_file` 的返回值当作异常raise出来。"
 
-# c6a61579847e4979b39844da1c7c1437
-#: ../../tutorial.rst:349
+#: ../../tutorial.rst:332
 msgid "Forced Download"
 msgstr "强制下载"
 
-# 92e3e880d653496584a1fedb1c450809
-#: ../../tutorial.rst:350
+#: ../../tutorial.rst:333
 msgid ""
 "Most browsers try to open downloaded files if the MIME type is known and "
 "assigned to an application (e.g. PDF files). If this is not what you want, "
 "you can force a download dialog and even suggest a filename to the user::"
 msgstr "大多数浏览器在知道MIME类型的时候，会尝试直接调用相关程序来打开文件(例如PDF文件)。如果你不想这样，你可强制浏览器只是下载该文件，甚至提供文件名。::"
 
-# 868eadb6b675438bbd4e4e00e77ea5dc
-#: ../../tutorial.rst:356
+#: ../../tutorial.rst:339
 msgid ""
 "If the ``download`` parameter is just ``True``, the original filename is "
 "used."
 msgstr "如果 ``download`` 参数的值为 ``True`` ，会使用原始的文件名。"
 
-# 5170980d61fa48c3a798819613bd979a
-#: ../../tutorial.rst:361
+#: ../../tutorial.rst:344
 msgid "HTTP Errors and Redirects"
 msgstr "HTTP错误和重定向"
 
-# 39600d8c864a413e8f0b91d7115903d9
-#: ../../tutorial.rst:363
+#: ../../tutorial.rst:346
 msgid ""
 "The :func:`abort` function is a shortcut for generating HTTP error pages."
 msgstr ":func:`abort` 函数是生成HTTP错误页面的一个捷径。"
 
-# 89afe97f71a74600b0a92866b55c208c
-#: ../../tutorial.rst:372
+#: ../../tutorial.rst:355
 msgid ""
 "To redirect a client to a different URL, you can send a ``303 See Other`` "
 "response with the ``Location`` header set to the new URL. :func:`redirect` "
 "does that for you::"
 msgstr "为了将用户访问重定向到其他URL，你在 ``Location`` 中设置新的URL，接着返回一个 ``303 See Other`` 。 :func:`redirect` 函数可以帮你做这件事情。"
 
-# 2c6d6522d36f472baae5da4acd70dcad
-#: ../../tutorial.rst:379
+#: ../../tutorial.rst:362
 msgid "You may provide a different HTTP status code as a second parameter."
 msgstr "你可以在第二个参数中提供另外的HTTP状态码。"
 
-# 8261a4a6a4db4182bcbfec5411cc864c
-#: ../../tutorial.rst:382
+#: ../../tutorial.rst:365
 msgid ""
 "Both functions will interrupt your callback code by raising an "
 ":exc:`HTTPError` exception."
 msgstr "这两个函数都会抛出 :exc:`HTTPError` 异常，终止回调函数的执行。"
 
-# 7af63c8946c94640a29ea3c200e0cbfa
-#: ../../tutorial.rst:385
+#: ../../tutorial.rst:368
 msgid "Other Exceptions"
 msgstr "其他异常"
 
-# 38f50e2703a94839ad3744a16099dd0b
-#: ../../tutorial.rst:386
+#: ../../tutorial.rst:369
 msgid ""
 "All exceptions other than :exc:`HTTPResponse` or :exc:`HTTPError` will "
 "result in a ``500 Internal Server Error`` response, so they won't crash your"
@@ -706,13 +558,11 @@ msgid ""
 "middleware by setting ``bottle.app().catchall`` to ``False``."
 msgstr "除了 :exc:`HTTPResponse` 或 :exc:`HTTPError` 以外的其他异常，都会导致500错误，所以不会造成WSGI服务器崩溃。你将 ``bottle.app().catchall`` 的值设为 ``False`` 来关闭这种行为，以便在你的中间件中处理异常。"
 
-# 5b1413110d4b4fde8dbeac4ba1ac21d5
-#: ../../tutorial.rst:392
+#: ../../tutorial.rst:375
 msgid "The :class:`Response` Object"
 msgstr ":class:`Response` 对象"
 
-# f13e21c89da34f2a97acd3e1b95d2533
-#: ../../tutorial.rst:394
+#: ../../tutorial.rst:377
 msgid ""
 "Response metadata such as the HTTP status code, response headers and cookies"
 " are stored in an object called :data:`response` up to the point where they "
@@ -722,13 +572,11 @@ msgid ""
 "common use cases and features are covered here, too."
 msgstr "诸如HTTP状态码，HTTP响应头，用户cookie等元数据都保存在一个名字为 :data:`response` 的对象里面，接着被传输给浏览器。你可直接操作这些元数据或使用一些更方便的函数。在API章节可查到所有相关API(详见 :class:`Response` )，这里主要介绍一些常用方法。"
 
-# 38f06fec96ec47b29c0cbfc22de8dd25
-#: ../../tutorial.rst:397
+#: ../../tutorial.rst:380
 msgid "Status Code"
 msgstr "状态码"
 
-# 5c082752523046a5803db071bd295050
-#: ../../tutorial.rst:398
+#: ../../tutorial.rst:381
 msgid ""
 "The `HTTP status code <http_code>`_ controls the behavior of the browser and"
 " defaults to ``200 OK``. In most scenarios you won't need to set the "
@@ -739,21 +587,18 @@ msgid ""
 "standards."
 msgstr "`HTTP状态码 <http_code>`_ 控制着浏览器的行为，默认为 ``200 OK`` 。多数情况下，你不必手动修改 :attr:`Response.status` 的值，可使用 :func:`abort` 函数或return一个 :exc:`HTTPResponse` 实例(带有合适的状态码)。虽然所有整数都可当作状态码返回，但浏览器不知道如何处理 `HTTP标准 <http_code>`_ 中定义的那些状态码之外的数字，你也破坏了大家约定的标准。"
 
-# e58a3f9b92b845858b168ed8e7fd897c
-#: ../../tutorial.rst:401
+#: ../../tutorial.rst:384
 msgid "Response Header"
 msgstr "响应头"
 
-# fe192653eed74523ab0c6ea7269aa31f
-#: ../../tutorial.rst:402
+#: ../../tutorial.rst:385
 msgid ""
 "Response headers such as ``Cache-Control`` or ``Location`` are defined via "
 ":meth:`Response.set_header`. This method takes two parameters, a header name"
 " and a value. The name part is case-insensitive::"
 msgstr "``Cache-Control`` 和 ``Location`` 之类的响应头通过 :meth:`Response.set_header` 来定义。这个方法接受两个参数，一个是响应头的名字，一个是它的值，名字是大小写敏感的。"
 
-# f0fe9d7d598146ff9d7f6b609556afbb
-#: ../../tutorial.rst:409
+#: ../../tutorial.rst:392
 msgid ""
 "Most headers are unique, meaning that only one header per name is send to "
 "the client. Some special headers however are allowed to appear more than "
@@ -761,93 +606,78 @@ msgid ""
 ":meth:`Response.add_header` instead of :meth:`Response.set_header`::"
 msgstr "大多数的响应头是唯一的，meaning that only one header per name is send to the client。一些特殊的响应头在一次response中允许出现多次。使用 :meth:`Response.add_header` 来添加一个额外的响应头，而不是 :meth:`Response.set_header` ::"
 
-# cc53dfe73b784f368f983b0ab35b6590
-#: ../../tutorial.rst:414
+#: ../../tutorial.rst:397
 msgid ""
 "Please note that this is just an example. If you want to work with cookies, "
 "read :ref:`ahead <tutorial-cookies>`."
 msgstr "请注意，这只是一个例子。如果你想使用cookie，详见 :ref:`ahead <tutorial-cookies>` 。"
 
-# bff754a4f00341f7b58c157f392ed5e2
-# d78c58fe2515483c9191fb1e9c0aa9dc
-#: ../../tutorial.rst:420 ../../tutorial.rst:549
+#: ../../tutorial.rst:403 ../../tutorial.rst:532
 msgid "Cookies"
 msgstr ""
 
-# 2ce5fe9ac949486a90e4b6979ad388cb
-#: ../../tutorial.rst:422
+#: ../../tutorial.rst:405
 msgid ""
 "A cookie is a named piece of text stored in the user's browser profile. You "
 "can access previously defined cookies via :meth:`Request.get_cookie` and set"
 " new cookies with :meth:`Response.set_cookie`::"
 msgstr "Cookie是储存在浏览器配置文件里面的一小段文本。你可通过 :meth:`Request.get_cookie` 来访问已存在的Cookie，或通过 :meth:`Response.set_cookie` 来设置新的Cookie。"
 
-# 073cba4dac4a4ba7ba7f084fe9e40c2a
-#: ../../tutorial.rst:432
+#: ../../tutorial.rst:415
 msgid ""
 "The :meth:`Response.set_cookie` method accepts a number of additional "
 "keyword arguments that control the cookies lifetime and behavior. Some of "
 "the most common settings are described here:"
 msgstr ":meth:`Response.set_cookie` 方法接受一系列额外的参数，来控制Cookie的生命周期及行为。一些常用的设置如下:"
 
-# eeba19ba3d9249df9fc326022429b2c8
-#: ../../tutorial.rst:434
+#: ../../tutorial.rst:417
 msgid "**max_age:**    Maximum age in seconds. (default: ``None``)"
 msgstr "**max_age:**    最大有效时间，以秒为单位 (默认: ``None``)"
 
-# c62fb8cd2b7e41f589a2e88705ee9924
-#: ../../tutorial.rst:435
+#: ../../tutorial.rst:418
 msgid ""
 "**expires:**    A datetime object or UNIX timestamp. (default: ``None``)"
 msgstr "**expires:**    一个datetime对象或一个UNIX timestamp (默认: ``None``)"
 
-# c8c5c5f6eb5448539c5b91515609dec9
-#: ../../tutorial.rst:436
+#: ../../tutorial.rst:419
 msgid ""
 "**domain:**     The domain that is allowed to read the cookie. (default: "
 "current domain)"
 msgstr "**domain:**     可访问该Cookie的域名 (默认: 当前域名)"
 
-# 6d0ae30c2bdb4082924490a3581927f6
-#: ../../tutorial.rst:437
+#: ../../tutorial.rst:420
 msgid "**path:**       Limit the cookie to a given path (default: ``/``)"
 msgstr "**path:**       限制cookie的访问路径 (默认: ``/``)"
 
-# 89af9a7789814bf3a3d39831ee47d339
-#: ../../tutorial.rst:438
+#: ../../tutorial.rst:421
 msgid "**secure:**     Limit the cookie to HTTPS connections (default: off)."
 msgstr "**secure:**     只允许在HTTPS链接中访问cookie (默认: off)"
 
-# ef929e1f89ea47b490f269945058f447
-#: ../../tutorial.rst:439
+#: ../../tutorial.rst:422
 msgid ""
 "**httponly:**   Prevent client-side javascript to read this cookie (default:"
 " off, requires Python 2.6 or newer)."
 msgstr "**httponly:**   防止客户端的javascript读取cookie (默认: off, 要求python 2.6或以上版本)"
 
-# c44dea99790347c3b1411561849c89dd
-#: ../../tutorial.rst:441
+#: ../../tutorial.rst:424
 msgid ""
 "If neither `expires` nor `max_age` is set, the cookie expires at the end of "
 "the browser session or as soon as the browser window is closed. There are "
 "some other gotchas you should consider when using cookies:"
 msgstr "如果 `expires` 和 `max_age` 两个值都没设置，cookie会在当前的浏览器session失效或浏览器窗口关闭后失效。在使用cookie的时候，应该注意一下几个陷阱。"
 
-# 5802e77b9bc94dbe910071affe4e2d2b
-#: ../../tutorial.rst:443
+#: ../../tutorial.rst:426
 msgid "Cookies are limited to 4 KB of text in most browsers."
 msgstr "在大多数浏览器中，cookie的最大容量为4KB。"
 
-# 078f11701bd1466ca37e2bff02db03d2
-#: ../../tutorial.rst:444
+#: ../../tutorial.rst:427
 msgid ""
 "Some users configure their browsers to not accept cookies at all. Most "
 "search engines ignore cookies too. Make sure that your application still "
 "works without cookies."
 msgstr "一些用户将浏览器设置为不接受任何cookie。大多数搜索引擎也忽略cookie。确保你的应用在无cookie的时候也能工作。"
 
-# 3e129493ead74cf2adb246bd3f35b3c7
-#: ../../tutorial.rst:445
+#: ../../tutorial.rst:428
 msgid ""
 "Cookies are stored at client side and are not encrypted in any way. Whatever"
 " you store in a cookie, the user can read it. Worse than that, an attacker "
@@ -857,18 +687,15 @@ msgid ""
 "cookies, too. Thus, never store confidential information in cookies."
 msgstr "cookie被储存在客户端，也没被加密。你在cookie中储存的任何数据，用户都可以读取。更坏的情况下，cookie会被攻击者通过 `XSS <http://en.wikipedia.org/wiki/HTTP_cookie#Cookie_theft_and_session_hijacking>`_ 偷走，一些已知病毒也会读取浏览器的cookie。既然如此，就不要在cookie中储存任何敏感信息。"
 
-# 2d2b28d364fe43f68e5455243f4d6bd9
-#: ../../tutorial.rst:446
+#: ../../tutorial.rst:429
 msgid "Cookies are easily forged by malicious clients. Do not trust cookies."
 msgstr "cookie可以被伪造，不要信任cookie！"
 
-# 57e3df9c7fbb4307918abf135b1b408d
-#: ../../tutorial.rst:451
+#: ../../tutorial.rst:434
 msgid "Signed Cookies"
 msgstr "Cookie签名"
 
-# 92a3f73e4b3c4de8a7ed7941b2ce366c
-#: ../../tutorial.rst:452
+#: ../../tutorial.rst:435
 msgid ""
 "As mentioned above, cookies are easily forged by malicious clients. Bottle "
 "can cryptographically sign your cookies to prevent this kind of "
@@ -878,8 +705,7 @@ msgid ""
 "if the cookie is not signed or the signature keys don't match::"
 msgstr "上面提到，cookie容易被客户端伪造。Bottle可通过加密cookie来防止此类攻击。你只需在读取和设置cookie的时候，通过 `secret` 参数来提供一个密钥。如果cookie未签名或密钥不匹配， :meth:`Request.get_cookie` 方法返回 ``None`` "
 
-# e4e66538b103446eaaa6be8545814503
-#: ../../tutorial.rst:472
+#: ../../tutorial.rst:455
 msgid ""
 "In addition, Bottle automatically pickles and unpickles any data stored to "
 "signed cookies. This allows you to store any pickle-able object (not only "
@@ -887,8 +713,7 @@ msgid ""
 "limit."
 msgstr "例外，Bottle自动序列化储存在签名cookie里面的数据。你可在cookie中储存任何可序列化的对象(不仅仅是字符串)，只要对象大小不超过4KB。"
 
-# beb5c580407247ec9519564408987b5b
-#: ../../tutorial.rst:474
+#: ../../tutorial.rst:457
 msgid ""
 "Signed cookies are not encrypted (the client can still see the content) and "
 "not copy-protected (the client can restore an old cookie). The main "
@@ -896,13 +721,11 @@ msgid ""
 "not to store secret information at client side."
 msgstr "签名cookie在客户端不加密(译者注：即在客户端没有经过二次加密)，也没有写保护(客户端可使用之前的cookie)。给cookie签名的主要意义在于在cookie中存储序列化对象和防止伪造cookie，依然不要在cookie中存储敏感信息。"
 
-# f81616266e524317b7881b24d9b0b913
-#: ../../tutorial.rst:487
+#: ../../tutorial.rst:470
 msgid "Request Data"
 msgstr "请求数据 (Request Data)"
 
-# f5735cfa714e43e6971a618eb223525f
-#: ../../tutorial.rst:489
+#: ../../tutorial.rst:472
 msgid ""
 "Cookies, HTTP header, HTML ``<form>`` fields and other request data is "
 "available through the global :data:`request` object. This special object "
@@ -910,29 +733,25 @@ msgid ""
 "where multiple client connections are handled at the same time::"
 msgstr "可通过全局的 :data:`request` 对象来访问Cookies，HTTP头，HTML的 ``<form>`` 字段，以及其它的请求数据。这个特殊的对象总是指向 *当前* 的请求，即使在同时处理多个客户端连接的多线程情况下。"
 
-# 89159d8092db437ba581dfabbd9373dd
-#: ../../tutorial.rst:498
+#: ../../tutorial.rst:481
 msgid ""
 "The :data:`request` object is a subclass of :class:`BaseRequest` and has a "
 "very rich API to access data. We only cover the most commonly used features "
 "here, but it should be enough to get started."
 msgstr ":data:`request` 对象继承自 :class:`BaseRequest` ，提供了丰富的API来访问数据。虽然我们只介绍最常用的特性，也足够入门了。"
 
-# df4a93a9d7534ca1a59cf027011e3090
-#: ../../tutorial.rst:503
+#: ../../tutorial.rst:486
 msgid "Introducing :class:`FormsDict`"
 msgstr "介绍 :class:`FormsDict` "
 
-# 431fe46c72de430a81a899114cbd7b5d
-#: ../../tutorial.rst:505
+#: ../../tutorial.rst:488
 msgid ""
 "Bottle uses a special type of dictionary to store form data and cookies. "
 ":class:`FormsDict` behaves like a normal dictionary, but has some additional"
 " features to make your life easier."
 msgstr "Bottle使用了一个特殊的字典来储存表单数据和cookies。 :class:`FormsDict` 表现得像一个普通的字典，但提供了更方便的额外功能。"
 
-# 398ec974232a4add91ded25202d804fa
-#: ../../tutorial.rst:507
+#: ../../tutorial.rst:490
 msgid ""
 "**Attribute access**: All values in the dictionary are also accessible as "
 "attributes. These virtual attributes return unicode strings, even if the "
@@ -940,8 +759,7 @@ msgid ""
 "empty, but still present::"
 msgstr "**属性访问** ：字典中所有的值都可以当做属性来访问。这些虚拟的属性返回unicode字符串。在字典中缺少对应的值，或unicode解码失败的情况下，属性返回的字符串为空。"
 
-# 31053961417647c1999307641ac677b2
-#: ../../tutorial.rst:522
+#: ../../tutorial.rst:505
 msgid ""
 "**Multiple values per key:** :class:`FormsDict` is a subclass of "
 ":class:`MultiDict` and can store more than one value per key. The standard "
@@ -950,8 +768,7 @@ msgid ""
 "values for a specific key::"
 msgstr "**一个key对应多个value：** :class:`FormsDict` 是 :class:`MutilDict` 的子类，一个key可存储多个value。标准的字典访问方法只返回一个值，但 :meth:`~MultiDict.getall` 方法会返回一个包含了所有value的一个list（也许为空）。"
 
-# 63ef53e5110b48f3b386e4817dd43ae1
-#: ../../tutorial.rst:527
+#: ../../tutorial.rst:510
 msgid ""
 "**WTForms support:** Some libraries (e.g. `WTForms "
 "<http://wtforms.simplecodes.com/>`_) want all-unicode dictionaries as input."
@@ -960,8 +777,7 @@ msgid ""
 "the other features."
 msgstr "**WTForms支持：** 一些第三方库（例如 `WTForms <http://wtforms.simplecodes.com/>`_ ）希望输入中的所有字典都是unicode的。 :meth:`FormsDict.decode` 帮你做了这件事情。它将所有value重新编码，并返回原字典的一个拷贝，同时保留所有特性，例如一个key对应多个value。"
 
-# cae78dee769745038d0e99d7f1962e92
-#: ../../tutorial.rst:531
+#: ../../tutorial.rst:514
 msgid ""
 "In **Python 2** all keys and values are byte-strings. If you need unicode, "
 "you can call :meth:`FormsDict.getunicode` or fetch values via attribute "
@@ -969,8 +785,7 @@ msgid ""
 "empty string if that fails. No need to catch :exc:`UnicodeError`::"
 msgstr "在 **Python2** 中，所有的key和value都是byte-string。如果你需要unicode，可使用 :meth:`FormsDict.getunicode` 方法或像访问属性那样访问。这两种方法都试着将字符串转码(默认: utf8)，如果失败，将返回一个空字符串。无需捕获 :exc:`UnicodeError` 异常。"
 
-# 860bf56342f9464cb363e7ceb8d8f191
-#: ../../tutorial.rst:538
+#: ../../tutorial.rst:521
 msgid ""
 "In **Python 3** all strings are unicode, but HTTP is a byte-based wire "
 "protocol. The server has to decode the byte strings somehow before they are "
@@ -982,15 +797,13 @@ msgid ""
 " not what you want."
 msgstr "在 **Python3** 中，所有的字符串都是unicode。但HTTP是基于字节的协议，在byte-string被传给应用之前，服务器必须将其转码。安全起见，WSGI协议建议使用ISO-8859-1 (即是latin1)，一个可反转的单字节编码，可被转换为其他编码。Bottle通过 :meth:`FormsDict.getunicode` 和属性访问实现了转码，但不支持字典形式的访问。通过字典形式的访问，将直接返回服务器返回的字符串，未经处理，这或许不是你想要的。"
 
-# d1d25ef91b1149e08b56d7eec46bc3b6
-#: ../../tutorial.rst:545
+#: ../../tutorial.rst:528
 msgid ""
 "If you need the whole dictionary with correctly decoded values (e.g. for "
 "WTForms), you can call :meth:`FormsDict.decode` to get a re-encoded copy."
 msgstr "如果你整个字典包含正确编码后的值(e.g. for WTForms)，可通过 :meth:`FormsDict.decode` 方法来获取一个转码后的拷贝(译者注：一个新的实例)。"
 
-# 1f41cf2d2cdd4445873e264035b1442b
-#: ../../tutorial.rst:551
+#: ../../tutorial.rst:534
 msgid ""
 "Cookies are small pieces of text stored in the clients browser and sent back"
 " to the server with each request. They are useful to keep some state around "
@@ -998,29 +811,25 @@ msgid ""
 " for security related stuff. They can be easily forged by the client."
 msgstr "Cookie是客户端浏览器存储的一些文本数据，在每次请求的时候发送回给服务器。Cookie被用于在多次请求间保留状态信息（HTTP本身是无状态的），但不应该用于保存安全相关信息。因为客户端很容易伪造Cookie。"
 
-# e24f4025a9484c5e8029385b83a05f53
-#: ../../tutorial.rst:553
+#: ../../tutorial.rst:536
 msgid ""
 "All cookies sent by the client are available through "
 ":attr:`BaseRequest.cookies` (a :class:`FormsDict`). This example shows a "
 "simple cookie-based view counter::"
 msgstr "可通过 :attr:`BaseRequest.cookies` (一个 :class:`FormsDict`) 来访问所有客户端发来的Cookie。下面的是一个基于Cookie的访问计数。"
 
-# 3a28598cdb314053b4534f8bb55582cb
-#: ../../tutorial.rst:563
+#: ../../tutorial.rst:546
 msgid ""
 "The :meth:`BaseRequest.get_cookie` method is a different way do access "
 "cookies. It supports decoding :ref:`signed cookies <tutorial-signed-"
 "cookies>` as described in a separate section."
 msgstr ":meth:`BaseRequest.get_cookie` 是访问cookie的另一种方法。它支持解析 :ref:`signed cookies <tutorial-signed-cookies>` 。"
 
-# f213ece9c0d84067854f53077a331dba
-#: ../../tutorial.rst:566
+#: ../../tutorial.rst:549
 msgid "HTTP Headers"
 msgstr "HTTP头"
 
-# 8a8fc6a8d22c4efbaa818329a0cdc607
-#: ../../tutorial.rst:568
+#: ../../tutorial.rst:551
 msgid ""
 "All HTTP headers sent by the client (e.g. ``Referer``, ``Agent`` or "
 "``Accept-Language``) are stored in a :class:`WSGIHeaderDict` and accessible "
@@ -1028,13 +837,11 @@ msgid ""
 " is basically a dictionary with case-insensitive keys::"
 msgstr "所有客户端发送过来的HTTP头(例如 ``Referer``, ``Agent`` 和 ``Accept-Language``)存储在一个 :class:`WSGIHeaderDict` 中，可通过 :attr:`BaseRequest.headers` 访问。  :class:`WSGIHeaderDict` 基本上是一个字典，其key大小写敏感。"
 
-# d28b3873034d468d905e90b0405c8f25
-#: ../../tutorial.rst:580
+#: ../../tutorial.rst:563
 msgid "Query Variables"
 msgstr "查询变量"
 
-# 15eaede90aa64490b333ee269b97e6c7
-#: ../../tutorial.rst:582
+#: ../../tutorial.rst:565
 msgid ""
 "The query string (as in ``/forum?id=1&page=5``) is commonly used to transmit"
 " a small number of key/value pairs to the server. You can use the "
@@ -1043,20 +850,17 @@ msgid ""
 "string."
 msgstr "查询字符串(例如 ``/forum?id=1&page=5`` )一般用于向服务器传输键值对。你可通过 :attr:`BaseRequest.query` ( :class:`FormsDict` 类的实例) 来访问，和通过 :attr:`BaseRequest.query_string` 来获取整个字符串。"
 
-# 8afda217e0c1411c93dfb29d25e7b68b
-#: ../../tutorial.rst:595
+#: ../../tutorial.rst:578
 msgid "HTML `<form>` Handling"
 msgstr "处理HTML的 `<form>` 标签"
 
-# 47bccfd4c83b4534813d04312a8f44d8
-#: ../../tutorial.rst:597
+#: ../../tutorial.rst:580
 msgid ""
 "Let us start from the beginning. In HTML, a typical ``<form>`` looks "
 "something like this:"
 msgstr "让我们从头开始。在HTML中，一个典型的 ``<form>`` 标签看起来是这样的。"
 
-# 64d8978da120454982ea5a701336edd4
-#: ../../tutorial.rst:607
+#: ../../tutorial.rst:590
 msgid ""
 "The ``action`` attribute specifies the URL that will receive the form data. "
 "``method`` defines the HTTP method to use (``GET`` or ``POST``). With "
@@ -1066,109 +870,77 @@ msgid ""
 "in doubt, use ``POST`` forms."
 msgstr "``action`` 属性指定了用于接收表单数据的URL， ``method`` 定义了使用的HTTP方法（ ``GET`` 或 ``POST`` ）。如果使用GET方法，表单中的数据会附加到URL后面，可通过 :attr:`BaseRequest.query` 来访问。这被认为是不安全的，且有其它限制。所以这里我们使用POST方法。如果有疑惑，就使用 ``POST`` 吧。"
 
-# f991d9afa38b458e9c90c2ff47e789f4
-#: ../../tutorial.rst:609
+#: ../../tutorial.rst:592
 msgid ""
 "Form fields transmitted via ``POST`` are stored in :attr:`BaseRequest.forms`"
 " as a :class:`FormsDict`. The server side code may look like this::"
 msgstr "通过POST方法传输的表单字段，作为一个 :class:`FormsDict` 存储在 :attr:`BaseRequest.forms` 中。服务器端的代码看起来是这样的。"
 
-# 81cff7f4af934d6fa9360ab54da95cb6
-#: ../../tutorial.rst:632
+#: ../../tutorial.rst:615
 msgid ""
 "There are several other attributes used to access form data. Some of them "
 "combine values from different sources for easier access. The following table"
 " should give you a decent overview."
 msgstr "有其它一些属性也可以用来访问表单数据。为了方便，一些属性包含了多个来源的数据。下面的表格可给你一个直观的印象。"
 
-# 6702069df9974731a7ea60ca75cab0f9
-#: ../../tutorial.rst:635
+#: ../../tutorial.rst:618
 msgid "Attribute"
-msgstr ""
+msgstr "属性"
 
-# d244efbdf14047919a287b05efa14f67
-#: ../../tutorial.rst:635
+#: ../../tutorial.rst:618
 msgid "GET Form fields"
 msgstr ""
 
-# dfc1e30176c84efcb0ae93db03175783
-#: ../../tutorial.rst:635
+#: ../../tutorial.rst:618
 msgid "POST Form fields"
 msgstr "POST表单数据"
 
-# 0f1381b897e7406f8b7c9fd4968e52da
-#: ../../tutorial.rst:635
+#: ../../tutorial.rst:618
 msgid "File Uploads"
 msgstr ""
 
-# 0ce02ef13e8f46b19a80f42290c2c442
-#: ../../tutorial.rst:637
+#: ../../tutorial.rst:620
 msgid ":attr:`BaseRequest.query`"
 msgstr ""
 
-# 7ea570eed5714a27842397402919a1b8
-# f866fe599a37442ca560b4f9f52af0dc
-# a6d6e8e46e7d478c8a6ad58ac4fd7056
-# 1bb36453a3ce4fe49c3f4a77fa7e5bfd
-# 2fcf1f61fc1c47a2829eee6461b2c9b7
-# 259a134887df4aefa37e401e1f74fcf3
-# 5d9e107544124f1189df3569c785a4f9
-# be692b7f81ad4459906b76b89aa77cb0
-#: ../../tutorial.rst:637 ../../tutorial.rst:638 ../../tutorial.rst:639
-#: ../../tutorial.rst:640 ../../tutorial.rst:640 ../../tutorial.rst:641
-#: ../../tutorial.rst:642 ../../tutorial.rst:642
+#: ../../tutorial.rst:620 ../../tutorial.rst:621 ../../tutorial.rst:622
+#: ../../tutorial.rst:623 ../../tutorial.rst:623 ../../tutorial.rst:624
+#: ../../tutorial.rst:625 ../../tutorial.rst:625
 msgid "yes"
 msgstr ""
 
-# 41fb61904c1c48b49f5d4eb6e5a4317d
-# 20d5592e036c4bd2b00bc328ae7ca487
-# ba20bb316e5b42c5b1fdd5b30427e8cf
-# bd6e97ab7e52496d90715378b0268e1c
-# acebe8690063405d8865f974bd2b7189
-# 2c649fa972a64390a4b662f23be351d4
-# 8af044d64b4a481482686774e23a256a
-# 4032074c7e0748528569b583e2e5286b
-# 797c2c93982040d7913ec152eaa6349a
-# bef53fde1b334d9ab5d5571f37e3f53f
-#: ../../tutorial.rst:637 ../../tutorial.rst:637 ../../tutorial.rst:638
-#: ../../tutorial.rst:638 ../../tutorial.rst:639 ../../tutorial.rst:639
-#: ../../tutorial.rst:640 ../../tutorial.rst:641 ../../tutorial.rst:641
-#: ../../tutorial.rst:642
+#: ../../tutorial.rst:620 ../../tutorial.rst:620 ../../tutorial.rst:621
+#: ../../tutorial.rst:621 ../../tutorial.rst:622 ../../tutorial.rst:622
+#: ../../tutorial.rst:623 ../../tutorial.rst:624 ../../tutorial.rst:624
+#: ../../tutorial.rst:625
 msgid "no"
 msgstr ""
 
-# 774116fa45d944548da6b38a82256693
-#: ../../tutorial.rst:638
+#: ../../tutorial.rst:621
 msgid ":attr:`BaseRequest.forms`"
 msgstr ""
 
-# 1af3b00479c946e68e966f8e00c2d9fa
-#: ../../tutorial.rst:639
+#: ../../tutorial.rst:622
 msgid ":attr:`BaseRequest.files`"
 msgstr ""
 
-# 713441a08c9b42359dd5e70eea1dfb2c
-#: ../../tutorial.rst:640
+#: ../../tutorial.rst:623
 msgid ":attr:`BaseRequest.params`"
 msgstr ""
 
-# 210cda782b0c4601b2b1b3e793621ace
-#: ../../tutorial.rst:641
+#: ../../tutorial.rst:624
 msgid ":attr:`BaseRequest.GET`"
 msgstr ""
 
-# bb796720e91d48c7a8817cff648e154b
-#: ../../tutorial.rst:642
+#: ../../tutorial.rst:625
 msgid ":attr:`BaseRequest.POST`"
 msgstr ""
 
-# c713689f0f9649adbdaed97afc4fc888
-#: ../../tutorial.rst:647
+#: ../../tutorial.rst:630
 msgid "File uploads"
 msgstr "文件上传"
 
-# f09f90f8cd8a426dbae4c7fb4a8a1544
-#: ../../tutorial.rst:649
+#: ../../tutorial.rst:632
 msgid ""
 "To support file uploads, we have to change the ``<form>`` tag a bit. First, "
 "we tell the browser to encode the form data in a different way by adding an "
@@ -1177,16 +949,14 @@ msgid ""
 "Here is an example:"
 msgstr "为了支持文件上传，我们需要小改一下上面 ``<form>`` 标签，加上 ``enctype=\"multipart/form-data\"`` 属性，告诉浏览器用另一种方式编码表单数据。接下来，我们添加 ``<input type=\"file\" />`` 标签，让用户可以选择需要上传的文件。例子如下。"
 
-# 5621abf2254141d59a63e48e0ff8f2a0
-#: ../../tutorial.rst:659
+#: ../../tutorial.rst:642
 msgid ""
 "Bottle stores file uploads in :attr:`BaseRequest.files` as "
 ":class:`FileUpload` instances, along with some metadata about the upload. "
 "Let us assume you just want to save the file to disk::"
 msgstr "Bottle将上传的文件当做一个 :class:`FileUpload` 实例存储在 :attr:`BaseRequest.files` 中，伴随着一些这次上传的元数据。我们假设你仅是想把上传的文件保存到磁盘中。"
 
-# afd75710819b4c39a70d77987aa39395
-#: ../../tutorial.rst:673
+#: ../../tutorial.rst:656
 msgid ""
 ":attr:`FileUpload.filename` contains the name of the file on the clients "
 "file system, but is cleaned up and normalized to prevent bugs caused by "
@@ -1195,8 +965,7 @@ msgid ""
 ":attr:`FileUpload.raw_filename`."
 msgstr ":attr:`FileUpload.filename` 包含客户端传上来的文件的文件名，但为了防止异常字符带来的bug，这里的文件名已经被处理过。如果你需要未经改动的文件名，看看 :attr:`FileUpload.raw_filename` 。"
 
-# c413b885489c4cb28d0213b211c9083b
-#: ../../tutorial.rst:675
+#: ../../tutorial.rst:658
 msgid ""
 "The :attr:`FileUpload.save` method is highly recommended if you want to "
 "store the file to disk. It prevents some common errors (e.g. it does not "
@@ -1205,26 +974,22 @@ msgid ""
 ":attr:`FileUpload.file`. Just be careful."
 msgstr "如果你想将文件保存到磁盘，强烈建议你使用 :attr:`FileUpload.save` 方法。它避免了一些常见的错误（例如，它不会覆盖已经存在的文件，除非你告诉它可以覆盖），并且更有效地使用内存。你可以通过 :attr:`FileUpload.file` 来直接访问文件对象，但是要谨慎。"
 
-# 7c1b1718d1cb4ac0bedcad349b6e7e9f
-#: ../../tutorial.rst:679
+#: ../../tutorial.rst:662
 msgid "JSON Content"
 msgstr "JSON内容"
 
-# 94dca01a171e406cb291c5f40a246907
-#: ../../tutorial.rst:681
+#: ../../tutorial.rst:664
 msgid ""
 "Some JavaScript or REST clients send ``application/json`` content to the "
 "server. The :attr:`BaseRequest.json` attribute contains the parsed data "
 "structure, if available."
 msgstr "一些JavaScript或支持REST的客户端会发送 ``application/json`` 内容给服务器。如果可用（合法的JSON）， :attr:`BaseRequest.json` 会包含解析后的数据结构。"
 
-# b18fe51c7d944a35ac322ca51d760407
-#: ../../tutorial.rst:685
+#: ../../tutorial.rst:668
 msgid "The raw request body"
 msgstr "原始的请求数据"
 
-# 3c02f3635cd4412e88370791707f1307
-#: ../../tutorial.rst:687
+#: ../../tutorial.rst:670
 msgid ""
 "You can access the raw body data as a file-like object via "
 ":attr:`BaseRequest.body`. This is a :class:`BytesIO` buffer or a temporary "
@@ -1234,13 +999,11 @@ msgid ""
 "unbuffered access to the stream, have a look at ``request['wsgi.input']``."
 msgstr "你可以把  :attr:`BaseRequest.body` 当做一个file-like 对象来访问。根据内容的长度，以及 :attr:`BaseRequest.MEMFILE_MAX` 中的设置，它可以是一个 :class:`BytesIO` 缓存或一个磁盘上的临时文件。无论如何，它都是被缓存的。如果你无需缓存，想直接访问文件流，可看看 ``request['wsgi.input']`` 。"
 
-# 31e459b302f947c3a11bc4bd8c3130c2
-#: ../../tutorial.rst:692
+#: ../../tutorial.rst:675
 msgid "WSGI Environment"
 msgstr "WSGI环境"
 
-# 277b90d681814132b180f82d12dbedea
-#: ../../tutorial.rst:694
+#: ../../tutorial.rst:677
 msgid ""
 "Each :class:`BaseRequest` instance wraps a WSGI environment dictionary. The "
 "original is stored in :attr:`BaseRequest.environ`, but the request object "
@@ -1249,13 +1012,11 @@ msgid ""
 "`WSGI environ variables <WSGI specification>`_ directly, you can do so::"
 msgstr "每一个  :class:`BaseRequest` 类的实例都包含一个WSGI环境的字典。最初存储在 :attr:`BaseRequest.environ` 中，但request对象也表现的像一个字典。大多数有用的数据都通过特定的方法或属性暴露了出来，但如果你想直接访问 `WSGI环境变量 <WSGI specification>`_ ，可以这样做::"
 
-# cbc4820353de4a8fa7d8093817f8cb58
-#: ../../tutorial.rst:712
+#: ../../tutorial.rst:695
 msgid "Templates"
 msgstr "模板"
 
-# 7f54e3b252594f1296fd078b53278355
-#: ../../tutorial.rst:714
+#: ../../tutorial.rst:697
 msgid ""
 "Bottle comes with a fast and powerful built-in template engine called "
 ":doc:`stpl`. To render a template you can use the :func:`template` function "
@@ -1264,8 +1025,7 @@ msgid ""
 "arguments. Here’s a simple example of how to render a template::"
 msgstr "Bottle内置了一个快速的，强大的模板引擎，称为 :doc:`stpl` 。可通过 :func:`template` 函数或 :func:`view` 修饰器来渲染一个模板。只需提供模板的名字和传递给模板的变量。下面是一个渲染模板的简单例子::"
 
-# 9c995ce0ba9247d998d1daf11889c3d4
-#: ../../tutorial.rst:721
+#: ../../tutorial.rst:704
 msgid ""
 "This will load the template file ``hello_template.tpl`` and render it with "
 "the ``name`` variable set. Bottle will look for templates in the "
@@ -1273,20 +1033,17 @@ msgid ""
 "list."
 msgstr "这会加载 ``hello_template.tpl`` 模板文件，并提供 ``name`` 变量。默认情况，Bottle会在 ``./views/`` 目录查找模板文件(译者注：或当前目录)。可在 ``bottle.TEMPLATE_PATH`` 这个列表中添加更多的模板路径。"
 
-# 3fb064d060e74fa9b91c7e9019037bcb
-#: ../../tutorial.rst:723
+#: ../../tutorial.rst:706
 msgid ""
 "The :func:`view` decorator allows you to return a dictionary with the "
 "template variables instead of calling :func:`template`::"
 msgstr ":func:`view` 修饰器允许你在回调函数中返回一个字典，并将其传递给模板，和 :func:`template` 函数做同样的事情。"
 
-# 793d0013d90b46688230efac332591c6
-#: ../../tutorial.rst:732
+#: ../../tutorial.rst:715
 msgid "Syntax"
 msgstr "语法"
 
-# 276911f834024512812f74daa82b7b9a
-#: ../../tutorial.rst:735
+#: ../../tutorial.rst:718
 msgid ""
 "The template syntax is a very thin layer around the Python language. Its "
 "main purpose is to ensure correct indentation of blocks, so you can format "
@@ -1294,31 +1051,26 @@ msgid ""
 " syntax description: :doc:`stpl`"
 msgstr "模板语法类似于Python的语法。它要确保语句块的正确缩进，所以你在写模板的时候无需担心会出现缩进问题。详细的语法描述可看 :doc:`stpl` 。"
 
-# 8b3dfbc242614a39bbbcbd2c7b480650
-#: ../../tutorial.rst:737
+#: ../../tutorial.rst:720
 msgid "Here is an example template::"
 msgstr "简单的模板例子::"
 
-# 9fb13a88ef1e48dabfb9003411f0da05
-#: ../../tutorial.rst:748
+#: ../../tutorial.rst:731
 msgid "Caching"
 msgstr "缓存"
 
-# 014c2131d61848819bd5efafc48a7c23
-#: ../../tutorial.rst:749
+#: ../../tutorial.rst:732
 msgid ""
 "Templates are cached in memory after compilation. Modifications made to the "
 "template files will have no affect until you clear the template cache. Call "
 "``bottle.TEMPLATES.clear()`` to do so. Caching is disabled in debug mode."
 msgstr "模板在经过编译后被缓存在内存里。你在修改模板文件后，要调用 ``bottle.TEMPLATES.clear()`` 函数清除缓存才能看到效果。在debug模式下，缓存被禁用了，无需手动清除缓存。"
 
-# bca0ac7a52cf4ad2be2fd039a319376f
-#: ../../tutorial.rst:759
+#: ../../tutorial.rst:742
 msgid "Plugins"
 msgstr "插件"
 
-# 25be41e29e994bb39b03cca0274c82c4
-#: ../../tutorial.rst:763
+#: ../../tutorial.rst:746
 msgid ""
 "Bottle's core features cover most common use-cases, but as a micro-framework"
 " it has its limits. This is where \"Plugins\" come into play. Plugins add "
@@ -1326,8 +1078,7 @@ msgid ""
 "just automate some repetitive work."
 msgstr "Bottle的核心功能覆盖了常见的使用情况，但是作为一个迷你框架，它有它的局限性。所以我们引入了插件机制，插件可以给框架添加其缺少的功能，集成第三方的库，或是自动化一些重复性的工作。"
 
-# 8f13e7d3d6ce4e76a84a4960b1cb4d16
-#: ../../tutorial.rst:765
+#: ../../tutorial.rst:748
 msgid ""
 "We have a growing :doc:`/plugins/index` and most plugins are designed to be "
 "portable and re-usable across applications. The chances are high that your "
@@ -1335,8 +1086,7 @@ msgid ""
 "the :doc:`/plugindev` may help you."
 msgstr "我们有一个不断增长的 :doc:`/plugins/index` 插件列表，大多数插件都被设计为可插拔的。有很大可能，你的问题已经被解决，而且已经有现成的插件可以使用了。如果没有现成的插件， :doc:`/plugindev` 有介绍如何开发一个插件。"
 
-# 0594cbaaa49844da81038387ed1bfa0f
-#: ../../tutorial.rst:767
+#: ../../tutorial.rst:750
 msgid ""
 "The effects and APIs of plugins are manifold and depend on the specific "
 "plugin. The ``SQLitePlugin`` plugin for example detects callbacks that "
@@ -1345,8 +1095,7 @@ msgid ""
 "use a database::"
 msgstr "插件扮演着各种各样的角色。例如， ``SQLitePlugin`` 插件给每个route的回调函数都添加了一个 ``db`` 参数，在回调函数被调用的时候，会新建一个数据库连接。这样，使用数据库就非常简单了。"
 
-# a54a3ff608494fc4a8746922337e3dbc
-#: ../../tutorial.rst:787
+#: ../../tutorial.rst:770
 msgid ""
 "Other plugin may populate the thread-safe :data:`local` object, change "
 "details of the :data:`request` object, filter the data returned by the "
@@ -1355,13 +1104,11 @@ msgid ""
 "the original callback. What happens exactly depends on the plugin."
 msgstr "其它插件或许在线程安全的 :data:`local` 对象里面发挥作用，改变 :data:`request` 对象的细节，过滤回调函数返回的数据或完全绕开回调函数。举个例子，一个用于登录验证的插件会在调用原先的回调函数响应请求之前，验证用户的合法性，如果是非法访问，则返回登录页面而不是调用回调函数。具体的做法要看插件是如何实现的。"
 
-# 85df0eb6da384cc69f757bc3bb5e462d
-#: ../../tutorial.rst:791
+#: ../../tutorial.rst:774
 msgid "Application-wide Installation"
 msgstr "整个应用的范围内安装插件"
 
-# d0222cf4aa4c4835af86c94d7c0c0589
-#: ../../tutorial.rst:793
+#: ../../tutorial.rst:776
 msgid ""
 "Plugins can be installed application-wide or just to some specific routes "
 "that need additional functionality. Most plugins can safely be installed to "
@@ -1369,8 +1116,7 @@ msgid ""
 " need their functionality."
 msgstr "可以在整个应用的范围内安装插件，也可以只是安装给某些route。大多数插件都可安全地安装给所有route，也足够智能，可忽略那些并不需要它们的route。"
 
-# 57e02045eb6945f69f6f863fe0953064
-#: ../../tutorial.rst:795
+#: ../../tutorial.rst:778
 msgid ""
 "Let us take the ``SQLitePlugin`` plugin for example. It only affects route "
 "callbacks that need a database connection. Other routes are left alone. "
@@ -1378,15 +1124,13 @@ msgid ""
 "additional overhead."
 msgstr "让我们拿 ``SQLitePlugin`` 插件举例，它只会影响到那些需要数据库连接的route，其它route都被忽略了。正因为如此，我们可以放心地在整个应用的范围内安装这个插件。"
 
-# 7195c359c8f94d89b1d0fd93875173b7
-#: ../../tutorial.rst:797
+#: ../../tutorial.rst:780
 msgid ""
 "To install a plugin, just call :func:`install` with the plugin as first "
 "argument::"
 msgstr "调用 :func:`install` 函数来安装一个插件::"
 
-# 79c5ac9cbe514621842159896ee0ae5d
-#: ../../tutorial.rst:802
+#: ../../tutorial.rst:785
 msgid ""
 "The plugin is not applied to the route callbacks yet. This is delayed to "
 "make sure no routes are missed. You can install plugins first and add routes"
@@ -1395,20 +1139,17 @@ msgid ""
 "database plugin first."
 msgstr "插件没有马上应用到所有route上面，它被延迟执行来确保没有遗漏任何route。你可以先安装插件，再添加route。有时，插件的安装顺序很重要，如果另外一个插件需要连接数据库，那么你就需要先安装操作数据库的插件。"
 
-# 76f0442c3c9f48d596a3612707f2b4f1
-#: ../../tutorial.rst:806
+#: ../../tutorial.rst:789
 msgid "Uninstall Plugins"
 msgstr "卸载插件"
 
-# 9e704003eec5447b87efbfdbeb2bde74
-#: ../../tutorial.rst:807
+#: ../../tutorial.rst:790
 msgid ""
 "You can use a name, class or instance to :func:`uninstall` a previously "
 "installed plugin::"
 msgstr "调用 :func:`uninstall` 函数来卸载已经安装的插件"
 
-# 4f74d521e0c84a759bf77d9eb22a485b
-#: ../../tutorial.rst:817
+#: ../../tutorial.rst:800
 msgid ""
 "Plugins can be installed and removed at any time, even at runtime while "
 "serving requests. This enables some neat tricks (installing slow debugging "
@@ -1417,61 +1158,52 @@ msgid ""
 " re-applied."
 msgstr "在任何时候，插件都可以被安装或卸载，即使是在服务器正在运行的时候。一些小技巧应用到了这个特征，例如在需要的时候安装一些供debug和性能测试的插件，但不可滥用这个特性。每一次安装或卸载插件的时候，route缓存都会被刷新，所有插件被重新加载。"
 
-# 40927582b3c84e00bbc2191d16078246
-#: ../../tutorial.rst:820
+#: ../../tutorial.rst:803
 msgid ""
 "The module-level :func:`install` and :func:`uninstall` functions affect the "
 ":ref:`default-app`. To manage plugins for a specific application, use the "
 "corresponding methods on the :class:`Bottle` application object."
 msgstr "模块层面的 :func:`install` 和 :func:`unistall` 函数会影响 :ref:`default-app` 。针对应用来管理插件，可使用 :class:`Bottle` 应用对象的相应方法。"
 
-# 58c602357cdf4076a0038b3d440bd688
-#: ../../tutorial.rst:824
+#: ../../tutorial.rst:807
 msgid "Route-specific Installation"
 msgstr "安装给特定的route"
 
-# 8f59747bb8e648fdba1d771c2939cad8
-#: ../../tutorial.rst:826
+#: ../../tutorial.rst:809
 msgid ""
 "The ``apply`` parameter of the :func:`route` decorator comes in handy if you"
 " want to install plugins to only a small number of routes::"
 msgstr ":func:`route` 修饰器的 ``apply`` 参数可以给指定的route安装插件"
 
-# abcb2ceeb0054dc58ef4237a350faf34
-#: ../../tutorial.rst:836
+#: ../../tutorial.rst:819
 msgid "Blacklisting Plugins"
 msgstr "插件黑名单"
 
-# b731ed592be14b0d9c004e4a214e3489
-#: ../../tutorial.rst:838
+#: ../../tutorial.rst:821
 msgid ""
 "You may want to explicitly disable a plugin for a number of routes. The "
 ":func:`route` decorator has a ``skip`` parameter for this purpose::"
 msgstr "如果你想显式地在一些route上面禁用某些插件，可使用 :func:`route` 修饰器的 ``skip`` 参数::"
 
-# d85ad26d6e3a46d5818f416319d0c5a3
-#: ../../tutorial.rst:860
+#: ../../tutorial.rst:843
 msgid ""
 "The ``skip`` parameter accepts a single value or a list of values. You can "
 "use a name, class or instance to identify the plugin that is to be skipped. "
 "Set ``skip=True`` to skip all plugins at once."
 msgstr "``skip`` 参数接受单一的值或是一个list。你可使用插件的名字，类，实例来指定你想要禁用的插件。如果 ``skip`` 的值为True，则禁用所有插件。"
 
-# b0e92a806c1540a8b226edd15c74a341
-#: ../../tutorial.rst:863
+#: ../../tutorial.rst:846
 msgid "Plugins and Sub-Applications"
 msgstr "插件和子应用"
 
-# d94f16ee803544499b013738990cfeb7
-#: ../../tutorial.rst:865
+#: ../../tutorial.rst:848
 msgid ""
 "Most plugins are specific to the application they were installed to. "
 "Consequently, they should not affect sub-applications mounted with "
 ":meth:`Bottle.mount`. Here is an example::"
 msgstr "大多数插件只会影响到安装了它们的应用。因此，它们不应该影响通过 :meth:`Bottle.mount` 方法挂载上来的子应用。这里有一个例子。"
 
-# 40b102855d834ae1a674b32c75aa31d5
-#: ../../tutorial.rst:876
+#: ../../tutorial.rst:859
 msgid ""
 "Whenever you mount an application, Bottle creates a proxy-route on the main-"
 "application that forwards all requests to the sub-application. Plugins are "
@@ -1480,15 +1212,13 @@ msgid ""
 "affect the routes of the ``/blog`` sub-application."
 msgstr "在你挂载一个应用的时候，Bottle在主应用上面创建一个代理route，将所有请求转接给子应用。在代理route上，默认禁用了插件。如上所示，我们的 ``WTForms`` 插件影响了 ``/contact`` route，但不会影响挂载在root上面的 ``/blog`` 。"
 
-# 4ae87ecf90a048f990df1510667100b3
-#: ../../tutorial.rst:878
+#: ../../tutorial.rst:861
 msgid ""
 "This behavior is intended as a sane default, but can be overridden. The "
 "following example re-activates all plugins for a specific proxy-route::"
 msgstr "这个是一个合理的行为，但可被改写。下面的例子，在指定的代理route上面应用了插件。"
 
-# a24c569c2903469eab34c396c43e83e9
-#: ../../tutorial.rst:882
+#: ../../tutorial.rst:865
 msgid ""
 "But there is a snag: The plugin sees the whole sub-application as a single "
 "route, namely the proxy-route mentioned above. In order to affect each "
@@ -1496,25 +1226,21 @@ msgid ""
 "the mounted application explicitly."
 msgstr "这里存在一个小难题: 插件会整个子应用当作一个route看待，即是上面提及的代理route。如果想在子应用的每个route上面应用插件，你必须显式地在子应用上面安装插件。"
 
-# 8dbf1a52f32d451784ef4d67fc179b0a
-#: ../../tutorial.rst:887
+#: ../../tutorial.rst:870
 msgid "Development"
 msgstr "开发"
 
-# 8f36ef7efc4246bf9a542080c79eeede
-#: ../../tutorial.rst:889
+#: ../../tutorial.rst:872
 msgid ""
 "So you have learned the basics and want to write your own application? Here "
 "are some tips that might help you beeing more productive."
 msgstr ""
 
-# dd29da73ce5c432d8228bfa0d0d81099
-#: ../../tutorial.rst:895
+#: ../../tutorial.rst:878
 msgid "Default Application"
 msgstr "默认应用"
 
-# 544a987ceb96442c9ccff5f1e2fe2e4b
-#: ../../tutorial.rst:897
+#: ../../tutorial.rst:880
 msgid ""
 "Bottle maintains a global stack of :class:`Bottle` instances and uses the "
 "top of the stack as a default for some of the module-level functions and "
@@ -1522,8 +1248,7 @@ msgid ""
 "calling :meth:`Bottle.route` on the default application::"
 msgstr "Bottle维护一个全局的 :class:`Bottle` 实例的栈，模块层面的函数和修饰器使用栈顶实例作为默认应用。例如 :func:`route` 修饰器，相当于在默认应用上面调用了 :meth:`Bottle.route` 方法。"
 
-# 4e0ba4ae441f4e0281a706abb654d18d
-#: ../../tutorial.rst:905
+#: ../../tutorial.rst:888
 msgid ""
 "This is very convenient for small applications and saves you some typing, "
 "but also means that, as soon as your module is imported, routes are "
@@ -1532,33 +1257,28 @@ msgid ""
 "applications::"
 msgstr ""
 
-# 9714994da3d94f458ab6ee594a764f3d
-#: ../../tutorial.rst:915
+#: ../../tutorial.rst:898
 msgid ""
 "Separating the application object improves re-usability a lot, too. Other "
 "developers can safely import the ``app`` object from your module and use "
 ":meth:`Bottle.mount` to merge applications together."
 msgstr "分离应用对象，大大提高了可重用性。其他开发者可安全地从你的应用中导入 ``app`` 对象，然后通过 :meth:`Bottle.mount` 方法来合并到其它应用中。"
 
-# 315dc7ab16da4382841a5dd90d0c731a
-#: ../../tutorial.rst:920
+#: ../../tutorial.rst:903
 msgid ""
 "Starting with bottle-0.13 you can use :class:`Bottle` instances as context "
 "managers::"
 msgstr ""
 
-# e816f442ee374317a4db0354035a741f
-#: ../../tutorial.rst:945
+#: ../../tutorial.rst:928
 msgid "Debug Mode"
 msgstr "调试模式"
 
-# 1841835c41ef4ab3b775053b920435f0
-#: ../../tutorial.rst:947
+#: ../../tutorial.rst:930
 msgid "During early development, the debug mode can be very helpful."
 msgstr "在开发的早期阶段，调试模式非常有用。"
 
-# 1e3210c116344bfcb3ecdad6b4df771e
-#: ../../tutorial.rst:955
+#: ../../tutorial.rst:938
 msgid ""
 "In this mode, Bottle is much more verbose and provides helpful debugging "
 "information whenever an error occurs. It also disables some optimisations "
@@ -1566,38 +1286,31 @@ msgid ""
 " misconfiguration."
 msgstr "在调试模式下，当错误发生的时候，Bottle会提供更多的调试信息。同时禁用一些可能妨碍你的优化措施，检查你的错误设置。"
 
-# c024d64f3e44433380ea258a1e92dd53
-#: ../../tutorial.rst:957
+#: ../../tutorial.rst:940
 msgid "Here is an incomplete list of things that change in debug mode:"
 msgstr "下面是调试模式下会发生改变的东西，但这份列表不完整:"
 
-# d51ba513873c4172ad91bfd90ccb2bd4
-#: ../../tutorial.rst:959
+#: ../../tutorial.rst:942
 msgid "The default error page shows a traceback."
 msgstr "默认的错误页面会打印出运行栈。"
 
-# e6e131c916ed4f609f2da4fee618c82c
-#: ../../tutorial.rst:960
+#: ../../tutorial.rst:943
 msgid "Templates are not cached."
 msgstr "模板不会被缓存。"
 
-# 871d27067f994ad8a39c1ca49544ee68
-#: ../../tutorial.rst:961
+#: ../../tutorial.rst:944
 msgid "Plugins are applied immediately."
 msgstr "插件马上生效。"
 
-# b7d8c5b7008f45c0a038f83728a08df4
-#: ../../tutorial.rst:963
+#: ../../tutorial.rst:946
 msgid "Just make sure not to use the debug mode on a production server."
 msgstr "请确保不要在生产环境中使用调试模式。"
 
-# 230a80d407214760b0f52d315277db98
-#: ../../tutorial.rst:966
+#: ../../tutorial.rst:949
 msgid "Auto Reloading"
 msgstr "自动加载"
 
-# 5490d728bb6146a8935d3472247f547f
-#: ../../tutorial.rst:968
+#: ../../tutorial.rst:951
 msgid ""
 "During development, you have to restart the server a lot to test your recent"
 " changes. The auto reloader can do this for you. Every time you edit a "
@@ -1605,16 +1318,14 @@ msgid ""
 "version of your code."
 msgstr "在开发的时候，你需要不断地重启服务器来验证你最新的改动。自动加载功能可以替你做这件事情。在你编辑完一个模块文件后，它会自动重启服务器进程，加载最新版本的代码。"
 
-# 70c64c23129b44948cff310d97af3f06
-#: ../../tutorial.rst:978
+#: ../../tutorial.rst:961
 msgid ""
 "How it works: the main process will not start a server, but spawn a new "
 "child process using the same command line arguments used to start the main "
 "process. All module-level code is executed at least twice! Be careful."
 msgstr "它的工作原理，主进程不会启动服务器，它使用相同的命令行参数，创建一个子进程来启动服务器。请注意，所有模块级别的代码都被执行了至少两次。"
 
-# ec521c28413244ef883d0d26e2689e35
-#: ../../tutorial.rst:983
+#: ../../tutorial.rst:966
 msgid ""
 "The child process will have ``os.environ['BOTTLE_CHILD']`` set to ``True`` "
 "and start as a normal non-reloading app server. As soon as any of the loaded"
@@ -1623,8 +1334,7 @@ msgid ""
 "debug mode to deactivate template caching."
 msgstr "子进程中 ``os.environ['BOOTLE_CHILD']`` 变量的值被设为 ``True`` ，它运行一个不会自动加载的服务器。在代码改变后，主进程会终止掉子进程，并创建一个新的子进程。更改模板文件不会触发自动重载，请使用debug模式来禁用模板缓存。"
 
-# 090016314dc74f0d9d5c06c11f77f1b4
-#: ../../tutorial.rst:989
+#: ../../tutorial.rst:972
 msgid ""
 "The reloading depends on the ability to stop the child process. If you are "
 "running on Windows or any other operating system not supporting "
@@ -1633,25 +1343,21 @@ msgid ""
 "finally clauses, etc., are not executed after a ``SIGTERM``."
 msgstr "自动加载需要终止子进程。如果你运行在Windows等不支持 ``signal.SIGINT`` (会在Python中raise ``KeyboardInterrupt`` 异常)的系统上，会使用 ``signal.SIGTERM`` 来杀掉子进程。在子进程被 ``SIGTERM`` 杀掉的时候，exit handlers和finally等语句不会被执行。"
 
-# e9af1d45586f47678186c5e456d8cbd6
-#: ../../tutorial.rst:997
+#: ../../tutorial.rst:980
 msgid "Command Line Interface"
 msgstr "命令行接口"
 
-# b7bb238a6c4940c6ad67a8522e5b64ad
-#: ../../tutorial.rst:1001
+#: ../../tutorial.rst:984
 msgid "Starting with version 0.10 you can use bottle as a command-line tool:"
 msgstr "从0.10版本开始，你可像一个命令行工具那样使用Bottle:"
 
-# b069a1c2ef7c40d080c59f668bd47ed6
-#: ../../tutorial.rst:1021
+#: ../../tutorial.rst:1008
 msgid ""
 "The `ADDRESS` field takes an IP address or an IP:PORT pair and defaults to "
 "``localhost:8080``. The other parameters should be self-explanatory."
 msgstr "`ADDRESS` 参数接受一个IP地址或IP:端口，其默认为 ``localhost:8080`` 。其它参数都很好地自我解释了。"
 
-# df531b1dbca34c6db295549ebe781feb
-#: ../../tutorial.rst:1023
+#: ../../tutorial.rst:1010
 msgid ""
 "Both plugins and applications are specified via import expressions. These "
 "consist of an import path (e.g. ``package.module``) and an expression to be "
@@ -1659,13 +1365,11 @@ msgid ""
 ":func:`load` for details. Here are some examples:"
 msgstr "插件和应用都通过一个导入表达式来指定。包含了导入的路径(例如: ``package.module`` )和模块命名空间内的一个表达式，两者用\":\"分开。下面是一个简单例子，详见 :func:`load` 。"
 
-# 2ff1ba34045444f296682d99266c76fc
-#: ../../tutorial.rst:1044
+#: ../../tutorial.rst:1031
 msgid "Deployment"
 msgstr "部署"
 
-# 17875cb062b0410295d0c2070a303b46
-#: ../../tutorial.rst:1046
+#: ../../tutorial.rst:1033
 msgid ""
 "Bottle runs on the built-in `wsgiref WSGIServer "
 "<http://docs.python.org/library/wsgiref.html#module-wsgiref.simple_server>`_"
@@ -1674,46 +1378,39 @@ msgid ""
 "when server load increases."
 msgstr "Bottle默认运行在内置的 `wsgiref <http://docs.python.org/library/wsgiref.html#module-wsgiref.simple_server>`_  服务器上面。这个单线程的HTTP服务器在开发的时候特别有用，但其性能低下，在服务器负载不断增加的时候也许会是性能瓶颈。"
 
-# 4c8326eabfd34669bce8c85bd409e9a5
-#: ../../tutorial.rst:1048
+#: ../../tutorial.rst:1035
 msgid ""
 "The easiest way to increase performance is to install a multi-threaded "
 "server library like paste_ or cherrypy_ and tell Bottle to use that instead "
 "of the single-threaded server::"
 msgstr "最早的解决办法是让Bottle使用 paste_ 或 cherrypy_ 等多线程的服务器。"
 
-# 211f847f902344269c0f7414d7944b82
-#: ../../tutorial.rst:1052
+#: ../../tutorial.rst:1039
 msgid ""
 "This, and many other deployment options are described in a separate article:"
 " :doc:`deployment`"
 msgstr "在 :doc:`deployment` 章节中，会介绍更多部署的选择。"
 
-# 81519fb5f1d7406cb9b6494174640cd1
-#: ../../tutorial.rst:1060
+#: ../../tutorial.rst:1047
 msgid "Glossary"
 msgstr "词汇表"
 
-# 4ae50891b37244f6b923ca21c801242a
-#: ../../tutorial.rst:1063
+#: ../../tutorial.rst:1050
 msgid "callback"
 msgstr ""
 
-# 76835012ccdd431ab1b60af7cff4e7da
-#: ../../tutorial.rst:1065
+#: ../../tutorial.rst:1052
 msgid ""
 "Programmer code that is to be called when some external action happens. In "
 "the context of web frameworks, the mapping between URL paths and application"
 " code is often achieved by specifying a callback function for each URL."
 msgstr ""
 
-# f565b2272291413296e44576e5844363
-#: ../../tutorial.rst:1069
+#: ../../tutorial.rst:1056
 msgid "decorator"
 msgstr ""
 
-# 36051db8397e42e1ab2f41ae9b5cb8f9
-#: ../../tutorial.rst:1071
+#: ../../tutorial.rst:1058
 msgid ""
 "A function returning another function, usually applied as a function "
 "transformation using the ``@decorator`` syntax. See `python documentation "
@@ -1722,13 +1419,11 @@ msgid ""
 "about decorators."
 msgstr ""
 
-# 78b63b0f25fa48fdadbc39087d8e88cb
-#: ../../tutorial.rst:1072
+#: ../../tutorial.rst:1059
 msgid "environ"
 msgstr ""
 
-# abf5b7541b9e44b995bc839d58f02441
-#: ../../tutorial.rst:1074
+#: ../../tutorial.rst:1061
 msgid ""
 "A structure where information about all documents under the root is saved, "
 "and used for cross-referencing.  The environment is pickled after the "
@@ -1736,26 +1431,22 @@ msgid ""
 "changed documents."
 msgstr ""
 
-# f0ccedaa7176499786f45fd4103a3332
-#: ../../tutorial.rst:1078
+#: ../../tutorial.rst:1065
 msgid "handler function"
 msgstr ""
 
-# 6a5c6163ec6347f2924b22eba8f34302
-#: ../../tutorial.rst:1080
+#: ../../tutorial.rst:1067
 msgid ""
 "A function to handle some specific event or situation. In a web framework, "
 "the application is developed by attaching a handler function as callback for"
 " each specific URL comprising the application."
 msgstr ""
 
-# 90e647e99d59401f9213900ed9c012d8
-#: ../../tutorial.rst:1083
+#: ../../tutorial.rst:1070
 msgid "source directory"
 msgstr ""
 
-# 139a4e596dde491593d07ee7d082143e
-#: ../../tutorial.rst:1085
+#: ../../tutorial.rst:1072
 msgid ""
 "The directory which, including its subdirectories, contains all source files"
 " for one Sphinx project."

@@ -7,22 +7,20 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-01-22 16:45-0200\n"
-"PO-Revision-Date: 2015-01-22 19:20+0000\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: Portuguese (Brazil) (http://www.transifex.com/projects/p/bottle/language/pt_BR/)\n"
+"POT-Creation-Date: 2015-12-19 14:15+0100\n"
+"PO-Revision-Date: 2015-12-13 20:58+0000\n"
+"Last-Translator: defnull <marc@gsites.de>\n"
+"Language-Team: Portuguese (Brazil) (http://www.transifex.com/bottle/bottle/language/pt_BR/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: pt_BR\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-# e5c40772f91e46b490056ee3d352e7a0
 #: ../../stpl.rst:3
 msgid "SimpleTemplate Engine"
 msgstr ""
 
-# 069d59f4cde84fec9ffab6f949ac79a9
 #: ../../stpl.rst:7
 msgid ""
 "Bottle comes with a fast, powerful and easy to learn built-in template "
@@ -32,30 +30,25 @@ msgid ""
 "template syntax and shows examples for common use cases."
 msgstr ""
 
-# 043167051da74bf091b4335265fdc480
 #: ../../stpl.rst:10
 msgid "Basic API Usage:"
 msgstr ""
 
-# fc7000f3776346a4948c02a4a50fb56a
 #: ../../stpl.rst:11
 msgid ":class:`SimpleTemplate` implements the :class:`BaseTemplate` API::"
 msgstr ""
 
-# e25b50496020423f8954114f227e44a0
 #: ../../stpl.rst:18
 msgid ""
 "In this document we use the :func:`template` helper in examples for the sake"
 " of simplicity::"
 msgstr ""
 
-# c4675dea5471473693f9de5fef540889
 #: ../../stpl.rst:24
 msgid ""
 "You can also pass a dictionary into the template using keyword arguments::"
 msgstr ""
 
-# 37da1d7286ba447eb2096bf24e409112
 #: ../../stpl.rst:31
 msgid ""
 "Just keep in mind that compiling and rendering templates are two different "
@@ -64,12 +57,10 @@ msgid ""
 "with different keyword arguments."
 msgstr ""
 
-# 73a50f2356454ce299b96556ee792c8d
 #: ../../stpl.rst:34
 msgid ":class:`SimpleTemplate` Syntax"
 msgstr ""
 
-# 7463828d16c54830a56b0270cfb3a6a5
 #: ../../stpl.rst:36
 msgid ""
 "Python is a very powerful language but its whitespace-aware syntax makes it "
@@ -79,7 +70,6 @@ msgid ""
 "of the Python language."
 msgstr ""
 
-# d59894cc4ac74618954a352aa42645b1
 #: ../../stpl.rst:40
 msgid ""
 "The :class:`SimpleTemplate` syntax compiles directly to python bytecode and "
@@ -87,12 +77,10 @@ msgid ""
 "untrusted templates! They may contain and execute harmful python code."
 msgstr ""
 
-# 9ead45a0161545fd920a2a758a0a8f8f
 #: ../../stpl.rst:43
 msgid "Inline Expressions"
 msgstr ""
 
-# 22ee7e4039f946a496b82a6661c4207f
 #: ../../stpl.rst:45
 msgid ""
 "You already learned the use of the ``{{...}}`` syntax from the \"Hello "
@@ -101,7 +89,6 @@ msgid ""
 "that has a string representation::"
 msgstr ""
 
-# 43c420ced9664f93bd4b6fb92e6f76bb
 #: ../../stpl.rst:54
 msgid ""
 "The contained python expression is executed at render-time and has access to"
@@ -112,12 +99,10 @@ msgid ""
 "expression::"
 msgstr ""
 
-# 0a028087d6554513bc1695948b55303a
 #: ../../stpl.rst:62
 msgid "Embedded python code"
 msgstr ""
 
-# 7b42a99984ab4953a5f6ddd8892126f3
 #: ../../stpl.rst:66
 msgid ""
 "The template engine allows you to embed lines or blocks of python code "
@@ -125,14 +110,12 @@ msgid ""
 "surrounded by ``<%`` and ``%>`` tokens::"
 msgstr ""
 
-# 7c1bfb659c83406799985730ba1c5752
 #: ../../stpl.rst:76
 msgid ""
 "Embedded python code follows regular python syntax, but with two additional "
 "syntax rules:"
 msgstr ""
 
-# 4afb96c91af74889b74bf122dbd3c19a
 #: ../../stpl.rst:78
 msgid ""
 "**Indentation is ignored.** You can put as much whitespace in front of "
@@ -140,14 +123,12 @@ msgid ""
 "surrounding markup and can greatly improve readability."
 msgstr ""
 
-# a45db75ab9ed483d90355d9940c15327
 #: ../../stpl.rst:79
 msgid ""
 "Blocks that are normally indented now have to be closed explicitly with an "
 "``end`` keyword."
 msgstr ""
 
-# 6bf2738f934c47278e86eef3a721b16a
 #: ../../stpl.rst:89
 msgid ""
 "Both the ``%`` and the ``<%`` tokens are only recognized if they are the "
@@ -159,19 +140,16 @@ msgid ""
 "in an inline expression::"
 msgstr ""
 
-# ea1cfdad0dc046cdaddfdeffdf1669d1
 #: ../../stpl.rst:96
 msgid ""
 "If you find yourself to escape a lot, consider using :ref:`custom tokens "
 "<stpl-custom-tokens>`."
 msgstr ""
 
-# 24e526d936304c589e44352c662c184e
 #: ../../stpl.rst:99
 msgid "Whitespace Control"
 msgstr ""
 
-# ceb3b6a8301c4b06ab1236266e8b025b
 #: ../../stpl.rst:101
 msgid ""
 "Code blocks and code lines always span the whole line. Whitespace in front "
@@ -179,12 +157,10 @@ msgid ""
 "dangling whitespace in your template because of embedded code::"
 msgstr ""
 
-# 7b97b2993b6a4300b8cee886428b01fd
 #: ../../stpl.rst:109
 msgid "This snippet renders to clean and compact html::"
 msgstr ""
 
-# bb43847a10ef4479bdc55979716b9f9e
 #: ../../stpl.rst:115
 msgid ""
 "But embedding code still requires you to start a new line, which may not "
@@ -192,24 +168,20 @@ msgid ""
 " of a code segment, end the text line with a double-backslash::"
 msgstr ""
 
-# 0a8c68359c0f46229baa5bf89cea417c
 #: ../../stpl.rst:123
-msgid "THis time the rendered template looks like this::"
+msgid "This time the rendered template looks like this::"
 msgstr ""
 
-# 2a97642550b64e8298aeadbb2ee4030b
 #: ../../stpl.rst:127
 msgid ""
 "This only works directly in front of code segments. In all other places you "
 "can control the whitespace yourself and don't need any special syntax."
 msgstr ""
 
-# 853c44d3fb074abfa5b5515dfd3a6590
 #: ../../stpl.rst:130
 msgid "Template Functions"
 msgstr ""
 
-# 8435a9fd969641519d01e84205d49152
 #: ../../stpl.rst:132
 msgid ""
 "Each template is preloaded with a bunch of functions that help with the most"
@@ -219,14 +191,12 @@ msgid ""
 "anything you want within your templates. They are python programs after all."
 msgstr ""
 
-# c458a81dae52450eb81cc4950592d1ac
 #: ../../stpl.rst:136
 msgid ""
 "Prior to this release, :func:`include` and :func:`rebase` were syntax "
 "keywords, not functions."
 msgstr ""
 
-# ac75ab2b19f143cda945036c86cba4d4
 #: ../../stpl.rst:141
 msgid ""
 "Render a sub-template with the specified variables and insert the resulting "
@@ -234,7 +204,6 @@ msgid ""
 " the local variables passed to or defined within the sub-template::"
 msgstr ""
 
-# aece402c1d1649b4b04cf1687a262af6
 #: ../../stpl.rst:149
 msgid ""
 "Mark the current template to be later included into a different template. "
@@ -244,12 +213,10 @@ msgid ""
 "simulate the inheritance feature found in other template engines::"
 msgstr ""
 
-# 0cb7a5d100eb4b658580c4c80980321c
 #: ../../stpl.rst:154
 msgid "This can be combined with the following ``base.tpl``::"
 msgstr ""
 
-# f7a8fd39c4a149cb87c14b0dc94ca02e
 #: ../../stpl.rst:166
 msgid ""
 "Accessing undefined variables in a template raises :exc:`NameError` and "
@@ -259,38 +226,32 @@ msgid ""
 "or use the same template in different situations. These functions may help:"
 msgstr ""
 
-# ddc1cb230c4b484ca4010e09ef5c01c2
 #: ../../stpl.rst:174
 msgid ""
 "Return True if the variable is defined in the current template namespace, "
 "False otherwise."
 msgstr ""
 
-# 1fc0b1edb65b414daf4245dfc3098707
 #: ../../stpl.rst:179
 msgid "Return the variable, or a default value."
 msgstr ""
 
-# 8aab0bb61e754f81bcc1b2afe11018a3
 #: ../../stpl.rst:183
 msgid ""
 "If the variable is not defined, create it with the given default value. "
 "Return the variable."
 msgstr ""
 
-# 2285c559a3234f1fa946cbb4c0c41397
 #: ../../stpl.rst:186
 msgid ""
 "Here is an example that uses all three functions to implement optional "
 "template variables in different ways::"
 msgstr ""
 
-# 651cc34084614960a201eeb40239f183
 #: ../../stpl.rst:200
 msgid ":class:`SimpleTemplate` API"
 msgstr ""
 
-# 9b30ddc34ccc4129a1c16dcaedb69c3c
 #: ../../../bottle.pydocstring of bottle.SimpleTemplate.render:1
 msgid "Render the template using keyword arguments as local variables."
 msgstr ""

@@ -54,7 +54,3 @@ class TestSecureCookiesInBottle(unittest.TestCase):
         self.set_pairs([(k+'xxx', v) for (k, v) in pairs])
         result = bottle.request.get_cookie('key', secret=self.secret)
         self.assertEqual(None, result)
-
-
-if __name__ == '__main__': #pragma: no cover
-    unittest.main()
