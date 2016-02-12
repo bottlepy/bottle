@@ -2419,7 +2419,7 @@ class AppStack(list):
 
     def __call__(self):
         """ Return the current default application. """
-        return self[-1]
+        return self.default
 
     def push(self, value=None):
         """ Add a new :class:`Bottle` instance to the stack """
@@ -2427,6 +2427,13 @@ class AppStack(list):
             value = Bottle()
         self.append(value)
         return value
+    new_app = push
+    @property
+    def default(self):
+        try:
+            return self[-1]
+        except IndexError:
+            return self.push()
 
 
 class WSGIFileWrapper(object):
@@ -4078,10 +4085,10 @@ response = LocalResponse()
 #: A thread-safe namespace. Not used by Bottle.
 local = threading.local()
 
-# Initialize app stack (create first empty Bottle app)
+# Initialize app stack (create first empty Bottle app now deferred until needed)
 # BC: 0.6.4 and needed for run()
-app = default_app = AppStack()
-app.push()
+apps =app = default_app = AppStack()
+
 
 #: A virtual package that redirects import statements.
 #: Example: ``import bottle.ext.sqlite`` actually imports `bottle_sqlite`.
