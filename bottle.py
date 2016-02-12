@@ -4089,7 +4089,7 @@ local = threading.local()
 
 # Initialize app stack (create first empty Bottle app now deferred until needed)
 # BC: 0.6.4 and needed for run()
-apps =app = default_app = AppStack()
+apps = app = default_app = AppStack()
 
 
 #: A virtual package that redirects import statements.
