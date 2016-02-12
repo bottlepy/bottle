@@ -3960,6 +3960,8 @@ def template(*args, **kwargs):
     or directly (as keyword arguments).
     """
     tpl = args[0] if args else None
+    for dictarg in args[1:]:
+        kwargs.update(dictarg)
     adapter = kwargs.pop('template_adapter', SimpleTemplate)
     lookup = kwargs.pop('template_lookup', TEMPLATE_PATH)
     tplid = (id(lookup), tpl)
@@ -3974,8 +3976,6 @@ def template(*args, **kwargs):
             TEMPLATES[tplid] = adapter(name=tpl, lookup=lookup, **settings)
     if not TEMPLATES[tplid]:
         abort(500, 'Template (%s) not found' % tpl)
-    for dictarg in args[1:]:
-        kwargs.update(dictarg)
     return TEMPLATES[tplid].render(kwargs)
 
 
