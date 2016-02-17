@@ -3488,7 +3488,7 @@ def run(app=None,
 
 class FileCheckerThread(threading.Thread):
     """ Interrupt main-thread as soon as a changed module file is detected,
-        the lockfile gets deleted or gets to old. """
+        the lockfile gets deleted or gets too old. """
 
     def __init__(self, lockfile, interval):
         threading.Thread.__init__(self)
