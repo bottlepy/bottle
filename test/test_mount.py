@@ -24,7 +24,7 @@ class TestAppMounting(ServerTestBase):
         self.app.mount('/test/', self.subapp)
         @self.subapp.route('/unshift')
         def test():
-            for i in xrange(2):
+            for i in range(2):
                 yield '%s\n' % bottle.request.environ["SCRIPT_NAME"]
         self.assertBody('/test\n'*2, '/test/unshift')
         
