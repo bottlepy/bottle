@@ -3730,7 +3730,7 @@ class SimpleTemplate(BaseTemplate):
         env = _env.copy()
         env.update(kwargs)
         if _name not in self.cache:
-            self.cache[_name] = self.__class__(name=_name, lookup=self.lookup)
+            self.cache[_name] = self.__class__(name=_name, lookup=self.lookup, syntax=self.syntax)
         return self.cache[_name].execute(env['_stdout'], env)
 
     def execute(self, _stdout, kwargs):
