@@ -2671,7 +2671,7 @@ def static_file(filename, root,
             mime-type. (default: UTF-8)
     """
 
-    root = os.path.abspath(root) + os.sep
+    root = os.path.join(os.path.abspath(root), '')
     filename = os.path.abspath(os.path.join(root, filename.strip('/\\')))
     headers = dict()
 
