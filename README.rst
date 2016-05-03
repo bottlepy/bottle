@@ -7,15 +7,15 @@
     :target: https://travis-ci.org/bottlepy/bottle
     :alt: Bottle Build
 
-.. image:: https://pypip.in/download/bottle/badge.png
+.. image:: https://img.shields.io/pypi/dm/bottle.svg
     :target: https://pypi.python.org/pypi/bottle/
     :alt: Downloads
 
-.. image:: https://pypip.in/version/bottle/badge.png
+.. image:: https://img.shields.io/pypi/v/bottle.svg
     :target: https://pypi.python.org/pypi/bottle/
     :alt: Latest Version
 
-.. image:: https://pypip.in/license/bottle/badge.png
+.. image:: https://img.shields.io/pypi/l/bottle.svg
     :target: https://pypi.python.org/pypi/bottle/
     :alt: License
 
