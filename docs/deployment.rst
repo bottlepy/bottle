@@ -98,6 +98,7 @@ All you need is an ``app.wsgi`` file that provides an ``application`` object. Th
 
 File ``/var/www/yourapp/app.wsgi``::
 
+    import os
     # Change working directory so relative paths (and template lookup) work again
     os.chdir(os.path.dirname(__file__))
     
@@ -119,6 +120,21 @@ The Apache configuration may look like this::
             WSGIApplicationGroup %{GLOBAL}
             Order deny,allow
             Allow from all
+        </Directory>
+    </VirtualHost>
+
+With newer versions of Apache (2.4) use a configuration similar to this::
+
+    <VirtualHost *>
+        ServerName example.com
+        
+        WSGIDaemonProcess yourapp user=www-data group=www-data processes=1 threads=5
+        WSGIScriptAlias / /var/www/yourapp/app.wsgi
+        
+        <Directory /var/www/yourapp>
+            WSGIProcessGroup yourapp
+            WSGIApplicationGroup %{GLOBAL}
+            Require all granted
         </Directory>
     </VirtualHost>
 

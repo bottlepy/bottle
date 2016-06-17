@@ -7,32 +7,28 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-01-22 16:45-0200\n"
-"PO-Revision-Date: 2015-01-22 19:37+0000\n"
+"POT-Creation-Date: 2015-12-19 14:15+0100\n"
+"PO-Revision-Date: 2015-12-13 21:06+0000\n"
 "Last-Translator: Thiago Avelino <thiago@avelino.xxx>\n"
-"Language-Team: Chinese (China) (http://www.transifex.com/projects/p/bottle/language/zh_CN/)\n"
+"Language-Team: Chinese (China) (http://www.transifex.com/bottle/bottle/language/zh_CN/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: zh_CN\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-# 52e83ba5006348dba53082cf44d160ba
 #: ../../faq.rst:10
 msgid "Frequently Asked Questions"
 msgstr "常见问题"
 
-# 80a5a5a1091b4e2e80bb1d93320ccfb4
 #: ../../faq.rst:13
 msgid "About Bottle"
 msgstr "关于Bottle"
 
-# 85de266ae4bb4564a9c33f98d9f8244f
 #: ../../faq.rst:16
 msgid "Is bottle suitable for complex applications?"
 msgstr "Bottle适合用于复杂的应用吗？"
 
-# e0d0c22633a34c4eb6d7a57ea1dd1599
 #: ../../faq.rst:18
 msgid ""
 "Bottle is a *micro* framework designed for prototyping and building small "
@@ -44,17 +40,14 @@ msgid ""
 "framework like pylons_ or paste_ instead."
 msgstr "Bottle是一个 *迷你* 框架，被设计来提供原型开发和创建小的Web应用和服务。它能快速上手，并帮助你快速完成任务，但缺少一些高级功能和一些其他框架已提供的已知问题解决方法(例如:MVC， ORM，表单验证，手脚架，XML-RPC)。尽管 *可以* 添加这些功能，然后通过Bottle来开发复杂的应用，但我们还是建议你使用一些功能完备的Web框架，例如 pylons_ 或 paste_ 。"
 
-# ec3b8ccdedb64fc181132d3eec8c25f5
 #: ../../faq.rst:22
 msgid "Common Problems and Pitfalls"
 msgstr "常见的，意料之外的问题"
 
-# c9ea3f021fb64708a14092b0bb340ba5
 #: ../../faq.rst:29
 msgid "\"Template Not Found\" in mod_wsgi/mod_python"
 msgstr "在mod_wsgi/mod_python中的 \"Template Not Found\" 错误"
 
-# 7ae535c473864aeead086bfbd9c1610a
 #: ../../faq.rst:31
 msgid ""
 "Bottle searches in ``./`` and ``./views/`` for templates. In a mod_python_ "
@@ -63,17 +56,14 @@ msgid ""
 "path::"
 msgstr "Bottle会在 ``./`` 和 ``./views/`` 目录中搜索模板。在一个 mod_python_ 或 mod_wsgi_ 环境，当前工作目录( ``./`` )是由Apache的设置决定的。你应该在模板的搜索路径中添加一个绝对路径。"
 
-# c10be0d717be43f28fd03f218a7ec161
 #: ../../faq.rst:35
 msgid "so bottle searches the right paths."
 msgstr "这样，Bottle就能在正确的目录下搜索模板了"
 
-# 7049a06646bc43c6b19697fcaecbfde2
 #: ../../faq.rst:38
 msgid "Dynamic Routes and Slashes"
 msgstr "动态route和反斜杠"
 
-# ec1977a0fb194f37a84914ed0cbfa693
 #: ../../faq.rst:40
 msgid ""
 "In :ref:`dynamic route syntax <tutorial-dynamic-routes>`, a placeholder "
@@ -84,12 +74,10 @@ msgid ""
 "``/images/:filename`` won't."
 msgstr "在 :ref:`dynamic route syntax <tutorial-dynamic-routes>` 中， ``:name`` 匹配任何字符，直到出现一个反斜杠。工作方式相当与 ``[^/]+`` 这样一个正则表达式。为了将反斜杠包涵进来，你必须在 ``:name`` 中添加一个自定义的正则表达式。例如： ``/images/:filepath#.*#`` 会匹配 ``/images/icons/error.png`` ，但不匹配 ``/images/:filename`` 。"
 
-# c66abb0a46474797bda8875024694350
 #: ../../faq.rst:43
 msgid "Problems with reverse proxies"
 msgstr "反向代理的问题"
 
-# 30ed7c0f41cd409f8af531e174fa75fd
 #: ../../faq.rst:45
 msgid ""
 "Redirects and url-building only works if bottle knows the public address and"

@@ -86,7 +86,7 @@ Embedded python code follows regular python syntax, but with two additional synt
     % end
   </ul>
 
-Both the ``%`` and the ``<%`` tokens are only recognized if they are the first non-whitespace characters in a line. You don't have to escape them if they appear mid-text in your template markup. Only if a line of text starts with one of these tokens, you have to escape it with a backslash. In the rare case where the backslash + token combination appears in your markup at the beginning of a line, you can always help yourself with a string literal in an inline expression:: 
+Both the ``%`` and the ``<%`` tokens are only recognized if they are the first non-whitespace characters in a line. You don't have to escape them if they appear mid-text in your template markup. Only if a line of text starts with one of these tokens, you have to escape it with a backslash. In the rare case where the backslash + token combination appears in your markup at the beginning of a line, you can always help yourself with a string literal in an inline expression::
 
   This line contains % and <% but no python code.
   \% This text-line starts with the '%' token.
@@ -120,7 +120,7 @@ But embedding code still requires you to start a new line, which may not what yo
    %end
   </div>
 
-THis time the rendered template looks like this::
+This time the rendered template looks like this::
 
   <div><span>content</span></div>
 
@@ -142,7 +142,7 @@ Each template is preloaded with a bunch of functions that help with the most com
 
     % include('header.tpl', title='Page Title')
     Page Content
-    % include('foother.tpl')
+    % include('footer.tpl')
 
 .. function:: rebase(name, **variables)
 
@@ -201,4 +201,3 @@ variables in different ways::
 
 .. autoclass:: SimpleTemplate
    :members:
-

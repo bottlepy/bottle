@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import with_statement
-import unittest
 import bottle
-from tools import ServerTestBase
+from tools import ServerTestBase, chdir
 from bottle import tob
 
 class TestWsgi(ServerTestBase):
@@ -49,6 +48,16 @@ class TestWsgi(ServerTestBase):
                              bottle.default_app().routes[0])
             return 'foo'
         self.assertBody('foo', '/')
+
+    def get204(self):
+        """ 204 responses must not return some entity headers """
+        bad = ('content-length', 'content-type')
+        for h in bad:
+            bottle.response.set_header(h, 'foo')
+        bottle.status = 204
+        for h, v in bottle.response.headerlist:
+            self.assertFalse(h.lower() in bad, "Header %s not deleted" % h)
+
 
     def get304(self):
         """ 304 responses must not return entity headers """
@@ -250,10 +259,22 @@ class TestRouteDecorator(ServerTestBase):
         def hook():
             bottle.request.environ['hooktest'] = 'before'
         @bottle.hook('after_request')
-        def hook():
+        def hook(*args, **kwargs):
             bottle.response.headers['X-Hook'] = 'after'
         self.assertBody('before', '/test')
         self.assertHeader('X-Hook', 'after', '/test')
+
+    def test_environ_reflects_correct_response_after_request_in_hooks(self):
+        """ Issue #671  """
+
+        @bottle.hook('after_request')
+        def log_request_a():
+            self.assertStatus(400)
+            self.assertBody("test")
+
+        @bottle.get('/')
+        def _get():
+            bottle.abort(400, 'test')
 
     def test_template(self):
         @bottle.route(template='test {{a}} {{b}}')
@@ -285,13 +306,14 @@ class TestDecorators(ServerTestBase):
 
     def test_view(self):
         """ WSGI: Test view-decorator (should override autojson) """
-        @bottle.route('/tpl')
-        @bottle.view('stpl_t2main')
-        def test():
-            return dict(content='1234')
-        result = '+base+\n+main+\n!1234!\n+include+\n-main-\n+include+\n-base-\n'
-        self.assertHeader('Content-Type', 'text/html; charset=UTF-8', '/tpl')
-        self.assertBody(result, '/tpl')
+        with chdir(__file__):
+            @bottle.route('/tpl')
+            @bottle.view('stpl_t2main')
+            def test():
+                return dict(content='1234')
+            result = '+base+\n+main+\n!1234!\n+include+\n-main-\n+include+\n-base-\n'
+            self.assertHeader('Content-Type', 'text/html; charset=UTF-8', '/tpl')
+            self.assertBody(result, '/tpl')
 
     def test_view_error(self):
         """ WSGI: Test if view-decorator reacts on non-dict return values correctly."""
@@ -368,10 +390,3 @@ class TestAppShortcuts(ServerTestBase):
 
     def test_module_shortcuts_with_different_name(self):
         self.assertWraps(bottle.url, bottle.app().get_url)
-
-
-
-
-
-if __name__ == '__main__': #pragma: no cover
-    unittest.main()

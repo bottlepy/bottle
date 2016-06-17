@@ -5,7 +5,7 @@ import unittest
 import sys
 import bottle
 from bottle import request, tob, touni, tonat, json_dumps, _e, HTTPError, parse_date
-import tools
+from test import tools
 import wsgiref.util
 import base64
 
@@ -452,8 +452,12 @@ class TestRequest(unittest.TestCase):
             self.assertEqual(r.foo, 'somevalue')
             self.assertTrue('somevalue' in r.environ.values())
 
+            # Attributes are read-only once set.
+            self.assertRaises(AttributeError, setattr, r, 'foo', 'x')
+
             # Unknown attributes raise AttributeError.
             self.assertRaises(AttributeError, getattr, r, 'somevalue')
+
 
 
 
@@ -594,6 +598,14 @@ class TestResponse(unittest.TestCase):
         self.assertEqual(cookies[0], 'name1=value; Max-Age=5')
         self.assertEqual(cookies[1], 'name2="value 2"; Path=/foo')
 
+    def test_set_cookie_value_long_string(self):
+        r = BaseResponse()
+        self.assertRaises(ValueError, r.set_cookie, name='test', value='x' * 4097)
+
+    def test_set_cookie_name_long_string(self):
+        r = BaseResponse()
+        self.assertRaises(ValueError, r.set_cookie, name='x' * 4097, value='simple_value')
+
     def test_set_cookie_maxage(self):
         import datetime
         r = BaseResponse()
@@ -614,13 +626,33 @@ class TestResponse(unittest.TestCase):
         self.assertEqual(cookies[0], 'name1=value; expires=Thu, 01 Jan 1970 00:00:42 GMT')
         self.assertEqual(cookies[1], 'name2=value; expires=Thu, 01 Jan 1970 00:00:43 GMT')
 
+    def test_set_cookie_secure(self):
+        r = BaseResponse()
+        r.set_cookie('name1', 'value', secure=True)
+        r.set_cookie('name2', 'value', secure=False)
+        cookies = sorted([value for name, value in r.headerlist
+                   if name.title() == 'Set-Cookie'])
+        self.assertEqual(cookies[0].lower(), 'name1=value; secure')
+        self.assertEqual(cookies[1], 'name2=value')
+
+    def test_set_cookie_httponly(self):
+        if sys.version_info < (2,6,0):
+            return
+        r = BaseResponse()
+        r.set_cookie('name1', 'value', httponly=True)
+        r.set_cookie('name2', 'value', httponly=False)
+        cookies = sorted([value for name, value in r.headerlist
+                   if name.title() == 'Set-Cookie'])
+        self.assertEqual(cookies[0].lower(), 'name1=value; httponly')
+        self.assertEqual(cookies[1], 'name2=value')
+
     def test_delete_cookie(self):
         response = BaseResponse()
         response.set_cookie('name', 'value')
         response.delete_cookie('name')
         cookies = [value for name, value in response.headerlist
                    if name.title() == 'Set-Cookie']
-        self.assertTrue('name=;' in cookies[0])
+        self.assertTrue('Max-Age=-1' in cookies[0])
 
     def test_set_header(self):
         response = BaseResponse()
@@ -669,11 +701,11 @@ class TestResponse(unittest.TestCase):
         response = BaseResponse()
         now = datetime.datetime.now()
         response.expires = now
-        
+
         def seconds(a, b):
             td = max(a,b) - min(a,b)
             return td.days*360*24 + td.seconds
-        
+
         self.assertEqual(0, seconds(response.expires, now))
         now2 = datetime.datetime.utcfromtimestamp(
             parse_date(response.headers['Expires']))
@@ -818,8 +850,3 @@ class TestWSGIHeaderDict(unittest.TestCase):
             self.assertTrue(key in self.headers)
             self.assertEqual(self.headers.get(key), 'test')
             self.assertEqual(self.headers.get(key, 5), 'test')
-
-
-
-if __name__ == '__main__': #pragma: no cover
-    unittest.main()

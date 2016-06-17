@@ -44,7 +44,7 @@ This will get you the latest development snapshot that includes all the new feat
     $ sudo easy_install bottle             # alternative without pip
     $ sudo apt-get install python-bottle   # works for debian, ubuntu, ...
 
-Either way, you'll need Python 2.5 or newer (including 3.x) to run bottle applications. If you do not have permissions to install packages system-wide or simply don't want to, create a `virtualenv <http://pypi.python.org/pypi/virtualenv>`_ first:
+Either way, you'll need Python 2.6 or newer (including 3.2+) to run bottle applications. If you do not have permissions to install packages system-wide or simply don't want to, create a `virtualenv <http://pypi.python.org/pypi/virtualenv>`_ first:
 
 .. code-block:: bash
 
@@ -147,9 +147,7 @@ Each wildcard passes the covered part of the URL as a keyword argument to the re
     def user_api(action, user):
         ...
 
-.. versionadded:: 0.10
-
-Filters are used to define more specific wildcards, and/or transform the covered part of the URL before it is passed to the callback. A filtered wildcard is declared as ``<name:filter>`` or ``<name:filter:config>``. The syntax for the optional config part depends on the filter used.
+Filters can be used to define more specific wildcards, and/or transform the covered part of the URL before it is passed to the callback. A filtered wildcard is declared as ``<name:filter>`` or ``<name:filter:config>``. The syntax for the optional config part depends on the filter used.
 
 The following filters are implemented by default and more may be added:
 
@@ -173,21 +171,6 @@ Let's have a look at some practical examples::
         return static_file(path, ...)
 
 You can add your own filters as well. See :doc:`routing` for details.
-
-.. versionchanged:: 0.10
-
-The new rule syntax was introduced in **Bottle 0.10** to simplify some common use cases, but the old syntax still works and you can find a lot of code examples still using it. The differences are best described by example:
-
-=================== ====================
-Old Syntax          New Syntax
-=================== ====================
-``:name``           ``<name>``
-``:name#regexp#``   ``<name:re:regexp>``
-``:#regexp#``       ``<:re:regexp>``
-``:##``             ``<:re>``
-=================== ====================
-
-Try to avoid the old syntax in future projects if you can. It is not currently deprecated, but will be eventually.
 
 
 HTTP Request Methods
@@ -489,7 +472,7 @@ Request Data
 Cookies, HTTP header, HTML ``<form>`` fields and other request data is available through the global :data:`request` object. This special object always refers to the *current* request, even in multi-threaded environments where multiple client connections are handled at the same time::
 
   from bottle import request, route, template
-  
+
   @route('/hello')
   def hello():
       name = request.cookies.username or 'Guest'
@@ -507,9 +490,9 @@ Bottle uses a special type of dictionary to store form data and cookies. :class:
 **Attribute access**: All values in the dictionary are also accessible as attributes. These virtual attributes return unicode strings, even if the value is missing or unicode decoding fails. In that case, the string is empty, but still present::
 
   name = request.cookies.name
-  
+
   # is a shortcut for:
-  
+
   name = request.cookies.getunicode('name') # encoding='utf-8' (default)
 
   # which basically does this:
@@ -672,7 +655,7 @@ Bottle stores file uploads in :attr:`BaseRequest.files` as :class:`FileUpload` i
 
 :attr:`FileUpload.filename` contains the name of the file on the clients file system, but is cleaned up and normalized to prevent bugs caused by unsupported characters or path segments in the filename. If you need the unmodified name as sent by the client, have a look at :attr:`FileUpload.raw_filename`.
 
-The :attr:`FileUpload.save` method is highly recommended if you want to store the file to disk. It prevents some common errors (e.g. it does not overwrite existing files unless you tell it to) and stores the file in a memory efficient way. You can access the file object directly via :attr:`FileUpload.file`. Just be careful. 
+The :attr:`FileUpload.save` method is highly recommended if you want to store the file to disk. It prevents some common errors (e.g. it does not overwrite existing files unless you tell it to) and stores the file in a memory efficient way. You can access the file object directly via :attr:`FileUpload.file`. Just be careful.
 
 
 JSON Content
@@ -684,7 +667,7 @@ Some JavaScript or REST clients send ``application/json`` content to the server.
 The raw request body
 --------------------
 
-You can access the raw body data as a file-like object via :attr:`BaseRequest.body`. This is a :class:`BytesIO` buffer or a temporary file depending on the content length and :attr:`BaseRequest.MEMFILE_MAX` setting. In both cases the body is completely buffered before you can access the attribute. If you expect huge amounts of data and want to get direct unbuffered access to the stream, have a look at ``request['wsgi.input']``. 
+You can access the raw body data as a file-like object via :attr:`BaseRequest.body`. This is a :class:`BytesIO` buffer or a temporary file depending on the content length and :attr:`BaseRequest.MEMFILE_MAX` setting. In both cases the body is completely buffered before you can access the attribute. If you expect huge amounts of data and want to get direct unbuffered access to the stream, have a look at ``request['wsgi.input']``.
 
 
 
@@ -1015,8 +998,12 @@ Starting with version 0.10 you can use bottle as a command-line tool:
                             use SERVER as backend.
       -p PLUGIN, --plugin=PLUGIN
                             install additional plugin/s.
+      -c FILE, --conf=FILE  load config values from FILE.
+      -C NAME=VALUE, --param=NAME=VALUE
+                            override config values.
       --debug               start server in debug mode.
       --reload              auto-reload on file changes.
+
 
 The `ADDRESS` field takes an IP address or an IP:PORT pair and defaults to ``localhost:8080``. The other parameters should be self-explanatory.
 

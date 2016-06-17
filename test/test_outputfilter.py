@@ -35,6 +35,7 @@ class TestOutputFilter(ServerTestBase):
         self.assertInBody('Unhandled exception')
 
     def test_error(self):
+        bottle.debug(True)
         self.app.route('/')(lambda: 1/0)
         self.assertStatus(500)
         self.assertInBody('ZeroDivisionError')
@@ -193,6 +194,3 @@ class TestOutputFilter(ServerTestBase):
             c = [x.strip() for x in c]
         self.assertTrue('b=b' in c)
         self.assertTrue('c=c; Path=/' in c)
-
-if __name__ == '__main__': #pragma: no cover
-    unittest.main()

@@ -1,6 +1,3 @@
-# Needed for 2.5
-simplejson
-
 # Template Engines
 mako
 jinja2

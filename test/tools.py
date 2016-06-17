@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+from __future__ import with_statement
+import os
+
 import bottle
 import sys
 import unittest
@@ -11,12 +14,52 @@ import uuid
 
 from bottle import tob, tonat, BytesIO, py3k, unicode
 
+
 def warn(msg):
     sys.stderr.write('WARNING: %s\n' % msg.strip())
+
 
 def tobs(data):
     ''' Transforms bytes or unicode into a byte stream. '''
     return BytesIO(tob(data))
+
+
+class chdir(object):
+    def __init__(self, dir):
+        if os.path.isfile(dir):
+            dir = os.path.dirname(dir)
+        self.wd = os.path.abspath(dir)
+        self.old = os.path.abspath('.')
+
+    def __enter__(self):
+        os.chdir(self.wd)
+
+    def __exit__(self, exc_type, exc_val, tb):
+        os.chdir(self.old)
+
+class assertWarn(object):
+    def __init__(self, text):
+        self.searchtext = text
+
+    def __call__(self, func):
+        def wrapper(*a, **ka):
+            with self:
+                return func(*a, **ka)
+        return wrapper
+
+    def __enter__(self):
+        self.orig = bottle.depr
+        bottle.depr = self.dept
+        self.warnings = []
+
+    def depr(self, msg, strict=False):
+        assert self.searchtext in msg, "Could not find phrase %r in warning message %r" % (self.searchtext, msg)
+        self.warnings.append(msg)
+
+    def __exit__(self, exc_type, exc_val, tb):
+        bottle.depr = self.orig
+        assert self.warnings, "Expected warning with message %r bot no warning was triggered" % self.searchtext
+
 
 def api(introduced, deprecated=None, removed=None):
     current    = tuple(map(int, bottle.__version__.split('-')[0].split('.')))
@@ -32,7 +75,7 @@ def api(introduced, deprecated=None, removed=None):
             return func
         elif current < removed:
             func.__doc__ = '(deprecated) ' + (func.__doc__ or '')
-            return func
+            return assertWarn('deprecationWarning')(func)
         else:
             return None
     return decorator

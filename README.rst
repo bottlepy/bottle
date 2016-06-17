@@ -1,4 +1,5 @@
 .. image:: http://bottlepy.org/docs/dev/_static/logo_nav.png
+  :target: http://bottlepy.org/
   :alt: Bottle Logo
   :align: right
 
@@ -6,15 +7,15 @@
     :target: https://travis-ci.org/bottlepy/bottle
     :alt: Bottle Build
 
-.. image:: https://pypip.in/download/bottle/badge.png
+.. image:: https://img.shields.io/pypi/dm/bottle.svg
     :target: https://pypi.python.org/pypi/bottle/
     :alt: Downloads
 
-.. image:: https://pypip.in/version/bottle/badge.png
+.. image:: https://img.shields.io/pypi/v/bottle.svg
     :target: https://pypi.python.org/pypi/bottle/
     :alt: Latest Version
 
-.. image:: https://pypip.in/license/bottle/badge.png
+.. image:: https://img.shields.io/pypi/l/bottle.svg
     :target: https://pypi.python.org/pypi/bottle/
     :alt: License
 
@@ -64,7 +65,7 @@ Download and Install
 
 .. __: https://github.com/bottlepy/bottle/raw/master/bottle.py
 
-Install the latest stable release with ``pip install bottle``, ``easy_install -U bottle`` or download `bottle.py`__ (unstable) into your project directory. There are no hard dependencies other than the Python standard library. Bottle runs with **Python 2.5+ and 3.x**.
+Install the latest stable release with ``pip install bottle``, ``easy_install -U bottle`` or download `bottle.py`__ (unstable) into your project directory. There are no hard dependencies other than the Python standard library. Bottle runs with **Python 2.6+ and 3.2+**.
 
 
 License

@@ -1,3 +1,4 @@
+import sys
 import unittest
 from bottle import ConfigDict
 
@@ -58,7 +59,72 @@ class TestConfDict(unittest.TestCase):
         self.assertEqual(c['a.b.foo'], 5)
         self.assertEqual(c['a.b.bar'], 6)
         self.assertEqual(c['a.baz'], 7)
-   
-if __name__ == '__main__': #pragma: no cover
-    unittest.main()
+        # unicode keys (see issue #720)
+        try:
+            key = unichr(12354)
+        except NameError:
+            key = chr(12354)
+        c = ConfigDict()
+        c.load_dict({key: 'value'})
+        self.assertEqual('value', c[key])
+        c = ConfigDict()
+        c.load_dict({key: {'subkey': 'value'}})
+        self.assertEqual('value', c[key + '.subkey'])
 
+    def test_load_module(self):
+        c = ConfigDict()
+        c.load_module('example_settings', True)
+        self.assertEqual(c['A.B.C'], 3)
+
+        c = ConfigDict()
+        c.load_module('example_settings', False)
+        self.assertEqual(c['A']['B']['C'], 3)
+
+    def test_fallback(self):
+        fallback = ConfigDict()
+        fallback['key'] = 'fallback'
+        primary = ConfigDict()
+        primary._set_fallback(fallback)
+
+        # Check copy of existing values from fallback to primary
+        self.assertEqual(primary['key'], 'fallback')
+
+        # Check value change in fallback
+        fallback['key'] = 'fallback2'
+        self.assertEqual(fallback['key'], 'fallback2')
+        self.assertEqual(primary['key'], 'fallback2')
+
+        # Check value change in primary
+        primary['key'] = 'primary'
+        self.assertEqual(fallback['key'], 'fallback2')
+        self.assertEqual(primary['key'], 'primary')
+
+        # Check delete of mirrored value in primary
+        del primary['key']
+        self.assertEqual(fallback['key'], 'fallback2')
+        self.assertEqual(primary['key'], 'fallback2')
+
+        # Check delete on mirrored key in fallback
+        del fallback['key']
+        self.assertTrue('key' not in primary)
+        self.assertTrue('key' not in fallback)
+
+        # Check new key in fallback
+        fallback['key2'] = 'fallback'
+        self.assertEqual(fallback['key2'], 'fallback')
+        self.assertEqual(primary['key2'], 'fallback')
+
+        # Check new key in primary
+        primary['key3'] = 'primary'
+        self.assertEqual(primary['key3'], 'primary')
+        self.assertTrue('key3' not in fallback)
+
+        # Check delete of primary-only key
+        del primary['key3']
+        self.assertTrue('key3' not in primary)
+        self.assertTrue('key3' not in fallback)
+
+        # Check delete of fallback value
+        del fallback['key2']
+        self.assertTrue('key2' not in primary)
+        self.assertTrue('key2' not in fallback)

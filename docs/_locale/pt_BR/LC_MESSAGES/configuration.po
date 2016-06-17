@@ -7,29 +7,26 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-01-22 16:45-0200\n"
-"PO-Revision-Date: 2015-01-22 19:18+0000\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: Portuguese (Brazil) (http://www.transifex.com/projects/p/bottle/language/pt_BR/)\n"
+"POT-Creation-Date: 2015-12-19 14:15+0100\n"
+"PO-Revision-Date: 2015-12-13 20:58+0000\n"
+"Last-Translator: defnull <marc@gsites.de>\n"
+"Language-Team: Portuguese (Brazil) (http://www.transifex.com/bottle/bottle/language/pt_BR/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: pt_BR\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-# 41dd5a760ca64fd1b2a969eb2e9735d7
 #: ../../configuration.rst:3
 msgid "Configuration (DRAFT)"
 msgstr ""
 
-# 9f5442bfb4ba4ef7a3491f5ee2f83c1d
 #: ../../configuration.rst:8
 msgid ""
 "This is a draft for a new API. `Tell us <mailto:bottlepy@googlegroups.com>`_"
 " what you think."
 msgstr ""
 
-# df022256d2554261a177c1941072519b
 #: ../../configuration.rst:10
 msgid ""
 "Bottle applications can store their configuration in :attr:`Bottle.config`, "
@@ -38,12 +35,10 @@ msgid ""
 "what to do, and can be used to store your own configuration as well."
 msgstr ""
 
-# 7de19ce5de5146328e6daa85560853b1
 #: ../../configuration.rst:13
 msgid "Configuration Basics"
 msgstr ""
 
-# c2d1d9ca89e946bfb57ca6a751966a23
 #: ../../configuration.rst:15
 msgid ""
 "The :attr:`Bottle.config` object behaves a lot like an ordinary dictionary. "
@@ -51,7 +46,6 @@ msgid ""
 "examples::"
 msgstr ""
 
-# 921ae4e0b55d469e96ae218b5dad242b
 #: ../../configuration.rst:44
 msgid ""
 "The app object is not always available, but as long as you are within a "
@@ -59,33 +53,28 @@ msgid ""
 "application and its configuration::"
 msgstr ""
 
-# 3ae97017b4144341ab54e5276441d8c2
 #: ../../configuration.rst:51
 msgid "Naming Convention"
 msgstr ""
 
-# 2c092c7037fe46579c071acf148c939e
 #: ../../configuration.rst:53
 msgid ""
 "To make life easier, plugins and applications should follow some simple "
 "rules when it comes to config parameter names:"
 msgstr ""
 
-# fc3fbb508cd24642b2b5462206c54acb
 #: ../../configuration.rst:55
 msgid ""
 "All keys should be lowercase strings and follow the rules for python "
 "identifiers (no special characters but the underscore)."
 msgstr ""
 
-# 24f2e66b3ae34af9b25114c9fb3e3625
 #: ../../configuration.rst:56
 msgid ""
 "Namespaces are separated by dots (e.g. ``namespace.field`` or "
 "``namespace.subnamespace.field``)."
 msgstr ""
 
-# 237bffb361414e67988117fb945c93b4
 #: ../../configuration.rst:57
 msgid ""
 "Bottle uses the root namespace for its own configuration. Plugins should "
@@ -93,18 +82,15 @@ msgid ""
 "``werkzeug.use_debugger``)."
 msgstr ""
 
-# cd76f935f79c4e269b988be703f5d741
 #: ../../configuration.rst:58
 msgid ""
 "Your own application should use a separate namespace (e.g. ``myapp.*``)."
 msgstr ""
 
-# e51f19210f1048818c4d6d5a3171bb7e
 #: ../../configuration.rst:62
 msgid "Loading Configuration from a File"
 msgstr ""
 
-# b7c704ced8de4b80a781e5e8e0861bd6
 #: ../../configuration.rst:66
 msgid ""
 "Configuration files are useful if you want to enable non-programmers to "
@@ -113,7 +99,6 @@ msgid ""
 "files is shown here:"
 msgstr ""
 
-# 641c33bddb35403ab0fe8a6d00339ebb
 #: ../../configuration.rst:78
 msgid ""
 "With :meth:`ConfigDict.load_config` you can load these ``*.ini`` style "
@@ -121,12 +106,10 @@ msgid ""
 "configuration::"
 msgstr ""
 
-# bde80d0bfa9f43f78f2d64f90c45b72f
 #: ../../configuration.rst:84
 msgid "Loading Configuration from a nested :class:`dict`"
 msgstr ""
 
-# 7319a191901b435b990ee7499608e960
 #: ../../configuration.rst:88
 msgid ""
 "Another useful method is :meth:`ConfigDict.load_dict`. This method takes an "
@@ -134,12 +117,10 @@ msgid ""
 "keys and values with namespaced keys::"
 msgstr ""
 
-# c5045a1a02544a56aef81d15d98e99e5
 #: ../../configuration.rst:109
 msgid "Listening to configuration changes"
 msgstr ""
 
-# 723b9a5b13bf486b8f1843ab05bc400b
 #: ../../configuration.rst:113
 msgid ""
 "The ``config`` hook on the application object is triggered each time a value"
@@ -152,43 +133,36 @@ msgid ""
 "preserved."
 msgstr ""
 
-# c7f9316bc6a045bf8e9215a0597b7b38
 #: ../../configuration.rst:122
 msgid ""
 "The hook callbacks cannot *change* the value that is to be stored to the "
 "dictionary. That is what filters are for."
 msgstr ""
 
-# 27c52380f44c4bfba0c8ca35c74e75d2
 #: ../../configuration.rst:128
 msgid "Filters and other Meta Data"
 msgstr ""
 
-# cb1c23553991419ab8bb660009f67990
 #: ../../configuration.rst:132
 msgid ""
 ":class:`ConfigDict` allows you to store meta data along with configuration "
 "keys. Two meta fields are currently defined:"
 msgstr ""
 
-# 7b73714a96e8483ebfa5f1384e311b29
 #: ../../configuration.rst:136
 msgid "help"
 msgstr ""
 
-# 19be8769e56849788d8b8fd13e5f1ccc
 #: ../../configuration.rst:135
 msgid ""
 "A help or description string. May be used by debugging, introspection or "
 "admin tools to help the site maintainer configuring their application."
 msgstr ""
 
-# 1a17a0ed92f34a5d941d20205ef53ba3
 #: ../../configuration.rst:139
 msgid "filter"
 msgstr ""
 
-# a2873afa468d45fd8dbae4b0ba6b8e71
 #: ../../configuration.rst:139
 msgid ""
 "A callable that accepts and returns a single value. If a filter is defined "
@@ -197,7 +171,6 @@ msgid ""
 "type, check for invalid values (throw a ValueError) or trigger side effects."
 msgstr ""
 
-# c394622ffc8f46e7a9d3538ea73155fe
 #: ../../configuration.rst:141
 msgid ""
 "This feature is most useful for plugins. They can validate their config "
@@ -205,24 +178,36 @@ msgid ""
 "configuration via ``help`` fields::"
 msgstr ""
 
-# 11079f458d1e430695566c654c93dbc9
 #: ../../configuration.rst:163
 msgid "API Documentation"
 msgstr ""
 
-# 64e730addd274fcbb8a9b72c0aa47918
 #: ../../../bottle.pydocstring of bottle.ConfigDict:1
 msgid ""
 "A dict-like configuration storage with additional support for namespaces, "
 "validators, meta-data, on_change listeners and more."
 msgstr ""
 
-# c0fd04ccbf6a4891bbae4f4c06409ef0
+#: ../../../bottle.pydocstring of bottle.ConfigDict.load_module:1
+msgid ""
+"Load values from a Python module. :param squash: Squash nested dicts into "
+"namespaces by using"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.ConfigDict.load_module:3
+msgid "load_dict(), otherwise use update()"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.ConfigDict.load_module:4
+msgid ""
+"Example: load_config('my.app.settings', True) Example: "
+"load_config('my.app.settings', False)"
+msgstr ""
+
 #: ../../../bottle.pydocstring of bottle.ConfigDict.load_config:1
 msgid "Load values from an ``*.ini`` style config file."
 msgstr ""
 
-# c650309c63f04a23b00cbfe9235f4a99
 #: ../../../bottle.pydocstring of bottle.ConfigDict.load_config:3
 msgid ""
 "If the config file contains sections, their names are used as namespaces for"
@@ -230,14 +215,12 @@ msgid ""
 "refer to the root namespace (no prefix)."
 msgstr ""
 
-# eb236c7b588248229206d0e945150a6e
 #: ../../../bottle.pydocstring of bottle.ConfigDict.load_dict:1
 msgid ""
 "Load values from a dictionary structure. Nesting can be used to represent "
 "namespaces."
 msgstr ""
 
-# 08a5e29d7c3d4a4fa604dd7963b5c848
 #: ../../../bottle.pydocstring of bottle.ConfigDict.update:1
 msgid ""
 "If the first parameter is a string, all keys are prefixed with this "
@@ -245,19 +228,14 @@ msgid ""
 "Example: ``update('some.namespace', key='value')``"
 msgstr ""
 
-# a9fbbf7583bd47a780c12874017194b8
 #: ../../../bottle.pydocstring of bottle.ConfigDict.meta_get:1
 msgid "Return the value of a meta field for a key."
 msgstr ""
 
-# 5d9c253ad9254a7fb6e7e2fde5c96511
 #: ../../../bottle.pydocstring of bottle.ConfigDict.meta_set:1
-msgid ""
-"Set the meta field for a key to a new value. This triggers the on-change "
-"handler for existing keys."
+msgid "Set the meta field for a key to a new value."
 msgstr ""
 
-# 6ff07db9d5a04ad1b67e891192c722e6
 #: ../../../bottle.pydocstring of bottle.ConfigDict.meta_list:1
 msgid "Return an iterable of meta field names defined for a key."
 msgstr ""

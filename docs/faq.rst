@@ -49,7 +49,7 @@ Redirects and url-building only works if bottle knows the public address and loc
       environ['wsgi.url_scheme'] = 'https'
       environ['HTTP_X_FORWARDED_HOST'] = 'example.com'
       return app(environ, start_response)
-    return https_app
+    return fixed_app
 
   app = bottle.default_app()    
   app.wsgi = fix_environ_middleware(app.wsgi)

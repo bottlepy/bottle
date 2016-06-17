@@ -74,7 +74,3 @@ class TestResourceManager(unittest.TestCase):
         rm.add_path(__file__)
         fp = rm.open(__file__)
         self.assertEqual(fp.read(), open(__file__).read())
-
-
-if __name__ == '__main__': #pragma: no cover
-    unittest.main()
