@@ -3189,7 +3189,8 @@ class GeventServer(ServerAdapter):
             msg = "Bottle requires gevent.monkey.patch_all() (before import)"
             raise RuntimeError(msg)
         if not self.options.pop('fast', None): wsgi = pywsgi
-        self.options['log'] = None if self.quiet else 'default'
+        if self.quiet:
+            self.options['log'] = None
         address = (self.host, self.port)
         server = wsgi.WSGIServer(address, handler, **self.options)
         if 'BOTTLE_CHILD' in os.environ:
