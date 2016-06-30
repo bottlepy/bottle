@@ -86,6 +86,9 @@ Lets forget about the low-level details for a while and speak about WebSockets. 
 Thankfully the `gevent-websocket <http://pypi.python.org/pypi/gevent-websocket/>`_ package does all the hard work for us. Here is a simple WebSocket endpoint that receives messages and just sends them back to the client::
 
     from bottle import request, Bottle, abort
+    from gevent import monkey
+    
+    monkey.patch_all()  # without this line the server responds to requests synchronously
     app = Bottle()
 
     @app.route('/websocket')
