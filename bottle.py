@@ -891,6 +891,13 @@ class Bottle(object):
         scriptname = request.environ.get('SCRIPT_NAME', '').strip('/') + '/'
         location = self.router.build(routename, **kargs).lstrip('/')
         return urljoin(urljoin('/', scriptname), location)
+    
+    def url_for(self, routename, **kwargs):
+        """ Return url for func name """
+        for route in self.routes:
+            if route.callback.__name__ == routename:
+                return self.get_url(route.rule, **kwargs)
+        return ""
 
     def add_route(self, route):
         """ Add a route object, but do not change the :data:`Route.app`
