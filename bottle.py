@@ -3301,6 +3301,13 @@ class AiohttpServer(ServerAdapter):
         except KeyboardInterrupt:
             self.loop.stop()
 
+class UvWSGIServer(ServerAdapter):
+    """Fast libuv based server"""
+    def run(self,handler):
+        from uvwsgi import run
+        run(handler, (self.host, self.port))
+
+
 
 class AutoServer(ServerAdapter):
     """ Untested. """
@@ -3335,6 +3342,7 @@ server_names = {
     'rocket': RocketServer,
     'bjoern': BjoernServer,
     'aiohttp': AiohttpServer,
+    'uvwsgi': UvWSGIServer,
     'auto': AutoServer,
 }
 
