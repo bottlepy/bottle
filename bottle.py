@@ -987,7 +987,7 @@ class Bottle(object):
             environ['PATH_INFO'] = path.encode('latin1').decode('utf8', 'ignore')
 
         def _inner_handle():
-            # Maybe pass variables as locals for better performance? 
+            # Maybe pass variables as locals for better performance?
             try:
                 route, args = self.router.match(environ)
                 environ['route.handle'] = route
@@ -1069,8 +1069,8 @@ class Bottle(object):
         try:
             iout = iter(out)
             first = next(iout)
-            while not first:
-                first = next(iout)
+            #while not first:  # this interferes with async driven endpoints
+                #first = next(iout)
         except StopIteration:
             return self._cast('')
         except HTTPResponse:
