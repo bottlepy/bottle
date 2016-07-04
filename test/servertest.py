@@ -11,6 +11,7 @@ sys.path.insert(0, test_root)
 try:
     server = sys.argv[1]
     port   = int(sys.argv[2])
+    kwargs = dict((arg.split('=') for arg in sys.argv[3:]))
 
     if server == 'gevent':
         from gevent import monkey
@@ -27,7 +28,7 @@ try:
 
     from bottle import route, run
     route('/test', callback=lambda: 'OK')
-    run(port=port, server=server, quiet=True)
+    run(port=port, server=server, quiet=True, **kwargs)
 
 except socket.error:
     sys.exit(3)

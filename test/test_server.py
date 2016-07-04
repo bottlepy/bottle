@@ -6,6 +6,7 @@ import sys
 import os
 import signal
 import socket
+import ssl
 from subprocess import Popen, PIPE
 import tools
 from bottle import _e
@@ -15,7 +16,11 @@ try:
 except:
     from urllib2 import urlopen
 
-serverscript = os.path.join(os.path.dirname(__file__), 'servertest.py')
+THIS_DIR = os.path.abspath(os.path.expanduser(os.path.dirname(__file__)))
+KEY_FILE = os.path.join(THIS_DIR, 'fixtures', 'test.key')
+CERT_FILE = os.path.join(THIS_DIR, 'fixtures', 'test.crt')
+
+serverscript = os.path.join(THIS_DIR, 'servertest.py')
 
 def ping(server, port):
     ''' Check if a server accepts connections on a specific TCP port '''
@@ -28,10 +33,26 @@ def ping(server, port):
     finally:
         s.close()
 
+def ping_ssl(server, port):
+    ''' Check if a server accepts SSL connections on a specific TCP port '''
+    s = ssl.wrap_socket(socket.socket(socket.AF_INET, socket.SOCK_STREAM),
+                        cert_reqs=ssl.CERT_REQUIRED, ca_certs=CERT_FILE)
+    try:
+        s.connect((server, port))
+        cert = s.getpeercert(True)
+        if not cert:
+            return False
+        return True
+    except socket.error:
+        return False
+    finally:
+        s.close()
 
 class TestServer(unittest.TestCase):
     server = 'wsgiref'
     skip   = False
+    ssl    = False
+    args   = []
 
     def setUp(self):
         if self.skip: return
@@ -41,12 +62,16 @@ class TestServer(unittest.TestCase):
             # Start servertest.py in a subprocess
             cmd = [sys.executable, serverscript, self.server, str(port)]
             cmd += sys.argv[1:] # pass cmdline arguments to subprocesses
+            cmd += self.args
             self.p = Popen(cmd, stdout=PIPE, stderr=PIPE)
             # Wait for the socket to accept connections
             for i in range(100):
                 time.sleep(0.1)
                 # Accepts connections?
-                if ping('127.0.0.1', port): return
+                if self.ssl:
+                    if ping_ssl('127.0.0.1', port): return
+                else:
+                    if ping('127.0.0.1', port): return
                 # Server died for some reason...
                 if not self.p.poll() is None: break
             rv = self.p.poll()
@@ -79,8 +104,12 @@ class TestServer(unittest.TestCase):
                     raise AssertionError(line.strip().decode('utf8'))
 
     def fetch(self, url):
+        if self.ssl:
+            base = 'https://127.0.0.1:%d/%s'
+        else:
+            base = 'http://127.0.0.1:%d/%s'
         try:
-            return urlopen('http://127.0.0.1:%d/%s' % (self.port, url)).read()
+            return urlopen(base % (self.port, url)).read()
         except Exception:
             return repr(_e())
 
@@ -114,6 +143,11 @@ class TestGeventServer(TestServer):
 
 class TestEventletServer(TestServer):
     server = 'eventlet'
+
+class TestEventletServerSSL(TestServer):
+    server = 'eventlet'
+    ssl    = True
+    args   = ['keyfile=%s' % KEY_FILE, 'certfile=%s' % CERT_FILE]
 
 class TestRocketServer(TestServer):
     server = 'rocket'

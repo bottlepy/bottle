@@ -3233,26 +3233,69 @@ class EventletServer(ServerAdapter):
           value is system-dependent.
         * `family`: (default is 2) socket family, optional. See socket
           documentation for available families.
+        * `**kwargs`: directly map to python's ssl.wrap_socket arguments from
+          https://docs.python.org/2/library/ssl.html#ssl.wrap_socket and
+          wsgi.server arguments from
+          http://eventlet.net/doc/modules/wsgi.html#wsgi-wsgi-server
+
+        To create a self-signed key and start the eventlet server using SSL::
+
+          openssl genrsa -des3 -out server.orig.key 2048
+          openssl rsa -in server.orig.key -out test.key
+          openssl req -new -key test.key -out server.csr
+          openssl x509 -req -days 365 -in server.csr -signkey test.key -out test.crt
+
+          bottle.run(server='eventlet', keyfile='test.key', certfile='test.crt')
     """
 
     def run(self, handler):
-        from eventlet import wsgi, listen, patcher
+        from eventlet import wsgi, listen, patcher, wrap_ssl
         if not patcher.is_monkey_patched(os):
             msg = "Bottle requires eventlet.monkey_patch() (before import)"
             raise RuntimeError(msg)
+        # Separate out socket.listen arguments
         socket_args = {}
         for arg in ('backlog', 'family'):
             try:
                 socket_args[arg] = self.options.pop(arg)
             except KeyError:
                 pass
+        # Separate out wrap_ssl arguments
+        ssl_args = {}
+        for arg in ('keyfile', 'certfile', 'server_side', 'cert_reqs',
+                    'ssl_version', 'ca_certs', 'do_handshake_on_connect',
+                    'suppress_ragged_eofs', 'ciphers'):
+            try:
+                ssl_args[arg] = self.options.pop(arg)
+            except KeyError:
+                pass
+        # Separate out wsgi.server arguments
+        wsgi_args = {}
+        for arg in ('log', 'environ', 'max_size', 'max_http_version',
+                    'protocol', 'server_event', 'minimum_chunk_size',
+                    'log_x_forwarded_for', 'custom_pool', 'keepalive',
+                    'log_output', 'log_format', 'url_length_limit', 'debug',
+                    'socket_timeout', 'capitalize_response_headers'):
+            try:
+                wsgi_args[arg] = self.options.pop(arg)
+            except KeyError:
+                pass
+        if 'log_output' not in wsgi_args:
+            wsgi_args['log_output'] = not self.quiet
         address = (self.host, self.port)
         try:
-            wsgi.server(listen(address, **socket_args), handler,
-                        log_output=(not self.quiet))
+            if ssl_args:
+                sock = wrap_ssl(listen(address, **socket_args), **ssl_args)
+            else:
+                sock = listen(address, **socket_args)
+            wsgi.server(sock, handler, **wsgi_args)
         except TypeError:
             # Fallback, if we have old version of eventlet
-            wsgi.server(listen(address), handler)
+            if ssl_args:
+                sock = wrap_ssl(listen(address), **ssl_args)
+            else:
+                sock = listen(address)
+            wsgi.server(sock, handler, **wsgi_args)
 
 
 class RocketServer(ServerAdapter):
