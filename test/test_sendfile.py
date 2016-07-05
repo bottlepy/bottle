@@ -1,5 +1,6 @@
 import unittest
 from bottle import static_file, request, response, parse_date, parse_range_header, Bottle, tob
+import bottle
 import wsgiref.util
 import os
 import tempfile
@@ -7,6 +8,9 @@ import time
 
 basename = os.path.basename(__file__)
 root = os.path.dirname(__file__)
+
+basename2 = os.path.basename(bottle.__file__)
+root2 = os.path.dirname(bottle.__file__)
 
 
 class TestDateParser(unittest.TestCase):
@@ -79,6 +83,26 @@ class TestSendFile(unittest.TestCase):
         self.assertAlmostEqual(int(time.time()), parse_date(res.headers['Date']))
         request.environ['HTTP_IF_MODIFIED_SINCE'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(100))
         self.assertEqual(open(__file__,'rb').read(), static_file(basename, root=root).body.read())
+
+    def test_etag(self):
+        """ SendFile: If-Modified-Since"""
+        res = static_file(basename, root=root)
+        self.assertTrue('ETag' in res.headers)
+        self.assertEqual(200, res.status_code)
+        etag = res.headers['ETag']
+        
+        request.environ['HTTP_IF_NONE_MATCH'] = etag
+        res = static_file(basename, root=root)
+        self.assertTrue('ETag' in res.headers)
+        self.assertEqual(etag, res.headers['ETag'])
+        self.assertEqual(304, res.status_code)
+
+        request.environ['HTTP_IF_NONE_MATCH'] = etag
+        res = static_file(basename2, root=root2)
+        self.assertTrue('ETag' in res.headers)
+        self.assertNotEqual(etag, res.headers['ETag'])
+        self.assertEqual(200, res.status_code)
+       
 
     def test_download(self):
         """ SendFile: Download as attachment """
