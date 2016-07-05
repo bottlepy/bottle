@@ -2723,7 +2723,7 @@ def static_file(filename, root,
     if etag is None:
         etag = '%d:%d:%d:%d:%s' % (stats.st_dev, stats.st_ino, stats.st_mtime,
                                    clen, filename)
-        etag = hashlib.sha1(etag).hexdigest()
+        etag = hashlib.sha1(tob(etag)).hexdigest()
 
     if etag:
         headers['ETag'] = etag
