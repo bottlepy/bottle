@@ -2899,19 +2899,18 @@ class DieselServer(ServerAdapter):
 class GeventServer(ServerAdapter):
     """ Untested. Options:
 
-        * `fast` (default: False) uses libevent's http server, but has some
-          issues: No streaming, no pipelining, no SSL.
         * See gevent.wsgi.WSGIServer() documentation for more options.
     """
+
     def run(self, handler):
-        from gevent import wsgi, pywsgi, local
+        from gevent import pywsgi, local
         if not isinstance(threading.local(), local.local):
             msg = "Bottle requires gevent.monkey.patch_all() (before import)"
             raise RuntimeError(msg)
-        if not self.options.pop('fast', None): wsgi = pywsgi
-        self.options['log'] = None if self.quiet else 'default'
+        if self.quiet:
+            self.options['log'] = None
         address = (self.host, self.port)
-        server = wsgi.WSGIServer(address, handler, **self.options)
+        server = pywsgi.WSGIServer(address, handler, **self.options)
         if 'BOTTLE_CHILD' in os.environ:
             import signal
             signal.signal(signal.SIGINT, lambda s, f: server.stop())
