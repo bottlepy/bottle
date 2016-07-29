@@ -129,3 +129,6 @@ class TestBjoernServer(TestServer):
 
 class TestAiohttpServer(TestServer):
     server = 'aiohttp'
+
+class TestAiohttpServer(TestServer):
+    server = 'uvloop'
