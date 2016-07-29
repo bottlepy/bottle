@@ -3332,6 +3332,13 @@ class AiohttpServer(AsyncioServerAdapter):
         except KeyboardInterrupt:
             self.loop.stop()
 
+class AiohttpUVLoopServer(AiohttpServer):
+    """uvloop
+       https://github.com/MagicStack/uvloop
+    """
+    def get_event_loop(self):
+        import uvloop
+        return uvloop.new_event_loop()
 
 class AutoServer(ServerAdapter):
     """ Untested. """
@@ -3366,6 +3373,7 @@ server_names = {
     'rocket': RocketServer,
     'bjoern': BjoernServer,
     'aiohttp': AiohttpServer,
+    'uvloop': AiohttpUVLoopServer,
     'auto': AutoServer,
 }
 
