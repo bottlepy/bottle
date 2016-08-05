@@ -170,21 +170,13 @@ else:  # 2.x
     from StringIO import StringIO as BytesIO
     from ConfigParser import SafeConfigParser as ConfigParser, \
                              Error as ConfigParserError
-    if py25:
-        from UserDict import DictMixin
-
-        def next(it):
-            return it.next()
-
-        bytes = str
-    else:  # 2.6, 2.7
-        from collections import MutableMapping as DictMixin
+    from collections import MutableMapping as DictMixin
     unicode = unicode
     json_loads = json_lds
     eval(compile('def _raise(*a): raise a[0], a[1], a[2]', '<py3fix>', 'exec'))
 
-if py25 or py31:
-    msg = "Python 2.5 and 3.1 support will be dropped in future versions of Bottle."
+if py31:
+    msg = "Python 3.1 support will be dropped in future versions of Bottle."
     warnings.warn(msg, DeprecationWarning)
 
 # Some helpers for string/byte handling
