@@ -6,8 +6,8 @@ try:
 except ImportError:
     from distutils.core import setup
 
-if sys.version_info < (2, 6):
-    raise NotImplementedError("Sorry, you need at least Python 2.6 or Python 3.2+ to use bottle.")
+if sys.version_info < (2, 7):
+    raise NotImplementedError("Sorry, you need at least Python 2.7 or Python 3.2+ to use bottle.")
 
 import bottle
 
@@ -32,8 +32,6 @@ setup(name='bottle',
                    'Topic :: Internet :: WWW/HTTP :: WSGI :: Middleware',
                    'Topic :: Internet :: WWW/HTTP :: WSGI :: Server',
                    'Topic :: Software Development :: Libraries :: Application Frameworks',
-                   'Programming Language :: Python :: 2.5',
-                   'Programming Language :: Python :: 2.6',
                    'Programming Language :: Python :: 2.7',
                    'Programming Language :: Python :: 3',
                    'Programming Language :: Python :: 3.2',
