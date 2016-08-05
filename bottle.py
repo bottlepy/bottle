@@ -124,7 +124,6 @@ except ImportError:  # pragma: no cover
 
 py = sys.version_info
 py3k = py >= (3, 0, 0)
-py25 = py <  (2, 6, 0)
 py31 = (3, 1, 0) <= py < (3, 2, 0)
 
 # Workaround for the missing "as" keyword in py3k.
