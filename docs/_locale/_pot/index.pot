@@ -53,7 +53,7 @@ msgid "Download and Install"
 msgstr ""
 
 #: ../../index.rst:49
-msgid "Install the latest stable release with ``pip install bottle``, ``easy_install -U bottle`` or download `bottle.py`__ (unstable) into your project directory. There are no hard [1]_ dependencies other than the Python standard library. Bottle runs with **Python 2.6+ and 3.2+**."
+msgid "Install the latest stable release with ``pip install bottle``, ``easy_install -U bottle`` or download `bottle.py`__ (unstable) into your project directory. There are no hard [1]_ dependencies other than the Python standard library. Bottle runs with **Python 2.7 and 3.2+**."
 msgstr ""
 
 #: ../../index.rst:52
