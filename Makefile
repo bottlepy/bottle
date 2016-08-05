@@ -2,7 +2,7 @@ PATH := build/python/bin:$(PATH)
 VERSION = $(shell python setup.py --version)
 ALLFILES = $(shell echo bottle.py test/*.py test/views/*.tpl)
 
-.PHONY: release coverage install docs test test_all test_26 test_27 test_32 test_33 test_34 test_35 2to3 clean
+.PHONY: release coverage install docs test test_all test_27 test_32 test_33 test_34 test_35 2to3 clean
 
 release: test_all
 	python setup.py --version | egrep -q -v '[a-zA-Z]' # Fail on dev/rc versions
@@ -32,10 +32,7 @@ docs:
 test:
 	python test/testall.py
 
-test_all: test_26 test_27 test_32 test_33 test_34 test_35
-
-test_26:
-	python2.6 test/testall.py
+test_all: test_27 test_32 test_33 test_34 test_35
 
 test_27:
 	python2.7 test/testall.py
