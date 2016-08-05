@@ -934,7 +934,7 @@ msgid "limit the cookie to HTTPS connections (default: off)."
 msgstr ""
 
 #: ../../../bottle.py:docstring of bottle.BaseResponse.set_cookie:17
-msgid "prevents client-side javascript to read this cookie (default: off, requires Python 2.6 or newer)."
+msgid "prevents client-side javascript to read this cookie (default: off, requires Python 2.7 or newer)."
 msgstr ""
 
 #: ../../../bottle.py:docstring of bottle.BaseResponse.set_cookie:20

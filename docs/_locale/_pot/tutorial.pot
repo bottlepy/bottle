@@ -37,7 +37,7 @@ msgid "This will get you the latest development snapshot that includes all the n
 msgstr ""
 
 #: ../../tutorial.rst:47
-msgid "Either way, you'll need Python 2.6 or newer (including 3.2+) to run bottle applications. If you do not have permissions to install packages system-wide or simply don't want to, create a `virtualenv <http://pypi.python.org/pypi/virtualenv>`_ first:"
+msgid "Either way, you'll need Python 2.7 or newer (including 3.2+) to run bottle applications. If you do not have permissions to install packages system-wide or simply don't want to, create a `virtualenv <http://pypi.python.org/pypi/virtualenv>`_ first:"
 msgstr ""
 
 #: ../../tutorial.rst:55
@@ -410,7 +410,7 @@ msgid "**secure:**     Limit the cookie to HTTPS connections (default: off)."
 msgstr ""
 
 #: ../../tutorial.rst:422
-msgid "**httponly:**   Prevent client-side javascript to read this cookie (default: off, requires Python 2.6 or newer)."
+msgid "**httponly:**   Prevent client-side javascript to read this cookie (default: off, requires Python 2.7 or newer)."
 msgstr ""
 
 #: ../../tutorial.rst:424
