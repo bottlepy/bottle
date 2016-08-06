@@ -56,7 +56,7 @@ msgstr "在终端运行以上命令，即可下载到Bottle的最新开发版，
 
 #: ../../tutorial.rst:47
 msgid ""
-"Either way, you'll need Python 2.6 or newer (including 3.2+) to run bottle "
+"Either way, you'll need Python 2.7 or newer (including 3.2+) to run bottle "
 "applications. If you do not have permissions to install packages system-wide"
 " or simply don't want to, create a `virtualenv "
 "<http://pypi.python.org/pypi/virtualenv>`_ first:"
@@ -656,8 +656,8 @@ msgstr "**secure:**     只允许在HTTPS链接中访问cookie (默认: off)"
 #: ../../tutorial.rst:422
 msgid ""
 "**httponly:**   Prevent client-side javascript to read this cookie (default:"
-" off, requires Python 2.6 or newer)."
-msgstr "**httponly:**   防止客户端的javascript读取cookie (默认: off, 要求python 2.6或以上版本)"
+" off, requires Python 2.7 or newer)."
+msgstr "**httponly:**   防止客户端的javascript读取cookie (默认: off, 要求python 2.7或以上版本)"
 
 #: ../../tutorial.rst:424
 msgid ""
