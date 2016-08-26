@@ -3171,6 +3171,8 @@ class AppEngineServer(ServerAdapter):
     quiet = True
 
     def run(self, handler):
+        depr(0, 13, "AppEngineServer no longer required",
+             "Configure your application directly in your app.yaml")
         from google.appengine.ext.webapp import util
         # A main() function in the handler script enables 'App Caching'.
         # Lets makes sure it is there. This _really_ improves performance.
