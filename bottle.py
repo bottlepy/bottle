@@ -3300,17 +3300,25 @@ class BjoernServer(ServerAdapter):
         from bjoern import run
         run(handler, self.host, self.port)
 
+class AsyncioServerAdapter(ServerAdapter):
+      """ Extend ServerAdapter for adding custom event loop """
+      def get_event_loop(self):
+          pass
 
-class AiohttpServer(ServerAdapter):
+class AiohttpServer(AsyncioServerAdapter):
     """ Untested.
         aiohttp
         https://pypi.python.org/pypi/aiohttp/
     """
 
+    def get_event_loop(self):
+        import asyncio
+        return asyncio.new_event_loop()
+
     def run(self, handler):
         import asyncio
         from aiohttp.wsgi import WSGIServerHttpProtocol
-        self.loop = asyncio.new_event_loop()
+        self.loop = self.get_event_loop()
         asyncio.set_event_loop(self.loop)
 
         protocol_factory = lambda: WSGIServerHttpProtocol(
@@ -3330,6 +3338,13 @@ class AiohttpServer(ServerAdapter):
         except KeyboardInterrupt:
             self.loop.stop()
 
+class AiohttpUVLoopServer(AiohttpServer):
+    """uvloop
+       https://github.com/MagicStack/uvloop
+    """
+    def get_event_loop(self):
+        import uvloop
+        return uvloop.new_event_loop()
 
 class AutoServer(ServerAdapter):
     """ Untested. """
@@ -3364,6 +3379,7 @@ server_names = {
     'rocket': RocketServer,
     'bjoern': BjoernServer,
     'aiohttp': AiohttpServer,
+    'uvloop': AiohttpUVLoopServer,
     'auto': AutoServer,
 }
 
