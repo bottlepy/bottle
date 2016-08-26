@@ -3734,7 +3734,7 @@ class Jinja2Template(BaseTemplate):
             fname = self.search(name, self.lookup)
         if not fname: return
         with open(fname, "rb") as f:
-            return f.read().decode(self.encoding)
+            return (f.read().decode(self.encoding), fname, lambda: False)
 
 
 class SimpleTemplate(BaseTemplate):
