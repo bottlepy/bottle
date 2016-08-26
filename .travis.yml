@@ -12,10 +12,10 @@ python:
   - "pypy3"
 
 install:
-  - bash test/travis_setup.sh
+  - travis_retry bash test/travis_setup.sh
 
 script:
-  - python test/testall.py fast
+  - python test/testall.py
 
 notifications:
   irc: "irc.freenode.org#bottlepy"

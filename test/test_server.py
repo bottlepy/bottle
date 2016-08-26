@@ -8,7 +8,7 @@ import signal
 import socket
 from subprocess import Popen, PIPE
 import tools
-from bottle import _e
+from bottle import _e, server_names
 
 try:
     from urllib.request import urlopen
@@ -67,20 +67,25 @@ class TestServer(unittest.TestCase):
         if self.p.poll() == None:
             os.kill(self.p.pid, signal.SIGINT)
             time.sleep(0.5)
-        while self.p.poll() == None:
+        if self.p.poll() == None:
             os.kill(self.p.pid, signal.SIGTERM)
+            time.sleep(0.5)
+        while self.p.poll() == None:
+            tools.warn("Trying to kill server %r with pid %d." %
+                       (self.server, self.p.pid))
+            os.kill(self.p.pid, signal.SIGKILL)
             time.sleep(1)
 
-        for stream in (self.p.stdout, self.p.stderr):
-            for line in stream:
-                if tob('warning') in line.lower():
-                    tools.warn(line.strip().decode('utf8'))
-                elif tob('error') in line.lower():
-                    raise AssertionError(line.strip().decode('utf8'))
+        lines = [line for stream in (self.p.stdout, self.p.stderr) for line in stream]
+        for line in lines:
+            if tob('warning') in line.lower():
+               tools.warn(line.strip().decode('utf8'))
+            elif tob('error') in line.lower():
+                raise AssertionError(line.strip().decode('utf8'))
 
     def fetch(self, url):
         try:
-            return urlopen('http://127.0.0.1:%d/%s' % (self.port, url)).read()
+            return urlopen('http://127.0.0.1:%d/%s' % (self.port, url), None, 5).read()
         except Exception:
             return repr(_e())
 
@@ -90,45 +95,9 @@ class TestServer(unittest.TestCase):
         self.assertEqual(tob('OK'), self.fetch('test'))
 
 
+blacklist = ['cgi', 'flup', 'gae']
 
-class TestCherryPyServer(TestServer):
-    server = 'cherrypy'
-
-class TestPasteServer(TestServer):
-    server = 'paste'
-
-class TestTornadoServer(TestServer):
-    server = 'tornado'
-
-class TestTwistedServer(TestServer):
-    server = 'twisted'
-
-class TestDieselServer(TestServer):
-    server = 'diesel'
-
-class TestGunicornServer(TestServer):
-    server = 'gunicorn'
-
-class TestGeventServer(TestServer):
-    server = 'gevent'
-
-class TestEventletServer(TestServer):
-    server = 'eventlet'
-
-class TestRocketServer(TestServer):
-    server = 'rocket'
-
-class TestFapwsServer(TestServer):
-    server = 'fapws3'
-
-class MeinheldServer(TestServer):
-    server = 'meinheld'
-
-class TestBjoernServer(TestServer):
-    server = 'bjoern'
-
-class TestAiohttpServer(TestServer):
-    server = 'aiohttp'
-
-class TestAiohttpServer(TestServer):
-    server = 'uvloop'
+for name in set(server_names) - set(blacklist):
+    classname = 'TestServerAdapter_'+name
+    setattr(sys.modules[__name__], classname,
+            type(classname, (TestServer,), {'server': name}))
