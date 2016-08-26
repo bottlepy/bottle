@@ -2291,12 +2291,22 @@ class ConfigDict(dict):
         self._change_listener = []
         self._fallbacks = []
 
-    def load_module(self, path, squash):
+    def load_module(self, path, squash=True):
         """ Load values from a Python module.
-            :param squash: Squash nested dicts into namespaces by using
-                           load_dict(), otherwise use update()
-            Example: load_config('my.app.settings', True)
-            Example: load_config('my.app.settings', False)
+
+            Example modue ``config.py``::
+
+                debug = True
+                sqlite = {
+                    "db": ":memory:"
+                }
+
+            >>> c = ConfigDict()
+            >>> c.load_module('config')
+
+
+            :param squash: If true (default), dictionary values are assumed to
+                           represent namespaces (see :meth:`load_dict`).
         """
         config_obj = __import__(path)
         obj = dict([(key, getattr(config_obj, key))
@@ -2345,7 +2355,10 @@ class ConfigDict(dict):
     def update(self, *a, **ka):
         """ If the first parameter is a string, all keys are prefixed with this
             namespace. Apart from that it works just as the usual dict.update().
-            Example: ``update('some.namespace', key='value')`` """
+
+            >>> c = ConfigDict()
+            >>> c.update('some.namespace', key='value')
+        """
         prefix = ''
         if a and isinstance(a[0], basestring):
             prefix = a[0].strip('.') + '.'
@@ -4114,7 +4127,6 @@ local = threading.local()
 # Initialize app stack (create first empty Bottle app now deferred until needed)
 # BC: 0.6.4 and needed for run()
 apps = app = default_app = AppStack()
-
 
 #: A virtual package that redirects import statements.
 #: Example: ``import bottle.ext.sqlite`` actually imports `bottle_sqlite`.
