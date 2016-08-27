@@ -13,7 +13,6 @@ Copyright (c) 2015, Marcel Hellkamp.
 License: MIT (see LICENSE for details)
 """
 
-from __future__ import with_statement
 import sys
 
 __author__ = 'Marcel Hellkamp'
