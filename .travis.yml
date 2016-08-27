@@ -15,7 +15,7 @@ install:
   - travis_retry bash test/travis_setup.sh
 
 script:
-  - python test/testall.py
+  - python test/testall.py fast
 
 notifications:
   irc: "irc.freenode.org#bottlepy"
