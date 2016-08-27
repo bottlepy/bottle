@@ -34,6 +34,7 @@ class TestServer(unittest.TestCase):
     skip   = False
 
     def setUp(self):
+        self.skip = self.skip or 'fast' in sys.argv
         if self.skip: return
         # Find a free port
         for port in range(8800, 8900):
