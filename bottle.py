@@ -4182,7 +4182,7 @@ if __name__ == '__main__':
                     config.load_dict(json_loads(fp.read()))
             else:
                 config.load_config(cfile)
-        except ConfigParserError:
+        except configparser.Error:
             _cli_error(str(_e()))
         except IOError:
             _cli_error("Unable to read config file %r" % cfile)
