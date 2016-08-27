@@ -124,7 +124,6 @@ except ImportError:  # pragma: no cover
 
 py = sys.version_info
 py3k = py >= (3, 0, 0)
-py31 = (3, 1, 0) <= py < (3, 2, 0)
 
 # Workaround for the missing "as" keyword in py3k.
 def _e():
@@ -174,10 +173,6 @@ else:  # 2.x
     json_loads = json_lds
     eval(compile('def _raise(*a): raise a[0], a[1], a[2]', '<py3fix>', 'exec'))
 
-if py31:
-    msg = "Python 3.1 support will be dropped in future versions of Bottle."
-    warnings.warn(msg, DeprecationWarning)
-
 # Some helpers for string/byte handling
 def tob(s, enc='utf8'):
     return s.encode(enc) if isinstance(s, unicode) else bytes(s)
@@ -193,13 +188,6 @@ def touni(s, enc='utf8', err='strict'):
 tonat = touni if py3k else tob
 
 # 3.2 fixes cgi.FieldStorage to accept bytes (which makes a lot of sense).
-# 3.1 needs a workaround.
-if py31:
-    from io import TextIOWrapper
-
-    class NCTextIOWrapper(TextIOWrapper):
-        def close(self):
-            pass  # Keep wrapped buffer open.
 
 
 # A bug in functools causes it to break if the wrapper is an instance method
@@ -1384,11 +1372,8 @@ class BaseRequest(object):
         for key in ('REQUEST_METHOD', 'CONTENT_TYPE', 'CONTENT_LENGTH'):
             if key in self.environ: safe_env[key] = self.environ[key]
         args = dict(fp=self.body, environ=safe_env, keep_blank_values=True)
-        if py31:
-            args['fp'] = NCTextIOWrapper(args['fp'],
-                                         encoding='utf8',
-                                         newline='\n')
-        elif py3k:
+
+        if py3k:
             args['encoding'] = 'utf8'
         data = cgi.FieldStorage(**args)
         self['_cgi.FieldStorage'] = data  #http://bugs.python.org/issue18394
