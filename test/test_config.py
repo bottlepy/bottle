@@ -1,9 +1,14 @@
+import os
 import sys
+import tempfile
 import unittest
+
+import functools
+
 from bottle import ConfigDict
 
+
 class TestConfDict(unittest.TestCase):
-    
     def test_isadict(self):
         """ ConfigDict should behaves like a normal dict. """
         # It is a dict-subclass, so this kind of pointless, but it doen't hurt.
@@ -47,7 +52,7 @@ class TestConfDict(unittest.TestCase):
         c.meta_set('bool', 'filter', bool)
         c.meta_set('int', 'filter', int)
         c['bool'] = 'I am so true!'
-        c['int']  = '6'
+        c['int'] = '6'
         self.assertTrue(c['bool'] is True)
         self.assertEqual(c['int'], 6)
         self.assertRaises(ValueError, lambda: c.update(int='not an int'))
@@ -128,3 +133,38 @@ class TestConfDict(unittest.TestCase):
         del fallback['key2']
         self.assertTrue('key2' not in primary)
         self.assertTrue('key2' not in fallback)
+
+
+class TestINIConfigLoader(unittest.TestCase):
+    @classmethod
+    def setUpClass(self):
+        self.config_file = tempfile.NamedTemporaryFile(suffix='.example.ini',
+                                                       delete=True)
+        self.config_file.write(b'[DEFAULT]\n'
+                               b'default: 45\n'
+                               b'[bottle]\n'
+                               b'port = 8080\n'
+                               b'[ROOT]\n'
+                               b'namespace.key = test\n'
+                               b'[NameSpace.Section]\n'
+                               b'sub.namespace.key = test2\n'
+                               b'default = otherDefault\n'
+                               b'[compression]\n'
+                               b'status=single\n')
+        self.config_file.flush()
+
+    @classmethod
+    def tearDownClass(self):
+        self.config_file.close()
+
+    def test_load_config(self):
+        c = ConfigDict()
+        c.load_config(self.config_file.name)
+        self.assertDictEqual({
+            'compression.default': '45',
+            'compression.status': 'single',
+            'default': '45',
+            'namespace.key': 'test',
+            'namespace.section.default': 'otherDefault',
+            'namespace.section.sub.namespace.key': 'test2',
+            'port': '8080'}, c)

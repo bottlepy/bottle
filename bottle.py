@@ -149,7 +149,8 @@ if py3k:
     from collections import MutableMapping as DictMixin
     import pickle
     from io import BytesIO
-    from configparser import ConfigParser, Error as ConfigParserError
+    import configparser
+
     basestring = str
     unicode = str
     json_loads = lambda s: json_lds(touni(s))
@@ -167,8 +168,7 @@ else:  # 2.x
     from itertools import imap
     import cPickle as pickle
     from StringIO import StringIO as BytesIO
-    from ConfigParser import SafeConfigParser as ConfigParser, \
-                             Error as ConfigParserError
+    import ConfigParser as configparser
     from collections import MutableMapping as DictMixin
     unicode = unicode
     json_loads = json_lds
@@ -2308,20 +2308,47 @@ class ConfigDict(dict):
             self.update(obj)
         return self
 
-    def load_config(self, filename):
+    def load_config(self, filename, **options):
         """ Load values from an ``*.ini`` style config file.
 
-            If the config file contains sections, their names are used as
-            namespaces for the values within. The two special sections
-            ``DEFAULT`` and ``bottle`` refer to the root namespace (no prefix).
+            A configuration file consists of sections, each led by a
+            ``[section]`` header, followed by key/value entries separated by
+            either ``=`` or ``:``. Section names and keys are case-insensitive.
+            Leading and trailing whitespace is removed from keys and values.
+            Values can be omitted, in which case the key/value delimiter may
+            also be left out. Values can also span multiple lines, as long as
+            they are indented deeper than the first line of the value. Commends
+            are prefixed by ``#`` or ``;`` and may only appear on their own on
+            an otherwise empty line.
+
+            Both section and key names may contain dots (``.``) as namespace
+            separators. The actual configuration parameter name is constructed
+            by joining section name and key name together and converting to
+            lower case.
+
+            The special sections ``bottle`` and ``ROOT`` refer to the root
+            namespace and the ``DEFAULT`` section defines default values for all
+            other sections.
+
+            With Python 3, extended string interpolation is enabled.
+
+            :param filename: The path of a config file, or a list of paths.
+            :param options: All keyword parameters are passed to the underlying
+                :class:`python:configparser.ConfigParser` constructor call.
+
         """
-        conf = ConfigParser()
+        options.setdefault('allow_no_value', True)
+        if py3k:
+            options.setdefault('interpolation',
+                               configparser.ExtendedInterpolation())
+        conf = configparser.ConfigParser(**options)
         conf.read(filename)
         for section in conf.sections():
-            for key, value in conf.items(section):
-                if section not in ('DEFAULT', 'bottle'):
+            for key in conf.options(section):
+                value = conf.get(section, key)
+                if section not in ['bottle', 'ROOT']:
                     key = section + '.' + key
-                self[key] = value
+                self[key.lower()] = value
         return self
 
     def load_dict(self, source, namespace=''):
