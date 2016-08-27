@@ -3038,6 +3038,9 @@ url       = make_default_app_wrapper('get_url')
 # Server Adapter ###############################################################
 ###############################################################################
 
+# Before you edit or add a server adapter, please read:
+# - https://github.com/bottlepy/bottle/pull/647#issuecomment-60152870
+# - https://github.com/bottlepy/bottle/pull/865#issuecomment-242795341
 
 class ServerAdapter(object):
     quiet = False
