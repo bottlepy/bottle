@@ -27,12 +27,24 @@ __license__ = 'MIT'
 # are imported. This is why some of the command-line handling is done here, but
 # the actual call to main() is at the end of the file.
 
+py = sys.version_info
+py26 = py < (2, 7, 0)
 
-def _cli_parse(args):
-    from optparse import OptionParser
-    parser = OptionParser(
-        usage="usage: %prog [options] package.module:app")
-    opt = parser.add_option
+
+def _cli_parse(cli_args):
+    cli_usage = "usage: %prog [options] package.module:app"
+
+    if py26:
+        from optparse import OptionParser
+        parser = OptionParser(
+            usage=cli_usage)
+        opt = parser.add_option
+    else:
+        from argparse import ArgumentParser
+        parser = ArgumentParser(usage="usage: %sprog [options] package.module:app")
+        opt = parser.add_argument
+    if not py26:
+        opt('app', help='WSGI app entry point.')
     opt("--version", action="store_true", help="show version number.")
     opt("-b", "--bind", metavar="ADDRESS", help="bind socket to ADDRESS.")
     opt("-s", "--server", default='wsgiref', help="use SERVER as backend.")
@@ -43,13 +55,19 @@ def _cli_parse(args):
         help="override config values.")
     opt("--debug", action="store_true", help="start server in debug mode.")
     opt("--reload", action="store_true", help="auto-reload on file changes.")
-    opts, args = parser.parse_args(args[1:])
+    cli_args = parser.parse_args(cli_args[1:])
+    if py26:
+        opts, cli_args = cli_args
+    else:
+        opts = None
 
-    return opts, args, parser
+    return opts, cli_args, parser
 
 
-def _cli_patch(args):
-    opts, _, _ = _cli_parse(args)
+def _cli_patch(cli_args):
+    opts, parsed_args, _ = _cli_parse(cli_args)
+    if opts is None:
+        opts = parsed_args
     if opts.server:
         if opts.server.startswith('gevent'):
             import gevent.monkey
@@ -122,7 +140,6 @@ except ImportError:  # pragma: no cover
 # We now try to fix 2.5/2.6/3.1/3.2 incompatibilities.
 # It ain't pretty but it works... Sorry for the mess.
 
-py = sys.version_info
 py3k = py >= (3, 0, 0)
 py31 = (3, 1, 0) <= py < (3, 2, 0)
 
@@ -4165,32 +4182,34 @@ ext = _ImportRedirect('bottle.ext' if __name__ == '__main__' else
                       __name__ + ".ext", 'bottle_%s').module
 
 
-
 if __name__ == '__main__':
     opt, args, parser = _cli_parse(sys.argv)
 
-    def _cli_error(msg):
+    def _cli_error(cli_msg):
         parser.print_help()
-        _stderr('\nError: %s\n' % msg)
+        _stderr('\nError: %s\n' % cli_msg)
         sys.exit(1)
 
-    if opt.version:
+
+    version = opt.version if py26 else args.version
+    if version:
         _stdout('Bottle %s\n' % __version__)
         sys.exit(0)
-    if not args:
+    app_entry = args if py26 else args.app
+    if not app_entry:
         _cli_error("No application entry point specified.")
 
     sys.path.insert(0, '.')
     sys.modules.setdefault('bottle', sys.modules['__main__'])
-
-    host, port = (opt.bind or 'localhost'), 8080
+    bind = opt.bind if py26 else args.bind
+    host, port = (bind or 'localhost'), 8080
     if ':' in host and host.rfind(']') < host.rfind(':'):
         host, port = host.rsplit(':', 1)
     host = host.strip('[]')
 
     config = ConfigDict()
-
-    for cfile in opt.conf or []:
+    conf = opt.conf if py26 else args.conf
+    for cfile in conf or []:
         try:
             if cfile.endswith('.json'):
                 with open(cfile, 'rb') as fp:
@@ -4203,20 +4222,20 @@ if __name__ == '__main__':
             _cli_error("Unable to read config file %r" % cfile)
         except (UnicodeError, TypeError, ValueError):
             _cli_error("Unable to parse config file %r: %s" % (cfile, _e()))
-
-    for cval in opt.param or []:
+    param = opt.param if py26 else args.param
+    for cval in param or []:
         if '=' in cval:
             config.update((cval.split('=', 1),))
         else:
             config[cval] = True
 
-    run(args[0],
+    run(app_entry,
         host=host,
         port=int(port),
-        server=opt.server,
-        reloader=opt.reload,
-        plugins=opt.plugin,
-        debug=opt.debug,
+        server=opt.server if py26 else args.server,
+        reloader=opt.reload if py26 else args.reload,
+        plugins=opt.plugin if py26 else args.plugin,
+        debug=opt.debug if py26 else args.debug,
         config=config)
 
 # THE END
