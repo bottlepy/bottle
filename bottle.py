@@ -119,11 +119,8 @@ except ImportError:  # pragma: no cover
 
             json_lds = json_dumps
 
-# We now try to fix 2.5/2.6/3.1/3.2 incompatibilities.
-# It ain't pretty but it works... Sorry for the mess.
+py3k =  sys.version_info.major > 2
 
-py = sys.version_info
-py3k = py >= (3, 0, 0)
 
 # Workaround for the missing "as" keyword in py3k.
 def _e():
