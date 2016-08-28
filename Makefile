@@ -50,7 +50,6 @@ test_35:
 	python3.5 test/testall.py
 
 test_setup:
-	bash test/build_python.sh 2.6 build/python
 	bash test/build_python.sh 2.7 build/python
 	bash test/build_python.sh 3.2 build/python
 	bash test/build_python.sh 3.3 build/python
