@@ -118,12 +118,8 @@ except ImportError:  # pragma: no cover
 
             json_lds = json_dumps
 
-py3k =  sys.version_info.major > 2
+py3k = sys.version_info.major > 2
 
-
-# Workaround for the missing "as" keyword in py3k.
-def _e():
-    return sys.exc_info()[1]
 
 # Workaround for the "print is a keyword/function" Python 2/3 dilemma
 # and a fallback for mod_wsgi (resticts stdout/err attribute access)
@@ -200,7 +196,7 @@ def update_wrapper(wrapper, wrapped, *a, **ka):
 def depr(major, minor, cause, fix):
     text = "Warning: Use of deprecated feature or API. (Deprecated in Bottle-%d.%d)\n"\
            "Cause: %s\n"\
-           "Fix: %s\n" %  (major, minor, cause, fix)
+           "Fix: %s\n" % (major, minor, cause, fix)
     if DEBUG == 'strict':
         raise DeprecationWarning(text)
     warnings.warn(text, DeprecationWarning, stacklevel=3)
@@ -419,9 +415,8 @@ class Router(object):
         try:
             re_pattern = re.compile('^(%s)$' % pattern)
             re_match = re_pattern.match
-        except re.error:
-            raise RouteSyntaxError("Could not add Route: %s (%s)" %
-                                   (rule, _e()))
+        except re.error as e:
+            raise RouteSyntaxError("Could not add Route: %s (%s)" % (rule, e))
 
         if filters:
 
@@ -477,8 +472,8 @@ class Router(object):
                 query['anon%d' % i] = value
             url = ''.join([f(query.pop(n)) if n else f for (n, f) in builder])
             return url if not query else url + '?' + urlencode(query)
-        except KeyError:
-            raise RouteBuildError('Missing URL argument: %r' % _e().args[0])
+        except KeyError as E:
+            raise RouteBuildError('Missing URL argument: %r' % E.args[0])
 
     def match(self, environ):
         """ Return a (target, url_args) tuple or raise HTTPError(400/404/405). """
@@ -962,25 +957,25 @@ class Bottle(object):
             environ['PATH_INFO'] = path.encode('latin1').decode('utf8', 'ignore')
 
         def _inner_handle():
-            # Maybe pass variables as locals for better performance? 
+            # Maybe pass variables as locals for better performance?
             try:
                 route, args = self.router.match(environ)
                 environ['route.handle'] = route
                 environ['bottle.route'] = route
                 environ['route.url_args'] = args
                 return route.call(**args)
-            except HTTPResponse:
-                return _e()
+            except HTTPResponse as E:
+                return E
             except RouteReset:
                 route.reset()
                 return _inner_handle()
             except (KeyboardInterrupt, SystemExit, MemoryError):
                 raise
-            except Exception:
+            except Exception as E:
                 if not self.catchall: raise
                 stacktrace = format_exc()
                 environ['wsgi.errors'].write(stacktrace)
-                return HTTPError(500, "Internal Server Error", _e(), stacktrace)
+                return HTTPError(500, "Internal Server Error", E, stacktrace)
 
         try:
             out = None
@@ -989,8 +984,8 @@ class Bottle(object):
             response.bind()
             try:
                 self.trigger_hook('before_request')
-            except HTTPResponse:
-                return  _e()
+            except HTTPResponse as E:
+                return E
             out = _inner_handle()
             return out
         finally:
@@ -1048,13 +1043,13 @@ class Bottle(object):
                 first = next(iout)
         except StopIteration:
             return self._cast('')
-        except HTTPResponse:
-            first = _e()
+        except HTTPResponse as E:
+            first = E
         except (KeyboardInterrupt, SystemExit, MemoryError):
             raise
-        except:
+        except Exception as error:
             if not self.catchall: raise
-            first = HTTPError(500, 'Unhandled exception', _e(), format_exc())
+            first = HTTPError(500, 'Unhandled exception', error, format_exc())
 
         # These are the inner types allowed in iterator or generator objects.
         if isinstance(first, HTTPResponse):
@@ -1084,14 +1079,14 @@ class Bottle(object):
             return out
         except (KeyboardInterrupt, SystemExit, MemoryError):
             raise
-        except:
+        except Exception as E:
             if not self.catchall: raise
             err = '<h1>Critical error while processing request: %s</h1>' \
                   % html_escape(environ.get('PATH_INFO', '/'))
             if DEBUG:
                 err += '<h2>Error:</h2>\n<pre>\n%s\n</pre>\n' \
                        '<h2>Traceback:</h2>\n<pre>\n%s\n</pre>\n' \
-                       % (html_escape(repr(_e())), html_escape(format_exc()))
+                       % (html_escape(repr(E)), html_escape(format_exc()))
             environ['wsgi.errors'].write(err)
             headers = [('Content-Type', 'text/html; charset=UTF-8')]
             start_response('500 INTERNAL SERVER ERROR', headers, sys.exc_info())
@@ -1245,7 +1240,7 @@ class BaseRequest(object):
     @DictProperty('environ', 'bottle.request.json', read_only=True)
     def json(self):
         """ If the ``Content-Type`` header is ``application/json`` or
-            ``application/json-rpc``, this property holds the parsed content 
+            ``application/json-rpc``, this property holds the parsed content
             of the request body. Only requests smaller than :attr:`MEMFILE_MAX`
             are processed to avoid memory exhaustion.
             Invalid JSON raises a 400 error response.
@@ -1924,8 +1919,8 @@ class JSONPlugin(object):
         def wrapper(*a, **ka):
             try:
                 rv = callback(*a, **ka)
-            except HTTPError:
-                rv = _e()
+            except HTTPError as error:
+                rv = error
 
             if isinstance(rv, dict):
                 #Attempt to serialize, raises exception on failure
@@ -1960,8 +1955,6 @@ class TemplatePlugin(object):
             return view(conf)(callback)
         else:
             return callback
-
-
 
 
 #: Not a plugin, but part of the plugin API. TODO: Find a better place.
@@ -4146,7 +4139,6 @@ ext = _ImportRedirect('bottle.ext' if __name__ == '__main__' else
                       __name__ + ".ext", 'bottle_%s').module
 
 
-
 if __name__ == '__main__':
     opt, args, parser = _cli_parse(sys.argv)
 
@@ -4178,12 +4170,12 @@ if __name__ == '__main__':
                     config.load_dict(json_loads(fp.read()))
             else:
                 config.load_config(cfile)
-        except configparser.Error:
-            _cli_error(str(_e()))
+        except configparser.Error as parse_error:
+            _cli_error(parse_error)
         except IOError:
             _cli_error("Unable to read config file %r" % cfile)
-        except (UnicodeError, TypeError, ValueError):
-            _cli_error("Unable to parse config file %r: %s" % (cfile, _e()))
+        except (UnicodeError, TypeError, ValueError) as error:
+            _cli_error("Unable to parse config file %r: %s" % (cfile, error))
 
     for cval in opt.param or []:
         if '=' in cval:

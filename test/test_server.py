@@ -8,7 +8,7 @@ import signal
 import socket
 from subprocess import Popen, PIPE
 import tools
-from bottle import _e, server_names
+from bottle import server_names
 
 try:
     from urllib.request import urlopen
@@ -16,6 +16,7 @@ except:
     from urllib2 import urlopen
 
 serverscript = os.path.join(os.path.dirname(__file__), 'servertest.py')
+
 
 def ping(server, port):
     ''' Check if a server accepts connections on a specific TCP port '''
@@ -87,8 +88,8 @@ class TestServer(unittest.TestCase):
     def fetch(self, url):
         try:
             return urlopen('http://127.0.0.1:%d/%s' % (self.port, url), None, 5).read()
-        except Exception:
-            return repr(_e())
+        except Exception as E:
+            return repr(E)
 
     def test_simple(self):
         ''' Test a simple static page with this server adapter. '''
