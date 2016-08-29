@@ -4139,8 +4139,8 @@ ext = _ImportRedirect('bottle.ext' if __name__ == '__main__' else
                       __name__ + ".ext", 'bottle_%s').module
 
 
-if __name__ == '__main__':
-    opt, args, parser = _cli_parse(sys.argv)
+def _main(argv):
+    opt, args, parser = _cli_parse(argv)
 
     def _cli_error(msg):
         parser.print_help()
@@ -4191,5 +4191,9 @@ if __name__ == '__main__':
         plugins=opt.plugin,
         debug=opt.debug,
         config=config)
+
+
+if __name__ == '__main__':
+    main(sys.argv)
 
 # THE END
