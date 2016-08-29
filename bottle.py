@@ -473,7 +473,7 @@ class Router(object):
             url = ''.join([f(query.pop(n)) if n else f for (n, f) in builder])
             return url if not query else url + '?' + urlencode(query)
         except KeyError as E:
-            raise RouteBuildError('Missing URL argument: %r' % E.message)
+            raise RouteBuildError('Missing URL argument: %r' % E.args[0])
 
     def match(self, environ):
         """ Return a (target, url_args) tuple or raise HTTPError(400/404/405). """

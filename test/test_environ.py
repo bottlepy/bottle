@@ -4,12 +4,13 @@
 import unittest
 import sys
 import bottle
-from bottle import request, tob, touni, tonat, json_dumps, _e, HTTPError, parse_date
+from bottle import request, tob, touni, tonat, json_dumps, HTTPError, parse_date
 from test import tools
 import wsgiref.util
 import base64
 
 from bottle import BaseRequest, BaseResponse, LocalRequest
+
 
 class TestRequest(unittest.TestCase):
 
@@ -459,8 +460,6 @@ class TestRequest(unittest.TestCase):
             self.assertRaises(AttributeError, getattr, r, 'somevalue')
 
 
-
-
 class TestResponse(unittest.TestCase):
 
     def test_constructor_body(self):
@@ -711,10 +710,11 @@ class TestResponse(unittest.TestCase):
             parse_date(response.headers['Expires']))
         self.assertEqual(0, seconds(now, now2))
 
+
 class TestRedirect(unittest.TestCase):
 
     def assertRedirect(self, target, result, query=None, status=303, **args):
-        env = {'SERVER_PROTOCOL':'HTTP/1.1'}
+        env = {'SERVER_PROTOCOL': 'HTTP/1.1'}
         for key in list(args):
             if key.startswith('wsgi'):
                 args[key.replace('_', '.', 1)] = args[key]
@@ -724,11 +724,10 @@ class TestRedirect(unittest.TestCase):
         bottle.response.bind()
         try:
             bottle.redirect(target, **(query or {}))
-        except bottle.HTTPResponse:
-            r = _e()
-            self.assertEqual(status, r.status_code)
-            self.assertTrue(r.headers)
-            self.assertEqual(result, r.headers['Location'])
+        except bottle.HTTPResponse as E:
+            self.assertEqual(status, E.status_code)
+            self.assertTrue(E.headers)
+            self.assertEqual(result, E.headers['Location'])
 
     def test_absolute_path(self):
         self.assertRedirect('/', 'http://127.0.0.1/')
@@ -815,8 +814,8 @@ class TestRedirect(unittest.TestCase):
         try:
             bottle.response.set_cookie('xxx', 'yyy')
             bottle.redirect('...')
-        except bottle.HTTPResponse:
-            h = [v for (k, v) in _e().headerlist if k == 'Set-Cookie']
+        except bottle.HTTPResponse as E:
+            h = [v for (k, v) in E.headerlist if k == 'Set-Cookie']
             self.assertEqual(h, ['xxx=yyy'])
 
 class TestWSGIHeaderDict(unittest.TestCase):
