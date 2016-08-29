@@ -95,6 +95,15 @@ class TestAppMounting(ServerTestBase):
         self.app.mount('/test', self.subapp)
         self.assertHeader('Content-Type', 'application/json', '/test/json')
 
+    def test_mount_get_url(self):
+        @self.subapp.route('/test', name="test")
+        def test_cookie():
+            return self.subapp.get_url("test")
+
+        self.app.mount('/test', self.subapp)
+        self.assertBody('/test/test', '/test/test')
+
+
 class TestAppMerging(ServerTestBase):
     def setUp(self):
         ServerTestBase.setUp(self)
