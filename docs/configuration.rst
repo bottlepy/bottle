@@ -80,6 +80,32 @@ files from disk and import their values into your existing configuration::
 
     app.config.load_config('/etc/myapp.conf')
 
+
+Loading Configuration from a python module
+==========================================
+
+.. versionadded 0.13
+
+Loading configuration from a Python module is a common pattern for Python
+programs and frameworks. Bottle assumes that configuration keys are all upper
+case:
+
+.. code-block::
+
+     DEBUG = True
+     SQLITE = {"db": ":memory:"}
+
+You can load the this Python module with :met:`ConfigDict.load_module`::
+
+   >>> c = ConfigDict()
+   >>> c.load_module('config')
+   {DEBUG: True, 'SQLITE.DB': 'memory'}
+   >>> c.load_module("config", False)
+   {'DEBUG': True, 'SQLITE': {'DB': 'memory'}}
+
+
+Note the second parameter to disable loading as namespaced items as in :meth:`ConfigDict.load_dict`. By default, loading from a Python module will call this method, unless you specifically call this method with `False` as the second argument.
+
 Loading Configuration from a nested :class:`dict`
 =================================================
 
