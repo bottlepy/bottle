@@ -2258,25 +2258,29 @@ class ConfigDict(dict):
         self._fallbacks = []
 
     def load_module(self, path, squash=True):
-        """ Load values from a Python module.
+        """Load values from a Python module.
 
-            Example modue ``config.py``::
+           Example modue ``config.py``::
 
-                debug = True
-                sqlite = {
+                DEBUG = True
+                SQLITE = {
                     "db": ":memory:"
                 }
 
-            >>> c = ConfigDict()
-            >>> c.load_module('config')
 
+           >>> c = ConfigDict()
+           >>> c.load_module('config')
+           {DEBUG: True, 'SQLITE.DB': 'memory'}
+           >>> c.load_module("config", False)
+           {'DEBUG': True, 'SQLITE': {'DB': 'memory'}}
 
-            :param squash: If true (default), dictionary values are assumed to
-                           represent namespaces (see :meth:`load_dict`).
+           :param squash: If true (default), dictionary values are assumed to
+                          represent namespaces (see :meth:`load_dict`).
         """
-        config_obj = __import__(path)
-        obj = dict([(key, getattr(config_obj, key))
-                for key in dir(config_obj) if key.isupper()])
+        config_obj = load(path)
+        obj = {key: getattr(config_obj, key) for key in dir(config_obj)
+               if key.isupper()}
+
         if squash:
             self.load_dict(obj)
         else:
