@@ -24,7 +24,7 @@ __license__ = 'MIT'
 ###############################################################################
 # INFO: Some server adapters need to monkey-patch std-lib modules before they
 # are imported. This is why some of the command-line handling is done here, but
-# the actual call to main() is at the end of the file.
+# the actual call to _main() is at the end of the file.
 
 
 def _cli_parse(args):
@@ -1557,6 +1557,7 @@ class BaseRequest(object):
         except KeyError:
             raise AttributeError("Attribute not defined: %s" % name)
 
+
 def _hkey(s):
     return s.title().replace('_', '-')
 
@@ -2435,6 +2436,7 @@ class AppStack(list):
         self.append(value)
         return value
     new_app = push
+
     @property
     def default(self):
         try:
@@ -2659,7 +2661,7 @@ def static_file(filename, root,
                 charset='UTF-8',
                 etag=None):
     """ Open a file in a safe way and return an instance of :exc:`HTTPResponse`
-        that can be sent back to the client. 
+        that can be sent back to the client.
 
         :param filename: Name or path of the file to send, relative to ``root``.
         :param root: Root path for file lookups. Should be an absolute directory
@@ -2701,7 +2703,7 @@ def static_file(filename, root,
         return HTTPError(403, "You do not have permission to access this file.")
 
     if mimetype is True:
-        if download and download != True:
+        if download and download is not True:
             mimetype, encoding = mimetypes.guess_type(download)
         else:
             mimetype, encoding = mimetypes.guess_type(filename)
@@ -2714,7 +2716,7 @@ def static_file(filename, root,
         headers['Content-Type'] = mimetype
 
     if download:
-        download = os.path.basename(filename if download == True else download)
+        download = os.path.basename(filename if download is True else download)
         headers['Content-Disposition'] = 'attachment; filename="%s"' % download
 
     stats = os.stat(filename)
@@ -3298,9 +3300,9 @@ class BjoernServer(ServerAdapter):
         run(handler, self.host, self.port)
 
 class AsyncioServerAdapter(ServerAdapter):
-      """ Extend ServerAdapter for adding custom event loop """
-      def get_event_loop(self):
-          pass
+    """ Extend ServerAdapter for adding custom event loop """
+    def get_event_loop(self):
+        pass
 
 class AiohttpServer(AsyncioServerAdapter):
     """ Untested.
@@ -3880,7 +3882,7 @@ class StplParser(object):
     def set_syntax(self, syntax):
         self._syntax = syntax
         self._tokens = syntax.split()
-        if not syntax in self._re_cache:
+        if syntax not in self._re_cache:
             names = 'block_start block_close line_start inline_start inline_end'
             etokens = map(re.escape, self._tokens)
             pattern_vars = dict(zip(names.split(), etokens))
@@ -4194,6 +4196,6 @@ def _main(argv):
 
 
 if __name__ == '__main__':
-    main(sys.argv)
+    _main(sys.argv)
 
 # THE END
