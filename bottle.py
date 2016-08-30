@@ -24,7 +24,7 @@ __license__ = 'MIT'
 ###############################################################################
 # INFO: Some server adapters need to monkey-patch std-lib modules before they
 # are imported. This is why some of the command-line handling is done here, but
-# the actual call to main() is at the end of the file.
+# the actual call to _main() is at the end of the file.
 
 
 def _cli_parse(args):
@@ -4194,6 +4194,6 @@ def _main(argv):
 
 
 if __name__ == '__main__':
-    main(sys.argv)
+    _main(sys.argv)
 
 # THE END
