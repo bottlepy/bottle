@@ -530,7 +530,8 @@ class Route(object):
         #: Additional keyword arguments passed to the :meth:`Bottle.route`
         #: decorator are stored in this dictionary. Used for route-specific
         #: plugin configuration and meta-data.
-        self.config = ConfigDict().load_dict(config)
+        self.config = app.config._make_overlay()
+        self.config.load_dict(config)
 
     @cached_property
     def call(self):
@@ -599,9 +600,10 @@ class Route(object):
     def get_config(self, key, default=None):
         """ Lookup a config field and return its value, first checking the
             route.config, then route.app.config."""
-        for conf in (self.config, self.app.config):
-            if key in conf: return conf[key]
-        return default
+        depr(0, 13, "Route.get_config() is deprectated.",
+                    "The Route.config property already includes values from the"
+                    " application config for missing keys. Access it directly.")
+        return self.config.get(key, default)
 
     def __repr__(self):
         cb = self.get_undecorated_callback()
@@ -621,14 +623,32 @@ class Bottle(object):
                          let debugging middleware handle exceptions.
     """
 
-    def __init__(self, catchall=True, autojson=True):
+    @lazy_attribute
+    def _global_config(cls):
+        cfg = ConfigDict()
+        cfg.meta_set('catchall', 'validate', bool)
+        return cfg
+
+    def __init__(self, **kwargs):
         #: A :class:`ConfigDict` for app specific configuration.
-        self.config = ConfigDict()
-        self.config._add_change_listener(functools.partial(self.trigger_hook, 'config'))
-        self.config.meta_set('autojson', 'validate', bool)
-        self.config.meta_set('catchall', 'validate', bool)
-        self.config['catchall'] = catchall
-        self.config['autojson'] = autojson
+        self.config = self._global_config._make_overlay()
+        self.config._add_change_listener(
+            functools.partial(self.trigger_hook, 'config'))
+
+        self.config.update({
+            "catchall": True
+        })
+
+        if kwargs.get('catchall') is False:
+            depr(0,13, "Bottle(catchall) keyword argument.",
+                        "The 'catchall' setting is now part of the app "
+                        "configuration. Fix: `app.config['catchall'] = False`")
+            self.config['catchall'] = False
+        if kwargs.get('autojson') is False:
+            depr(0, 13, "Bottle(autojson) keyword argument.",
+                 "The 'autojson' setting is now part of the app "
+                 "configuration. Fix: `app.config['json.enable'] = False`")
+            self.config['json.disable'] = True
 
         self._mounts = []
 
@@ -641,8 +661,7 @@ class Bottle(object):
 
         # Core plugins
         self.plugins = []  # List of installed plugins.
-        if self.config['autojson']:
-            self.install(JSONPlugin())
+        self.install(JSONPlugin())
         self.install(TemplatePlugin())
 
     #: If true, most exceptions are caught and returned as :exc:`HTTPError`
@@ -1901,9 +1920,21 @@ class JSONPlugin(object):
     def __init__(self, json_dumps=json_dumps):
         self.json_dumps = json_dumps
 
-    def apply(self, callback, _):
+    def setup(self, app):
+        app.config._define('json.enable', default=True, validate=bool,
+                          help="Enable or disable automatic dict->json filter.")
+        app.config._define('json.ascii', default=False, validate=bool,
+                          help="Use only 7-bit ASCII characters in output.")
+        app.config._define('json.indent', default=True, validate=bool,
+                          help="Add whitespace to make json more readable.")
+        app.config._define('json.dump_func', default=None,
+                          help="If defined, use this function to transform"
+                               " dict into json. The other options no longer"
+                               " apply.")
+
+    def apply(self, callback, route):
         dumps = self.json_dumps
-        if not dumps: return callback
+        if not self.json_dumps: return callback
 
         def wrapper(*a, **ka):
             try:
@@ -2232,18 +2263,27 @@ class WSGIHeaderDict(DictMixin):
     def __contains__(self, key):
         return self._ekey(key) in self.environ
 
+_UNSET = object()
 
 class ConfigDict(dict):
     """ A dict-like configuration storage with additional support for
-        namespaces, validators, meta-data, on_change listeners and more.
+        namespaces, validators, meta-data, overlays and more.
+
+        This dict-like class is heavily optimized for read access. All read-only
+        methods as well as item access should be as fast as the built-in dict.
     """
 
-    __slots__ = ('_meta', '_change_listener', '_fallbacks')
+    __slots__ = ('_meta', '_change_listener', '_overlays', '_virtual_keys', '_source')
 
     def __init__(self):
         self._meta = {}
         self._change_listener = []
-        self._fallbacks = []
+        #: Configs that overlay this one and need to be kept in sync.
+        self._overlays = []
+        #: Config that is the source for this overlay.
+        self._source = None
+        #: Keys of values copied from the source (values we do not own)
+        self._virtual_keys = set()
 
     def load_module(self, path, squash=True):
         """Load values from a Python module.
@@ -2360,23 +2400,59 @@ class ConfigDict(dict):
         if not isinstance(key, basestring):
             raise TypeError('Key has type %r (not a string)' % type(key))
 
+        self._virtual_keys.discard(key)
+
         value = self.meta_get(key, 'filter', lambda x: x)(value)
         if key in self and self[key] is value:
             return
+
         self._on_change(key, value)
         dict.__setitem__(self, key, value)
 
-    def __delitem__(self, key):
-        self._on_change(key, None)
-        dict.__delitem__(self, key)
+        for overlay in self._overlays:
+            overlay._set_virtual(key, value)
 
-    def __missing__(self, key):
-        for fallback in self._fallbacks:
-            if key in fallback:
-                value = self[key] = fallback[key]
-                self.meta_set(key, 'fallback', fallback)
-                return value
-        raise KeyError(key)
+    def __delitem__(self, key):
+        if key not in self:
+            raise KeyError(key)
+        if key in self._virtual_keys:
+            raise KeyError("Virtual keys cannot be deleted: %s" % key)
+
+        if self._source and key in self._source:
+            # Not virtual, but present in source -> Restore virtual value
+            dict.__delitem__(self, key)
+            self._set_virtual(key, self._source[key])
+        else:  # not virtual, not present in source. This is OUR value
+            self._on_change(key, None)
+            dict.__delitem__(self, key)
+            for overlay in self._overlays:
+                overlay._delete_virtual(key)
+
+    def _set_virtual(self, key, value):
+        """ Recursively set or update virtual keys. Do nothing if non-virtual
+            value is present. """
+        if key in self and key not in self._virtual_keys:
+            return  # Do nothing for non-virtual keys.
+
+        self._virtual_keys.add(key)
+        if key in self and self[key] is not value:
+            self._on_change(key, value)
+        dict.__setitem__(self, key, value)
+        for overlay in self._overlays:
+            overlay._set_virtual(key, value)
+
+    def _delete_virtual(self, key):
+        """ Recursively delete virtual entry. Do nothing if key is not virtual.
+        """
+        if key not in self._virtual_keys:
+            return  # Do nothing for non-virtual keys.
+
+        if key in self:
+            self._on_change(key, None)
+        dict.__delitem__(self, key)
+        self._virtual_keys.discard(key)
+        for overlay in self._overlays:
+            overlay._delete_virtual(key)
 
     def _on_change(self, key, value):
         for cb in self._change_listener:
@@ -2386,20 +2462,6 @@ class ConfigDict(dict):
     def _add_change_listener(self, func):
         self._change_listener.append(func)
         return func
-
-    def _set_fallback(self, fallback):
-        self._fallbacks.append(fallback)
-
-        @fallback._add_change_listener
-        def fallback_update(conf, key, value):
-            if self.meta_get(key, 'fallback') is conf:
-                self.meta_set(key, 'fallback', None)
-                dict.__delitem__(self, key)
-
-        @self._add_change_listener
-        def self_update(conf, key, value):
-            if conf.meta_get(key, 'fallback'):
-                conf.meta_set(key, 'fallback', None)
 
     def meta_get(self, key, metafield, default=None):
         """ Return the value of a meta field for a key. """
@@ -2412,6 +2474,49 @@ class ConfigDict(dict):
     def meta_list(self, key):
         """ Return an iterable of meta field names defined for a key. """
         return self._meta.get(key, {}).keys()
+
+    def _define(self, key, default=_UNSET, help=_UNSET, validate=_UNSET):
+        """ (Unstable) Shortcut for plugins to define own config parameters. """
+        if default is not _UNSET:
+            self.setdefault(key, default)
+        if help is not _UNSET:
+            self.meta_set(key, 'help', help)
+        if validate is not _UNSET:
+            self.meta_set(key, 'validate', validate)
+
+    def _make_overlay(self):
+        """ (Unstable) Create a new overlay that acts like a chained map: Values
+            missing in the overlay are copied from the source map. Both maps
+            share the same meta entries.
+
+            Entries that were copied from the source are called 'virtual'. You
+            can not delete virtual keys, but overwrite them, which turns them
+            into non-virtual entries. Setting keys on an overlay never affects
+            its source, but may affect any number of child overlays.
+
+            Other than collections.ChainMap or most other implementations, this
+            approach does not resolve missing keys on demand, but instead
+            actively copies all values from the source to the overlay and keeps
+            track of virtual and non-virtual keys internally. This removes any
+            lookup-overhead. Read-access is as fast as a build-in dict for both
+            virtual and non-virtual keys.
+
+            Changes are propagated recursively and depth-first. A failing
+            on-change handler in an overlay stops the propagation of virtual
+            values and may result in an partly updated tree. Take extra care
+            here and make sure that on-change handlers never fail.
+
+            Used by Route.config
+        """
+        overlay = ConfigDict()
+        overlay._meta = self._meta
+        overlay._source = self
+        self._overlays.append(overlay)
+        for key in self:
+            overlay._set_virtual(key, self[key])
+        return overlay
+
+
 
 
 class AppStack(list):
