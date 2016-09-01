@@ -77,6 +77,7 @@ from datetime import date as datedate, datetime, timedelta
 from tempfile import TemporaryFile
 from traceback import format_exc, print_exc
 from unicodedata import normalize
+from json import dumps as json_dumps, loads as json_lds
 
 # inspect.getargspec was removed in Python 3.6, use
 # Signature-based version where we can (Python 3.3+)
@@ -104,22 +105,6 @@ except ImportError:
             return kwargs, spec[1], spec[2], spec[3]
     except ImportError:
         from inspect import getargspec
-
-try:
-    from simplejson import dumps as json_dumps, loads as json_lds
-except ImportError:  # pragma: no cover
-    try:
-        from json import dumps as json_dumps, loads as json_lds
-    except ImportError:
-        try:
-            from django.utils.simplejson import dumps as json_dumps, loads as json_lds
-        except ImportError:
-
-            def json_dumps(data):
-                raise ImportError(
-                    "JSON support requires Python 2.6 or simplejson.")
-
-            json_lds = json_dumps
 
 py3k = sys.version_info.major > 2
 
