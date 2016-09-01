@@ -5,6 +5,8 @@ import unittest
 
 import functools
 
+import itertools
+
 from bottle import ConfigDict
 
 
@@ -85,54 +87,56 @@ class TestConfDict(unittest.TestCase):
         c.load_module('example_settings', False)
         self.assertEqual(c['A']['B']['C'], 3)
 
-    def test_fallback(self):
-        fallback = ConfigDict()
-        fallback['key'] = 'fallback'
-        primary = ConfigDict()
-        primary._set_fallback(fallback)
+    def test_overlay(self):
+        source = ConfigDict()
+        source['key'] = 'source'
+        overlay = source._make_overlay()
 
-        # Check copy of existing values from fallback to primary
-        self.assertEqual(primary['key'], 'fallback')
+        # Overlay contains values from source
+        self.assertEqual(overlay['key'], 'source')
+        self.assertEqual(overlay.get('key'), 'source')
+        self.assertTrue('key' in overlay)
 
-        # Check value change in fallback
-        fallback['key'] = 'fallback2'
-        self.assertEqual(fallback['key'], 'fallback2')
-        self.assertEqual(primary['key'], 'fallback2')
+        # Overlay is updated with source
+        source['key'] = 'source2'
+        self.assertEqual(source['key'], 'source2')
+        self.assertEqual(overlay['key'], 'source2')
 
-        # Check value change in primary
-        primary['key'] = 'primary'
-        self.assertEqual(fallback['key'], 'fallback2')
-        self.assertEqual(primary['key'], 'primary')
+        # Overlay 'overlays' source (hence the name)
+        overlay['key'] = 'overlay'
+        self.assertEqual(source['key'], 'source2')
+        self.assertEqual(overlay['key'], 'overlay')
 
-        # Check delete of mirrored value in primary
-        del primary['key']
-        self.assertEqual(fallback['key'], 'fallback2')
-        self.assertEqual(primary['key'], 'fallback2')
+        # Deleting an overlayed key restores the value from source
+        del overlay['key']
+        self.assertEqual(source['key'], 'source2')
+        self.assertEqual(overlay['key'], 'source2')
 
-        # Check delete on mirrored key in fallback
-        del fallback['key']
-        self.assertTrue('key' not in primary)
-        self.assertTrue('key' not in fallback)
+        # Deleting a key in the source also removes it from overlays.
+        del source['key']
+        self.assertTrue('key' not in overlay)
+        self.assertTrue('key' not in source)
 
-        # Check new key in fallback
-        fallback['key2'] = 'fallback'
-        self.assertEqual(fallback['key2'], 'fallback')
-        self.assertEqual(primary['key2'], 'fallback')
+        # New keys in source are copied to overlay
+        source['key2'] = 'source'
+        self.assertEqual(source['key2'], 'source')
+        self.assertEqual(overlay['key2'], 'source')
 
-        # Check new key in primary
-        primary['key3'] = 'primary'
-        self.assertEqual(primary['key3'], 'primary')
-        self.assertTrue('key3' not in fallback)
+        # New keys in overlay do not change the source
+        overlay['key3'] = 'overlay'
+        self.assertEqual(overlay['key3'], 'overlay')
+        self.assertTrue('key3' not in source)
 
-        # Check delete of primary-only key
-        del primary['key3']
-        self.assertTrue('key3' not in primary)
-        self.assertTrue('key3' not in fallback)
+        # Setting the same key in the source does not affect the overlay
+        source['key3'] = 'source'
+        self.assertEqual(source['key3'], 'source')
+        self.assertEqual(overlay['key3'], 'overlay')
 
-        # Check delete of fallback value
-        del fallback['key2']
-        self.assertTrue('key2' not in primary)
-        self.assertTrue('key2' not in fallback)
+        # But as soon as the overlayed key is deleted, the source is copied again
+        del overlay['key3']
+        self.assertEqual(source['key3'], 'source')
+        self.assertEqual(overlay['key3'], 'source')
+
 
 
 class TestINIConfigLoader(unittest.TestCase):

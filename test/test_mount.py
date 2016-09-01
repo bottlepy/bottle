@@ -91,7 +91,7 @@ class TestAppMounting(ServerTestBase):
     def test_mount_json_bug(self):
         @self.subapp.route('/json')
         def test_cookie():
-            return {'a':5}
+            return {'a': 5}
         self.app.mount('/test', self.subapp)
         self.assertHeader('Content-Type', 'application/json', '/test/json')
 
