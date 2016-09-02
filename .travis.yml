@@ -13,6 +13,7 @@ python:
 
 install:
   - travis_retry bash test/travis_setup.sh
+  - pip install coveralls
 
 script:
   - python test/testall.py fast
@@ -20,3 +21,6 @@ script:
 notifications:
   irc: "irc.freenode.org#bottlepy"
   on_success: "never"
+
+after_success:
+  coveralls
