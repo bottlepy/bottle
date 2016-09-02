@@ -244,7 +244,7 @@ class cached_property(object):
         property. """
 
     def __init__(self, func):
-        self.__doc__ = getattr(func, '__doc__')
+        update_wrapper(self, func)
         self.func = func
 
     def __get__(self, obj, cls):
@@ -266,7 +266,7 @@ class lazy_attribute(object):
         return value
 
 ###############################################################################
-# Exceptions and Events ########################################################
+# Exceptions and Events #######################################################
 ###############################################################################
 
 
