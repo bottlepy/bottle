@@ -13,9 +13,8 @@ release: test_all
 	python setup.py sdist bdist_wheel register upload  # Release to pypi
 
 coverage:
-	-mkdir build/
 	coverage erase
-	COVERAGE_PROCESS_START=.coveragerc test/testall.py
+	coverage run --source=bottle.py test/testall.py
 	coverage combine
 	coverage report
 	coverage html
