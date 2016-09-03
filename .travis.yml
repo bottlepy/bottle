@@ -20,7 +20,9 @@ install:
   - pip install coveralls
 
 script:
-  - python test/testall.py fast
+ - coverage run --source=bottle.py test/testall.py
+ - coverage combine
+ - coverage report 2>&1
 
 notifications:
   irc: "irc.freenode.org#bottlepy"
