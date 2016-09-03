@@ -1,4 +1,5 @@
 language: python
+sudo: required
 
 python:
   - "2.7.3" # Ubuntu 12.4LTS (precise) and Debian 7 LTS (wheezy)
