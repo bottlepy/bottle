@@ -3720,7 +3720,7 @@ class Jinja2Template(BaseTemplate):
         if self.source:
             self.tpl = self.env.from_string(self.source)
         else:
-            self.tpl = self.env.get_template(self.filename)
+            self.tpl = self.env.get_template(self.name)
 
     def render(self, *args, **kwargs):
         for dictarg in args:
