@@ -1,6 +1,17 @@
 import unittest
 import bottle
 from tools import api
+from bottle import _re_flatten
+
+
+class TestReFlatten(unittest.TestCase):
+
+    def test_re_flatten(self):
+        self.assertEqual(_re_flatten(r"(?:aaa)(_bbb)"), '(?:aaa)(?:_bbb)')
+        self.assertEqual(_re_flatten(r"(aaa)(_bbb)"), '(?:aaa)(?:_bbb)')
+        self.assertEqual(_re_flatten(r"aaa)(_bbb)"), 'aaa)(?:_bbb)')
+        self.assertEqual(_re_flatten(r"aaa(_bbb)"), 'aaa(?:_bbb)')
+        self.assertEqual(_re_flatten(r"aaa_bbb"), 'aaa_bbb')
 
 
 class TestRoute(unittest.TestCase):
@@ -12,7 +23,7 @@ class TestRoute(unittest.TestCase):
             def w():
                 return f()
             return w
-        
+
         route = bottle.Route(None, None, None, d(x))
         self.assertEqual(route.get_undecorated_callback(), x)
         self.assertEqual(set(route.get_callback_args()), set(['a', 'b']))
