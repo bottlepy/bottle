@@ -20,16 +20,15 @@ __version__ = '0.13-dev'
 __license__ = 'MIT'
 
 ###############################################################################
-# Command-line interface ########################################################
+# Command-line interface ######################################################
 ###############################################################################
 # INFO: Some server adapters need to monkey-patch std-lib modules before they
 # are imported. This is why some of the command-line handling is done here, but
 # the actual call to _main() is at the end of the file.
 
 
-def _cli_parse(args):
+def _cli_parse(args):  # pragma: no coverage
     from argparse import ArgumentParser
-    cli_usage = "usage: %prog [options] package.module:app"
 
     parser = ArgumentParser(usage="usage: %sprog [options] package.module:app")
     opt = parser.add_argument
@@ -45,12 +44,12 @@ def _cli_parse(args):
     opt("--debug", action="store_true", help="start server in debug mode.")
     opt("--reload", action="store_true", help="auto-reload on file changes.")
 
-    cli_args = parser.parse_args(cli_args[1:])
+    cli_args = parser.parse_args(args)
 
     return cli_args, parser
 
 
-def _cli_patch(cli_args):
+def _cli_patch(cli_args):  # pragma: no coverage
     parsed_args, _ = _cli_parse(cli_args)
     opts = parsed_args
     if opts.server:
@@ -66,7 +65,7 @@ if __name__ == '__main__':
     _cli_patch(sys.argv)
 
 ###############################################################################
-# Imports and Python 2/3 unification ###########################################
+# Imports and Python 2/3 unification ##########################################
 ###############################################################################
 
 
@@ -4149,7 +4148,7 @@ ext = _ImportRedirect('bottle.ext' if __name__ == '__main__' else
                       __name__ + ".ext", 'bottle_%s').module
 
 
-def _main(argv):
+def _main(argv):  # pragma: no coverage
     args, parser = _cli_parse(argv)
 
     def _cli_error(cli_msg):
@@ -4203,7 +4202,5 @@ def _main(argv):
         config=config)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no coverage
     _main(sys.argv)
-
-# THE END
