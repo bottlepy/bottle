@@ -20,18 +20,19 @@ __version__ = '0.13-dev'
 __license__ = 'MIT'
 
 ###############################################################################
-# Command-line interface ########################################################
+# Command-line interface ######################################################
 ###############################################################################
 # INFO: Some server adapters need to monkey-patch std-lib modules before they
 # are imported. This is why some of the command-line handling is done here, but
 # the actual call to _main() is at the end of the file.
 
 
-def _cli_parse(args):
-    from optparse import OptionParser
-    parser = OptionParser(
-        usage="usage: %prog [options] package.module:app")
-    opt = parser.add_option
+def _cli_parse(args):  # pragma: no coverage
+    from argparse import ArgumentParser
+
+    parser = ArgumentParser(usage="usage: %sprog [options] package.module:app")
+    opt = parser.add_argument
+    opt('app', help='WSGI app entry point.')
     opt("--version", action="store_true", help="show version number.")
     opt("-b", "--bind", metavar="ADDRESS", help="bind socket to ADDRESS.")
     opt("-s", "--server", default='wsgiref', help="use SERVER as backend.")
@@ -42,13 +43,15 @@ def _cli_parse(args):
         help="override config values.")
     opt("--debug", action="store_true", help="start server in debug mode.")
     opt("--reload", action="store_true", help="auto-reload on file changes.")
-    opts, args = parser.parse_args(args[1:])
 
-    return opts, args, parser
+    cli_args = parser.parse_args(args)
+
+    return cli_args, parser
 
 
-def _cli_patch(args):
-    opts, _, _ = _cli_parse(args)
+def _cli_patch(cli_args):  # pragma: no coverage
+    parsed_args, _ = _cli_parse(cli_args)
+    opts = parsed_args
     if opts.server:
         if opts.server.startswith('gevent'):
             import gevent.monkey
@@ -62,7 +65,7 @@ if __name__ == '__main__':
     _cli_patch(sys.argv)
 
 ###############################################################################
-# Imports and Python 2/3 unification ###########################################
+# Imports and Python 2/3 unification ##########################################
 ###############################################################################
 
 
@@ -4145,31 +4148,31 @@ ext = _ImportRedirect('bottle.ext' if __name__ == '__main__' else
                       __name__ + ".ext", 'bottle_%s').module
 
 
-def _main(argv):
-    opt, args, parser = _cli_parse(argv)
+def _main(argv):  # pragma: no coverage
+    args, parser = _cli_parse(argv)
 
-    def _cli_error(msg):
+    def _cli_error(cli_msg):
         parser.print_help()
-        _stderr('\nError: %s\n' % msg)
+        _stderr('\nError: %s\n' % cli_msg)
         sys.exit(1)
 
-    if opt.version:
+    if args.version:
         _stdout('Bottle %s\n' % __version__)
         sys.exit(0)
-    if not args:
+    if not args.app:
         _cli_error("No application entry point specified.")
 
     sys.path.insert(0, '.')
     sys.modules.setdefault('bottle', sys.modules['__main__'])
 
-    host, port = (opt.bind or 'localhost'), 8080
+    host, port = (args.bind or 'localhost'), 8080
     if ':' in host and host.rfind(']') < host.rfind(':'):
         host, port = host.rsplit(':', 1)
     host = host.strip('[]')
 
     config = ConfigDict()
 
-    for cfile in opt.conf or []:
+    for cfile in args.conf or []:
         try:
             if cfile.endswith('.json'):
                 with open(cfile, 'rb') as fp:
@@ -4183,23 +4186,21 @@ def _main(argv):
         except (UnicodeError, TypeError, ValueError) as error:
             _cli_error("Unable to parse config file %r: %s" % (cfile, error))
 
-    for cval in opt.param or []:
+    for cval in args.param or []:
         if '=' in cval:
             config.update((cval.split('=', 1),))
         else:
             config[cval] = True
 
-    run(args[0],
+    run(args.app,
         host=host,
         port=int(port),
-        server=opt.server,
-        reloader=opt.reload,
-        plugins=opt.plugin,
-        debug=opt.debug,
+        server=args.server,
+        reloader=args.reload,
+        plugins=args.plugin,
+        debug=args.debug,
         config=config)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no coverage
     _main(sys.argv)
-
-# THE END
