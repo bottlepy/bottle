@@ -1925,6 +1925,8 @@ class JSONPlugin(object):
                 rv = callback(*a, **ka)
             except HTTPError as error:
                 rv = error
+            except HTTPResponse as resp:
+                rv = resp
 
             if isinstance(rv, dict):
                 #Attempt to serialize, raises exception on failure
