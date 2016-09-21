@@ -166,7 +166,7 @@ else:  # 2.x
     from collections import MutableMapping as DictMixin
     unicode = unicode
     json_loads = json_lds
-    eval(compile('def _raise(*a): raise a[0], a[1], a[2]', '<py3fix>', 'exec'))
+    exec(compile('def _raise(*a): raise a[0], a[1], a[2]', '<py3fix>', 'exec'))
 
 # Some helpers for string/byte handling
 def tob(s, enc='utf8'):
@@ -3799,7 +3799,7 @@ class SimpleTemplate(BaseTemplate):
             'setdefault': env.setdefault,
             'defined': env.__contains__
         })
-        eval(self.co, env)
+        exec(self.co, env)
         if env.get('_rebase'):
             subtpl, rargs = env.pop('_rebase')
             rargs['base'] = ''.join(_stdout)  #copy stdout
