@@ -4097,7 +4097,12 @@ ERROR_PAGE_TEMPLATE = """
             <pre>{{e.body}}</pre>
             %%if DEBUG and e.exception:
               <h2>Exception:</h2>
-              <pre>{{repr(e.exception)}}</pre>
+              %%try:
+                %%exc = repr(e.exception)
+              %%except:
+                %%exc = '<unprintable %%s object>' %% type(e.exception).__name__
+              %%end
+              <pre>{{exc}}</pre>
             %%end
             %%if DEBUG and e.traceback:
               <h2>Traceback:</h2>
