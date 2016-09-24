@@ -20,7 +20,7 @@ install:
   - pip install coveralls
 
 script:
- - coverage run --source=bottle.py test/testall.py
+ - coverage run --source=bottle.py test/testall.py fast
  - coverage combine
  - coverage report 2>&1
 
