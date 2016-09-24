@@ -3568,9 +3568,8 @@ class FileCheckerThread(threading.Thread):
 ###############################################################################
 
 
-class TemplateError(HTTPError):
-    def __init__(self, message):
-        HTTPError.__init__(self, 500, message)
+class TemplateError(BottleException):
+    pass
 
 
 class BaseTemplate(object):
