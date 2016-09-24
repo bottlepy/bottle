@@ -151,7 +151,7 @@ else:  # 2.x
     from collections import MutableMapping as DictMixin
     unicode = unicode
     json_loads = json_lds
-    eval(compile('def _raise(*a): raise a[0], a[1], a[2]', '<py3fix>', 'exec'))
+    exec(compile('def _raise(*a): raise a[0], a[1], a[2]', '<py3fix>', 'exec'))
 
 # Some helpers for string/byte handling
 def tob(s, enc='utf8'):
@@ -937,7 +937,7 @@ class Bottle(object):
         return wrapper
 
     def default_error_handler(self, res):
-        return tob(template(ERROR_PAGE_TEMPLATE, e=res))
+        return tob(template(ERROR_PAGE_TEMPLATE, e=res, template_settings=dict(name='__ERROR_PAGE_TEMPLATE')))
 
     def _handle(self, environ):
         path = environ['bottle.raw_path'] = environ['PATH_INFO']
@@ -3784,7 +3784,7 @@ class SimpleTemplate(BaseTemplate):
             'setdefault': env.setdefault,
             'defined': env.__contains__
         })
-        eval(self.co, env)
+        exec(self.co, env)
         if env.get('_rebase'):
             subtpl, rargs = env.pop('_rebase')
             rargs['base'] = ''.join(_stdout)  #copy stdout
