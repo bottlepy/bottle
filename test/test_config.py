@@ -28,6 +28,11 @@ class TestConfDict(unittest.TestCase):
         self.assertEqual('key' in d, 'key' in m)
         self.assertEqual('cay' in d, 'cay' in m)
         self.assertRaises(KeyError, lambda: m['cay'])
+        self.assertEquals(d.setdefault('key', "Val2"), m.setdefault('key', "Val2"))
+        self.assertEquals(d.setdefault('key', "Val3"), m.setdefault('key', "Val3"))
+        self.assertEqual(d.get('key'), m.get('key'))
+        with self.assertRaises(KeyError):
+            del m['No key']
 
     def test_write(self):
         c = ConfigDict()
@@ -43,6 +48,13 @@ class TestConfDict(unittest.TestCase):
         c.update(key='value2', key2='value3')
         self.assertEqual(c['key'], 'value2')
         self.assertEqual(c['key2'], 'value3')
+
+    def test_string_save_keys(self):
+        c = ConfigDict()
+        with self.assertRaises(TypeError):
+            c[5] = 'value'
+        with self.assertRaises(TypeError):
+            c.load_dict({5: 'value'})
 
     def test_namespaces(self):
         c = ConfigDict()
@@ -90,7 +102,8 @@ class TestConfDict(unittest.TestCase):
     def test_overlay(self):
         source = ConfigDict()
         source['key'] = 'source'
-        overlay = source._make_overlay()
+        intermediate = source._make_overlay()
+        overlay = intermediate._make_overlay()
 
         # Overlay contains values from source
         self.assertEqual(overlay['key'], 'source')
@@ -105,6 +118,7 @@ class TestConfDict(unittest.TestCase):
         # Overlay 'overlays' source (hence the name)
         overlay['key'] = 'overlay'
         self.assertEqual(source['key'], 'source2')
+        self.assertEqual(intermediate['key'], 'source2')
         self.assertEqual(overlay['key'], 'overlay')
 
         # Deleting an overlayed key restores the value from source
@@ -112,27 +126,37 @@ class TestConfDict(unittest.TestCase):
         self.assertEqual(source['key'], 'source2')
         self.assertEqual(overlay['key'], 'source2')
 
+        # Deleting a virtual key is actually not possible.
+        with self.assertRaises(KeyError):
+            del overlay['key']
+
         # Deleting a key in the source also removes it from overlays.
         del source['key']
         self.assertTrue('key' not in overlay)
+        self.assertTrue('key' not in intermediate)
         self.assertTrue('key' not in source)
 
         # New keys in source are copied to overlay
         source['key2'] = 'source'
         self.assertEqual(source['key2'], 'source')
+        self.assertEqual(intermediate['key2'], 'source')
         self.assertEqual(overlay['key2'], 'source')
 
         # New keys in overlay do not change the source
         overlay['key3'] = 'overlay'
         self.assertEqual(overlay['key3'], 'overlay')
+        self.assertTrue('key3' not in intermediate)
         self.assertTrue('key3' not in source)
 
         # Setting the same key in the source does not affect the overlay
+        # because it already has this key.
         source['key3'] = 'source'
         self.assertEqual(source['key3'], 'source')
+        self.assertEqual(intermediate['key3'], 'source')
         self.assertEqual(overlay['key3'], 'overlay')
 
-        # But as soon as the overlayed key is deleted, the source is copied again
+        # But as soon as the overlayed key is deleted, it gets the
+        # copy from the source
         del overlay['key3']
         self.assertEqual(source['key3'], 'source')
         self.assertEqual(overlay['key3'], 'source')
