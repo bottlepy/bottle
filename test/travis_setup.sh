@@ -3,16 +3,12 @@
 set -e
 set -x
 
-if test -n "$PY"; then
-  # https://github.com/pycurl/pycurl/blob/master/tests/travis/setup.sh
-  sudo add-apt-repository -y ppa:fkrull/deadsnakes
-  sudo apt-get update
-  sudo apt-get install python$PY-dev
+sudo apt-get install libev-dev
 
-  if test "$PY" = 2.5; then
-    wget https://pypi.python.org/packages/source/s/simplejson/simplejson-3.6.3.tar.gz
-    tar -xvzf simplejson-3.6.3.tar.gz
-    cd simplejson-3.6.3
-    sudo python$PY setup.py install
-  fi
+if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]]; then
+    pip install flup waitress cherrypy paste fapws3 tornado twisted diesel meinheld gunicorn eventlet gevent rocket bjoern
+fi
+
+if [[ $TRAVIS_PYTHON_VERSION == 3.5 ]]; then
+    pip install waitress cherrypy paste tornado twisted diesel meinheld gunicorn eventlet gevent uvloop
 fi

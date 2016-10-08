@@ -57,9 +57,6 @@ The source repository is structured as follows:
 ``release-x.y`` branches
   As soon as the master branch is (almost) ready for a new release, it is branched into a new release branch. This "release candidate" is feature-frozen but may receive bug-fixes and last-minute changes until it is considered production ready and officially released. From that point on it is called a "support branch" and still receives bug-fixes, but only important ones. The revision number is increased on each push to these branches, so you can keep up with important changes.
 
-``bugfix_name-x.y`` branches
-  These branches are only temporary and used to develop and share non-trivial bug-fixes for existing releases. They are merged into the corresponding release branch and deleted soon after that.
-
 Feature branches
   All other branches are feature branches. These are based on the master branch and only live as long as they are still active and not merged back into ``master``.
 

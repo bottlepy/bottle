@@ -8,18 +8,77 @@ Release Notes and Changelog
 Release 0.13
 ==============
 
-.. warning: Not released yet.
+.. warning:: Not released yet.
 
-* Added :func:`patch` shortcut for `route(..., method='PATCH')`
+.. rubric:: Dropped support for Python 2.5, 2.6 and 3.1
+
+These three Python versions are no longer maintained by the Python Software Foundation and reached their end of life a long time ago. Keeping up support for ancient Python versions hinders adaptation of new features and serves no real purpose. Even Debian 7 (wheezy) and Ubuntu 12.4 (precise), both outdated, ship with Python 2.7.3 and 3.2.3 already. For this reason, we decided to drop support for Python 2.5, 2.6 and 3.1. The updated list of tested and supported python releases is as follows:
+
+ * Python 2.7.3 ()
+ * Python 2.7
+ * Python 3.2
+ * Python 3.3
+ * Python 3.4
+ * Python 3.5
+ * PyPy 5.3
+ * PyPy3 2.4
+
+Support for Python 2.5 was marked as deprecated since 0.12. We decided to go a step further and also remove 2.6 and 3.1 support even if it was never deprecated explicitly. This means that this release is *not* backwards compatible in Python 2.6 or 3.1 environments. Maintainers for distributions or systems that still use these old python versions should not update to Bottle 0.13 and stick with 0.12 instead.
+
+.. rubric:: Stabilized APIs
+* The documented API of the :class:`ConfigDict` class is now considered stable and ready to use.
+
+.. rubric:: Deprecated APIs
+* The old route syntax (``/hello/:name``) is deprecated in favor of the more readable and flexible ``/hello/<name>`` syntax.
+* :meth:`Bottle.mount` now recognizes Bottle instance and will warn about parameters that are not compatible with the new mounting behavior. The old behavior (mount applications as WSGI callable) still works and is used as a fallback automatically.
+* The undocumented :func:`local_property` helper is now deprecated.
+* The server adapter for google app engine is not useful anymore and marked as deprecated.
+
+.. rubric:: Removed APIs (deprecated since 0.12)
+* Plugins with the old API (``api=1`` or no api attribute) will no longer work.
+* Parameter order of :meth:`Bottle.mount` changed in 0.10. The old order will now result in an error instead of a warning.
+* The :class:`ConfigDict` class was introduced in 0.11 and changed during 0.12. These changes are now final.
+
+  * Attribute access and assignment was removed due to high overhead and limited usability.
+  * Namespaced sub-instance creation was removed. ``config["a"]["b"]`` has a high overhead and little benefit over ``config["a.b"]``.
+  * :class:`ConfigDict` instances are no longer callable. This was a shortcut for :meth:`ConfigDict.update`.
+  * :class:`ConfigDict` constructor no longer accepts any parameters. Use the `load_*` methods instead.
+
+* Bottle 0.12 changed some aspects of the Simple Template Engine. These changes are now final and the old syntax will now longer work.
+
+  * The magic ``{{rebase()}}`` call was replaced by a ``base`` variable. Example: ``{{base}}``
+  * In STPL Templates, the 'rebase' and 'include' keywords were replaced with functions in 0.12.
+  * PEP-263 encoding strings are no longer recognized.
+
+* The 'geventSocketIO' server adapter was removed without notice. It did not work anyway.
+
+.. rubric:: Changes
+These changes might require special care when updating.
+
+* Signed cookies now use a stronger HMAC algorithm by default. This will result in old cookies to appear invalid after the update. Pass an explicit ``digestmod=hashlib.md5`` to :meth:`Request.get_cookie` and :meth:`Response.set_cookie` to get the old behavior.
+
+.. rubric:: Other Improvements
+* Bottle() instances are now context managers. If used in a with-statement, the default application changes to the specific instance and the shortcuts for many instance methods can be used.
+* Added support for ``PATCH`` requests and the :meth:`Bottle.patch` decorator.
+* Added `aiohttp <http://aiohttp.readthedocs.io/en/stable/>`_ and `uvloop <https://github.com/MagicStack/uvloop>`_ server adapters.
+* Added command-line arguments for config from json or ini files.
+* :meth:`Bottle.mount` now recognizes instances of :class:`Bottle` and mounts them with significantly less overhead than other WSGI applications.
+* The :attr:`Request.json` property now accepts ``application/json-rpc`` requests.
+* :func:`static_file` gained support for ``ETag`` headers. It will generate ETags and recognizes ``If-None-Match`` headers.
+* Jinja2 templates will produce better error messages than before.
+
+
 
 
 Release 0.12
 ==============
 
 * New SimpleTemplate parser implementation
+
   * Support for multi-line code blocks (`<% ... %>`).
   * The keywords `include` and `rebase` are functions now and can accept variable template names.
-* The new :meth:`BaseRequest.route` property returns the :class:`Route` that originally matched the request.
+
+* The new :attr:`BaseRequest.route` property returns the :class:`Route` that originally matched the request.
 * Removed the ``BaseRequest.MAX_PARAMS`` limit. The hash collision bug in CPythons dict() implementation was fixed over a year ago. If you are still using Python 2.5 in production, consider upgrading or at least make sure that you get security fixed from your distributor.
 * New :class:`ConfigDict` API (see :doc:`configuration`)
 

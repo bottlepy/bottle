@@ -44,7 +44,7 @@ This will get you the latest development snapshot that includes all the new feat
     $ sudo easy_install bottle             # alternative without pip
     $ sudo apt-get install python-bottle   # works for debian, ubuntu, ...
 
-Either way, you'll need Python 2.6 or newer (including 3.2+) to run bottle applications. If you do not have permissions to install packages system-wide or simply don't want to, create a `virtualenv <http://pypi.python.org/pypi/virtualenv>`_ first:
+Either way, you'll need Python 2.7 or newer (including 3.2+) to run bottle applications. If you do not have permissions to install packages system-wide or simply don't want to, create a `virtualenv <http://pypi.python.org/pypi/virtualenv>`_ first:
 
 .. code-block:: bash
 
@@ -419,7 +419,7 @@ The :meth:`Response.set_cookie` method accepts a number of additional keyword ar
 * **domain:**     The domain that is allowed to read the cookie. (default: current domain)
 * **path:**       Limit the cookie to a given path (default: ``/``)
 * **secure:**     Limit the cookie to HTTPS connections (default: off).
-* **httponly:**   Prevent client-side javascript to read this cookie (default: off, requires Python 2.6 or newer).
+* **httponly:**   Prevent client-side javascript to read this cookie (default: off, requires Python 2.7 or newer).
 
 If neither `expires` nor `max_age` is set, the cookie expires at the end of the browser session or as soon as the browser window is closed. There are some other gotchas you should consider when using cookies:
 
@@ -1030,7 +1030,7 @@ Both plugins and applications are specified via import expressions. These consis
 Deployment
 ================================================================================
 
-Bottle runs on the built-in `wsgiref WSGIServer <http://docs.python.org/library/wsgiref.html#module-wsgiref.simple_server>`_  by default. This non-threading HTTP server is perfectly fine for development and early production, but may become a performance bottleneck when server load increases.
+Bottle runs on the built-in `wsgiref WSGIServer <http://docs.python.org/library/wsgiref.html#module-wsgiref.simple_server>`_  by default. This non-threading HTTP server is perfectly fine for development, but may become a performance bottleneck when server load increases.
 
 The easiest way to increase performance is to install a multi-threaded server library like paste_ or cherrypy_ and tell Bottle to use that instead of the single-threaded server::
 

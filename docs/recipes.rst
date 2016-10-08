@@ -116,7 +116,7 @@ This is not the recommend way (you should use a middleware in front of bottle to
     from bottle import request, response, route
     subproject = SomeWSGIApplication()
 
-    @route('/subproject/:subpath#.*#', method='ANY')
+    @route('/subproject/<subpath:re:.*>', method='ANY')
     def call_wsgi(subpath):
         new_environ = request.environ.copy()
         new_environ['SCRIPT_NAME'] = new_environ.get('SCRIPT_NAME','') + '/subproject'
@@ -255,7 +255,7 @@ section of the `Getting Started with Python on Heroku/Cedar
 
     @route("/")
     def hello_world():
-            return "Hello World!"
+        return "Hello World!"
 
     run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
 

@@ -46,7 +46,11 @@ Run this script or paste it into a Python console, then point your browser to `<
 
 .. __: https://github.com/bottlepy/bottle/raw/master/bottle.py
 
-Install the latest stable release with ``pip install bottle``, ``easy_install -U bottle`` or download `bottle.py`__ (unstable) into your project directory. There are no hard [1]_ dependencies other than the Python standard library. Bottle runs with **Python 2.6+ and 3.2+**.
+Install the latest stable release with ``pip install bottle`` or download `bottle.py`__ (unstable) into your project directory. There are no hard [1]_ dependencies other than the Python standard library. Bottle supports **Python 2.7 and Python 3**.
+
+.. deprecated:: 0.13
+    Support for Python 2.5 and 2.6 was dropped with this release.
+
 
 User's Guide
 ===============

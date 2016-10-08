@@ -1,0 +1,13 @@
+test:
+  override:
+    - pyenv versions
+    - pyenv shell 2.7.3; eval "$(pyenv init -)"; python --version; python test/testall.py fast
+    - pyenv shell 2.7; eval "$(pyenv init -)"; python --version; python test/testall.py fast
+    - pyenv shell 3.2; eval "$(pyenv init -)"; python --version; python test/testall.py fast
+    - pyenv shell 3.3; eval "$(pyenv init -)"; python --version; python test/testall.py fast
+    - pyenv shell 3.4; eval "$(pyenv init -)"; python --version; python test/testall.py fast
+    - pyenv shell 3.5; eval "$(pyenv init -)"; python --version; python test/testall.py fast
+    - pyenv shell pypy-2.2; eval "$(pyenv init -)"; python --version; python test/testall.py fast
+    - pyenv shell pypy-2.3; eval "$(pyenv init -)"; python --version; python test/testall.py fast
+    - pyenv shell pypy-2.4; eval "$(pyenv init -)"; python --version; python test/testall.py fast
+    - pyenv shell pypy-2.5; eval "$(pyenv init -)"; python --version; python test/testall.py fast
