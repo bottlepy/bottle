@@ -70,7 +70,7 @@ if __name__ == '__main__':
 
 
 import base64, cgi, email.utils, functools, hmac, imp, itertools, mimetypes,\
-        os, re, tempfile, threading, time, warnings, hashlib
+        os, re, tempfile, threading, time, warnings, weakref, hashlib
 
 from types import FunctionType
 from datetime import date as datedate, datetime, timedelta
@@ -2275,12 +2275,12 @@ class ConfigDict(dict):
         methods as well as item access should be as fast as the built-in dict.
     """
 
-    __slots__ = ('_meta', '_change_listener', '_overlays', '_virtual_keys', '_source')
+    __slots__ = ('_meta', '_change_listener', '_overlays', '_virtual_keys', '_source', '__weakref__')
 
     def __init__(self):
         self._meta = {}
         self._change_listener = []
-        #: Configs that overlay this one and need to be kept in sync.
+        #: Weak references of overlays that need to be kept in sync.
         self._overlays = []
         #: Config that is the source for this overlay.
         self._source = None
@@ -2411,7 +2411,7 @@ class ConfigDict(dict):
         self._on_change(key, value)
         dict.__setitem__(self, key, value)
 
-        for overlay in self._overlays:
+        for overlay in self._iter_overlays():
             overlay._set_virtual(key, value)
 
     def __delitem__(self, key):
@@ -2427,7 +2427,7 @@ class ConfigDict(dict):
         else:  # not virtual, not present in source. This is OUR value
             self._on_change(key, None)
             dict.__delitem__(self, key)
-            for overlay in self._overlays:
+            for overlay in self._iter_overlays():
                 overlay._delete_virtual(key)
 
     def _set_virtual(self, key, value):
@@ -2440,7 +2440,7 @@ class ConfigDict(dict):
         if key in self and self[key] is not value:
             self._on_change(key, value)
         dict.__setitem__(self, key, value)
-        for overlay in self._overlays:
+        for overlay in self._iter_overlays():
             overlay._set_virtual(key, value)
 
     def _delete_virtual(self, key):
@@ -2453,7 +2453,7 @@ class ConfigDict(dict):
             self._on_change(key, None)
         dict.__delitem__(self, key)
         self._virtual_keys.discard(key)
-        for overlay in self._overlays:
+        for overlay in self._iter_overlays():
             overlay._delete_virtual(key)
 
     def _on_change(self, key, value):
@@ -2486,6 +2486,12 @@ class ConfigDict(dict):
         if validate is not _UNSET:
             self.meta_set(key, 'validate', validate)
 
+    def _iter_overlays(self):
+        for ref in self._overlays:
+            overlay = ref()
+            if overlay is not None:
+                yield overlay
+
     def _make_overlay(self):
         """ (Unstable) Create a new overlay that acts like a chained map: Values
             missing in the overlay are copied from the source map. Both maps
@@ -2510,10 +2516,13 @@ class ConfigDict(dict):
 
             Used by Route.config
         """
+        # Cleanup dead references
+        self._overlays[:] = [ref for ref in self._overlays if ref() is not None]
+
         overlay = ConfigDict()
         overlay._meta = self._meta
         overlay._source = self
-        self._overlays.append(overlay)
+        self._overlays.append(weakref.ref(overlay))
         for key in self:
             overlay._set_virtual(key, self[key])
         return overlay

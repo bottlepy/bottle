@@ -161,6 +161,13 @@ class TestConfDict(unittest.TestCase):
         self.assertEqual(source['key3'], 'source')
         self.assertEqual(overlay['key3'], 'source')
 
+    def test_gc_overlays(self):
+        root = ConfigDict()
+        overlay = root._make_overlay()
+        del overlay
+        import gc; gc.collect()
+        root._make_overlay()  # This triggers the weakref-collect
+        self.assertEqual(len(root._overlays), 1)
 
 
 class TestINIConfigLoader(unittest.TestCase):
