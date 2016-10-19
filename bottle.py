@@ -982,6 +982,7 @@ class Bottle(object):
                 if not self.catchall: raise
                 stacktrace = format_exc()
                 environ['wsgi.errors'].write(stacktrace)
+                environ['wsgi.errors'].flush()
                 return HTTPError(500, "Internal Server Error", E, stacktrace)
 
         try:
@@ -1095,6 +1096,7 @@ class Bottle(object):
                        '<h2>Traceback:</h2>\n<pre>\n%s\n</pre>\n' \
                        % (html_escape(repr(E)), html_escape(format_exc()))
             environ['wsgi.errors'].write(err)
+            environ['wsgi.errors'].flush()
             headers = [('Content-Type', 'text/html; charset=UTF-8')]
             start_response('500 INTERNAL SERVER ERROR', headers, sys.exc_info())
             return [tob(err)]
