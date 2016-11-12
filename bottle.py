@@ -963,42 +963,44 @@ class Bottle(object):
         if py3k:
             environ['PATH_INFO'] = path.encode('latin1').decode('utf8', 'ignore')
 
-        def _inner_handle():
-            # Maybe pass variables as locals for better performance?
-            try:
-                route, args = self.router.match(environ)
-                environ['route.handle'] = route
-                environ['bottle.route'] = route
-                environ['route.url_args'] = args
-                return route.call(**args)
-            except HTTPResponse as E:
-                return E
-            except RouteReset:
-                route.reset()
-                return _inner_handle()
-            except (KeyboardInterrupt, SystemExit, MemoryError):
-                raise
-            except Exception as E:
-                if not self.catchall: raise
-                stacktrace = format_exc()
-                environ['wsgi.errors'].write(stacktrace)
-                environ['wsgi.errors'].flush()
-                return HTTPError(500, "Internal Server Error", E, stacktrace)
+        environ['bottle.app'] = self
+        request.bind(environ)
+        response.bind()
+
+        try:
+            self.trigger_hook('before_request')
+        except HTTPResponse as E:
+            E.apply(response)
+            return E
 
         try:
             out = None
-            environ['bottle.app'] = self
-            request.bind(environ)
-            response.bind()
-            try:
-                self.trigger_hook('before_request')
-            except HTTPResponse as E:
-                return E
-            out = _inner_handle()
-            return out
-        finally:
+            while True:
+                try:
+                    route, args = self.router.match(environ)
+                    environ['route.handle'] = route
+                    environ['bottle.route'] = route
+                    environ['route.url_args'] = args
+                    out = route.call(**args)
+                except HTTPResponse as E:
+                    out = E
+                except RouteReset:
+                    route.reset()
+                    continue
+                except (KeyboardInterrupt, SystemExit, MemoryError):
+                    raise
+                except Exception as E:
+                    if not self.catchall: raise
+                    stacktrace = format_exc()
+                    environ['wsgi.errors'].write(stacktrace)
+                    environ['wsgi.errors'].flush()
+                    out = HTTPError(500, "Internal Server Error", E, stacktrace)
+                break
+
             if isinstance(out, HTTPResponse):
                 out.apply(response)
+            return out
+        finally:
             self.trigger_hook('after_request')
 
     def _cast(self, out, peek=None):
