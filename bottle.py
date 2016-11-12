@@ -1613,8 +1613,8 @@ class BaseResponse(object):
     # Header blacklist for specific response codes
     # (rfc2616 section 10.2.3 and 10.3.5)
     bad_headers = {
-        204: set(('Content-Type', 'Content-Length')),
-        304: set(('Allow', 'Content-Encoding', 'Content-Language',
+        204: frozenset(('Content-Type', 'Content-Length')),
+        304: frozenset(('Allow', 'Content-Encoding', 'Content-Language',
                   'Content-Length', 'Content-Range', 'Content-Type',
                   'Content-Md5', 'Last-Modified'))
     }
