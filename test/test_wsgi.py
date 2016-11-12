@@ -264,17 +264,80 @@ class TestRouteDecorator(ServerTestBase):
         self.assertBody('before', '/test')
         self.assertHeader('X-Hook', 'after', '/test')
 
-    def test_environ_reflects_correct_response_after_request_in_hooks(self):
+    def test_after_request_sees_HTTPError_response(self):
         """ Issue #671  """
+        called = []
 
         @bottle.hook('after_request')
-        def log_request_a():
-            self.assertStatus(400)
-            self.assertBody("test")
+        def after_request():
+            called.append('after')
+            self.assertEqual(400, bottle.response.status_code)
 
         @bottle.get('/')
         def _get():
+            called.append("route")
             bottle.abort(400, 'test')
+
+        self.urlopen("/")
+        self.assertEqual(["route", "after"], called)
+
+    def test_after_request_hooks_run_after_exception(self):
+        """ Issue #671  """
+        called = []
+
+        @bottle.hook('before_request')
+        def before_request():
+            called.append('before')
+
+        @bottle.hook('after_request')
+        def after_request():
+            called.append('after')
+
+        @bottle.get('/')
+        def _get():
+            called.append("route")
+            1/0
+
+        self.urlopen("/")
+        self.assertEqual(["before", "route", "after"], called)
+
+    def test_after_request_hooks_run_after_exception_in_before_hook(self):
+        """ Issue #671  """
+        called = []
+
+        @bottle.hook('before_request')
+        def before_request():
+            called.append('before')
+            1 / 0
+
+        @bottle.hook('after_request')
+        def after_request():
+            called.append('after')
+
+        @bottle.get('/')
+        def _get():
+            called.append("route")
+
+        self.urlopen("/")
+        self.assertEqual(["before", "after"], called)
+
+    def test_after_request_hooks_may_rise_response_exception(self):
+        """ Issue #671  """
+        called = []
+
+        @bottle.hook('after_request')
+        def after_request():
+            called.append('after')
+            bottle.abort(400, "hook_content")
+
+        @bottle.get('/')
+        def _get():
+            called.append("route")
+            return "XXX"
+
+        self.assertInBody("hook_content", "/")
+        self.assertEqual(["route", "after"], called)
+
 
     def test_template(self):
         @bottle.route(template='test {{a}} {{b}}')
