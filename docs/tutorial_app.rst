@@ -8,7 +8,7 @@
 .. _`WSGI reference Server`: http://docs.python.org/library/wsgiref.html#module-wsgiref.simple_server
 .. _Cherrypy: http://www.cherrypy.org/
 .. _Fapws3: http://github.com/william-os4y/fapws3
-.. _Flup: http://trac.saddi.com/flup
+.. _Flup: https://www.saddi.com/software/flup/
 .. _Paste: http://pythonpaste.org/
 .. _Apache: http://www.apache.org
 .. _`Bottle documentation`: http://bottlepy.org/docs/dev/tutorial.html
