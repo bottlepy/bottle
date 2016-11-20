@@ -2302,7 +2302,7 @@ class ConfigDict(dict):
            >>> c.load_module('config')
            {DEBUG: True, 'SQLITE.DB': 'memory'}
            >>> c.load_module("config", False)
-           {'DEBUG': True, 'SQLITE': {'DB': 'memory'}]
+           {'DEBUG': True, 'SQLITE': {'DB': 'memory'}}
 
            :param squash: If true (default), dictionary values are assumed to
                           represent namespaces (see :meth:`load_dict`).
