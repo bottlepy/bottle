@@ -2302,7 +2302,7 @@ class ConfigDict(dict):
            >>> c.load_module('config')
            {DEBUG: True, 'SQLITE.DB': 'memory'}
            >>> c.load_module("config", False)
-           {'DEBUG': True, 'SQLITE': {'DB': 'memory'}}
+           {'DEBUG': True, 'SQLITE': {'DB': 'memory'}]
 
            :param squash: If true (default), dictionary values are assumed to
                           represent namespaces (see :meth:`load_dict`).
@@ -3972,7 +3972,7 @@ class StplParser(object):
     # Match inline statements (may contain python strings)
     _re_inl = r'''%%(inline_start)s((?:%s|[^'"\n]+?)*?)%%(inline_end)s''' % _re_inl
 
-    default_syntax = '<% %> % {{ }}'
+    default_syntax = '<% %> % [{ }]'
 
     def __init__(self, source, syntax=None, encoding='utf8'):
         self.source, self.encoding = touni(source, encoding), encoding
@@ -3983,7 +3983,7 @@ class StplParser(object):
         self.paren_depth = 0
 
     def get_syntax(self):
-        """ Tokens as a space separated string (default: <% %> % {{ }}) """
+        """ Tokens as a space separated string (default: <% %> % [{ }]) """
         return self._syntax
 
     def set_syntax(self, syntax):
@@ -4197,7 +4197,7 @@ ERROR_PAGE_TEMPLATE = """
     <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
     <html>
         <head>
-            <title>Error: {{e.status}}</title>
+            <title>Error: [{e.status}]</title>
             <style type="text/css">
               html {background-color: #eee; font-family: sans-serif;}
               body {background-color: #fff; border: 1px solid #ddd;
@@ -4206,10 +4206,10 @@ ERROR_PAGE_TEMPLATE = """
             </style>
         </head>
         <body>
-            <h1>Error: {{e.status}}</h1>
-            <p>Sorry, the requested URL <tt>{{repr(request.url)}}</tt>
+            <h1>Error: [{e.status}]</h1>
+            <p>Sorry, the requested URL <tt>[{repr(request.url)}]</tt>
                caused an error:</p>
-            <pre>{{e.body}}</pre>
+            <pre>[{e.body}]</pre>
             %%if DEBUG and e.exception:
               <h2>Exception:</h2>
               %%try:
@@ -4217,11 +4217,11 @@ ERROR_PAGE_TEMPLATE = """
               %%except:
                 %%exc = '<unprintable %%s object>' %% type(e.exception).__name__
               %%end
-              <pre>{{exc}}</pre>
+              <pre>[{exc}]</pre>
             %%end
             %%if DEBUG and e.traceback:
               <h2>Traceback:</h2>
-              <pre>{{e.traceback}}</pre>
+              <pre>[{e.traceback}]</pre>
             %%end
         </body>
     </html>
