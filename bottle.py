@@ -1194,15 +1194,22 @@ class BaseRequest(object):
         cookies = SimpleCookie(self.environ.get('HTTP_COOKIE', '')).values()
         return FormsDict((c.key, c.value) for c in cookies)
 
-    def get_cookie(self, key, default=None, secret=None):
+    def get_cookie(self, key, default=None, secret=None, digestmod=hashlib.sha256):
         """ Return the content of a cookie. To read a `Signed Cookie`, the
             `secret` must match the one used to create the cookie (see
             :meth:`BaseResponse.set_cookie`). If anything goes wrong (missing
             cookie or wrong signature), return a default value. """
         value = self.cookies.get(key)
-        if secret and value:
-            dec = cookie_decode(value, secret)  # (key, value) tuple or None
-            return dec[1] if dec and dec[0] == key else default
+        if secret:
+            # See BaseResponse.set_cookie for details on signed cookies.
+            if value and value.startswith('!') and '?' in value:
+                sig, msg = map(tob, value[1:].split('?', 1))
+                hash = hmac.new(tob(secret), msg, digestmod=digestmod).digest()
+                if _lscmp(sig, base64.b64encode(hash)):
+                    dst = pickle.loads(base64.b64decode(msg))
+                    if dst and dst[0] == key:
+                        return dst[1]
+            return default
         return value or default
 
     @DictProperty('environ', 'bottle.request.query', read_only=True)
@@ -1774,7 +1781,7 @@ class BaseResponse(object):
             return self.content_type.split('charset=')[-1].split(';')[0].strip()
         return default
 
-    def set_cookie(self, name, value, secret=None, **options):
+    def set_cookie(self, name, value, secret=None, digestmod=hashlib.sha256, **options):
         """ Create a new cookie or replace an old one. If the `secret` parameter is
             set, create a `Signed Cookie` (described below).
 
@@ -1802,6 +1809,11 @@ class BaseResponse(object):
             cryptographically signed to prevent manipulation. Keep in mind that
             cookies are limited to 4kb in most browsers.
 
+            Warning: Pickle is a potentially dangerous format. If an attacker
+            gains access to the secret key, he could forge cookies that execute
+            code on server side if unpickeld. Using pickle is discouraged and
+            support for it will be removed in later versions of bottle.
+
             Warning: Signed cookies are not encrypted (the client can still see
             the content) and not copy-protected (the client can restore an old
             cookie). The main intention is to make pickling and unpickling
@@ -1811,9 +1823,16 @@ class BaseResponse(object):
             self._cookies = SimpleCookie()
 
         if secret:
-            value = touni(cookie_encode((name, value), secret))
+            if not isinstance(value, basestring):
+                depr(0, 13, "Pickling of arbitrary objects into cookies is "
+                            "deprecated.", "Only store strings in cookies. "
+                            "JSON strings are fine, too.")
+            encoded = base64.b64encode(pickle.dumps([name, value], -1))
+            sig = base64.b64encode(hmac.new(tob(secret), encoded,
+                                            digestmod=digestmod).digest())
+            value = touni(tob('!') + sig + tob('?') + encoded)
         elif not isinstance(value, basestring):
-            raise TypeError('Secret key missing for non-string Cookie.')
+            raise TypeError('Secret key required for non-string cookies.')
 
         # Cookie size plus options must not exceed 4kb.
         if len(name) + len(value) > 3800:
@@ -2995,6 +3014,8 @@ def _lscmp(a, b):
 
 def cookie_encode(data, key, digestmod=None):
     """ Encode and sign a pickle-able object. Return a (byte) string """
+    depr(0, 13, "cookie_encode() will be removed soon.",
+                "Do not use this API directly.")
     digestmod = digestmod or hashlib.sha256
     msg = base64.b64encode(pickle.dumps(data, -1))
     sig = base64.b64encode(hmac.new(tob(key), msg, digestmod=digestmod).digest())
@@ -3003,6 +3024,8 @@ def cookie_encode(data, key, digestmod=None):
 
 def cookie_decode(data, key, digestmod=None):
     """ Verify and decode an encoded string. Return an object or None."""
+    depr(0, 13, "cookie_decode() will be removed soon.",
+                "Do not use this API directly.")
     data = tob(data)
     if cookie_is_encoded(data):
         sig, msg = data.split(tob('?'), 1)
@@ -3015,6 +3038,8 @@ def cookie_decode(data, key, digestmod=None):
 
 def cookie_is_encoded(data):
     """ Return True if the argument looks like a encoded cookie."""
+    depr(0, 13, "cookie_is_encoded() will be removed soon.",
+                "Do not use this API directly.")
     return bool(data.startswith(tob('!')) and tob('?') in data)
 
 
