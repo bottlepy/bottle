@@ -1398,10 +1398,18 @@ class BaseRequest(object):
         self.environ['bottle.request.ext.%s'%name] = value
 
 
+def _hkey(key):
+    if '\n' in key or '\r' in key or '\0' in key:
+        raise ValueError("Header names must not contain control characters: %r" % key)
+    return key.title().replace('_', '-')
 
 
-def _hkey(s):
-    return s.title().replace('_','-')
+def _hval(value):
+    value = value if isinstance(value, unicode) else str(value)
+    if '\n' in value or '\r' in value or '\0' in value:
+        raise ValueError("Header value must not contain control characters: %r" % value)
+    return value
+
 
 
 class HeaderProperty(object):
@@ -1921,7 +1929,6 @@ class FormsDict(MultiDict):
             return super(FormsDict, self).__getattr__(name)
         return self.getunicode(name, default=default)
 
-
 class HeaderDict(MultiDict):
     """ A case-insensitive version of :class:`MultiDict` that defaults to
         replace the old value instead of appending it. """
@@ -1933,15 +1940,14 @@ class HeaderDict(MultiDict):
     def __contains__(self, key): return _hkey(key) in self.dict
     def __delitem__(self, key): del self.dict[_hkey(key)]
     def __getitem__(self, key): return self.dict[_hkey(key)][-1]
-    def __setitem__(self, key, value): self.dict[_hkey(key)] = [str(value)]
-    def append(self, key, value):
-        self.dict.setdefault(_hkey(key), []).append(str(value))
-    def replace(self, key, value): self.dict[_hkey(key)] = [str(value)]
+    def __setitem__(self, key, value): self.dict[_hkey(key)] = [_hval(value)]
+    def append(self, key, value): self.dict.setdefault(_hkey(key), []).append(_hval(value))
+    def replace(self, key, value): self.dict[_hkey(key)] = [_hval(value)]
     def getall(self, key): return self.dict.get(_hkey(key)) or []
     def get(self, key, default=None, index=-1):
         return MultiDict.get(self, _hkey(key), default, index)
     def filter(self, names):
-        for name in [_hkey(n) for n in names]:
+        for name in (_hkey(n) for n in names):
             if name in self.dict:
                 del self.dict[name]
 
