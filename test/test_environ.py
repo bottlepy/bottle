@@ -4,8 +4,6 @@
 import unittest
 import sys
 
-import itertools
-
 import bottle
 from bottle import request, tob, touni, tonat, json_dumps, _e, HTTPError, parse_date
 import tools
@@ -13,6 +11,18 @@ import wsgiref.util
 import base64
 
 from bottle import BaseRequest, BaseResponse, LocalRequest
+
+
+try:
+    from itertools import product
+except ImportError:
+    def product(*args):
+        pools = map(tuple, args)
+        result = [[]]
+        for pool in pools:
+            result = [x + [y] for x in result for y in pool]
+        for prod in result:
+            yield tuple(prod)
 
 class TestRequest(unittest.TestCase):
 
@@ -662,7 +672,7 @@ class TestResponse(unittest.TestCase):
         apis = 'append', 'replace', '__setitem__', 'setdefault'
         masks = '{}test', 'test{}', 'te{}st'
         tests = '\n', '\r', '\n\r', '\0'
-        for api, mask, test in itertools.product(apis, masks, tests):
+        for api, mask, test in product(apis, masks, tests):
             hd = bottle.HeaderDict()
             func = getattr(hd, api)
             value = mask.replace("{}", test)
