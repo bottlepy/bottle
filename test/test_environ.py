@@ -3,6 +3,9 @@
 
 import unittest
 import sys
+
+import itertools
+
 import bottle
 from bottle import request, tob, touni, tonat, json_dumps, HTTPError, parse_date
 from test import tools
@@ -694,6 +697,17 @@ class TestResponse(unittest.TestCase):
         self.assertEqual('5', response['x-test'])
         response['x-test'] = None
         self.assertEqual('None', response['x-test'])
+
+    def test_prevent_control_characters_in_headers(self):
+        apis = 'append', 'replace', '__setitem__', 'setdefault'
+        masks = '{}test', 'test{}', 'te{}st'
+        tests = '\n', '\r', '\n\r', '\0'
+        for api, mask, test in itertools.product(apis, masks, tests):
+            hd = bottle.HeaderDict()
+            func = getattr(hd, api)
+            value = mask.replace("{}", test)
+            self.assertRaises(ValueError, func, value, "test-value")
+            self.assertRaises(ValueError, func, "test-name", value)
 
     def test_expires_header(self):
         import datetime
