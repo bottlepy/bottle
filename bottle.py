@@ -1413,21 +1413,21 @@ def _hval(value):
 
 
 class HeaderProperty(object):
-    def __init__(self, name, reader=None, writer=str, default=''):
+    def __init__(self, name, reader=None, writer=None, default=''):
         self.name, self.default = name, default
         self.reader, self.writer = reader, writer
         self.__doc__ = 'Current value of the %r header.' % name.title()
 
     def __get__(self, obj, cls):
         if obj is None: return self
-        value = obj.headers.get(self.name, self.default)
+        value = obj.get_header(self.name, self.default)
         return self.reader(value) if self.reader else value
 
     def __set__(self, obj, value):
-        obj.headers[self.name] = self.writer(value)
+        obj[self.name] = self.writer(value) if self.writer else value
 
     def __delete__(self, obj):
-        del obj.headers[self.name]
+        del obj[self.name]
 
 
 class BaseResponse(object):
@@ -1534,7 +1534,7 @@ class BaseResponse(object):
     def __contains__(self, name): return _hkey(name) in self._headers
     def __delitem__(self, name):  del self._headers[_hkey(name)]
     def __getitem__(self, name):  return self._headers[_hkey(name)][-1]
-    def __setitem__(self, name, value): self._headers[_hkey(name)] = [str(value)]
+    def __setitem__(self, name, value): self._headers[_hkey(name)] = [_hval(value)]
 
     def get_header(self, name, default=None):
         ''' Return the value of a previously defined header. If there is no
@@ -1544,11 +1544,11 @@ class BaseResponse(object):
     def set_header(self, name, value):
         ''' Create a new response header, replacing any previously defined
             headers with the same name. '''
-        self._headers[_hkey(name)] = [str(value)]
+        self._headers[_hkey(name)] = [_hval(value)]
 
     def add_header(self, name, value):
         ''' Add an additional response header, not removing duplicates. '''
-        self._headers.setdefault(_hkey(name), []).append(str(value))
+        self._headers.setdefault(_hkey(name), []).append(_hval(value))
 
     def iter_headers(self):
         ''' Yield (header, value) tuples, skipping headers that are not
