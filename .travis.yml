@@ -17,12 +17,12 @@ install:
   # Coveralls 4.0 doesn't support Python 3.2
   - if [ "$TRAVIS_PYTHON_VERSION" == "3.2" ]; then travis_retry pip install coverage==3.7.1; fi
   - if [ "$TRAVIS_PYTHON_VERSION" != "3.2" ]; then travis_retry pip install coverage; fi
-  - pip install coveralls
+  - pip install -U coverage coveralls
 
 script:
- - coverage run --source=bottle.py test/testall.py fast
- - coverage combine
- - coverage report 2>&1
+ - python -m coverage run --source=bottle.py test/testall.py fast
+ - python -m coverage combine
+ - python -m coverage report 2>&1
 
 notifications:
   irc: "irc.freenode.org#bottlepy"
