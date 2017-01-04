@@ -59,5 +59,12 @@ Have a look at :ref:`plugins` for general questions about plugins (installation,
 `Bottle-jwt <https://github.com/kianxineki/bottlejwt>`_
 	JWT integration for bottle
 
+`bottle-cerberus <https://github.com/kianxineki/bottle-cerberus>`_
+	Cerberus integration for bottle
+
+`Bottle-errorsrest <https://github.com/kianxineki/bottle-errorsrest>`_
+	All errors generated from bottle are returned in json
+
+
 Plugins listed here are not part of Bottle or the Bottle project, but developed and maintained by third parties.
 
