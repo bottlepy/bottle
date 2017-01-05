@@ -53,5 +53,13 @@ Have a look at :ref:`plugins` for general questions about plugins (installation,
 `Bottle-Werkzeug <http://pypi.python.org/pypi/bottle-werkzeug/>`_
 	Integrates the `werkzeug` library (alternative request and response objects, advanced debugging middleware and more).
 
+`bottle-smart-filters <https://github.com/agile4you/bottle-smart-filters/>`_
+	Bottle Querystring smart guessing.
+
+`bottle-jwt <https://github.com/agile4you/bottle-jwt/>`_
+	JSON Web Token authentication plugin for bottle.py
+	
+
+
 Plugins listed here are not part of Bottle or the Bottle project, but developed and maintained by third parties.
 
