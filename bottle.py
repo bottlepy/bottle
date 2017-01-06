@@ -2709,6 +2709,10 @@ class FileUpload(object):
     content_type = HeaderProperty('Content-Type')
     content_length = HeaderProperty('Content-Length', reader=int, default=-1)
 
+    def get_header(self, name, default=None):
+        """ Return the value of a header within the mulripart part. """
+        return self.headers.get(name, default)
+
     @cached_property
     def filename(self):
         """ Name of the file on the client file system, but normalized to ensure
