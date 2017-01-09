@@ -1,10 +1,4 @@
 [run]
 branch = True
 parallel = True
-data_file = build/.coverage
-
-[report]
-include=bottle.py
-
-[html]
-directory = build/coverage
+source = bottle.py 

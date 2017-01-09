@@ -40,13 +40,6 @@ pushd $PREFIX || exit 1
     echo "Installing distribute and pip..."
     hash -r
 
-    if [ $VERSION = "2.5" ]; then
-        wget https://pypi.python.org/packages/source/s/simplejson/simplejson-3.6.3.tar.gz
-        tar -xvzf simplejson-3.6.3.tar.gz
-        cd simplejson-3.6.3
-        $PREFIX/bin/python$VERSION setup.py install
-    fi
-
   popd
 
   echo "Cleaning up..."

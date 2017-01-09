@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
+from __future__ import with_statement
 import unittest
 from bottle import SimpleTemplate, TemplateError, view, template, touni, tob, html_quote
-import re
+import re, os
 import traceback
+from tools import chdir
+
 
 class TestSimpleTemplate(unittest.TestCase):
     def assertRenders(self, tpl, to, *args, **vars):
         if isinstance(tpl, str):
-            tpl = SimpleTemplate(tpl)
+            tpl = SimpleTemplate(tpl, lookup=[os.path.join(os.path.dirname(__file__), 'views')])
         self.assertEqual(touni(to), tpl.render(*args, **vars))
 
     def test_string(self):
@@ -18,12 +21,14 @@ class TestSimpleTemplate(unittest.TestCase):
         self.assertRenders('start {{self}} end', 'start var end', {'self':'var'})
 
     def test_file(self):
-        t = SimpleTemplate(name='./views/stpl_simple.tpl')
-        self.assertRenders(t, 'start var end\n', var='var')
+        with chdir(__file__):
+            t = SimpleTemplate(name='./views/stpl_simple.tpl', lookup=['.'])
+            self.assertRenders(t, 'start var end\n', var='var')
 
     def test_name(self):
-        t = SimpleTemplate(name='stpl_simple', lookup=['./views/'])
-        self.assertRenders(t, 'start var end\n', var='var')
+        with chdir(__file__):
+            t = SimpleTemplate(name='stpl_simple', lookup=['./views/'])
+            self.assertRenders(t, 'start var end\n', var='var')
 
     def test_unicode(self):
         self.assertRenders('start {{var}} end', 'start äöü end', var=touni('äöü'))
@@ -31,8 +36,9 @@ class TestSimpleTemplate(unittest.TestCase):
 
     def test_unicode_code(self):
         """ Templates: utf8 code in file"""
-        t = SimpleTemplate(name='./views/stpl_unicode.tpl')
-        self.assertRenders(t, 'start ñç äöü end\n', var=touni('äöü'))
+        with chdir(__file__):
+            t = SimpleTemplate(name='./views/stpl_unicode.tpl', lookup=['.'])
+            self.assertRenders(t, 'start ñç äöü end\n', var=touni('äöü'))
 
     def test_import(self):
         """ Templates: import statement"""
@@ -147,14 +153,16 @@ class TestSimpleTemplate(unittest.TestCase):
 
     def test_include(self):
         """ Templates: Include statements"""
-        t = SimpleTemplate(name='stpl_include', lookup=['./views/'])
-        self.assertRenders(t, 'before\nstart var end\nafter\n', var='var')
+        with chdir(__file__):
+            t = SimpleTemplate(name='stpl_include', lookup=['./views/'])
+            self.assertRenders(t, 'before\nstart var end\nafter\n', var='var')
 
     def test_rebase(self):
         """ Templates: %rebase and method passing """
-        t = SimpleTemplate(name='stpl_t2main', lookup=['./views/'])
-        result='+base+\n+main+\n!1234!\n+include+\n-main-\n+include+\n-base-\n'
-        self.assertRenders(t, result, content='1234')
+        with chdir(__file__):
+            t = SimpleTemplate(name='stpl_t2main', lookup=['./views/'])
+            result='+base+\n+main+\n!1234!\n+include+\n-main-\n+include+\n-base-\n'
+            self.assertRenders(t, result, content='1234')
 
     def test_get(self):
         self.assertRenders('{{get("x", "default")}}', '1234', x='1234')
@@ -171,12 +179,12 @@ class TestSimpleTemplate(unittest.TestCase):
 
     def test_notfound(self):
         """ Templates: Unavailable templates"""
-        self.assertRaises(TemplateError, SimpleTemplate, name="abcdef")
+        self.assertRaises(TemplateError, SimpleTemplate, name="abcdef", lookup=['.'])
 
     def test_error(self):
         """ Templates: Exceptions"""
         self.assertRaises(SyntaxError, lambda: SimpleTemplate('%for badsyntax').co)
-        self.assertRaises(IndexError, SimpleTemplate('{{i[5]}}').render, i=[0])
+        self.assertRaises(IndexError, SimpleTemplate('{{i[5]}}', lookup=['.']).render, i=[0])
 
     def test_winbreaks(self):
         """ Templates: Test windows line breaks """
@@ -205,14 +213,15 @@ class TestSimpleTemplate(unittest.TestCase):
         self.assertEqual(touni('start middle end'), test())
 
     def test_view_decorator_issue_407(self):
-        @view('stpl_no_vars')
-        def test():
-            pass
-        self.assertEqual(touni('hihi'), test())
-        @view('aaa {{x}}', x='bbb')
-        def test2():
-            pass
-        self.assertEqual(touni('aaa bbb'), test2())
+        with chdir(__file__):
+            @view('stpl_no_vars')
+            def test():
+                pass
+            self.assertEqual(touni('hihi'), test())
+            @view('aaa {{x}}', x='bbb')
+            def test2():
+                pass
+            self.assertEqual(touni('aaa bbb'), test2())
 
     def test_global_config(self):
         SimpleTemplate.global_config('meh', 1)
@@ -347,7 +356,3 @@ class TestSTPLDir(unittest.TestCase):
         ''', result='''
             [1, 3, 5]
         ''')
-
-if __name__ == '__main__': #pragma: no cover
-    unittest.main()
-

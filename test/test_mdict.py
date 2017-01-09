@@ -45,9 +45,3 @@ class TestMultiDict(unittest.TestCase):
         d['lower'] = 'lower'
         self.assertEqual(d.get('upper'), 'UPPER')
         self.assertEqual(d.get('LOWER'), 'lower')
-
-
-   
-if __name__ == '__main__': #pragma: no cover
-    unittest.main()
-

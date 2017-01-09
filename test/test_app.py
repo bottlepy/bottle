@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-""" Tests for the functionalityof the application object.
+""" Tests for the functionality of the application object.
 
     TODO: Move other tests here.
 """ 
@@ -18,9 +18,3 @@ class TestApplicationObject(unittest.TestCase):
         del app.test
         app.test = 6
         self.assertEquals(6, app.test)
-
-
-   
-if __name__ == '__main__': #pragma: no cover
-    unittest.main()
-

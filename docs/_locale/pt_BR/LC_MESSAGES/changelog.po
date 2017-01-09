@@ -7,37 +7,32 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-01-22 16:45-0200\n"
+"POT-Creation-Date: 2015-12-19 14:15+0100\n"
 "PO-Revision-Date: 2015-01-22 19:17+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: Portuguese (Brazil) (http://www.transifex.com/projects/p/bottle/language/pt_BR/)\n"
+"Language-Team: Portuguese (Brazil) (http://www.transifex.com/bottle/bottle/language/pt_BR/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: pt_BR\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-# 2c827a6b85474451ac6d1b311afbc48e
 #: ../../changelog.rst:6
 msgid "Release Notes and Changelog"
 msgstr ""
 
-# 2c038f6c72e3462db84c3b9c6174bcb8
 #: ../../changelog.rst:9
 msgid "Release 0.13"
 msgstr ""
 
-# 90d2ce4be7c946ab81248e09e10226e1
 #: ../../changelog.rst:13
 msgid "Added :func:`patch` shortcut for `route(..., method='PATCH')`"
 msgstr ""
 
-# 5accefe5fae449c39c9f40dd3e0ccb8b
 #: ../../changelog.rst:17
 msgid "Release 0.12"
 msgstr ""
 
-# 732dab09fa81456fa715247b9a35e93c
 #: ../../changelog.rst:19
 msgid ""
 "New SimpleTemplate parser implementation * Support for multi-line code "
@@ -45,14 +40,12 @@ msgid ""
 "now and can accept variable template names."
 msgstr ""
 
-# d0bb03ee92a64a5ab87feab02b7a9eed
 #: ../../changelog.rst:22
 msgid ""
 "The new :meth:`BaseRequest.route` property returns the :class:`Route` that "
 "originally matched the request."
 msgstr ""
 
-# 9cf2dad038c146d4bc701ce50e141e76
 #: ../../changelog.rst:23
 msgid ""
 "Removed the ``BaseRequest.MAX_PARAMS`` limit. The hash collision bug in "
@@ -61,81 +54,68 @@ msgid ""
 "that you get security fixed from your distributor."
 msgstr ""
 
-# 7374c76a656945f0881c7bc0076bcf1b
 #: ../../changelog.rst:24
 msgid "New :class:`ConfigDict` API (see :doc:`configuration`)"
 msgstr ""
 
-# 0e1f1441ce394c738495d6c46baf5f54
 #: ../../changelog.rst:26
 msgid ""
 "More information can be found in this `development blog post "
 "<http://blog.bottlepy.org/2013/07/19/preview-bottle-012.html>`_."
 msgstr ""
 
-# fc420f49db9e421fbf9e3695c0eb4c2e
 #: ../../changelog.rst:30
 msgid "Release 0.11"
 msgstr ""
 
-# 7275946a1b3b488180a42012afd18c3c
 #: ../../changelog.rst:32
 msgid ""
 "Native support for Python 2.x and 3.x syntax. No need to run 2to3 anymore."
 msgstr ""
 
-# 1656569620784d82bc9c97487eec1729
 #: ../../changelog.rst:33
 msgid ""
 "Support for partial downloads (``Range`` header) in :func:`static_file`."
 msgstr ""
 
-# 80feb703c40843058a77eaca812d9b7c
 #: ../../changelog.rst:34
 msgid ""
 "The new :class:`ResourceManager` interface helps locating files bundled with"
 " an application."
 msgstr ""
 
-# bca3fdd9d73b4811ac697e9766e4aa09
 #: ../../changelog.rst:35
 msgid ""
 "Added a server adapter for `waitress "
 "<http://docs.pylonsproject.org/projects/waitress/en/latest/>`_."
 msgstr ""
 
-# f0084e8bac074d29bce2e7e953f6a103
 #: ../../changelog.rst:36
 msgid ""
 "New :meth:`Bottle.merge` method to install all routes from one application "
 "into another."
 msgstr ""
 
-# 9d3d19299356472b95a214c337bb5f13
 #: ../../changelog.rst:37
 msgid ""
 "New :attr:`BaseRequest.app` property to get the application object that "
 "handles a request."
 msgstr ""
 
-# 1601400744654d8a9b852130611227f0
 #: ../../changelog.rst:38
 msgid ""
 "Added :meth:`FormsDict.decode()` to get an all-unicode version (needed by "
 "WTForms)."
 msgstr ""
 
-# bcc680fd33594efd9bbfa43f8030128e
 #: ../../changelog.rst:39
 msgid ":class:`MultiDict` and subclasses are now pickle-able."
 msgstr ""
 
-# 9107573403244a82a24734c2d241d75d
 #: ../../changelog.rst:42
 msgid "API Changes"
 msgstr ""
 
-# f6591938bdc54dd280391cbe0a0e4621
 #: ../../changelog.rst:43
 msgid ""
 ":attr:`Response.status` is a read-write property that can be assigned either"
@@ -145,33 +125,27 @@ msgid ""
 ":attr:`BaseResponse.status_code` and :attr:`BaseResponse.status_line`."
 msgstr ""
 
-# 2daa25fd26b443db9a5150a0c2def983
 #: ../../changelog.rst:46
 msgid "API Deprecations"
 msgstr ""
 
-# 820072567caf4729b3b74fed4f6118b6
 #: ../../changelog.rst:47
 msgid ""
 ":class:`SimpleTALTemplate` is now deprecating. There seems to be no demand."
 msgstr ""
 
-# 5f2eb52f0d474a4bb053be3a191fe578
 #: ../../changelog.rst:50
 msgid "Release 0.10"
 msgstr ""
 
-# 158db14a56bb43f9b58d28b47e216089
 #: ../../changelog.rst:52
 msgid "Plugin API v2"
 msgstr ""
 
-# 579ae0cd9df049599de4616d6d24703e
 #: ../../changelog.rst:54
 msgid "To use the new API, set :attr:`Plugin.api` to ``2``."
 msgstr ""
 
-# 2cdfd046417c4e99a6bd53d249ef2c53
 #: ../../changelog.rst:55
 msgid ""
 ":meth:`Plugin.apply` receives a :class:`Route` object instead of a context "
@@ -179,7 +153,6 @@ msgid ""
 "information and may be extended in the future."
 msgstr ""
 
-# 49a0977d71bb499aa2a80cbb9959930f
 #: ../../changelog.rst:56
 msgid ""
 "Plugin names are considered unique now. The topmost plugin with a given name"
@@ -187,12 +160,10 @@ msgid ""
 "silently ignored."
 msgstr ""
 
-# 3824dd706a2a4d4b9a6661f05e8b467b
 #: ../../changelog.rst:58
 msgid "The Request/Response Objects"
 msgstr ""
 
-# 577141de8723430dad536a0749d577f8
 #: ../../changelog.rst:60
 msgid ""
 "Added :attr:`BaseRequest.json`, :attr:`BaseRequest.remote_route`, "
@@ -200,7 +171,6 @@ msgid ""
 ":attr:`BaseRequest.script_name`."
 msgstr ""
 
-# cd389889065a48cd95d0ae2f75f9d62d
 #: ../../changelog.rst:61
 msgid ""
 "Added :attr:`BaseResponse.status_line` and :attr:`BaseResponse.status_code` "
@@ -210,7 +180,6 @@ msgid ""
 "use the verbose attributes from now on."
 msgstr ""
 
-# 132b6fe6e13c41eeabfff0ff1c891522
 #: ../../changelog.rst:62
 msgid ""
 "Replaced :class:`MultiDict` with a specialized :class:`FormsDict` in many "
@@ -218,12 +187,10 @@ msgid ""
 "unicode form values transparently."
 msgstr ""
 
-# e33dd3a79e644f13a994228e1533378f
 #: ../../changelog.rst:64
 msgid "Templates"
 msgstr ""
 
-# b0bb171556254dc7871aca5c60a777d5
 #: ../../changelog.rst:66
 msgid ""
 "Added three new functions to the SimpleTemplate default namespace that "
@@ -231,105 +198,87 @@ msgid ""
 ":func:`stpl.setdefault`."
 msgstr ""
 
-# 293cddcc8d3f453ebdb9dd605cfa1029
 #: ../../changelog.rst:67
 msgid ""
 "The default escape function for SimpleTemplate now additionally escapes "
 "single and double quotes."
 msgstr ""
 
-# 35fe745ed3cd40dab6fb6e5a9f005b37
 #: ../../changelog.rst:69
 msgid "Routing"
 msgstr ""
 
-# 7bf29650e0224c13afbcdcb56fc55d9b
 #: ../../changelog.rst:71
 msgid ""
 "A new route syntax (e.g. ``/object/<id:int>``) and support for route "
 "wildcard filters."
 msgstr ""
 
-# 6ed8557a1a604713ad082a4d6462453a
 #: ../../changelog.rst:72
 msgid "Four new wildcard filters: `int`, `float`, `path` and `re`."
 msgstr ""
 
-# b1a3509cf3844b8c9ab5f3917b31546e
 #: ../../changelog.rst:74
 msgid "Other changes"
 msgstr ""
 
-# f6697ab0743147849f1df7fe0930652f
 #: ../../changelog.rst:76
 msgid "Added command line interface to load applications and start servers."
 msgstr ""
 
-# 8611f032641947168f388f3a4a07696d
 #: ../../changelog.rst:77
 msgid ""
 "Introduced a :class:`ConfigDict` that makes accessing configuration a lot "
 "easier (attribute access and auto-expanding namespaces)."
 msgstr ""
 
-# ec3b9fcadf5e491cb640936be17b77cf
 #: ../../changelog.rst:78
 msgid "Added support for raw WSGI applications to :meth:`Bottle.mount`."
 msgstr ""
 
-# 12dd1cc30a50414880b5f544b94a5001
 #: ../../changelog.rst:79
 msgid ":meth:`Bottle.mount` parameter order changed."
 msgstr ""
 
-# 502b129b05aa47bdb5c6bfb34df41a98
 #: ../../changelog.rst:80
 msgid ""
 ":meth:`Bottle.route` now accpets an import string for the ``callback`` "
 "parameter."
 msgstr ""
 
-# 4c9b80fe05904012a89c3e43428e2924
 #: ../../changelog.rst:81
 msgid "Dropped Gunicorn 0.8 support. Current supported version is 0.13."
 msgstr ""
 
-# 5e739d4bc2c54925ad8b86766cb2c791
 #: ../../changelog.rst:82
 msgid "Added custom options to Gunicorn server."
 msgstr ""
 
-# 233be944ddbd4bbb836f83f481b1a915
 #: ../../changelog.rst:83
 msgid ""
 "Finally dropped support for type filters. Replace with a custom plugin of "
 "needed."
 msgstr ""
 
-# 36dd0a8c8e4a4dafac381339d58df66c
 #: ../../changelog.rst:87
 msgid "Release 0.9"
 msgstr ""
 
-# 101cb3e3ef6d4baf9a3ed040e12b7b19
 #: ../../changelog.rst:90
 msgid "Whats new?"
 msgstr ""
 
-# 8a3b1aa389ad471ca43f841f0f317364
 #: ../../changelog.rst:91
 msgid ""
 "A brand new plugin-API. See :ref:`plugins` and :doc:`plugindev` for details."
 msgstr ""
 
-# 3be65e71763e433c8aff5472af8e09b8
 #: ../../changelog.rst:92
 msgid ""
 "The :func:`route` decorator got a lot of new features. See "
 ":meth:`Bottle.route` for details."
 msgstr ""
 
-# 94b950340c8841e897d589e9b5b134e4
 #: ../../changelog.rst:93
 msgid ""
 "New server adapters for `gevent <http://www.gevent.org/>`_, `meinheld "
@@ -337,39 +286,32 @@ msgid ""
 "<https://github.com/jonashaag/bjoern>`_."
 msgstr ""
 
-# 72a468b5a2ff4cc3a130fb82df0eb3d5
 #: ../../changelog.rst:94
 msgid "Support for SimpleTAL templates."
 msgstr ""
 
-# 30a0c7c37ed449e29686f9bb594adf90
 #: ../../changelog.rst:95
 msgid "Better runtime exception handling for mako templates in debug mode."
 msgstr ""
 
-# 8bc1355b0dcd458dbf4a4eba7d448b1f
 #: ../../changelog.rst:96
 msgid "Lots of documentation, fixes and small improvements."
 msgstr ""
 
-# e07fb9f10d92468f9c7cb74474fee3e1
 #: ../../changelog.rst:97
 msgid "A new :data:`Request.urlparts` property."
 msgstr ""
 
-# 1bd92f22acc9414ba3529143d1988c31
 #: ../../changelog.rst:100
 msgid "Performance improvements"
 msgstr ""
 
-# 286c25222ec548d293e3176f357944c2
 #: ../../changelog.rst:101
 msgid ""
 "The :class:`Router` now special-cases ``wsgi.run_once`` environments to "
 "speed up CGI."
 msgstr ""
 
-# b437a95c5a2c4ca6803b3b4317a8488a
 #: ../../changelog.rst:102
 msgid ""
 "Reduced module load time by ~30% and optimized template parser. See `8ccb2d "
@@ -377,77 +319,64 @@ msgid ""
 "</commit/b14b9a>`_ for details."
 msgstr ""
 
-# 315aaadb8a4541bab81138dc9d551be2
 #: ../../changelog.rst:103
 msgid ""
 "Support for \"App Caching\" on Google App Engine. See `af93ec "
 "</commit/af93ec>`_."
 msgstr ""
 
-# 22feac860f5f4f778ae3bc0cd5dfdbdd
 #: ../../changelog.rst:104
 msgid ""
 "Some of the rarely used or deprecated features are now plugins that avoid "
 "overhead if the feature is not used."
 msgstr ""
 
-# f9c11c8ec44c46e18575bf0fe05968fd
-# 5fdc037880e5447e9a26737a21db2d34
 #: ../../changelog.rst:107 ../../changelog.rst:118
 msgid "API changes"
 msgstr ""
 
-# 9d24322ae2114f468d7518ef8c55a1db
 #: ../../changelog.rst:108
 msgid ""
 "This release is mostly backward compatible, but some APIs are marked "
 "deprecated now and will be removed for the next release. Most noteworthy:"
 msgstr ""
 
-# 34e082f51a794cb8a6fe86adda84e8b0
 #: ../../changelog.rst:110
 msgid ""
 "The ``static`` route parameter is deprecated. You can escape wild-cards with"
 " a backslash."
 msgstr ""
 
-# 1dd0e5af5f834cbfb61a8573280fdcf8
 #: ../../changelog.rst:111
 msgid ""
 "Type-based output filters are deprecated. They can easily be replaced with "
 "plugins."
 msgstr ""
 
-# 657f51449b0e49f9a03de59548798d4e
 #: ../../changelog.rst:115
 msgid "Release 0.8"
 msgstr ""
 
-# 4d3a993a0d134ac0a9c8a0b29bf48fe3
 #: ../../changelog.rst:119
 msgid "These changes may break compatibility with previous versions."
 msgstr ""
 
-# 1fccac54d0904e4d9468b97732a97734
 #: ../../changelog.rst:121
 msgid ""
 "The built-in Key/Value database is not available anymore. It is marked "
 "deprecated since 0.6.4"
 msgstr ""
 
-# b7227b98ea1a4a738ed6e9b6f41909a0
 #: ../../changelog.rst:122
 msgid "The Route syntax and behaviour changed."
 msgstr ""
 
-# 12d72ecb20f64391b27040e7f2ee2a15
 #: ../../changelog.rst:124
 msgid ""
 "Regular expressions must be encapsulated with ``#``. In 0.6 all non-"
 "alphanumeric characters not present in the regular expression were allowed."
 msgstr ""
 
-# d8f083f9637441128997df2f00bb48f8
 #: ../../changelog.rst:125
 msgid ""
 "Regular expressions not part of a route wildcard are escaped automatically. "
@@ -457,13 +386,11 @@ msgid ""
 "behaviour."
 msgstr ""
 
-# ecea5eb958534d5e9baef864b2acfad6
 #: ../../changelog.rst:127
 msgid ""
 "The ``BreakTheBottle`` exception is gone. Use :class:`HTTPResponse` instead."
 msgstr ""
 
-# 60eb27138b4245f29a411fa14238bb04
 #: ../../changelog.rst:128
 msgid ""
 "The :class:`SimpleTemplate` engine escapes HTML special characters in "
@@ -471,60 +398,49 @@ msgid ""
 "syntax to get old behaviour (no escaping)."
 msgstr ""
 
-# 4887b0ad500140e89cbda9b18807e7a5
 #: ../../changelog.rst:129
 msgid ""
 "The :class:`SimpleTemplate` engine returns unicode strings instead of lists "
 "of byte strings."
 msgstr ""
 
-# 9056d2bbd0b048ccac6bae5e1203515e
 #: ../../changelog.rst:130
 msgid ""
 "``bottle.optimize()`` and the automatic route optimization is obsolete."
 msgstr ""
 
-# ed11f22b500c46faa840eb9fc29324af
 #: ../../changelog.rst:131
 msgid "Some functions and attributes were renamed:"
 msgstr ""
 
-# fc45a4aa25cf44b59dc77be0cf2f0385
 #: ../../changelog.rst:133
 msgid ":attr:`Request._environ` is now :attr:`Request.environ`"
 msgstr ""
 
-# 20b88aba4f424207b4e78a1f0f314d54
 #: ../../changelog.rst:134
 msgid ":attr:`Response.header` is now :attr:`Response.headers`"
 msgstr ""
 
-# 1ee20d6d27954048ae54d953a9d4f81b
 #: ../../changelog.rst:135
 msgid ":func:`default_app` is obsolete. Use :func:`app` instead."
 msgstr ""
 
-# 7eaaf369a22c40cd98887131653ff120
 #: ../../changelog.rst:137
 msgid "The default :func:`redirect` code changed from 307 to 303."
 msgstr ""
 
-# 2ec80f46ac8941009624dcfbc9bb320c
 #: ../../changelog.rst:138
 msgid "Removed support for ``@default``. Use ``@error(404)`` instead."
 msgstr ""
 
-# 7ebba0e9d2c14507a252a73cf0bbe792
 #: ../../changelog.rst:142
 msgid "New features"
 msgstr ""
 
-# 842805d08c084796a12a129ea8bf9800
 #: ../../changelog.rst:143
 msgid "This is an incomplete list of new features and improved functionality."
 msgstr ""
 
-# e1b8b2333fb549b8ad81b61c13a303f8
 #: ../../changelog.rst:145
 msgid ""
 "The :class:`Request` object got new properties: :attr:`Request.body`, "
@@ -532,7 +448,6 @@ msgid ""
 ":attr:`Request.forms`, :attr:`Request.files`."
 msgstr ""
 
-# c4731a0b7888483590302e02e11ddd1a
 #: ../../changelog.rst:146
 msgid ""
 "The :meth:`Response.set_cookie` and :meth:`Request.get_cookie` methods are "
@@ -541,7 +456,6 @@ msgid ""
 "client side. All pickle-able data structures are allowed."
 msgstr ""
 
-# 080b35bd8b384dd0a7ac63892ca4f34c
 #: ../../changelog.rst:147
 msgid ""
 "The new :class:`Router` class drastically improves performance for setups "
@@ -549,7 +463,6 @@ msgid ""
 "URL string)."
 msgstr ""
 
-# 97e1af042fe04647adbff077d404caaf
 #: ../../changelog.rst:148
 msgid ""
 "It is now possible (and recommended) to return :exc:`HTTPError` and "
@@ -557,7 +470,6 @@ msgid ""
 "them."
 msgstr ""
 
-# 8321b5f7a3854e56aee3a2f4a99902ab
 #: ../../changelog.rst:149
 msgid ""
 "The new function :func:`static_file` equals :func:`send_file` but returns a "
@@ -565,34 +477,28 @@ msgid ""
 ":func:`send_file` is deprecated."
 msgstr ""
 
-# 41f0ec63293945d0bc19234d0fdf6640
 #: ../../changelog.rst:150
 msgid ""
 "New :func:`get`, :func:`post`, :func:`put` and :func:`delete` decorators."
 msgstr ""
 
-# 0dc50af1fa164246847f85881bfcfb39
 #: ../../changelog.rst:151
 msgid "The :class:`SimpleTemplate` engine got full unicode support."
 msgstr ""
 
-# 94167cea68144ef1a4022f7ca9dba48b
 #: ../../changelog.rst:152
 msgid "Lots of non-critical bugfixes."
 msgstr ""
 
-# 4a63f3d0122f46dc9df7edc4ec3676bd
 #: ../../changelog.rst:158
 msgid "Contributors"
 msgstr ""
 
-# 23c9800f9e384e38a65f2a9986f9b3de
 #: ../../../AUTHORS:1
 msgid ""
 "Bottle is written and maintained by Marcel Hellkamp <marc@bottlepy.org>."
 msgstr ""
 
-# bd81482365f04522ba256609b0e9d4a3
 #: ../../../AUTHORS:3
 msgid ""
 "Thanks to all the people who found bugs, sent patches, spread the word, "
@@ -602,312 +508,250 @@ msgid ""
 "<contact>` or add it yourself."
 msgstr ""
 
-# 44ac13fbc6a341398353ff4d59867d0e
 #: ../../../AUTHORS:5
 msgid "acasajus"
 msgstr ""
 
-# cd2ebbb541f54c949ef211f1b244a157
 #: ../../../AUTHORS:6
 msgid "Adam R. Smith"
 msgstr ""
 
-# c2aaf9aefc48492ea75cc0576e2cd6a3
 #: ../../../AUTHORS:7
 msgid "Alexey Borzenkov"
 msgstr ""
 
-# ed9d763dd24343fb9b198058ae3945e6
 #: ../../../AUTHORS:8
 msgid "Alexis Daboville"
 msgstr ""
 
-# 4517c03d71da422f9e8786101df6b80d
 #: ../../../AUTHORS:9
 msgid "Anton I. Sipos"
 msgstr ""
 
-# 250e9e86e381491796e5a47ba11cd33a
 #: ../../../AUTHORS:10
 msgid "Anton Kolechkin"
 msgstr ""
 
-# aaa452df4a9746728aebddf5d93a929d
 #: ../../../AUTHORS:11
 msgid "apexi200sx"
 msgstr ""
 
-# 21e7ac5dc5474c7fbf57328575081813
 #: ../../../AUTHORS:12
 msgid "apheage"
 msgstr ""
 
-# 59f21fc76cb74864a57529b7813b247c
 #: ../../../AUTHORS:13
 msgid "BillMa"
 msgstr ""
 
-# d41b360d6abe42149210d4a244031921
 #: ../../../AUTHORS:14
 msgid "Brad Greenlee"
 msgstr ""
 
-# 7e09658cbfab43f692f847f18854ae0a
 #: ../../../AUTHORS:15
 msgid "Brandon Gilmore"
 msgstr ""
 
-# 68bff8ff74a448789d593b24a6f05975
 #: ../../../AUTHORS:16
 msgid "Branko Vukelic"
 msgstr ""
 
-# 452c5b1852064a409f5ac924e64eb114
 #: ../../../AUTHORS:17
 msgid "Brian Sierakowski"
 msgstr ""
 
-# 5e39fd7963b6497eb4f78d913627e189
 #: ../../../AUTHORS:18
 msgid "Brian Wickman"
 msgstr ""
 
-# 4718da57f320462dabb993c62e64c0a9
 #: ../../../AUTHORS:19
 msgid "Carl Scharenberg"
 msgstr ""
 
-# 3fa8c7576531430e8d397b24fc0a77f9
 #: ../../../AUTHORS:20
 msgid "Damien Degois"
 msgstr ""
 
-# dfebc21eb79f4b568c74ac1a3cd38f8b
 #: ../../../AUTHORS:21
 msgid "David Buxton"
 msgstr ""
 
-# 1fb4f9aff43c4514b1fcf996c02080a2
 #: ../../../AUTHORS:22
 msgid "Duane Johnson"
 msgstr ""
 
-# d0b08d28dab84ce2a02f6c23f920ecf1
 #: ../../../AUTHORS:23
 msgid "fcamel"
 msgstr ""
 
-# 138a368291c545928d486a5f26be70b6
 #: ../../../AUTHORS:24
 msgid "Frank Murphy"
 msgstr ""
 
-# 6abfb6dc15074edfb411e6e25268c244
 #: ../../../AUTHORS:25
 msgid "Frederic Junod"
 msgstr ""
 
-# bfbc2d5d63aa49dab0601560287e3487
 #: ../../../AUTHORS:26
 msgid "goldfaber3012"
 msgstr ""
 
-# 44638f864d154190bd3cf682dda01f34
 #: ../../../AUTHORS:27
 msgid "Greg Milby"
 msgstr ""
 
-# c7f7cb93e7d74e6abba897010d2a10fd
 #: ../../../AUTHORS:28
 msgid "gstein"
 msgstr ""
 
-# 4cd13f0b8ab74c2ba0c460c8fe4d75a7
 #: ../../../AUTHORS:29
 msgid "Ian Davis"
 msgstr ""
 
-# c46aba8972d440e1a8a904e360b32c29
 #: ../../../AUTHORS:30
 msgid "Itamar Nabriski"
 msgstr ""
 
-# b2679c3240984ee0afa7edec71ba488f
 #: ../../../AUTHORS:31
 msgid "Iuri de Silvio"
 msgstr ""
 
-# 0dd5cb7a963d4929a721c3740ec750dd
 #: ../../../AUTHORS:32
 msgid "Jaimie Murdock"
 msgstr ""
 
-# c3119796d7814104a9aab5ec24c19fa9
 #: ../../../AUTHORS:33
 msgid "Jeff Nichols"
 msgstr ""
 
-# 902e46776f014c0f9a863d0b649f9808
 #: ../../../AUTHORS:34
 msgid "Jeremy Kelley"
 msgstr ""
 
-# 3b8f99f1855b425baef941f1cd2ff980
 #: ../../../AUTHORS:35
 msgid "joegester"
 msgstr ""
 
-# 5c5e03b3e6ce4ff0ae6531e6add0f7f0
 #: ../../../AUTHORS:36
 msgid "Johannes Krampf"
 msgstr ""
 
-# 1da28c428f3c4afd8a0390061007bf30
 #: ../../../AUTHORS:37
 msgid "Jonas Haag"
 msgstr ""
 
-# 8f9ad5ddfb68446ea51c52609ce31260
 #: ../../../AUTHORS:38
 msgid "Joshua Roesslein"
 msgstr ""
 
-# 0335bfab06ac43aa9032ac4d6e333f98
 #: ../../../AUTHORS:39
 msgid "Judson Neer"
 msgstr ""
 
-# d95fb86066d34f398c604c8ae2a92034
 #: ../../../AUTHORS:40
 msgid "Karl"
 msgstr ""
 
-# 41bc91c8c19145b58a1303ebde901482
 #: ../../../AUTHORS:41
 msgid "Kevin Zuber"
 msgstr ""
 
-# 6937902879b9472791487af0a097c595
 #: ../../../AUTHORS:42
 msgid "Kraken"
 msgstr ""
 
-# 65140f9a7f4c40b68a678e7057691e77
 #: ../../../AUTHORS:43
 msgid "Kyle Fritz"
 msgstr ""
 
-# 216de002dbb347a982040a77e8b02ddb
 #: ../../../AUTHORS:44
 msgid "m35"
 msgstr ""
 
-# 80e4c199ab7a419f8794524256ed99bb
 #: ../../../AUTHORS:45
 msgid "Marcos Neves"
 msgstr ""
 
-# 449d85ec6fdd4889aec58e56f88cbda4
 #: ../../../AUTHORS:46
 msgid "masklinn"
 msgstr ""
 
-# ccdce343ce234b43bd6540db53e00d7f
 #: ../../../AUTHORS:47
 msgid "Michael Labbe"
 msgstr ""
 
-# 7141d0f068ee41d2adce09b325016ed5
 #: ../../../AUTHORS:48
 msgid "Michael Soulier"
 msgstr ""
 
-# b8e6480fa2644a40b9a92a59d57cca62
 #: ../../../AUTHORS:49
 msgid "`reddit <http://reddit.com/r/python>`_"
 msgstr ""
 
-# 9f36ba5a0fa64317b3e7cbeaa4d2c3f1
 #: ../../../AUTHORS:50
 msgid "Nicolas Vanhoren"
 msgstr ""
 
-# 1c71a905683744a2825371642d617386
 #: ../../../AUTHORS:51
 msgid "Robert Rollins"
 msgstr ""
 
-# e3ee6dea5e974c89b71ba0dc8fb91b24
 #: ../../../AUTHORS:52
 msgid "rogererens"
 msgstr ""
 
-# 424ac2557bbe4627a86911906c32770f
 #: ../../../AUTHORS:53
 msgid "rwxrwx"
 msgstr ""
 
-# ec8859a4871a45f78a9f1a7296d90f6d
 #: ../../../AUTHORS:54
 msgid "Santiago Gala"
 msgstr ""
 
-# 81519108bdc4489498b580cf613f3cb5
 #: ../../../AUTHORS:55
 msgid "Sean M. Collins"
 msgstr ""
 
-# 7f055848f95542d982bc1055e199940d
 #: ../../../AUTHORS:56
 msgid "Sebastian Wollrath"
 msgstr ""
 
-# 7d21484496df4f659697c6ff9fcb5860
 #: ../../../AUTHORS:57
 msgid "Seth"
 msgstr ""
 
-# 048fe07f65b346ef86cb8e27e98af5cf
 #: ../../../AUTHORS:58
 msgid "Sigurd Høgsbro"
 msgstr ""
 
-# 3e2745b4fe5e4ad5ae5c1488ce8fad5f
 #: ../../../AUTHORS:59
 msgid "Stuart Rackham"
 msgstr ""
 
-# bc1aef70a6294c13bb0e084fd428ac2f
 #: ../../../AUTHORS:60
 msgid "Sun Ning"
 msgstr ""
 
-# d2def08e6f154bbe9ebeb274e349c272
 #: ../../../AUTHORS:61
 msgid "Tomás A. Schertel"
 msgstr ""
 
-# 4dc8185b717e425594ceda46f0611f79
 #: ../../../AUTHORS:62
 msgid "Tristan Zajonc"
 msgstr ""
 
-# d36705e7c8f047c28b721efb2bba5c14
 #: ../../../AUTHORS:63
 msgid "voltron"
 msgstr ""
 
-# 95ebaee97c8041cf96b1ccb65bf2429f
 #: ../../../AUTHORS:64
 msgid "Wieland Hoffmann"
 msgstr ""
 
-# 33047a4b52fe419fbda5271ca187ebc6
 #: ../../../AUTHORS:65
 msgid "zombat"
 msgstr ""
 
-# b714fb9982bb4e42a923768f7efca51e
 #: ../../../AUTHORS:66
 msgid "Thiago Avelino"
 msgstr ""

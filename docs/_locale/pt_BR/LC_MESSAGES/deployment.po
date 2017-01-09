@@ -7,22 +7,20 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-01-22 16:45-0200\n"
-"PO-Revision-Date: 2015-01-22 19:18+0000\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: Portuguese (Brazil) (http://www.transifex.com/projects/p/bottle/language/pt_BR/)\n"
+"POT-Creation-Date: 2015-12-19 14:15+0100\n"
+"PO-Revision-Date: 2015-12-13 20:58+0000\n"
+"Last-Translator: defnull <marc@gsites.de>\n"
+"Language-Team: Portuguese (Brazil) (http://www.transifex.com/bottle/bottle/language/pt_BR/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: pt_BR\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-# c3f524e009824df6bcdcf136bb08ded6
 #: ../../deployment.rst:27
 msgid "Deployment"
 msgstr ""
 
-# 811033cf9ef2444481f5ef5bcbb18e3e
 #: ../../deployment.rst:29
 msgid ""
 "The bottle :func:`run` function, when called without any parameters, starts "
@@ -30,7 +28,6 @@ msgid ""
 "application via http://localhost:8080/ if you are on the same host."
 msgstr ""
 
-# 68543f932d8e45bab1fe941eb39fd6a3
 #: ../../deployment.rst:31
 msgid ""
 "To get your application available to the outside world, specify the IP of "
@@ -41,12 +38,10 @@ msgid ""
 "is the standard for HTTP servers::"
 msgstr ""
 
-# a412e290cfdf4741a5032f6f67a403a3
 #: ../../deployment.rst:36
 msgid "Server Options"
 msgstr ""
 
-# 4d816682e72b4488aea138cd951a3325
 #: ../../deployment.rst:38
 msgid ""
 "The built-in default server is based on `wsgiref WSGIServer "
@@ -57,23 +52,19 @@ msgid ""
 "this bottleneck:"
 msgstr ""
 
-# 963e934e4b7e47d2ac33e527aca3f860
 #: ../../deployment.rst:40
 msgid "Use a different server that is either multi-threaded or asynchronous."
 msgstr ""
 
-# 49df642cd4e242b7970a04432f1fd09e
 #: ../../deployment.rst:41
 msgid ""
 "Start multiple server processes and spread the load with a load-balancer."
 msgstr ""
 
-# 7848123f5095478ca195c607dc9d0ec9
 #: ../../deployment.rst:42
 msgid "Do both."
 msgstr ""
 
-# 492f82d932814c2a8f3d8b327835faeb
 #: ../../deployment.rst:44
 msgid ""
 "**Multi-threaded** servers are the 'classic' way to do it. They are very "
@@ -85,7 +76,6 @@ msgid ""
 "image processing)."
 msgstr ""
 
-# a430c2eda3494102bc8ac86d2038cc95
 #: ../../deployment.rst:46
 msgid ""
 "**Asynchronous** servers are very fast, can handle a virtually unlimited "
@@ -94,7 +84,6 @@ msgid ""
 "accordingly and understand the concepts of the specific server."
 msgstr ""
 
-# f16c78d1bd37478d83b638c1326cef74
 #: ../../deployment.rst:48
 msgid ""
 "**Multi-processing** (forking) servers are not limited by the GIL and "
@@ -105,12 +94,10 @@ msgid ""
 "there are good tutorials available."
 msgstr ""
 
-# 8cf18dd5b75d4d4d98cdd72b9cf56dd2
 #: ../../deployment.rst:51
 msgid "Switching the Server Backend"
 msgstr ""
 
-# aa3edbdb18854d2c9dc98bcfa72a6564
 #: ../../deployment.rst:53
 msgid ""
 "The easiest way to increase performance is to install a multi-threaded "
@@ -118,290 +105,232 @@ msgid ""
 "of the single-threaded default server::"
 msgstr ""
 
-# 6b5453352749474799214dce0dd3d4d0
 #: ../../deployment.rst:57
 msgid ""
 "Bottle ships with a lot of ready-to-use adapters for the most common WSGI "
 "servers and automates the setup process. Here is an incomplete list:"
 msgstr ""
 
-# 6cc253d6e21c423e8960de46401247ec
 #: ../../deployment.rst:60
 msgid "Name"
 msgstr ""
 
-# 9c5504b8881c413faebe963e393b96d2
 #: ../../deployment.rst:60
 msgid "Homepage"
 msgstr ""
 
-# 68e2c490d5d34ffabecf3238ccab3790
 #: ../../deployment.rst:60
 msgid "Description"
 msgstr ""
 
-# b471b00d0bfa4fdcbd556272d5be80e0
 #: ../../deployment.rst:62
 msgid "cgi"
 msgstr ""
 
-# 7e5ba5104d5c48a584c5ceef5597fa00
 #: ../../deployment.rst:62
 msgid "Run as CGI script"
 msgstr ""
 
-# e223abdb42a842c2a9464d2cf1c44545
 #: ../../deployment.rst:63
 msgid "flup"
 msgstr ""
 
-# 6a4dec4be6324dca97fbd510b89ffc2e
 #: ../../deployment.rst:63
 msgid "flup_"
 msgstr ""
 
-# 962eb475175345f09d6d1cc76c119b53
 #: ../../deployment.rst:63
 msgid "Run as FastCGI process"
 msgstr ""
 
-# 69ff106258ad41fabfe0653939e85f55
 #: ../../deployment.rst:64
 msgid "gae"
 msgstr ""
 
-# be2071f8ef7d45f187ebd70003e287d5
 #: ../../deployment.rst:64
 msgid "gae_"
 msgstr ""
 
-# 06205bd681a44f8498668e98163d4f97
 #: ../../deployment.rst:64
 msgid "Helper for Google App Engine deployments"
 msgstr ""
 
-# abc3eef9fa81465aaeff95914dbb62e2
 #: ../../deployment.rst:65
 msgid "wsgiref"
 msgstr ""
 
-# c43c3ff0d7014cf0a9a1db585a887608
 #: ../../deployment.rst:65
 msgid "wsgiref_"
 msgstr ""
 
-# 52a2e70ac3dc4023bd730cc599aa40c8
 #: ../../deployment.rst:65
 msgid "Single-threaded default server"
 msgstr ""
 
-# ce238f37770e49d29be330bf0098d6f2
 #: ../../deployment.rst:66
 msgid "cherrypy"
 msgstr ""
 
-# 0b205f1813d44c738ae9c095e78366c2
 #: ../../deployment.rst:66
 msgid "cherrypy_"
 msgstr ""
 
-# baa8b1c796fb41eeac96866a1e4b6402
 #: ../../deployment.rst:66
 msgid "Multi-threaded and very stable"
 msgstr ""
 
-# c76e38e216e64f7d996221fe3b12c0e0
 #: ../../deployment.rst:67
 msgid "paste"
 msgstr ""
 
-# 72b0fb19a2e548e7a3043326a0d766a7
 #: ../../deployment.rst:67
 msgid "paste_"
 msgstr ""
 
-# 47714039fdd84c74bec5ca721a27ae56
 #: ../../deployment.rst:67
 msgid "Multi-threaded, stable, tried and tested"
 msgstr ""
 
-# 44425da6c4554faa84eea877a6b65518
 #: ../../deployment.rst:68
 msgid "rocket"
 msgstr ""
 
-# b64da16177834ce8bf5d11fd8ab5149b
 #: ../../deployment.rst:68
 msgid "rocket_"
 msgstr ""
 
-# 903d0ae282a747edb1cc1af49dcf3a36
 #: ../../deployment.rst:68
 msgid "Multi-threaded"
 msgstr ""
 
-# 408d4ab197eb4d8cb28478f973a53c9c
 #: ../../deployment.rst:69
 msgid "waitress"
 msgstr ""
 
-# 151d7fac5ea24959b77ebf5c297c86a1
 #: ../../deployment.rst:69
 msgid "waitress_"
 msgstr ""
 
-# 8f5838d0dfe542e884733604b2d74e85
 #: ../../deployment.rst:69
 msgid "Multi-threaded, poweres Pyramid"
 msgstr ""
 
-# 4a7cea6e61324fb6a44e789802ac0e95
 #: ../../deployment.rst:70
 msgid "gunicorn"
 msgstr ""
 
-# 343ddfc9f58c4db4b4017efa6fbf0cb8
 #: ../../deployment.rst:70
 msgid "gunicorn_"
 msgstr ""
 
-# de229c4b15f947d793bf7229f1da1dd5
 #: ../../deployment.rst:70
 msgid "Pre-forked, partly written in C"
 msgstr ""
 
-# 2e9826ab145d4bd99f3ded941f241689
 #: ../../deployment.rst:71
 msgid "eventlet"
 msgstr ""
 
-# ac12b72c9b90499fae9a065efa512549
 #: ../../deployment.rst:71
 msgid "eventlet_"
 msgstr ""
 
-# d75a36595a6c46faa4997ca594fc7190
 #: ../../deployment.rst:71
 msgid "Asynchronous framework with WSGI support."
 msgstr ""
 
-# 569ecdcfd75647fa8a5cab952d165cd9
 #: ../../deployment.rst:72
 msgid "gevent"
 msgstr ""
 
-# 61c9c112a71743778c676bb2745222a7
 #: ../../deployment.rst:72
 msgid "gevent_"
 msgstr ""
 
-# 9b4311692d0442a3ae0c61f88d83f31f
-# 4385b447f929475fab4accff00f8b7c1
 #: ../../deployment.rst:72 ../../deployment.rst:73
 msgid "Asynchronous (greenlets)"
 msgstr ""
 
-# 13a43fcbc1204e25a80a4c587f409b0a
 #: ../../deployment.rst:73
 msgid "diesel"
 msgstr ""
 
-# 956517897af846aaa75a062f7080ffa8
 #: ../../deployment.rst:73
 msgid "diesel_"
 msgstr ""
 
-# 133a4003f1bb4b628c177f58500e408a
 #: ../../deployment.rst:74
 msgid "fapws3"
 msgstr ""
 
-# d0a4de28157940ac87829e1863662af1
 #: ../../deployment.rst:74
 msgid "fapws3_"
 msgstr ""
 
-# 9bd4641b35124fc28095ea8e8f0fbd35
 #: ../../deployment.rst:74
 msgid "Asynchronous (network side only), written in C"
 msgstr ""
 
-# 514067a8e4504f528c9641a6ac69c8f7
 #: ../../deployment.rst:75
 msgid "tornado"
 msgstr ""
 
-# 136af1a554f146829d7ff54f4c5533be
 #: ../../deployment.rst:75
 msgid "tornado_"
 msgstr ""
 
-# 38d6f7e852574b0b86f9a81d51f56d72
 #: ../../deployment.rst:75
 msgid "Asynchronous, powers some parts of Facebook"
 msgstr ""
 
-# 8650b70a77664266bbf8f4283de22f45
 #: ../../deployment.rst:76
 msgid "twisted"
 msgstr ""
 
-# c0319824132b4398b319a384c7ca12c8
 #: ../../deployment.rst:76
 msgid "twisted_"
 msgstr ""
 
-# ff94d0839e18456f9528bc1cd21482c9
 #: ../../deployment.rst:76
 msgid "Asynchronous, well tested but... twisted"
 msgstr ""
 
-# f85f868c1f854e5288d89d323118fe3c
 #: ../../deployment.rst:77
 msgid "meinheld"
 msgstr ""
 
-# 94f51a7258384015b78e354324dde65e
 #: ../../deployment.rst:77
 msgid "meinheld_"
 msgstr ""
 
-# 7f447f15bdef4ac997ea1dcaad3e0ca6
 #: ../../deployment.rst:77
 msgid "Asynchronous, partly written in C"
 msgstr ""
 
-# 3c03952763cc4581a395cbff827a3b65
 #: ../../deployment.rst:78
 msgid "bjoern"
 msgstr ""
 
-# 7fdc37617b444223a612000e98252c26
 #: ../../deployment.rst:78
 msgid "bjoern_"
 msgstr ""
 
-# 4e2f0530258a4b3695a9061c60c52ca4
 #: ../../deployment.rst:78
 msgid "Asynchronous, very fast and written in C"
 msgstr ""
 
-# c3390f3f5cb540ab9b5b0df792f78292
 #: ../../deployment.rst:79
 msgid "auto"
 msgstr ""
 
-# 91c6e1b5649b4f78ac818c96301c27d7
 #: ../../deployment.rst:79
 msgid "Automatically selects an available server adapter"
 msgstr ""
 
-# d8989bcdd32a41c7baaf5121fdeadc65
 #: ../../deployment.rst:82
 msgid "The full list is available through :data:`server_names`."
 msgstr ""
 
-# 3c9ac552473e4fa591dfe9f083cb9442
 #: ../../deployment.rst:84
 msgid ""
 "If there is no adapter for your favorite server or if you need more control "
@@ -410,19 +339,16 @@ msgid ""
 " for paste_::"
 msgstr ""
 
-# 37aaf02738404aa4945fe65bf7791dcd
 #: ../../deployment.rst:93
 msgid "Apache mod_wsgi"
 msgstr ""
 
-# c55b893eb6184de78f82b9c31461635c
 #: ../../deployment.rst:95
 msgid ""
 "Instead of running your own HTTP server from within Bottle, you can attach "
 "Bottle applications to an `Apache server <apache>`_ using mod_wsgi_."
 msgstr ""
 
-# f8158c133b1e4d73b7c003e83422642b
 #: ../../deployment.rst:97
 msgid ""
 "All you need is an ``app.wsgi`` file that provides an ``application`` "
@@ -430,23 +356,24 @@ msgid ""
 " be a WSGI-compatible Python callable."
 msgstr ""
 
-# 2a8da94c51b648c59afe0b70af743396
 #: ../../deployment.rst:99
 msgid "File ``/var/www/yourapp/app.wsgi``::"
 msgstr ""
 
-# ecc8b03f39f3420d9ba455c1b13ece1f
-#: ../../deployment.rst:109
+#: ../../deployment.rst:110
 msgid "The Apache configuration may look like this::"
 msgstr ""
 
-# ee835f1387fa4be69701b4aede11ebf8
-#: ../../deployment.rst:128
+#: ../../deployment.rst:126
+msgid ""
+"With newer versions of Apache (2.4) use a configuration similar to this::"
+msgstr ""
+
+#: ../../deployment.rst:144
 msgid "Google AppEngine"
 msgstr ""
 
-# d0ee0715d19c4fc991c54b9e328ff0bd
-#: ../../deployment.rst:132
+#: ../../deployment.rst:148
 msgid ""
 "New App Engine applications using the Python 2.7 runtime environment support"
 " any WSGI application and should be configured to use the Bottle application"
@@ -454,15 +381,13 @@ msgid ""
 "``myapp.py``::"
 msgstr ""
 
-# 57dc546c7cf74d9fa80fd96f80a8e70d
-#: ../../deployment.rst:142
+#: ../../deployment.rst:158
 msgid ""
 "Then you can configure App Engine's ``app.yaml`` to use the ``app`` object "
 "like so::"
 msgstr ""
 
-# 4cbc7b59b70e4564900fe247fa8d10d7
-#: ../../deployment.rst:153
+#: ../../deployment.rst:169
 msgid ""
 "Bottle also provides a ``gae`` server adapter for legacy App Engine "
 "applications using the Python 2.5 runtime environment. It works similar to "
@@ -471,29 +396,25 @@ msgid ""
 " it conforms to their API::"
 msgstr ""
 
-# ecd80ebf66f843dfa0c2bab351e8546a
-#: ../../deployment.rst:157
+#: ../../deployment.rst:173
 msgid ""
 "It is always a good idea to let GAE serve static files directly. Here is "
 "example for a working  ``app.yaml`` (using the legacy Python 2.5 runtime "
 "environment)::"
 msgstr ""
 
-# 27d6ad740fd4413596b73bed70cab2d0
-#: ../../deployment.rst:173
+#: ../../deployment.rst:189
 msgid "Load Balancer (Manual Setup)"
 msgstr ""
 
-# afed46d2164b47b0a254abf40990601c
-#: ../../deployment.rst:175
+#: ../../deployment.rst:191
 msgid ""
 "A single Python process can utilize only one CPU at a time, even if there "
 "are more CPU cores available. The trick is to balance the load between "
 "multiple independent Python processes to utilize all of your CPU cores."
 msgstr ""
 
-# 4d5e478b13d44326a19aecea46b89e78
-#: ../../deployment.rst:177
+#: ../../deployment.rst:193
 msgid ""
 "Instead of a single Bottle application server, you start one instance for "
 "each CPU core available using different local port (localhost:8080, 8081, "
@@ -504,35 +425,29 @@ msgid ""
 "spread out the load between different physical servers."
 msgstr ""
 
-# e5d495710d6e49459b37dc32606480a5
-#: ../../deployment.rst:179
+#: ../../deployment.rst:195
 msgid ""
 "One of the fastest load balancers available is Pound_ but most common web "
 "servers have a proxy-module that can do the work just fine."
 msgstr ""
 
-# 0abd9e59e9404392be15c6d60068f4f6
-#: ../../deployment.rst:181
+#: ../../deployment.rst:197
 msgid "Pound example::"
 msgstr ""
 
-# 0ae649a3b6a64f57a5f306c7aef7cd83
-#: ../../deployment.rst:199
+#: ../../deployment.rst:215
 msgid "Apache example::"
 msgstr ""
 
-# 72a12c37e6d942f4a30cdbf4d1511a7b
-#: ../../deployment.rst:207
+#: ../../deployment.rst:223
 msgid "Lighttpd example::"
 msgstr ""
 
-# 6ac39d6e2d534ec4a75316966250ed66
-#: ../../deployment.rst:219
+#: ../../deployment.rst:235
 msgid "Good old CGI"
 msgstr ""
 
-# ccf4d6681a6844e085d1a35639e2cdc7
-#: ../../deployment.rst:221
+#: ../../deployment.rst:237
 msgid ""
 "A CGI server starts a new process for each request. This adds a lot of "
 "overhead but is sometimes the only option, especially on cheap hosting "

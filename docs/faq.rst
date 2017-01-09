@@ -37,7 +37,7 @@ so bottle searches the right paths.
 Dynamic Routes and Slashes
 --------------------------------------------------------------------------------
 
-In :ref:`dynamic route syntax <tutorial-dynamic-routes>`, a placeholder token (``:name``) matches everything up to the next slash. This equals to ``[^/]+`` in regular expression syntax. To accept slashes too, you have to add a custom regular pattern to the placeholder. An example: ``/images/:filepath#.*#`` would match ``/images/icons/error.png`` but ``/images/:filename`` won't.
+In :ref:`dynamic route syntax <tutorial-dynamic-routes>`, a placeholder token (``<name>``) matches everything up to the next slash. This equals to ``[^/]+`` in regular expression syntax. To accept slashes too, you have to add a custom regular pattern to the placeholder. An example: ``/images/<filepath:path>`` would match ``/images/icons/error.png`` but ``/images/<filename>`` won't.
 
 Problems with reverse proxies
 --------------------------------------------------------------------------------
@@ -49,7 +49,7 @@ Redirects and url-building only works if bottle knows the public address and loc
       environ['wsgi.url_scheme'] = 'https'
       environ['HTTP_X_FORWARDED_HOST'] = 'example.com'
       return app(environ, start_response)
-    return https_app
+    return fixed_app
 
   app = bottle.default_app()    
   app.wsgi = fix_environ_middleware(app.wsgi)

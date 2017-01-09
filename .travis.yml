@@ -1,25 +1,32 @@
 language: python
+sudo: required
 
 python:
-  - "2.6"
+  - "2.7.3" # Ubuntu 12.4LTS (precise) and Debian 7 LTS (wheezy)
   - "2.7"
   - "3.2"
   - "3.3"
   - "3.4"
   - "3.5"
-
-matrix:
-  include:
-    - python: 2.7
-      env: PY=2.5
-    - python: 2.7
-      env: PY=3.1
+  - "nightly"
+  - "pypy"
+  - "pypy3"
 
 install:
-  - bash test/travis_setup.sh
+  - travis_retry bash test/travis_setup.sh
+  # Coveralls 4.0 doesn't support Python 3.2
+  - if [ "$TRAVIS_PYTHON_VERSION" == "3.2" ]; then travis_retry pip install coverage==3.7.1; fi
+  - if [ "$TRAVIS_PYTHON_VERSION" != "3.2" ]; then travis_retry pip install coverage; fi
+  - pip install -U coverage coveralls
 
-script: python${PY:-} test/testall.py fast
+script:
+ - python -m coverage run --source=bottle.py test/testall.py fast
+ - python -m coverage combine
+ - python -m coverage report 2>&1
 
 notifications:
   irc: "irc.freenode.org#bottlepy"
   on_success: "never"
+
+after_success:
+  coveralls

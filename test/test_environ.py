@@ -3,13 +3,17 @@
 
 import unittest
 import sys
+
+import itertools
+
 import bottle
-from bottle import request, tob, touni, tonat, json_dumps, _e, HTTPError, parse_date
-import tools
+from bottle import request, tob, touni, tonat, json_dumps, HTTPError, parse_date
+from test import tools
 import wsgiref.util
 import base64
 
 from bottle import BaseRequest, BaseResponse, LocalRequest
+
 
 class TestRequest(unittest.TestCase):
 
@@ -459,8 +463,6 @@ class TestRequest(unittest.TestCase):
             self.assertRaises(AttributeError, getattr, r, 'somevalue')
 
 
-
-
 class TestResponse(unittest.TestCase):
 
     def test_constructor_body(self):
@@ -694,7 +696,31 @@ class TestResponse(unittest.TestCase):
         response['x-test'] = 5
         self.assertEqual('5', response['x-test'])
         response['x-test'] = None
-        self.assertEqual('None', response['x-test'])
+        self.assertEqual('', response['x-test'])
+        response['x-test'] = touni('瓶')
+        self.assertEqual(tonat(touni('瓶')), response['x-test'])
+
+    def test_prevent_control_characters_in_headers(self):
+        masks = '{}test', 'test{}', 'te{}st'
+        tests = '\n', '\r', '\n\r', '\0'
+
+        # Test HeaderDict
+        apis = 'append', 'replace', '__setitem__', 'setdefault'
+        for api, mask, test in itertools.product(apis, masks, tests):
+            hd = bottle.HeaderDict()
+            func = getattr(hd, api)
+            value = mask.replace("{}", test)
+            self.assertRaises(ValueError, func, value, "test-value")
+            self.assertRaises(ValueError, func, "test-name", value)
+
+        # Test functions on BaseResponse
+        apis = 'add_header', 'set_header', '__setitem__'
+        for api, mask, test in itertools.product(apis, masks, tests):
+            rs = bottle.BaseResponse()
+            func = getattr(rs, api)
+            value = mask.replace("{}", test)
+            self.assertRaises(ValueError, func, value, "test-value")
+            self.assertRaises(ValueError, func, "test-name", value)
 
     def test_expires_header(self):
         import datetime
@@ -711,10 +737,11 @@ class TestResponse(unittest.TestCase):
             parse_date(response.headers['Expires']))
         self.assertEqual(0, seconds(now, now2))
 
+
 class TestRedirect(unittest.TestCase):
 
     def assertRedirect(self, target, result, query=None, status=303, **args):
-        env = {'SERVER_PROTOCOL':'HTTP/1.1'}
+        env = {'SERVER_PROTOCOL': 'HTTP/1.1'}
         for key in list(args):
             if key.startswith('wsgi'):
                 args[key.replace('_', '.', 1)] = args[key]
@@ -724,11 +751,10 @@ class TestRedirect(unittest.TestCase):
         bottle.response.bind()
         try:
             bottle.redirect(target, **(query or {}))
-        except bottle.HTTPResponse:
-            r = _e()
-            self.assertEqual(status, r.status_code)
-            self.assertTrue(r.headers)
-            self.assertEqual(result, r.headers['Location'])
+        except bottle.HTTPResponse as E:
+            self.assertEqual(status, E.status_code)
+            self.assertTrue(E.headers)
+            self.assertEqual(result, E.headers['Location'])
 
     def test_absolute_path(self):
         self.assertRedirect('/', 'http://127.0.0.1/')
@@ -815,8 +841,8 @@ class TestRedirect(unittest.TestCase):
         try:
             bottle.response.set_cookie('xxx', 'yyy')
             bottle.redirect('...')
-        except bottle.HTTPResponse:
-            h = [v for (k, v) in _e().headerlist if k == 'Set-Cookie']
+        except bottle.HTTPResponse as E:
+            h = [v for (k, v) in E.headerlist if k == 'Set-Cookie']
             self.assertEqual(h, ['xxx=yyy'])
 
 class TestWSGIHeaderDict(unittest.TestCase):
@@ -850,8 +876,3 @@ class TestWSGIHeaderDict(unittest.TestCase):
             self.assertTrue(key in self.headers)
             self.assertEqual(self.headers.get(key), 'test')
             self.assertEqual(self.headers.get(key, 5), 'test')
-
-
-
-if __name__ == '__main__': #pragma: no cover
-    unittest.main()

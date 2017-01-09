@@ -2,6 +2,8 @@
 import unittest
 import tools
 
+from bottle import HTTPResponse, HTTPError
+
 
 class MyPlugin(object):
     def __init__(self):
@@ -150,6 +152,16 @@ class TestPluginManagement(tools.ServerTestBase):
         self.assertBody('plugin;global-1', '/a')
         self.assertBody('plugin', '/b')
 
+    def test_json_plugin_catches_httpresponse(self):
+        @self.app.get('/return')
+        def _():
+            return HTTPResponse({'test': 'ko'}, 402)
+        @self.app.get('/raise')
+        def _():
+            raise HTTPResponse({'test': 'ko2'}, 402)
+
+        self.assertBody(b'{"test": "ko"}', '/return')
+        self.assertBody(b'{"test": "ko2"}', '/raise')
 
 
 class TestPluginAPI(tools.ServerTestBase):
@@ -207,7 +219,3 @@ class TestPluginAPI(tools.ServerTestBase):
         self.assertTrue(getattr(plugin, 'closed', False))
         self.app.close()
         self.assertTrue(getattr(plugin2, 'closed', False))
-
-
-if __name__ == '__main__': #pragma: no cover
-    unittest.main()

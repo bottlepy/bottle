@@ -38,6 +38,3 @@ class TestImportHooks(unittest.TestCase):
         '''
         from bottle import ext
         self.assertTrue(os.path.isfile(ext.__file__))
-        
-if __name__ == '__main__': #pragma: no cover
-    unittest.main()

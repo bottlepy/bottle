@@ -156,7 +156,3 @@ class TestRouter(unittest.TestCase):
 class TestRouterInCGIMode(TestRouter):
     ''' Makes no sense since the default route does not optimize CGI anymore.'''
     CGI = True
-
-
-if __name__ == '__main__':  # pragma: no cover
-    unittest.main()
