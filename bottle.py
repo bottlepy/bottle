@@ -155,14 +155,15 @@ else:  # 2.x
 
 # Some helpers for string/byte handling
 def tob(s, enc='utf8'):
-    return s.encode(enc) if isinstance(s, unicode) else bytes(s)
+    if isinstance(s, unicode):
+        return s.encode(enc)
+    return bytes("" if s is None else s)
 
 
 def touni(s, enc='utf8', err='strict'):
     if isinstance(s, bytes):
         return s.decode(enc, err)
-    else:
-        return unicode(s or ("" if s is None else s))
+    return unicode("" if s is None else s)
 
 
 tonat = touni if py3k else tob
@@ -1586,7 +1587,7 @@ def _hkey(key):
     return key.title().replace('_', '-')
 
 def _hval(value):
-    value = value if isinstance(value, unicode) else str(value)
+    value = tonat(value)
     if '\n' in value or '\r' in value or '\0' in value:
         raise ValueError("Header value must not contain control characters: %r" % value)
     return value
@@ -1757,12 +1758,10 @@ class BaseResponse(object):
         out += [(name, val) for (name, vals) in headers for val in vals]
         if self._cookies:
             for c in self._cookies.values():
-                out.append(('Set-Cookie', c.OutputString()))
+                out.append(('Set-Cookie', _hval(c.OutputString())))
         if py3k:
-            return [(k, v.encode('utf8').decode('latin1')) for (k, v) in out]
-        else:
-            return [(k, v.encode('utf8') if isinstance(v, unicode) else v)
-                    for (k, v) in out]
+            out = [(k, v.encode('utf8').decode('latin1')) for (k, v) in out]
+        return out
 
     content_type = HeaderProperty('Content-Type')
     content_length = HeaderProperty('Content-Length', reader=int)
