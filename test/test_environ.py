@@ -667,6 +667,8 @@ class TestResponse(unittest.TestCase):
         self.assertEqual('5', response['x-test'])
         response['x-test'] = None
         self.assertEqual('None', response['x-test'])
+        response['x-test'] = touni('瓶')
+        self.assertEqual(tonat(touni('瓶')), response['x-test'])
 
     def test_prevent_control_characters_in_headers(self):
         masks = '{}test', 'test{}', 'te{}st'
