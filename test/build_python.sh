@@ -32,7 +32,7 @@ pushd $PREFIX || exit 1
 
   pushd cpython-$VERSION || exit 1
     echo "Running ./configure --prefix=$PREFIX ..."
-    ./configure --prefix=$PREFIX || exit 1
+    SVNVERSION=exported ./configure --prefix=$PREFIX || exit 1
 
     echo "Running make && make install ..."
     (make -j8 && make install) || exit 1
