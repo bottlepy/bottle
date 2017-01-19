@@ -1441,6 +1441,7 @@ class BaseRequest(object):
             port = env.get('SERVER_PORT')
             if port and port != ('80' if http == 'http' else '443'):
                 host += ':' + port
+        host = host.split(",")[0].strip()
         path = urlquote(self.fullpath)
         return UrlSplitResult(http, host, path, env.get('QUERY_STRING'), '')
 
