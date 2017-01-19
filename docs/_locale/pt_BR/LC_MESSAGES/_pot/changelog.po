@@ -1,4 +1,4 @@
-# 
+#
 msgid ""
 msgstr ""
 "Project-Id-Version: Bottle 0.13-dev\n"
@@ -309,14 +309,14 @@ msgstr ""
 #: ../../changelog.rst:102
 msgid ""
 "Reduced module load time by ~30% and optimized template parser. See `8ccb2d "
-"</commit/8ccb2d>`_, `f72a7c </commit/f72a7c>`_ and `b14b9a "
-"</commit/b14b9a>`_ for details."
+"<http://github.com/bottlepy/bottle/commit/8ccb2d>`_, `f72a7c <http://github.com/bottlepy/bottle/commit/f72a7c>`_ and `b14b9a "
+"<http://github.com/bottlepy/bottle/commit/b14b9a>`_ for details."
 msgstr ""
 
 #: ../../changelog.rst:103
 msgid ""
 "Support for \"App Caching\" on Google App Engine. See `af93ec "
-"</commit/af93ec>`_."
+"<http://github.com/bottlepy/bottle/commit/af93ec>`_."
 msgstr ""
 
 #: ../../changelog.rst:104
