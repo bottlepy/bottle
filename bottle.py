@@ -3255,8 +3255,8 @@ class CherryPyServer(ServerAdapter):
             server.stop()
 
 
-class CherootServer(bottle.ServerAdapter):
-    def run(self, handler):
+class CherootServer(ServerAdapter):
+    def run(self, handler): # pragma: no cover
         from cheroot import wsgi
         from cheroot.ssl import builtin
         self.options['bind_addr'] = (self.host, self.port)
