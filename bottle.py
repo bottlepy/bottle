@@ -9,7 +9,7 @@ Python Standard Library.
 
 Homepage and documentation: http://bottlepy.org/
 
-Copyright (c) 2015, Marcel Hellkamp.
+Copyright (c) 2017, Marcel Hellkamp.
 License: MIT (see LICENSE for details)
 """
 
