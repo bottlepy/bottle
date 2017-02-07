@@ -155,14 +155,15 @@ else:  # 2.x
 
 # Some helpers for string/byte handling
 def tob(s, enc='utf8'):
-    return s.encode(enc) if isinstance(s, unicode) else bytes(s)
+    if isinstance(s, unicode):
+        return s.encode(enc)
+    return bytes("" if s is None else s)
 
 
 def touni(s, enc='utf8', err='strict'):
     if isinstance(s, bytes):
         return s.decode(enc, err)
-    else:
-        return unicode(s or ("" if s is None else s))
+    return unicode("" if s is None else s)
 
 
 tonat = touni if py3k else tob
@@ -668,7 +669,7 @@ class Bottle(object):
     catchall = DictProperty('config', 'catchall')
 
     __hook_names = 'before_request', 'after_request', 'app_reset', 'config'
-    __hook_reversed = 'after_request'
+    __hook_reversed = {'after_request'}
 
     @cached_property
     def _hooks(self):
@@ -963,43 +964,49 @@ class Bottle(object):
         if py3k:
             environ['PATH_INFO'] = path.encode('latin1').decode('utf8', 'ignore')
 
-        def _inner_handle():
-            # Maybe pass variables as locals for better performance?
-            try:
-                route, args = self.router.match(environ)
-                environ['route.handle'] = route
-                environ['bottle.route'] = route
-                environ['route.url_args'] = args
-                return route.call(**args)
-            except HTTPResponse as E:
-                return E
-            except RouteReset:
-                route.reset()
-                return _inner_handle()
-            except (KeyboardInterrupt, SystemExit, MemoryError):
-                raise
-            except Exception as E:
-                if not self.catchall: raise
-                stacktrace = format_exc()
-                environ['wsgi.errors'].write(stacktrace)
-                environ['wsgi.errors'].flush()
-                return HTTPError(500, "Internal Server Error", E, stacktrace)
+        environ['bottle.app'] = self
+        request.bind(environ)
+        response.bind()
 
         try:
-            out = None
-            environ['bottle.app'] = self
-            request.bind(environ)
-            response.bind()
-            try:
-                self.trigger_hook('before_request')
-            except HTTPResponse as E:
-                return E
-            out = _inner_handle()
-            return out
-        finally:
-            if isinstance(out, HTTPResponse):
-                out.apply(response)
-            self.trigger_hook('after_request')
+            while True: # Remove in 0.14 together with RouteReset
+                out = None
+                try:
+                    self.trigger_hook('before_request')
+                    route, args = self.router.match(environ)
+                    environ['route.handle'] = route
+                    environ['bottle.route'] = route
+                    environ['route.url_args'] = args
+                    out = route.call(**args)
+                    break
+                except HTTPResponse as E:
+                    out = E
+                    break
+                except RouteReset:
+                    depr(0, 13, "RouteReset exception deprecated",
+                                "Call route.call() after route.reset() and "
+                                "return the result.")
+                    route.reset()
+                    continue
+                finally:
+                    if isinstance(out, HTTPResponse):
+                        out.apply(response)
+                    try:
+                        self.trigger_hook('after_request')
+                    except HTTPResponse as E:
+                        out = E
+                        out.apply(response)
+        except (KeyboardInterrupt, SystemExit, MemoryError):
+            raise
+        except Exception as E:
+            if not self.catchall: raise
+            stacktrace = format_exc()
+            environ['wsgi.errors'].write(stacktrace)
+            environ['wsgi.errors'].flush()
+            out = HTTPError(500, "Internal Server Error", E, stacktrace)
+            out.apply(response)
+
+        return out
 
     def _cast(self, out, peek=None):
         """ Try to convert the parameter into something WSGI compatible and set
@@ -1188,15 +1195,22 @@ class BaseRequest(object):
         cookies = SimpleCookie(self.environ.get('HTTP_COOKIE', '')).values()
         return FormsDict((c.key, c.value) for c in cookies)
 
-    def get_cookie(self, key, default=None, secret=None):
+    def get_cookie(self, key, default=None, secret=None, digestmod=hashlib.sha256):
         """ Return the content of a cookie. To read a `Signed Cookie`, the
             `secret` must match the one used to create the cookie (see
             :meth:`BaseResponse.set_cookie`). If anything goes wrong (missing
             cookie or wrong signature), return a default value. """
         value = self.cookies.get(key)
-        if secret and value:
-            dec = cookie_decode(value, secret)  # (key, value) tuple or None
-            return dec[1] if dec and dec[0] == key else default
+        if secret:
+            # See BaseResponse.set_cookie for details on signed cookies.
+            if value and value.startswith('!') and '?' in value:
+                sig, msg = map(tob, value[1:].split('?', 1))
+                hash = hmac.new(tob(secret), msg, digestmod=digestmod).digest()
+                if _lscmp(sig, base64.b64encode(hash)):
+                    dst = pickle.loads(base64.b64decode(msg))
+                    if dst and dst[0] == key:
+                        return dst[1]
+            return default
         return value or default
 
     @DictProperty('environ', 'bottle.request.query', read_only=True)
@@ -1567,26 +1581,33 @@ class BaseRequest(object):
             raise AttributeError("Attribute not defined: %s" % name)
 
 
-def _hkey(s):
-    return s.title().replace('_', '-')
+def _hkey(key):
+    if '\n' in key or '\r' in key or '\0' in key:
+        raise ValueError("Header names must not contain control characters: %r" % key)
+    return key.title().replace('_', '-')
 
+def _hval(value):
+    value = tonat(value)
+    if '\n' in value or '\r' in value or '\0' in value:
+        raise ValueError("Header value must not contain control characters: %r" % value)
+    return value
 
 class HeaderProperty(object):
-    def __init__(self, name, reader=None, writer=str, default=''):
+    def __init__(self, name, reader=None, writer=None, default=''):
         self.name, self.default = name, default
         self.reader, self.writer = reader, writer
         self.__doc__ = 'Current value of the %r header.' % name.title()
 
     def __get__(self, obj, _):
         if obj is None: return self
-        value = obj.headers.get(self.name, self.default)
+        value = obj.get_header(self.name, self.default)
         return self.reader(value) if self.reader else value
 
     def __set__(self, obj, value):
-        obj.headers[self.name] = self.writer(value)
+        obj[self.name] = self.writer(value) if self.writer else value
 
     def __delete__(self, obj):
-        del obj.headers[self.name]
+        del obj[self.name]
 
 
 class BaseResponse(object):
@@ -1611,8 +1632,8 @@ class BaseResponse(object):
     # Header blacklist for specific response codes
     # (rfc2616 section 10.2.3 and 10.3.5)
     bad_headers = {
-        204: set(('Content-Type', 'Content-Length')),
-        304: set(('Allow', 'Content-Encoding', 'Content-Language',
+        204: frozenset(('Content-Type', 'Content-Length')),
+        304: frozenset(('Allow', 'Content-Encoding', 'Content-Language',
                   'Content-Length', 'Content-Range', 'Content-Type',
                   'Content-Md5', 'Last-Modified'))
     }
@@ -1703,8 +1724,7 @@ class BaseResponse(object):
         return self._headers[_hkey(name)][-1]
 
     def __setitem__(self, name, value):
-        self._headers[_hkey(name)] = [value if isinstance(value, unicode) else
-                                      str(value)]
+        self._headers[_hkey(name)] = [_hval(value)]
 
     def get_header(self, name, default=None):
         """ Return the value of a previously defined header. If there is no
@@ -1714,13 +1734,11 @@ class BaseResponse(object):
     def set_header(self, name, value):
         """ Create a new response header, replacing any previously defined
             headers with the same name. """
-        self._headers[_hkey(name)] = [value if isinstance(value, unicode)
-                                            else str(value)]
+        self._headers[_hkey(name)] = [_hval(value)]
 
     def add_header(self, name, value):
         """ Add an additional response header, not removing duplicates. """
-        self._headers.setdefault(_hkey(name), []).append(
-            value if isinstance(value, unicode) else str(value))
+        self._headers.setdefault(_hkey(name), []).append(_hval(value))
 
     def iter_headers(self):
         """ Yield (header, value) tuples, skipping headers that are not
@@ -1740,12 +1758,10 @@ class BaseResponse(object):
         out += [(name, val) for (name, vals) in headers for val in vals]
         if self._cookies:
             for c in self._cookies.values():
-                out.append(('Set-Cookie', c.OutputString()))
+                out.append(('Set-Cookie', _hval(c.OutputString())))
         if py3k:
-            return [(k, v.encode('utf8').decode('latin1')) for (k, v) in out]
-        else:
-            return [(k, v.encode('utf8') if isinstance(v, unicode) else v)
-                    for (k, v) in out]
+            out = [(k, v.encode('utf8').decode('latin1')) for (k, v) in out]
+        return out
 
     content_type = HeaderProperty('Content-Type')
     content_length = HeaderProperty('Content-Length', reader=int)
@@ -1761,7 +1777,7 @@ class BaseResponse(object):
             return self.content_type.split('charset=')[-1].split(';')[0].strip()
         return default
 
-    def set_cookie(self, name, value, secret=None, **options):
+    def set_cookie(self, name, value, secret=None, digestmod=hashlib.sha256, **options):
         """ Create a new cookie or replace an old one. If the `secret` parameter is
             set, create a `Signed Cookie` (described below).
 
@@ -1789,6 +1805,11 @@ class BaseResponse(object):
             cryptographically signed to prevent manipulation. Keep in mind that
             cookies are limited to 4kb in most browsers.
 
+            Warning: Pickle is a potentially dangerous format. If an attacker
+            gains access to the secret key, he could forge cookies that execute
+            code on server side if unpickeld. Using pickle is discouraged and
+            support for it will be removed in later versions of bottle.
+
             Warning: Signed cookies are not encrypted (the client can still see
             the content) and not copy-protected (the client can restore an old
             cookie). The main intention is to make pickling and unpickling
@@ -1798,9 +1819,16 @@ class BaseResponse(object):
             self._cookies = SimpleCookie()
 
         if secret:
-            value = touni(cookie_encode((name, value), secret))
+            if not isinstance(value, basestring):
+                depr(0, 13, "Pickling of arbitrary objects into cookies is "
+                            "deprecated.", "Only store strings in cookies. "
+                            "JSON strings are fine, too.")
+            encoded = base64.b64encode(pickle.dumps([name, value], -1))
+            sig = base64.b64encode(hmac.new(tob(secret), encoded,
+                                            digestmod=digestmod).digest())
+            value = touni(tob('!') + sig + tob('?') + encoded)
         elif not isinstance(value, basestring):
-            raise TypeError('Secret key missing for non-string Cookie.')
+            raise TypeError('Secret key required for non-string cookies.')
 
         # Cookie size plus options must not exceed 4kb.
         if len(name) + len(value) > 3800:
@@ -2164,7 +2192,6 @@ class FormsDict(MultiDict):
             return super(FormsDict, self).__getattr__(name)
         return self.getunicode(name, default=default)
 
-
 class HeaderDict(MultiDict):
     """ A case-insensitive version of :class:`MultiDict` that defaults to
         replace the old value instead of appending it. """
@@ -2183,16 +2210,13 @@ class HeaderDict(MultiDict):
         return self.dict[_hkey(key)][-1]
 
     def __setitem__(self, key, value):
-        self.dict[_hkey(key)] = [value if isinstance(value, unicode) else
-                                 str(value)]
+        self.dict[_hkey(key)] = [_hval(value)]
 
     def append(self, key, value):
-        self.dict.setdefault(_hkey(key), []).append(
-            value if isinstance(value, unicode) else str(value))
+        self.dict.setdefault(_hkey(key), []).append(_hval(value))
 
     def replace(self, key, value):
-        self.dict[_hkey(key)] = [value if isinstance(value, unicode) else
-                                 str(value)]
+        self.dict[_hkey(key)] = [_hval(value)]
 
     def getall(self, key):
         return self.dict.get(_hkey(key)) or []
@@ -2201,7 +2225,7 @@ class HeaderDict(MultiDict):
         return MultiDict.get(self, _hkey(key), default, index)
 
     def filter(self, names):
-        for name in [_hkey(n) for n in names]:
+        for name in (_hkey(n) for n in names):
             if name in self.dict:
                 del self.dict[name]
 
@@ -2684,6 +2708,10 @@ class FileUpload(object):
     content_type = HeaderProperty('Content-Type')
     content_length = HeaderProperty('Content-Length', reader=int, default=-1)
 
+    def get_header(self, name, default=None):
+        """ Return the value of a header within the mulripart part. """
+        return self.headers.get(name, default)
+
     @cached_property
     def filename(self):
         """ Name of the file on the client file system, but normalized to ensure
@@ -2986,6 +3014,8 @@ def _lscmp(a, b):
 
 def cookie_encode(data, key, digestmod=None):
     """ Encode and sign a pickle-able object. Return a (byte) string """
+    depr(0, 13, "cookie_encode() will be removed soon.",
+                "Do not use this API directly.")
     digestmod = digestmod or hashlib.sha256
     msg = base64.b64encode(pickle.dumps(data, -1))
     sig = base64.b64encode(hmac.new(tob(key), msg, digestmod=digestmod).digest())
@@ -2994,6 +3024,8 @@ def cookie_encode(data, key, digestmod=None):
 
 def cookie_decode(data, key, digestmod=None):
     """ Verify and decode an encoded string. Return an object or None."""
+    depr(0, 13, "cookie_decode() will be removed soon.",
+                "Do not use this API directly.")
     data = tob(data)
     if cookie_is_encoded(data):
         sig, msg = data.split(tob('?'), 1)
@@ -3006,6 +3038,8 @@ def cookie_decode(data, key, digestmod=None):
 
 def cookie_is_encoded(data):
     """ Return True if the argument looks like a encoded cookie."""
+    depr(0, 13, "cookie_is_encoded() will be removed soon.",
+                "Do not use this API directly.")
     return bool(data.startswith(tob('!')) and tob('?') in data)
 
 
@@ -3453,6 +3487,254 @@ class AiohttpUVLoopServer(AiohttpServer):
         import uvloop
         return uvloop.new_event_loop()
 
+'''
+This is an experimental Code.
+This is an intergartion of Uvloop and HttpTools with wsgi support.
+@Uvloop = https://github.com/MagicStack/uvloop
+@HttpTools = https://github.com/MagicStack/httptools
+'''
+import asyncio
+import socket
+import traceback
+from concurrent.futures.thread import ThreadPoolExecutor
+
+
+import httptools
+from urllib.parse import urlsplit
+import uvloop
+from httptools.parser.errors import HttpParserUpgrade
+
+class HttpToolsServer(ServerAdapter):
+
+    def get_event_loop(self):
+        return uvloop.new_event_loop()
+
+    def run(self, handler):
+        threads = 4 # This dosent spawn any threads. still exec with 1 thread.
+        uv_loop = uvloop.new_event_loop()
+        asyncio.set_event_loop(uv_loop)
+        loop = asyncio.get_event_loop()
+		''' The PoolExecutor is not yet complete.'''
+        #loop.set_default_executor(ThreadPoolExecutor(max_workers=threads))
+
+        server = loop.run_until_complete(loop.create_server(lambda: HttpProtocol(handler, loop), self.host, self.port))
+
+
+        if 'BOTTLE_CHILD' in os.environ:
+            import signal
+
+            signal.signal(signal.SIGINT, lambda s, f: self.loop.stop())
+
+        try:
+            print('HttpTools Server Running...')
+            loop.run_forever()
+        except KeyboardInterrupt:
+            print('Server Shutting Down....')
+            loop.stop()
+
+           
+class BufferIO:
+
+    def __init__(self):
+        self.queue = []
+        self.got_eof = False
+
+    def feed_data(self, data):
+        self.queue.append(data)
+
+    def read(self, size=-1):
+        if size == -1 or not size:
+            return self.readall()
+
+        buffer = bytearray()
+
+        while True:
+
+            if not self.queue:
+                if self.got_eof:
+                    return bytes(buffer)
+
+                continue
+
+            buffer.extend(self.queue[0])
+            del self.queue[0]
+
+            if len(buffer) >= size:
+                remaining = buffer[size:]
+                if remaining:
+                    self.queue.insert(0, remaining)
+
+                return bytes(buffer[:size])
+
+    def readall(self):
+        buffer = bytearray()
+        while self.queue or not self.got_eof:
+            if not self.queue:
+                continue
+
+            buffer.extend(self.queue[0])
+            del self.queue[0]
+
+        return bytes(buffer)
+
+    def readline(self):
+        buffer = bytearray()
+
+        while True:
+            if not self.queue:
+                if self.got_eof:
+                    return bytes(buffer)
+
+                continue
+
+            cr_pos = self.queue[0].find(b'\n')
+            if cr_pos < 0:
+                buffer.extend(self.queue[0])
+                del self.queue[0]
+            else:
+                buffer.extend(self.queue[0][:cr_pos])
+                del self.queue[0][:cr_pos]
+                return bytes(buffer)
+
+
+    def feed_eof(self):
+        self.got_eof = True
+
+
+class HttpProtocol(asyncio.Protocol):
+
+    def __init__(self, handler, loop=None):
+        self.loop = loop or asyncio.get_event_loop()
+        self.request = None
+        self.parser = httptools.HttpRequestParser(self)
+        self.handler = handler
+        self.headers = {}
+        self.path = None
+        self.buffer = BufferIO()
+        self.content_length = 0
+        self.closed = False
+        self.upgraded_protocol = None
+        self.body_read_pos = 0
+
+    def connection_made(self, transport):
+        self.transport = transport
+        sock = transport.get_extra_info('socket')
+        try:
+            sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        except (OSError, NameError):
+            pass
+
+    def data_received(self, data):
+
+        if self.upgraded_protocol:
+            self.upgraded_protocol.data_received(data)
+            return
+
+        try:
+            self.parser.feed_data(data)
+        except HttpParserUpgrade as e:
+            '''
+            let framework handle protocol upgrade
+            '''
+            pass
+
+    def on_header(self, name, value):
+        try:
+            self.headers[name.decode('utf8')] = value.decode('utf8')
+        except:
+            traceback.print_exc()
+
+    def on_headers_complete(self):
+        asyncio.ensure_future(self.async_process_response(), loop=self.loop)
+        
+    def on_url(self, url):
+        self.path = url
+
+    def on_body(self, data):
+        self.buffer.feed_data(data)
+
+    def on_message_complete(self):
+        self.buffer.feed_eof()
+
+    def connection_lost(self, exc):
+        self.closed = True
+        if self.upgraded_protocol:
+            self.upgraded_protocol.connection_lost(exc)
+
+    def eof_received(self):
+        self.buffer.feed_eof()
+
+    async def async_process_response(self):
+        try:
+            it = self.handler(self.make_environ(), self.start_response)
+            self.write(b'\r\n')
+            for data in it:
+                self.write(data)
+
+            self.write_eof()
+        except:
+            traceback.print_exc()
+            self.write_eof()
+
+    def write(self, data):
+        self.transport.write(data)
+
+    def write_eof(self):
+        if not self.closed and not self.upgraded_protocol:
+            self.transport.write_eof()
+
+    def start_response(self, status, response_headers):
+        self.write('HTTP/1.1 {}\r\n'.format(status).encode('utf8'))
+        for header in response_headers:
+            if header[0].lower() == 'content-length':
+                self.content_length = header[1]
+
+            if header[0].lower() == 'connection' and header[1].lower() == 'upgrade':
+                assert self.upgraded_protocol
+
+            self.write('{0}: {1}\r\n'.format(header[0], header[1]).encode('utf8'))
+
+    def make_environ(self):
+        new_request_url = urlsplit(self.path)
+
+        environ = {
+            'awsgi.upgrade': self.upgrade,
+            'wsgi.version': (1, 0),
+            'wsgi.url_scheme': 'http',
+            'wsgi.input': self.buffer,
+            'wsgi.errors': sys.stderr,
+            'wsgi.multithread': True,
+            'wsgi.multiprocess': True,
+            'wsgi.run_once': True,
+            'REQUEST_METHOD': self.parser.get_method().decode('utf8'),
+            'SCRIPT_NAME': '',
+            'PATH_INFO': new_request_url.path.decode('utf8'),
+            'QUERY_STRING': new_request_url.query.decode('utf8'),
+            'CONTENT_TYPE': self.headers.get('Content-Type', ''),
+            'CONTENT_LENGTH': self.headers.get('Content-Length', ''),
+            'REMOTE_ADDR': self.transport.get_extra_info('socket').getpeername()[0],
+            'REMOTE_PORT': self.transport.get_extra_info('socket').getpeername()[1],
+            'SERVER_NAME': self.transport.get_extra_info('socket').getsockname()[0],
+            'SERVER_PORT': self.transport.get_extra_info('socket').getsockname()[1],
+            'SERVER_PROTOCOL': ''
+        }
+
+        for key, value in self.headers.items():
+            key = 'HTTP_' + key.upper().replace('-', '_')
+            if key not in ('HTTP_CONTENT_TYPE', 'HTTP_CONTENT_LENGTH'):
+                environ[key] = value
+
+        if new_request_url.scheme and new_request_url.netloc:
+            environ['HTTP_HOST'] = new_request_url.netloc
+        return environ
+
+    def upgrade(self, websocket_protocol):
+        self.upgraded_protocol = websocket_protocol(self.loop)
+        self.upgraded_protocol.connection_made(self.transport)
+        return self.upgraded_protocol
+            
+############################################
+		
 class AutoServer(ServerAdapter):
     """ Untested. """
     adapters = [WaitressServer, PasteServer, TwistedServer, CherryPyServer,
@@ -3467,26 +3749,27 @@ class AutoServer(ServerAdapter):
 
 
 server_names = {
-    'cgi': CGIServer,
-    'flup': FlupFCGIServer,
-    'wsgiref': WSGIRefServer,
-    'waitress': WaitressServer,
-    'cherrypy': CherryPyServer,
-    'paste': PasteServer,
-    'fapws3': FapwsServer,
-    'tornado': TornadoServer,
-    'gae': AppEngineServer,
-    'twisted': TwistedServer,
-    'diesel': DieselServer,
-    'meinheld': MeinheldServer,
-    'gunicorn': GunicornServer,
-    'eventlet': EventletServer,
-    'gevent': GeventServer,
-    'rocket': RocketServer,
-    'bjoern': BjoernServer,
-    'aiohttp': AiohttpServer,
-    'uvloop': AiohttpUVLoopServer,
-    'auto': AutoServer,
+	'cgi': CGIServer,
+	'flup': FlupFCGIServer,
+	'wsgiref': WSGIRefServer,
+	'waitress': WaitressServer,
+	'cherrypy': CherryPyServer,
+	'paste': PasteServer,
+	'fapws3': FapwsServer,
+	'tornado': TornadoServer,
+	'gae': AppEngineServer,
+	'twisted': TwistedServer,
+	'diesel': DieselServer,
+	'meinheld': MeinheldServer,
+	'gunicorn': GunicornServer,
+	'eventlet': EventletServer,
+	'gevent': GeventServer,
+	'rocket': RocketServer,
+	'bjoern': BjoernServer,
+	'aiohttp': AiohttpServer,
+	'uvloop': AiohttpUVLoopServer,
+	'httptools':HttpToolsServer,
+	'auto': AutoServer,
 }
 
 ###############################################################################
@@ -3541,6 +3824,7 @@ def run(app=None,
         quiet=False,
         plugins=None,
         debug=None,
+        workers=1,
         config=None, **kargs):
     """ Start a server instance. This method blocks until the server terminates.
 
@@ -3930,7 +4214,7 @@ class StplParser(object):
     # This huge pile of voodoo magic splits python code into 8 different tokens.
     # We use the verbose (?x) regex mode to make this more manageable
 
-    _re_tok = _re_inl = r'''((?mx)         # verbose and dot-matches-newline mode
+    _re_tok = _re_inl = r'''(?mx)(        # verbose and dot-matches-newline mode
         [urbURB]*
         (?:  ''(?!')
             |""(?!")
@@ -3983,7 +4267,7 @@ class StplParser(object):
         self.paren_depth = 0
 
     def get_syntax(self):
-        """ Tokens as a space separated string (default: <% %> % [{ }]) """
+        """ Tokens as a space separated string (default: <% %> % {{ }}) """
         return self._syntax
 
     def set_syntax(self, syntax):
@@ -4186,6 +4470,7 @@ HTTP_CODES[418] = "I'm a teapot"  # RFC 2324
 HTTP_CODES[428] = "Precondition Required"
 HTTP_CODES[429] = "Too Many Requests"
 HTTP_CODES[431] = "Request Header Fields Too Large"
+HTTP_CODES[451] = "Unavailable For Legal Reasons" # RFC 7725
 HTTP_CODES[511] = "Network Authentication Required"
 _HTTP_STATUS_LINES = dict((k, '%d %s' % (k, v))
                           for (k, v) in HTTP_CODES.items())
@@ -4197,7 +4482,7 @@ ERROR_PAGE_TEMPLATE = """
     <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
     <html>
         <head>
-            <title>Error: [{e.status}]</title>
+            <title>Error: {{e.status}}</title>
             <style type="text/css">
               html {background-color: #eee; font-family: sans-serif;}
               body {background-color: #fff; border: 1px solid #ddd;
@@ -4206,10 +4491,10 @@ ERROR_PAGE_TEMPLATE = """
             </style>
         </head>
         <body>
-            <h1>Error: [{e.status}]</h1>
-            <p>Sorry, the requested URL <tt>[{repr(request.url)}]</tt>
+            <h1>Error: {{e.status}}</h1>
+            <p>Sorry, the requested URL <tt>{{repr(request.url)}}</tt>
                caused an error:</p>
-            <pre>[{e.body}]</pre>
+            <pre>{{e.body}}</pre>
             %%if DEBUG and e.exception:
               <h2>Exception:</h2>
               %%try:
@@ -4217,11 +4502,11 @@ ERROR_PAGE_TEMPLATE = """
               %%except:
                 %%exc = '<unprintable %%s object>' %% type(e.exception).__name__
               %%end
-              <pre>[{exc}]</pre>
+              <pre>{{exc}}</pre>
             %%end
             %%if DEBUG and e.traceback:
               <h2>Traceback:</h2>
-              <pre>[{e.traceback}]</pre>
+              <pre>{{e.traceback}}</pre>
             %%end
         </body>
     </html>
