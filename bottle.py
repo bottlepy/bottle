@@ -3972,7 +3972,7 @@ class StplParser(object):
     # Match inline statements (may contain python strings)
     _re_inl = r'''%%(inline_start)s((?:%s|[^'"\n]+?)*?)%%(inline_end)s''' % _re_inl
 
-    default_syntax = '<% %> % [{ }]'
+    default_syntax = '<% %> % {{ }}'
 
     def __init__(self, source, syntax=None, encoding='utf8'):
         self.source, self.encoding = touni(source, encoding), encoding
