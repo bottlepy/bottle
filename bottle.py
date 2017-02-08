@@ -3487,6 +3487,254 @@ class AiohttpUVLoopServer(AiohttpServer):
         import uvloop
         return uvloop.new_event_loop()
 
+'''
+This is an experimental Code.
+This is an intergartion of Uvloop and HttpTools with wsgi support.
+@Uvloop = https://github.com/MagicStack/uvloop
+@HttpTools = https://github.com/MagicStack/httptools
+'''
+import asyncio
+import socket
+import traceback
+from concurrent.futures.thread import ThreadPoolExecutor
+
+
+import httptools
+from urllib.parse import urlsplit
+import uvloop
+from httptools.parser.errors import HttpParserUpgrade
+
+class HttpToolsServer(ServerAdapter):
+
+    def get_event_loop(self):
+        return uvloop.new_event_loop()
+
+    def run(self, handler):
+        threads = 4 # This dosent spawn any threads. still exec with 1 thread.
+        uv_loop = uvloop.new_event_loop()
+        asyncio.set_event_loop(uv_loop)
+        loop = asyncio.get_event_loop()
+        ''' The PoolExecutor is not yet complete.'''
+        #loop.set_default_executor(ThreadPoolExecutor(max_workers=threads))
+
+        server = loop.run_until_complete(loop.create_server(lambda: HttpProtocol(handler, loop), self.host, self.port))
+
+
+        if 'BOTTLE_CHILD' in os.environ:
+            import signal
+
+            signal.signal(signal.SIGINT, lambda s, f: self.loop.stop())
+
+        try:
+            print('HttpTools Server Running...')
+            loop.run_forever()
+        except KeyboardInterrupt:
+            print('Server Shutting Down....')
+            loop.stop()
+
+           
+class BufferIO:
+
+    def __init__(self):
+        self.queue = []
+        self.got_eof = False
+
+    def feed_data(self, data):
+        self.queue.append(data)
+
+    def read(self, size=-1):
+        if size == -1 or not size:
+            return self.readall()
+
+        buffer = bytearray()
+
+        while True:
+
+            if not self.queue:
+                if self.got_eof:
+                    return bytes(buffer)
+
+                continue
+
+            buffer.extend(self.queue[0])
+            del self.queue[0]
+
+            if len(buffer) >= size:
+                remaining = buffer[size:]
+                if remaining:
+                    self.queue.insert(0, remaining)
+
+                return bytes(buffer[:size])
+
+    def readall(self):
+        buffer = bytearray()
+        while self.queue or not self.got_eof:
+            if not self.queue:
+                continue
+
+            buffer.extend(self.queue[0])
+            del self.queue[0]
+
+        return bytes(buffer)
+
+    def readline(self):
+        buffer = bytearray()
+
+        while True:
+            if not self.queue:
+                if self.got_eof:
+                    return bytes(buffer)
+
+                continue
+
+            cr_pos = self.queue[0].find(b'\n')
+            if cr_pos < 0:
+                buffer.extend(self.queue[0])
+                del self.queue[0]
+            else:
+                buffer.extend(self.queue[0][:cr_pos])
+                del self.queue[0][:cr_pos]
+                return bytes(buffer)
+
+
+    def feed_eof(self):
+        self.got_eof = True
+
+
+class HttpProtocol(asyncio.Protocol):
+
+    def __init__(self, handler, loop=None):
+        self.loop = loop or asyncio.get_event_loop()
+        self.request = None
+        self.parser = httptools.HttpRequestParser(self)
+        self.handler = handler
+        self.headers = {}
+        self.path = None
+        self.buffer = BufferIO()
+        self.content_length = 0
+        self.closed = False
+        self.upgraded_protocol = None
+        self.body_read_pos = 0
+
+    def connection_made(self, transport):
+        self.transport = transport
+        sock = transport.get_extra_info('socket')
+        try:
+            sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        except (OSError, NameError):
+            pass
+
+    def data_received(self, data):
+
+        if self.upgraded_protocol:
+            self.upgraded_protocol.data_received(data)
+            return
+
+        try:
+            self.parser.feed_data(data)
+        except HttpParserUpgrade as e:
+            '''
+            let framework handle protocol upgrade
+            '''
+            pass
+
+    def on_header(self, name, value):
+        try:
+            self.headers[name.decode('utf8')] = value.decode('utf8')
+        except:
+            traceback.print_exc()
+
+    def on_headers_complete(self):
+        asyncio.ensure_future(self.async_process_response(), loop=self.loop)
+        
+    def on_url(self, url):
+        self.path = url
+
+    def on_body(self, data):
+        self.buffer.feed_data(data)
+
+    def on_message_complete(self):
+        self.buffer.feed_eof()
+
+    def connection_lost(self, exc):
+        self.closed = True
+        if self.upgraded_protocol:
+            self.upgraded_protocol.connection_lost(exc)
+
+    def eof_received(self):
+        self.buffer.feed_eof()
+
+    async def async_process_response(self):
+        try:
+            it = self.handler(self.make_environ(), self.start_response)
+            self.write(b'\r\n')
+            for data in it:
+                self.write(data)
+
+            self.write_eof()
+        except:
+            traceback.print_exc()
+            self.write_eof()
+
+    def write(self, data):
+        self.transport.write(data)
+
+    def write_eof(self):
+        if not self.closed and not self.upgraded_protocol:
+            self.transport.write_eof()
+
+    def start_response(self, status, response_headers):
+        self.write('HTTP/1.1 {}\r\n'.format(status).encode('utf8'))
+        for header in response_headers:
+            if header[0].lower() == 'content-length':
+                self.content_length = header[1]
+
+            if header[0].lower() == 'connection' and header[1].lower() == 'upgrade':
+                assert self.upgraded_protocol
+
+            self.write('{0}: {1}\r\n'.format(header[0], header[1]).encode('utf8'))
+
+    def make_environ(self):
+        new_request_url = urlsplit(self.path)
+
+        environ = {
+            'awsgi.upgrade': self.upgrade,
+            'wsgi.version': (1, 0),
+            'wsgi.url_scheme': 'http',
+            'wsgi.input': self.buffer,
+            'wsgi.errors': sys.stderr,
+            'wsgi.multithread': True,
+            'wsgi.multiprocess': True,
+            'wsgi.run_once': True,
+            'REQUEST_METHOD': self.parser.get_method().decode('utf8'),
+            'SCRIPT_NAME': '',
+            'PATH_INFO': new_request_url.path.decode('utf8'),
+            'QUERY_STRING': new_request_url.query.decode('utf8'),
+            'CONTENT_TYPE': self.headers.get('Content-Type', ''),
+            'CONTENT_LENGTH': self.headers.get('Content-Length', ''),
+            'REMOTE_ADDR': self.transport.get_extra_info('socket').getpeername()[0],
+            'REMOTE_PORT': self.transport.get_extra_info('socket').getpeername()[1],
+            'SERVER_NAME': self.transport.get_extra_info('socket').getsockname()[0],
+            'SERVER_PORT': self.transport.get_extra_info('socket').getsockname()[1],
+            'SERVER_PROTOCOL': ''
+        }
+
+        for key, value in self.headers.items():
+            key = 'HTTP_' + key.upper().replace('-', '_')
+            if key not in ('HTTP_CONTENT_TYPE', 'HTTP_CONTENT_LENGTH'):
+                environ[key] = value
+
+        if new_request_url.scheme and new_request_url.netloc:
+            environ['HTTP_HOST'] = new_request_url.netloc
+        return environ
+
+    def upgrade(self, websocket_protocol):
+        self.upgraded_protocol = websocket_protocol(self.loop)
+        self.upgraded_protocol.connection_made(self.transport)
+        return self.upgraded_protocol
+            
+############################################
+		
 class AutoServer(ServerAdapter):
     """ Untested. """
     adapters = [WaitressServer, PasteServer, TwistedServer, CherryPyServer,
@@ -3501,26 +3749,27 @@ class AutoServer(ServerAdapter):
 
 
 server_names = {
-    'cgi': CGIServer,
-    'flup': FlupFCGIServer,
-    'wsgiref': WSGIRefServer,
-    'waitress': WaitressServer,
-    'cherrypy': CherryPyServer,
-    'paste': PasteServer,
-    'fapws3': FapwsServer,
-    'tornado': TornadoServer,
-    'gae': AppEngineServer,
-    'twisted': TwistedServer,
-    'diesel': DieselServer,
-    'meinheld': MeinheldServer,
-    'gunicorn': GunicornServer,
-    'eventlet': EventletServer,
-    'gevent': GeventServer,
-    'rocket': RocketServer,
-    'bjoern': BjoernServer,
-    'aiohttp': AiohttpServer,
-    'uvloop': AiohttpUVLoopServer,
-    'auto': AutoServer,
+	'cgi': CGIServer,
+	'flup': FlupFCGIServer,
+	'wsgiref': WSGIRefServer,
+	'waitress': WaitressServer,
+	'cherrypy': CherryPyServer,
+	'paste': PasteServer,
+	'fapws3': FapwsServer,
+	'tornado': TornadoServer,
+	'gae': AppEngineServer,
+	'twisted': TwistedServer,
+	'diesel': DieselServer,
+	'meinheld': MeinheldServer,
+	'gunicorn': GunicornServer,
+	'eventlet': EventletServer,
+	'gevent': GeventServer,
+	'rocket': RocketServer,
+	'bjoern': BjoernServer,
+	'aiohttp': AiohttpServer,
+	'uvloop': AiohttpUVLoopServer,
+	'httptools':HttpToolsServer,
+	'auto': AutoServer,
 }
 
 ###############################################################################
@@ -3575,6 +3824,7 @@ def run(app=None,
         quiet=False,
         plugins=None,
         debug=None,
+        workers=1,
         config=None, **kargs):
     """ Start a server instance. This method blocks until the server terminates.
 
