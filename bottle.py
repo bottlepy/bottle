@@ -3336,12 +3336,21 @@ class TwistedServer(ServerAdapter):
     def run(self, handler):
         from twisted.web import server, wsgi
         from twisted.python.threadpool import ThreadPool
-        from twisted.internet import reactor
+        from twisted.internet import reactor, ssl
         thread_pool = ThreadPool()
         thread_pool.start()
         reactor.addSystemEventTrigger('after', 'shutdown', thread_pool.stop)
         factory = server.Site(wsgi.WSGIResource(reactor, thread_pool, handler))
-        reactor.listenTCP(self.port, factory, interface=self.host)
+
+        certfile = self.options.get('certfile')
+        keyfile = self.options.get('keyfile')
+
+        if certfile and keyfile:
+            reactor.listenSSL(self.port, factory,
+                ssl.DefaultOpenSSLContextFactory(keyfile, certfile))
+        else:
+            reactor.listenTCP(self.port, factory, interface=self.host)
+
         if not reactor.running:
             reactor.run()
 
