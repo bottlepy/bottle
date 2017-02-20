@@ -20,13 +20,14 @@ install:
   - pip install coveralls
 
 script:
- - python -m coverage run --source=./bottle.py ./test/testall.py fast
- - python -m coverage combine
- - python -m coverage report 2>&1
+ - python test/testall.py fast
 
 notifications:
   irc: "irc.freenode.org#bottlepy"
   on_success: "never"
 
 after_success:
-  coveralls
+ - python -m coverage run --source=./bottle.py ./test/testall.py fast
+ - python -m coverage combine
+ - python -m coverage report 2>&1
+ - coveralls
