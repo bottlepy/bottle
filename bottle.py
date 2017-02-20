@@ -3232,7 +3232,7 @@ class WSGIRefServer(ServerAdapter):
 
 class CherryPyServer(ServerAdapter):
     def run(self, handler):  # pragma: no cover
-        from cherrypy import wsgiserver
+        from cheroot import wsgi
         self.options['bind_addr'] = (self.host, self.port)
         self.options['wsgi_app'] = handler
 
@@ -3243,7 +3243,7 @@ class CherryPyServer(ServerAdapter):
         if keyfile:
             del self.options['keyfile']
 
-        server = wsgiserver.CherryPyWSGIServer(**self.options)
+        server = wsgi.Server(**self.options)
         if certfile:
             server.ssl_certificate = certfile
         if keyfile:
