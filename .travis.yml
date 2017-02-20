@@ -31,3 +31,4 @@ after_success:
  - python -m coverage combine
  - python -m coverage report 2>&1
  - coveralls
+ 
