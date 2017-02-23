@@ -13,7 +13,7 @@
 
 .. image:: https://coveralls.io/repos/github/bottlepy/bottle/badge.svg?branch=master
    :target: https://coveralls.io/github/bottlepy/bottle?branch=master
-   :alt: Coverage 
+   :alt: Coverage
 
 .. image:: https://img.shields.io/pypi/dm/bottle.svg
     :target: https://pypi.python.org/pypi/bottle/
@@ -47,7 +47,7 @@ Bottle is a fast, simple and lightweight WSGI_ micro web-framework for Python_. 
 * **Routing:** Requests to function-call mapping with support for clean and  dynamic URLs.
 * **Templates:** Fast and pythonic `*built-in template engine* <http://bottlepy.org/docs/dev/tutorial.html#tutorial-templates>`_ and support for mako_, jinja2_ and cheetah_ templates.
 * **Utilities:** Convenient access to form data, file uploads, cookies, headers and other HTTP-related metadata.
-* **Server:** Built-in HTTP development server and support for paste_, fapws3_, bjoern_, `Google App Engine <https://cloud.google.com/appengine/>`_, cherrypy_ or any other WSGI_ capable HTTP server.
+* **Server:** Built-in HTTP development server and support for paste_, fapws3_, bjoern_, `Google App Engine <https://cloud.google.com/appengine/>`_, cherrypy_ (<= 9.0.0) or any other WSGI_ capable HTTP server.
 
 Homepage and documentation: http://bottlepy.org
 

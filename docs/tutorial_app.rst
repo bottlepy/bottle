@@ -486,7 +486,7 @@ The ``port`` and ``host`` parameter can also be applied when Bottle is running w
 
 As said above, the standard server is perfectly suitable for development, personal use or a small group of people only using your application based on Bottle. For larger tasks, the standard server may become a bottleneck, as it is single-threaded, thus it can only serve one request at a time.
 
-But Bottle has already various adapters to multi-threaded servers on board, which perform better on higher load. Bottle supports Cherrypy_, Fapws3_, Flup_ and Paste_.
+But Bottle has already various adapters to multi-threaded servers on board, which perform better on higher load. Bottle supports Cherrypy_ (<= 9.0.0), Fapws3_, Flup_ and Paste_.
 
 If you want to run for example Bottle with the Paste server, use the following code::
 
