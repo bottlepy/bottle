@@ -3274,7 +3274,7 @@ class PasteServer(ServerAdapter):
 class MeinheldServer(ServerAdapter):
     def run(self, handler):
         from meinheld import server, set_max_content_length
-        set_max_content_lenght(BaseRequest.MEMFILE_MAX)
+        set_max_content_length(BaseRequest.MEMFILE_MAX)
         server.listen((self.host, self.port))
         server.run(handler)
 
