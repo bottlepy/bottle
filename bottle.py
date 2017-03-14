@@ -3273,7 +3273,8 @@ class PasteServer(ServerAdapter):
 
 class MeinheldServer(ServerAdapter):
     def run(self, handler):
-        from meinheld import server
+        from meinheld import server, set_max_content_length
+        set_max_content_lenght(BaseRequest.MEMFILE_MAX)
         server.listen((self.host, self.port))
         server.run(handler)
 
@@ -3309,7 +3310,7 @@ class TornadoServer(ServerAdapter):
     def run(self, handler):  # pragma: no cover
         import tornado.wsgi, tornado.httpserver, tornado.ioloop
         container = tornado.wsgi.WSGIContainer(handler)
-        server = tornado.httpserver.HTTPServer(container)
+        server = tornado.httpserver.HTTPServer(container, max_body_size=BaseRequest.MEMFILE_MAX)
         server.listen(port=self.port, address=self.host)
         tornado.ioloop.IOLoop.instance().start()
 
