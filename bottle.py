@@ -955,7 +955,11 @@ class Bottle(object):
             return handler
 
         return wrapper
-
+    
+    def add_error_handler(self, code, handler):
+        '''add an error handler by explicit code'''
+        self.error_handler[int(code)] = handler
+    
     def default_error_handler(self, res):
         return tob(template(ERROR_PAGE_TEMPLATE, e=res, template_settings=dict(name='__ERROR_PAGE_TEMPLATE')))
 
