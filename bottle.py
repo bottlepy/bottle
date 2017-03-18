@@ -947,14 +947,27 @@ class Bottle(object):
         """ Equals :meth:`route` with a ``PATCH`` method parameter. """
         return self.route(path, method, **options)
 
-    def error(self, code=500):
-        """ Decorator: Register an output handler for a HTTP error code"""
+    def error(self, code=500, callback=None):
+        """ Register an output handler for a HTTP error code.
+            Can be used as a decorator or called directly ::
+                
+                def error_handler_500(error):
+                    return 'error_handler_500'
 
-        def wrapper(handler):
-            self.error_handler[int(code)] = handler
-            return handler
+                app.error(code=500, callback=error_handler_500)
 
-        return wrapper
+
+                @app.error(404)
+                def error_handler_404(error):
+                    return 'error_handler_404'
+        """
+        
+        def decorator(callback):
+            if isinstance(callback, basestring): callback = load(callback)
+            self.error_handler[int(code)] = callback
+            return callback
+        
+        return decorator(callback) if callback else decorator
 
     def default_error_handler(self, res):
         return tob(template(ERROR_PAGE_TEMPLATE, e=res, template_settings=dict(name='__ERROR_PAGE_TEMPLATE')))
