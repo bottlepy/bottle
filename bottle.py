@@ -948,18 +948,18 @@ class Bottle(object):
         return self.route(path, method, **options)
 
     def error(self, code=500, callback=None):
-        """ Register an output handler for a HTTP error code.
-            Can be used as a decorator or called directly ::
-                
+        """ Register an output handler for a HTTP error code. Can
+            be used as a decorator or called directly ::
+
                 def error_handler_500(error):
                     return 'error_handler_500'
 
                 app.error(code=500, callback=error_handler_500)
 
-
                 @app.error(404)
                 def error_handler_404(error):
                     return 'error_handler_404'
+
         """
         
         def decorator(callback):
