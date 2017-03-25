@@ -5,7 +5,8 @@ jinja2
 # Server Backends
 meinheld
 bjoern
-cherrypy
+cherrypy < 9
+cheroot
 diesel
 eventlet
 fapws3==0.11.dev
