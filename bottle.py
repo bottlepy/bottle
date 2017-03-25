@@ -2793,7 +2793,11 @@ class WSGIRefServer(ServerAdapter):
 
 class CherryPyServer(ServerAdapter):
     def run(self, handler): # pragma: no cover
-        from cherrypy import wsgiserver
+        depr(0, 13, "The wsgi server part of cherrypy was split into a new "
+                    "project called 'cheroot'.", "Use the 'cheroot' server "
+                    "adapter instead of cherrypy.")
+        from cherrypy import wsgiserver # This will fail for CherryPy >= 9
+
         self.options['bind_addr'] = (self.host, self.port)
         self.options['wsgi_app'] = handler
 
