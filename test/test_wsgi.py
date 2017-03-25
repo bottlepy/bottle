@@ -173,6 +173,32 @@ class TestWsgi(ServerTestBase):
         self.assertTrue('b=b' in c)
         self.assertTrue('c=c; Path=/' in c)
 
+class TestErrorHandling(ServerTestBase):
+    def test_error_routing(self):
+
+        @bottle.route("/<code:int>")
+        def throw_error(code):
+            bottle.abort(code)
+
+        # Decorator syntax
+        @bottle.error(500)
+        def catch_500(err):
+            return err.status_line
+
+        # Decorator syntax (unusual/custom error codes)
+        @bottle.error(999)
+        def catch_999(err):
+            return err.status_line
+
+        # Callback argument syntax
+        def catch_404(err):
+            return err.status_line
+        bottle.error(404, callback=catch_404)
+
+        self.assertBody("404 Not Found", '/not_found')
+        self.assertBody("500 Internal Server Error", '/500')
+        self.assertBody("999 Unknown", '/999')
+
 
 class TestRouteDecorator(ServerTestBase):
     def test_decorators(self):
