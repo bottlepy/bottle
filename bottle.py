@@ -30,9 +30,8 @@ __license__ = 'MIT'
 def _cli_parse(args):  # pragma: no coverage
     from argparse import ArgumentParser
 
-    parser = ArgumentParser(usage="usage: %sprog [options] package.module:app")
+    parser = ArgumentParser(prog=args[0], usage="%(prog)s [options] package.module:app")
     opt = parser.add_argument
-    opt('app', help='WSGI app entry point.')
     opt("--version", action="store_true", help="show version number.")
     opt("-b", "--bind", metavar="ADDRESS", help="bind socket to ADDRESS.")
     opt("-s", "--server", default='wsgiref', help="use SERVER as backend.")
@@ -43,8 +42,9 @@ def _cli_parse(args):  # pragma: no coverage
         help="override config values.")
     opt("--debug", action="store_true", help="start server in debug mode.")
     opt("--reload", action="store_true", help="auto-reload on file changes.")
+    opt('app', help='WSGI app entry point.', nargs='?')
 
-    cli_args = parser.parse_args(args)
+    cli_args = parser.parse_args(args[1:])
 
     return cli_args, parser
 
