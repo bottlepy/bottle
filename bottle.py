@@ -3577,7 +3577,16 @@ def load(target, **namespace):
         local variables. Example: ``import_string('re:compile(x)', x='[a-z]')``
     """
     module, target = target.split(":", 1) if ':' in target else (target, None)
-    if module not in sys.modules: __import__(module)
+    if module not in sys.modules:
+        try:
+            __import__(module)
+        except ImportError:
+            # cwd is not always in sys.path, e.g when using scripts
+            if os.getcwd() in sys.path:
+                raise
+            sys.path.append(os.getcwd())
+            __import__(module)
+            sys.path.remove(os.getcwd())
     if not target: return sys.modules[module]
     if target.isalnum(): return getattr(sys.modules[module], target)
     package_name = module.split('.')[0]
