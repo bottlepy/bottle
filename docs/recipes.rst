@@ -145,9 +145,8 @@ add a WSGI middleware that strips trailing slashes from all URLs::
       def __init__(self, app):
         self.app = app
       def __call__(self, e, h):
-        e['PATH_INFO'] = e['PATH_INFO'].rstrip('/')
-        return self.app(e,h)
-    
+        bottle.redirect(e['PATH_INFO'].rstrip('/'), code=301)
+
     app = bottle.app()
     myapp = StripPathMiddleware(app)
     bottle.run(app=myapp)
