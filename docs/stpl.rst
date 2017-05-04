@@ -135,7 +135,7 @@ Each template is preloaded with a bunch of functions that help with the most com
 
     % include('header.tpl', title='Page Title')
     Page Content
-    % include('foother.tpl')
+    % include('footer.tpl')
 
 .. function:: rebase(name, **variables)
 
