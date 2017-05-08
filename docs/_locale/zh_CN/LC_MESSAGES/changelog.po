@@ -1,0 +1,757 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2009-2015, Marcel Hellkamp
+# This file is distributed under the same license as the Bottle package.
+# 
+# Translators:
+msgid ""
+msgstr ""
+"Project-Id-Version: bottle\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2015-12-19 14:15+0100\n"
+"PO-Revision-Date: 2015-12-13 21:06+0000\n"
+"Last-Translator: Thiago Avelino <thiago@avelino.xxx>\n"
+"Language-Team: Chinese (China) (http://www.transifex.com/bottle/bottle/language/zh_CN/)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: zh_CN\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: ../../changelog.rst:6
+msgid "Release Notes and Changelog"
+msgstr "发布摘要和更改历史(不译)"
+
+#: ../../changelog.rst:9
+msgid "Release 0.13"
+msgstr ""
+
+#: ../../changelog.rst:13
+msgid "Added :func:`patch` shortcut for `route(..., method='PATCH')`"
+msgstr ""
+
+#: ../../changelog.rst:17
+msgid "Release 0.12"
+msgstr ""
+
+#: ../../changelog.rst:19
+msgid ""
+"New SimpleTemplate parser implementation * Support for multi-line code "
+"blocks (`<% ... %>`). * The keywords `include` and `rebase` are functions "
+"now and can accept variable template names."
+msgstr ""
+
+#: ../../changelog.rst:22
+msgid ""
+"The new :meth:`BaseRequest.route` property returns the :class:`Route` that "
+"originally matched the request."
+msgstr ""
+
+#: ../../changelog.rst:23
+msgid ""
+"Removed the ``BaseRequest.MAX_PARAMS`` limit. The hash collision bug in "
+"CPythons dict() implementation was fixed over a year ago. If you are still "
+"using Python 2.5 in production, consider upgrading or at least make sure "
+"that you get security fixed from your distributor."
+msgstr ""
+
+#: ../../changelog.rst:24
+msgid "New :class:`ConfigDict` API (see :doc:`configuration`)"
+msgstr ""
+
+#: ../../changelog.rst:26
+msgid ""
+"More information can be found in this `development blog post "
+"<http://blog.bottlepy.org/2013/07/19/preview-bottle-012.html>`_."
+msgstr ""
+
+#: ../../changelog.rst:30
+msgid "Release 0.11"
+msgstr ""
+
+#: ../../changelog.rst:32
+msgid ""
+"Native support for Python 2.x and 3.x syntax. No need to run 2to3 anymore."
+msgstr ""
+
+#: ../../changelog.rst:33
+msgid ""
+"Support for partial downloads (``Range`` header) in :func:`static_file`."
+msgstr ""
+
+#: ../../changelog.rst:34
+msgid ""
+"The new :class:`ResourceManager` interface helps locating files bundled with"
+" an application."
+msgstr ""
+
+#: ../../changelog.rst:35
+msgid ""
+"Added a server adapter for `waitress "
+"<http://docs.pylonsproject.org/projects/waitress/en/latest/>`_."
+msgstr ""
+
+#: ../../changelog.rst:36
+msgid ""
+"New :meth:`Bottle.merge` method to install all routes from one application "
+"into another."
+msgstr ""
+
+#: ../../changelog.rst:37
+msgid ""
+"New :attr:`BaseRequest.app` property to get the application object that "
+"handles a request."
+msgstr ""
+
+#: ../../changelog.rst:38
+msgid ""
+"Added :meth:`FormsDict.decode()` to get an all-unicode version (needed by "
+"WTForms)."
+msgstr ""
+
+#: ../../changelog.rst:39
+msgid ":class:`MultiDict` and subclasses are now pickle-able."
+msgstr ""
+
+#: ../../changelog.rst:42
+msgid "API Changes"
+msgstr ""
+
+#: ../../changelog.rst:43
+msgid ""
+":attr:`Response.status` is a read-write property that can be assigned either"
+" a numeric status code or a status string with a reason phrase (``200 OK``)."
+" The return value is now a string to better match existing APIs (WebOb, "
+"werkzeug). To be absolutely clear, you can use the read-only properties "
+":attr:`BaseResponse.status_code` and :attr:`BaseResponse.status_line`."
+msgstr ""
+
+#: ../../changelog.rst:46
+msgid "API Deprecations"
+msgstr ""
+
+#: ../../changelog.rst:47
+msgid ""
+":class:`SimpleTALTemplate` is now deprecating. There seems to be no demand."
+msgstr ""
+
+#: ../../changelog.rst:50
+msgid "Release 0.10"
+msgstr ""
+
+#: ../../changelog.rst:52
+msgid "Plugin API v2"
+msgstr ""
+
+#: ../../changelog.rst:54
+msgid "To use the new API, set :attr:`Plugin.api` to ``2``."
+msgstr ""
+
+#: ../../changelog.rst:55
+msgid ""
+":meth:`Plugin.apply` receives a :class:`Route` object instead of a context "
+"dictionary as second parameter. The new object offers some additional "
+"information and may be extended in the future."
+msgstr ""
+
+#: ../../changelog.rst:56
+msgid ""
+"Plugin names are considered unique now. The topmost plugin with a given name"
+" on a given route is installed, all other plugins with the same name are "
+"silently ignored."
+msgstr ""
+
+#: ../../changelog.rst:58
+msgid "The Request/Response Objects"
+msgstr ""
+
+#: ../../changelog.rst:60
+msgid ""
+"Added :attr:`BaseRequest.json`, :attr:`BaseRequest.remote_route`, "
+":attr:`BaseRequest.remote_addr`, :attr:`BaseRequest.query` and "
+":attr:`BaseRequest.script_name`."
+msgstr ""
+
+#: ../../changelog.rst:61
+msgid ""
+"Added :attr:`BaseResponse.status_line` and :attr:`BaseResponse.status_code` "
+"attributes. In future releases, :attr:`BaseResponse.status` will return a "
+"string (e.g. ``200 OK``) instead of an integer to match the API of other "
+"common frameworks. To make the transition as smooth as possible, you should "
+"use the verbose attributes from now on."
+msgstr ""
+
+#: ../../changelog.rst:62
+msgid ""
+"Replaced :class:`MultiDict` with a specialized :class:`FormsDict` in many "
+"places. The new dict implementation allows attribute access and handles "
+"unicode form values transparently."
+msgstr ""
+
+#: ../../changelog.rst:64
+msgid "Templates"
+msgstr "模板"
+
+#: ../../changelog.rst:66
+msgid ""
+"Added three new functions to the SimpleTemplate default namespace that "
+"handle undefined variables: :func:`stpl.defined`, :func:`stpl.get` and "
+":func:`stpl.setdefault`."
+msgstr ""
+
+#: ../../changelog.rst:67
+msgid ""
+"The default escape function for SimpleTemplate now additionally escapes "
+"single and double quotes."
+msgstr ""
+
+#: ../../changelog.rst:69
+msgid "Routing"
+msgstr ""
+
+#: ../../changelog.rst:71
+msgid ""
+"A new route syntax (e.g. ``/object/<id:int>``) and support for route "
+"wildcard filters."
+msgstr ""
+
+#: ../../changelog.rst:72
+msgid "Four new wildcard filters: `int`, `float`, `path` and `re`."
+msgstr ""
+
+#: ../../changelog.rst:74
+msgid "Other changes"
+msgstr ""
+
+#: ../../changelog.rst:76
+msgid "Added command line interface to load applications and start servers."
+msgstr ""
+
+#: ../../changelog.rst:77
+msgid ""
+"Introduced a :class:`ConfigDict` that makes accessing configuration a lot "
+"easier (attribute access and auto-expanding namespaces)."
+msgstr ""
+
+#: ../../changelog.rst:78
+msgid "Added support for raw WSGI applications to :meth:`Bottle.mount`."
+msgstr ""
+
+#: ../../changelog.rst:79
+msgid ":meth:`Bottle.mount` parameter order changed."
+msgstr ""
+
+#: ../../changelog.rst:80
+msgid ""
+":meth:`Bottle.route` now accpets an import string for the ``callback`` "
+"parameter."
+msgstr ""
+
+#: ../../changelog.rst:81
+msgid "Dropped Gunicorn 0.8 support. Current supported version is 0.13."
+msgstr ""
+
+#: ../../changelog.rst:82
+msgid "Added custom options to Gunicorn server."
+msgstr ""
+
+#: ../../changelog.rst:83
+msgid ""
+"Finally dropped support for type filters. Replace with a custom plugin of "
+"needed."
+msgstr ""
+
+#: ../../changelog.rst:87
+msgid "Release 0.9"
+msgstr ""
+
+#: ../../changelog.rst:90
+msgid "Whats new?"
+msgstr ""
+
+#: ../../changelog.rst:91
+msgid ""
+"A brand new plugin-API. See :ref:`plugins` and :doc:`plugindev` for details."
+msgstr ""
+
+#: ../../changelog.rst:92
+msgid ""
+"The :func:`route` decorator got a lot of new features. See "
+":meth:`Bottle.route` for details."
+msgstr ""
+
+#: ../../changelog.rst:93
+msgid ""
+"New server adapters for `gevent <http://www.gevent.org/>`_, `meinheld "
+"<http://meinheld.org/>`_ and `bjoern "
+"<https://github.com/jonashaag/bjoern>`_."
+msgstr ""
+
+#: ../../changelog.rst:94
+msgid "Support for SimpleTAL templates."
+msgstr ""
+
+#: ../../changelog.rst:95
+msgid "Better runtime exception handling for mako templates in debug mode."
+msgstr ""
+
+#: ../../changelog.rst:96
+msgid "Lots of documentation, fixes and small improvements."
+msgstr ""
+
+#: ../../changelog.rst:97
+msgid "A new :data:`Request.urlparts` property."
+msgstr ""
+
+#: ../../changelog.rst:100
+msgid "Performance improvements"
+msgstr ""
+
+#: ../../changelog.rst:101
+msgid ""
+"The :class:`Router` now special-cases ``wsgi.run_once`` environments to "
+"speed up CGI."
+msgstr ""
+
+#: ../../changelog.rst:102
+msgid ""
+"Reduced module load time by ~30% and optimized template parser. See `8ccb2d "
+"</commit/8ccb2d>`_, `f72a7c </commit/f72a7c>`_ and `b14b9a "
+"</commit/b14b9a>`_ for details."
+msgstr ""
+
+#: ../../changelog.rst:103
+msgid ""
+"Support for \"App Caching\" on Google App Engine. See `af93ec "
+"</commit/af93ec>`_."
+msgstr ""
+
+#: ../../changelog.rst:104
+msgid ""
+"Some of the rarely used or deprecated features are now plugins that avoid "
+"overhead if the feature is not used."
+msgstr ""
+
+#: ../../changelog.rst:107 ../../changelog.rst:118
+msgid "API changes"
+msgstr ""
+
+#: ../../changelog.rst:108
+msgid ""
+"This release is mostly backward compatible, but some APIs are marked "
+"deprecated now and will be removed for the next release. Most noteworthy:"
+msgstr ""
+
+#: ../../changelog.rst:110
+msgid ""
+"The ``static`` route parameter is deprecated. You can escape wild-cards with"
+" a backslash."
+msgstr ""
+
+#: ../../changelog.rst:111
+msgid ""
+"Type-based output filters are deprecated. They can easily be replaced with "
+"plugins."
+msgstr ""
+
+#: ../../changelog.rst:115
+msgid "Release 0.8"
+msgstr ""
+
+#: ../../changelog.rst:119
+msgid "These changes may break compatibility with previous versions."
+msgstr ""
+
+#: ../../changelog.rst:121
+msgid ""
+"The built-in Key/Value database is not available anymore. It is marked "
+"deprecated since 0.6.4"
+msgstr ""
+
+#: ../../changelog.rst:122
+msgid "The Route syntax and behaviour changed."
+msgstr ""
+
+#: ../../changelog.rst:124
+msgid ""
+"Regular expressions must be encapsulated with ``#``. In 0.6 all non-"
+"alphanumeric characters not present in the regular expression were allowed."
+msgstr ""
+
+#: ../../changelog.rst:125
+msgid ""
+"Regular expressions not part of a route wildcard are escaped automatically. "
+"You don't have to escape dots or other regular control characters anymore. "
+"In 0.6 the whole URL was interpreted as a regular expression. You can use "
+"anonymous wildcards (``/index:#(\\.html)?#``) to achieve a similar "
+"behaviour."
+msgstr ""
+
+#: ../../changelog.rst:127
+msgid ""
+"The ``BreakTheBottle`` exception is gone. Use :class:`HTTPResponse` instead."
+msgstr ""
+
+#: ../../changelog.rst:128
+msgid ""
+"The :class:`SimpleTemplate` engine escapes HTML special characters in "
+"``{{bad_html}}`` expressions automatically. Use the new ``{{!good_html}}`` "
+"syntax to get old behaviour (no escaping)."
+msgstr ""
+
+#: ../../changelog.rst:129
+msgid ""
+"The :class:`SimpleTemplate` engine returns unicode strings instead of lists "
+"of byte strings."
+msgstr ""
+
+#: ../../changelog.rst:130
+msgid ""
+"``bottle.optimize()`` and the automatic route optimization is obsolete."
+msgstr ""
+
+#: ../../changelog.rst:131
+msgid "Some functions and attributes were renamed:"
+msgstr ""
+
+#: ../../changelog.rst:133
+msgid ":attr:`Request._environ` is now :attr:`Request.environ`"
+msgstr ""
+
+#: ../../changelog.rst:134
+msgid ":attr:`Response.header` is now :attr:`Response.headers`"
+msgstr ""
+
+#: ../../changelog.rst:135
+msgid ":func:`default_app` is obsolete. Use :func:`app` instead."
+msgstr ""
+
+#: ../../changelog.rst:137
+msgid "The default :func:`redirect` code changed from 307 to 303."
+msgstr ""
+
+#: ../../changelog.rst:138
+msgid "Removed support for ``@default``. Use ``@error(404)`` instead."
+msgstr ""
+
+#: ../../changelog.rst:142
+msgid "New features"
+msgstr ""
+
+#: ../../changelog.rst:143
+msgid "This is an incomplete list of new features and improved functionality."
+msgstr ""
+
+#: ../../changelog.rst:145
+msgid ""
+"The :class:`Request` object got new properties: :attr:`Request.body`, "
+":attr:`Request.auth`, :attr:`Request.url`, :attr:`Request.header`, "
+":attr:`Request.forms`, :attr:`Request.files`."
+msgstr ""
+
+#: ../../changelog.rst:146
+msgid ""
+"The :meth:`Response.set_cookie` and :meth:`Request.get_cookie` methods are "
+"now able to encode and decode python objects. This is called a *secure "
+"cookie* because the encoded values are signed and protected from changes on "
+"client side. All pickle-able data structures are allowed."
+msgstr ""
+
+#: ../../changelog.rst:147
+msgid ""
+"The new :class:`Router` class drastically improves performance for setups "
+"with lots of dynamic routes and supports named routes (named route + dict = "
+"URL string)."
+msgstr ""
+
+#: ../../changelog.rst:148
+msgid ""
+"It is now possible (and recommended) to return :exc:`HTTPError` and "
+":exc:`HTTPResponse` instances or other exception objects instead of raising "
+"them."
+msgstr ""
+
+#: ../../changelog.rst:149
+msgid ""
+"The new function :func:`static_file` equals :func:`send_file` but returns a "
+":exc:`HTTPResponse` or :exc:`HTTPError` instead of raising it. "
+":func:`send_file` is deprecated."
+msgstr ""
+
+#: ../../changelog.rst:150
+msgid ""
+"New :func:`get`, :func:`post`, :func:`put` and :func:`delete` decorators."
+msgstr ""
+
+#: ../../changelog.rst:151
+msgid "The :class:`SimpleTemplate` engine got full unicode support."
+msgstr ""
+
+#: ../../changelog.rst:152
+msgid "Lots of non-critical bugfixes."
+msgstr ""
+
+#: ../../changelog.rst:158
+msgid "Contributors"
+msgstr ""
+
+#: ../../../AUTHORS:1
+msgid ""
+"Bottle is written and maintained by Marcel Hellkamp <marc@bottlepy.org>."
+msgstr ""
+
+#: ../../../AUTHORS:3
+msgid ""
+"Thanks to all the people who found bugs, sent patches, spread the word, "
+"helped each other on the mailing-list and made this project possible. I hope"
+" the following (alphabetically sorted) list is complete. If you miss your "
+"name on that list (or want your name removed) please :doc:`tell me "
+"<contact>` or add it yourself."
+msgstr ""
+
+#: ../../../AUTHORS:5
+msgid "acasajus"
+msgstr ""
+
+#: ../../../AUTHORS:6
+msgid "Adam R. Smith"
+msgstr ""
+
+#: ../../../AUTHORS:7
+msgid "Alexey Borzenkov"
+msgstr ""
+
+#: ../../../AUTHORS:8
+msgid "Alexis Daboville"
+msgstr ""
+
+#: ../../../AUTHORS:9
+msgid "Anton I. Sipos"
+msgstr ""
+
+#: ../../../AUTHORS:10
+msgid "Anton Kolechkin"
+msgstr ""
+
+#: ../../../AUTHORS:11
+msgid "apexi200sx"
+msgstr ""
+
+#: ../../../AUTHORS:12
+msgid "apheage"
+msgstr ""
+
+#: ../../../AUTHORS:13
+msgid "BillMa"
+msgstr ""
+
+#: ../../../AUTHORS:14
+msgid "Brad Greenlee"
+msgstr ""
+
+#: ../../../AUTHORS:15
+msgid "Brandon Gilmore"
+msgstr ""
+
+#: ../../../AUTHORS:16
+msgid "Branko Vukelic"
+msgstr ""
+
+#: ../../../AUTHORS:17
+msgid "Brian Sierakowski"
+msgstr ""
+
+#: ../../../AUTHORS:18
+msgid "Brian Wickman"
+msgstr ""
+
+#: ../../../AUTHORS:19
+msgid "Carl Scharenberg"
+msgstr ""
+
+#: ../../../AUTHORS:20
+msgid "Damien Degois"
+msgstr ""
+
+#: ../../../AUTHORS:21
+msgid "David Buxton"
+msgstr ""
+
+#: ../../../AUTHORS:22
+msgid "Duane Johnson"
+msgstr ""
+
+#: ../../../AUTHORS:23
+msgid "fcamel"
+msgstr ""
+
+#: ../../../AUTHORS:24
+msgid "Frank Murphy"
+msgstr ""
+
+#: ../../../AUTHORS:25
+msgid "Frederic Junod"
+msgstr ""
+
+#: ../../../AUTHORS:26
+msgid "goldfaber3012"
+msgstr ""
+
+#: ../../../AUTHORS:27
+msgid "Greg Milby"
+msgstr ""
+
+#: ../../../AUTHORS:28
+msgid "gstein"
+msgstr ""
+
+#: ../../../AUTHORS:29
+msgid "Ian Davis"
+msgstr ""
+
+#: ../../../AUTHORS:30
+msgid "Itamar Nabriski"
+msgstr ""
+
+#: ../../../AUTHORS:31
+msgid "Iuri de Silvio"
+msgstr ""
+
+#: ../../../AUTHORS:32
+msgid "Jaimie Murdock"
+msgstr ""
+
+#: ../../../AUTHORS:33
+msgid "Jeff Nichols"
+msgstr ""
+
+#: ../../../AUTHORS:34
+msgid "Jeremy Kelley"
+msgstr ""
+
+#: ../../../AUTHORS:35
+msgid "joegester"
+msgstr ""
+
+#: ../../../AUTHORS:36
+msgid "Johannes Krampf"
+msgstr ""
+
+#: ../../../AUTHORS:37
+msgid "Jonas Haag"
+msgstr ""
+
+#: ../../../AUTHORS:38
+msgid "Joshua Roesslein"
+msgstr ""
+
+#: ../../../AUTHORS:39
+msgid "Judson Neer"
+msgstr ""
+
+#: ../../../AUTHORS:40
+msgid "Karl"
+msgstr ""
+
+#: ../../../AUTHORS:41
+msgid "Kevin Zuber"
+msgstr ""
+
+#: ../../../AUTHORS:42
+msgid "Kraken"
+msgstr ""
+
+#: ../../../AUTHORS:43
+msgid "Kyle Fritz"
+msgstr ""
+
+#: ../../../AUTHORS:44
+msgid "m35"
+msgstr ""
+
+#: ../../../AUTHORS:45
+msgid "Marcos Neves"
+msgstr ""
+
+#: ../../../AUTHORS:46
+msgid "masklinn"
+msgstr ""
+
+#: ../../../AUTHORS:47
+msgid "Michael Labbe"
+msgstr ""
+
+#: ../../../AUTHORS:48
+msgid "Michael Soulier"
+msgstr ""
+
+#: ../../../AUTHORS:49
+msgid "`reddit <http://reddit.com/r/python>`_"
+msgstr ""
+
+#: ../../../AUTHORS:50
+msgid "Nicolas Vanhoren"
+msgstr ""
+
+#: ../../../AUTHORS:51
+msgid "Robert Rollins"
+msgstr ""
+
+#: ../../../AUTHORS:52
+msgid "rogererens"
+msgstr ""
+
+#: ../../../AUTHORS:53
+msgid "rwxrwx"
+msgstr ""
+
+#: ../../../AUTHORS:54
+msgid "Santiago Gala"
+msgstr ""
+
+#: ../../../AUTHORS:55
+msgid "Sean M. Collins"
+msgstr ""
+
+#: ../../../AUTHORS:56
+msgid "Sebastian Wollrath"
+msgstr ""
+
+#: ../../../AUTHORS:57
+msgid "Seth"
+msgstr ""
+
+#: ../../../AUTHORS:58
+msgid "Sigurd Høgsbro"
+msgstr ""
+
+#: ../../../AUTHORS:59
+msgid "Stuart Rackham"
+msgstr ""
+
+#: ../../../AUTHORS:60
+msgid "Sun Ning"
+msgstr ""
+
+#: ../../../AUTHORS:61
+msgid "Tomás A. Schertel"
+msgstr ""
+
+#: ../../../AUTHORS:62
+msgid "Tristan Zajonc"
+msgstr ""
+
+#: ../../../AUTHORS:63
+msgid "voltron"
+msgstr ""
+
+#: ../../../AUTHORS:64
+msgid "Wieland Hoffmann"
+msgstr ""
+
+#: ../../../AUTHORS:65
+msgid "zombat"
+msgstr ""
+
+#: ../../../AUTHORS:66
+msgid "Thiago Avelino"
+msgstr ""

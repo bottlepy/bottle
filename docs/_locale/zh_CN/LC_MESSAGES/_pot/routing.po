@@ -1,0 +1,218 @@
+# 
+msgid ""
+msgstr ""
+"Project-Id-Version: Bottle 0.13-dev\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2015-01-22 16:45-0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../routing.rst:3
+msgid "Request Routing"
+msgstr ""
+
+#: ../../routing.rst:5
+msgid ""
+"Bottle uses a powerful routing engine to find the right callback for each "
+"request. The :ref:`tutorial <tutorial-routing>` shows you the basics. This "
+"document covers advanced techniques and rule mechanics in detail."
+msgstr ""
+
+#: ../../routing.rst:8
+msgid "Rule Syntax"
+msgstr ""
+
+#: ../../routing.rst:10
+msgid ""
+"The :class:`Router` distinguishes between two basic types of routes: "
+"**static routes** (e.g. ``/contact``) and **dynamic routes** (e.g. "
+"``/hello/<name>``). A route that contains one or more *wildcards* it is "
+"considered dynamic. All other routes are static."
+msgstr ""
+
+#: ../../routing.rst:14
+msgid ""
+"The simplest form of a wildcard consists of a name enclosed in angle "
+"brackets (e.g. ``<name>``). The name should be unique for a given route and "
+"form a valid python identifier (alphanumeric, starting with a letter). This "
+"is because wildcards are used as keyword arguments for the request callback "
+"later."
+msgstr ""
+
+#: ../../routing.rst:16
+msgid ""
+"Each wildcard matches one or more characters, but stops at the first slash "
+"(``/``). This equals a regular expression of ``[^/]+`` and ensures that only"
+" one path segment is matched and routes with more than one wildcard stay "
+"unambiguous."
+msgstr ""
+
+#: ../../routing.rst:18
+msgid "The rule ``/<action>/<item>`` matches as follows:"
+msgstr ""
+
+#: ../../routing.rst:21
+msgid "Path"
+msgstr ""
+
+#: ../../routing.rst:21
+msgid "Result"
+msgstr ""
+
+#: ../../routing.rst:23
+msgid "/save/123"
+msgstr ""
+
+#: ../../routing.rst:23
+msgid "``{'action': 'save', 'item': '123'}``"
+msgstr ""
+
+#: ../../routing.rst:24
+msgid "/save/123/"
+msgstr ""
+
+#: ../../routing.rst:24 ../../routing.rst:25 ../../routing.rst:26
+msgid "`No Match`"
+msgstr ""
+
+#: ../../routing.rst:25
+msgid "/save/"
+msgstr ""
+
+#: ../../routing.rst:26
+msgid "//123"
+msgstr ""
+
+#: ../../routing.rst:29
+msgid ""
+"You can change the exact behaviour in many ways using filters. This is "
+"described in the next section."
+msgstr ""
+
+#: ../../routing.rst:32
+msgid "Wildcard Filters"
+msgstr ""
+
+#: ../../routing.rst:36
+msgid ""
+"Filters are used to define more specific wildcards, and/or transform the "
+"matched part of the URL before it is passed to the callback. A filtered "
+"wildcard is declared as ``<name:filter>`` or ``<name:filter:config>``. The "
+"syntax for the optional config part depends on the filter used."
+msgstr ""
+
+#: ../../routing.rst:38
+msgid "The following standard filters are implemented:"
+msgstr ""
+
+#: ../../routing.rst:40
+msgid "**:int** matches (signed) digits and converts the value to integer."
+msgstr ""
+
+#: ../../routing.rst:41
+msgid "**:float** similar to :int but for decimal numbers."
+msgstr ""
+
+#: ../../routing.rst:42
+msgid ""
+"**:path** matches all characters including the slash character in a non-"
+"greedy way and may be used to match more than one path segment."
+msgstr ""
+
+#: ../../routing.rst:43
+msgid ""
+"**:re[:exp]** allows you to specify a custom regular expression in the "
+"config field. The matched value is not modified."
+msgstr ""
+
+#: ../../routing.rst:45
+msgid ""
+"You can add your own filters to the router. All you need is a function that "
+"returns three elements: A regular expression string, a callable to convert "
+"the URL fragment to a python value, and a callable that does the opposite. "
+"The filter function is called with the configuration string as the only "
+"parameter and may parse it as needed::"
+msgstr ""
+
+#: ../../routing.rst:71
+msgid "Legacy Syntax"
+msgstr ""
+
+#: ../../routing.rst:75
+msgid ""
+"The new rule syntax was introduce in **Bottle 0.10** to simplify some common"
+" use cases, but the old syntax still works and you can find lot code "
+"examples still using it. The differences are best described by example:"
+msgstr ""
+
+#: ../../routing.rst:78
+msgid "Old Syntax"
+msgstr ""
+
+#: ../../routing.rst:78
+msgid "New Syntax"
+msgstr ""
+
+#: ../../routing.rst:80
+msgid "``:name``"
+msgstr ""
+
+#: ../../routing.rst:80
+msgid "``<name>``"
+msgstr ""
+
+#: ../../routing.rst:81
+msgid "``:name#regexp#``"
+msgstr ""
+
+#: ../../routing.rst:81
+msgid "``<name:re:regexp>``"
+msgstr ""
+
+#: ../../routing.rst:82
+msgid "``:#regexp#``"
+msgstr ""
+
+#: ../../routing.rst:82
+msgid "``<:re:regexp>``"
+msgstr ""
+
+#: ../../routing.rst:83
+msgid "``:##``"
+msgstr ""
+
+#: ../../routing.rst:83
+msgid "``<:re>``"
+msgstr ""
+
+#: ../../routing.rst:86
+msgid ""
+"Try to avoid the old syntax in future projects if you can. It is not "
+"currently deprecated, but will be eventually."
+msgstr ""
+
+#: ../../routing.rst:91
+msgid "Explicit routing configuration"
+msgstr ""
+
+#: ../../routing.rst:93
+msgid ""
+"Route decorator can also be directly called as method. This way provides "
+"flexibility in complex setups, allowing you to directly control, when and "
+"how routing configuration done."
+msgstr ""
+
+#: ../../routing.rst:95
+msgid ""
+"Here is a basic example of explicit routing configuration for default bottle"
+" application::"
+msgstr ""
+
+#: ../../routing.rst:101
+msgid ""
+"In fact, any :class:`Bottle` instance routing can be configured same way::"
+msgstr ""

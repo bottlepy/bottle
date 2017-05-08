@@ -1,1 +1,0 @@
-.. include:: ../../plugins/sqlite/README

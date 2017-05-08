@@ -1,0 +1,123 @@
+# 
+msgid ""
+msgstr ""
+"Project-Id-Version: Bottle 0.13-dev\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2015-01-22 16:45-0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../index.rst:21
+msgid "Bottle: Python Web Framework"
+msgstr ""
+
+#: ../../index.rst:23
+msgid ""
+"Bottle is a fast, simple and lightweight WSGI_ micro web-framework for "
+"Python_. It is distributed as a single file module and has no dependencies "
+"other than the `Python Standard Library <http://docs.python.org/library/>`_."
+msgstr ""
+
+#: ../../index.rst:26
+msgid ""
+"**Routing:** Requests to function-call mapping with support for clean and  "
+"dynamic URLs."
+msgstr ""
+
+#: ../../index.rst:27
+msgid ""
+"**Templates:** Fast and pythonic :ref:`built-in template engine <tutorial-"
+"templates>` and support for mako_, jinja2_ and cheetah_ templates."
+msgstr ""
+
+#: ../../index.rst:28
+msgid ""
+"**Utilities:** Convenient access to form data, file uploads, cookies, "
+"headers and other HTTP-related metadata."
+msgstr ""
+
+#: ../../index.rst:29
+msgid ""
+"**Server:** Built-in HTTP development server and support for paste_, "
+"fapws3_, bjoern_, gae_, cherrypy_ or any other WSGI_ capable HTTP server."
+msgstr ""
+
+#: ../../index.rst:32
+msgid "Example: \"Hello World\" in a bottle"
+msgstr ""
+
+#: ../../index.rst:43
+msgid ""
+"Run this script or paste it into a Python console, then point your browser "
+"to `<http://localhost:8080/hello/world>`_. That's it."
+msgstr ""
+
+#: ../../index.rst:46
+msgid "Download and Install"
+msgstr ""
+
+#: ../../index.rst:49
+msgid ""
+"Install the latest stable release with ``pip install bottle``, "
+"``easy_install -U bottle`` or download `bottle.py`__ (unstable) into your "
+"project directory. There are no hard [1]_ dependencies other than the Python"
+" standard library. Bottle runs with **Python 2.5+ and 3.x**."
+msgstr ""
+
+#: ../../index.rst:52
+msgid "User's Guide"
+msgstr ""
+
+#: ../../index.rst:53
+msgid ""
+"Start here if you want to learn how to use the bottle framework for web "
+"development. If you have any questions not answered here, feel free to ask "
+"the `mailing list <mailto:bottlepy@googlegroups.com>`_."
+msgstr ""
+
+#: ../../index.rst:68
+msgid "Knowledge Base"
+msgstr ""
+
+#: ../../index.rst:69
+msgid "A collection of articles, guides and HOWTOs."
+msgstr ""
+
+#: ../../index.rst:81
+msgid "Development and Contribution"
+msgstr ""
+
+#: ../../index.rst:83
+msgid ""
+"These chapters are intended for developers interested in the bottle "
+"development and release workflow."
+msgstr ""
+
+#: ../../index.rst:100
+msgid "License"
+msgstr ""
+
+#: ../../index.rst:102
+msgid "Code and documentation are available according to the MIT License:"
+msgstr ""
+
+#: ../../index.rst:107
+msgid ""
+"The Bottle logo however is *NOT* covered by that license. It is allowed to "
+"use the logo as a link to the bottle homepage or in direct context with the "
+"unmodified library. In all other cases please ask first."
+msgstr ""
+
+#: ../../index.rst:112
+msgid "Footnotes"
+msgstr ""
+
+#: ../../index.rst:113
+msgid ""
+"Usage of the template or server adapter classes of course requires the "
+"corresponding template or server modules."
+msgstr ""

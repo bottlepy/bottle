@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import unittest
 import bottle
 
@@ -47,12 +49,14 @@ class TestRouter(unittest.TestCase):
         self.assertMatches('/<:re:anon>/match', '/anon/match') # Anon wildcards
         self.assertRaises(bottle.HTTPError, self.match, '//no/m/at/ch/')
 
+    def testUnicode(self):
+        self.assertMatches('/uni/<x>', '/uni/瓶', x='瓶')
+
     def testValueErrorInFilter(self):
         self.r.add_filter('test', lambda x: ('.*', int, int))
 
         self.assertMatches('/int/<i:test>', '/int/5', i=5) # No tail
         self.assertRaises(bottle.HTTPError, self.match, '/int/noint')
-
 
     def testIntFilter(self):
         self.assertMatches('/object/<id:int>', '/object/567', id=567)
@@ -152,7 +156,3 @@ class TestRouter(unittest.TestCase):
 class TestRouterInCGIMode(TestRouter):
     ''' Makes no sense since the default route does not optimize CGI anymore.'''
     CGI = True
-
-
-if __name__ == '__main__':  # pragma: no cover
-    unittest.main()

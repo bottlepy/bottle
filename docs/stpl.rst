@@ -21,6 +21,13 @@ In this document we use the :func:`template` helper in examples for the sake of 
    >>> template('Hello {{name}}!', name='World')
    u'Hello World!'
 
+You can also pass a dictionary into the template using keyword arguments::
+
+   >>> from bottle import template
+   >>> my_dict={'number': '123', 'street': 'Fake St.', 'city': 'Fakeville'}
+   >>> template('I live at {{number}} {{street}}, {{city}}', **my_dict)
+   u'I live at 123 Fake St., Fakeville'
+
 Just keep in mind that compiling and rendering templates are two different actions, even if the :func:`template` helper hides this fact. Templates are usually compiled only once and cached internally, but rendered many times with different keyword arguments.
 
 :class:`SimpleTemplate` Syntax
@@ -79,7 +86,7 @@ Embedded python code follows regular python syntax, but with two additional synt
     % end
   </ul>
 
-Both the ``%`` and the ``<%`` tokens are only recognized if they are the first non-whitespace characters in a line. You don't have to escape them if they appear mid-text in your template markup. Only if a line of text starts with one of these tokens, you have to escape it with a backslash. In the rare case where the backslash + token combination appears in your markup at the beginning of a line, you can always help yourself with a string literal in an inline expression:: 
+Both the ``%`` and the ``<%`` tokens are only recognized if they are the first non-whitespace characters in a line. You don't have to escape them if they appear mid-text in your template markup. Only if a line of text starts with one of these tokens, you have to escape it with a backslash. In the rare case where the backslash + token combination appears in your markup at the beginning of a line, you can always help yourself with a string literal in an inline expression::
 
   This line contains % and <% but no python code.
   \% This text-line starts with the '%' token.
@@ -113,7 +120,7 @@ But embedding code still requires you to start a new line, which may not what yo
    %end
   </div>
 
-THis time the rendered template looks like this::
+This time the rendered template looks like this::
 
   <div><span>content</span></div>
 
@@ -127,7 +134,7 @@ Each template is preloaded with a bunch of functions that help with the most com
 .. currentmodule:: stpl
 
 .. versionchanged:: 0.12
-   Prior to this release, :func:`include` and :func:`rebase` were sytnax keywords, not functions.
+   Prior to this release, :func:`include` and :func:`rebase` were syntax keywords, not functions.
 
 .. function:: include(sub_template, **variables)
 
@@ -135,7 +142,7 @@ Each template is preloaded with a bunch of functions that help with the most com
 
     % include('header.tpl', title='Page Title')
     Page Content
-    % include('foother.tpl')
+    % include('footer.tpl')
 
 .. function:: rebase(name, **variables)
 
@@ -151,7 +158,7 @@ Each template is preloaded with a bunch of functions that help with the most com
       <title>{{title or 'No title'}}</title>
     </head>
     <body>
-      {{base}}
+      {{!base}}
     </body>
     </html>
 
@@ -194,4 +201,3 @@ variables in different ways::
 
 .. autoclass:: SimpleTemplate
    :members:
-

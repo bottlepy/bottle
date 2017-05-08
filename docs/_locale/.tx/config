@@ -1,0 +1,84 @@
+[main]
+host = https://www.transifex.com
+type = PO
+
+[bottle.development]
+file_filter = <lang>/LC_MESSAGES/development.po
+source_file = _pot/development.pot
+source_lang = en
+
+[bottle.index]
+file_filter = <lang>/LC_MESSAGES/index.po
+source_file = _pot/index.pot
+source_lang = en
+
+[bottle.configuration]
+file_filter = <lang>/LC_MESSAGES/configuration.po
+source_file = _pot/configuration.pot
+source_lang = en
+
+[bottle.changelog]
+file_filter = <lang>/LC_MESSAGES/changelog.po
+source_file = _pot/changelog.pot
+source_lang = en
+
+[bottle.stpl]
+file_filter = <lang>/LC_MESSAGES/stpl.po
+source_file = _pot/stpl.pot
+source_lang = en
+
+[bottle.async]
+file_filter = <lang>/LC_MESSAGES/async.po
+source_file = _pot/async.pot
+source_lang = en
+
+[bottle.recipes]
+file_filter = <lang>/LC_MESSAGES/recipes.po
+source_file = _pot/recipes.pot
+source_lang = en
+
+[bottle.tutorial]
+file_filter = <lang>/LC_MESSAGES/tutorial.po
+source_file = _pot/tutorial.pot
+source_lang = en
+
+[bottle.deployment]
+file_filter = <lang>/LC_MESSAGES/deployment.po
+source_file = _pot/deployment.pot
+source_lang = en
+
+[bottle.routing]
+file_filter = <lang>/LC_MESSAGES/routing.po
+source_file = _pot/routing.pot
+source_lang = en
+
+[bottle.api]
+file_filter = <lang>/LC_MESSAGES/api.po
+source_file = _pot/api.pot
+source_lang = en
+
+[bottle.tutorial_app]
+file_filter = <lang>/LC_MESSAGES/tutorial_app.po
+source_file = _pot/tutorial_app.pot
+source_lang = en
+
+[bottle.plugindev]
+file_filter = <lang>/LC_MESSAGES/plugindev.po
+source_file = _pot/plugindev.pot
+source_lang = en
+
+[bottle.contact]
+file_filter = <lang>/LC_MESSAGES/contact.po
+source_file = _pot/contact.pot
+source_lang = en
+
+[bottle.faq]
+file_filter = <lang>/LC_MESSAGES/faq.po
+source_file = _pot/faq.pot
+source_lang = en
+
+[bottle.plugins--index]
+file_filter = <lang>/LC_MESSAGES/plugins/index.po
+source_file = _pot/plugins/index.pot
+source_lang = en
+

@@ -4,7 +4,7 @@
 import unittest
 import sys, os.path
 import bottle
-from bottle import FileUpload, BytesIO
+from bottle import FileUpload, BytesIO, tob
 import tempfile
 
 class TestFileUpload(unittest.TestCase):
@@ -14,6 +14,10 @@ class TestFileUpload(unittest.TestCase):
     def test_raw_filename(self):
         self.assertEqual(FileUpload(None, None, 'x/x').raw_filename, 'x/x')
 
+    def test_content_type(self):
+        fu = FileUpload(None, None, None, {"Content-type": "text/plain"})
+        self.assertEqual(fu.content_type, 'text/plain')
+
     def assertFilename(self, bad, good):
         fu = FileUpload(None, None, bad)
         self.assertEqual(fu.filename, good)
@@ -21,17 +25,21 @@ class TestFileUpload(unittest.TestCase):
     def test_filename(self):
         self.assertFilename('with space', 'with-space')
         self.assertFilename('with more  \t\n\r space', 'with-more-space')
-        self.assertFilename('UpperCase', 'uppercase')
         self.assertFilename('with/path', 'path')
         self.assertFilename('../path', 'path')
         self.assertFilename('..\\path', 'path')
         self.assertFilename('..', 'empty')
         self.assertFilename('.name.', 'name')
+        self.assertFilename('.name.cfg', 'name.cfg')
         self.assertFilename(' . na me . ', 'na-me')
         self.assertFilename('path/', 'empty')
-        self.assertFilename(bottle.tob('ümläüts$'), 'mlts')
+        self.assertFilename(bottle.tob('ümläüts$'), 'umlauts')
         self.assertFilename(bottle.touni('ümläüts$'), 'umlauts')
         self.assertFilename('', 'empty')
+        self.assertFilename('a'+'b'*1337+'c', 'a'+'b'*254)
+
+    def test_preserve_case_issue_582(self):
+        self.assertFilename('UpperCase', 'UpperCase')
 
     def test_save_buffer(self):
         fu = FileUpload(open(__file__, 'rb'), 'testfile', __file__)
@@ -59,4 +67,3 @@ class TestFileUpload(unittest.TestCase):
         self.assertEqual(fu.file.read(), open(filepath, 'rb').read())
         os.unlink(filepath)
         os.rmdir(dirpath)
-                

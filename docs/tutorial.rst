@@ -14,10 +14,10 @@
 .. _Paste: http://pythonpaste.org/
 .. _Pound: http://www.apsis.ch/pound/
 .. _`WSGI Specification`: http://www.wsgi.org/
-.. _issue: http://github.com/defnull/bottle/issues
+.. _issue: http://github.com/bottlepy/bottle/issues
 .. _Python: http://python.org/
 .. _SimpleCookie: http://docs.python.org/library/cookie.html#morsel-objects
-.. _testing: http://github.com/defnull/bottle/raw/master/bottle.py
+.. _testing: http://github.com/bottlepy/bottle/raw/master/bottle.py
 
 ========
 Tutorial
@@ -44,7 +44,7 @@ This will get you the latest development snapshot that includes all the new feat
     $ sudo easy_install bottle             # alternative without pip
     $ sudo apt-get install python-bottle   # works for debian, ubuntu, ...
 
-Either way, you'll need Python 2.5 or newer (including 3.x) to run bottle applications. If you do not have permissions to install packages system-wide or simply don't want to, create a `virtualenv <http://pypi.python.org/pypi/virtualenv>`_ first:
+Either way, you'll need Python 2.7 or newer (including 3.2+) to run bottle applications. If you do not have permissions to install packages system-wide or simply don't want to, create a `virtualenv <http://pypi.python.org/pypi/virtualenv>`_ first:
 
 .. code-block:: bash
 
@@ -78,13 +78,13 @@ This tutorial assumes you have Bottle either :ref:`installed <installation>` or 
 
 This is it. Run this script, visit http://localhost:8080/hello and you will see "Hello World!" in your browser. Here is how it works:
 
-The :func:`route` decorator binds a piece of code to an URL path. In this case, we link the ``/hello`` path to the ``hello()`` function. This is called a `route` (hence the decorator name) and is the most important concept of this framework. You can define as many routes as you want. Whenever a browser requests an URL, the associated function is called and the return value is sent back to the browser. Its as simple as that.
+The :func:`route` decorator binds a piece of code to an URL path. In this case, we link the ``/hello`` path to the ``hello()`` function. This is called a `route` (hence the decorator name) and is the most important concept of this framework. You can define as many routes as you want. Whenever a browser requests a URL, the associated function is called and the return value is sent back to the browser. It's as simple as that.
 
 The :func:`run` call in the last line starts a built-in development server. It runs on ``localhost`` port ``8080`` and serves requests until you hit :kbd:`Control-c`. You can switch the server backend later, but for now a development server is all we need. It requires no setup at all and is an incredibly painless way to get your application up and running for local tests.
 
 The :ref:`tutorial-debugging` is very helpful during early development, but should be switched off for public applications. Keep that in mind.
 
-Of course this is a very simple example, but it shows the basic concept of how applications are built with Bottle. Continue reading and you'll see what else is possible.
+This is just a demonstration of the basic concept of how applications are built with Bottle. Continue reading and you'll see what else is possible.
 
 .. _tutorial-default:
 
@@ -119,7 +119,7 @@ In the last chapter we built a very simple web application with only a single ro
     def hello():
         return "Hello World!"
 
-The :func:`route` decorator links an URL path to a callback function, and adds a new route to the :ref:`default application <tutorial-default>`. An application with just one route is kind of boring, though. Let's add some more::
+The :func:`route` decorator links an URL path to a callback function, and adds a new route to the :ref:`default application <tutorial-default>`. An application with just one route is kind of boring, though. Let's add some more (don't forget ``from bottle import template``)::
 
     @route('/')
     @route('/hello/<name>')
@@ -147,9 +147,7 @@ Each wildcard passes the covered part of the URL as a keyword argument to the re
     def user_api(action, user):
         ...
 
-.. versionadded:: 0.10
-
-Filters are used to define more specific wildcards, and/or transform the covered part of the URL before it is passed to the callback. A filtered wildcard is declared as ``<name:filter>`` or ``<name:filter:config>``. The syntax for the optional config part depends on the filter used.
+Filters can be used to define more specific wildcards, and/or transform the covered part of the URL before it is passed to the callback. A filtered wildcard is declared as ``<name:filter>`` or ``<name:filter:config>``. The syntax for the optional config part depends on the filter used.
 
 The following filters are implemented by default and more may be added:
 
@@ -172,22 +170,7 @@ Let's have a look at some practical examples::
     def callback(path):
         return static_file(path, ...)
 
-You can add your own filters as well. See :doc:`Routing` for details.
-
-.. versionchanged:: 0.10
-
-The new rule syntax was introduced in **Bottle 0.10** to simplify some common use cases, but the old syntax still works and you can find a lot of code examples still using it. The differences are best described by example:
-
-=================== ====================
-Old Syntax          New Syntax
-=================== ====================
-``:name``           ``<name>``
-``:name#regexp#``   ``<name:re:regexp>``
-``:#regexp#``       ``<:re:regexp>``
-``:##``             ``<:re>``
-=================== ====================
-
-Try to avoid the old syntax in future projects if you can. It is not currently deprecated, but will be eventually.
+You can add your own filters as well. See :doc:`routing` for details.
 
 
 HTTP Request Methods
@@ -195,7 +178,7 @@ HTTP Request Methods
 
 .. __: http_method_
 
-The HTTP protocol defines several `request methods`__ (sometimes referred to as "verbs") for different tasks. GET is the default for all routes with no other method specified. These routes will match GET requests only. To handle other methods such as POST, PUT or DELETE, add a ``method`` keyword argument to the :func:`route` decorator or use one of the four alternative decorators: :func:`get`, :func:`post`, :func:`put` or :func:`delete`.
+The HTTP protocol defines several `request methods`__ (sometimes referred to as "verbs") for different tasks. GET is the default for all routes with no other method specified. These routes will match GET requests only. To handle other methods such as POST, PUT, DELETE or PATCH, add a ``method`` keyword argument to the :func:`route` decorator or use one of the five alternative decorators: :func:`get`, :func:`post`, :func:`put`, :func:`delete` or :func:`patch`.
 
 The POST method is commonly used for HTML form submission. This example shows how to handle a login form using POST::
 
@@ -330,12 +313,12 @@ In some rare cases the Python encoding names differ from the names supported by 
 Static Files
 --------------------------------------------------------------------------------
 
-You can directly return file objects, but :func:`static_file` is the recommended way to serve static files. It automatically guesses a mime-type, adds a ``Last-Modified`` header, restricts paths to a ``root`` directory for security reasons and generates appropriate error responses (401 on permission errors, 404 on missing files). It even supports the ``If-Modified-Since`` header and eventually generates a ``304 Not Modified`` response. You can pass a custom MIME type to disable guessing.
+You can directly return file objects, but :func:`static_file` is the recommended way to serve static files. It automatically guesses a mime-type, adds a ``Last-Modified`` header, restricts paths to a ``root`` directory for security reasons and generates appropriate error responses (403 on permission errors, 404 on missing files). It even supports the ``If-Modified-Since`` header and eventually generates a ``304 Not Modified`` response. You can pass a custom MIME type to disable guessing.
 
 ::
 
     from bottle import static_file
-    @route('/images/<filename:re:.*\.png>#')
+    @route('/images/<filename:re:.*\.png>')
     def send_image(filename):
         return static_file(filename, root='/path/to/image/files', mimetype='image/png')
 
@@ -436,7 +419,7 @@ The :meth:`Response.set_cookie` method accepts a number of additional keyword ar
 * **domain:**     The domain that is allowed to read the cookie. (default: current domain)
 * **path:**       Limit the cookie to a given path (default: ``/``)
 * **secure:**     Limit the cookie to HTTPS connections (default: off).
-* **httponly:**   Prevent client-side javascript to read this cookie (default: off, requires Python 2.6 or newer).
+* **httponly:**   Prevent client-side javascript to read this cookie (default: off, requires Python 2.7 or newer).
 
 If neither `expires` nor `max_age` is set, the cookie expires at the end of the browser session or as soon as the browser window is closed. There are some other gotchas you should consider when using cookies:
 
@@ -489,7 +472,7 @@ Request Data
 Cookies, HTTP header, HTML ``<form>`` fields and other request data is available through the global :data:`request` object. This special object always refers to the *current* request, even in multi-threaded environments where multiple client connections are handled at the same time::
 
   from bottle import request, route, template
-  
+
   @route('/hello')
   def hello():
       name = request.cookies.username or 'Guest'
@@ -507,9 +490,9 @@ Bottle uses a special type of dictionary to store form data and cookies. :class:
 **Attribute access**: All values in the dictionary are also accessible as attributes. These virtual attributes return unicode strings, even if the value is missing or unicode decoding fails. In that case, the string is empty, but still present::
 
   name = request.cookies.name
-  
+
   # is a shortcut for:
-  
+
   name = request.cookies.getunicode('name') # encoding='utf-8' (default)
 
   # which basically does this:
@@ -663,7 +646,7 @@ Bottle stores file uploads in :attr:`BaseRequest.files` as :class:`FileUpload` i
         category   = request.forms.get('category')
         upload     = request.files.get('upload')
         name, ext = os.path.splitext(upload.filename)
-        if ext not in ('png','jpg','jpeg'):
+        if ext not in ('.png','.jpg','.jpeg'):
             return 'File extension not allowed.'
 
         save_path = get_save_path_for_category(category)
@@ -672,7 +655,7 @@ Bottle stores file uploads in :attr:`BaseRequest.files` as :class:`FileUpload` i
 
 :attr:`FileUpload.filename` contains the name of the file on the clients file system, but is cleaned up and normalized to prevent bugs caused by unsupported characters or path segments in the filename. If you need the unmodified name as sent by the client, have a look at :attr:`FileUpload.raw_filename`.
 
-The :attr:`FileUpload.save` method is highly recommended if you want to store the file to disk. It prevents some common errors (e.g. it does not overwrite existing files unless you tell it to) and stores the file in a memory efficient way. You can access the file object directly via :attr:`FileUpload.file`. Just be careful. 
+The :attr:`FileUpload.save` method is highly recommended if you want to store the file to disk. It prevents some common errors (e.g. it does not overwrite existing files unless you tell it to) and stores the file in a memory efficient way. You can access the file object directly via :attr:`FileUpload.file`. Just be careful.
 
 
 JSON Content
@@ -684,7 +667,7 @@ Some JavaScript or REST clients send ``application/json`` content to the server.
 The raw request body
 --------------------
 
-You can access the raw body data as a file-like object via :attr:`BaseRequest.body`. This is a :class:`BytesIO` buffer or a temporary file depending on the content length and :attr:`BaseRequest.MEMFILE_MAX` setting. In both cases the body is completely buffered before you can access the attribute. If you expect huge amounts of data and want to get direct unbuffered access to the stream, have a look at ``request['wsgi.input']``. 
+You can access the raw body data as a file-like object via :attr:`BaseRequest.body`. This is a :class:`BytesIO` buffer or a temporary file depending on the content length and :attr:`BaseRequest.MEMFILE_MAX` setting. In both cases the body is completely buffered before you can access the attribute. If you expect huge amounts of data and want to get direct unbuffered access to the stream, have a look at ``request['wsgi.input']``.
 
 
 
@@ -887,7 +870,7 @@ Development
 ================================================================================
 
 So you have learned the basics and want to write your own application? Here are
-some tips that might help you to be more productive.
+some tips that might help you beeing more productive.
 
 .. _default-app:
 
@@ -900,7 +883,9 @@ Bottle maintains a global stack of :class:`Bottle` instances and uses the top of
     def hello():
         return 'Hello World'
 
-This is very convenient for small applications and saves you some typing, but also means that, as soon as your module is imported, routes are installed to the global application. To avoid this kind of import side-effects, Bottle offers a second, more explicit way to build applications::
+    run()
+
+This is very convenient for small applications and saves you some typing, but also means that, as soon as your module is imported, routes are installed to the global default application. To avoid this kind of import side-effects, Bottle offers a second, more explicit way to build applications::
 
     app = Bottle()
 
@@ -908,25 +893,32 @@ This is very convenient for small applications and saves you some typing, but al
     def hello():
         return 'Hello World'
 
+    app.run()
+
 Separating the application object improves re-usability a lot, too. Other developers can safely import the ``app`` object from your module and use :meth:`Bottle.mount` to merge applications together.
 
-As an alternative, you can make use of the application stack to isolate your routes while still using the convenient shortcuts::
 
-    default_app.push()
+.. versionadded:: 0.13
 
-    @route('/')
-    def hello():
-        return 'Hello World'
+Starting with bottle-0.13 you can use :class:`Bottle` instances as context managers::
 
-    app = default_app.pop()
+    app = Bottle()
 
-Both :func:`app` and :func:`default_app` are instance of :class:`AppStack` and implement a stack-like API. You can push and pop applications from and to the stack as needed. This also helps if you want to import a third party module that does not offer a separate application object::
+    with app:
 
-    default_app.push()
+        # Our application object is now the default
+        # for all shortcut functions and decorators
 
-    import some.module
+        assert my_app is default_app()
 
-    app = default_app.pop()
+        @route('/')
+        def hello():
+            return 'Hello World'
+
+        # Also useful to capture routes defined in other modules
+        import some_package.more_routes
+
+
 
 
 .. _tutorial-debugging:
@@ -1006,8 +998,12 @@ Starting with version 0.10 you can use bottle as a command-line tool:
                             use SERVER as backend.
       -p PLUGIN, --plugin=PLUGIN
                             install additional plugin/s.
+      -c FILE, --conf=FILE  load config values from FILE.
+      -C NAME=VALUE, --param=NAME=VALUE
+                            override config values.
       --debug               start server in debug mode.
       --reload              auto-reload on file changes.
+
 
 The `ADDRESS` field takes an IP address or an IP:PORT pair and defaults to ``localhost:8080``. The other parameters should be self-explanatory.
 
@@ -1034,7 +1030,7 @@ Both plugins and applications are specified via import expressions. These consis
 Deployment
 ================================================================================
 
-Bottle runs on the built-in `wsgiref WSGIServer <http://docs.python.org/library/wsgiref.html#module-wsgiref.simple_server>`_  by default. This non-threading HTTP server is perfectly fine for development and early production, but may become a performance bottleneck when server load increases.
+Bottle runs on the built-in `wsgiref WSGIServer <http://docs.python.org/library/wsgiref.html#module-wsgiref.simple_server>`_  by default. This non-threading HTTP server is perfectly fine for development, but may become a performance bottleneck when server load increases.
 
 The easiest way to increase performance is to install a multi-threaded server library like paste_ or cherrypy_ and tell Bottle to use that instead of the single-threaded server::
 

@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+from __future__ import with_statement
+import os
+
 import bottle
 import sys
 import unittest
@@ -9,14 +12,54 @@ import wsgiref.validate
 import mimetypes
 import uuid
 
-from bottle import tob, BytesIO
+from bottle import tob, tonat, BytesIO, py3k, unicode
+
 
 def warn(msg):
     sys.stderr.write('WARNING: %s\n' % msg.strip())
 
+
 def tobs(data):
     ''' Transforms bytes or unicode into a byte stream. '''
     return BytesIO(tob(data))
+
+
+class chdir(object):
+    def __init__(self, dir):
+        if os.path.isfile(dir):
+            dir = os.path.dirname(dir)
+        self.wd = os.path.abspath(dir)
+        self.old = os.path.abspath('.')
+
+    def __enter__(self):
+        os.chdir(self.wd)
+
+    def __exit__(self, exc_type, exc_val, tb):
+        os.chdir(self.old)
+
+class assertWarn(object):
+    def __init__(self, text):
+        self.searchtext = text
+
+    def __call__(self, func):
+        def wrapper(*a, **ka):
+            with self:
+                return func(*a, **ka)
+        return wrapper
+
+    def __enter__(self):
+        self.orig = bottle.depr
+        bottle.depr = self.dept
+        self.warnings = []
+
+    def depr(self, msg, strict=False):
+        assert self.searchtext in msg, "Could not find phrase %r in warning message %r" % (self.searchtext, msg)
+        self.warnings.append(msg)
+
+    def __exit__(self, exc_type, exc_val, tb):
+        bottle.depr = self.orig
+        assert self.warnings, "Expected warning with message %r bot no warning was triggered" % self.searchtext
+
 
 def api(introduced, deprecated=None, removed=None):
     current    = tuple(map(int, bottle.__version__.split('-')[0].split('.')))
@@ -32,10 +75,17 @@ def api(introduced, deprecated=None, removed=None):
             return func
         elif current < removed:
             func.__doc__ = '(deprecated) ' + (func.__doc__ or '')
-            return func
+            return assertWarn('deprecationWarning')(func)
         else:
             return None
     return decorator
+
+
+def wsgistr(s):
+    if py3k:
+        return s.encode('utf8').decode('latin1')
+    else:
+        return s
 
 class ServerTestBase(unittest.TestCase):
     def setUp(self):
@@ -47,7 +97,7 @@ class ServerTestBase(unittest.TestCase):
 
     def urlopen(self, path, method='GET', post='', env=None):
         result = {'code':0, 'status':'error', 'header':{}, 'body':tob('')}
-        def start_response(status, header):
+        def start_response(status, header, exc_info=None):
             result['code'] = int(status.split()[0])
             result['status'] = status.split(None, 1)[-1]
             for name, value in header:
@@ -58,9 +108,9 @@ class ServerTestBase(unittest.TestCase):
                     result['header'][name] = value
         env = env if env else {}
         wsgiref.util.setup_testing_defaults(env)
-        env['REQUEST_METHOD'] = method.upper().strip()
-        env['PATH_INFO'] = path
-        env['QUERY_STRING'] = ''
+        env['REQUEST_METHOD'] = wsgistr(method.upper().strip())
+        env['PATH_INFO'] = wsgistr(path)
+        env['QUERY_STRING'] = wsgistr('')
         if post:
             env['REQUEST_METHOD'] = 'POST'
             env['CONTENT_LENGTH'] = str(len(tob(post)))
@@ -119,14 +169,14 @@ def multipart_environ(fields, files):
         body += 'Content-Disposition: form-data; name="%s"\n\n' % name
         body += value + '\n'
     for name, filename, content in files:
-        mimetype = mimetypes.guess_type(filename)[0] or 'application/octet-stream'
+        mimetype = str(mimetypes.guess_type(filename)[0]) or 'application/octet-stream'
         body += boundary + '\n'
         body += 'Content-Disposition: file; name="%s"; filename="%s"\n' % \
              (name, filename)
         body += 'Content-Type: %s\n\n' % mimetype
         body += content + '\n'
     body += boundary + '--\n'
-    if hasattr(body, 'encode'):
+    if isinstance(body, unicode):
         body = body.encode('utf8')
     env['CONTENT_LENGTH'] = str(len(body))
     env['wsgi.input'].write(body)

@@ -1,0 +1,1404 @@
+# 
+msgid ""
+msgstr ""
+"Project-Id-Version: Bottle 0.13-dev\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2015-01-22 16:45-0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../api.rst:3
+msgid "API Reference"
+msgstr ""
+
+#: ../../api.rst:10
+msgid ""
+"This is a mostly auto-generated API. If you are new to bottle, you might "
+"find the narrative :doc:`tutorial` more helpful."
+msgstr ""
+
+#: ../../api.rst:17
+msgid "Module Contents"
+msgstr ""
+
+#: ../../api.rst:19
+msgid "The module defines several functions, constants, and an exception."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.debug:1
+msgid ""
+"Change the debug level. There is only one debug level supported at the "
+"moment."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.run:1
+msgid ""
+"Start a server instance. This method blocks until the server terminates."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.run:3
+msgid ""
+"WSGI application or target string supported by :func:`load_app`. (default: "
+":func:`default_app`)"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.run:5
+msgid ""
+"Server adapter to use. See :data:`server_names` keys for valid names or pass"
+" a :class:`ServerAdapter` subclass. (default: `wsgiref`)"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.run:8
+msgid ""
+"Server address to bind to. Pass ``0.0.0.0`` to listens on all interfaces "
+"including the external one. (default: 127.0.0.1)"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.run:10
+msgid ""
+"Server port to bind to. Values below 1024 require root privileges. (default:"
+" 8080)"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.run:12
+msgid "Start auto-reloading server? (default: False)"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.run:13
+msgid "Auto-reloader interval in seconds (default: 1)"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.run:14
+msgid "Suppress output to stdout and stderr? (default: False)"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.run:15
+msgid "Options passed to the server adapter."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.load:1
+msgid "Import a module or fetch an object from a module."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.load:3
+msgid "``package.module`` returns `module` as a module object."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.load:4
+msgid "``pack.mod:name`` returns the module variable `name` from `pack.mod`."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.load:5
+msgid "``pack.mod:func()`` calls `pack.mod.func()` and returns the result."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.load:7
+msgid ""
+"The last form accepts not only function calls, but any type of expression. "
+"Keyword arguments passed to this function are available as local variables. "
+"Example: ``import_string('re:compile(x)', x='[a-z]')``"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.load_app:1
+msgid ""
+"Load a bottle application from a module and make sure that the import does "
+"not affect the current default application, but returns a separate "
+"application object. See :func:`load` for the target parameter."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.request:1 ../../../bottle.pydocstring
+#: of bottle.request:1
+msgid ""
+"A thread-safe instance of :class:`LocalRequest`. If accessed from within a "
+"request callback, this instance always refers to the *current* request (even"
+" on a multithreaded server)."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.response:1
+msgid ""
+"A thread-safe instance of :class:`LocalResponse`. It is used to change the "
+"HTTP response for the *current* request."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.HTTP_CODES:1
+msgid ""
+"A dict to map HTTP status codes (e.g. 404) to phrases (e.g. 'Not Found')"
+msgstr ""
+
+#: ../../api.rst:38
+msgid ""
+"Return the current :ref:`default-app`. Actually, these are callable "
+"instances of :class:`AppStack` and implement a stack-like API."
+msgstr ""
+
+#: ../../api.rst:42
+msgid "Routing"
+msgstr ""
+
+#: ../../api.rst:44
+msgid ""
+"Bottle maintains a stack of :class:`Bottle` instances (see :func:`app` and "
+":class:`AppStack`) and uses the top of the stack as a *default application* "
+"for some of the module-level functions and decorators."
+msgstr ""
+
+#: ../../api.rst:54
+msgid ""
+"Decorator to install a route to the current default application. See "
+":meth:`Bottle.route` for details."
+msgstr ""
+
+#: ../../api.rst:59
+msgid ""
+"Decorator to install an error handler to the current default application. "
+"See :meth:`Bottle.error` for details."
+msgstr ""
+
+#: ../../api.rst:63
+msgid "WSGI and HTTP Utilities"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.parse_date:1
+msgid "Parse rfc1123, rfc850 and asctime timestamps and return UTC epoch."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.parse_auth:1
+msgid ""
+"Parse rfc2617 HTTP authentication header string (basic) and return "
+"(user,pass) tuple or None"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.cookie_encode:1
+msgid "Encode and sign a pickle-able object. Return a (byte) string"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.cookie_decode:1
+msgid "Verify and decode an encoded string. Return an object or None."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.cookie_is_encoded:1
+msgid "Return True if the argument looks like a encoded cookie."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.yieldroutes:1
+msgid ""
+"Return a generator for routes that match the signature (name, args) of the "
+"func parameter. This may yield more than one route if the function takes "
+"optional keyword arguments. The output is best described by example::"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.path_shift:1
+msgid "Shift path fragments from PATH_INFO to SCRIPT_NAME and vice versa."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.path_shift:3
+msgid "The modified paths."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.path_shift:4
+msgid "The SCRIPT_NAME path."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.path_shift:5
+msgid "The PATH_INFO path."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.path_shift:6
+msgid ""
+"The number of path fragments to shift. May be negative to change the shift "
+"direction. (default: 1)"
+msgstr ""
+
+#: ../../api.rst:81
+msgid "Data Structures"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.MultiDict:1
+msgid ""
+"This dict stores multiple values per key, but behaves exactly like a normal "
+"dict in that it returns only the newest value for any given key. There are "
+"special methods available to access the full list of values."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.MultiDict.get:1
+msgid "Return the most recent value for a key."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.MultiDict.get:3
+msgid ""
+"The default value to be returned if the key is not present or the type "
+"conversion fails."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.MultiDict.get:5
+msgid "An index for the list of available values."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.MultiDict.get:6
+msgid ""
+"If defined, this callable is used to cast the value into a specific type. "
+"Exception are suppressed and result in the default value to be returned."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.MultiDict.append:1
+msgid "Add a new value to the list of values for this key."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.MultiDict.replace:1
+msgid "Replace the list of values with a single value."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.MultiDict.getall:1
+#: ../../../bottle.pydocstring of bottle.MultiDict.getlist:1
+msgid "Return a (possibly empty) list of values for a key."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.MultiDict.getone:1
+msgid "Aliases for WTForms to mimic other multi-dict APIs (Django)"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.HeaderDict:1
+msgid ""
+"A case-insensitive version of :class:`MultiDict` that defaults to replace "
+"the old value instead of appending it."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.FormsDict:1
+msgid ""
+"This :class:`MultiDict` subclass is used to store request form data. "
+"Additionally to the normal dict-like item access methods (which return "
+"unmodified data as native strings), this container also supports attribute-"
+"like access to its values. Attributes are automatically de- or recoded to "
+"match :attr:`input_encoding` (default: 'utf8'). Missing attributes default "
+"to an empty string."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.FormsDict.input_encoding:1
+msgid "Encoding used for attribute values."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.FormsDict.recode_unicode:1
+msgid ""
+"If true (default), unicode strings are first encoded with `latin1` and then "
+"decoded to match :attr:`input_encoding`."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.FormsDict.decode:1
+msgid ""
+"Returns a copy with all keys and values de- or recoded to match "
+":attr:`input_encoding`. Some libraries (e.g. WTForms) want a unicode "
+"dictionary."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.FormsDict.getunicode:1
+msgid "Return the value as a unicode string, or the default."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.WSGIHeaderDict:1
+msgid ""
+"This dict-like class wraps a WSGI environ dict and provides convenient "
+"access to HTTP_* fields. Keys and values are native strings (2.x bytes or "
+"3.x unicode) and keys are case-insensitive. If the WSGI environment contains"
+" non-native string values, these are de- or encoded using a lossless "
+"'latin1' character set."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.WSGIHeaderDict:7
+msgid ""
+"The API will remain stable even on changes to the relevant PEPs. Currently "
+"PEP 333, 444 and 3333 are supported. (PEP 444 is the only one that uses non-"
+"native strings.)"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.WSGIHeaderDict.cgikeys:1
+msgid "List of keys that do not have a ``HTTP_`` prefix."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.WSGIHeaderDict.raw:1
+msgid "Return the header value as is (may be bytes or unicode)."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.AppStack:1
+msgid "A stack-like list. Calling it returns the head of the stack."
+msgstr ""
+
+#: ../../api.rst:100
+msgid "Return the current default application and remove it from the stack."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.AppStack.push:1
+msgid "Add a new :class:`Bottle` instance to the stack"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.ResourceManager:1
+msgid ""
+"This class manages a list of search paths and helps to find and open "
+"application-bound resources (files)."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.ResourceManager:4
+msgid "default value for :meth:`add_path` calls."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.ResourceManager:5
+msgid "callable used to open resources."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.ResourceManager:6
+msgid "controls which lookups are cached. One of 'all', 'found' or 'none'."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.ResourceManager.path:1
+msgid "A list of search paths. See :meth:`add_path` for details."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.ResourceManager.cache:1
+msgid "A cache for resolved paths. ``res.cache.clear()`` clears the cache."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.ResourceManager.add_path:1
+msgid ""
+"Add a new path to the list of search paths. Return False if the path does "
+"not exist."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.ResourceManager.add_path:4
+msgid ""
+"The new search path. Relative paths are turned into an absolute and "
+"normalized form. If the path looks like a file (not ending in `/`), the "
+"filename is stripped off."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.ResourceManager.add_path:7
+msgid ""
+"Path used to absolutize relative search paths. Defaults to :attr:`base` "
+"which defaults to ``os.getcwd()``."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.ResourceManager.add_path:9
+msgid ""
+"Position within the list of search paths. Defaults to last index (appends to"
+" the list)."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.ResourceManager.add_path:12
+msgid ""
+"The `base` parameter makes it easy to reference files installed along with a"
+" python module or package::"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.ResourceManager.lookup:1
+msgid "Search for a resource and return an absolute file path, or `None`."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.ResourceManager.lookup:3
+msgid ""
+"The :attr:`path` list is searched in order. The first match is returend. "
+"Symlinks are followed. The result is cached to speed up future lookups."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.ResourceManager.open:1
+msgid "Find a resource and return a file object, or raise IOError."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.FileUpload.file:1
+msgid "Open file(-like) object (BytesIO buffer or temporary file)"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.FileUpload.name:1
+msgid "Name of the upload form field"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.FileUpload.raw_filename:1
+msgid "Raw filename as sent by the client (may contain unsafe characters)"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.FileUpload.headers:1
+msgid "A :class:`HeaderDict` with additional headers (e.g. content-type)"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.FileUpload.content_type:1
+#: ../../../bottle.pydocstring of bottle.BaseResponse.content_type:1
+msgid "Current value of the 'Content-Type' header."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.FileUpload.content_length:1
+#: ../../../bottle.pydocstring of bottle.BaseResponse.content_length:1
+msgid "Current value of the 'Content-Length' header."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.FileUpload.filename:1
+msgid ""
+"Name of the file on the client file system, but normalized to ensure file "
+"system compatibility. An empty filename is returned as 'empty'."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.FileUpload.filename:4
+msgid ""
+"Only ASCII letters, digits, dashes, underscores and dots are allowed in the "
+"final filename. Accents are removed, if possible. Whitespace is replaced by "
+"a single dash. Leading or tailing dots or dashes are removed. The filename "
+"is limited to 255 characters."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.FileUpload.save:1
+msgid ""
+"Save file to disk or copy its content to an open file(-like) object. If "
+"*destination* is a directory, :attr:`filename` is added to the path. "
+"Existing files are not overwritten by default (IOError)."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.FileUpload.save:5
+msgid "File path, directory or file(-like) object."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.FileUpload.save:6
+msgid "If True, replace existing files. (default: False)"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.FileUpload.save:7
+msgid "Bytes to read at a time. (default: 64kb)"
+msgstr ""
+
+#: ../../api.rst:109
+msgid "Exceptions"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BottleException:1
+msgid "A base class for exceptions used by bottle."
+msgstr ""
+
+#: ../../api.rst:117
+msgid "The :class:`Bottle` Class"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle:1
+msgid ""
+"Each Bottle object represents a single, distinct web application and "
+"consists of routes, callbacks, plugins, resources and configuration. "
+"Instances are callable WSGI applications."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle:5
+msgid ""
+"If true (default), handle all exceptions. Turn off to let debugging "
+"middleware handle exceptions."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle.config:1
+msgid "A :class:`ConfigDict` for app specific configuration."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle.resources:1
+msgid "A :class:`ResourceManager` for application files"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle.catchall:1
+msgid "If true, most exceptions are caught and returned as :exc:`HTTPError`"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle.add_hook:1
+msgid "Attach a callback to a hook. Three hooks are currently implemented:"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle.add_hook:4
+msgid "before_request"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle.add_hook:4
+msgid ""
+"Executed once before each request. The request context is available, but no "
+"routing has happened yet."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle.add_hook:6
+msgid "after_request"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle.add_hook:7
+msgid "Executed once after each request regardless of its outcome."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle.add_hook:8
+msgid "app_reset"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle.add_hook:9
+msgid "Called whenever :meth:`Bottle.reset` is called."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle.remove_hook:1
+msgid "Remove a callback from a hook."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle.trigger_hook:1
+msgid "Trigger a hook and return a list of results."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle.hook:1
+msgid ""
+"Return a decorator that attaches a callback to a hook. See :meth:`add_hook` "
+"for details."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle.mount:1
+msgid ""
+"Mount an application (:class:`Bottle` or plain WSGI) to a specific URL "
+"prefix. Example::"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle.mount:6
+msgid ""
+"path prefix or `mount-point`. If it ends in a slash, that slash is "
+"mandatory."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle.mount:8
+msgid "an instance of :class:`Bottle` or a WSGI application."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle.mount:10
+msgid "All other parameters are passed to the underlying :meth:`route` call."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle.merge:1
+msgid ""
+"Merge the routes of another :class:`Bottle` application or a list of "
+":class:`Route` objects into this application. The routes keep their 'owner',"
+" meaning that the :data:`Route.app` attribute is not changed."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle.install:1
+msgid ""
+"Add a plugin to the list of plugins and prepare it for being applied to all "
+"routes of this application. A plugin may be a simple decorator or an object "
+"that implements the :class:`Plugin` API."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle.uninstall:1
+msgid ""
+"Uninstall plugins. Pass an instance to remove a specific plugin, a type "
+"object to remove all plugins that match that type, a string to remove all "
+"plugins with a matching ``name`` attribute or ``True`` to remove all "
+"plugins. Return the list of removed plugins."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle.reset:1
+msgid ""
+"Reset all routes (force plugins to be re-applied) and clear all caches. If "
+"an ID or route object is given, only that specific route is affected."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle.close:1
+msgid "Close the application and all installed plugins."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle.run:1
+msgid "Calls :func:`run` with the same parameters."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle.match:1
+msgid ""
+"Search for a matching route and return a (:class:`Route` , urlargs) tuple. "
+"The second value is a dictionary with parameters extracted from the URL. "
+"Raise :exc:`HTTPError` (404/405) on a non-match."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle.get_url:1
+msgid "Return a string that matches a named route"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle.add_route:1
+msgid "Add a route object, but do not change the :data:`Route.app` attribute."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle.route:1
+msgid "A decorator to bind a function to a request URL. Example::"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle.route:7
+msgid ""
+"The ``:name`` part is a wildcard. See :class:`Router` for syntax details."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle.route:10
+msgid ""
+"Request path or a list of paths to listen to. If no path is specified, it is"
+" automatically generated from the signature of the function."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle.route:13
+msgid ""
+"HTTP method (`GET`, `POST`, `PUT`, ...) or a list of methods to listen to. "
+"(default: `GET`)"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle.route:15
+msgid ""
+"An optional shortcut to avoid the decorator syntax. ``route(..., "
+"callback=func)`` equals ``route(...)(func)``"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle.route:17
+msgid "The name for this route. (default: None)"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle.route:18
+msgid ""
+"A decorator or plugin or a list of plugins. These are applied to the route "
+"callback in addition to installed plugins."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle.route:20
+msgid ""
+"A list of plugins, plugin classes or names. Matching plugins are not "
+"installed to this route. ``True`` skips all."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle.route:23
+msgid ""
+"Any additional keyword arguments are stored as route-specific configuration "
+"and passed to plugins (see :meth:`Plugin.apply`)."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle.get:1
+msgid "Equals :meth:`route`."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle.post:1
+msgid "Equals :meth:`route` with a ``POST`` method parameter."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle.put:1
+msgid "Equals :meth:`route` with a ``PUT`` method parameter."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle.delete:1
+msgid "Equals :meth:`route` with a ``DELETE`` method parameter."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle.patch:1
+msgid "Equals :meth:`route` with a ``PATCH`` method parameter."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle.error:1
+msgid "Decorator: Register an output handler for a HTTP error code"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Bottle.wsgi:1
+msgid "The bottle WSGI-interface."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Route:1
+msgid ""
+"This class wraps a route callback along with route specific metadata and "
+"configuration and applies Plugins on demand. It is also responsible for "
+"turing an URL path rule into a regular expression usable by the Router."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Route.app:1
+msgid "The application this route is installed to."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Route.rule:1
+msgid "The path-rule string (e.g. ``/wiki/<page>``)."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Route.method:1
+msgid "The HTTP method as a string (e.g. ``GET``)."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Route.callback:1
+msgid ""
+"The original callback with no plugins applied. Useful for introspection."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Route.name:1
+msgid "The name of the route (if specified) or ``None``."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Route.plugins:1
+msgid "A list of route-specific plugins (see :meth:`Bottle.route`)."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Route.skiplist:1
+msgid ""
+"A list of plugins to not apply to this route (see :meth:`Bottle.route`)."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Route.config:1
+msgid ""
+"Additional keyword arguments passed to the :meth:`Bottle.route` decorator "
+"are stored in this dictionary. Used for route-specific plugin configuration "
+"and meta-data."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Route.call:1
+msgid ""
+"The route callback with all plugins applied. This property is created on "
+"demand and then cached to speed up subsequent requests."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Route.reset:1
+msgid ""
+"Forget any cached values. The next time :attr:`call` is accessed, all "
+"plugins are re-applied."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Route.prepare:1
+msgid "Do all on-demand work immediately (useful for debugging)."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Route.all_plugins:1
+msgid "Yield all Plugins affecting this route."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Route.get_undecorated_callback:1
+msgid ""
+"Return the callback. If the callback is a decorated function, try to recover"
+" the original function."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Route.get_callback_args:1
+msgid ""
+"Return a list of argument names the callback (most likely) accepts as "
+"keyword arguments. If the callback is a decorated function, try to recover "
+"the original function before inspection."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.Route.get_config:1
+msgid ""
+"Lookup a config field and return its value, first checking the route.config,"
+" then route.app.config."
+msgstr ""
+
+#: ../../api.rst:127
+msgid "The :class:`Request` Object"
+msgstr ""
+
+#: ../../api.rst:129
+msgid ""
+"The :class:`Request` class wraps a WSGI environment and provides helpful "
+"methods to parse and access form data, cookies, file uploads and other "
+"metadata. Most of the attributes are read-only."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseRequest:1
+msgid ""
+"A wrapper for WSGI environment dictionaries that adds a lot of convenient "
+"access methods and properties. Most of them are read-only."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseRequest:4
+msgid ""
+"Adding new attributes to a request actually adds them to the environ "
+"dictionary (as 'bottle.request.ext.<name>'). This is the recommended way to "
+"store and access request-specific data."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseRequest.MEMFILE_MAX:1
+msgid "Maximum size of memory buffer for :attr:`body` in bytes."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseRequest.environ:1
+msgid ""
+"The wrapped WSGI environ dictionary. This is the only real attribute. All "
+"other attributes actually are read-only properties."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseRequest.app:1
+msgid "Bottle application handling this request."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseRequest.route:1
+msgid "The bottle :class:`Route` object that matches this request."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseRequest.url_args:1
+msgid "The arguments extracted from the URL."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseRequest.path:1
+msgid ""
+"The value of ``PATH_INFO`` with exactly one prefixed slash (to fix broken "
+"clients and avoid the \"empty path\" edge case)."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseRequest.method:1
+msgid "The ``REQUEST_METHOD`` value as an uppercase string."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseRequest.headers:1
+msgid ""
+"A :class:`WSGIHeaderDict` that provides case-insensitive access to HTTP "
+"request headers."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseRequest.get_header:1
+msgid "Return the value of a request header, or a given default value."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseRequest.cookies:1
+msgid ""
+"Cookies parsed into a :class:`FormsDict`. Signed cookies are NOT decoded. "
+"Use :meth:`get_cookie` if you expect signed cookies."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseRequest.get_cookie:1
+msgid ""
+"Return the content of a cookie. To read a `Signed Cookie`, the `secret` must"
+" match the one used to create the cookie (see "
+":meth:`BaseResponse.set_cookie`). If anything goes wrong (missing cookie or "
+"wrong signature), return a default value."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseRequest.query:1
+msgid ""
+"The :attr:`query_string` parsed into a :class:`FormsDict`. These values are "
+"sometimes called \"URL arguments\" or \"GET parameters\", but not to be "
+"confused with \"URL wildcards\" as they are provided by the :class:`Router`."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseRequest.forms:1
+msgid ""
+"Form values parsed from an `url-encoded` or `multipart/form-data` encoded "
+"POST or PUT request body. The result is returned as a :class:`FormsDict`. "
+"All keys and values are strings. File uploads are stored separately in "
+":attr:`files`."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseRequest.params:1
+msgid ""
+"A :class:`FormsDict` with the combined values of :attr:`query` and "
+":attr:`forms`. File uploads are stored in :attr:`files`."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseRequest.files:1
+msgid ""
+"File uploads parsed from `multipart/form-data` encoded POST or PUT request "
+"body. The values are instances of :class:`FileUpload`."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseRequest.json:1
+msgid ""
+"If the ``Content-Type`` header is ``application/json``, this property holds "
+"the parsed content of the request body. Only requests smaller than "
+":attr:`MEMFILE_MAX` are processed to avoid memory exhaustion."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseRequest.body:1
+msgid ""
+"The HTTP request body as a seek-able file-like object. Depending on "
+":attr:`MEMFILE_MAX`, this is either a temporary file or a "
+":class:`io.BytesIO` instance. Accessing this property for the first time "
+"reads and replaces the ``wsgi.input`` environ variable. Subsequent accesses "
+"just do a `seek(0)` on the file object."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseRequest.chunked:1
+msgid "True if Chunked transfer encoding was."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseRequest.GET:1
+msgid "An alias for :attr:`query`."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseRequest.POST:1
+msgid ""
+"The values of :attr:`forms` and :attr:`files` combined into a single "
+":class:`FormsDict`. Values are either strings (form values) or instances of "
+":class:`cgi.FieldStorage` (file uploads)."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseRequest.url:1
+msgid ""
+"The full request URI including hostname and scheme. If your app lives behind"
+" a reverse proxy or load balancer and you get confusing results, make sure "
+"that the ``X-Forwarded-Host`` header is set correctly."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseRequest.urlparts:1
+msgid ""
+"The :attr:`url` string as an :class:`urlparse.SplitResult` tuple. The tuple "
+"contains (scheme, host, path, query_string and fragment), but the fragment "
+"is always empty because it is not visible to the server."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseRequest.fullpath:1
+msgid "Request path including :attr:`script_name` (if present)."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseRequest.query_string:1
+msgid ""
+"The raw :attr:`query` part of the URL (everything in between ``?`` and "
+"``#``) as a string."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseRequest.script_name:1
+msgid ""
+"The initial portion of the URL's `path` that was removed by a higher level "
+"(server or routing middleware) before the application was called. This "
+"script path is returned with leading and tailing slashes."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseRequest.path_shift:2
+msgid "Shift path segments from :attr:`path` to :attr:`script_name` and"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseRequest.path_shift:2
+msgid "vice versa."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseRequest.path_shift:4
+msgid ""
+"The number of path segments to shift. May be negative to change the shift "
+"direction. (default: 1)"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseRequest.content_length:1
+msgid ""
+"The request body length as an integer. The client is responsible to set this"
+" header. Otherwise, the real length of the body is unknown and -1 is "
+"returned. In this case, :attr:`body` will be empty."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseRequest.content_type:1
+msgid "The Content-Type header as a lowercase-string (default: empty)."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseRequest.is_xhr:1
+msgid ""
+"True if the request was triggered by a XMLHttpRequest. This only works with "
+"JavaScript libraries that support the `X-Requested-With` header (most of the"
+" popular libraries do)."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseRequest.is_ajax:1
+msgid "Alias for :attr:`is_xhr`. \"Ajax\" is not the right term."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseRequest.auth:1
+msgid ""
+"HTTP authentication data as a (user, password) tuple. This implementation "
+"currently supports basic (not digest) authentication only. If the "
+"authentication happened at a higher level (e.g. in the front web-server or a"
+" middleware), the password field is None, but the user field is looked up "
+"from the ``REMOTE_USER`` environ variable. On any errors, None is returned."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseRequest.remote_route:1
+msgid ""
+"A list of all IPs that were involved in this request, starting with the "
+"client IP and followed by zero or more proxies. This does only work if all "
+"proxies support the ```X-Forwarded-For`` header. Note that this information "
+"can be forged by malicious clients."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseRequest.remote_addr:1
+msgid ""
+"The client IP as a string. Note that this information can be forged by "
+"malicious clients."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseRequest.copy:1
+msgid "Return a new :class:`Request` with a shallow :attr:`environ` copy."
+msgstr ""
+
+#: ../../api.rst:137
+msgid ""
+"The module-level :data:`bottle.request` is a proxy object (implemented in "
+":class:`LocalRequest`) and always refers to the `current` request, or in "
+"other words, the request that is currently processed by the request handler "
+"in the current thread. This `thread locality` ensures that you can safely "
+"use a global instance in a multi-threaded environment."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.LocalRequest:1
+msgid ""
+"A thread-local subclass of :class:`BaseRequest` with a different set of "
+"attributes for each thread. There is usually only one global instance of "
+"this class (:data:`request`). If accessed during a request/response cycle, "
+"this instance always refers to the *current* request (even on a "
+"multithreaded server)."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.LocalRequest.bind:1
+msgid "Wrap a WSGI environ dictionary."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.LocalRequest.environ:1
+#: ../../../bottle.pydocstring of bottle.LocalResponse.body:1
+msgid "Thread-local property"
+msgstr ""
+
+#: ../../api.rst:146
+msgid "The :class:`Response` Object"
+msgstr ""
+
+#: ../../api.rst:148
+msgid ""
+"The :class:`Response` class stores the HTTP status code as well as headers "
+"and cookies that are to be sent to the client. Similar to "
+":data:`bottle.request` there is a thread-local :data:`bottle.response` "
+"instance that can be used to adjust the `current` response. Moreover, you "
+"can instantiate :class:`Response` and return it from your request handler. "
+"In this case, the custom instance overrules the headers and cookies defined "
+"in the global one."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseResponse:1
+msgid "Storage class for a response body as well as headers and cookies."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseResponse:3
+msgid ""
+"This class does support dict-like case-insensitive item-access to headers, "
+"but is NOT a dict. Most notably, iterating over a response yields parts of "
+"the body and not the headers."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseResponse:7
+msgid "The response body as one of the supported types."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseResponse:8
+msgid ""
+"Either an HTTP status code (e.g. 200) or a status line including the reason "
+"phrase (e.g. '200 OK')."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseResponse:10
+msgid "A dictionary or a list of name-value pairs."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseResponse:12
+msgid ""
+"Additional keyword arguments are added to the list of headers. Underscores "
+"in the header name are replaced with dashes."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseResponse.copy:1
+msgid "Returns a copy of self."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseResponse.status_line:1
+msgid "The HTTP status line as a string (e.g. ``404 Not Found``)."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseResponse.status_code:1
+msgid "The HTTP status code as an integer (e.g. 404)."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseResponse.status:1
+msgid ""
+"A writeable property to change the HTTP response status. It accepts either a"
+" numeric code (100-999) or a string with a custom reason phrase (e.g. \"404 "
+"Brain not found\"). Both :data:`status_line` and :data:`status_code` are "
+"updated accordingly. The return value is always a status string."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseResponse.headers:1
+msgid ""
+"An instance of :class:`HeaderDict`, a case-insensitive dict-like view on the"
+" response headers."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseResponse.get_header:1
+msgid ""
+"Return the value of a previously defined header. If there is no header with "
+"that name, return a default value."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseResponse.set_header:1
+msgid ""
+"Create a new response header, replacing any previously defined headers with "
+"the same name."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseResponse.add_header:1
+msgid "Add an additional response header, not removing duplicates."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseResponse.iter_headers:1
+msgid ""
+"Yield (header, value) tuples, skipping headers that are not allowed with the"
+" current response status code."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseResponse.headerlist:1
+msgid "WSGI conform list of (header, value) tuples."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseResponse.expires:1
+msgid "Current value of the 'Expires' header."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseResponse.charset:1
+msgid ""
+"Return the charset specified in the content-type header (default: utf8)."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseResponse.set_cookie:1
+msgid ""
+"Create a new cookie or replace an old one. If the `secret` parameter is set,"
+" create a `Signed Cookie` (described below)."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseResponse.set_cookie:4
+msgid "the name of the cookie."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseResponse.set_cookie:5
+msgid "the value of the cookie."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseResponse.set_cookie:6
+msgid "a signature key required for signed cookies."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseResponse.set_cookie:8
+msgid ""
+"Additionally, this method accepts all RFC 2109 attributes that are supported"
+" by :class:`cookie.Morsel`, including:"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseResponse.set_cookie:11
+msgid "maximum age in seconds. (default: None)"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseResponse.set_cookie:12
+msgid "a datetime object or UNIX timestamp. (default: None)"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseResponse.set_cookie:13
+msgid ""
+"the domain that is allowed to read the cookie. (default: current domain)"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseResponse.set_cookie:15
+msgid "limits the cookie to a given path (default: current path)"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseResponse.set_cookie:16
+msgid "limit the cookie to HTTPS connections (default: off)."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseResponse.set_cookie:17
+msgid ""
+"prevents client-side javascript to read this cookie (default: off, requires "
+"Python 2.7 or newer)."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseResponse.set_cookie:20
+msgid ""
+"If neither `expires` nor `max_age` is set (default), the cookie will expire "
+"at the end of the browser session (as soon as the browser window is closed)."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseResponse.set_cookie:24
+msgid ""
+"Signed cookies may store any pickle-able object and are cryptographically "
+"signed to prevent manipulation. Keep in mind that cookies are limited to 4kb"
+" in most browsers."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseResponse.set_cookie:28
+msgid ""
+"Warning: Signed cookies are not encrypted (the client can still see the "
+"content) and not copy-protected (the client can restore an old cookie). The "
+"main intention is to make pickling and unpickling save, not to store secret "
+"information at client side."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseResponse.delete_cookie:1
+msgid ""
+"Delete a cookie. Be sure to use the same `domain` and `path` settings as "
+"used to create the cookie."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.LocalResponse:1
+msgid ""
+"A thread-local subclass of :class:`BaseResponse` with a different set of "
+"attributes for each thread. There is usually only one global instance of "
+"this class (:data:`response`). Its attributes are used to build the HTTP "
+"response at the end of the request/response cycle."
+msgstr ""
+
+#: ../../api.rst:160
+msgid ""
+"The following two classes can be raised as an exception. The most noticeable"
+" difference is that bottle invokes error handlers for :class:`HTTPError`, "
+"but not for :class:`HTTPResponse` or other response types."
+msgstr ""
+
+#: ../../api.rst:172
+msgid "Templates"
+msgstr ""
+
+#: ../../api.rst:174
+msgid ""
+"All template engines supported by :mod:`bottle` implement the "
+":class:`BaseTemplate` API. This way it is possible to switch and mix "
+"template engines without changing the application code at all."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseTemplate:1
+msgid "Base class and minimal API for template adapters"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseTemplate.__init__:1
+msgid ""
+"Create a new template. If the source parameter (str or buffer) is missing, "
+"the name argument is used to guess a template filename. Subclasses can "
+"assume that self.source and/or self.filename are set. Both are strings. The "
+"lookup, encoding and settings parameters are stored as instance variables. "
+"The lookup parameter stores a list containing directory paths. The encoding "
+"parameter should be used to decode byte strings or files. The settings "
+"parameter contains a dict for engine-specific settings."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseTemplate.search:1
+msgid ""
+"Search name in all directories specified in lookup. First without, then with"
+" common extensions. Return first hit."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseTemplate.global_config:1
+msgid "This reads or sets the global settings stored in class.settings."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseTemplate.prepare:1
+msgid ""
+"Run preparations (parsing, caching, ...). It should be possible to call this"
+" again to refresh a template or to update settings."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.BaseTemplate.render:1
+msgid ""
+"Render the template with the specified local variables and return a single "
+"byte or unicode string. If it is a byte string, the encoding must match "
+"self.encoding. This method must be thread-safe! Local variables may be "
+"provided in dictionaries (args) or directly, as keywords (kwargs)."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.view:1
+msgid ""
+"Decorator: renders a template for a handler. The handler can control its "
+"behavior like that:"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.view:4
+msgid "return a dict of template vars to fill out the template"
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.view:5
+msgid ""
+"return something other than a dict and the view decorator will not process "
+"the template, but return the handler result as is. This includes returning a"
+" HTTPResponse(dict) to get, for instance, JSON with autojson or other "
+"castfilters."
+msgstr ""
+
+#: ../../../bottle.pydocstring of bottle.template:1
+msgid ""
+"Get a rendered template as a string iterator. You can use a name, a filename"
+" or a template string as first parameter. Template rendering arguments can "
+"be passed as dictionaries or directly (as keyword arguments)."
+msgstr ""
+
+#: ../../api.rst:185
+msgid ""
+"You can write your own adapter for your favourite template engine or use one"
+" of the predefined adapters. Currently there are four fully supported "
+"template engines:"
+msgstr ""
+
+#: ../../api.rst:188
+msgid "Class"
+msgstr ""
+
+#: ../../api.rst:188
+msgid "URL"
+msgstr ""
+
+#: ../../api.rst:188
+msgid "Decorator"
+msgstr ""
+
+#: ../../api.rst:188
+msgid "Render function"
+msgstr ""
+
+#: ../../api.rst:190
+msgid ":class:`SimpleTemplate`"
+msgstr ""
+
+#: ../../api.rst:190
+msgid ":doc:`stpl`"
+msgstr ""
+
+#: ../../api.rst:190
+msgid ":func:`view`"
+msgstr ""
+
+#: ../../api.rst:190
+msgid ":func:`template`"
+msgstr ""
+
+#: ../../api.rst:191
+msgid ":class:`MakoTemplate`"
+msgstr ""
+
+#: ../../api.rst:191
+msgid "http://www.makotemplates.org"
+msgstr ""
+
+#: ../../api.rst:191
+msgid ":func:`mako_view`"
+msgstr ""
+
+#: ../../api.rst:191
+msgid ":func:`mako_template`"
+msgstr ""
+
+#: ../../api.rst:192
+msgid ":class:`CheetahTemplate`"
+msgstr ""
+
+#: ../../api.rst:192
+msgid "http://www.cheetahtemplate.org/"
+msgstr ""
+
+#: ../../api.rst:192
+msgid ":func:`cheetah_view`"
+msgstr ""
+
+#: ../../api.rst:192
+msgid ":func:`cheetah_template`"
+msgstr ""
+
+#: ../../api.rst:193
+msgid ":class:`Jinja2Template`"
+msgstr ""
+
+#: ../../api.rst:193
+msgid "http://jinja.pocoo.org/"
+msgstr ""
+
+#: ../../api.rst:193
+msgid ":func:`jinja2_view`"
+msgstr ""
+
+#: ../../api.rst:193
+msgid ":func:`jinja2_template`"
+msgstr ""
+
+#: ../../api.rst:196
+msgid ""
+"To use :class:`MakoTemplate` as your default template engine, just import "
+"its specialised decorator and render function::"
+msgstr ""

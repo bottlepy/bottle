@@ -1,0 +1,456 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2009-2015, Marcel Hellkamp
+# This file is distributed under the same license as the Bottle package.
+# 
+# Translators:
+msgid ""
+msgstr ""
+"Project-Id-Version: bottle\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2015-12-19 14:15+0100\n"
+"PO-Revision-Date: 2015-12-13 20:58+0000\n"
+"Last-Translator: defnull <marc@gsites.de>\n"
+"Language-Team: Portuguese (Brazil) (http://www.transifex.com/bottle/bottle/language/pt_BR/)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: pt_BR\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: ../../deployment.rst:27
+msgid "Deployment"
+msgstr ""
+
+#: ../../deployment.rst:29
+msgid ""
+"The bottle :func:`run` function, when called without any parameters, starts "
+"a local development server on port 8080. You can access and test your "
+"application via http://localhost:8080/ if you are on the same host."
+msgstr ""
+
+#: ../../deployment.rst:31
+msgid ""
+"To get your application available to the outside world, specify the IP of "
+"the interface the server should listen to (e.g. ``run(host='192.168.0.1')``)"
+" or let the server listen to all interfaces at once (e.g. "
+"``run(host='0.0.0.0')``). The listening port can be changed in a similar "
+"way, but you need root or admin rights to choose a port below 1024. Port 80 "
+"is the standard for HTTP servers::"
+msgstr ""
+
+#: ../../deployment.rst:36
+msgid "Server Options"
+msgstr ""
+
+#: ../../deployment.rst:38
+msgid ""
+"The built-in default server is based on `wsgiref WSGIServer "
+"<http://docs.python.org/library/wsgiref.html#module-"
+"wsgiref.simple_server>`_. This non-threading HTTP server is perfectly fine "
+"for development and early production, but may become a performance "
+"bottleneck when server load increases. There are three ways to eliminate "
+"this bottleneck:"
+msgstr ""
+
+#: ../../deployment.rst:40
+msgid "Use a different server that is either multi-threaded or asynchronous."
+msgstr ""
+
+#: ../../deployment.rst:41
+msgid ""
+"Start multiple server processes and spread the load with a load-balancer."
+msgstr ""
+
+#: ../../deployment.rst:42
+msgid "Do both."
+msgstr ""
+
+#: ../../deployment.rst:44
+msgid ""
+"**Multi-threaded** servers are the 'classic' way to do it. They are very "
+"robust, reasonably fast and easy to manage. As a drawback, they can only "
+"handle a limited number of connections at the same time and utilize only one"
+" CPU core due to the \"Global Interpreter Lock\" (GIL) of the Python "
+"runtime. This does not hurt most applications, they are waiting for network "
+"IO most of the time anyway, but may slow down CPU intensive tasks (e.g. "
+"image processing)."
+msgstr ""
+
+#: ../../deployment.rst:46
+msgid ""
+"**Asynchronous** servers are very fast, can handle a virtually unlimited "
+"number of concurrent connections and are easy to manage. To take full "
+"advantage of their potential, you need to design your application "
+"accordingly and understand the concepts of the specific server."
+msgstr ""
+
+#: ../../deployment.rst:48
+msgid ""
+"**Multi-processing** (forking) servers are not limited by the GIL and "
+"utilize more than one CPU core, but make communication between server "
+"instances more expensive. You need a database or external message query to "
+"share state between processes, or design your application so that it does "
+"not need any shared state. The setup is also a bit more complicated, but "
+"there are good tutorials available."
+msgstr ""
+
+#: ../../deployment.rst:51
+msgid "Switching the Server Backend"
+msgstr ""
+
+#: ../../deployment.rst:53
+msgid ""
+"The easiest way to increase performance is to install a multi-threaded "
+"server library like paste_ or cherrypy_ and tell Bottle to use that instead "
+"of the single-threaded default server::"
+msgstr ""
+
+#: ../../deployment.rst:57
+msgid ""
+"Bottle ships with a lot of ready-to-use adapters for the most common WSGI "
+"servers and automates the setup process. Here is an incomplete list:"
+msgstr ""
+
+#: ../../deployment.rst:60
+msgid "Name"
+msgstr ""
+
+#: ../../deployment.rst:60
+msgid "Homepage"
+msgstr ""
+
+#: ../../deployment.rst:60
+msgid "Description"
+msgstr ""
+
+#: ../../deployment.rst:62
+msgid "cgi"
+msgstr ""
+
+#: ../../deployment.rst:62
+msgid "Run as CGI script"
+msgstr ""
+
+#: ../../deployment.rst:63
+msgid "flup"
+msgstr ""
+
+#: ../../deployment.rst:63
+msgid "flup_"
+msgstr ""
+
+#: ../../deployment.rst:63
+msgid "Run as FastCGI process"
+msgstr ""
+
+#: ../../deployment.rst:64
+msgid "gae"
+msgstr ""
+
+#: ../../deployment.rst:64
+msgid "gae_"
+msgstr ""
+
+#: ../../deployment.rst:64
+msgid "Helper for Google App Engine deployments"
+msgstr ""
+
+#: ../../deployment.rst:65
+msgid "wsgiref"
+msgstr ""
+
+#: ../../deployment.rst:65
+msgid "wsgiref_"
+msgstr ""
+
+#: ../../deployment.rst:65
+msgid "Single-threaded default server"
+msgstr ""
+
+#: ../../deployment.rst:66
+msgid "cherrypy"
+msgstr ""
+
+#: ../../deployment.rst:66
+msgid "cherrypy_"
+msgstr ""
+
+#: ../../deployment.rst:66
+msgid "Multi-threaded and very stable"
+msgstr ""
+
+#: ../../deployment.rst:67
+msgid "paste"
+msgstr ""
+
+#: ../../deployment.rst:67
+msgid "paste_"
+msgstr ""
+
+#: ../../deployment.rst:67
+msgid "Multi-threaded, stable, tried and tested"
+msgstr ""
+
+#: ../../deployment.rst:68
+msgid "rocket"
+msgstr ""
+
+#: ../../deployment.rst:68
+msgid "rocket_"
+msgstr ""
+
+#: ../../deployment.rst:68
+msgid "Multi-threaded"
+msgstr ""
+
+#: ../../deployment.rst:69
+msgid "waitress"
+msgstr ""
+
+#: ../../deployment.rst:69
+msgid "waitress_"
+msgstr ""
+
+#: ../../deployment.rst:69
+msgid "Multi-threaded, poweres Pyramid"
+msgstr ""
+
+#: ../../deployment.rst:70
+msgid "gunicorn"
+msgstr ""
+
+#: ../../deployment.rst:70
+msgid "gunicorn_"
+msgstr ""
+
+#: ../../deployment.rst:70
+msgid "Pre-forked, partly written in C"
+msgstr ""
+
+#: ../../deployment.rst:71
+msgid "eventlet"
+msgstr ""
+
+#: ../../deployment.rst:71
+msgid "eventlet_"
+msgstr ""
+
+#: ../../deployment.rst:71
+msgid "Asynchronous framework with WSGI support."
+msgstr ""
+
+#: ../../deployment.rst:72
+msgid "gevent"
+msgstr ""
+
+#: ../../deployment.rst:72
+msgid "gevent_"
+msgstr ""
+
+#: ../../deployment.rst:72 ../../deployment.rst:73
+msgid "Asynchronous (greenlets)"
+msgstr ""
+
+#: ../../deployment.rst:73
+msgid "diesel"
+msgstr ""
+
+#: ../../deployment.rst:73
+msgid "diesel_"
+msgstr ""
+
+#: ../../deployment.rst:74
+msgid "fapws3"
+msgstr ""
+
+#: ../../deployment.rst:74
+msgid "fapws3_"
+msgstr ""
+
+#: ../../deployment.rst:74
+msgid "Asynchronous (network side only), written in C"
+msgstr ""
+
+#: ../../deployment.rst:75
+msgid "tornado"
+msgstr ""
+
+#: ../../deployment.rst:75
+msgid "tornado_"
+msgstr ""
+
+#: ../../deployment.rst:75
+msgid "Asynchronous, powers some parts of Facebook"
+msgstr ""
+
+#: ../../deployment.rst:76
+msgid "twisted"
+msgstr ""
+
+#: ../../deployment.rst:76
+msgid "twisted_"
+msgstr ""
+
+#: ../../deployment.rst:76
+msgid "Asynchronous, well tested but... twisted"
+msgstr ""
+
+#: ../../deployment.rst:77
+msgid "meinheld"
+msgstr ""
+
+#: ../../deployment.rst:77
+msgid "meinheld_"
+msgstr ""
+
+#: ../../deployment.rst:77
+msgid "Asynchronous, partly written in C"
+msgstr ""
+
+#: ../../deployment.rst:78
+msgid "bjoern"
+msgstr ""
+
+#: ../../deployment.rst:78
+msgid "bjoern_"
+msgstr ""
+
+#: ../../deployment.rst:78
+msgid "Asynchronous, very fast and written in C"
+msgstr ""
+
+#: ../../deployment.rst:79
+msgid "auto"
+msgstr ""
+
+#: ../../deployment.rst:79
+msgid "Automatically selects an available server adapter"
+msgstr ""
+
+#: ../../deployment.rst:82
+msgid "The full list is available through :data:`server_names`."
+msgstr ""
+
+#: ../../deployment.rst:84
+msgid ""
+"If there is no adapter for your favorite server or if you need more control "
+"over the server setup, you may want to start the server manually. Refer to "
+"the server documentation on how to run WSGI applications. Here is an example"
+" for paste_::"
+msgstr ""
+
+#: ../../deployment.rst:93
+msgid "Apache mod_wsgi"
+msgstr ""
+
+#: ../../deployment.rst:95
+msgid ""
+"Instead of running your own HTTP server from within Bottle, you can attach "
+"Bottle applications to an `Apache server <apache>`_ using mod_wsgi_."
+msgstr ""
+
+#: ../../deployment.rst:97
+msgid ""
+"All you need is an ``app.wsgi`` file that provides an ``application`` "
+"object. This object is used by mod_wsgi to start your application and should"
+" be a WSGI-compatible Python callable."
+msgstr ""
+
+#: ../../deployment.rst:99
+msgid "File ``/var/www/yourapp/app.wsgi``::"
+msgstr ""
+
+#: ../../deployment.rst:110
+msgid "The Apache configuration may look like this::"
+msgstr ""
+
+#: ../../deployment.rst:126
+msgid ""
+"With newer versions of Apache (2.4) use a configuration similar to this::"
+msgstr ""
+
+#: ../../deployment.rst:144
+msgid "Google AppEngine"
+msgstr ""
+
+#: ../../deployment.rst:148
+msgid ""
+"New App Engine applications using the Python 2.7 runtime environment support"
+" any WSGI application and should be configured to use the Bottle application"
+" object directly. For example suppose your application's main module is "
+"``myapp.py``::"
+msgstr ""
+
+#: ../../deployment.rst:158
+msgid ""
+"Then you can configure App Engine's ``app.yaml`` to use the ``app`` object "
+"like so::"
+msgstr ""
+
+#: ../../deployment.rst:169
+msgid ""
+"Bottle also provides a ``gae`` server adapter for legacy App Engine "
+"applications using the Python 2.5 runtime environment. It works similar to "
+"the ``cgi`` adapter in that it does not start a new HTTP server, but "
+"prepares and optimizes your application for Google App Engine and makes sure"
+" it conforms to their API::"
+msgstr ""
+
+#: ../../deployment.rst:173
+msgid ""
+"It is always a good idea to let GAE serve static files directly. Here is "
+"example for a working  ``app.yaml`` (using the legacy Python 2.5 runtime "
+"environment)::"
+msgstr ""
+
+#: ../../deployment.rst:189
+msgid "Load Balancer (Manual Setup)"
+msgstr ""
+
+#: ../../deployment.rst:191
+msgid ""
+"A single Python process can utilize only one CPU at a time, even if there "
+"are more CPU cores available. The trick is to balance the load between "
+"multiple independent Python processes to utilize all of your CPU cores."
+msgstr ""
+
+#: ../../deployment.rst:193
+msgid ""
+"Instead of a single Bottle application server, you start one instance for "
+"each CPU core available using different local port (localhost:8080, 8081, "
+"8082, ...). You can choose any server adapter you want, even asynchronous "
+"ones. Then a high performance load balancer acts as a reverse proxy and "
+"forwards each new requests to a random port, spreading the load between all "
+"available back-ends. This way you can use all of your CPU cores and even "
+"spread out the load between different physical servers."
+msgstr ""
+
+#: ../../deployment.rst:195
+msgid ""
+"One of the fastest load balancers available is Pound_ but most common web "
+"servers have a proxy-module that can do the work just fine."
+msgstr ""
+
+#: ../../deployment.rst:197
+msgid "Pound example::"
+msgstr ""
+
+#: ../../deployment.rst:215
+msgid "Apache example::"
+msgstr ""
+
+#: ../../deployment.rst:223
+msgid "Lighttpd example::"
+msgstr ""
+
+#: ../../deployment.rst:235
+msgid "Good old CGI"
+msgstr ""
+
+#: ../../deployment.rst:237
+msgid ""
+"A CGI server starts a new process for each request. This adds a lot of "
+"overhead but is sometimes the only option, especially on cheap hosting "
+"packages. The `cgi` server adapter does not actually start a CGI server, but"
+" transforms your bottle application into a valid CGI application::"
+msgstr ""

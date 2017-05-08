@@ -1,0 +1,1501 @@
+# 
+msgid ""
+msgstr ""
+"Project-Id-Version: Bottle 0.13-dev\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2015-01-22 16:45-0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../tutorial.rst:24
+msgid "Tutorial"
+msgstr ""
+
+#: ../../tutorial.rst:26
+msgid ""
+"This tutorial introduces you to the concepts and features of the Bottle web "
+"framework and covers basic and advanced topics alike. You can read it from "
+"start to end, or use it as a reference later on. The automatically generated"
+" :doc:`api` may be interesting for you, too. It covers more details, but "
+"explains less than this tutorial. Solutions for the most common questions "
+"can be found in our :doc:`recipes` collection or on the :doc:`faq` page. If "
+"you need any help, join our `mailing list "
+"<mailto:bottlepy@googlegroups.com>`_ or visit us in our `IRC channel "
+"<http://webchat.freenode.net/?channels=bottlepy>`_."
+msgstr ""
+
+#: ../../tutorial.rst:31
+msgid "Installation"
+msgstr ""
+
+#: ../../tutorial.rst:33
+msgid ""
+"Bottle does not depend on any external libraries. You can just download "
+"`bottle.py </bottle.py>`_ into your project directory and start coding:"
+msgstr ""
+
+#: ../../tutorial.rst:39
+msgid ""
+"This will get you the latest development snapshot that includes all the new "
+"features. If you prefer a more stable environment, you should stick with the"
+" stable releases. These are available on `PyPI "
+"<http://pypi.python.org/pypi/bottle>`_ and can be installed via "
+":command:`pip` (recommended), :command:`easy_install` or your package "
+"manager:"
+msgstr ""
+
+#: ../../tutorial.rst:47
+msgid ""
+"Either way, you'll need Python 2.5 or newer (including 3.x) to run bottle "
+"applications. If you do not have permissions to install packages system-wide"
+" or simply don't want to, create a `virtualenv "
+"<http://pypi.python.org/pypi/virtualenv>`_ first:"
+msgstr ""
+
+#: ../../tutorial.rst:55
+msgid "Or, if virtualenv is not installed on your system:"
+msgstr ""
+
+#: ../../tutorial.rst:67
+msgid "Quickstart: \"Hello World\""
+msgstr ""
+
+#: ../../tutorial.rst:69
+msgid ""
+"This tutorial assumes you have Bottle either :ref:`installed <installation>`"
+" or copied into your project directory. Let's start with a very basic "
+"\"Hello World\" example::"
+msgstr ""
+
+#: ../../tutorial.rst:79
+msgid ""
+"This is it. Run this script, visit http://localhost:8080/hello and you will "
+"see \"Hello World!\" in your browser. Here is how it works:"
+msgstr ""
+
+#: ../../tutorial.rst:81
+msgid ""
+"The :func:`route` decorator binds a piece of code to an URL path. In this "
+"case, we link the ``/hello`` path to the ``hello()`` function. This is "
+"called a `route` (hence the decorator name) and is the most important "
+"concept of this framework. You can define as many routes as you want. "
+"Whenever a browser requests a URL, the associated function is called and the"
+" return value is sent back to the browser. It's as simple as that."
+msgstr ""
+
+#: ../../tutorial.rst:83
+msgid ""
+"The :func:`run` call in the last line starts a built-in development server. "
+"It runs on ``localhost`` port ``8080`` and serves requests until you hit "
+":kbd:`Control-c`. You can switch the server backend later, but for now a "
+"development server is all we need. It requires no setup at all and is an "
+"incredibly painless way to get your application up and running for local "
+"tests."
+msgstr ""
+
+#: ../../tutorial.rst:85
+msgid ""
+"The :ref:`tutorial-debugging` is very helpful during early development, but "
+"should be switched off for public applications. Keep that in mind."
+msgstr ""
+
+#: ../../tutorial.rst:87
+msgid ""
+"Of course this is a very simple example, but it shows the basic concept of "
+"how applications are built with Bottle. Continue reading and you'll see what"
+" else is possible."
+msgstr ""
+
+#: ../../tutorial.rst:92
+msgid "The Default Application"
+msgstr ""
+
+#: ../../tutorial.rst:94
+msgid ""
+"For the sake of simplicity, most examples in this tutorial use a module-"
+"level :func:`route` decorator to define routes. This adds routes to a global"
+" \"default application\", an instance of :class:`Bottle` that is "
+"automatically created the first time you call :func:`route`. Several other "
+"module-level decorators and functions relate to this default application, "
+"but if you prefer a more object oriented approach and don't mind the extra "
+"typing, you can create a separate application object and use that instead of"
+" the global one::"
+msgstr ""
+
+#: ../../tutorial.rst:106
+msgid ""
+"The object-oriented approach is further described in the :ref:`default-app` "
+"section. Just keep in mind that you have a choice."
+msgstr ""
+
+#: ../../tutorial.rst:114
+msgid "Request Routing"
+msgstr ""
+
+#: ../../tutorial.rst:116
+msgid ""
+"In the last chapter we built a very simple web application with only a "
+"single route. Here is the routing part of the \"Hello World\" example "
+"again::"
+msgstr ""
+
+#: ../../tutorial.rst:122
+msgid ""
+"The :func:`route` decorator links an URL path to a callback function, and "
+"adds a new route to the :ref:`default application <tutorial-default>`. An "
+"application with just one route is kind of boring, though. Let's add some "
+"more (don't forget ``from bottle import template``)::"
+msgstr ""
+
+#: ../../tutorial.rst:129
+msgid ""
+"This example demonstrates two things: You can bind more than one route to a "
+"single callback, and you can add wildcards to URLs and access them via "
+"keyword arguments."
+msgstr ""
+
+#: ../../tutorial.rst:136
+msgid "Dynamic Routes"
+msgstr ""
+
+#: ../../tutorial.rst:138
+msgid ""
+"Routes that contain wildcards are called `dynamic routes` (as opposed to "
+"`static routes`) and match more than one URL at the same time. A simple "
+"wildcard consists of a name enclosed in angle brackets (e.g. ``<name>``) and"
+" accepts one or more characters up to the next slash (``/``). For example, "
+"the route ``/hello/<name>`` accepts requests for ``/hello/alice`` as well as"
+" ``/hello/bob``, but not for ``/hello``, ``/hello/`` or ``/hello/mr/smith``."
+msgstr ""
+
+#: ../../tutorial.rst:140
+msgid ""
+"Each wildcard passes the covered part of the URL as a keyword argument to "
+"the request callback. You can use them right away and implement RESTful, "
+"nice-looking and meaningful URLs with ease. Here are some other examples "
+"along with the URLs they'd match::"
+msgstr ""
+
+#: ../../tutorial.rst:152
+msgid ""
+"Filters are used to define more specific wildcards, and/or transform the "
+"covered part of the URL before it is passed to the callback. A filtered "
+"wildcard is declared as ``<name:filter>`` or ``<name:filter:config>``. The "
+"syntax for the optional config part depends on the filter used."
+msgstr ""
+
+#: ../../tutorial.rst:154
+msgid ""
+"The following filters are implemented by default and more may be added:"
+msgstr ""
+
+#: ../../tutorial.rst:156
+msgid ""
+"**:int** matches (signed) digits only and converts the value to integer."
+msgstr ""
+
+#: ../../tutorial.rst:157
+msgid "**:float** similar to :int but for decimal numbers."
+msgstr ""
+
+#: ../../tutorial.rst:158
+msgid ""
+"**:path** matches all characters including the slash character in a non-"
+"greedy way and can be used to match more than one path segment."
+msgstr ""
+
+#: ../../tutorial.rst:159
+msgid ""
+"**:re** allows you to specify a custom regular expression in the config "
+"field. The matched value is not modified."
+msgstr ""
+
+#: ../../tutorial.rst:161
+msgid "Let's have a look at some practical examples::"
+msgstr ""
+
+#: ../../tutorial.rst:175
+msgid "You can add your own filters as well. See :doc:`routing` for details."
+msgstr ""
+
+#: ../../tutorial.rst:179
+msgid ""
+"The new rule syntax was introduced in **Bottle 0.10** to simplify some "
+"common use cases, but the old syntax still works and you can find a lot of "
+"code examples still using it. The differences are best described by example:"
+msgstr ""
+
+#: ../../tutorial.rst:182
+msgid "Old Syntax"
+msgstr ""
+
+#: ../../tutorial.rst:182
+msgid "New Syntax"
+msgstr ""
+
+#: ../../tutorial.rst:184
+msgid "``:name``"
+msgstr ""
+
+#: ../../tutorial.rst:184
+msgid "``<name>``"
+msgstr ""
+
+#: ../../tutorial.rst:185
+msgid "``:name#regexp#``"
+msgstr ""
+
+#: ../../tutorial.rst:185
+msgid "``<name:re:regexp>``"
+msgstr ""
+
+#: ../../tutorial.rst:186
+msgid "``:#regexp#``"
+msgstr ""
+
+#: ../../tutorial.rst:186
+msgid "``<:re:regexp>``"
+msgstr ""
+
+#: ../../tutorial.rst:187
+msgid "``:##``"
+msgstr ""
+
+#: ../../tutorial.rst:187
+msgid "``<:re>``"
+msgstr ""
+
+#: ../../tutorial.rst:190
+msgid ""
+"Try to avoid the old syntax in future projects if you can. It is not "
+"currently deprecated, but will be eventually."
+msgstr ""
+
+#: ../../tutorial.rst:194
+msgid "HTTP Request Methods"
+msgstr ""
+
+#: ../../tutorial.rst:198
+msgid ""
+"The HTTP protocol defines several `request methods`__ (sometimes referred to"
+" as \"verbs\") for different tasks. GET is the default for all routes with "
+"no other method specified. These routes will match GET requests only. To "
+"handle other methods such as POST, PUT, DELETE or PATCH, add a ``method`` "
+"keyword argument to the :func:`route` decorator or use one of the four "
+"alternative decorators: :func:`get`, :func:`post`, :func:`put`, "
+":func:`delete` or :func:`patch`."
+msgstr ""
+
+#: ../../tutorial.rst:200
+msgid ""
+"The POST method is commonly used for HTML form submission. This example "
+"shows how to handle a login form using POST::"
+msgstr ""
+
+#: ../../tutorial.rst:223
+msgid ""
+"In this example the ``/login`` URL is linked to two distinct callbacks, one "
+"for GET requests and another for POST requests. The first one displays a "
+"HTML form to the user. The second callback is invoked on a form submission "
+"and checks the login credentials the user entered into the form. The use of "
+":attr:`Request.forms` is further described in the :ref:`tutorial-request` "
+"section."
+msgstr ""
+
+#: ../../tutorial.rst:226
+msgid "Special Methods: HEAD and ANY"
+msgstr ""
+
+#: ../../tutorial.rst:227
+msgid ""
+"The HEAD method is used to ask for the response identical to the one that "
+"would correspond to a GET request, but without the response body. This is "
+"useful for retrieving meta-information about a resource without having to "
+"download the entire document. Bottle handles these requests automatically by"
+" falling back to the corresponding GET route and cutting off the request "
+"body, if present. You don't have to specify any HEAD routes yourself."
+msgstr ""
+
+#: ../../tutorial.rst:229
+msgid ""
+"Additionally, the non-standard ANY method works as a low priority fallback: "
+"Routes that listen to ANY will match requests regardless of their HTTP "
+"method but only if no other more specific route is defined. This is helpful "
+"for *proxy-routes* that redirect requests to more specific sub-applications."
+msgstr ""
+
+#: ../../tutorial.rst:231
+msgid ""
+"To sum it up: HEAD requests fall back to GET routes and all requests fall "
+"back to ANY routes, but only if there is no matching route for the original "
+"request method. It's as simple as that."
+msgstr ""
+
+#: ../../tutorial.rst:236
+msgid "Routing Static Files"
+msgstr ""
+
+#: ../../tutorial.rst:238
+msgid ""
+"Static files such as images or CSS files are not served automatically. You "
+"have to add a route and a callback to control which files get served and "
+"where to find them::"
+msgstr ""
+
+#: ../../tutorial.rst:245
+msgid ""
+"The :func:`static_file` function is a helper to serve files in a safe and "
+"convenient way (see :ref:`tutorial-static-files`). This example is limited "
+"to files directly within the ``/path/to/your/static/files`` directory "
+"because the ``<filename>`` wildcard won't match a path with a slash in it. "
+"To serve files in subdirectories, change the wildcard to use the `path` "
+"filter::"
+msgstr ""
+
+#: ../../tutorial.rst:251
+msgid ""
+"Be careful when specifying a relative root-path such as "
+"``root='./static/files'``. The working directory (``./``) and the project "
+"directory are not always the same."
+msgstr ""
+
+#: ../../tutorial.rst:259
+msgid "Error Pages"
+msgstr ""
+
+#: ../../tutorial.rst:261
+msgid ""
+"If anything goes wrong, Bottle displays an informative but fairly plain "
+"error page. You can override the default for a specific HTTP status code "
+"with the :func:`error` decorator::"
+msgstr ""
+
+#: ../../tutorial.rst:268
+msgid ""
+"From now on, `404 File not Found` errors will display a custom error page to"
+" the user. The only parameter passed to the error-handler is an instance of "
+":exc:`HTTPError`. Apart from that, an error-handler is quite similar to a "
+"regular request callback. You can read from :data:`request`, write to "
+":data:`response` and return any supported data-type except for "
+":exc:`HTTPError` instances."
+msgstr ""
+
+#: ../../tutorial.rst:270
+msgid ""
+"Error handlers are used only if your application returns or raises an "
+":exc:`HTTPError` exception (:func:`abort` does just that). Changing "
+":attr:`Request.status` or returning :exc:`HTTPResponse` won't trigger the "
+"error handler."
+msgstr ""
+
+#: ../../tutorial.rst:280
+msgid "Generating content"
+msgstr ""
+
+#: ../../tutorial.rst:282
+msgid ""
+"In pure WSGI, the range of types you may return from your application is "
+"very limited. Applications must return an iterable yielding byte strings. "
+"You may return a string (because strings are iterable) but this causes most "
+"servers to transmit your content char by char. Unicode strings are not "
+"allowed at all. This is not very practical."
+msgstr ""
+
+#: ../../tutorial.rst:284
+msgid ""
+"Bottle is much more flexible and supports a wide range of types. It even "
+"adds a ``Content-Length`` header if possible and encodes unicode "
+"automatically, so you don't have to. What follows is a list of data types "
+"you may return from your application callbacks and a short description of "
+"how these are handled by the framework:"
+msgstr ""
+
+#: ../../tutorial.rst:287
+msgid "Dictionaries"
+msgstr ""
+
+#: ../../tutorial.rst:287
+msgid ""
+"As mentioned above, Python dictionaries (or subclasses thereof) are "
+"automatically transformed into JSON strings and returned to the browser with"
+" the ``Content-Type`` header set to ``application/json``. This makes it easy"
+" to implement json-based APIs. Data formats other than json are supported "
+"too. See the :ref:`tutorial-output-filter` to learn more."
+msgstr ""
+
+#: ../../tutorial.rst:290
+msgid "Empty Strings, ``False``, ``None`` or other non-true values:"
+msgstr ""
+
+#: ../../tutorial.rst:290
+msgid ""
+"These produce an empty output with the ``Content-Length`` header set to 0."
+msgstr ""
+
+#: ../../tutorial.rst:293
+msgid "Unicode strings"
+msgstr ""
+
+#: ../../tutorial.rst:293
+msgid ""
+"Unicode strings (or iterables yielding unicode strings) are automatically "
+"encoded with the codec specified in the ``Content-Type`` header (utf8 by "
+"default) and then treated as normal byte strings (see below)."
+msgstr ""
+
+#: ../../tutorial.rst:296
+msgid "Byte strings"
+msgstr ""
+
+#: ../../tutorial.rst:296
+msgid ""
+"Bottle returns strings as a whole (instead of iterating over each char) and "
+"adds a ``Content-Length`` header based on the string length. Lists of byte "
+"strings are joined first. Other iterables yielding byte strings are not "
+"joined because they may grow too big to fit into memory. The ``Content-"
+"Length`` header is not set in this case."
+msgstr ""
+
+#: ../../tutorial.rst:299
+msgid "Instances of :exc:`HTTPError` or :exc:`HTTPResponse`"
+msgstr ""
+
+#: ../../tutorial.rst:299
+msgid ""
+"Returning these has the same effect as when raising them as an exception. In"
+" case of an :exc:`HTTPError`, the error handler is applied. See :ref"
+":`tutorial-errorhandling` for details."
+msgstr ""
+
+#: ../../tutorial.rst:302
+msgid "File objects"
+msgstr ""
+
+#: ../../tutorial.rst:302
+msgid ""
+"Everything that has a ``.read()`` method is treated as a file or file-like "
+"object and passed to the ``wsgi.file_wrapper`` callable defined by the WSGI "
+"server framework. Some WSGI server implementations can make use of optimized"
+" system calls (sendfile) to transmit files more efficiently. In other cases "
+"this just iterates over chunks that fit into memory. Optional headers such "
+"as ``Content-Length`` or ``Content-Type`` are *not* set automatically. Use "
+":func:`send_file` if possible. See :ref:`tutorial-static-files` for details."
+msgstr ""
+
+#: ../../tutorial.rst:305
+msgid "Iterables and generators"
+msgstr ""
+
+#: ../../tutorial.rst:305
+msgid ""
+"You are allowed to use ``yield`` within your callbacks or return an "
+"iterable, as long as the iterable yields byte strings, unicode strings, "
+":exc:`HTTPError` or :exc:`HTTPResponse` instances. Nested iterables are not "
+"supported, sorry. Please note that the HTTP status code and the headers are "
+"sent to the browser as soon as the iterable yields its first non-empty "
+"value. Changing these later has no effect."
+msgstr ""
+
+#: ../../tutorial.rst:307
+msgid ""
+"The ordering of this list is significant. You may for example return a "
+"subclass of :class:`str` with a ``read()`` method. It is still treated as a "
+"string instead of a file, because strings are handled first."
+msgstr ""
+
+#: ../../tutorial.rst:310
+msgid "Changing the Default Encoding"
+msgstr ""
+
+#: ../../tutorial.rst:311
+msgid ""
+"Bottle uses the `charset` parameter of the ``Content-Type`` header to decide"
+" how to encode unicode strings. This header defaults to ``text/html; "
+"charset=UTF8`` and can be changed using the :attr:`Response.content_type` "
+"attribute or by setting the :attr:`Response.charset` attribute directly. "
+"(The :class:`Response` object is described in the section :ref:`tutorial-"
+"response`.)"
+msgstr ""
+
+#: ../../tutorial.rst:326
+msgid ""
+"In some rare cases the Python encoding names differ from the names supported"
+" by the HTTP specification. Then, you have to do both: first set the "
+":attr:`Response.content_type` header (which is sent to the client unchanged)"
+" and then set the :attr:`Response.charset` attribute (which is used to "
+"encode unicode)."
+msgstr ""
+
+#: ../../tutorial.rst:331
+msgid "Static Files"
+msgstr ""
+
+#: ../../tutorial.rst:333
+msgid ""
+"You can directly return file objects, but :func:`static_file` is the "
+"recommended way to serve static files. It automatically guesses a mime-type,"
+" adds a ``Last-Modified`` header, restricts paths to a ``root`` directory "
+"for security reasons and generates appropriate error responses (403 on "
+"permission errors, 404 on missing files). It even supports the ``If-"
+"Modified-Since`` header and eventually generates a ``304 Not Modified`` "
+"response. You can pass a custom MIME type to disable guessing."
+msgstr ""
+
+#: ../../tutorial.rst:346
+msgid ""
+"You can raise the return value of :func:`static_file` as an exception if you"
+" really need to."
+msgstr ""
+
+#: ../../tutorial.rst:349
+msgid "Forced Download"
+msgstr ""
+
+#: ../../tutorial.rst:350
+msgid ""
+"Most browsers try to open downloaded files if the MIME type is known and "
+"assigned to an application (e.g. PDF files). If this is not what you want, "
+"you can force a download dialog and even suggest a filename to the user::"
+msgstr ""
+
+#: ../../tutorial.rst:356
+msgid ""
+"If the ``download`` parameter is just ``True``, the original filename is "
+"used."
+msgstr ""
+
+#: ../../tutorial.rst:361
+msgid "HTTP Errors and Redirects"
+msgstr ""
+
+#: ../../tutorial.rst:363
+msgid ""
+"The :func:`abort` function is a shortcut for generating HTTP error pages."
+msgstr ""
+
+#: ../../tutorial.rst:372
+msgid ""
+"To redirect a client to a different URL, you can send a ``303 See Other`` "
+"response with the ``Location`` header set to the new URL. :func:`redirect` "
+"does that for you::"
+msgstr ""
+
+#: ../../tutorial.rst:379
+msgid "You may provide a different HTTP status code as a second parameter."
+msgstr ""
+
+#: ../../tutorial.rst:382
+msgid ""
+"Both functions will interrupt your callback code by raising an "
+":exc:`HTTPError` exception."
+msgstr ""
+
+#: ../../tutorial.rst:385
+msgid "Other Exceptions"
+msgstr ""
+
+#: ../../tutorial.rst:386
+msgid ""
+"All exceptions other than :exc:`HTTPResponse` or :exc:`HTTPError` will "
+"result in a ``500 Internal Server Error`` response, so they won't crash your"
+" WSGI server. You can turn off this behavior to handle exceptions in your "
+"middleware by setting ``bottle.app().catchall`` to ``False``."
+msgstr ""
+
+#: ../../tutorial.rst:392
+msgid "The :class:`Response` Object"
+msgstr ""
+
+#: ../../tutorial.rst:394
+msgid ""
+"Response metadata such as the HTTP status code, response headers and cookies"
+" are stored in an object called :data:`response` up to the point where they "
+"are transmitted to the browser. You can manipulate these metadata directly "
+"or use the predefined helper methods to do so. The full API and feature list"
+" is described in the API section (see :class:`Response`), but the most "
+"common use cases and features are covered here, too."
+msgstr ""
+
+#: ../../tutorial.rst:397
+msgid "Status Code"
+msgstr ""
+
+#: ../../tutorial.rst:398
+msgid ""
+"The `HTTP status code <http_code>`_ controls the behavior of the browser and"
+" defaults to ``200 OK``. In most scenarios you won't need to set the "
+":attr:`Response.status` attribute manually, but use the :func:`abort` helper"
+" or return an :exc:`HTTPResponse` instance with the appropriate status code."
+" Any integer is allowed, but codes other than the ones defined by the `HTTP "
+"specification <http_code>`_ will only confuse the browser and break "
+"standards."
+msgstr ""
+
+#: ../../tutorial.rst:401
+msgid "Response Header"
+msgstr ""
+
+#: ../../tutorial.rst:402
+msgid ""
+"Response headers such as ``Cache-Control`` or ``Location`` are defined via "
+":meth:`Response.set_header`. This method takes two parameters, a header name"
+" and a value. The name part is case-insensitive::"
+msgstr ""
+
+#: ../../tutorial.rst:409
+msgid ""
+"Most headers are unique, meaning that only one header per name is send to "
+"the client. Some special headers however are allowed to appear more than "
+"once in a response. To add an additional header, use "
+":meth:`Response.add_header` instead of :meth:`Response.set_header`::"
+msgstr ""
+
+#: ../../tutorial.rst:414
+msgid ""
+"Please note that this is just an example. If you want to work with cookies, "
+"read :ref:`ahead <tutorial-cookies>`."
+msgstr ""
+
+#: ../../tutorial.rst:420 ../../tutorial.rst:549
+msgid "Cookies"
+msgstr ""
+
+#: ../../tutorial.rst:422
+msgid ""
+"A cookie is a named piece of text stored in the user's browser profile. You "
+"can access previously defined cookies via :meth:`Request.get_cookie` and set"
+" new cookies with :meth:`Response.set_cookie`::"
+msgstr ""
+
+#: ../../tutorial.rst:432
+msgid ""
+"The :meth:`Response.set_cookie` method accepts a number of additional "
+"keyword arguments that control the cookies lifetime and behavior. Some of "
+"the most common settings are described here:"
+msgstr ""
+
+#: ../../tutorial.rst:434
+msgid "**max_age:**    Maximum age in seconds. (default: ``None``)"
+msgstr ""
+
+#: ../../tutorial.rst:435
+msgid ""
+"**expires:**    A datetime object or UNIX timestamp. (default: ``None``)"
+msgstr ""
+
+#: ../../tutorial.rst:436
+msgid ""
+"**domain:**     The domain that is allowed to read the cookie. (default: "
+"current domain)"
+msgstr ""
+
+#: ../../tutorial.rst:437
+msgid "**path:**       Limit the cookie to a given path (default: ``/``)"
+msgstr ""
+
+#: ../../tutorial.rst:438
+msgid "**secure:**     Limit the cookie to HTTPS connections (default: off)."
+msgstr ""
+
+#: ../../tutorial.rst:439
+msgid ""
+"**httponly:**   Prevent client-side javascript to read this cookie (default:"
+" off, requires Python 2.7 or newer)."
+msgstr ""
+
+#: ../../tutorial.rst:441
+msgid ""
+"If neither `expires` nor `max_age` is set, the cookie expires at the end of "
+"the browser session or as soon as the browser window is closed. There are "
+"some other gotchas you should consider when using cookies:"
+msgstr ""
+
+#: ../../tutorial.rst:443
+msgid "Cookies are limited to 4 KB of text in most browsers."
+msgstr ""
+
+#: ../../tutorial.rst:444
+msgid ""
+"Some users configure their browsers to not accept cookies at all. Most "
+"search engines ignore cookies too. Make sure that your application still "
+"works without cookies."
+msgstr ""
+
+#: ../../tutorial.rst:445
+msgid ""
+"Cookies are stored at client side and are not encrypted in any way. Whatever"
+" you store in a cookie, the user can read it. Worse than that, an attacker "
+"might be able to steal a user's cookies through `XSS "
+"<http://en.wikipedia.org/wiki/HTTP_cookie#Cookie_theft_and_session_hijacking>`_"
+" vulnerabilities on your side. Some viruses are known to read the browser "
+"cookies, too. Thus, never store confidential information in cookies."
+msgstr ""
+
+#: ../../tutorial.rst:446
+msgid "Cookies are easily forged by malicious clients. Do not trust cookies."
+msgstr ""
+
+#: ../../tutorial.rst:451
+msgid "Signed Cookies"
+msgstr ""
+
+#: ../../tutorial.rst:452
+msgid ""
+"As mentioned above, cookies are easily forged by malicious clients. Bottle "
+"can cryptographically sign your cookies to prevent this kind of "
+"manipulation. All you have to do is to provide a signature key via the "
+"`secret` keyword argument whenever you read or set a cookie and keep that "
+"key a secret. As a result, :meth:`Request.get_cookie` will return ``None`` "
+"if the cookie is not signed or the signature keys don't match::"
+msgstr ""
+
+#: ../../tutorial.rst:472
+msgid ""
+"In addition, Bottle automatically pickles and unpickles any data stored to "
+"signed cookies. This allows you to store any pickle-able object (not only "
+"strings) to cookies, as long as the pickled data does not exceed the 4 KB "
+"limit."
+msgstr ""
+
+#: ../../tutorial.rst:474
+msgid ""
+"Signed cookies are not encrypted (the client can still see the content) and "
+"not copy-protected (the client can restore an old cookie). The main "
+"intention is to make pickling and unpickling safe and prevent manipulation, "
+"not to store secret information at client side."
+msgstr ""
+
+#: ../../tutorial.rst:487
+msgid "Request Data"
+msgstr ""
+
+#: ../../tutorial.rst:489
+msgid ""
+"Cookies, HTTP header, HTML ``<form>`` fields and other request data is "
+"available through the global :data:`request` object. This special object "
+"always refers to the *current* request, even in multi-threaded environments "
+"where multiple client connections are handled at the same time::"
+msgstr ""
+
+#: ../../tutorial.rst:498
+msgid ""
+"The :data:`request` object is a subclass of :class:`BaseRequest` and has a "
+"very rich API to access data. We only cover the most commonly used features "
+"here, but it should be enough to get started."
+msgstr ""
+
+#: ../../tutorial.rst:503
+msgid "Introducing :class:`FormsDict`"
+msgstr ""
+
+#: ../../tutorial.rst:505
+msgid ""
+"Bottle uses a special type of dictionary to store form data and cookies. "
+":class:`FormsDict` behaves like a normal dictionary, but has some additional"
+" features to make your life easier."
+msgstr ""
+
+#: ../../tutorial.rst:507
+msgid ""
+"**Attribute access**: All values in the dictionary are also accessible as "
+"attributes. These virtual attributes return unicode strings, even if the "
+"value is missing or unicode decoding fails. In that case, the string is "
+"empty, but still present::"
+msgstr ""
+
+#: ../../tutorial.rst:522
+msgid ""
+"**Multiple values per key:** :class:`FormsDict` is a subclass of "
+":class:`MultiDict` and can store more than one value per key. The standard "
+"dictionary access methods will only return a single value, but the "
+":meth:`~MultiDict.getall` method returns a (possibly empty) list of all "
+"values for a specific key::"
+msgstr ""
+
+#: ../../tutorial.rst:527
+msgid ""
+"**WTForms support:** Some libraries (e.g. `WTForms "
+"<http://wtforms.simplecodes.com/>`_) want all-unicode dictionaries as input."
+" :meth:`FormsDict.decode` does that for you. It decodes all values and "
+"returns a copy of itself, while preserving multiple values per key and all "
+"the other features."
+msgstr ""
+
+#: ../../tutorial.rst:531
+msgid ""
+"In **Python 2** all keys and values are byte-strings. If you need unicode, "
+"you can call :meth:`FormsDict.getunicode` or fetch values via attribute "
+"access. Both methods try to decode the string (default: utf8) and return an "
+"empty string if that fails. No need to catch :exc:`UnicodeError`::"
+msgstr ""
+
+#: ../../tutorial.rst:538
+msgid ""
+"In **Python 3** all strings are unicode, but HTTP is a byte-based wire "
+"protocol. The server has to decode the byte strings somehow before they are "
+"passed to the application. To be on the safe side, WSGI suggests ISO-8859-1 "
+"(aka latin1), a reversible single-byte codec that can be re-encoded with a "
+"different encoding later. Bottle does that for :meth:`FormsDict.getunicode` "
+"and attribute access, but not for the dict-access methods. These return the "
+"unchanged values as provided by the server implementation, which is probably"
+" not what you want."
+msgstr ""
+
+#: ../../tutorial.rst:545
+msgid ""
+"If you need the whole dictionary with correctly decoded values (e.g. for "
+"WTForms), you can call :meth:`FormsDict.decode` to get a re-encoded copy."
+msgstr ""
+
+#: ../../tutorial.rst:551
+msgid ""
+"Cookies are small pieces of text stored in the clients browser and sent back"
+" to the server with each request. They are useful to keep some state around "
+"for more than one request (HTTP itself is stateless), but should not be used"
+" for security related stuff. They can be easily forged by the client."
+msgstr ""
+
+#: ../../tutorial.rst:553
+msgid ""
+"All cookies sent by the client are available through "
+":attr:`BaseRequest.cookies` (a :class:`FormsDict`). This example shows a "
+"simple cookie-based view counter::"
+msgstr ""
+
+#: ../../tutorial.rst:563
+msgid ""
+"The :meth:`BaseRequest.get_cookie` method is a different way do access "
+"cookies. It supports decoding :ref:`signed cookies <tutorial-signed-"
+"cookies>` as described in a separate section."
+msgstr ""
+
+#: ../../tutorial.rst:566
+msgid "HTTP Headers"
+msgstr ""
+
+#: ../../tutorial.rst:568
+msgid ""
+"All HTTP headers sent by the client (e.g. ``Referer``, ``Agent`` or "
+"``Accept-Language``) are stored in a :class:`WSGIHeaderDict` and accessible "
+"through the :attr:`BaseRequest.headers` attribute. A :class:`WSGIHeaderDict`"
+" is basically a dictionary with case-insensitive keys::"
+msgstr ""
+
+#: ../../tutorial.rst:580
+msgid "Query Variables"
+msgstr ""
+
+#: ../../tutorial.rst:582
+msgid ""
+"The query string (as in ``/forum?id=1&page=5``) is commonly used to transmit"
+" a small number of key/value pairs to the server. You can use the "
+":attr:`BaseRequest.query` attribute (a :class:`FormsDict`) to access these "
+"values and the :attr:`BaseRequest.query_string` attribute to get the whole "
+"string."
+msgstr ""
+
+#: ../../tutorial.rst:595
+msgid "HTML `<form>` Handling"
+msgstr ""
+
+#: ../../tutorial.rst:597
+msgid ""
+"Let us start from the beginning. In HTML, a typical ``<form>`` looks "
+"something like this:"
+msgstr ""
+
+#: ../../tutorial.rst:607
+msgid ""
+"The ``action`` attribute specifies the URL that will receive the form data. "
+"``method`` defines the HTTP method to use (``GET`` or ``POST``). With "
+"``method=\"get\"`` the form values are appended to the URL and available "
+"through :attr:`BaseRequest.query` as described above. This is considered "
+"insecure and has other limitations, so we use ``method=\"post\"`` here. If "
+"in doubt, use ``POST`` forms."
+msgstr ""
+
+#: ../../tutorial.rst:609
+msgid ""
+"Form fields transmitted via ``POST`` are stored in :attr:`BaseRequest.forms`"
+" as a :class:`FormsDict`. The server side code may look like this::"
+msgstr ""
+
+#: ../../tutorial.rst:632
+msgid ""
+"There are several other attributes used to access form data. Some of them "
+"combine values from different sources for easier access. The following table"
+" should give you a decent overview."
+msgstr ""
+
+#: ../../tutorial.rst:635
+msgid "Attribute"
+msgstr ""
+
+#: ../../tutorial.rst:635
+msgid "GET Form fields"
+msgstr ""
+
+#: ../../tutorial.rst:635
+msgid "POST Form fields"
+msgstr ""
+
+#: ../../tutorial.rst:635
+msgid "File Uploads"
+msgstr ""
+
+#: ../../tutorial.rst:637
+msgid ":attr:`BaseRequest.query`"
+msgstr ""
+
+#: ../../tutorial.rst:637 ../../tutorial.rst:638 ../../tutorial.rst:639
+#: ../../tutorial.rst:640 ../../tutorial.rst:640 ../../tutorial.rst:641
+#: ../../tutorial.rst:642 ../../tutorial.rst:642
+msgid "yes"
+msgstr ""
+
+#: ../../tutorial.rst:637 ../../tutorial.rst:637 ../../tutorial.rst:638
+#: ../../tutorial.rst:638 ../../tutorial.rst:639 ../../tutorial.rst:639
+#: ../../tutorial.rst:640 ../../tutorial.rst:641 ../../tutorial.rst:641
+#: ../../tutorial.rst:642
+msgid "no"
+msgstr ""
+
+#: ../../tutorial.rst:638
+msgid ":attr:`BaseRequest.forms`"
+msgstr ""
+
+#: ../../tutorial.rst:639
+msgid ":attr:`BaseRequest.files`"
+msgstr ""
+
+#: ../../tutorial.rst:640
+msgid ":attr:`BaseRequest.params`"
+msgstr ""
+
+#: ../../tutorial.rst:641
+msgid ":attr:`BaseRequest.GET`"
+msgstr ""
+
+#: ../../tutorial.rst:642
+msgid ":attr:`BaseRequest.POST`"
+msgstr ""
+
+#: ../../tutorial.rst:647
+msgid "File uploads"
+msgstr ""
+
+#: ../../tutorial.rst:649
+msgid ""
+"To support file uploads, we have to change the ``<form>`` tag a bit. First, "
+"we tell the browser to encode the form data in a different way by adding an "
+"``enctype=\"multipart/form-data\"`` attribute to the ``<form>`` tag. Then, "
+"we add ``<input type=\"file\" />`` tags to allow the user to select a file. "
+"Here is an example:"
+msgstr ""
+
+#: ../../tutorial.rst:659
+msgid ""
+"Bottle stores file uploads in :attr:`BaseRequest.files` as "
+":class:`FileUpload` instances, along with some metadata about the upload. "
+"Let us assume you just want to save the file to disk::"
+msgstr ""
+
+#: ../../tutorial.rst:673
+msgid ""
+":attr:`FileUpload.filename` contains the name of the file on the clients "
+"file system, but is cleaned up and normalized to prevent bugs caused by "
+"unsupported characters or path segments in the filename. If you need the "
+"unmodified name as sent by the client, have a look at "
+":attr:`FileUpload.raw_filename`."
+msgstr ""
+
+#: ../../tutorial.rst:675
+msgid ""
+"The :attr:`FileUpload.save` method is highly recommended if you want to "
+"store the file to disk. It prevents some common errors (e.g. it does not "
+"overwrite existing files unless you tell it to) and stores the file in a "
+"memory efficient way. You can access the file object directly via "
+":attr:`FileUpload.file`. Just be careful."
+msgstr ""
+
+#: ../../tutorial.rst:679
+msgid "JSON Content"
+msgstr ""
+
+#: ../../tutorial.rst:681
+msgid ""
+"Some JavaScript or REST clients send ``application/json`` content to the "
+"server. The :attr:`BaseRequest.json` attribute contains the parsed data "
+"structure, if available."
+msgstr ""
+
+#: ../../tutorial.rst:685
+msgid "The raw request body"
+msgstr ""
+
+#: ../../tutorial.rst:687
+msgid ""
+"You can access the raw body data as a file-like object via "
+":attr:`BaseRequest.body`. This is a :class:`BytesIO` buffer or a temporary "
+"file depending on the content length and :attr:`BaseRequest.MEMFILE_MAX` "
+"setting. In both cases the body is completely buffered before you can access"
+" the attribute. If you expect huge amounts of data and want to get direct "
+"unbuffered access to the stream, have a look at ``request['wsgi.input']``."
+msgstr ""
+
+#: ../../tutorial.rst:692
+msgid "WSGI Environment"
+msgstr ""
+
+#: ../../tutorial.rst:694
+msgid ""
+"Each :class:`BaseRequest` instance wraps a WSGI environment dictionary. The "
+"original is stored in :attr:`BaseRequest.environ`, but the request object "
+"itself behaves like a dictionary, too. Most of the interesting data is "
+"exposed through special methods or attributes, but if you want to access "
+"`WSGI environ variables <WSGI specification>`_ directly, you can do so::"
+msgstr ""
+
+#: ../../tutorial.rst:712
+msgid "Templates"
+msgstr ""
+
+#: ../../tutorial.rst:714
+msgid ""
+"Bottle comes with a fast and powerful built-in template engine called "
+":doc:`stpl`. To render a template you can use the :func:`template` function "
+"or the :func:`view` decorator. All you have to do is to provide the name of "
+"the template and the variables you want to pass to the template as keyword "
+"arguments. Here’s a simple example of how to render a template::"
+msgstr ""
+
+#: ../../tutorial.rst:721
+msgid ""
+"This will load the template file ``hello_template.tpl`` and render it with "
+"the ``name`` variable set. Bottle will look for templates in the "
+"``./views/`` folder or any folder specified in the ``bottle.TEMPLATE_PATH`` "
+"list."
+msgstr ""
+
+#: ../../tutorial.rst:723
+msgid ""
+"The :func:`view` decorator allows you to return a dictionary with the "
+"template variables instead of calling :func:`template`::"
+msgstr ""
+
+#: ../../tutorial.rst:732
+msgid "Syntax"
+msgstr ""
+
+#: ../../tutorial.rst:735
+msgid ""
+"The template syntax is a very thin layer around the Python language. Its "
+"main purpose is to ensure correct indentation of blocks, so you can format "
+"your template without worrying about indentation. Follow the link for a full"
+" syntax description: :doc:`stpl`"
+msgstr ""
+
+#: ../../tutorial.rst:737
+msgid "Here is an example template::"
+msgstr ""
+
+#: ../../tutorial.rst:748
+msgid "Caching"
+msgstr ""
+
+#: ../../tutorial.rst:749
+msgid ""
+"Templates are cached in memory after compilation. Modifications made to the "
+"template files will have no affect until you clear the template cache. Call "
+"``bottle.TEMPLATES.clear()`` to do so. Caching is disabled in debug mode."
+msgstr ""
+
+#: ../../tutorial.rst:759
+msgid "Plugins"
+msgstr ""
+
+#: ../../tutorial.rst:763
+msgid ""
+"Bottle's core features cover most common use-cases, but as a micro-framework"
+" it has its limits. This is where \"Plugins\" come into play. Plugins add "
+"missing functionality to the framework, integrate third party libraries, or "
+"just automate some repetitive work."
+msgstr ""
+
+#: ../../tutorial.rst:765
+msgid ""
+"We have a growing :doc:`/plugins/index` and most plugins are designed to be "
+"portable and re-usable across applications. The chances are high that your "
+"problem has already been solved and a ready-to-use plugin exists. If not, "
+"the :doc:`/plugindev` may help you."
+msgstr ""
+
+#: ../../tutorial.rst:767
+msgid ""
+"The effects and APIs of plugins are manifold and depend on the specific "
+"plugin. The ``SQLitePlugin`` plugin for example detects callbacks that "
+"require a ``db`` keyword argument and creates a fresh database connection "
+"object every time the callback is called. This makes it very convenient to "
+"use a database::"
+msgstr ""
+
+#: ../../tutorial.rst:787
+msgid ""
+"Other plugin may populate the thread-safe :data:`local` object, change "
+"details of the :data:`request` object, filter the data returned by the "
+"callback or bypass the callback completely. An \"auth\" plugin for example "
+"could check for a valid session and return a login page instead of calling "
+"the original callback. What happens exactly depends on the plugin."
+msgstr ""
+
+#: ../../tutorial.rst:791
+msgid "Application-wide Installation"
+msgstr ""
+
+#: ../../tutorial.rst:793
+msgid ""
+"Plugins can be installed application-wide or just to some specific routes "
+"that need additional functionality. Most plugins can safely be installed to "
+"all routes and are smart enough to not add overhead to callbacks that do not"
+" need their functionality."
+msgstr ""
+
+#: ../../tutorial.rst:795
+msgid ""
+"Let us take the ``SQLitePlugin`` plugin for example. It only affects route "
+"callbacks that need a database connection. Other routes are left alone. "
+"Because of this, we can install the plugin application-wide with no "
+"additional overhead."
+msgstr ""
+
+#: ../../tutorial.rst:797
+msgid ""
+"To install a plugin, just call :func:`install` with the plugin as first "
+"argument::"
+msgstr ""
+
+#: ../../tutorial.rst:802
+msgid ""
+"The plugin is not applied to the route callbacks yet. This is delayed to "
+"make sure no routes are missed. You can install plugins first and add routes"
+" later, if you want to. The order of installed plugins is significant, "
+"though. If a plugin requires a database connection, you need to install the "
+"database plugin first."
+msgstr ""
+
+#: ../../tutorial.rst:806
+msgid "Uninstall Plugins"
+msgstr ""
+
+#: ../../tutorial.rst:807
+msgid ""
+"You can use a name, class or instance to :func:`uninstall` a previously "
+"installed plugin::"
+msgstr ""
+
+#: ../../tutorial.rst:817
+msgid ""
+"Plugins can be installed and removed at any time, even at runtime while "
+"serving requests. This enables some neat tricks (installing slow debugging "
+"or profiling plugins only when needed) but should not be overused. Each time"
+" the list of plugins changes, the route cache is flushed and all plugins are"
+" re-applied."
+msgstr ""
+
+#: ../../tutorial.rst:820
+msgid ""
+"The module-level :func:`install` and :func:`uninstall` functions affect the "
+":ref:`default-app`. To manage plugins for a specific application, use the "
+"corresponding methods on the :class:`Bottle` application object."
+msgstr ""
+
+#: ../../tutorial.rst:824
+msgid "Route-specific Installation"
+msgstr ""
+
+#: ../../tutorial.rst:826
+msgid ""
+"The ``apply`` parameter of the :func:`route` decorator comes in handy if you"
+" want to install plugins to only a small number of routes::"
+msgstr ""
+
+#: ../../tutorial.rst:836
+msgid "Blacklisting Plugins"
+msgstr ""
+
+#: ../../tutorial.rst:838
+msgid ""
+"You may want to explicitly disable a plugin for a number of routes. The "
+":func:`route` decorator has a ``skip`` parameter for this purpose::"
+msgstr ""
+
+#: ../../tutorial.rst:860
+msgid ""
+"The ``skip`` parameter accepts a single value or a list of values. You can "
+"use a name, class or instance to identify the plugin that is to be skipped. "
+"Set ``skip=True`` to skip all plugins at once."
+msgstr ""
+
+#: ../../tutorial.rst:863
+msgid "Plugins and Sub-Applications"
+msgstr ""
+
+#: ../../tutorial.rst:865
+msgid ""
+"Most plugins are specific to the application they were installed to. "
+"Consequently, they should not affect sub-applications mounted with "
+":meth:`Bottle.mount`. Here is an example::"
+msgstr ""
+
+#: ../../tutorial.rst:876
+msgid ""
+"Whenever you mount an application, Bottle creates a proxy-route on the main-"
+"application that forwards all requests to the sub-application. Plugins are "
+"disabled for this kind of proxy-route by default. As a result, our "
+"(fictional) `WTForms` plugin affects the ``/contact`` route, but does not "
+"affect the routes of the ``/blog`` sub-application."
+msgstr ""
+
+#: ../../tutorial.rst:878
+msgid ""
+"This behavior is intended as a sane default, but can be overridden. The "
+"following example re-activates all plugins for a specific proxy-route::"
+msgstr ""
+
+#: ../../tutorial.rst:882
+msgid ""
+"But there is a snag: The plugin sees the whole sub-application as a single "
+"route, namely the proxy-route mentioned above. In order to affect each "
+"individual route of the sub-application, you have to install the plugin to "
+"the mounted application explicitly."
+msgstr ""
+
+#: ../../tutorial.rst:887
+msgid "Development"
+msgstr ""
+
+#: ../../tutorial.rst:889
+msgid ""
+"So you have learned the basics and want to write your own application? Here "
+"are some tips that might help you beeing more productive."
+msgstr ""
+
+#: ../../tutorial.rst:895
+msgid "Default Application"
+msgstr ""
+
+#: ../../tutorial.rst:897
+msgid ""
+"Bottle maintains a global stack of :class:`Bottle` instances and uses the "
+"top of the stack as a default for some of the module-level functions and "
+"decorators. The :func:`route` decorator, for example, is a shortcut for "
+"calling :meth:`Bottle.route` on the default application::"
+msgstr ""
+
+#: ../../tutorial.rst:905
+msgid ""
+"This is very convenient for small applications and saves you some typing, "
+"but also means that, as soon as your module is imported, routes are "
+"installed to the global default application. To avoid this kind of import "
+"side-effects, Bottle offers a second, more explicit way to build "
+"applications::"
+msgstr ""
+
+#: ../../tutorial.rst:915
+msgid ""
+"Separating the application object improves re-usability a lot, too. Other "
+"developers can safely import the ``app`` object from your module and use "
+":meth:`Bottle.mount` to merge applications together."
+msgstr ""
+
+#: ../../tutorial.rst:920
+msgid ""
+"Starting with bottle-0.13 you can use :class:`Bottle` instances as context "
+"managers::"
+msgstr ""
+
+#: ../../tutorial.rst:945
+msgid "Debug Mode"
+msgstr ""
+
+#: ../../tutorial.rst:947
+msgid "During early development, the debug mode can be very helpful."
+msgstr ""
+
+#: ../../tutorial.rst:955
+msgid ""
+"In this mode, Bottle is much more verbose and provides helpful debugging "
+"information whenever an error occurs. It also disables some optimisations "
+"that might get in your way and adds some checks that warn you about possible"
+" misconfiguration."
+msgstr ""
+
+#: ../../tutorial.rst:957
+msgid "Here is an incomplete list of things that change in debug mode:"
+msgstr ""
+
+#: ../../tutorial.rst:959
+msgid "The default error page shows a traceback."
+msgstr ""
+
+#: ../../tutorial.rst:960
+msgid "Templates are not cached."
+msgstr ""
+
+#: ../../tutorial.rst:961
+msgid "Plugins are applied immediately."
+msgstr ""
+
+#: ../../tutorial.rst:963
+msgid "Just make sure not to use the debug mode on a production server."
+msgstr ""
+
+#: ../../tutorial.rst:966
+msgid "Auto Reloading"
+msgstr ""
+
+#: ../../tutorial.rst:968
+msgid ""
+"During development, you have to restart the server a lot to test your recent"
+" changes. The auto reloader can do this for you. Every time you edit a "
+"module file, the reloader restarts the server process and loads the newest "
+"version of your code."
+msgstr ""
+
+#: ../../tutorial.rst:978
+msgid ""
+"How it works: the main process will not start a server, but spawn a new "
+"child process using the same command line arguments used to start the main "
+"process. All module-level code is executed at least twice! Be careful."
+msgstr ""
+
+#: ../../tutorial.rst:983
+msgid ""
+"The child process will have ``os.environ['BOTTLE_CHILD']`` set to ``True`` "
+"and start as a normal non-reloading app server. As soon as any of the loaded"
+" modules changes, the child process is terminated and re-spawned by the main"
+" process. Changes in template files will not trigger a reload. Please use "
+"debug mode to deactivate template caching."
+msgstr ""
+
+#: ../../tutorial.rst:989
+msgid ""
+"The reloading depends on the ability to stop the child process. If you are "
+"running on Windows or any other operating system not supporting "
+"``signal.SIGINT`` (which raises ``KeyboardInterrupt`` in Python), "
+"``signal.SIGTERM`` is used to kill the child. Note that exit handlers and "
+"finally clauses, etc., are not executed after a ``SIGTERM``."
+msgstr ""
+
+#: ../../tutorial.rst:997
+msgid "Command Line Interface"
+msgstr ""
+
+#: ../../tutorial.rst:1001
+msgid "Starting with version 0.10 you can use bottle as a command-line tool:"
+msgstr ""
+
+#: ../../tutorial.rst:1021
+msgid ""
+"The `ADDRESS` field takes an IP address or an IP:PORT pair and defaults to "
+"``localhost:8080``. The other parameters should be self-explanatory."
+msgstr ""
+
+#: ../../tutorial.rst:1023
+msgid ""
+"Both plugins and applications are specified via import expressions. These "
+"consist of an import path (e.g. ``package.module``) and an expression to be "
+"evaluated in the namespace of that module, separated by a colon. See "
+":func:`load` for details. Here are some examples:"
+msgstr ""
+
+#: ../../tutorial.rst:1044
+msgid "Deployment"
+msgstr ""
+
+#: ../../tutorial.rst:1046
+msgid ""
+"Bottle runs on the built-in `wsgiref WSGIServer "
+"<http://docs.python.org/library/wsgiref.html#module-wsgiref.simple_server>`_"
+"  by default. This non-threading HTTP server is perfectly fine for "
+"development and early production, but may become a performance bottleneck "
+"when server load increases."
+msgstr ""
+
+#: ../../tutorial.rst:1048
+msgid ""
+"The easiest way to increase performance is to install a multi-threaded "
+"server library like paste_ or cherrypy_ and tell Bottle to use that instead "
+"of the single-threaded server::"
+msgstr ""
+
+#: ../../tutorial.rst:1052
+msgid ""
+"This, and many other deployment options are described in a separate article:"
+" :doc:`deployment`"
+msgstr ""
+
+#: ../../tutorial.rst:1060
+msgid "Glossary"
+msgstr ""
+
+#: ../../tutorial.rst:1063
+msgid "callback"
+msgstr ""
+
+#: ../../tutorial.rst:1065
+msgid ""
+"Programmer code that is to be called when some external action happens. In "
+"the context of web frameworks, the mapping between URL paths and application"
+" code is often achieved by specifying a callback function for each URL."
+msgstr ""
+
+#: ../../tutorial.rst:1069
+msgid "decorator"
+msgstr ""
+
+#: ../../tutorial.rst:1071
+msgid ""
+"A function returning another function, usually applied as a function "
+"transformation using the ``@decorator`` syntax. See `python documentation "
+"for function definition  "
+"<http://docs.python.org/reference/compound_stmts.html#function>`_ for more "
+"about decorators."
+msgstr ""
+
+#: ../../tutorial.rst:1072
+msgid "environ"
+msgstr ""
+
+#: ../../tutorial.rst:1074
+msgid ""
+"A structure where information about all documents under the root is saved, "
+"and used for cross-referencing.  The environment is pickled after the "
+"parsing stage, so that successive runs only need to read and parse new and "
+"changed documents."
+msgstr ""
+
+#: ../../tutorial.rst:1078
+msgid "handler function"
+msgstr ""
+
+#: ../../tutorial.rst:1080
+msgid ""
+"A function to handle some specific event or situation. In a web framework, "
+"the application is developed by attaching a handler function as callback for"
+" each specific URL comprising the application."
+msgstr ""
+
+#: ../../tutorial.rst:1083
+msgid "source directory"
+msgstr ""
+
+#: ../../tutorial.rst:1085
+msgid ""
+"The directory which, including its subdirectories, contains all source files"
+" for one Sphinx project."
+msgstr ""

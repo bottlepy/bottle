@@ -3,13 +3,17 @@
 
 import unittest
 import sys
+
+import itertools
+
 import bottle
-from bottle import request, tob, touni, tonat, json_dumps, _e, HTTPError, parse_date
-import tools
+from bottle import request, tob, touni, tonat, json_dumps, HTTPError, parse_date
+from test import tools
 import wsgiref.util
 import base64
 
 from bottle import BaseRequest, BaseResponse, LocalRequest
+
 
 class TestRequest(unittest.TestCase):
 
@@ -279,10 +283,44 @@ class TestRequest(unittest.TestCase):
         self.assertEqual(42, len(request.body.readline()))
         self.assertEqual(42, len(request.body.readline(1024)))
 
+    def _test_chunked(self, body, expect):
+        e = {}
+        wsgiref.util.setup_testing_defaults(e)
+        e['wsgi.input'].write(tob(body))
+        e['wsgi.input'].seek(0)
+        e['HTTP_TRANSFER_ENCODING'] = 'chunked'
+        if isinstance(expect, str):
+            self.assertEqual(tob(expect), BaseRequest(e).body.read())
+        else:
+            self.assertRaises(expect, lambda: BaseRequest(e).body)
+
+    def test_chunked(self):
+        self._test_chunked('1\r\nx\r\nff\r\n' + 'y'*255 + '\r\n0\r\n',
+                           'x' + 'y'*255)
+        self._test_chunked('8\r\nxxxxxxxx\r\n0\r\n','xxxxxxxx')
+        self._test_chunked('0\r\n', '')
+
+    def test_chunked_meta_fields(self):
+        self._test_chunked('8 ; foo\r\nxxxxxxxx\r\n0\r\n','xxxxxxxx')
+        self._test_chunked('8;foo\r\nxxxxxxxx\r\n0\r\n','xxxxxxxx')
+        self._test_chunked('8;foo=bar\r\nxxxxxxxx\r\n0\r\n','xxxxxxxx')
+
+    def test_chunked_not_terminated(self):
+        self._test_chunked('1\r\nx\r\n', HTTPError)
+
+    def test_chunked_wrong_size(self):
+        self._test_chunked('2\r\nx\r\n', HTTPError)
+
+    def test_chunked_illegal_size(self):
+        self._test_chunked('x\r\nx\r\n', HTTPError)
+
+    def test_chunked_not_chunked_at_all(self):
+        self._test_chunked('abcdef', HTTPError)
+
     def test_multipart(self):
         """ Environ: POST (multipart files and multible values per key) """
         fields = [('field1','value1'), ('field2','value2'), ('field2','value3')]
-        files = [('file1','filename1.txt','content1'), ('file2','filename2.py',touni('ä\nö\rü'))]
+        files = [('file1','filename1.txt','content1'), ('万难','万难foo.py', 'ä\nö\rü')]
         e = tools.multipart_environ(fields=fields, files=files)
         request = BaseRequest(e)
         # File content
@@ -292,16 +330,16 @@ class TestRequest(unittest.TestCase):
         cmp = tob('content1') if sys.version_info >= (3,2,0) else 'content1'
         self.assertEqual(cmp, request.POST['file1'].file.read())
         # File name and meta data
-        self.assertTrue('file2' in request.POST)
-        self.assertTrue('file2' in request.files)
-        self.assertTrue('file2' not in request.forms)
-        self.assertEqual('filename2.py', request.POST['file2'].filename)
-        self.assertTrue(request.files.file2)
+        self.assertTrue('万难' in request.POST)
+        self.assertTrue('万难' in request.files)
+        self.assertTrue('万难' not in request.forms)
+        self.assertEqual('foo.py', request.POST['万难'].filename)
+        self.assertTrue(request.files['万难'])
         self.assertFalse(request.files.file77)
         # UTF-8 files
-        x = request.POST['file2'].file.read()
+        x = request.POST['万难'].file.read()
         if (3,2,0) > sys.version_info >= (3,0,0):
-            x = x.encode('ISO-8859-1')
+            x = x.encode('utf8')
         self.assertEqual(tob('ä\nö\rü'), x)
         # No file
         self.assertTrue('file3' not in request.POST)
@@ -351,6 +389,23 @@ class TestRequest(unittest.TestCase):
         e['CONTENT_LENGTH'] = str(len(json_dumps(test)))
         self.assertEqual(BaseRequest(e).json, test)
 
+    def test_json_forged_header_issue616(self):
+        test = dict(a=5, b='test', c=[1,2,3])
+        e = {'CONTENT_TYPE': 'text/plain;application/json'}
+        wsgiref.util.setup_testing_defaults(e)
+        e['wsgi.input'].write(tob(json_dumps(test)))
+        e['wsgi.input'].seek(0)
+        e['CONTENT_LENGTH'] = str(len(json_dumps(test)))
+        self.assertEqual(BaseRequest(e).json, None)
+
+    def test_json_header_empty_body(self):
+        """Request Content-Type is application/json but body is empty"""
+        e = {'CONTENT_TYPE': 'application/json'}
+        wsgiref.util.setup_testing_defaults(e)
+        wsgiref.util.setup_testing_defaults(e)
+        e['CONTENT_LENGTH'] = "0"
+        self.assertEqual(BaseRequest(e).json, None)
+
     def test_isajax(self):
         e = {}
         wsgiref.util.setup_testing_defaults(e)
@@ -392,27 +447,6 @@ class TestRequest(unittest.TestCase):
         del r.environ['HTTP_X_FORWARDED_FOR']
         self.assertEqual(r.remote_addr, ips[1])
 
-    def test_maxparam(self):
-        ips = ['1.2.3.4', '2.3.4.5', '3.4.5.6']
-        e = {}
-        wsgiref.util.setup_testing_defaults(e)
-        e['wsgi.input'].write(tob('a=a&b=b&c=c'))
-        e['wsgi.input'].seek(0)
-        e['CONTENT_LENGTH'] = '11'
-        e['REQUEST_METHOD'] = "POST"
-        e['HTTP_COOKIE'] = 'a=1;b=1;c=1;d=1'
-        e['QUERY_STRING'] = 'a&b&c&d'
-        old_value = BaseRequest.MAX_PARAMS
-        r = BaseRequest(e)
-        try:
-            BaseRequest.MAX_PARAMS = 2
-            self.assertRaises(HTTPError, lambda: r.query)
-            self.assertRaises(HTTPError, lambda: r.cookies)
-            self.assertRaises(HTTPError, lambda: r.forms)
-            self.assertRaises(HTTPError, lambda: r.params)
-        finally:
-            BaseRequest.MAX_PARAMS = old_value
-
     def test_user_defined_attributes(self):
         for cls in (BaseRequest, LocalRequest):
             r = cls()
@@ -422,9 +456,11 @@ class TestRequest(unittest.TestCase):
             self.assertEqual(r.foo, 'somevalue')
             self.assertTrue('somevalue' in r.environ.values())
 
+            # Attributes are read-only once set.
+            self.assertRaises(AttributeError, setattr, r, 'foo', 'x')
+
             # Unknown attributes raise AttributeError.
             self.assertRaises(AttributeError, getattr, r, 'somevalue')
-
 
 
 class TestResponse(unittest.TestCase):
@@ -453,15 +489,24 @@ class TestResponse(unittest.TestCase):
         from functools import partial
         make_res = partial(BaseResponse, '', 200)
 
-        self.assertTrue('yay',
-            make_res([('x-test','yay')])['x-test'])
+        self.assertEquals('yay', make_res(x_test='yay')['x-test'])
 
-    def test_constructor_headerlist(self):
-        from functools import partial
-        make_res = partial(BaseResponse, '', 200)
+    def test_wsgi_header_values(self):
+        def cmp(app, wire):
+            rs = BaseResponse()
+            rs.set_header('x-test', app)
+            result = [v for (h, v) in rs.headerlist if h.lower()=='x-test'][0]
+            self.assertEquals(wire, result)
 
-        self.assertTrue('yay', make_res(x_test='yay')['x-test'])
-
+        if bottle.py3k:
+            cmp(1, tonat('1', 'latin1'))
+            cmp('öäü', 'öäü'.encode('utf8').decode('latin1'))
+            # Dropped byte header support in Python 3:
+            #cmp(tob('äöü'), 'äöü'.encode('utf8').decode('latin1'))
+        else:
+            cmp(1, '1')
+            cmp('öäü', 'öäü')
+            cmp(touni('äöü'), 'äöü')
 
     def test_set_status(self):
         rs = BaseResponse()
@@ -535,7 +580,7 @@ class TestResponse(unittest.TestCase):
     def test_content_type(self):
         rs = BaseResponse()
         rs.content_type = 'test/some'
-        self.assertEquals('test/some', rs.headers.get('Content-Type'))
+        self.assertEqual('test/some', rs.headers.get('Content-Type'))
 
     def test_charset(self):
         rs = BaseResponse()
@@ -554,6 +599,14 @@ class TestResponse(unittest.TestCase):
         cookies.sort()
         self.assertEqual(cookies[0], 'name1=value; Max-Age=5')
         self.assertEqual(cookies[1], 'name2="value 2"; Path=/foo')
+
+    def test_set_cookie_value_long_string(self):
+        r = BaseResponse()
+        self.assertRaises(ValueError, r.set_cookie, name='test', value='x' * 4097)
+
+    def test_set_cookie_name_long_string(self):
+        r = BaseResponse()
+        self.assertRaises(ValueError, r.set_cookie, name='x' * 4097, value='simple_value')
 
     def test_set_cookie_maxage(self):
         import datetime
@@ -575,13 +628,33 @@ class TestResponse(unittest.TestCase):
         self.assertEqual(cookies[0], 'name1=value; expires=Thu, 01 Jan 1970 00:00:42 GMT')
         self.assertEqual(cookies[1], 'name2=value; expires=Thu, 01 Jan 1970 00:00:43 GMT')
 
+    def test_set_cookie_secure(self):
+        r = BaseResponse()
+        r.set_cookie('name1', 'value', secure=True)
+        r.set_cookie('name2', 'value', secure=False)
+        cookies = sorted([value for name, value in r.headerlist
+                   if name.title() == 'Set-Cookie'])
+        self.assertEqual(cookies[0].lower(), 'name1=value; secure')
+        self.assertEqual(cookies[1], 'name2=value')
+
+    def test_set_cookie_httponly(self):
+        if sys.version_info < (2,6,0):
+            return
+        r = BaseResponse()
+        r.set_cookie('name1', 'value', httponly=True)
+        r.set_cookie('name2', 'value', httponly=False)
+        cookies = sorted([value for name, value in r.headerlist
+                   if name.title() == 'Set-Cookie'])
+        self.assertEqual(cookies[0].lower(), 'name1=value; httponly')
+        self.assertEqual(cookies[1], 'name2=value')
+
     def test_delete_cookie(self):
         response = BaseResponse()
         response.set_cookie('name', 'value')
         response.delete_cookie('name')
         cookies = [value for name, value in response.headerlist
                    if name.title() == 'Set-Cookie']
-        self.assertTrue('name=;' in cookies[0])
+        self.assertTrue('Max-Age=-1' in cookies[0])
 
     def test_set_header(self):
         response = BaseResponse()
@@ -623,27 +696,52 @@ class TestResponse(unittest.TestCase):
         response['x-test'] = 5
         self.assertEqual('5', response['x-test'])
         response['x-test'] = None
-        self.assertEqual('None', response['x-test'])
+        self.assertEqual('', response['x-test'])
+        response['x-test'] = touni('瓶')
+        self.assertEqual(tonat(touni('瓶')), response['x-test'])
+
+    def test_prevent_control_characters_in_headers(self):
+        masks = '{}test', 'test{}', 'te{}st'
+        tests = '\n', '\r', '\n\r', '\0'
+
+        # Test HeaderDict
+        apis = 'append', 'replace', '__setitem__', 'setdefault'
+        for api, mask, test in itertools.product(apis, masks, tests):
+            hd = bottle.HeaderDict()
+            func = getattr(hd, api)
+            value = mask.replace("{}", test)
+            self.assertRaises(ValueError, func, value, "test-value")
+            self.assertRaises(ValueError, func, "test-name", value)
+
+        # Test functions on BaseResponse
+        apis = 'add_header', 'set_header', '__setitem__'
+        for api, mask, test in itertools.product(apis, masks, tests):
+            rs = bottle.BaseResponse()
+            func = getattr(rs, api)
+            value = mask.replace("{}", test)
+            self.assertRaises(ValueError, func, value, "test-value")
+            self.assertRaises(ValueError, func, "test-name", value)
 
     def test_expires_header(self):
         import datetime
         response = BaseResponse()
         now = datetime.datetime.now()
         response.expires = now
-        
+
         def seconds(a, b):
             td = max(a,b) - min(a,b)
             return td.days*360*24 + td.seconds
-        
+
         self.assertEqual(0, seconds(response.expires, now))
         now2 = datetime.datetime.utcfromtimestamp(
             parse_date(response.headers['Expires']))
         self.assertEqual(0, seconds(now, now2))
 
+
 class TestRedirect(unittest.TestCase):
 
     def assertRedirect(self, target, result, query=None, status=303, **args):
-        env = {'SERVER_PROTOCOL':'HTTP/1.1'}
+        env = {'SERVER_PROTOCOL': 'HTTP/1.1'}
         for key in list(args):
             if key.startswith('wsgi'):
                 args[key.replace('_', '.', 1)] = args[key]
@@ -653,11 +751,10 @@ class TestRedirect(unittest.TestCase):
         bottle.response.bind()
         try:
             bottle.redirect(target, **(query or {}))
-        except bottle.HTTPResponse:
-            r = _e()
-            self.assertEqual(status, r.status_code)
-            self.assertTrue(r.headers)
-            self.assertEqual(result, r.headers['Location'])
+        except bottle.HTTPResponse as E:
+            self.assertEqual(status, E.status_code)
+            self.assertTrue(E.headers)
+            self.assertEqual(result, E.headers['Location'])
 
     def test_absolute_path(self):
         self.assertRedirect('/', 'http://127.0.0.1/')
@@ -744,8 +841,8 @@ class TestRedirect(unittest.TestCase):
         try:
             bottle.response.set_cookie('xxx', 'yyy')
             bottle.redirect('...')
-        except bottle.HTTPResponse:
-            h = [v for (k, v) in _e().headerlist if k == 'Set-Cookie']
+        except bottle.HTTPResponse as E:
+            h = [v for (k, v) in E.headerlist if k == 'Set-Cookie']
             self.assertEqual(h, ['xxx=yyy'])
 
 class TestWSGIHeaderDict(unittest.TestCase):
@@ -779,8 +876,3 @@ class TestWSGIHeaderDict(unittest.TestCase):
             self.assertTrue(key in self.headers)
             self.assertEqual(self.headers.get(key), 'test')
             self.assertEqual(self.headers.get(key, 5), 'test')
-
-
-
-if __name__ == '__main__': #pragma: no cover
-    unittest.main()

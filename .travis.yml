@@ -1,0 +1,29 @@
+language: python
+sudo: required
+
+python:
+  - "2.7.3" # Ubuntu 12.4LTS (precise) and Debian 7 LTS (wheezy)
+  - "2.7"
+  - "3.2"
+  - "3.3"
+  - "3.4"
+  - "3.5"
+  - "3.6"
+  - "nightly"
+  - "pypy"
+  - "pypy3"
+
+install:
+  - travis_retry bash test/travis_setup.sh
+
+script:
+  - python -m coverage run --source=. test/testall.py fast
+  - python -m coverage combine
+  - python -m coverage report 2>&1
+
+notifications:
+  irc: "irc.freenode.org#bottlepy"
+  on_success: "never"
+
+after_success:
+  coveralls

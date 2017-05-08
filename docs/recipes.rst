@@ -7,7 +7,7 @@
 .. _paste: http://pythonpaste.org/modules/evalexception.html
 .. _pylons: http://pylonshq.com/
 .. _gevent: http://www.gevent.org/
-.. _compression: https://github.com/defnull/bottle/issues/92
+.. _compression: https://github.com/bottlepy/bottle/issues/92
 .. _GzipFilter: http://www.cherrypy.org/wiki/GzipFilter
 .. _cherrypy: http://www.cherrypy.org
 .. _heroku: http://heroku.com
@@ -116,7 +116,7 @@ This is not the recommend way (you should use a middleware in front of bottle to
     from bottle import request, response, route
     subproject = SomeWSGIApplication()
 
-    @route('/subproject/:subpath#.*#', method='ANY')
+    @route('/subproject/<subpath:re:.*>', method='ANY')
     def call_wsgi(subpath):
         new_environ = request.environ.copy()
         new_environ['SCRIPT_NAME'] = new_environ.get('SCRIPT_NAME','') + '/subproject'
@@ -139,7 +139,7 @@ For Bottle, ``/example`` and ``/example/`` are two different routes [1]_. To tre
     @route('/test/')
     def test(): return 'Slash? no?'
 
-or add a WSGI middleware that strips trailing slashes from all URLs::
+add a WSGI middleware that strips trailing slashes from all URLs::
 
     class StripPathMiddleware(object):
       def __init__(self, app):
@@ -151,6 +151,12 @@ or add a WSGI middleware that strips trailing slashes from all URLs::
     app = bottle.app()
     myapp = StripPathMiddleware(app)
     bottle.run(app=myapp)
+
+or add a ``before_request`` hook to strip the trailing slashes::
+
+    @hook('before_request')
+    def strip_path():
+        request.environ['PATH_INFO'] = request.environ['PATH_INFO'].rstrip('/')
 
 .. rubric:: Footnotes
 
@@ -168,15 +174,15 @@ Several "push" mechanisms like XHR multipart need the ability to write response 
 
     from gevent import monkey; monkey.patch_all()
 
-    import time
+    import gevent
     from bottle import route, run
     
     @route('/stream')
     def stream():
         yield 'START'
-        time.sleep(3)
+        gevent.sleep(3)
         yield 'MIDDLE'
-        time.sleep(5)
+        gevent.sleep(5)
         yield 'END'
     
     run(host='0.0.0.0', port=8080, server='gevent')
@@ -249,7 +255,7 @@ section of the `Getting Started with Python on Heroku/Cedar
 
     @route("/")
     def hello_world():
-            return "Hello World!"
+        return "Hello World!"
 
     run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
 
