@@ -83,6 +83,23 @@ Test script::
 
 In the example the Bottle route() method is never executed - only index() is tested.
 
+If the code being tested requires access to ``bottle.request`` you can mock it using `Boddle <https://github.com/keredson/boddle>`_::
+
+    import bottle
+    
+    @bottle.route('/')
+    def index():
+        return 'Hi %s!' % bottle.request.params['name']
+
+Test script::
+
+    import mywebapp
+    from boddle import boddle
+    
+    def test_webapp_index():
+        with boddle(params={'name':'Derek'}):
+            assert mywebapp.index() == 'Hi Derek!'
+
 
 Functional Testing Bottle Applications
 --------------------------------------------------------------------------------
