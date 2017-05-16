@@ -2887,7 +2887,9 @@ def static_file(filename, root,
         if check and check == etag:
             return HTTPResponse(status=304, **headers)
 
-    ims = getenv('HTTP_IF_MODIFIED_SINCE')
+    ims = request.get_header('If-Modified-Since')
+    if not ims:
+        ims = request.environ.get('HTTP_IF_MODIFIED_SINCE')
     if ims:
         ims = parse_date(ims.split(";")[0].strip())
     if ims is not None and ims >= int(stats.st_mtime):
