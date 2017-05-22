@@ -3209,6 +3209,11 @@ class FlupFCGIServer(ServerAdapter):
         self.options.setdefault('bindAddress', (self.host, self.port))
         flup.server.fcgi.WSGIServer(handler, **self.options).run()
 
+class FlipFlopFCGIServer(ServerAdapter):
+    def run(self, handler): # pragma: no cover
+        from flipflop import WSGIServer
+        self.options.setdefault('bindAddress', (self.host, self.port))
+        WSGIServer(handler).run()
 
 class WSGIRefServer(ServerAdapter):
     def run(self, app):  # pragma: no cover
@@ -3539,6 +3544,7 @@ class AutoServer(ServerAdapter):
 server_names = {
     'cgi': CGIServer,
     'flup': FlupFCGIServer,
+    'flipflop': FlipFlopFCGIServer,
     'wsgiref': WSGIRefServer,
     'waitress': WaitressServer,
     'cherrypy': CherryPyServer,
