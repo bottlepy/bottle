@@ -77,7 +77,11 @@ from datetime import date as datedate, datetime, timedelta
 from tempfile import TemporaryFile
 from traceback import format_exc, print_exc
 from unicodedata import normalize
-from json import dumps as json_dumps, loads as json_lds
+
+try:
+    from ujson import dumps as json_dumps, loads as json_lds
+except ImportError:
+    from json import dumps as json_dumps, loads as json_lds
 
 # inspect.getargspec was removed in Python 3.6, use
 # Signature-based version where we can (Python 3.3+)
