@@ -291,7 +291,7 @@ The basic statement for a dynamic route looks like this::
 
     @route('/myroute/<something>')
 
-This tells Bottle to accept for ``<something>`` any string up to the next slash. Furthermore, the value of ``something`` will be passed to the function assigned to that route, so the data can be processed within the function.
+This tells Bottle to accept for ``<something>`` any string up to the next slash. Furthermore, the value of ``something`` will be passed to the function assigned to that route, so the data can be processed within the function, like this::
 
     @route('/edit/<no:int>', method='GET')
     def edit_item(no):
