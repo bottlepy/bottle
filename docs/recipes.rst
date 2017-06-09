@@ -42,6 +42,9 @@ There is no built-in support for sessions because there is no *right* way to do 
 
     bottle.run(app=app)
 
+WARNING: Beaker's SessionMiddleware is not thread safe.  If two concurrent requests modify the same session at the same time, one of the updates might get lost. For this reason, sessions should only be populated once and treated as a read-only store after that. If you find yourself updating sessions regularly, and don't want to risk loosing any updates, think about using a real database instead or seek alternative session middleware libraries.
+
+
 Debugging with Style: Debugging Middleware
 --------------------------------------------------------------------------------
 
