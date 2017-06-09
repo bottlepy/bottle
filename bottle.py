@@ -1155,6 +1155,9 @@ class BaseRequest(object):
 
     __slots__ = ('environ', )
 
+    #: Maximum size of body in bytes.
+    MAX_BODY_SIZE = 102400
+
     #: Maximum size of memory buffer for :attr:`body` in bytes.
     MEMFILE_MAX = 102400
 
@@ -3309,7 +3312,8 @@ class PasteServer(ServerAdapter):
 
 class MeinheldServer(ServerAdapter):
     def run(self, handler):
-        from meinheld import server
+        from meinheld import server, set_max_content_length
+        set_max_content_length(BaseRequest.MAX_BODY_SIZE)
         server.listen((self.host, self.port))
         server.run(handler)
 
@@ -3345,7 +3349,7 @@ class TornadoServer(ServerAdapter):
     def run(self, handler):  # pragma: no cover
         import tornado.wsgi, tornado.httpserver, tornado.ioloop
         container = tornado.wsgi.WSGIContainer(handler)
-        server = tornado.httpserver.HTTPServer(container)
+        server = tornado.httpserver.HTTPServer(container, max_body_size=BaseRequest.MAX_BODY_SIZE)
         server.listen(port=self.port, address=self.host)
         tornado.ioloop.IOLoop.instance().start()
 
