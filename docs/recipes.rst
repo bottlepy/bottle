@@ -121,11 +121,11 @@ Example using `WebTest <http://webtest.pythonpaste.org/>`_ and `Nose <http://rea
 
         assert app.get('/admin').status == '200 OK'        # fetch a page successfully
 
-        app.get('/logout')                                 # log out
+        assert app.get('/logout').status_code = 200        # log out
         app.reset()                                        # drop the cookie
 
         # fetch the same page, unsuccessfully
-        assert app.get('/admin').status == '401 Unauthorized'
+        assert app.get('/admin', expect_errors=True).status == '401 Unauthorized'
 
 
 Embedding other WSGI Apps
