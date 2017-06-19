@@ -26,6 +26,10 @@ Path         Result
 //123        `No Match`
 ============ =========================================
 
+Is it possible to escape characters like colon ``:`` with a backslash ``\``. This will prevent to trigger the old syntax in case you need to use ``:``.
+For example: the rule ``/<action>/item:<id>`` triggers the old syntax, (see below) but ``/action/item\:<id>`` works as intended with the new syntax. 
+
+
 You can change the exact behaviour in many ways using filters. This is described in the next section.
 
 Wildcard Filters
