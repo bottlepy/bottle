@@ -420,7 +420,7 @@ The :meth:`Response.set_cookie` method accepts a number of additional keyword ar
 * **path:**       Limit the cookie to a given path (default: ``/``)
 * **secure:**     Limit the cookie to HTTPS connections (default: off).
 * **httponly:**   Prevent client-side javascript to read this cookie (default: off, requires Python 2.7 or newer).
-* **same_site:**  Disables third-party use for a cookie. Allowed attributes: `lax` and `strict`.
+* **same_site:**  Disables third-party use for a cookie. Allowed attributes: `lax` and `strict`. In strict mode the cookie will never be sent. In lax mode the cookie is only sent with a top-level GET request.
 
 If neither `expires` nor `max_age` is set, the cookie expires at the end of the browser session or as soon as the browser window is closed. There are some other gotchas you should consider when using cookies:
 
