@@ -4,7 +4,6 @@ sudo: required
 python:
   - "2.7.3" # Ubuntu 12.4LTS (precise) and Debian 7 LTS (wheezy)
   - "2.7"
-  - "3.2"
   - "3.3"
   - "3.4"
   - "3.5"
