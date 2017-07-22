@@ -3,7 +3,6 @@ test:
     - pyenv versions
     - pyenv shell 2.7.3; eval "$(pyenv init -)"; python --version; python test/testall.py fast
     - pyenv shell 2.7; eval "$(pyenv init -)"; python --version; python test/testall.py fast
-    - pyenv shell 3.2; eval "$(pyenv init -)"; python --version; python test/testall.py fast
     - pyenv shell 3.3-dev; eval "$(pyenv init -)"; python --version; python test/testall.py fast
     - pyenv shell 3.4-dev; eval "$(pyenv init -)"; python --version; python test/testall.py fast
     - pyenv shell 3.5-dev; eval "$(pyenv init -)"; python --version; python test/testall.py fast
