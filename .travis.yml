@@ -9,8 +9,6 @@ python:
   - "3.5"
   - "3.6"
   - "nightly"
-  - "pypy"
-  - "pypy3"
 
 install:
   - travis_retry bash test/travis_setup.sh
