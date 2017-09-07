@@ -314,7 +314,7 @@ This tells Bottle to accept for ``<something>`` any string up to the next slash.
         else:
             conn = sqlite3.connect('todo.db')
             c = conn.cursor()
-            c.execute("SELECT task FROM todo WHERE id LIKE ?", (str(no)))
+            c.execute("SELECT task FROM todo WHERE id LIKE ?", (str(no),))
             cur_data = c.fetchone()
 
             return template('edit_task', old=cur_data, no=no)
