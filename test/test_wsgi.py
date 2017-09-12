@@ -2,7 +2,7 @@
 from __future__ import with_statement
 import bottle
 from tools import ServerTestBase, chdir
-from bottle import tob
+from bottle import tob, touni
 
 class TestWsgi(ServerTestBase):
     ''' Tests for WSGI functionality, routing and output casting (decorators) '''
