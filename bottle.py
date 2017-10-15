@@ -3972,6 +3972,7 @@ class SimpleTemplate(BaseTemplate):
     def execute(self, _stdout, kwargs):
         env = self.defaults.copy()
         env.update(kwargs)
+        env.update(globals())
         env.update({
             '_stdout': _stdout,
             '_printlist': _stdout.extend,
