@@ -147,7 +147,7 @@ else:  # 2.x
     import thread
     from urlparse import urljoin, SplitResult as UrlSplitResult
     from urllib import urlencode, quote as urlquote, unquote as urlunquote
-    from Cookie import SimpleCookie
+    from Cookie import SimpleCookie, Morsel, CookieError
     from itertools import imap
     import cPickle as pickle
     from StringIO import StringIO as BytesIO
@@ -494,7 +494,7 @@ class Router(object):
         nocheck = set(methods)
         for method in set(self.static) - nocheck:
             if path in self.static[method]:
-                allowed.add(verb)
+                allowed.add(method)
         for method in set(self.dyna_regexes) - allowed - nocheck:
             for combined, rules in self.dyna_regexes[method]:
                 match = combined(path)
@@ -965,12 +965,12 @@ class Bottle(object):
                     return 'error_handler_404'
 
         """
-        
+
         def decorator(callback):
             if isinstance(callback, basestring): callback = load(callback)
             self.error_handler[int(code)] = callback
             return callback
-        
+
         return decorator(callback) if callback else decorator
 
     def default_error_handler(self, res):
@@ -1838,10 +1838,10 @@ class BaseResponse(object):
         """
         if not self._cookies:
             self._cookies = SimpleCookie()
-            
+
         # To add "SameSite" cookie support.
         Morsel._reserved['same-site'] = 'SameSite'
-        
+
         if secret:
             if not isinstance(value, basestring):
                 depr(0, 13, "Pickling of arbitrary objects into cookies is "

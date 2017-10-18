@@ -13,11 +13,7 @@
 
 .. image:: https://coveralls.io/repos/github/bottlepy/bottle/badge.svg?branch=master
    :target: https://coveralls.io/github/bottlepy/bottle?branch=master
-   :alt: Coverage 
-
-.. image:: https://img.shields.io/pypi/dm/bottle.svg
-    :target: https://pypi.python.org/pypi/bottle/
-    :alt: Downloads
+   :alt: Coverage
 
 .. image:: https://img.shields.io/pypi/v/bottle.svg
     :target: https://pypi.python.org/pypi/bottle/
