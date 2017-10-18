@@ -2377,7 +2377,7 @@ class ConfigDict(dict):
             Leading and trailing whitespace is removed from keys and values.
             Values can be omitted, in which case the key/value delimiter may
             also be left out. Values can also span multiple lines, as long as
-            they are indented deeper than the first line of the value. Commends
+            they are indented deeper than the first line of the value. Commands
             are prefixed by ``#`` or ``;`` and may only appear on their own on
             an otherwise empty line.
 
