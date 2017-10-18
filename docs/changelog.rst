@@ -14,8 +14,7 @@ Release 0.13
 
 These three Python versions are no longer maintained by the Python Software Foundation and reached their end of life a long time ago. Keeping up support for ancient Python versions hinders adaptation of new features and serves no real purpose. Even Debian 7 (wheezy) and Ubuntu 12.4 (precise), both outdated, ship with Python 2.7.3 and 3.2.3 already. For this reason, we decided to drop support for Python 2.5, 2.6 and 3.1. The updated list of tested and supported python releases is as follows:
 
- * Python 2.7.3 ()
- * Python 2.7
+ * Python 2.7 (>= 2.7.3)
  * Python 3.2
  * Python 3.3
  * Python 3.4
@@ -23,7 +22,7 @@ These three Python versions are no longer maintained by the Python Software Foun
  * PyPy 5.3
  * PyPy3 2.4
 
-Support for Python 2.5 was marked as deprecated since 0.12. We decided to go a step further and also remove 2.6 and 3.1 support even if it was never deprecated explicitly. This means that this release is *not* backwards compatible in Python 2.6 or 3.1 environments. Maintainers for distributions or systems that still use these old python versions should not update to Bottle 0.13 and stick with 0.12 instead.
+Support for Python 2.5 was marked as deprecated since 0.12. We decided to go a step further and also remove 2.6 and 3.1 support even if it was never deprecated explicitly in bottle. This means that this release is *not* backwards compatible in Python 2.6 or 3.1 environments. Maintainers for distributions or systems that still use these old python versions should not update to Bottle 0.13 and stick with 0.12 instead.
 
 .. rubric:: Stabilized APIs
 * The documented API of the :class:`ConfigDict` class is now considered stable and ready to use.
@@ -33,6 +32,7 @@ Support for Python 2.5 was marked as deprecated since 0.12. We decided to go a s
 * :meth:`Bottle.mount` now recognizes Bottle instance and will warn about parameters that are not compatible with the new mounting behavior. The old behavior (mount applications as WSGI callable) still works and is used as a fallback automatically.
 * The undocumented :func:`local_property` helper is now deprecated.
 * The server adapter for google app engine is not useful anymore and marked as deprecated.
+* Bottle uses pickle to store arbitrary objects into signed cookies. This is safe, as long as the signature key remains a secret. Unfortunately, people tend to push code with signature keys to github all the time, so we decided to remove pickle-support from bottle. Signed cookies will now issue a deprecation warning if the value is not a string, and support for non-string values will be removed in 0.14. The global :func:`cookie_encode`, :func:`cookie_decode` and :func:`is_cookie_encoded` are now also deprecated. If you are using this feature, think about using json to serialize your objects before storing them into cookies, or switch to a session system that stores data server-side instead of client-side.
 
 .. rubric:: Removed APIs (deprecated since 0.12)
 * Plugins with the old API (``api=1`` or no api attribute) will no longer work.
@@ -48,7 +48,7 @@ Support for Python 2.5 was marked as deprecated since 0.12. We decided to go a s
 
   * The magic ``{{rebase()}}`` call was replaced by a ``base`` variable. Example: ``{{base}}``
   * In STPL Templates, the 'rebase' and 'include' keywords were replaced with functions in 0.12.
-  * PEP-263 encoding strings are no longer recognized.
+  * PEP-263 encoding strings are no longer recognized. Templates are always utf-8.
 
 * The 'geventSocketIO' server adapter was removed without notice. It did not work anyway.
 

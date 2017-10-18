@@ -7,6 +7,10 @@
     :target: https://travis-ci.org/bottlepy/bottle
     :alt: Bottle Build
 
+.. image:: https://circleci.com/gh/bottlepy/bottle.svg?style=svg
+   :target: https://circleci.com/gh/bottlepy/bottle
+   :alt: CI Bottle
+
 .. image:: https://coveralls.io/repos/github/bottlepy/bottle/badge.svg?branch=master
    :target: https://coveralls.io/github/bottlepy/bottle?branch=master
    :alt: Coverage 
@@ -69,7 +73,7 @@ Download and Install
 
 .. __: https://github.com/bottlepy/bottle/raw/master/bottle.py
 
-Install the latest stable release with ``pip install bottle``, ``easy_install -U bottle`` or download `bottle.py`__ (unstable) into your project directory. There are no hard dependencies other than the Python standard library. Bottle runs with **Python 2.7 and 3.2+**.
+Install the latest stable release with ``pip install bottle``, ``easy_install -U bottle`` or download `bottle.py`__ (unstable) into your project directory. There are no hard dependencies other than the Python standard library. Bottle runs with **Python 2.7 and 3.3+**.
 
 
 License

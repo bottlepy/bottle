@@ -5,6 +5,8 @@ import unittest
 
 import functools
 
+import itertools
+
 from bottle import ConfigDict
 
 
@@ -26,6 +28,11 @@ class TestConfDict(unittest.TestCase):
         self.assertEqual('key' in d, 'key' in m)
         self.assertEqual('cay' in d, 'cay' in m)
         self.assertRaises(KeyError, lambda: m['cay'])
+        self.assertEquals(d.setdefault('key', "Val2"), m.setdefault('key', "Val2"))
+        self.assertEquals(d.setdefault('key', "Val3"), m.setdefault('key', "Val3"))
+        self.assertEqual(d.get('key'), m.get('key'))
+        with self.assertRaises(KeyError):
+            del m['No key']
 
     def test_write(self):
         c = ConfigDict()
@@ -41,6 +48,13 @@ class TestConfDict(unittest.TestCase):
         c.update(key='value2', key2='value3')
         self.assertEqual(c['key'], 'value2')
         self.assertEqual(c['key2'], 'value3')
+
+    def test_string_save_keys(self):
+        c = ConfigDict()
+        with self.assertRaises(TypeError):
+            c[5] = 'value'
+        with self.assertRaises(TypeError):
+            c.load_dict({5: 'value'})
 
     def test_namespaces(self):
         c = ConfigDict()
@@ -85,54 +99,75 @@ class TestConfDict(unittest.TestCase):
         c.load_module('example_settings', False)
         self.assertEqual(c['A']['B']['C'], 3)
 
-    def test_fallback(self):
-        fallback = ConfigDict()
-        fallback['key'] = 'fallback'
-        primary = ConfigDict()
-        primary._set_fallback(fallback)
+    def test_overlay(self):
+        source = ConfigDict()
+        source['key'] = 'source'
+        intermediate = source._make_overlay()
+        overlay = intermediate._make_overlay()
 
-        # Check copy of existing values from fallback to primary
-        self.assertEqual(primary['key'], 'fallback')
+        # Overlay contains values from source
+        self.assertEqual(overlay['key'], 'source')
+        self.assertEqual(overlay.get('key'), 'source')
+        self.assertTrue('key' in overlay)
 
-        # Check value change in fallback
-        fallback['key'] = 'fallback2'
-        self.assertEqual(fallback['key'], 'fallback2')
-        self.assertEqual(primary['key'], 'fallback2')
+        # Overlay is updated with source
+        source['key'] = 'source2'
+        self.assertEqual(source['key'], 'source2')
+        self.assertEqual(overlay['key'], 'source2')
 
-        # Check value change in primary
-        primary['key'] = 'primary'
-        self.assertEqual(fallback['key'], 'fallback2')
-        self.assertEqual(primary['key'], 'primary')
+        # Overlay 'overlays' source (hence the name)
+        overlay['key'] = 'overlay'
+        self.assertEqual(source['key'], 'source2')
+        self.assertEqual(intermediate['key'], 'source2')
+        self.assertEqual(overlay['key'], 'overlay')
 
-        # Check delete of mirrored value in primary
-        del primary['key']
-        self.assertEqual(fallback['key'], 'fallback2')
-        self.assertEqual(primary['key'], 'fallback2')
+        # Deleting an overlayed key restores the value from source
+        del overlay['key']
+        self.assertEqual(source['key'], 'source2')
+        self.assertEqual(overlay['key'], 'source2')
 
-        # Check delete on mirrored key in fallback
-        del fallback['key']
-        self.assertTrue('key' not in primary)
-        self.assertTrue('key' not in fallback)
+        # Deleting a virtual key is actually not possible.
+        with self.assertRaises(KeyError):
+            del overlay['key']
 
-        # Check new key in fallback
-        fallback['key2'] = 'fallback'
-        self.assertEqual(fallback['key2'], 'fallback')
-        self.assertEqual(primary['key2'], 'fallback')
+        # Deleting a key in the source also removes it from overlays.
+        del source['key']
+        self.assertTrue('key' not in overlay)
+        self.assertTrue('key' not in intermediate)
+        self.assertTrue('key' not in source)
 
-        # Check new key in primary
-        primary['key3'] = 'primary'
-        self.assertEqual(primary['key3'], 'primary')
-        self.assertTrue('key3' not in fallback)
+        # New keys in source are copied to overlay
+        source['key2'] = 'source'
+        self.assertEqual(source['key2'], 'source')
+        self.assertEqual(intermediate['key2'], 'source')
+        self.assertEqual(overlay['key2'], 'source')
 
-        # Check delete of primary-only key
-        del primary['key3']
-        self.assertTrue('key3' not in primary)
-        self.assertTrue('key3' not in fallback)
+        # New keys in overlay do not change the source
+        overlay['key3'] = 'overlay'
+        self.assertEqual(overlay['key3'], 'overlay')
+        self.assertTrue('key3' not in intermediate)
+        self.assertTrue('key3' not in source)
 
-        # Check delete of fallback value
-        del fallback['key2']
-        self.assertTrue('key2' not in primary)
-        self.assertTrue('key2' not in fallback)
+        # Setting the same key in the source does not affect the overlay
+        # because it already has this key.
+        source['key3'] = 'source'
+        self.assertEqual(source['key3'], 'source')
+        self.assertEqual(intermediate['key3'], 'source')
+        self.assertEqual(overlay['key3'], 'overlay')
+
+        # But as soon as the overlayed key is deleted, it gets the
+        # copy from the source
+        del overlay['key3']
+        self.assertEqual(source['key3'], 'source')
+        self.assertEqual(overlay['key3'], 'source')
+
+    def test_gc_overlays(self):
+        root = ConfigDict()
+        overlay = root._make_overlay()
+        del overlay
+        import gc; gc.collect()
+        root._make_overlay()  # This triggers the weakref-collect
+        self.assertEqual(len(root._overlays), 1)
 
 
 class TestINIConfigLoader(unittest.TestCase):

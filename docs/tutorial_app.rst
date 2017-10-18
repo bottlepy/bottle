@@ -8,7 +8,7 @@
 .. _`WSGI reference Server`: http://docs.python.org/library/wsgiref.html#module-wsgiref.simple_server
 .. _Cherrypy: http://www.cherrypy.org/
 .. _Fapws3: http://github.com/william-os4y/fapws3
-.. _Flup: http://trac.saddi.com/flup
+.. _Flup: https://www.saddi.com/software/flup/
 .. _Paste: http://pythonpaste.org/
 .. _Apache: http://www.apache.org
 .. _`Bottle documentation`: http://bottlepy.org/docs/dev/tutorial.html
@@ -68,13 +68,13 @@ As we use SQLite3 as a database, make sure it is installed. On Linux systems, mo
 First, we need to create the database we use later on. To do so, save the following script in your project directory and run it with python. You can use the interactive interpreter too::
 
     import sqlite3
-    con = sqlite3.connect('todo.db') # Warning: This file is created in the current directory
-    con.execute("CREATE TABLE todo (id INTEGER PRIMARY KEY, task char(100) NOT NULL, status bool NOT NULL)")
-    con.execute("INSERT INTO todo (task,status) VALUES ('Read A-byte-of-python to get a good introduction into Python',0)")
-    con.execute("INSERT INTO todo (task,status) VALUES ('Visit the Python website',1)")
-    con.execute("INSERT INTO todo (task,status) VALUES ('Test various editors for and check the syntax highlighting',1)")
-    con.execute("INSERT INTO todo (task,status) VALUES ('Choose your favorite WSGI-Framework',0)")
-    con.commit()
+    conn = sqlite3.connect('todo.db') # Warning: This file is created in the current directory
+    conn.execute("CREATE TABLE todo (id INTEGER PRIMARY KEY, task char(100) NOT NULL, status bool NOT NULL)")
+    conn.execute("INSERT INTO todo (task,status) VALUES ('Read A-byte-of-python to get a good introduction into Python',0)")
+    conn.execute("INSERT INTO todo (task,status) VALUES ('Visit the Python website',1)")
+    conn.execute("INSERT INTO todo (task,status) VALUES ('Test various editors for and check the syntax highlighting',1)")
+    conn.execute("INSERT INTO todo (task,status) VALUES ('Choose your favorite WSGI-Framework',0)")
+    conn.commit()
 
 This generates a database-file `todo.db` with tables called ``todo`` and three columns ``id``, ``task``, and ``status``. ``id`` is a unique id for each row, which is used later on to reference the rows. The column ``task`` holds the text which describes the task, it can be max 100 characters long. Finally, the column ``status`` is used to mark a task as open (value 1) or closed (value 0).
 
@@ -291,7 +291,7 @@ The basic statement for a dynamic route looks like this::
 
     @route('/myroute/<something>')
 
-This tells Bottle to accept for ``<something>`` any string up to the next slash. Furthermore, the value of ``something`` will be passed to the function assigned to that route, so the data can be processed within the function.
+This tells Bottle to accept for ``<something>`` any string up to the next slash. Furthermore, the value of ``something`` will be passed to the function assigned to that route, so the data can be processed within the function, like this::
 
     @route('/edit/<no:int>', method='GET')
     def edit_item(no):

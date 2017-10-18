@@ -42,6 +42,9 @@ There is no built-in support for sessions because there is no *right* way to do 
 
     bottle.run(app=app)
 
+WARNING: Beaker's SessionMiddleware is not thread safe.  If two concurrent requests modify the same session at the same time, one of the updates might get lost. For this reason, sessions should only be populated once and treated as a read-only store after that. If you find yourself updating sessions regularly, and don't want to risk loosing any updates, think about using a real database instead or seek alternative session middleware libraries.
+
+
 Debugging with Style: Debugging Middleware
 --------------------------------------------------------------------------------
 
@@ -83,6 +86,23 @@ Test script::
 
 In the example the Bottle route() method is never executed - only index() is tested.
 
+If the code being tested requires access to ``bottle.request`` you can mock it using `Boddle <https://github.com/keredson/boddle>`_::
+
+    import bottle
+    
+    @bottle.route('/')
+    def index():
+        return 'Hi %s!' % bottle.request.params['name']
+
+Test script::
+
+    import mywebapp
+    from boddle import boddle
+    
+    def test_webapp_index():
+        with boddle(params={'name':'Derek'}):
+            assert mywebapp.index() == 'Hi Derek!'
+
 
 Functional Testing Bottle Applications
 --------------------------------------------------------------------------------
@@ -101,11 +121,11 @@ Example using `WebTest <http://webtest.pythonpaste.org/>`_ and `Nose <http://rea
 
         assert app.get('/admin').status == '200 OK'        # fetch a page successfully
 
-        app.get('/logout')                                 # log out
+        assert app.get('/logout').status_code = 200        # log out
         app.reset()                                        # drop the cookie
 
         # fetch the same page, unsuccessfully
-        assert app.get('/admin').status == '401 Unauthorized'
+        assert app.get('/admin', expect_errors=True).status == '401 Unauthorized'
 
 
 Embedding other WSGI Apps

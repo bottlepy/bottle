@@ -23,8 +23,7 @@ class TestRoute(unittest.TestCase):
             def w():
                 return f()
             return w
-
-        route = bottle.Route(None, None, None, d(x))
+        route = bottle.Route(bottle.Bottle(), None, None, d(x))
         self.assertEqual(route.get_undecorated_callback(), x)
         self.assertEqual(set(route.get_callback_args()), set(['a', 'b']))
 
@@ -35,7 +34,7 @@ class TestRoute(unittest.TestCase):
                 return w
             return d
 
-        route = bottle.Route(None, None, None, d2('foo')(x))
+        route = bottle.Route(bottle.Bottle(), None, None, d2('foo')(x))
         self.assertEqual(route.get_undecorated_callback(), x)
         self.assertEqual(set(route.get_callback_args()), set(['a', 'b']))
 
@@ -55,7 +54,7 @@ class TestRoute(unittest.TestCase):
         def x(a, b):
             return
 
-        route = bottle.Route(None, None, None, x)
+        route = bottle.Route(bottle.Bottle(), None, None, x)
 
         # triggers the "TypeError: 'foo' is not a Python function"
         self.assertEqual(set(route.get_callback_args()), set(['a', 'b']))
@@ -64,5 +63,5 @@ class TestRoute(unittest.TestCase):
         def test_callback_inspection_newsig(self):
             env = {}
             eval(compile('def foo(a, *, b=5): pass', '<foo>', 'exec'), env, env)
-            route = bottle.Route(None, None, None, env['foo'])
+            route = bottle.Route(bottle.Bottle(), None, None, env['foo'])
             self.assertEqual(set(route.get_callback_args()), set(['a', 'b']))
