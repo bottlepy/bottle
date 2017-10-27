@@ -79,4 +79,4 @@ License
 
 Code and documentation are available according to the MIT License (see LICENSE__).
 
-The Bottle logo however is *NOT* covered by that license. It is allowed to use the logo as a link to the bottle homepage or in direct context with the unmodified library. In all other cases please ask first.
+The Bottle logo however is *NOT* covered by that license. It is allowed to use the logo as a link to the bottle homepage or in direct context with the unmodified library. In all other cases, please ask first.
