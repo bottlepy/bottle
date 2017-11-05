@@ -2884,9 +2884,9 @@ def static_file(filename, root,
 
     stats = os.stat(filename)
     headers['Content-Length'] = clen = stats.st_size
-    lm = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(stats.st_mtime))
-    headers['Last-Modified'] = lm
-    headers['Date'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime())
+    headers['Last-Modified'] = email.utils.formatdate(stats.st_mtime,
+                                                      usegmt=True)
+    headers['Date'] = email.utils.formatdate(time.time(), usegmt=True)
 
     getenv = request.environ.get
 
