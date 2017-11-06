@@ -871,7 +871,7 @@ Development
 ================================================================================
 
 So you have learned the basics and want to write your own application? Here are
-some tips that might help you beeing more productive.
+some tips that might help you being more productive.
 
 .. _default-app:
 
