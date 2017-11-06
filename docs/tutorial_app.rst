@@ -297,8 +297,8 @@ This tells Bottle to accept for ``<something>`` any string up to the next slash.
     def edit_item(no):
 
         if request.GET.save:
-            edit = request.task.strip()
-            status = request.status.strip()
+            edit = request.GET.task.strip()
+            status = request.GET.status.strip()
 
             if status == 'open':
                 status = 1
