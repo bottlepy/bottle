@@ -3972,7 +3972,6 @@ class SimpleTemplate(BaseTemplate):
     def execute(self, _stdout, kwargs):
         env = self.defaults.copy()
         env.update(kwargs)
-        env.update(globals())
         env.update({
             '_stdout': _stdout,
             '_printlist': _stdout.extend,
@@ -3983,7 +3982,8 @@ class SimpleTemplate(BaseTemplate):
             '_escape': self._escape,
             'get': env.get,
             'setdefault': env.setdefault,
-            'defined': env.__contains__
+            'defined': env.__contains__,
+            '__builtins__':__builtins__
         })
         exec(self.co, env)
         if env.get('_rebase'):
