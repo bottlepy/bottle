@@ -297,8 +297,8 @@ This tells Bottle to accept for ``<something>`` any string up to the next slash.
     def edit_item(no):
 
         if request.GET.save:
-            edit = request.task.strip()
-            status = request.status.strip()
+            edit = request.GET.task.strip()
+            status = request.GET.status.strip()
 
             if status == 'open':
                 status = 1
@@ -463,7 +463,7 @@ So far, we used the standard server used by Bottle, which is the `WSGI reference
 
 .. rubric:: Running Bottle on a different port and IP
 
-As standard, Bottle serves the pages on the IP adress 127.0.0.1, also known as ``localhost``, and on port ``8080``. To modify the setting is pretty simple, as additional parameters can be passed to Bottle's ``run()`` function to change the port and the address.
+As standard, Bottle serves the pages on the IP address 127.0.0.1, also known as ``localhost``, and on port ``8080``. To modify the setting is pretty simple, as additional parameters can be passed to Bottle's ``run()`` function to change the port and the address.
 
 To change the port, just add ``port=portnumber`` to the run command. So, for example::
 

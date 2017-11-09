@@ -2,7 +2,7 @@
 Contact
 =============
 
-.. rubric:: About the Autor
+.. rubric:: About the Author
 
 Hi, I'm *Marcel Hellkamp* (aka *defnull*), author of Bottle and the guy behind this website. I'm 27 years old and studying computer science at the Georg-August-University in Göttingen, Germany. Python is my favorite language, but I also code in ruby and JavaScript a lot. Watch me on `twitter <http://twitter.com/bottlepy>`_ or visit my profile at `GitHub <http://github.com/defnull>`_ to get in contact. A `mailinglist <http://groups.google.de/group/bottlepy>`_ is open for Bottle related questions, too.
 

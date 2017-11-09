@@ -2377,7 +2377,7 @@ class ConfigDict(dict):
             Leading and trailing whitespace is removed from keys and values.
             Values can be omitted, in which case the key/value delimiter may
             also be left out. Values can also span multiple lines, as long as
-            they are indented deeper than the first line of the value. Commends
+            they are indented deeper than the first line of the value. Commands
             are prefixed by ``#`` or ``;`` and may only appear on their own on
             an otherwise empty line.
 
@@ -2884,9 +2884,9 @@ def static_file(filename, root,
 
     stats = os.stat(filename)
     headers['Content-Length'] = clen = stats.st_size
-    lm = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(stats.st_mtime))
-    headers['Last-Modified'] = lm
-    headers['Date'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime())
+    headers['Last-Modified'] = email.utils.formatdate(stats.st_mtime,
+                                                      usegmt=True)
+    headers['Date'] = email.utils.formatdate(time.time(), usegmt=True)
 
     getenv = request.environ.get
 
