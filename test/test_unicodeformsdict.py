@@ -43,12 +43,12 @@ class TestUnicodeFormsDict(unittest.TestCase):
         d = UnicodeFormsDict(py2=tob('瓶'), py3=tob('瓶').decode('latin1'))
         self.assertEqual(d.get('py2', raw=True), tob('瓶'))
         self.assertEqual(d.get('py3', raw=True), tob('瓶').decode('latin1'))
-        self.assertEqual(d.get('py2'), '瓶')
-        self.assertEqual(d.get('py3'), '瓶')
+        self.assertEqual(d.get('py2'), touni('瓶'))
+        self.assertEqual(d.get('py3'), touni('瓶'))
         self.assertEqual(d.getall('py2', raw=True), [tob('瓶')])
         self.assertEqual(d.getall('py3', raw=True), [tob('瓶').decode('latin1')])
-        self.assertEqual(d.getall('py2'), ['瓶'])
-        self.assertEqual(d.getall('py3'), ['瓶'])
+        self.assertEqual(d.getall('py2'), [touni('瓶')])
+        self.assertEqual(d.getall('py3'), [touni('瓶')])
 
     def test_decode_method(self):
         d = UnicodeFormsDict(py2=tob('瓶'), py3=tob('瓶').decode('latin1'))
