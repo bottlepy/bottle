@@ -1204,13 +1204,17 @@ class BaseRequest(object):
     def get_header(self, name, default=None):
         """ Return the value of a request header, or a given default value. """
         return self.headers.get(name, default)
+    
+    @property
+    def form_container_type(self):
+      return UnicodeFormsDict if 'bottle.route' in self and self.route.config.get('__utf8.use_unicode_forms_dict') else FormsDict
 
     @DictProperty('environ', 'bottle.request.cookies', read_only=True)
     def cookies(self):
         """ Cookies parsed into a :class:`FormsDict`. Signed cookies are NOT
             decoded. Use :meth:`get_cookie` if you expect signed cookies. """
         cookies = SimpleCookie(self.environ.get('HTTP_COOKIE', '')).values()
-        return FormsDict((c.key, c.value) for c in cookies)
+        return self.form_container_type((c.key, c.value) for c in cookies)
 
     def get_cookie(self, key, default=None, secret=None, digestmod=hashlib.sha256):
         """ Return the content of a cookie. To read a `Signed Cookie`, the
@@ -1236,7 +1240,7 @@ class BaseRequest(object):
             values are sometimes called "URL arguments" or "GET parameters", but
             not to be confused with "URL wildcards" as they are provided by the
             :class:`Router`. """
-        get = self.environ['bottle.get'] = FormsDict()
+        get = self.environ['bottle.get'] = self.form_container_type()
         pairs = _parse_qsl(self.environ.get('QUERY_STRING', ''))
         for key, value in pairs:
             get[key] = value
@@ -1248,8 +1252,8 @@ class BaseRequest(object):
             encoded POST or PUT request body. The result is returned as a
             :class:`FormsDict`. All keys and values are strings. File uploads
             are stored separately in :attr:`files`. """
-        forms = FormsDict()
-        for name, item in self.POST.allitems():
+        forms = self.form_container_type()
+        for name, item in self.POST.allitems(raw=True):
             if not isinstance(item, FileUpload):
                 forms[name] = item
         return forms
@@ -1258,10 +1262,10 @@ class BaseRequest(object):
     def params(self):
         """ A :class:`FormsDict` with the combined values of :attr:`query` and
             :attr:`forms`. File uploads are stored in :attr:`files`. """
-        params = FormsDict()
-        for key, value in self.query.allitems():
+        params = self.form_container_type()
+        for key, value in self.query.allitems(raw=True):
             params[key] = value
-        for key, value in self.forms.allitems():
+        for key, value in self.forms.allitems(raw=True):
             params[key] = value
         return params
 
@@ -1271,8 +1275,8 @@ class BaseRequest(object):
             request body. The values are instances of :class:`FileUpload`.
 
         """
-        files = FormsDict()
-        for name, item in self.POST.allitems():
+        files = self.form_container_type()
+        for name, item in self.POST.allitems(raw=True):
             if isinstance(item, FileUpload):
                 files[name] = item
         return files
@@ -1390,7 +1394,7 @@ class BaseRequest(object):
             :class:`FormsDict`. Values are either strings (form values) or
             instances of :class:`cgi.FieldStorage` (file uploads).
         """
-        post = FormsDict()
+        post = self.form_container_type()
         # We default to application/x-www-form-urlencoded for everything that
         # is not multipart and take the fast path (also: 3.1 workaround)
         if not self.content_type.startswith('multipart/'):
@@ -1969,6 +1973,21 @@ class HTTPError(HTTPResponse):
 class PluginError(BottleException):
     pass
 
+class UnicodeFormsPlugin(object):
+  """ This plugin changes the default behaviour of request attributes returning
+  :class: `FormsDict`. Instead, they return :class: `UnicodeFormsDict` which
+  defaults to returning unicode, while still allowing access to the raw data.
+  """
+
+  name = "UnicodeFormsPlugin"
+
+  def setup(self, app):
+    app.config._define('utf8.unicode_forms', default=False, validate=bool,
+                          help="Enable or disable automatic unicode decoding for FormDict data.")
+
+  def apply(self, cb, route):
+    route.config['__utf8.use_unicode_forms_dict'] = route.config['utf8.unicode_forms']
+    return cb
 
 class JSONPlugin(object):
     name = 'json'
@@ -2108,7 +2127,7 @@ class MultiDict(DictMixin):
         def items(self):
             return ((k, v[-1]) for k, v in self.dict.items())
 
-        def allitems(self):
+        def allitems(self, raw=None):
             return ((k, v) for k, vl in self.dict.items() for v in vl)
 
         iterkeys = keys
@@ -2136,7 +2155,7 @@ class MultiDict(DictMixin):
         def iterallitems(self):
             return ((k, v) for k, vl in self.dict.iteritems() for v in vl)
 
-        def allitems(self):
+        def allitems(self, raw=None):
             return [(k, v) for k, vl in self.dict.iteritems() for v in vl]
 
     def get(self, key, default=None, index=-1, type=None):
@@ -2218,6 +2237,93 @@ class FormsDict(MultiDict):
         if name.startswith('__') and name.endswith('__'):
             return super(FormsDict, self).__getattr__(name)
         return self.getunicode(name, default=default)
+
+class UnicodeFormsDict(FormsDict):
+    def __getitem__(self, key):
+        return self._fix(self.dict[key][-1])
+
+    def decode(self, encoding=None):
+        """ Returns a FormsDict with all keys and values de- or recoded to match
+            :attr:`input_encoding`. Some libraries (e.g. WTForms) want a
+            unicode dictionary. """
+        copy = FormsDict()
+        enc = copy.input_encoding = encoding or self.input_encoding
+        copy.recode_unicode = False
+        for key, value in self.allitems():
+            copy.append(self._fix(key, enc), value)
+        return copy
+    
+    def getunicode(self, name, default=None, encoding=None):
+        """ Return the value as a unicode string, or the default. """
+        try:
+            return self._fix(self.dict[name][-1], encoding)
+        except (UnicodeError, KeyError):
+            return default
+  
+    if py3k:
+
+        def values(self):
+            return (self._fix(v[-1]) for v in self.dict.values())
+
+        def items(self):
+            return ((k, self._fix(v[-1])) for k, v in self.dict.items())
+
+        def allitems(self, raw=False):
+            return ((k, v if raw else self._fix(v)) for k, vl in self.dict.items() for v in vl)
+
+        itervalues = values
+        iteritems = items
+        iterallitems = allitems
+
+    else:
+
+        def values(self):
+            return [self._fix(v[-1]) for v in self.dict.values()]
+
+        def items(self):
+            return [(k, self._fix(v[-1])) for k, v in self.dict.items()]
+
+        def iterkeys(self):
+            return self.dict.iterkeys()
+
+        def itervalues(self):
+            return (self._fix(v[-1]) for v in self.dict.itervalues())
+
+        def iteritems(self):
+            return ((k, self._fix(v[-1])) for k, v in self.dict.iteritems())
+
+        def iterallitems(self):
+            return ((k, self._fix(v)) for k, vl in self.dict.iteritems() for v in vl)
+
+        def allitems(self, raw=False):
+            return [(k, v if raw else self._fix(v)) for k, vl in self.dict.iteritems() for v in vl]
+
+    def get(self, key, default=None, index=-1, type=None, raw=False):
+        """ Return the most recent value for a key.
+
+          :param default: The default value to be returned if the key is not
+                  present or the type conversion fails.
+          :param index: An index for the list of available values.
+          :param type: If defined, this callable is used to cast the value
+                  into a specific type. Exception are suppressed and result in
+                  the default value to be returned.
+        """
+        try:
+            val = self.dict[key][index]
+            if not raw:
+              val = self._fix(val)
+            return type(val) if type else val
+        except Exception:
+            pass
+        return default
+    
+    def getall(self, key, raw=False):
+        """ Return a (possibly empty) list of values for a key. """
+        return [ v if raw else self._fix(v) for v in self.dict.get(key)]
+    
+    getone = get
+    getlist = getall
+
 
 class HeaderDict(MultiDict):
     """ A case-insensitive version of :class:`MultiDict` that defaults to
