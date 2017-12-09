@@ -161,7 +161,7 @@ else:  # 2.x
 def tob(s, enc='utf8'):
     if isinstance(s, unicode):
         return s.encode(enc)
-    return bytes("" if s is None else s)
+    return b'' if s is None else bytes(s)
 
 
 def touni(s, enc='utf8', err='strict'):
