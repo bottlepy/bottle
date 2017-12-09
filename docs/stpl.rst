@@ -93,7 +93,7 @@ Both the ``%`` and the ``<%`` tokens are only recognized if they are the first n
   \<% Another line that starts with a token but is rendered as text.
   {{'\\%'}} this line starts with an escaped token.
 
-If you find yourself to escape a lot, consider using :ref:`custom tokens <stpl-custom-tokens>`.
+If you find yourself needing to escape a lot, consider using :ref:`custom tokens <stpl-custom-tokens>`.
 
 Whitespace Control
 -----------------------
