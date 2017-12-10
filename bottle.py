@@ -75,8 +75,10 @@ import base64, cgi, email.utils, functools, hmac, imp, itertools, mimetypes,\
 from types import FunctionType
 from datetime import date as datedate, datetime, timedelta
 from tempfile import TemporaryFile
-from traceback import format_exc, print_exc
+import cgitb
 from unicodedata import normalize
+
+cgitb.enable()
 
 try:
     from ujson import dumps as json_dumps, loads as json_lds
@@ -1017,7 +1019,7 @@ class Bottle(object):
             raise
         except Exception as E:
             if not self.catchall: raise
-            stacktrace = format_exc()
+            stacktrace = cgitb.text(sys.exc_info())
             environ['wsgi.errors'].write(stacktrace)
             environ['wsgi.errors'].flush()
             out = HTTPError(500, "Internal Server Error", E, stacktrace)
@@ -1081,7 +1083,7 @@ class Bottle(object):
             raise
         except Exception as error:
             if not self.catchall: raise
-            first = HTTPError(500, 'Unhandled exception', error, format_exc())
+            first = HTTPError(500, 'Unhandled exception', error, cgitb.text(sys.exc_info()))
 
         # These are the inner types allowed in iterator or generator objects.
         if isinstance(first, HTTPResponse):
@@ -1118,7 +1120,7 @@ class Bottle(object):
             if DEBUG:
                 err += '<h2>Error:</h2>\n<pre>\n%s\n</pre>\n' \
                        '<h2>Traceback:</h2>\n<pre>\n%s\n</pre>\n' \
-                       % (html_escape(repr(E)), html_escape(format_exc()))
+                       % (html_escape(repr(E)), html_escape(cgitb.text(sys.exc_info())))
             environ['wsgi.errors'].write(err)
             environ['wsgi.errors'].flush()
             headers = [('Content-Type', 'text/html; charset=UTF-8')]
@@ -3718,7 +3720,7 @@ def run(app=None,
     except:
         if not reloader: raise
         if not getattr(server, 'quiet', quiet):
-            print_exc()
+            print(cgitb.text(sys.exc_info()))
         time.sleep(interval)
         sys.exit(3)
 
