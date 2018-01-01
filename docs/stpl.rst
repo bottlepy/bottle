@@ -95,6 +95,48 @@ Both the ``%`` and the ``<%`` tokens are only recognized if they are the first n
 
 If you find yourself needing to escape a lot, consider using :ref:`custom tokens <stpl-custom-tokens>`.
 
+The use of ``end`` tokens in embedded blocks
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Contents of code blocks surrounded by ``<%`` and ``%>`` might need to be not actually valid Python as understood by the Python parser, but close to it. This is because the content of these blocks is not actually parsed by Python, but rather by the ``SimpleTemplate`` parser, which then translates it to valid Python code. Thus, as per the second additional syntax rule mentioned above, the ``end`` token (without a preceding ``%``) must be used to help the parser understand how to indent the generated code correctly. As an example, the template code::
+
+  <%
+  if test:
+    result = 'foo'
+  else:
+    result = 'bar'
+  result += result
+  %>
+
+would be translated to the Python code::
+
+  if test:
+    result = 'foo'
+  else:
+    result = 'bar'
+    result += result
+
+which is clearly not the intention. However, if an ``end`` token is added in the correct place, the code generated is correct. The template::
+
+  <%
+  if test:
+    result = 'foo'
+  else:
+    result = 'bar'
+  end
+  result += result
+  %>
+
+correctly generates::
+
+  if test:
+    result = 'foo'
+  else:
+    result = 'bar'
+
+  result += result
+
+
 Whitespace Control
 -----------------------
 
