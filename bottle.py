@@ -2111,7 +2111,7 @@ class ConfigDict(dict):
         while stack:
             prefix, source = stack.pop()
             if not isinstance(source, dict):
-                raise TypeError('Source is not a dict (r)' % type(key))
+                raise TypeError('Source is not a dict (%r)' % type(source))
             for key, value in source.items():
                 if not isinstance(key, basestring):
                     raise TypeError('Key is not a string (%r)' % type(key))
