@@ -2816,6 +2816,7 @@ def _file_iter_range(fp, offset, bytes, maxread=1024 * 1024):
         if not part: break
         bytes -= len(part)
         yield part
+    fp.close()
 
 
 def static_file(filename, root,
