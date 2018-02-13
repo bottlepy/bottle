@@ -737,7 +737,8 @@ class Bottle(object):
                 body = app(request.environ, start_response)
                 rs.body = itertools.chain(rs.body, body) if rs.body else body
                 return rs
-            finally:
+            except Exception as err:
+                print_exc()
                 request.path_shift(-path_depth)
 
         options.setdefault('skip', True)
