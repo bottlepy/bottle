@@ -2907,20 +2907,24 @@ def static_file(filename, root,
     if ims is not None and ims >= int(stats.st_mtime):
         return HTTPResponse(status=304, **headers)
 
-    body = '' if request.method == 'HEAD' else open(filename, 'rb')
-
     headers["Accept-Ranges"] = "bytes"
-    range_header = getenv('HTTP_RANGE')
-    if range_header:
-        ranges = list(parse_range_header(range_header, clen))
-        if not ranges:
-            return HTTPError(416, "Requested Range Not Satisfiable")
-        offset, end = ranges[0]
-        headers["Content-Range"] = "bytes %d-%d/%d" % (offset, end - 1, clen)
-        headers["Content-Length"] = str(end - offset)
-        if body: body = _file_iter_range(body, offset, end - offset)
+    body = ''
+    if request.method == 'HEAD':
+        return HTTPResponse(body, **headers)
+    else:
+        with open(filename, 'rb') as body:
+            range_header = getenv('HTTP_RANGE')
+            if range_header:
+                ranges = list(parse_range_header(range_header, clen))
+                if not ranges:
+                    return HTTPError(416, "Requested Range Not Satisfiable")
+                offset, end = ranges[0]
+                headers["Content-Range"] = "bytes %d-%d/%d" % (offset, end - 1, clen)
+                headers["Content-Length"] = str(end - offset)
+                body = _file_iter_range(body, offset, end - offset)
+            else:
+                body = body.read()
         return HTTPResponse(body, status=206, **headers)
-    return HTTPResponse(body, **headers)
 
 ###############################################################################
 # HTTP Utilities and MISC (TODO) ###############################################
