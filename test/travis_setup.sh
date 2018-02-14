@@ -7,7 +7,7 @@ if test -n "$PY"; then
   # https://github.com/pycurl/pycurl/blob/master/tests/travis/setup.sh
   sudo add-apt-repository -y ppa:fkrull/deadsnakes
   sudo apt-get update
-  sudo apt-get install python$PY-dev
+  sudo apt-get install -y --allow-unauthenticated python$PY-dev
 
   if test "$PY" = 2.5; then
     wget https://pypi.python.org/packages/source/s/simplejson/simplejson-3.6.3.tar.gz
