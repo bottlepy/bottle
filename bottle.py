@@ -2808,8 +2808,9 @@ def redirect(url, code=None):
     raise res
 
 
-def _file_iter_range(fp, offset, bytes, maxread=1024 * 1024):
-    """ Yield chunks from a range in a file. No chunk is bigger than maxread."""
+def _file_iter_range(fp, offset, bytes, maxread=1024 * 1024, close=False):
+    """ Yield chunks from a range in a file, optionally closing it at the end.
+        No chunk is bigger than maxread. """
     fp.seek(offset)
     while bytes > 0:
         part = fp.read(min(bytes, maxread))
@@ -2817,7 +2818,8 @@ def _file_iter_range(fp, offset, bytes, maxread=1024 * 1024):
             break
         bytes -= len(part)
         yield part
-    fp.close()
+    if close:
+        fp.close()
 
 
 def static_file(filename, root,
@@ -2920,7 +2922,7 @@ def static_file(filename, root,
         offset, end = ranges[0]
         headers["Content-Range"] = "bytes %d-%d/%d" % (offset, end - 1, clen)
         headers["Content-Length"] = str(end - offset)
-        if body: body = _file_iter_range(body, offset, end - offset)
+        if body: body = _file_iter_range(body, offset, end - offset, close=True)
         return HTTPResponse(body, status=206, **headers)
     return HTTPResponse(body, **headers)
 
