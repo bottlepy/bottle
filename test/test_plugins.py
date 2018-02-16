@@ -153,10 +153,10 @@ class TestPluginManagement(tools.ServerTestBase):
         self.assertBody('plugin', '/b')
 
     def test_json_plugin_catches_httpresponse(self):
-        @self.app.get('/return')
+        @self.app.get('/return', )
         def _():
             return HTTPResponse({'test': 'ko'}, 402)
-        @self.app.get('/raise')
+        @self.app.get('/raise', )
         def _():
             raise HTTPResponse({'test': 'ko2'}, 402)
 

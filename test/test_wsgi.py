@@ -168,7 +168,7 @@ class TestWsgi(ServerTestBase):
         try:
             c = self.urlopen('/cookie')['header'].get_all('Set-Cookie', '')
         except:
-            c = self.urlopen('/cookie')['header'].get('Set-Cookie', '').split(',')
+            c = self.urlopen('/cookie')['header'].get('Set-Cookie', '', ).split(',')
             c = [x.strip() for x in c]
         self.assertTrue('b=b' in c)
         self.assertTrue('c=c; Path=/' in c)
@@ -280,7 +280,7 @@ class TestRouteDecorator(ServerTestBase):
     def test_hooks(self):
         @bottle.route()
         def test():
-            return bottle.request.environ.get('hooktest','nohooks')
+            return bottle.request.environ.get('hooktest', 'nohooks', )
         @bottle.hook('before_request')
         def hook():
             bottle.request.environ['hooktest'] = 'before'

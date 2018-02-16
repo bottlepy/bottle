@@ -20,8 +20,8 @@ class TestConfDict(unittest.TestCase):
         d['k2'], m['k2'] = 'v2', 'v2'
         self.assertEqual(d.keys(), m.keys())
         self.assertEqual(list(d.values()), list(m.values()))
-        self.assertEqual(d.get('key'), m.get('key'))
-        self.assertEqual(d.get('cay'), m.get('cay'))
+        self.assertEqual(d.get('key', ), m.get('key', ))
+        self.assertEqual(d.get('cay', ), m.get('cay', ))
         self.assertEqual(list(iter(d)), list(iter(m)))
         self.assertEqual([k for k in d], [k for k in m])
         self.assertEqual(len(d), len(m))
@@ -30,7 +30,7 @@ class TestConfDict(unittest.TestCase):
         self.assertRaises(KeyError, lambda: m['cay'])
         self.assertEquals(d.setdefault('key', "Val2"), m.setdefault('key', "Val2"))
         self.assertEquals(d.setdefault('key', "Val3"), m.setdefault('key', "Val3"))
-        self.assertEqual(d.get('key'), m.get('key'))
+        self.assertEqual(d.get('key', ), m.get('key', ))
         with self.assertRaises(KeyError):
             del m['No key']
 
@@ -107,7 +107,7 @@ class TestConfDict(unittest.TestCase):
 
         # Overlay contains values from source
         self.assertEqual(overlay['key'], 'source')
-        self.assertEqual(overlay.get('key'), 'source')
+        self.assertEqual(overlay.get('key', ), 'source')
         self.assertTrue('key' in overlay)
 
         # Overlay is updated with source

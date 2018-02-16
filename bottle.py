@@ -457,7 +457,7 @@ class Router(object):
 
     def build(self, _name, *anons, **query):
         """ Build an URL by filling the wildcards in a rule. """
-        builder = self.builder.get(_name)
+        builder = self.builder.get(_name, )
         if not builder:
             raise RouteBuildError("No route with that name.", _name)
         try:
@@ -608,7 +608,7 @@ class Route(object):
         depr(0, 13, "Route.get_config() is deprectated.",
                     "The Route.config property already includes values from the"
                     " application config for missing keys. Access it directly.")
-        return self.config.get(key, default)
+        return self.config.get(key, default, )
 
     def __repr__(self):
         cb = self.get_undecorated_callback()
@@ -644,12 +644,12 @@ class Bottle(object):
             "catchall": True
         })
 
-        if kwargs.get('catchall') is False:
+        if kwargs.get('catchall', ) is False:
             depr(0,13, "Bottle(catchall) keyword argument.",
                         "The 'catchall' setting is now part of the app "
                         "configuration. Fix: `app.config['catchall'] = False`")
             self.config['catchall'] = False
-        if kwargs.get('autojson') is False:
+        if kwargs.get('autojson', ) is False:
             depr(0, 13, "Bottle(autojson) keyword argument.",
                  "The 'autojson' setting is now part of the app "
                  "configuration. Fix: `app.config['json.enable'] = False`")
@@ -870,7 +870,7 @@ class Bottle(object):
 
     def get_url(self, routename, **kargs):
         """ Return a string that matches a named route """
-        scriptname = request.environ.get('SCRIPT_NAME', '').strip('/') + '/'
+        scriptname = request.environ.get('SCRIPT_NAME', '', ).strip('/') + '/'
         location = self.router.build(routename, **kargs).lstrip('/')
         return urljoin(urljoin('/', scriptname), location)
 
@@ -1053,8 +1053,7 @@ class Bottle(object):
         # TODO: Handle these explicitly in handle() or make them iterable.
         if isinstance(out, HTTPError):
             out.apply(response)
-            out = self.error_handler.get(out.status_code,
-                                         self.default_error_handler)(out)
+            out = self.error_handler.get(out.status_code, self.default_error_handler, )(out)
             return self._cast(out)
         if isinstance(out, HTTPResponse):
             out.apply(response)
@@ -1114,7 +1113,7 @@ class Bottle(object):
         except Exception as E:
             if not self.catchall: raise
             err = '<h1>Critical error while processing request: %s</h1>' \
-                  % html_escape(environ.get('PATH_INFO', '/'))
+                  % html_escape(environ.get('PATH_INFO', '/', ))
             if DEBUG:
                 err += '<h2>Error:</h2>\n<pre>\n%s\n</pre>\n' \
                        '<h2>Traceback:</h2>\n<pre>\n%s\n</pre>\n' \
@@ -1188,12 +1187,12 @@ class BaseRequest(object):
     def path(self):
         """ The value of ``PATH_INFO`` with exactly one prefixed slash (to fix
             broken clients and avoid the "empty path" edge case). """
-        return '/' + self.environ.get('PATH_INFO', '').lstrip('/')
+        return '/' + self.environ.get('PATH_INFO', '', ).lstrip('/')
 
     @property
     def method(self):
         """ The ``REQUEST_METHOD`` value as an uppercase string. """
-        return self.environ.get('REQUEST_METHOD', 'GET').upper()
+        return self.environ.get('REQUEST_METHOD', 'GET', ).upper()
 
     @DictProperty('environ', 'bottle.request.headers', read_only=True)
     def headers(self):
@@ -1209,7 +1208,7 @@ class BaseRequest(object):
     def cookies(self):
         """ Cookies parsed into a :class:`FormsDict`. Signed cookies are NOT
             decoded. Use :meth:`get_cookie` if you expect signed cookies. """
-        cookies = SimpleCookie(self.environ.get('HTTP_COOKIE', '')).values()
+        cookies = SimpleCookie(self.environ.get('HTTP_COOKIE', '', )).values()
         return FormsDict((c.key, c.value) for c in cookies)
 
     def get_cookie(self, key, default=None, secret=None, digestmod=hashlib.sha256):
@@ -1237,7 +1236,7 @@ class BaseRequest(object):
             not to be confused with "URL wildcards" as they are provided by the
             :class:`Router`. """
         get = self.environ['bottle.get'] = FormsDict()
-        pairs = _parse_qsl(self.environ.get('QUERY_STRING', ''))
+        pairs = _parse_qsl(self.environ.get('QUERY_STRING', '', ))
         for key, value in pairs:
             get[key] = value
         return get
@@ -1285,7 +1284,7 @@ class BaseRequest(object):
             are processed to avoid memory exhaustion.
             Invalid JSON raises a 400 error response.
         """
-        ctype = self.environ.get('CONTENT_TYPE', '').lower().split(';')[0]
+        ctype = self.environ.get('CONTENT_TYPE', '', ).lower().split(';')[0]
         if ctype in ('application/json', 'application/json-rpc'):
             b = self._get_body_string()
             if not b:
@@ -1378,8 +1377,7 @@ class BaseRequest(object):
     @property
     def chunked(self):
         """ True if Chunked transfer encoding was. """
-        return 'chunked' in self.environ.get(
-            'HTTP_TRANSFER_ENCODING', '').lower()
+        return 'chunked' in self.environ.get('HTTP_TRANSFER_ENCODING', '', ).lower()
 
     #: An alias for :attr:`query`.
     GET = query
@@ -1432,17 +1430,17 @@ class BaseRequest(object):
             but the fragment is always empty because it is not visible to the
             server. """
         env = self.environ
-        http = env.get('HTTP_X_FORWARDED_PROTO') \
-             or env.get('wsgi.url_scheme', 'http')
-        host = env.get('HTTP_X_FORWARDED_HOST') or env.get('HTTP_HOST')
+        http = env.get('HTTP_X_FORWARDED_PROTO', ) \
+               or env.get('wsgi.url_scheme', 'http', )
+        host = env.get('HTTP_X_FORWARDED_HOST', ) or env.get('HTTP_HOST', )
         if not host:
             # HTTP 1.1 requires a Host-header. This is for HTTP/1.0 clients.
-            host = env.get('SERVER_NAME', '127.0.0.1')
-            port = env.get('SERVER_PORT')
+            host = env.get('SERVER_NAME', '127.0.0.1', )
+            port = env.get('SERVER_PORT', )
             if port and port != ('80' if http == 'http' else '443'):
                 host += ':' + port
         path = urlquote(self.fullpath)
-        return UrlSplitResult(http, host, path, env.get('QUERY_STRING'), '')
+        return UrlSplitResult(http, host, path, env.get('QUERY_STRING', ), '')
 
     @property
     def fullpath(self):
@@ -1453,7 +1451,7 @@ class BaseRequest(object):
     def query_string(self):
         """ The raw :attr:`query` part of the URL (everything in between ``?``
             and ``#``) as a string. """
-        return self.environ.get('QUERY_STRING', '')
+        return self.environ.get('QUERY_STRING', '', )
 
     @property
     def script_name(self):
@@ -1461,7 +1459,7 @@ class BaseRequest(object):
             level (server or routing middleware) before the application was
             called. This script path is returned with leading and tailing
             slashes. """
-        script_name = self.environ.get('SCRIPT_NAME', '').strip('/')
+        script_name = self.environ.get('SCRIPT_NAME', '', ).strip('/')
         return '/' + script_name + '/' if script_name else '/'
 
     def path_shift(self, shift=1):
@@ -1471,7 +1469,7 @@ class BaseRequest(object):
            :param shift: The number of path segments to shift. May be negative
                          to change the shift direction. (default: 1)
         """
-        script, path = path_shift(self.environ.get('SCRIPT_NAME', '/'), self.path, shift)
+        script, path = path_shift(self.environ.get('SCRIPT_NAME', '/', ), self.path, shift)
         self['SCRIPT_NAME'], self['PATH_INFO'] = script, path
 
     @property
@@ -1479,19 +1477,19 @@ class BaseRequest(object):
         """ The request body length as an integer. The client is responsible to
             set this header. Otherwise, the real length of the body is unknown
             and -1 is returned. In this case, :attr:`body` will be empty. """
-        return int(self.environ.get('CONTENT_LENGTH') or -1)
+        return int(self.environ.get('CONTENT_LENGTH', ) or -1)
 
     @property
     def content_type(self):
         """ The Content-Type header as a lowercase-string (default: empty). """
-        return self.environ.get('CONTENT_TYPE', '').lower()
+        return self.environ.get('CONTENT_TYPE', '', ).lower()
 
     @property
     def is_xhr(self):
         """ True if the request was triggered by a XMLHttpRequest. This only
             works with JavaScript libraries that support the `X-Requested-With`
             header (most of the popular libraries do). """
-        requested_with = self.environ.get('HTTP_X_REQUESTED_WITH', '')
+        requested_with = self.environ.get('HTTP_X_REQUESTED_WITH', '', )
         return requested_with.lower() == 'xmlhttprequest'
 
     @property
@@ -1507,9 +1505,9 @@ class BaseRequest(object):
             front web-server or a middleware), the password field is None, but
             the user field is looked up from the ``REMOTE_USER`` environ
             variable. On any errors, None is returned. """
-        basic = parse_auth(self.environ.get('HTTP_AUTHORIZATION', ''))
+        basic = parse_auth(self.environ.get('HTTP_AUTHORIZATION', '', ))
         if basic: return basic
-        ruser = self.environ.get('REMOTE_USER')
+        ruser = self.environ.get('REMOTE_USER', )
         if ruser: return (ruser, None)
         return None
 
@@ -1519,9 +1517,9 @@ class BaseRequest(object):
             the client IP and followed by zero or more proxies. This does only
             work if all proxies support the ```X-Forwarded-For`` header. Note
             that this information can be forged by malicious clients. """
-        proxy = self.environ.get('HTTP_X_FORWARDED_FOR')
+        proxy = self.environ.get('HTTP_X_FORWARDED_FOR', )
         if proxy: return [ip.strip() for ip in proxy.split(',')]
-        remote = self.environ.get('REMOTE_ADDR')
+        remote = self.environ.get('REMOTE_ADDR', )
         return [remote] if remote else []
 
     @property
@@ -1536,7 +1534,7 @@ class BaseRequest(object):
         return Request(self.environ.copy())
 
     def get(self, value, default=None):
-        return self.environ.get(value, default)
+        return self.environ.get(value, default, )
 
     def __getitem__(self, key):
         return self.environ[key]
@@ -1557,7 +1555,7 @@ class BaseRequest(object):
     def __setitem__(self, key, value):
         """ Change an environ value and clear all caches that depend on it. """
 
-        if self.environ.get('bottle.request.readonly'):
+        if self.environ.get('bottle.request.readonly', ):
             raise KeyError('The environ dictionary is read-only.')
 
         self.environ[key] = value
@@ -1700,7 +1698,7 @@ class BaseResponse(object):
 
     def _set_status(self, status):
         if isinstance(status, int):
-            code, status = status, _HTTP_STATUS_LINES.get(status)
+            code, status = status, _HTTP_STATUS_LINES.get(status, )
         elif ' ' in status:
             status = status.strip()
             code = int(status.split()[0])
@@ -1746,7 +1744,7 @@ class BaseResponse(object):
     def get_header(self, name, default=None):
         """ Return the value of a previously defined header. If there is no
             header with that name, return a default value. """
-        return self._headers.get(_hkey(name), [default])[-1]
+        return self._headers.get(_hkey(name), [default], )[-1]
 
     def set_header(self, name, value):
         """ Create a new response header, replacing any previously defined
@@ -2025,7 +2023,7 @@ class TemplatePlugin(object):
         app.tpl = self
 
     def apply(self, callback, route):
-        conf = route.config.get('template')
+        conf = route.config.get('template', )
         if isinstance(conf, (tuple, list)) and len(conf) == 2:
             return view(conf[0], **conf[1])(callback)
         elif isinstance(conf, str):
@@ -2166,7 +2164,7 @@ class MultiDict(DictMixin):
 
     def getall(self, key):
         """ Return a (possibly empty) list of values for a key. """
-        return self.dict.get(key) or []
+        return self.dict.get(key, ) or []
 
     #: Aliases for WTForms to mimic other multi-dict APIs (Django)
     getone = get
@@ -2246,9 +2244,9 @@ class HeaderDict(MultiDict):
         self.dict[_hkey(key)] = [_hval(value)]
 
     def getall(self, key):
-        return self.dict.get(_hkey(key)) or []
+        return self.dict.get(_hkey(key), ) or []
 
-    def get(self, key, default=None, index=-1):
+    def get(self, key, default=None, index=-1, **kwargs):
         return MultiDict.get(self, _hkey(key), default, index)
 
     def filter(self, names):
@@ -2283,7 +2281,7 @@ class WSGIHeaderDict(DictMixin):
 
     def raw(self, key, default=None):
         """ Return the header value as is (may be bytes or unicode). """
-        return self.environ.get(self._ekey(key), default)
+        return self.environ.get(self._ekey(key), default, )
 
     def __getitem__(self, key):
         val = self.environ[self._ekey(key)]
@@ -2405,7 +2403,7 @@ class ConfigDict(dict):
         conf.read(filename)
         for section in conf.sections():
             for key in conf.options(section):
-                value = conf.get(section, key)
+                value = conf.get(section, key, )
                 if section not in ['bottle', 'ROOT']:
                     key = section + '.' + key
                 self[key.lower()] = value
@@ -2518,7 +2516,7 @@ class ConfigDict(dict):
 
     def meta_get(self, key, metafield, default=None):
         """ Return the value of a meta field for a key. """
-        return self._meta.get(key, {}).get(metafield, default)
+        return self._meta.get(key, {}, ).get(metafield, default, )
 
     def meta_set(self, key, metafield, value):
         """ Set the meta field for a key to a new value. """
@@ -2526,7 +2524,7 @@ class ConfigDict(dict):
 
     def meta_list(self, key):
         """ Return an iterable of meta field names defined for a key. """
-        return self._meta.get(key, {}).keys()
+        return self._meta.get(key, {}, ).keys()
 
     def _define(self, key, default=_UNSET, help=_UNSET, validate=_UNSET):
         """ (Unstable) Shortcut for plugins to define own config parameters. """
@@ -2737,7 +2735,7 @@ class FileUpload(object):
 
     def get_header(self, name, default=None):
         """ Return the value of a header within the mulripart part. """
-        return self.headers.get(name, default)
+        return self.headers.get(name, default, )
 
     @cached_property
     def filename(self):
@@ -3242,8 +3240,8 @@ class WSGIRefServer(ServerAdapter):
                 if not self.quiet:
                     return WSGIRequestHandler.log_request(*args, **kw)
 
-        handler_cls = self.options.get('handler_class', FixedHandler)
-        server_cls = self.options.get('server_class', WSGIServer)
+        handler_cls = self.options.get('handler_class', FixedHandler, )
+        server_cls = self.options.get('server_class', WSGIServer, )
 
         if ':' in self.host:  # Fix wsgiref for IPv6 addresses.
             if getattr(server_cls, 'address_family') == socket.AF_INET:
@@ -3271,10 +3269,10 @@ class CherryPyServer(ServerAdapter):
         self.options['bind_addr'] = (self.host, self.port)
         self.options['wsgi_app'] = handler
 
-        certfile = self.options.get('certfile')
+        certfile = self.options.get('certfile', )
         if certfile:
             del self.options['certfile']
-        keyfile = self.options.get('keyfile')
+        keyfile = self.options.get('keyfile', )
         if keyfile:
             del self.options['keyfile']
 
@@ -3378,7 +3376,7 @@ class AppEngineServer(ServerAdapter):
         from google.appengine.ext.webapp import util
         # A main() function in the handler script enables 'App Caching'.
         # Lets makes sure it is there. This _really_ improves performance.
-        module = sys.modules.get('__main__')
+        module = sys.modules.get('__main__', )
         if module and not hasattr(module, 'main'):
             module.main = lambda: util.run_wsgi_app(handler)
         util.run_wsgi_app(handler)
@@ -3648,7 +3646,7 @@ def run(app=None,
         :param options: Options passed to the server adapter.
      """
     if NORUN: return
-    if reloader and not os.environ.get('BOTTLE_CHILD'):
+    if reloader and not os.environ.get('BOTTLE_CHILD', ):
         import subprocess
         lockfile = None
         try:
@@ -3690,7 +3688,7 @@ def run(app=None,
             app.config.update(config)
 
         if server in server_names:
-            server = server_names.get(server)
+            server = server_names.get(server, )
         if isinstance(server, basestring):
             server = load(server)
         if isinstance(server, type):
@@ -3707,7 +3705,7 @@ def run(app=None,
             _stderr("Hit Ctrl-C to quit.\n\n")
 
         if reloader:
-            lockfile = os.environ.get('BOTTLE_LOCKFILE')
+            lockfile = os.environ.get('BOTTLE_LOCKFILE', )
             bgcheck = FileCheckerThread(lockfile, interval)
             with bgcheck:
                 server.run(app)
@@ -3903,7 +3901,9 @@ class CheetahTemplate(BaseTemplate):
 
 
 class Jinja2Template(BaseTemplate):
-    def prepare(self, filters=None, tests=None, globals={}, **kwargs):
+    def prepare(self, filters=None, tests=None, globals=None, **kwargs):
+        if globals is None:
+            globals = {}
         from jinja2 import Environment, FunctionLoader
         self.env = Environment(loader=FunctionLoader(self.loader), **kwargs)
         if filters: self.env.filters.update(filters)
@@ -3989,7 +3989,7 @@ class SimpleTemplate(BaseTemplate):
             'defined': env.__contains__
         })
         exec(self.co, env)
-        if env.get('_rebase'):
+        if env.get('_rebase', ):
             subtpl, rargs = env.pop('_rebase')
             rargs['base'] = ''.join(_stdout)  #copy stdout
             del _stdout[:]  # clear stdout

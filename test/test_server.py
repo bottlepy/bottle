@@ -66,13 +66,13 @@ class TestServer(unittest.TestCase):
     def tearDown(self):
         if self.skip: return
 
-        if self.p.poll() == None:
+        if self.p.poll() is None:
             os.kill(self.p.pid, signal.SIGINT)
             time.sleep(0.5)
-        if self.p.poll() == None:
+        if self.p.poll() is None:
             os.kill(self.p.pid, signal.SIGTERM)
             time.sleep(0.5)
-        while self.p.poll() == None:
+        while self.p.poll() is None:
             tools.warn("Trying to kill server %r with pid %d." %
                        (self.server, self.p.pid))
             os.kill(self.p.pid, signal.SIGKILL)
