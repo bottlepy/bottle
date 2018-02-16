@@ -146,10 +146,10 @@ class ServerTestBase(unittest.TestCase):
             self.fail('The search pattern "%s" is not included in body:\n%s' % (body, result))
 
     def assertHeader(self, name, value, route='/', **kargs):
-        self.assertEqual(value, self.urlopen(route, **kargs)['header'].get(name))
+        self.assertEqual(value, self.urlopen(route, **kargs)['header'].get(name, ))
 
     def assertHeaderAny(self, name, route='/', **kargs):
-        self.assertTrue(self.urlopen(route, **kargs)['header'].get(name, None))
+        self.assertTrue(self.urlopen(route, **kargs)['header'].get(name, None, ))
 
     def assertInError(self, search, route='/', **kargs):
         bottle.request.environ['wsgi.errors'].errors.seek(0)

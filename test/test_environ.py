@@ -580,7 +580,7 @@ class TestResponse(unittest.TestCase):
     def test_content_type(self):
         rs = BaseResponse()
         rs.content_type = 'test/some'
-        self.assertEqual('test/some', rs.headers.get('Content-Type'))
+        self.assertEqual('test/some', rs.headers.get('Content-Type', ))
 
     def test_charset(self):
         rs = BaseResponse()

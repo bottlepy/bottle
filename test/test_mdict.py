@@ -12,8 +12,8 @@ class TestMultiDict(unittest.TestCase):
         self.assertEqual(list(d.values()), list(m.values()))
         self.assertEqual(list(d.keys()), list(m.iterkeys()))
         self.assertEqual(list(d.values()), list(m.itervalues()))
-        self.assertEqual(d.get('key'), m.get('key'))
-        self.assertEqual(d.get('cay'), m.get('cay'))
+        self.assertEqual(d.get('key', ), m.get('key', ))
+        self.assertEqual(d.get('cay', ), m.get('cay', ))
         self.assertEqual(list(iter(d)), list(iter(m)))
         self.assertEqual([k for k in d], [k for k in m])
         self.assertEqual(len(d), len(m))
@@ -43,5 +43,5 @@ class TestMultiDict(unittest.TestCase):
         d = HeaderDict()
         d['UPPER'] = 'UPPER'
         d['lower'] = 'lower'
-        self.assertEqual(d.get('upper'), 'UPPER')
-        self.assertEqual(d.get('LOWER'), 'lower')
+        self.assertEqual(d.get('upper', ), 'UPPER')
+        self.assertEqual(d.get('LOWER', ), 'lower')

@@ -190,7 +190,7 @@ class TestOutputFilter(ServerTestBase):
         try:
             c = self.urlopen('/cookie')['header'].get_all('Set-Cookie', '')
         except:
-            c = self.urlopen('/cookie')['header'].get('Set-Cookie', '').split(',')
+            c = self.urlopen('/cookie')['header'].get('Set-Cookie', '', ).split(',')
             c = [x.strip() for x in c]
         self.assertTrue('b=b' in c)
         self.assertTrue('c=c; Path=/' in c)
