@@ -2239,6 +2239,12 @@ class FormsDict(MultiDict):
         return self.getunicode(name, default=default)
 
 class UnicodeFormsDict(FormsDict):
+    """ This :class:`FormsDict` subclass is used to store request form data.
+        It automatically attempts to '_fix' the data by de-or-recoding all
+        accesses to match :attr:`input_encoding` (default: 'utf8'). Missing
+        attributes default to an empty string. Access to the 'raw' data is
+        still available on several methods behind keyword arguments."""
+
     def __getitem__(self, key):
         return self._fix(self.dict[key][-1])
 
