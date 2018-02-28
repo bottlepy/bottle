@@ -1,4 +1,4 @@
-#coding: utf-8
+# -*- coding: utf-8 -*-
 import unittest
 
 import bottle
@@ -43,4 +43,5 @@ class TestSignedCookies(unittest.TestCase):
 class TestSignedCookiesWithPickle(TestSignedCookies):
     def setUp(self):
         super(TestSignedCookiesWithPickle, self).setUp()
-        self.data = dict(a=5, b=touni('υηι¢σ∂є'), c=[1,2,3,4,tob('bytestring')])
+        self.data = dict(a=5, b=touni('υηι¢σ∂є'),
+                         c=[1, 2, 3, 4, tob('bytestring')])

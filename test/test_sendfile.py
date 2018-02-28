@@ -59,8 +59,8 @@ class TestSendFile(unittest.TestCase):
         self.assertEqual(404, static_file('not/a/file', root=root).status_code)
         f = static_file(os.path.join('./../', basename), root='./views/')
         self.assertEqual(403, f.status_code)
+        fp, fn = tempfile.mkstemp()
         try:
-            fp, fn = tempfile.mkstemp()
             os.chmod(fn, 0)
             self.assertEqual(403, static_file(fn, root='/').status_code)
         finally:
@@ -70,13 +70,32 @@ class TestSendFile(unittest.TestCase):
     def test_mime(self):
         """ SendFile: Mime Guessing"""
         f = static_file(basename, root=root)
-        self.assertTrue(f.headers['Content-Type'].split(';')[0] in ('application/x-python-code', 'text/x-python'))
+        try:
+            self.assertIn(f.headers['Content-Type'].split(';')[0],
+                          ('application/x-python-code', 'text/x-python'))
+        finally:
+            f.close()
+
         f = static_file(basename, root=root, mimetype='some/type')
-        self.assertEqual('some/type', f.headers['Content-Type'])
+        try:
+            self.assertEqual('some/type', f.headers['Content-Type'])
+        finally:
+            f.close()
+
         f = static_file(basename, root=root, mimetype='text/foo')
-        self.assertEqual('text/foo; charset=UTF-8', f.headers['Content-Type'])
-        f = static_file(basename, root=root, mimetype='text/foo', charset='latin1')
-        self.assertEqual('text/foo; charset=latin1', f.headers['Content-Type'])
+        try:
+            self.assertEqual('text/foo; charset=UTF-8',
+                             f.headers['Content-Type'])
+        finally:
+            f.close()
+
+        f = static_file(basename, root=root, mimetype='text/foo',
+                        charset='latin1')
+        try:
+            self.assertEqual('text/foo; charset=latin1',
+                             f.headers['Content-Type'])
+        finally:
+            f.close()
 
     def test_ims(self):
         """ SendFile: If-Modified-Since"""
@@ -86,7 +105,12 @@ class TestSendFile(unittest.TestCase):
         self.assertEqual(int(os.stat(__file__).st_mtime), parse_date(res.headers['Last-Modified']))
         self.assertAlmostEqual(int(time.time()), parse_date(res.headers['Date']))
         request.environ['HTTP_IF_MODIFIED_SINCE'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(100))
-        self.assertEqual(open(__file__,'rb').read(), static_file(basename, root=root).body.read())
+        fp = open(__file__, 'rb')
+        try:
+            self.assertEqual(fp.read(),
+                             static_file(basename, root=root).body.read())
+        finally:
+            fp.close()
 
     def test_etag(self):
         """ SendFile: If-Modified-Since"""
@@ -106,33 +130,50 @@ class TestSendFile(unittest.TestCase):
         self.assertTrue('ETag' in res.headers)
         self.assertNotEqual(etag, res.headers['ETag'])
         self.assertEqual(200, res.status_code)
-       
 
     def test_download(self):
         """ SendFile: Download as attachment """
         f = static_file(basename, root=root, download="foo.mp3")
-        self.assertEqual('audio/mpeg', f.headers['Content-Type'])
+        try:
+            self.assertEqual('audio/mpeg', f.headers['Content-Type'])
+        finally:
+            f.close()
 
         f = static_file(basename, root=root, download=True)
-        self.assertEqual('attachment; filename="%s"' % basename, f.headers['Content-Disposition'])
+        try:
+            self.assertEqual('attachment; filename="%s"' % basename,
+                             f.headers['Content-Disposition'])
+        finally:
+            f.close()
+
         request.environ['HTTP_IF_MODIFIED_SINCE'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(100))
 
         f = static_file(basename, root=root)
-        with open(__file__, 'rb') as fp:
+        fp = open(__file__, 'rb')
+        try:
             self.assertEqual(fp.read(), f.body.read())
+        finally:
+            f.close()
+            fp.close()
 
     def test_range(self):
         request.environ['HTTP_RANGE'] = 'bytes=10-25,-80'
         f = static_file(basename, root=root)
         c = open(__file__, 'rb'); c.seek(10)
-        self.assertEqual(c.read(16), tob('').join(f.body))
-        self.assertEqual('bytes 10-25/%d' % len(open(__file__, 'rb').read()),
-                         f.headers['Content-Range'])
-        self.assertEqual('bytes', f.headers['Accept-Ranges'])
+        fp = open(__file__, 'rb')
+        try:
+            self.assertEqual(c.read(16), tob('').join(f.body))
+            self.assertEqual('bytes 10-25/%d' % len(fp.read()),
+                             f.headers['Content-Range'])
+            self.assertEqual('bytes', f.headers['Accept-Ranges'])
+        finally:
+            c.close()
+            fp.close()
 
     def test_range_parser(self):
         r = lambda rs: list(parse_range_header(rs, 100))
         self.assertEqual([(90, 100)], r('bytes=-10'))
         self.assertEqual([(10, 100)], r('bytes=10-'))
         self.assertEqual([(5, 11)],  r('bytes=5-10'))
-        self.assertEqual([(10, 100), (90, 100), (5, 11)],  r('bytes=10-,-10,5-10'))
+        self.assertEqual([(10, 100), (90, 100), (5, 11)],
+                         r('bytes=10-,-10,5-10'))
