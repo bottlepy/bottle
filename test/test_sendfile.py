@@ -106,11 +106,12 @@ class TestSendFile(unittest.TestCase):
         self.assertAlmostEqual(int(time.time()), parse_date(res.headers['Date']))
         request.environ['HTTP_IF_MODIFIED_SINCE'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(100))
         fp = open(__file__, 'rb')
+        sf = static_file(basename, root=root)
         try:
-            self.assertEqual(fp.read(),
-                             static_file(basename, root=root).body.read())
+            self.assertEqual(fp.read(), sf.body.read())
         finally:
             fp.close()
+            sf.close()
 
     def test_etag(self):
         """ SendFile: If-Modified-Since"""
