@@ -116,21 +116,32 @@ class TestSendFile(unittest.TestCase):
     def test_etag(self):
         """ SendFile: If-Modified-Since"""
         res = static_file(basename, root=root)
-        self.assertTrue('ETag' in res.headers)
-        self.assertEqual(200, res.status_code)
+        try:
+            self.assertTrue('ETag' in res.headers)
+            self.assertEqual(200, res.status_code)
+        finally:
+            res.close()
+
         etag = res.headers['ETag']
-        
         request.environ['HTTP_IF_NONE_MATCH'] = etag
         res = static_file(basename, root=root)
-        self.assertTrue('ETag' in res.headers)
-        self.assertEqual(etag, res.headers['ETag'])
-        self.assertEqual(304, res.status_code)
+
+        try:
+            self.assertTrue('ETag' in res.headers)
+            self.assertEqual(etag, res.headers['ETag'])
+            self.assertEqual(304, res.status_code)
+        finally:
+            res.close()
 
         request.environ['HTTP_IF_NONE_MATCH'] = etag
         res = static_file(basename2, root=root2)
-        self.assertTrue('ETag' in res.headers)
-        self.assertNotEqual(etag, res.headers['ETag'])
-        self.assertEqual(200, res.status_code)
+
+        try:
+            self.assertTrue('ETag' in res.headers)
+            self.assertNotEqual(etag, res.headers['ETag'])
+            self.assertEqual(200, res.status_code)
+        finally:
+            res.close()
 
     def test_download(self):
         """ SendFile: Download as attachment """

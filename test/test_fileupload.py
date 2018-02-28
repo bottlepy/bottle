@@ -2,10 +2,11 @@
 ''' Tests for the FileUpload wrapper. '''
 
 import unittest
-import sys, os.path
+import os.path
 import bottle
-from bottle import FileUpload, BytesIO, tob
+from bottle import FileUpload, BytesIO
 import tempfile
+
 
 class TestFileUpload(unittest.TestCase):
     def test_name(self):
