@@ -60,10 +60,16 @@ class TestFileUpload(unittest.TestCase):
         self.assertRaises(IOError, fu.save, __file__)
 
     def test_save_dir(self):
-        fu = FileUpload(open(__file__, 'rb'), 'testfile', __file__)
+        fp = open(__file__, 'rb')
+        fu = FileUpload(fp, 'testfile', __file__)
         dirpath = tempfile.mkdtemp()
         filepath = os.path.join(dirpath, fu.filename)
         fu.save(dirpath)
-        self.assertEqual(fu.file.read(), open(filepath, 'rb').read())
-        os.unlink(filepath)
-        os.rmdir(dirpath)
+        fp_expected = open(filepath, 'rb')
+        try:
+            self.assertEqual(fu.file.read(), fp_expected.read())
+        finally:
+            fp.close()
+            fp_expected.close()
+            os.unlink(filepath)
+            os.rmdir(dirpath)

@@ -48,7 +48,11 @@ class TestSendFile(unittest.TestCase):
     def test_valid(self):
         """ SendFile: Valid requests"""
         out = static_file(basename, root=root)
-        self.assertEqual(open(__file__,'rb').read(), out.body.read())
+        fp = open(__file__, 'rb')
+        try:
+            self.assertEqual(fp.read(), out.body.read())
+        finally:
+            fp.close()
 
     def test_invalid(self):
         """ SendFile: Invalid requests"""
@@ -114,7 +118,8 @@ class TestSendFile(unittest.TestCase):
         request.environ['HTTP_IF_MODIFIED_SINCE'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(100))
 
         f = static_file(basename, root=root)
-        self.assertEqual(open(__file__,'rb').read(), f.body.read())
+        with open(__file__, 'rb') as fp:
+            self.assertEqual(fp.read(), f.body.read())
 
     def test_range(self):
         request.environ['HTTP_RANGE'] = 'bytes=10-25,-80'
