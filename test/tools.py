@@ -37,6 +37,7 @@ class chdir(object):
     def __exit__(self, exc_type, exc_val, tb):
         os.chdir(self.old)
 
+
 class assertWarn(object):
     def __init__(self, text):
         self.searchtext = text
@@ -86,6 +87,7 @@ def wsgistr(s):
         return s.encode('utf8').decode('latin1')
     else:
         return s
+
 
 class ServerTestBase(unittest.TestCase):
     def setUp(self):
@@ -156,6 +158,7 @@ class ServerTestBase(unittest.TestCase):
         err = bottle.request.environ['wsgi.errors'].errors.read()
         if search not in err:
             self.fail('The search pattern "%s" is not included in wsgi.error: %s' % (search, err))
+
 
 def multipart_environ(fields, files):
     boundary = str(uuid.uuid1())

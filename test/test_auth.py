@@ -2,9 +2,10 @@
 import bottle
 from tools import ServerTestBase
 
+
 class TestBasicAuth(ServerTestBase):
 
-    def test__header(self):
+    def test_header(self):
         @bottle.route('/')
         @bottle.auth_basic(lambda x, y: False)
         def test(): return {}

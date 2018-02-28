@@ -7,6 +7,7 @@
 import unittest
 from bottle import Bottle
 
+
 class TestApplicationObject(unittest.TestCase):
     
     def test_setattr(self):
