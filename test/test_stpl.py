@@ -356,3 +356,13 @@ class TestSTPLDir(unittest.TestCase):
         ''', result='''
             [1, 3, 5]
         ''')
+
+
+    def test_end_keyword_on_same_line(self):
+        self.assertRenders('''
+            % if 1:
+            %    1; end
+            foo
+        ''', '''
+            foo
+        ''')
