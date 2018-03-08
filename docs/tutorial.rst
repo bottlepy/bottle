@@ -291,22 +291,20 @@ The ordering of this list is significant. You may for example return a subclass 
 
 .. rubric:: Changing the Default Encoding
 
-Bottle uses the `charset` parameter of the ``Content-Type`` header to decide how to encode unicode strings. This header defaults to ``text/html; charset=UTF8`` and can be changed using the :attr:`Response.content_type` attribute or by setting the :attr:`Response.charset` attribute directly. (The :class:`Response` object is described in the section :ref:`tutorial-response`.)
+Bottle uses the `charset` parameter of the ``Content-Type`` header to decide how to encode unicode strings. This header defaults to ``text/html; charset=UTF8`` and can be changed using the :attr:`Response.content_type` attribute or by passing additional parameters to :func:`Response.set_header`. (The :class:`Response` object is described in the section :ref:`tutorial-response`.)
 
 ::
 
     from bottle import response
     @route('/iso')
     def get_iso():
-        response.charset = 'ISO-8859-15'
+        response.set_header('text/html', charset='ISO-8859-15')
         return u'This will be sent with ISO-8859-15 encoding.'
 
     @route('/latin9')
     def get_latin():
         response.content_type = 'text/html; charset=latin9'
         return u'ISO-8859-15 is also known as latin9.'
-
-In some rare cases the Python encoding names differ from the names supported by the HTTP specification. Then, you have to do both: first set the :attr:`Response.content_type` header (which is sent to the client unchanged) and then set the :attr:`Response.charset` attribute (which is used to encode unicode).
 
 .. _tutorial-static-files:
 
@@ -382,11 +380,17 @@ The `HTTP status code <http_code>`_ controls the behavior of the browser and def
 
 .. rubric:: Response Header
 
-Response headers such as ``Cache-Control`` or ``Location`` are defined via :meth:`Response.set_header`. This method takes two parameters, a header name and a value. The name part is case-insensitive::
+Response headers such as ``Cache-Control`` or ``Location`` are defined via :meth:`Response.set_header`. This method takes two mandatory parameters, a header name and a value. The name part is case-insensitive. Additionally an arbitrary amount of header options (such as ``charset`` etc) can be passed as keyword arguments::
 
   @route('/wiki/<page>')
   def wiki(page):
       response.set_header('Content-Language', 'en')
+      ...
+
+  @rout('/about')
+  def about():
+      # This will produce a header: "Content-Type: text/html; charset=utf-8; foo=bar"
+      response.set_header('Content-Type', 'text/html', charset='utf-8', foo='bar')
       ...
 
 Most headers are unique, meaning that only one header per name is send to the client. Some special headers however are allowed to appear more than once in a response. To add an additional header, use :meth:`Response.add_header` instead of :meth:`Response.set_header`::
