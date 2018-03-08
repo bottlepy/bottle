@@ -387,7 +387,7 @@ Response headers such as ``Cache-Control`` or ``Location`` are defined via :meth
       response.set_header('Content-Language', 'en')
       ...
 
-  @rout('/about')
+  @route('/about')
   def about():
       # This will produce a header: "Content-Type: text/html; charset=utf-8; foo=bar"
       response.set_header('Content-Type', 'text/html', charset='utf-8', foo='bar')
