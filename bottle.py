@@ -1784,7 +1784,7 @@ class BaseResponse(object):
         """
         segments = [_hval(value)]
         for k, v in options.items():
-            if v in None:
+            if v is None:
                 segments.append(k)
             else:
                 segments.append('%s=%s' % (k, _hquote(_hval(v))))

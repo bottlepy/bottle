@@ -494,7 +494,7 @@ class TestResponse(unittest.TestCase):
     def test_wsgi_header_values(self):
         def cmp(app, wire):
             rs = BaseResponse()
-            rs.set_header('x-test', app)
+            rs.set_header('x-test', app, foo='bar')  # TEST IT PROPERLY
             result = [v for (h, v) in rs.headerlist if h.lower()=='x-test'][0]
             self.assertEquals(wire, result)
 
