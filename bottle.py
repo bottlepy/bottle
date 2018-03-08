@@ -157,6 +157,7 @@ else:  # 2.x
     json_loads = json_lds
     exec(compile('def _raise(*a): raise a[0], a[1], a[2]', '<py3fix>', 'exec'))
 
+
 # Some helpers for string/byte handling
 def tob(s, enc='utf8'):
     if isinstance(s, unicode):
@@ -1609,6 +1610,23 @@ def _hval(value):
         raise ValueError("Header value must not contain control characters: %r" % value)
     return value
 
+_token_chars = frozenset("!#$%&'*+-.0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+'^_`abcdefghijklmnopqrstuvwxyz|~')
+
+def _hquote(value, extra_chars='', allow_token=True):
+    """Quote a header value if necessary.
+
+       Taken from Werkzeug project http.py module:
+       https://github.com/pallets/werkzeug/blob/master/werkzeug/http.py
+    """
+    value = str(value)
+    if allow_token:
+        token_chars = _token_chars | set(extra_chars)
+    if set(value).issubset(token_chars):
+        return value
+    return '"%s"' % value.replace('\\', '\\\\').replace('"', '\\"')
+
+
 class HeaderProperty(object):
     def __init__(self, name, reader=None, writer=None, default=''):
         self.name, self.default = name, default
@@ -1748,10 +1766,29 @@ class BaseResponse(object):
             header with that name, return a default value. """
         return self._headers.get(_hkey(name), [default])[-1]
 
-    def set_header(self, name, value):
+    def set_header(self, name, value, **options):
         """ Create a new response header, replacing any previously defined
-            headers with the same name. """
-        self._headers[_hkey(name)] = [_hval(value)]
+            headers with the same name.
+
+            Field properties (options are supported) so this:
+
+            set_header("Content-Type", "text/plain", foo="bar")
+
+            ... will result it this:
+
+            "text/plain; foo=bar"
+
+            Options support is heavily inspired by Werkzeug project. In fact
+            it's almost a complete rip-off of quote_header_value() from http.py
+            module.
+        """
+        segments = [_hval(value)]
+        for k, v in options.items():
+            if v in None:
+                segments.append(k)
+            else:
+                segments.append('%s=%s' % (k, _hquote(_hval(v))))
+        self._headers[_hkey(name)] = ['; '.join(segments)]
 
     def add_header(self, name, value):
         """ Add an additional response header, not removing duplicates. """

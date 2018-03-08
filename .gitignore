@@ -11,3 +11,5 @@ MANIFEST
 bottle.egg-info/
 .htmlcoverage/
 docs/_locale/_pot/.doctrees/
+.mypy_cache/
+.tox/
