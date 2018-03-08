@@ -492,21 +492,35 @@ class TestResponse(unittest.TestCase):
         self.assertEquals('yay', make_res(x_test='yay')['x-test'])
 
     def test_wsgi_header_values(self):
-        def cmp(app, wire):
+        def cmp(wire, app, **options):
             rs = BaseResponse()
-            rs.set_header('x-test', app, foo='bar')  # TEST IT PROPERLY
+            rs.set_header('x-test', app, **options)
             result = [v for (h, v) in rs.headerlist if h.lower()=='x-test'][0]
             self.assertEquals(wire, result)
 
         if bottle.py3k:
-            cmp(1, tonat('1', 'latin1'))
-            cmp('öäü', 'öäü'.encode('utf8').decode('latin1'))
+            cmp(tonat('1', 'latin1'), 1)
+            cmp('öäü'.encode('utf8').decode('latin1'), 'öäü')
             # Dropped byte header support in Python 3:
-            #cmp(tob('äöü'), 'äöü'.encode('utf8').decode('latin1'))
+            #cmp(äöü'.encode('utf8').decode('latin1'), tob('äöü'))
+
+            # Options support
+            cmp(tonat('1; foo=bar', 'latin1'), 1, foo='bar')
+            cmp('öäü; foo="öäü"'.encode('utf8').decode('latin1'),
+                'öäü', foo='öäü')
+            cmp('just; get=into; robot=shinji'.encode('utf8').decode('latin1'),
+                'just', get='into', robot='shinji')
         else:
-            cmp(1, '1')
+            cmp('1', 1)
             cmp('öäü', 'öäü')
-            cmp(touni('äöü'), 'äöü')
+            cmp('äöü', touni('äöü'))
+
+            # Options support
+            cmp('1; foo=bar', 1, foo='bar')
+            cmp('öäü; foo="öäü"', 'öäü', foo='öäü')
+            cmp('öäü; foo="öäü"', touni('öäü'), foo=touni('öäü'))
+            cmp('just; get=into; robot=shinji',
+                'just', get='into', robot='shinji')
 
     def test_set_status(self):
         rs = BaseResponse()

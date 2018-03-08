@@ -157,7 +157,6 @@ else:  # 2.x
     json_loads = json_lds
     exec(compile('def _raise(*a): raise a[0], a[1], a[2]', '<py3fix>', 'exec'))
 
-
 # Some helpers for string/byte handling
 def tob(s, enc='utf8'):
     if isinstance(s, unicode):
@@ -1783,7 +1782,9 @@ class BaseResponse(object):
             module.
         """
         segments = [_hval(value)]
-        for k, v in options.items():
+        # Sort to ensure joining is always idempotent
+        for k in sorted(options.keys()):
+            v = options[k]
             if v is None:
                 segments.append(k)
             else:
