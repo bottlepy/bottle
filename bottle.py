@@ -645,7 +645,7 @@ class Bottle(object):
         })
 
         if kwargs.get('catchall') is False:
-            depr(0,13, "Bottle(catchall) keyword argument.",
+            depr(0, 13, "Bottle(catchall) keyword argument.",
                         "The 'catchall' setting is now part of the app "
                         "configuration. Fix: `app.config['catchall'] = False`")
             self.config['catchall'] = False
@@ -1603,11 +1603,13 @@ def _hkey(key):
         raise ValueError("Header names must not contain control characters: %r" % key)
     return key.title().replace('_', '-')
 
+
 def _hval(value):
     value = tonat(value)
     if '\n' in value or '\r' in value or '\0' in value:
         raise ValueError("Header value must not contain control characters: %r" % value)
     return value
+
 
 class HeaderProperty(object):
     def __init__(self, name, reader=None, writer=None, default=''):
