@@ -32,6 +32,9 @@ Have a look at :ref:`plugins` for general questions about plugins (installation,
 `Bottle-Mongo <http://pypi.python.org/pypi/bottle-mongo/>`_
 	MongoDB integration for Bottle
 
+`Bottle-OAuthlib <http://pypi.python.org/pypi/bottle-oauthlib/>`_
+	Adapter for oauthlib - create your own OAuth2.0 implementation
+
 `Bottle-Redis <http://pypi.python.org/pypi/bottle-redis/>`_
 	Redis integration for Bottle.
 

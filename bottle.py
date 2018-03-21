@@ -161,7 +161,7 @@ else:  # 2.x
 def tob(s, enc='utf8'):
     if isinstance(s, unicode):
         return s.encode(enc)
-    return bytes("" if s is None else s)
+    return b'' if s is None else bytes(s)
 
 
 def touni(s, enc='utf8', err='strict'):
@@ -645,7 +645,7 @@ class Bottle(object):
         })
 
         if kwargs.get('catchall') is False:
-            depr(0,13, "Bottle(catchall) keyword argument.",
+            depr(0, 13, "Bottle(catchall) keyword argument.",
                         "The 'catchall' setting is now part of the app "
                         "configuration. Fix: `app.config['catchall'] = False`")
             self.config['catchall'] = False
@@ -1603,11 +1603,13 @@ def _hkey(key):
         raise ValueError("Header names must not contain control characters: %r" % key)
     return key.title().replace('_', '-')
 
+
 def _hval(value):
     value = tonat(value)
     if '\n' in value or '\r' in value or '\0' in value:
         raise ValueError("Header value must not contain control characters: %r" % value)
     return value
+
 
 class HeaderProperty(object):
     def __init__(self, name, reader=None, writer=None, default=''):
@@ -2808,14 +2810,18 @@ def redirect(url, code=None):
     raise res
 
 
-def _file_iter_range(fp, offset, bytes, maxread=1024 * 1024):
-    """ Yield chunks from a range in a file. No chunk is bigger than maxread."""
+def _file_iter_range(fp, offset, bytes, maxread=1024 * 1024, close=False):
+    """ Yield chunks from a range in a file, optionally closing it at the end.
+        No chunk is bigger than maxread. """
     fp.seek(offset)
     while bytes > 0:
         part = fp.read(min(bytes, maxread))
-        if not part: break
+        if not part:
+            break
         bytes -= len(part)
         yield part
+    if close:
+        fp.close()
 
 
 def static_file(filename, root,
@@ -2918,7 +2924,7 @@ def static_file(filename, root,
         offset, end = ranges[0]
         headers["Content-Range"] = "bytes %d-%d/%d" % (offset, end - 1, clen)
         headers["Content-Length"] = str(end - offset)
-        if body: body = _file_iter_range(body, offset, end - offset)
+        if body: body = _file_iter_range(body, offset, end - offset, close=True)
         return HTTPResponse(body, status=206, **headers)
     return HTTPResponse(body, **headers)
 
