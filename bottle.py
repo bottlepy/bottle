@@ -1980,20 +1980,6 @@ class HTTPError(HTTPResponse):
 class PluginError(BottleException):
     pass
 
-class UnicodeFormsPlugin(object):
-  """ This plugin changes the default behaviour of request attributes returning
-  :class: `FormsDict`. Instead, they return :class: `UnicodeFormsDict` which
-  defaults to returning unicode, while still allowing access to the raw data.
-  """
-
-  name = "UnicodeFormsPlugin"
-
-  def setup(self, app):
-    app.config._define('utf8.unicode_forms', default=False, validate=bool,
-                          help="Enable or disable automatic unicode decoding for FormDict data.")
-
-  def apply(self, cb, route):
-    return cb
 
 class JSONPlugin(object):
     name = 'json'
