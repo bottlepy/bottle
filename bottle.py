@@ -2317,7 +2317,7 @@ class UnicodeFormsDict(FormsDict):
     
     def getall(self, key, raw=False):
         """ Return a (possibly empty) list of values for a key. """
-        return [ v if raw else self._fix(v) for v in self.dict.get(key)]
+        return [ v if raw else self._fix(v) for v in (self.dict.get(key) or [])]
     
     getone = get
     getlist = getall
