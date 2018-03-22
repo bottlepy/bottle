@@ -1209,9 +1209,11 @@ class BaseRequest(object):
     def form_container_type(self):
       use_unicode = False
       if 'bottle.app' in self:
-        use_unicode = self.app.config.get('utf8.unicode_forms')
+        if 'utf8.unicode_forms' in self.app.config:
+          use_unicode = self.app.config['utf8.unicode_forms']
       if 'bottle.route' in self:
-        use_unicode = self.route.config.get('utf8.unicode_forms')
+        if 'utf8.unicode_forms' in self.route.config:
+          use_unicode = self.route.config['utf8.unicode_forms']
       return UnicodeFormsDict if use_unicode else FormsDict
 
     @DictProperty('environ', 'bottle.request.cookies', read_only=True)
