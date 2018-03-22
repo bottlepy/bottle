@@ -1207,7 +1207,12 @@ class BaseRequest(object):
     
     @property
     def form_container_type(self):
-      return UnicodeFormsDict if 'bottle.route' in self and self.route.config.get('__utf8.use_unicode_forms_dict') else FormsDict
+      use_unicode = False
+      if 'bottle.app' in self:
+        use_unicode = self.app.config.get('utf8.unicode_forms')
+      if 'bottle.route' in self:
+        use_unicode = self.route.config.get('utf8.unicode_forms')
+      return UnicodeFormsDict if use_unicode else FormsDict
 
     @DictProperty('environ', 'bottle.request.cookies', read_only=True)
     def cookies(self):
@@ -1986,7 +1991,6 @@ class UnicodeFormsPlugin(object):
                           help="Enable or disable automatic unicode decoding for FormDict data.")
 
   def apply(self, cb, route):
-    route.config['__utf8.use_unicode_forms_dict'] = route.config['utf8.unicode_forms']
     return cb
 
 class JSONPlugin(object):
