@@ -236,7 +236,8 @@ class TestRequest(unittest.TestCase):
         # wsgiref.util.setup_testing_defaults(e)
         request = BaseRequest(e)
         self.assertEqual(request.form_container_type, bottle.FormsDict)
-        request.app = bottle.Bottle()
+        app = bottle.Bottle()
+        request.app = app
         self.assertEqual(request.form_container_type, bottle.FormsDict)
         app.config['utf8.unicode_forms'] = False
         self.assertEqual(request.form_container_type, bottle.FormsDict)
