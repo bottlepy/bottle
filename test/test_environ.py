@@ -235,29 +235,21 @@ class TestRequest(unittest.TestCase):
         # wsgiref.util.setup_testing_defaults(e)
         request = BaseRequest({})
         self.assertEqual(request.form_container_type, bottle.FormsDict)
-        request = BaseRequest({})
         app = bottle.Bottle()
-        request.app = app
+        request = BaseRequest({'bottle.app': app})
         self.assertEqual(request.form_container_type, bottle.FormsDict)
-        request = BaseRequest({})
-        request.app = app
+        request = BaseRequest({'bottle.app': app})
         app.config['utf8.unicode_forms'] = False
         self.assertEqual(request.form_container_type, bottle.FormsDict)
-        request = BaseRequest({})
-        request.app = app
+        request = BaseRequest({'bottle.app': app})
         app.config['utf8.unicode_forms'] = True
         self.assertEqual(request.form_container_type, bottle.UnicodeFormsDict)
-        request = BaseRequest({})
-        request.app = app
-        request.route = bottle.Route(request.app, None, None, None)
+        request = BaseRequest({'bottle.app': app, 'bottle.route': bottle.Route(request.app, None, None, None)})
         self.assertEqual(request.form_container_type, bottle.UnicodeFormsDict)
-        request = BaseRequest({})
-        request.app = app
+        request = BaseRequest({'bottle.app': app})
         app.config['utf8.unicode_forms'] = False
         self.assertEqual(request.form_container_type, bottle.FormsDict)
-        request = BaseRequest({})
-        request.app = app
-        request.route = bottle.Route(request.app, None, None, None, **{'utf8.unicode_forms':True})
+        request = BaseRequest({'bottle.app': app, 'bottle.route': bottle.Route(request.app, None, None, None, **{'utf8.unicode_forms':True})})
         self.assertEqual(request.form_container_type, bottle.UnicodeFormsDict)
 
     def test_getpostleak(self):
