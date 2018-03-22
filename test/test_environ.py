@@ -232,21 +232,31 @@ class TestRequest(unittest.TestCase):
 
     def test_form_container_type(self):
         """ Test that `form_container_type` returns the correct types. """
-        e = {}
         # wsgiref.util.setup_testing_defaults(e)
-        request = BaseRequest(e)
+        request = BaseRequest({})
         self.assertEqual(request.form_container_type, bottle.FormsDict)
+        request = BaseRequest({})
         app = bottle.Bottle()
         request.app = app
         self.assertEqual(request.form_container_type, bottle.FormsDict)
+        request = BaseRequest({})
+        request.app = app
         app.config['utf8.unicode_forms'] = False
         self.assertEqual(request.form_container_type, bottle.FormsDict)
+        request = BaseRequest({})
+        request.app = app
         app.config['utf8.unicode_forms'] = True
         self.assertEqual(request.form_container_type, bottle.UnicodeFormsDict)
+        request = BaseRequest({})
+        request.app = app
         request.route = bottle.Route(request.app, None, None, None)
         self.assertEqual(request.form_container_type, bottle.UnicodeFormsDict)
+        request = BaseRequest({})
+        request.app = app
         app.config['utf8.unicode_forms'] = False
         self.assertEqual(request.form_container_type, bottle.FormsDict)
+        request = BaseRequest({})
+        request.app = app
         request.route = bottle.Route(request.app, None, None, None, **{'utf8.unicode_forms':True})
         self.assertEqual(request.form_container_type, bottle.UnicodeFormsDict)
 
