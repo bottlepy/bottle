@@ -1262,7 +1262,7 @@ class BaseRequest(object):
         forms = self.form_container_type()
         for name, item in self.POST.allitems(raw=True):
             if not isinstance(item, FileUpload):
-                if py3k and isinstance(item, str):
+                if py3k and UnicodeFormsDict == self.form_container_type and isinstance(item, str):
                     # Already decoded by cgi.FieldStorage
                     item = item.encode()
                 forms[name] = item
