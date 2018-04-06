@@ -4021,7 +4021,7 @@ class StplParser(object):
     # This huge pile of voodoo magic splits python code into 8 different tokens.
     # We use the verbose (?x) regex mode to make this more manageable
 
-    _re_tok = _re_inl = r'''(?mx)(        # verbose and dot-matches-newline mode
+    _re_tok = _re_inl = r'''(
         [urbURB]*
         (?:  ''(?!')
             |""(?!")
@@ -4062,6 +4062,12 @@ class StplParser(object):
     _re_split = r'''(?m)^[ \t]*(\\?)((%(line_start)s)|(%(block_start)s))'''
     # Match inline statements (may contain python strings)
     _re_inl = r'''%%(inline_start)s((?:%s|[^'"\n]+?)*?)%%(inline_end)s''' % _re_inl
+
+    # add the flag in front of the regexp to avoid Deprecation warning (see Issue #949)
+    # verbose and dot-matches-newline mode
+    _re_tok = '(?mx)' + _re_tok
+    _re_inl = '(?mx)' + _re_inl
+
 
     default_syntax = '<% %> % {{ }}'
 
