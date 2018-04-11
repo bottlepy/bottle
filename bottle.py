@@ -444,7 +444,8 @@ class Router(object):
         self._compile(method)
 
     def _compile(self, method):
-        all_rules = self.dyna_routes[method]
+        all_rules = [] + self.dyna_routes[method]
+        self._sort_routes(all_rules)
         comborules = self.dyna_regexes[method] = []
         maxgroups = self._MAX_GROUPS_PER_PATTERN
         for x in range(0, len(all_rules), maxgroups):
@@ -454,6 +455,21 @@ class Router(object):
             combined = re.compile(combined).match
             rules = [(target, getargs) for (_, _, target, getargs) in some]
             comborules.append((combined, rules))
+
+    def _sort_routes(self, rules):
+        def key(wholerule):
+            rule, flatpat, target, getargs = wholerule
+            builder = self.builder[rule]
+            weights = []
+            for part in builder:
+                if part[0] is None: #static part
+                    for subpart in part[1].split("/"):
+                        if subpart:
+                            weights.append((0, -len(subpart)))
+                else: # dynamic parts have less weight than dynamic
+                    weights.append((1, 1000))
+            return (-len(weights), weights)
+        rules.sort(key=key)        
 
     def build(self, _name, *anons, **query):
         """ Build an URL by filling the wildcards in a rule. """
