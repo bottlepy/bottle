@@ -76,6 +76,20 @@ class TestOutputFilter(ServerTestBase):
         except ImportError:
             warn("Skipping JSON tests.")
 
+    def test_json_ensure_ascii(self):
+        self.app.route('/')(lambda: {'a': '世'})
+        self.assertBody('{"a": "世"}')
+        self.app.config['json.ascii'] = True
+        self.app.route('/')(lambda: {'a': '世'})
+        self.assertBody('{"a": "\\u4e16"}')
+
+    def test_json_indent(self):
+        self.app.route('/')(lambda: {'a': 1})
+        self.assertBody('{"a": 1}')
+        self.app.config['json.indent'] = True
+        self.app.route('/')(lambda: {'a': 1})
+        self.assertBody('{\n "a": 1\n}')
+
     def test_json_serialization_error(self):
         """
         Verify that 500 errors serializing dictionaries don't return

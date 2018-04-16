@@ -93,6 +93,7 @@ class ServerTestBase(unittest.TestCase):
         self.port = 8080
         self.host = 'localhost'
         self.app = bottle.app.push()
+        self.app.config['json.indent'] = False
         self.wsgiapp = wsgiref.validate.validator(self.app)
 
     def urlopen(self, path, method='GET', post='', env=None):
