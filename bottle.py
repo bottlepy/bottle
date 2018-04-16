@@ -80,8 +80,11 @@ from unicodedata import normalize
 
 try:
     from ujson import dumps as json_dumps, loads as json_lds
+    using_ujson = True
 except ImportError:
     from json import dumps as json_dumps, loads as json_lds
+    using_ujson = False
+
 
 # inspect.getargspec was removed in Python 3.6, use
 # Signature-based version where we can (Python 3.3+)
@@ -1992,8 +1995,14 @@ class JSONPlugin(object):
                                " apply.")
 
     def apply(self, callback, route):
+        if not using_ujson:
+            indent = 1 if route.config['json.indent'] else None
+        else:
+            indent = 1 if route.config['json.indent'] else 0
+
         dumps = self.json_dumps
         if not self.json_dumps: return callback
+
 
         def wrapper(*a, **ka):
             try:
@@ -2003,12 +2012,16 @@ class JSONPlugin(object):
 
             if isinstance(rv, dict):
                 #Attempt to serialize, raises exception on failure
-                json_response = dumps(rv)
+                json_response = dumps(rv,
+                                      indent=indent,
+                                      ensure_ascii=route.config["json.ascii"])
                 #Set content type only if serialization successful
                 response.content_type = 'application/json'
                 return json_response
             elif isinstance(rv, HTTPResponse) and isinstance(rv.body, dict):
-                rv.body = dumps(rv.body)
+                rv.body = dumps(rv.body,
+                                indent=indent,
+                                ensure_ascii=route.config["json.ascii"])
                 rv.content_type = 'application/json'
             return rv
 
