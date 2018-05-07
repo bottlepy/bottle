@@ -1261,7 +1261,7 @@ class BaseRequest(object):
             are stored separately in :attr:`files`. """
         forms = self.form_container_type()
         for name, item in self.POST.allitems(raw=True):
-            if not isinstance(item, FileUpload):
+            if not isinstance(item, FileUpload):                                                       # otherwise, we decode as `latin1` already in `tonat`
                 if py3k and UnicodeFormsDict == self.form_container_type and isinstance(item, str) and self.content_type.startswith('multipart/'):
                     # Already decoded by cgi.FieldStorage
                     item = item.encode()
