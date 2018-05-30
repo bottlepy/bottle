@@ -2191,7 +2191,11 @@ class FormsDict(MultiDict):
 
     def _fix(self, s, encoding=None):
         if isinstance(s, unicode) and self.recode_unicode:  # Python 3 WSGI
-            return s.encode('latin1').decode(encoding or self.input_encoding)
+            try:
+                s = s.encode('latin1').decode(encoding or self.input_encoding)
+            except UnicodeEncodeError:
+                s = s.encode('utf8').decode(encoding or self.input_encoding)
+            return s
         elif isinstance(s, bytes):  # Python 2 WSGI
             return s.decode(encoding or self.input_encoding)
         else:
