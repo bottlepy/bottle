@@ -8,7 +8,7 @@ import itertools
 
 import bottle
 from bottle import request, tob, touni, tonat, json_dumps, HTTPError, parse_date
-from test import tools
+import tools
 import wsgiref.util
 import base64
 
@@ -489,14 +489,14 @@ class TestResponse(unittest.TestCase):
         from functools import partial
         make_res = partial(BaseResponse, '', 200)
 
-        self.assertEquals('yay', make_res(x_test='yay')['x-test'])
+        self.assertEqual('yay', make_res(x_test='yay')['x-test'])
 
     def test_wsgi_header_values(self):
         def cmp(app, wire):
             rs = BaseResponse()
             rs.set_header('x-test', app)
             result = [v for (h, v) in rs.headerlist if h.lower()=='x-test'][0]
-            self.assertEquals(wire, result)
+            self.assertEqual(wire, result)
 
         if bottle.py3k:
             cmp(1, tonat('1', 'latin1'))
