@@ -8,7 +8,7 @@ class TestHttpUtils(unittest.TestCase):
     # TODO: Move more of the low level http stuff here.
 
     def test_accept_header(self):
-        self.assertEquals(_parse_http_header(
+        self.assertEqual(_parse_http_header(
                 'text/xml, text/whitespace ,'
                 'application/params;param=value; ws = lots ;"quote"="mid\\"quote",'
                 '"more\\"quotes\\"",'

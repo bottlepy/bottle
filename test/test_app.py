@@ -13,8 +13,8 @@ class TestApplicationObject(unittest.TestCase):
         """ Attributed can be assigned, but only once. """
         app = Bottle()
         app.test = 5
-        self.assertEquals(5, app.test)
+        self.assertEqual(5, app.test)
         self.assertRaises(AttributeError, setattr, app, 'test', 6) 
         del app.test
         app.test = 6
-        self.assertEquals(6, app.test)
+        self.assertEqual(6, app.test)

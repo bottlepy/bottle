@@ -28,8 +28,8 @@ class TestConfDict(unittest.TestCase):
         self.assertEqual('key' in d, 'key' in m)
         self.assertEqual('cay' in d, 'cay' in m)
         self.assertRaises(KeyError, lambda: m['cay'])
-        self.assertEquals(d.setdefault('key', "Val2"), m.setdefault('key', "Val2"))
-        self.assertEquals(d.setdefault('key', "Val3"), m.setdefault('key', "Val3"))
+        self.assertEqual(d.setdefault('key', "Val2"), m.setdefault('key', "Val2"))
+        self.assertEqual(d.setdefault('key', "Val3"), m.setdefault('key', "Val3"))
         self.assertEqual(d.get('key'), m.get('key'))
         with self.assertRaises(KeyError):
             del m['No key']
