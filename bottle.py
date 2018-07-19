@@ -1398,7 +1398,7 @@ class BaseRequest(object):
             for key, value in pairs:
                 post[key] = value
             return post
-
+        
         safe_env = {'QUERY_STRING': ''}  # Build a safe environment for cgi
         for key in ('REQUEST_METHOD', 'CONTENT_TYPE', 'CONTENT_LENGTH'):
             if key in self.environ: safe_env[key] = self.environ[key]
@@ -1409,6 +1409,7 @@ class BaseRequest(object):
         data = cgi.FieldStorage(**args)
         self['_cgi.FieldStorage'] = data  #http://bugs.python.org/issue18394
         data = data.list or []
+        post.recode_unicode = False #no need for re-encoding multipart data from FieldStorage
         for item in data:
             if item.filename:
                 post[item.name] = FileUpload(item.file, item.name,
@@ -2191,11 +2192,7 @@ class FormsDict(MultiDict):
 
     def _fix(self, s, encoding=None):
         if isinstance(s, unicode) and self.recode_unicode:  # Python 3 WSGI
-            try:
-                s = s.encode('latin1').decode(encoding or self.input_encoding)
-            except UnicodeEncodeError:
-                s = s.encode('utf8').decode(encoding or self.input_encoding)
-            return s
+            return s.encode('latin1').decode(encoding or self.input_encoding)
         elif isinstance(s, bytes):  # Python 2 WSGI
             return s.decode(encoding or self.input_encoding)
         else:
