@@ -2907,6 +2907,8 @@ class GeventServer(ServerAdapter):
         if not isinstance(threading.local(), local.local):
             msg = "Bottle requires gevent.monkey.patch_all() (before import)"
             raise RuntimeError(msg)
+        if self.options.pop('fast', None):
+            depr('The *fast* option has been deprecated and removed by Gevent.')
         if self.quiet:
             self.options['log'] = None
         address = (self.host, self.port)
