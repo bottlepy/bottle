@@ -54,7 +54,7 @@ class TestWsgi(ServerTestBase):
         bad = ('content-length', 'content-type')
         for h in bad:
             bottle.response.set_header(h, 'foo')
-        bottle.status = 204
+        bottle.response.status = 204
         for h, v in bottle.response.headerlist:
             self.assertFalse(h.lower() in bad, "Header %s not deleted" % h)
 
@@ -66,7 +66,7 @@ class TestWsgi(ServerTestBase):
                'content-type', 'last-modified') # + c-location, expires?
         for h in bad:
             bottle.response.set_header(h, 'foo')
-        bottle.status = 304
+        bottle.response.status = 304
         for h, v in bottle.response.headerlist:
             self.assertFalse(h.lower() in bad, "Header %s not deleted" % h)
 
