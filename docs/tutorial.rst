@@ -362,7 +362,7 @@ To redirect a client to a different URL, you can send a ``303 See Other`` respon
 You may provide a different HTTP status code as a second parameter.
 
 .. note::
-    Both functions will interrupt your callback code by raising an :exc:`HTTPError` exception.
+    Both functions will interrupt your callback code by raising an :exc:`HTTPResponse` exception.
 
 .. rubric:: Other Exceptions
 
