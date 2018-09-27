@@ -54,7 +54,7 @@ class ServerTestBase(unittest.TestCase):
 
     def urlopen(self, path, method='GET', post='', env=None):
         result = {'code':0, 'status':'error', 'header':{}, 'body':tob('')}
-        def start_response(status, header):
+        def start_response(status, header, exc_info=None):
             result['code'] = int(status.split()[0])
             result['status'] = status.split(None, 1)[-1]
             for name, value in header:
