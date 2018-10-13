@@ -526,8 +526,8 @@ class Route(object):
         self.method = method
         #: The original callback with no plugins applied. Useful for introspection.
         self.callback = callback
-        #: The name of the route (if specified) or ``None``.
-        self.name = name or None
+        #: The name of the route (if specified) or callback (function) name as default.
+        self.name = name or callback.__name__
         #: A list of route-specific plugins (see :meth:`Bottle.route`).
         self.plugins = plugins or []
         #: A list of plugins to not apply to this route (see :meth:`Bottle.route`).
@@ -868,17 +868,21 @@ class Bottle(object):
             from the URL. Raise :exc:`HTTPError` (404/405) on a non-match."""
         return self.router.match(environ)
 
-    def get_url(self, routename, **kargs):
-        """ Return a string that matches a named route """
+    def get_url(self, routename, undecorated = False, **kargs):
+        """ Return a string that matches routename, complete with parameters
+            unless undecorated is True """
         scriptname = request.environ.get('SCRIPT_NAME', '').strip('/') + '/'
-        location = self.router.build(routename, **kargs).lstrip('/')
-        return urljoin(urljoin('/', scriptname), location)
+        if undecorated:
+            location = self.router.builder.get(routename)[0][1].rstrip('/')
+        else:
+            location = self.router.build(routename, **kargs)
+        return urljoin(urljoin('/', scriptname), location.lstrip('/'))
 
     def add_route(self, route):
         """ Add a route object, but do not change the :data:`Route.app`
             attribute."""
         self.routes.append(route)
-        self.router.add(route.rule, route.method, route, name=route.name)
+        self.router.add(route.rule, route.method, route, route.name)
         if DEBUG: route.prepare()
 
     def route(self,
@@ -904,7 +908,7 @@ class Bottle(object):
               methods to listen to. (default: `GET`)
             :param callback: An optional shortcut to avoid the decorator
               syntax. ``route(..., callback=func)`` equals ``route(...)(func)``
-            :param name: The name for this route. (default: None)
+            :param name: The name for this route. (default: callback.__name__)
             :param apply: A decorator or plugin or a list of plugins. These are
               applied to the route callback in addition to installed plugins.
             :param skip: A list of plugins, plugin classes or names. Matching
