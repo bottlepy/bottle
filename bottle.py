@@ -1815,7 +1815,7 @@ class BaseResponse(object):
             :param secure: limit the cookie to HTTPS connections (default: off).
             :param httponly: prevents client-side javascript to read this cookie
               (default: off, requires Python 2.6 or newer).
-            :param same_site: disables third-party use for a cookie.
+            :param samesite: disables third-party use for a cookie.
               Allowed attributes: `lax` and `strict`.
               In strict mode the cookie will never be sent.
               In lax mode the cookie is only sent with a top-level GET request.
@@ -1842,7 +1842,7 @@ class BaseResponse(object):
             self._cookies = SimpleCookie()
 
         # To add "SameSite" cookie support.
-        Morsel._reserved['same-site'] = 'SameSite'
+        Morsel._reserved['samesite'] = 'SameSite'
 
         if secret:
             if not isinstance(value, basestring):
@@ -1873,7 +1873,7 @@ class BaseResponse(object):
                     value = time.gmtime(value)
                 value = time.strftime("%a, %d %b %Y %H:%M:%S GMT", value)
             # check values for SameSite cookie, because it's not natively supported by http.cookies.
-            if key == 'same_site' and value.lower() not in ('lax', 'strict'):
+            if key == 'samesite' and value.lower() not in ('lax', 'strict'):
                 raise CookieError("Invalid attribute %r" % (key,))
             if key in ('secure', 'httponly') and not value:
                 continue
