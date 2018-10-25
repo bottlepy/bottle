@@ -37,6 +37,7 @@ class chdir(object):
     def __exit__(self, exc_type, exc_val, tb):
         os.chdir(self.old)
 
+
 class assertWarn(object):
     def __init__(self, text):
         self.searchtext = text
@@ -49,7 +50,7 @@ class assertWarn(object):
 
     def __enter__(self):
         self.orig = bottle.depr
-        bottle.depr = self.dept
+        bottle.depr = self.depr
         self.warnings = []
 
     def depr(self, msg, strict=False):

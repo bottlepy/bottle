@@ -4,7 +4,7 @@ import unittest
 from bottle import SimpleTemplate, TemplateError, view, template, touni, tob, html_quote
 import re, os
 import traceback
-from tools import chdir
+from .tools import chdir
 
 
 class TestSimpleTemplate(unittest.TestCase):

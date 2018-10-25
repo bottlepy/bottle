@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import bottle
-from tools import ServerTestBase
+from .tools import ServerTestBase
 
 class TestBasicAuth(ServerTestBase):
 

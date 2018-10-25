@@ -19,13 +19,9 @@ install:
   - travis_retry bash test/travis_setup.sh
 
 script:
-  - python -m coverage run --source=. test/testall.py fast
+  - python -m coverage run -m unittest discover
   - python -m coverage combine
   - python -m coverage report 2>&1
-
-notifications:
-  irc: "irc.freenode.org#bottlepy"
-  on_success: "never"
 
 after_success:
   coveralls

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import unittest
-import tools
+from . import tools
 
 from bottle import HTTPResponse, HTTPError
 

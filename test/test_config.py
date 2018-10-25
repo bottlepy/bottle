@@ -1,12 +1,5 @@
-import os
-import sys
 import tempfile
 import unittest
-
-import functools
-
-import itertools
-
 from bottle import ConfigDict
 
 
@@ -92,11 +85,11 @@ class TestConfDict(unittest.TestCase):
 
     def test_load_module(self):
         c = ConfigDict()
-        c.load_module('example_settings', True)
+        c.load_module('test.example_settings', True)
         self.assertEqual(c['A.B.C'], 3)
 
         c = ConfigDict()
-        c.load_module('example_settings', False)
+        c.load_module('test.example_settings', False)
         self.assertEqual(c['A']['B']['C'], 3)
 
     def test_overlay(self):
