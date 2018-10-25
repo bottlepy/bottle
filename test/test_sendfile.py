@@ -55,6 +55,11 @@ class TestSendFile(unittest.TestCase):
         self.assertEqual(404, static_file('not/a/file', root=root).status_code)
         f = static_file(os.path.join('./../', basename), root='./views/')
         self.assertEqual(403, f.status_code)
+
+    def test_file_not_readable(self):
+        if os.geteuid() == 0:
+            return # Root can read anything
+
         try:
             fp, fn = tempfile.mkstemp()
             os.chmod(fn, 0)

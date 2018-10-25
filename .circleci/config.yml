@@ -1,0 +1,49 @@
+version: 2
+workflows:
+  version: 2
+  test:
+    jobs:
+      - test-2.7
+      - test-3.3
+      - test-3.4
+      - test-3.5
+      - test-3.6
+      - test-3.7
+jobs:
+  test-3.7: &test-template
+    parallelism: 1
+    docker:
+    - image: circleci/python:3.7
+    environment:
+      CIRCLE_ARTIFACTS: /tmp/circleci-artifacts
+      CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
+    steps:
+    - checkout
+    - run: python --version
+    - run: python -m unittest discover
+    - store_test_results:
+        path: /tmp/circleci-test-results
+    - store_artifacts:
+        path: /tmp/circleci-artifacts
+    - store_artifacts:
+        path: /tmp/circleci-test-results
+  test-3.6:
+    <<: *test-template
+    docker:
+    - image: circleci/python:3.6
+  test-3.5:
+    <<: *test-template
+    docker:
+    - image: circleci/python:3.5
+  test-3.4:
+    <<: *test-template
+    docker:
+    - image: circleci/python:3.4
+  test-3.3:
+    <<: *test-template
+    docker:
+    - image: circleci/python:3.3
+  test-2.7:
+    <<: *test-template
+    docker:
+    - image: circleci/python:2.7
