@@ -7,7 +7,7 @@ import sys
 import itertools
 
 import bottle
-from bottle import request, tob, touni, tonat, json_dumps, HTTPError, parse_date
+from bottle import request, tob, touni, tonat, json_dumps, HTTPError, parse_date, CookieError
 from . import tools
 import wsgiref.util
 import base64
@@ -645,8 +645,32 @@ class TestResponse(unittest.TestCase):
         r.set_cookie('name2', 'value', httponly=False)
         cookies = sorted([value for name, value in r.headerlist
                    if name.title() == 'Set-Cookie'])
-        self.assertEqual(cookies[0].lower(), 'name1=value; httponly')
-        self.assertEqual(cookies[1], 'name2=value')
+        self.assertEqual('name1=value; httponly', cookies[0].lower())
+        self.assertEqual('name2=value', cookies[1])
+
+    def test_set_cookie_samesite(self):
+        r = BaseResponse()
+        r.set_cookie('name1', 'value', same_site="lax")
+        r.set_cookie('name2', 'value', same_site="strict")
+
+        try:
+            r.set_cookie('name3', 'value', same_site='invalid')
+            self.fail("Should raise CookieError")
+        except CookieError:
+            pass
+
+        cookies = sorted([value for name, value in r.headerlist
+                   if name.title() == 'Set-Cookie'])
+        self.assertEqual('name1=value; samesite=lax', cookies[0].lower())
+        self.assertEqual('name2=value; samesite=strict', cookies[1].lower())
+
+    def test_clone_cookie(self):
+        r = BaseResponse()
+        r.set_cookie('name1', 'value', same_site="strict")
+        r2 = r.copy(BaseResponse)
+        cookies = sorted([value for name, value in r2.headerlist
+                   if name.title() == 'Set-Cookie'])
+        self.assertEqual('name1=value; samesite=strict', cookies[0].lower())
 
     def test_delete_cookie(self):
         response = BaseResponse()

@@ -172,7 +172,6 @@ def touni(s, enc='utf8', err='strict'):
 
 tonat = touni if py3k else tob
 
-# 3.2 fixes cgi.FieldStorage to accept bytes (which makes a lot of sense).
 
 
 # A bug in functools causes it to break if the wrapper is an instance method
@@ -1679,8 +1678,10 @@ class BaseResponse(object):
         copy.status = self.status
         copy._headers = dict((k, v[:]) for (k, v) in self._headers.items())
         if self._cookies:
-            copy._cookies = SimpleCookie()
-            copy._cookies.load(self._cookies.output(header=''))
+            cookies = copy._cookies = SimpleCookie()
+            for k,v in self._cookies.items():
+                cookies[k] = v.value
+                cookies[k].update(v) # also copy cookie attributes
         return copy
 
     def __iter__(self):
@@ -1807,7 +1808,7 @@ class BaseResponse(object):
             Additionally, this method accepts all RFC 2109 attributes that are
             supported by :class:`cookie.Morsel`, including:
 
-            :param max_age: maximum age in seconds. (default: None)
+            :param maxage: maximum age in seconds. (default: None)
             :param expires: a datetime object or UNIX timestamp. (default: None)
             :param domain: the domain that is allowed to read the cookie.
               (default: current domain)
@@ -1815,12 +1816,12 @@ class BaseResponse(object):
             :param secure: limit the cookie to HTTPS connections (default: off).
             :param httponly: prevents client-side javascript to read this cookie
               (default: off, requires Python 2.6 or newer).
-            :param same_site: disables third-party use for a cookie.
+            :param samesite: disables third-party use for a cookie.
               Allowed attributes: `lax` and `strict`.
               In strict mode the cookie will never be sent.
               In lax mode the cookie is only sent with a top-level GET request.
 
-            If neither `expires` nor `max_age` is set (default), the cookie will
+            If neither `expires` nor `maxage` is set (default), the cookie will
             expire at the end of the browser session (as soon as the browser
             window is closed).
 
@@ -1841,8 +1842,9 @@ class BaseResponse(object):
         if not self._cookies:
             self._cookies = SimpleCookie()
 
-        # To add "SameSite" cookie support.
-        Morsel._reserved['same-site'] = 'SameSite'
+        # Monkey-patch Cookie lib to support 'SameSite' parameter
+        # https://tools.ietf.org/html/draft-west-first-party-cookies-07#section-4.1
+        Morsel._reserved.setdefault('samesite', 'SameSite')
 
         if secret:
             if not isinstance(value, basestring):
@@ -1863,7 +1865,8 @@ class BaseResponse(object):
         self._cookies[name] = value
 
         for key, value in options.items():
-            if key == 'max_age':
+            if key in ('max_age', 'maxage'): # 'maxage' variant added in 0.13
+                key = 'max-age'
                 if isinstance(value, timedelta):
                     value = value.seconds + value.days * 24 * 3600
             if key == 'expires':
@@ -1872,12 +1875,13 @@ class BaseResponse(object):
                 elif isinstance(value, (int, float)):
                     value = time.gmtime(value)
                 value = time.strftime("%a, %d %b %Y %H:%M:%S GMT", value)
-            # check values for SameSite cookie, because it's not natively supported by http.cookies.
-            if key == 'same_site' and value.lower() not in ('lax', 'strict'):
-                raise CookieError("Invalid attribute %r" % (key,))
+            if key in ('same_site', 'samesite'): # 'samesite' variant added in 0.13
+                key = 'samesite'
+                if value.lower() not in ('lax', 'strict'):
+                    raise CookieError("Invalid value samesite=%r (expected 'lax' or 'strict')" % (key,))
             if key in ('secure', 'httponly') and not value:
                 continue
-            self._cookies[name][key.replace('_', '-')] = value
+            self._cookies[name][key] = value
 
     def delete_cookie(self, key, **kwargs):
         """ Delete a cookie. Be sure to use the same `domain` and `path`
