@@ -1397,7 +1397,7 @@ class BaseRequest(object):
             for key, value in pairs:
                 post[key] = value
             return post
-
+        
         safe_env = {'QUERY_STRING': ''}  # Build a safe environment for cgi
         for key in ('REQUEST_METHOD', 'CONTENT_TYPE', 'CONTENT_LENGTH'):
             if key in self.environ: safe_env[key] = self.environ[key]
@@ -1408,6 +1408,7 @@ class BaseRequest(object):
         data = cgi.FieldStorage(**args)
         self['_cgi.FieldStorage'] = data  #http://bugs.python.org/issue18394
         data = data.list or []
+        post.recode_unicode = False #no need for re-encoding multipart data from FieldStorage
         for item in data:
             if item.filename:
                 post[item.name] = FileUpload(item.file, item.name,

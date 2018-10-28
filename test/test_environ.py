@@ -319,7 +319,7 @@ class TestRequest(unittest.TestCase):
 
     def test_multipart(self):
         """ Environ: POST (multipart files and multible values per key) """
-        fields = [('field1','value1'), ('field2','value2'), ('field2','value3')]
+        fields = [('field1','value1'), ('field2','value2'), ('field2','value3'), ('field3','Чебурашка')]
         files = [('file1','filename1.txt','content1'), ('万难','万难foo.py', 'ä\nö\rü')]
         e = tools.multipart_environ(fields=fields, files=files)
         request = BaseRequest(e)
@@ -354,6 +354,8 @@ class TestRequest(unittest.TestCase):
         self.assertEqual(['value2', 'value3'], request.POST.getall('field2'))
         self.assertEqual(['value2', 'value3'], request.forms.getall('field2'))
         self.assertTrue('field2' not in request.files)
+        # Field (multi), test POST.decode() with non-latin1 data
+        request.POST.decode()
 
     def test_json_empty(self):
         """ Environ: Request.json property with empty body. """
