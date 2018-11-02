@@ -671,7 +671,7 @@ class Bottle(object):
     #: If true, most exceptions are caught and returned as :exc:`HTTPError`
     catchall = DictProperty('config', 'catchall')
 
-    __hook_names = 'before_request', 'after_request', 'app_reset', 'config'
+    __hook_names = 'before_request', 'after_request', 'app_reset', 'config', 'after_response'
     __hook_reversed = {'after_request'}
 
     @cached_property
@@ -1107,6 +1107,7 @@ class Bottle(object):
                 if hasattr(out, 'close'): out.close()
                 out = []
             start_response(response._status_line, response.headerlist)
+            self.trigger_hook('after_response')
             return out
         except (KeyboardInterrupt, SystemExit, MemoryError):
             raise
