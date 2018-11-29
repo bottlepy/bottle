@@ -230,6 +230,28 @@ class TestRequest(unittest.TestCase):
         self.assertEqual(['a','b','c'], sorted(request.params.keys()))
         self.assertEqual('p', request.params['c'])
 
+    def test_form_container_type(self):
+        """ Test that `form_container_type` returns the correct types. """
+        # wsgiref.util.setup_testing_defaults(e)
+        request = BaseRequest({})
+        self.assertEqual(request.form_container_type, bottle.FormsDict)
+        app = bottle.Bottle()
+        request = BaseRequest({'bottle.app': app})
+        self.assertEqual(request.form_container_type, bottle.FormsDict)
+        request = BaseRequest({'bottle.app': app})
+        app.config['utf8.unicode_forms'] = False
+        self.assertEqual(request.form_container_type, bottle.FormsDict)
+        request = BaseRequest({'bottle.app': app})
+        app.config['utf8.unicode_forms'] = True
+        self.assertEqual(request.form_container_type, bottle.UnicodeFormsDict)
+        request = BaseRequest({'bottle.app': app, 'bottle.route': bottle.Route(request.app, None, None, None)})
+        self.assertEqual(request.form_container_type, bottle.UnicodeFormsDict)
+        request = BaseRequest({'bottle.app': app})
+        app.config['utf8.unicode_forms'] = False
+        self.assertEqual(request.form_container_type, bottle.FormsDict)
+        request = BaseRequest({'bottle.app': app, 'bottle.route': bottle.Route(request.app, None, None, None, **{'utf8.unicode_forms':True})})
+        self.assertEqual(request.form_container_type, bottle.UnicodeFormsDict)
+
     def test_getpostleak(self):
         """ Environ: GET and POST should not leak into each other """
         e = {}
