@@ -16,7 +16,7 @@ License: MIT (see LICENSE for details)
 from __future__ import with_statement
 
 __author__ = 'Marcel Hellkamp'
-__version__ = '0.12.14'
+__version__ = '0.12.15'
 __license__ = 'MIT'
 
 # The gevent server adapter needs to patch some modules before they are imported
@@ -3445,7 +3445,7 @@ class StplParser(object):
     # Match inline statements (may contain python strings)
     _re_inl = '(?m)%%(inline_start)s((?:%s|[^\'"\n]*?)+)%%(inline_end)s' % _re_inl
     _re_tok = '(?m)' + _re_tok
-    
+
     default_syntax = '<% %> % {{ }}'
 
     def __init__(self, source, syntax=None, encoding='utf8'):
