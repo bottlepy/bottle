@@ -10,3 +10,4 @@ build/
 MANIFEST
 bottle.egg-info/
 .htmlcoverage/
+.idea/
