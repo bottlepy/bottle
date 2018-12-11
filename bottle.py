@@ -1248,6 +1248,7 @@ class BaseRequest(object):
             :class:`FormsDict`. All keys and values are strings. File uploads
             are stored separately in :attr:`files`. """
         forms = FormsDict()
+        forms.recode_unicode = self.POST.recode_unicode
         for name, item in self.POST.allitems():
             if not isinstance(item, FileUpload):
                 forms[name] = item
@@ -1271,6 +1272,7 @@ class BaseRequest(object):
 
         """
         files = FormsDict()
+        files.recode_unicode = self.POST.recode_unicode
         for name, item in self.POST.allitems():
             if isinstance(item, FileUpload):
                 files[name] = item
@@ -1405,6 +1407,7 @@ class BaseRequest(object):
 
         if py3k:
             args['encoding'] = 'utf8'
+            post.recode_unicode = False
         data = cgi.FieldStorage(**args)
         self['_cgi.FieldStorage'] = data  #http://bugs.python.org/issue18394
         data = data.list or []

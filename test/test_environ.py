@@ -319,7 +319,7 @@ class TestRequest(unittest.TestCase):
 
     def test_multipart(self):
         """ Environ: POST (multipart files and multible values per key) """
-        fields = [('field1','value1'), ('field2','value2'), ('field2','value3')]
+        fields = [('field1','value1'), ('field2','value2'), ('field2','万难')]
         files = [('file1','filename1.txt','content1'), ('万难','万难foo.py', 'ä\nö\rü')]
         e = tools.multipart_environ(fields=fields, files=files)
         request = BaseRequest(e)
@@ -349,10 +349,13 @@ class TestRequest(unittest.TestCase):
         self.assertEqual('value1', request.POST['field1'])
         self.assertTrue('field1' not in request.files)
         self.assertEqual('value1', request.forms['field1'])
+        print(request.forms.dict, request.forms.recode_unicode)
+        self.assertEqual('万难', request.forms['field2'])
+        self.assertEqual(touni('万难'), request.forms.field2)
         # Field (multi)
         self.assertEqual(2, len(request.POST.getall('field2')))
-        self.assertEqual(['value2', 'value3'], request.POST.getall('field2'))
-        self.assertEqual(['value2', 'value3'], request.forms.getall('field2'))
+        self.assertEqual(['value2', '万难'], request.POST.getall('field2'))
+        self.assertEqual(['value2', '万难'], request.forms.getall('field2'))
         self.assertTrue('field2' not in request.files)
 
     def test_json_empty(self):
