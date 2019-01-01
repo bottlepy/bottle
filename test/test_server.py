@@ -100,6 +100,7 @@ blacklist = ['cgi', 'flup', 'gae', 'wsgiref']
 
 if sys.version_info.major == 2:
     blacklist += [
+        'aiohttp',
         'uvloop',
     ]
 else:
