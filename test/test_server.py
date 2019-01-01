@@ -98,6 +98,20 @@ class TestServer(unittest.TestCase):
 
 blacklist = ['cgi', 'flup', 'gae']
 
+if sys.version_info.major == 2:
+    blacklist += [
+        'uvloop',
+    ]
+else:
+    blacklist += [
+        'bjoern',
+        'fapws3',
+        'flup',
+        'gevent',
+        'rocket',
+    ]
+
+
 for name in set(server_names) - set(blacklist):
     classname = 'TestServerAdapter_'+name
     setattr(sys.modules[__name__], classname,
