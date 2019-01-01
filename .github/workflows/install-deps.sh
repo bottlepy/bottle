@@ -10,6 +10,6 @@ sudo apt-get install -y libev-dev
 pip install mako jinja2
 
 for name in waitress "cherrypy<9" cheroot paste tornado twisted diesel meinheld\
-            gunicorn eventlet flup fapws3 bjoern gevent uvloop; do
+            gunicorn eventlet flup fapws3 bjoern gevent "aiohttp<2" uvloop; do
     pip install $name || echo "Failed to install $name with $(python -V 2>&1)" 1>&2
 done

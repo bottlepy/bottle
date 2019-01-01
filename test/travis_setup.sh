@@ -26,6 +26,6 @@ case ${TRAVIS_PYTHON_VERSION} in
     pip install flup fapws3 bjoern gevent diesel
     ;;
 3.6)
-    pip install uvloop
+    pip install "aiohttp<2" uvloop
     ;;
 esac
