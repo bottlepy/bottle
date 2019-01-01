@@ -96,7 +96,7 @@ class TestServer(unittest.TestCase):
         self.assertEqual(tob('OK'), self.fetch('test'))
 
 
-blacklist = ['cgi', 'flup', 'gae']
+blacklist = ['cgi', 'flup', 'gae', 'wsgiref']
 
 if sys.version_info.major == 2:
     blacklist += [
