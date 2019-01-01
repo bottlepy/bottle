@@ -110,7 +110,6 @@ else:
         'fapws3',
         'flup',
         'gevent',
-        'rocket',
     ]
 
 

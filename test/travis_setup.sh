@@ -23,7 +23,7 @@ esac
 
 case ${TRAVIS_PYTHON_VERSION} in
 2.7)
-    pip install flup fapws3 rocket bjoern gevent diesel
+    pip install flup fapws3 bjoern gevent diesel
     ;;
 3.6)
     pip install uvloop

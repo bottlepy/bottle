@@ -192,14 +192,6 @@ msgid "Multi-threaded, stable, tried and tested"
 msgstr "多线程，稳定，久经考验，充分测试"
 
 #: ../../deployment.rst:68
-msgid "rocket"
-msgstr ""
-
-#: ../../deployment.rst:68
-msgid "rocket_"
-msgstr ""
-
-#: ../../deployment.rst:68
 msgid "Multi-threaded"
 msgstr "多线程"
 

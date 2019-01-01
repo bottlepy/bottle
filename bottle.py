@@ -3494,15 +3494,6 @@ class EventletServer(ServerAdapter):
             wsgi.server(listen(address), handler)
 
 
-class RocketServer(ServerAdapter):
-    """ Untested. """
-
-    def run(self, handler):
-        from rocket import Rocket
-        server = Rocket((self.host, self.port), 'wsgi', {'wsgi_app': handler})
-        server.start()
-
-
 class BjoernServer(ServerAdapter):
     """ Fast server written in C: https://github.com/jonashaag/bjoern """
 
@@ -3586,7 +3577,6 @@ server_names = {
     'gunicorn': GunicornServer,
     'eventlet': EventletServer,
     'gevent': GeventServer,
-    'rocket': RocketServer,
     'bjoern': BjoernServer,
     'aiohttp': AiohttpServer,
     'uvloop': AiohttpUVLoopServer,
