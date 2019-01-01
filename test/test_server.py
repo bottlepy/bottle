@@ -105,6 +105,7 @@ if sys.version_info.major == 2:
 else:
     blacklist += [
         'bjoern',
+        'diesel',
         'fapws3',
         'flup',
         'gevent',

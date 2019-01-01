@@ -17,13 +17,13 @@ case ${TRAVIS_PYTHON_VERSION} in
 2.7|3.6)
     sudo apt-get update -y
     sudo apt-get install -y libev-dev
-    pip install mako jinja2 waitress "cherrypy<9" cheroot paste tornado twisted diesel meinheld gunicorn eventlet
+    pip install mako jinja2 waitress "cherrypy<9" cheroot paste tornado twisted meinheld gunicorn eventlet
     ;;
 esac
 
 case ${TRAVIS_PYTHON_VERSION} in
 2.7)
-    pip install flup fapws3 rocket bjoern gevent
+    pip install flup fapws3 rocket bjoern gevent diesel
     ;;
 3.6)
     pip install uvloop
