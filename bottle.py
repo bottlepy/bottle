@@ -3525,6 +3525,7 @@ class AiohttpServer(AsyncioServerAdapter):
         protocol_factory = lambda: WSGIServerHttpProtocol(
             handler,
             readpayload=True,
+            loop=self.loop,
             debug=(not self.quiet))
         self.loop.run_until_complete(self.loop.create_server(protocol_factory,
                                                              self.host,
