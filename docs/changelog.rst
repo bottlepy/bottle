@@ -10,19 +10,19 @@ Release 0.13
 
 .. warning:: Not released yet.
 
-.. rubric:: Dropped support for Python 2.5, 2.6 and 3.1
+.. rubric:: Dropped support for Python 2.5, 2.6, 3.1, 3.2 and 3.3
 
-These three Python versions are no longer maintained by the Python Software Foundation and reached their end of life a long time ago. Keeping up support for ancient Python versions hinders adaptation of new features and serves no real purpose. Even Debian 7 (wheezy) and Ubuntu 12.4 (precise), both outdated, ship with Python 2.7.3 and 3.2.3 already. For this reason, we decided to drop support for Python 2.5, 2.6 and 3.1. The updated list of tested and supported python releases is as follows:
+These three Python versions are no longer maintained by the Python Software Foundation and reached their end of life a long time ago. Keeping up support for ancient Python versions hinders adaptation of new features and serves no real purpose. Even Debian 7 (wheezy) and Ubuntu 12.4 (precise), both outdated, ship with Python 2.7.3 and 3.2.3 already. For this reason, we decided to drop support for Python 2.5, 2.6, 3.1, 3.2 and 3.1. The updated list of tested and supported python releases is as follows:
 
  * Python 2.7 (>= 2.7.3)
- * Python 3.2
- * Python 3.3
  * Python 3.4
  * Python 3.5
+ * Python 3.6
+ * Python 3.7
  * PyPy 5.3
  * PyPy3 2.4
 
-Support for Python 2.5 was marked as deprecated since 0.12. We decided to go a step further and also remove 2.6 and 3.1 support even if it was never deprecated explicitly in bottle. This means that this release is *not* backwards compatible in Python 2.6 or 3.1 environments. Maintainers for distributions or systems that still use these old python versions should not update to Bottle 0.13 and stick with 0.12 instead.
+Support for Python 2.5 was marked as deprecated since 0.12. We decided to go a step further and also remove 2.6, 3.1, 3.2 and 3.3 support even if it was never deprecated explicitly in bottle. This means that this release is *not* backwards compatible in Python <2.7 or <3.4 environments. Maintainers for distributions or systems that still use these old python versions should not update to Bottle 0.13 and stick with 0.12 instead.
 
 .. rubric:: Stabilized APIs
 * The documented API of the :class:`ConfigDict` class is now considered stable and ready to use.
