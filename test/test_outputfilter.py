@@ -6,6 +6,13 @@ import bottle
 from bottle import tob, touni
 from .tools import ServerTestBase, tobs, warn
 
+USING_UJSON = True
+
+try:
+    import ujson
+except ImportError:
+    USING_UJSON = False
+
 class TestOutputFilter(ServerTestBase):
     ''' Tests for WSGI functionality, routing and output casting (decorators) '''
 
@@ -76,6 +83,7 @@ class TestOutputFilter(ServerTestBase):
         except ImportError:
             warn("Skipping JSON tests.")
 
+    @unittest.skipIf(USING_UJSON, 'ujson do not throw exception in serialize')
     def test_json_serialization_error(self):
         """
         Verify that 500 errors serializing dictionaries don't return
@@ -87,6 +95,7 @@ class TestOutputFilter(ServerTestBase):
             self.assertHeader('Content-Type','text/html; charset=UTF-8')
         except ImportError:
             warn("Skipping JSON tests.")
+
 
     def test_json_HTTPResponse(self):
         self.app.route('/')(lambda: bottle.HTTPResponse({'a': 1}, 500))
