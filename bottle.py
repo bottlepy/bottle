@@ -3659,6 +3659,7 @@ def run(app=None,
     if NORUN: return
     if reloader and not os.environ.get('BOTTLE_CHILD'):
         import subprocess
+        import py_compile
         lockfile = None
         try:
             fd, lockfile = tempfile.mkstemp(prefix='bottle.', suffix='.lock')
@@ -3668,6 +3669,18 @@ def run(app=None,
                 environ = os.environ.copy()
                 environ['BOTTLE_CHILD'] = 'true'
                 environ['BOTTLE_LOCKFILE'] = lockfile
+                success = False
+                while not success:
+                    filepath = os.path.join(os.getcwd(), sys.argv[0])
+                    _stderr("Veryfing python script %s\n" % filepath)
+                    try:
+                        py_compile.compile(filepath, doraise=True)
+                        success = True
+                    except py_compile.PyCompileError as e: 
+                        _stderr("Failed to load script because of compile error\n")
+
+                    time.sleep(interval)
+
                 p = subprocess.Popen(args, env=environ)
                 while p.poll() is None:  # Busy wait...
                     os.utime(lockfile, None)  # I am alive!
