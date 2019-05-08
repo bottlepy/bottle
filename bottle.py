@@ -129,7 +129,7 @@ if py3k:
     from urllib.parse import urlencode, quote as urlquote, unquote as urlunquote
     urlunquote = functools.partial(urlunquote, encoding='latin1')
     from http.cookies import SimpleCookie, Morsel, CookieError
-    from collections import MutableMapping as DictMixin
+    from collections.abc import MutableMapping as DictMixin
     import pickle
     from io import BytesIO
     import configparser
