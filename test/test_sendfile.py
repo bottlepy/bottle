@@ -90,12 +90,12 @@ class TestSendFile(unittest.TestCase):
         self.assertEqual(open(__file__,'rb').read(), static_file(basename, root=root).body.read())
 
     def test_etag(self):
-        """ SendFile: If-Modified-Since"""
+        """ SendFile: If-None-Match"""
         res = static_file(basename, root=root)
         self.assertTrue('ETag' in res.headers)
         self.assertEqual(200, res.status_code)
         etag = res.headers['ETag']
-        
+
         request.environ['HTTP_IF_NONE_MATCH'] = etag
         res = static_file(basename, root=root)
         self.assertTrue('ETag' in res.headers)
@@ -107,7 +107,12 @@ class TestSendFile(unittest.TestCase):
         self.assertTrue('ETag' in res.headers)
         self.assertNotEqual(etag, res.headers['ETag'])
         self.assertEqual(200, res.status_code)
-       
+
+        # test ignore If-Modified-Since when If-None-Match checked failed.
+        request.environ['HTTP_IF_NONE_MATCH'] = '123456'
+        request.environ['HTTP_IF_MODIFIED_SINCE'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime())
+        res = static_file(basename, root=root)
+        self.assertEqual(200, res.status_code)
 
     def test_download(self):
         """ SendFile: Download as attachment """
