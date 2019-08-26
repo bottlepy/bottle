@@ -1787,7 +1787,7 @@ class BaseResponse(object):
         return out
 
     content_type = HeaderProperty('Content-Type')
-    content_length = HeaderProperty('Content-Length', reader=int)
+    content_length = HeaderProperty('Content-Length', reader=int, default=-1)
     expires = HeaderProperty(
         'Expires',
         reader=lambda x: datetime.utcfromtimestamp(parse_date(x)),
