@@ -116,12 +116,12 @@ Example using `WebTest <http://webtest.pythonpaste.org/>`_ and `Nose <http://rea
 
     def test_functional_login_logout():
         app = TestApp(mywebapp.app)
-        
+
         app.post('/login', {'user': 'foo', 'pass': 'bar'}) # log in and get a cookie
 
         assert app.get('/admin').status == '200 OK'        # fetch a page successfully
 
-        assert app.get('/logout').status_code = 200        # log out
+        assert app.get('/logout').status_code == 200        # log out
         app.reset()                                        # drop the cookie
 
         # fetch the same page, unsuccessfully
