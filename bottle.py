@@ -1834,7 +1834,7 @@ class BaseResponse(object):
 
             Warning: Pickle is a potentially dangerous format. If an attacker
             gains access to the secret key, he could forge cookies that execute
-            code on server side if unpickeld. Using pickle is discouraged and
+            code on server side if unpickled. Using pickle is discouraged and
             support for it will be removed in later versions of bottle.
 
             Warning: Signed cookies are not encrypted (the client can still see
