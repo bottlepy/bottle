@@ -3444,8 +3444,10 @@ class GunicornServer(ServerAdapter):
 
     def run(self, handler):
         from gunicorn.app.base import Application
-
-        config = {'bind': "%s:%d" % (self.host, int(self.port))}
+        if self.host.find('unix:') == 0:
+            config = {'bind': self.host}
+        else:
+            config = {'bind': "%s:%d" % (self.host, int(self.port))}
         config.update(self.options)
 
         class GunicornApplication(Application):
@@ -3711,8 +3713,11 @@ def run(app=None,
         if not server.quiet:
             _stderr("Bottle v%s server starting up (using %s)...\n" %
                     (__version__, repr(server)))
-            _stderr("Listening on http://%s:%d/\n" %
-                    (server.host, server.port))
+            if server.host.find('unix:') == 0:
+                _stderr("Listening on %s/\n" % server.host)
+            else:
+                _stderr("Listening on http://%s:%d/\n" %
+                        (server.host, server.port))
             _stderr("Hit Ctrl-C to quit.\n\n")
 
         if reloader:
