@@ -501,15 +501,11 @@ class TestResponse(unittest.TestCase):
             result = [v for (h, v) in rs.headerlist if h.lower()=='x-test'][0]
             self.assertEqual(wire, result)
 
-        if bottle.py3k:
             cmp(1, tonat('1', 'latin1'))
             cmp('öäü', 'öäü'.encode('utf8').decode('latin1'))
             # Dropped byte header support in Python 3:
             #cmp(tob('äöü'), 'äöü'.encode('utf8').decode('latin1'))
-        else:
-            cmp(1, '1')
-            cmp('öäü', 'öäü')
-            cmp(touni('äöü'), 'äöü')
+
 
     def test_set_status(self):
         rs = BaseResponse()
