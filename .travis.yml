@@ -3,8 +3,6 @@ language: python
 sudo: required
 
 python:
-#  - "2.7.3" # Ubuntu 12.4LTS (precise) and Debian 7 LTS (wheezy)
-  - "2.7"
   - "3.4"
   - "3.5"
   - "3.6"
@@ -19,5 +17,4 @@ script:
   - python -m coverage combine
   - python -m coverage report 2>&1
 
-after_success:
-  coveralls
+after_success: coveralls
