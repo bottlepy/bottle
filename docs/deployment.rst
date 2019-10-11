@@ -137,7 +137,7 @@ Google AppEngine
 
 .. versionadded:: 0.9
 
-New App Engine applications using the Python 2.7 runtime environment support any WSGI application and should be configured to use the Bottle application object directly. For example suppose your application's main module is ``myapp.py``::
+New App Engine applications using the Python runtime environment support any WSGI application and should be configured to use the Bottle application object directly. For example suppose your application's main module is ``myapp.py``::
 
     import bottle
 

@@ -41,10 +41,8 @@ docs:
 test: venv
 	$(VENV)/bin/python3 -m unittest discover
 
-test_all: test_27 test_32 test_33 test_34 test_35 test_37
+test_all: test_32 test_33 test_34 test_35 test_37
 
-test_27:
-	$(TESTBUILD)/bin/python2.7 -m unittest discover
 
 test_34:
 	$(TESTBUILD)/bin/python3.4 -m unittest discover
@@ -59,7 +57,6 @@ test_37:
 	$(TESTBUILD)/bin/python3.7 -m unittest discover
 
 test_setup:
-	bash test/build_python.sh 2.7.3 $(TESTBUILD)
 	bash test/build_python.sh 3.4.9 $(TESTBUILD)
 	bash test/build_python.sh 3.5.6 $(TESTBUILD)
 	bash test/build_python.sh 3.6.7 $(TESTBUILD)

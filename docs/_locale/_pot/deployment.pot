@@ -325,9 +325,6 @@ msgstr ""
 msgid "Google AppEngine"
 msgstr ""
 
-#: ../../deployment.rst:148
-msgid "New App Engine applications using the Python 2.7 runtime environment support any WSGI application and should be configured to use the Bottle application object directly. For example suppose your application's main module is ``myapp.py``::"
-msgstr ""
 
 #: ../../deployment.rst:158
 msgid "Then you can configure App Engine's ``app.yaml`` to use the ``app`` object like so::"
