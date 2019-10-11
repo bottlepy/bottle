@@ -142,7 +142,7 @@ def _raise(*a):
 
 # Some helpers for string/byte handling
 def tob(s, enc='utf8'):
-    if isinstance(s, unicode):
+    if isinstance(s, str):
         return s.encode(enc)
     return b'' if s is None else bytes(s)
 
@@ -1020,10 +1020,10 @@ class Bottle(object):
             return []
         # Join lists of byte or unicode strings. Mixed lists are NOT supported
         if isinstance(out, (tuple, list))\
-        and isinstance(out[0], (bytes, unicode)):
+        and isinstance(out[0], (bytes, str)):
             out = out[0][0:0].join(out)  # b'abc'[0:0] -> b''
         # Encode unicode strings
-        if isinstance(out, unicode):
+        if isinstance(out, str):
             out = out.encode(response.charset)
         # Byte Strings are just returned
         if isinstance(out, bytes):
@@ -1069,7 +1069,7 @@ class Bottle(object):
             return self._cast(first)
         elif isinstance(first, bytes):
             new_iter = itertools.chain([first], iout)
-        elif isinstance(first, unicode):
+        elif isinstance(first, str):
             encoder = lambda x: x.encode(response.charset)
             new_iter = imap(encoder, itertools.chain([first], iout))
         else:
@@ -2154,7 +2154,7 @@ class FormsDict(MultiDict):
     recode_unicode = True
 
     def _fix(self, s, encoding=None):
-        if isinstance(s, unicode) and self.recode_unicode:  # Python 3 WSGI
+        if isinstance(s, str) and self.recode_unicode:  # Python 3 WSGI
             return s.encode('latin1').decode(encoding or self.input_encoding)
         elif isinstance(s, bytes):  # Python 2 WSGI
             return s.decode(encoding or self.input_encoding)
@@ -2179,7 +2179,7 @@ class FormsDict(MultiDict):
         except (UnicodeError, KeyError):
             return default
 
-    def __getattr__(self, name, default=unicode()):
+    def __getattr__(self, name, default=""):
         # Without this guard, pickle generates a cryptic TypeError:
         if name.startswith('__') and name.endswith('__'):
             return super(FormsDict, self).__getattr__(name)
@@ -2226,7 +2226,7 @@ class HeaderDict(MultiDict):
 class WSGIHeaderDict(DictMixin):
     """ This dict-like class wraps a WSGI environ dict and provides convenient
         access to HTTP_* fields. Keys and values are native strings
-        (2.x bytes or 3.x unicode) and keys are case-insensitive. If the WSGI
+        (2.x bytes or 3.x str) and keys are case-insensitive. If the WSGI
         environment contains non-native string values, these are de- or encoded
         using a lossless 'latin1' character set.
 
@@ -2248,12 +2248,12 @@ class WSGIHeaderDict(DictMixin):
         return 'HTTP_' + key
 
     def raw(self, key, default=None):
-        """ Return the header value as is (may be bytes or unicode). """
+        """ Return the header value as is (may be bytes or str). """
         return self.environ.get(self._ekey(key), default)
 
     def __getitem__(self, key):
         val = self.environ[self._ekey(key)]
-        if isinstance(val, unicode):
+        if isinstance(val, str):
             val = val.encode('latin1').decode('utf8')
         else:
             val = val.decode('utf8')
@@ -2714,7 +2714,7 @@ class FileUpload(object):
             or dashes are removed. The filename is limited to 255 characters.
         """
         fname = self.raw_filename
-        if not isinstance(fname, unicode):
+        if not isinstance(fname, str):
             fname = fname.decode('utf8', 'ignore')
         fname = normalize('NFKD', fname)
         fname = fname.encode('ASCII', 'ignore').decode('ASCII')
