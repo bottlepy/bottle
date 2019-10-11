@@ -41,7 +41,7 @@ docs:
 test: venv
 	$(VENV)/bin/python3 -m unittest discover
 
-test_all: test_32 test_33 test_34 test_35 test_37
+test_all: test_34 test_35 test_37
 
 
 test_34:
