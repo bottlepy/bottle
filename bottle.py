@@ -110,7 +110,6 @@ except ImportError:
     except ImportError:
         from inspect import getargspec
 
-
 # Workaround for the "print is a keyword/function" Python 2/3 dilemma
 # and a fallback for mod_wsgi (resticts stdout/err attribute access)
 try:
@@ -118,6 +117,7 @@ try:
 except IOError:
     _stdout = lambda x: sys.stdout.write(x)
     _stderr = lambda x: sys.stderr.write(x)
+
 
 import http.client as httplib
 import _thread as thread
@@ -131,6 +131,7 @@ from io import BytesIO
 import configparser
 
 basestring = str
+unicode = str
 json_loads = lambda s: json_lds(touni(s))
 callable = lambda x: hasattr(x, '__call__')
 imap = map
@@ -138,9 +139,10 @@ imap = map
 def _raise(*a):
     raise a[0](a[1]).with_traceback(a[2])
 
+
 # Some helpers for string/byte handling
 def tob(s, enc='utf8'):
-    if isinstance(s, str):
+    if isinstance(s, unicode):
         return s.encode(enc)
     return b'' if s is None else bytes(s)
 
@@ -148,10 +150,11 @@ def tob(s, enc='utf8'):
 def touni(s, enc='utf8', err='strict'):
     if isinstance(s, bytes):
         return s.decode(enc, err)
-    return "" if s is None else s
+    return unicode("" if s is None else s)
 
 
 tonat = touni
+
 
 
 # A bug in functools causes it to break if the wrapper is an instance method
@@ -562,7 +565,7 @@ class Route(object):
             recover the original function. """
         func = self.callback
         func = getattr(func, '__func__' , func)
-        closure_attr = '__closure__' 
+        closure_attr = '__closure__'
         while hasattr(func, closure_attr) and getattr(func, closure_attr):
             attributes = getattr(func, closure_attr)
             func = attributes[0].cell_contents
@@ -1017,10 +1020,10 @@ class Bottle(object):
             return []
         # Join lists of byte or unicode strings. Mixed lists are NOT supported
         if isinstance(out, (tuple, list))\
-        and isinstance(out[0], (bytes, str)):
+        and isinstance(out[0], (bytes, unicode)):
             out = out[0][0:0].join(out)  # b'abc'[0:0] -> b''
         # Encode unicode strings
-        if isinstance(out, str):
+        if isinstance(out, unicode):
             out = out.encode(response.charset)
         # Byte Strings are just returned
         if isinstance(out, bytes):
@@ -1066,7 +1069,7 @@ class Bottle(object):
             return self._cast(first)
         elif isinstance(first, bytes):
             new_iter = itertools.chain([first], iout)
-        elif isinstance(first, str):
+        elif isinstance(first, unicode):
             encoder = lambda x: x.encode(response.charset)
             new_iter = imap(encoder, itertools.chain([first], iout))
         else:
@@ -2102,7 +2105,6 @@ class MultiDict(DictMixin):
     iterallitems = allitems
 
 
-
     def get(self, key, default=None, index=-1, type=None):
         """ Return the most recent value for a key.
 
@@ -2152,7 +2154,7 @@ class FormsDict(MultiDict):
     recode_unicode = True
 
     def _fix(self, s, encoding=None):
-        if isinstance(s, str) and self.recode_unicode:  # Python 3 WSGI
+        if isinstance(s, unicode) and self.recode_unicode:  # Python 3 WSGI
             return s.encode('latin1').decode(encoding or self.input_encoding)
         elif isinstance(s, bytes):  # Python 2 WSGI
             return s.decode(encoding or self.input_encoding)
@@ -2171,13 +2173,13 @@ class FormsDict(MultiDict):
         return copy
 
     def getunicode(self, name, default=None, encoding=None):
-        """ Return the value as a string, or the default. """
+        """ Return the value as a unicode string, or the default. """
         try:
             return self._fix(self[name], encoding)
         except (UnicodeError, KeyError):
             return default
 
-    def __getattr__(self, name, default=""):
+    def __getattr__(self, name, default=unicode()):
         # Without this guard, pickle generates a cryptic TypeError:
         if name.startswith('__') and name.endswith('__'):
             return super(FormsDict, self).__getattr__(name)
@@ -2224,7 +2226,7 @@ class HeaderDict(MultiDict):
 class WSGIHeaderDict(DictMixin):
     """ This dict-like class wraps a WSGI environ dict and provides convenient
         access to HTTP_* fields. Keys and values are native strings
-        (2.x bytes or 3.x str) and keys are case-insensitive. If the WSGI
+        (2.x bytes or 3.x unicode) and keys are case-insensitive. If the WSGI
         environment contains non-native string values, these are de- or encoded
         using a lossless 'latin1' character set.
 
@@ -2246,12 +2248,12 @@ class WSGIHeaderDict(DictMixin):
         return 'HTTP_' + key
 
     def raw(self, key, default=None):
-        """ Return the header value as is (may be bytes or str). """
+        """ Return the header value as is (may be bytes or unicode). """
         return self.environ.get(self._ekey(key), default)
 
     def __getitem__(self, key):
         val = self.environ[self._ekey(key)]
-        if isinstance(val, str):
+        if isinstance(val, unicode):
             val = val.encode('latin1').decode('utf8')
         else:
             val = val.decode('utf8')
@@ -2361,7 +2363,8 @@ class ConfigDict(dict):
 
         """
         options.setdefault('allow_no_value', True)
-        options.setdefault('interpolation', configparser.ExtendedInterpolation())
+        options.setdefault('interpolation',
+                               configparser.ExtendedInterpolation())
         conf = configparser.ConfigParser(**options)
         conf.read(filename)
         for section in conf.sections():
@@ -2711,7 +2714,7 @@ class FileUpload(object):
             or dashes are removed. The filename is limited to 255 characters.
         """
         fname = self.raw_filename
-        if not isinstance(fname, str):
+        if not isinstance(fname, unicode):
             fname = fname.decode('utf8', 'ignore')
         fname = normalize('NFKD', fname)
         fname = fname.encode('ASCII', 'ignore').decode('ASCII')
@@ -3812,7 +3815,7 @@ class BaseTemplate(object):
 
     def render(self, *args, **kwargs):
         """ Render the template with the specified local variables and return
-        a single byte or string. If it is a byte string, the encoding
+        a single byte or unicode string. If it is a byte string, the encoding
         must match self.encoding. This method must be thread-safe!
         Local variables may be provided in dictionaries (args)
         or directly, as keywords (kwargs).
