@@ -1820,9 +1820,10 @@ class BaseResponse(object):
             :param httponly: prevents client-side javascript to read this cookie
               (default: off, requires Python 2.6 or newer).
             :param samesite: disables third-party use for a cookie.
-              Allowed attributes: `lax` and `strict`.
+              Allowed attributes: `lax`, `strict` and `none`.
               In strict mode the cookie will never be sent.
               In lax mode the cookie is only sent with a top-level GET request.
+              In none mode no enforcement applied on the cookie.
 
             If neither `expires` nor `maxage` is set (default), the cookie will
             expire at the end of the browser session (as soon as the browser
@@ -1847,6 +1848,7 @@ class BaseResponse(object):
 
         # Monkey-patch Cookie lib to support 'SameSite' parameter
         # https://tools.ietf.org/html/draft-west-first-party-cookies-07#section-4.1
+        # NOTE already enabled in python 3.8
         Morsel._reserved.setdefault('samesite', 'SameSite')
 
         if secret:
@@ -1880,7 +1882,7 @@ class BaseResponse(object):
                 value = time.strftime("%a, %d %b %Y %H:%M:%S GMT", value)
             if key in ('same_site', 'samesite'): # 'samesite' variant added in 0.13
                 key = 'samesite'
-                if value.lower() not in ('lax', 'strict'):
+                if value.lower() not in ('lax', 'strict', 'none'):
                     raise CookieError("Invalid value samesite=%r (expected 'lax' or 'strict')" % (key,))
             if key in ('secure', 'httponly') and not value:
                 continue
