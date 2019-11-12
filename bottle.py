@@ -3430,8 +3430,8 @@ class StplParser(object):
     # 2: Comments (until end of line, but not the newline itself)
     _re_tok += '|(#.*)'
     # 3,4: Open and close grouping tokens
-    _re_tok += '|([\[\{\(])'
-    _re_tok += '|([\]\}\)])'
+    _re_tok += '|([\\[\\{\\(])'
+    _re_tok += '|([\\]\\}\\)])'
     # 5,6: Keywords that start or continue a python block (only start of line)
     _re_tok += '|^([ \\t]*(?:if|for|while|with|try|def|class)\\b)' \
                '|^([ \\t]*(?:elif|else|except|finally)\\b)'
