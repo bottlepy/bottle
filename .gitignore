@@ -5,9 +5,17 @@
 *.mo
 ._*
 *.*~
+
 dist/
 build/
 MANIFEST
 bottle.egg-info/
+
+.idea/
+
+htmlcov/
 .htmlcoverage/
+.coverage
+.name
+
 docs/_locale/_pot/.doctrees/

@@ -4,7 +4,7 @@ import unittest
 from bottle import SimpleTemplate, TemplateError, view, template, touni, tob, html_quote
 import re, os
 import traceback
-from tools import chdir
+from .tools import chdir
 
 
 class TestSimpleTemplate(unittest.TestCase):
@@ -355,4 +355,14 @@ class TestSTPLDir(unittest.TestCase):
             {{a}}
         ''', result='''
             [1, 3, 5]
+        ''')
+
+
+    def test_end_keyword_on_same_line(self):
+        self.assertRenders('''
+            % if 1:
+            %    1; end
+            foo
+        ''', '''
+            foo
         ''')

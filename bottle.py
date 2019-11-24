@@ -9,7 +9,7 @@ Python Standard Library.
 
 Homepage and documentation: http://bottlepy.org/
 
-Copyright (c) 2017, Marcel Hellkamp.
+Copyright (c) 2009-2018, Marcel Hellkamp.
 License: MIT (see LICENSE for details)
 """
 
@@ -129,7 +129,7 @@ if py3k:
     from urllib.parse import urlencode, quote as urlquote, unquote as urlunquote
     urlunquote = functools.partial(urlunquote, encoding='latin1')
     from http.cookies import SimpleCookie, Morsel, CookieError
-    from collections import MutableMapping as DictMixin
+    from collections.abc import MutableMapping as DictMixin
     import pickle
     from io import BytesIO
     import configparser
@@ -172,7 +172,6 @@ def touni(s, enc='utf8', err='strict'):
 
 tonat = touni if py3k else tob
 
-# 3.2 fixes cgi.FieldStorage to accept bytes (which makes a lot of sense).
 
 
 # A bug in functools causes it to break if the wrapper is an instance method
@@ -1249,6 +1248,7 @@ class BaseRequest(object):
             :class:`FormsDict`. All keys and values are strings. File uploads
             are stored separately in :attr:`files`. """
         forms = FormsDict()
+        forms.recode_unicode = self.POST.recode_unicode
         for name, item in self.POST.allitems():
             if not isinstance(item, FileUpload):
                 forms[name] = item
@@ -1272,6 +1272,7 @@ class BaseRequest(object):
 
         """
         files = FormsDict()
+        files.recode_unicode = self.POST.recode_unicode
         for name, item in self.POST.allitems():
             if isinstance(item, FileUpload):
                 files[name] = item
@@ -1406,6 +1407,7 @@ class BaseRequest(object):
 
         if py3k:
             args['encoding'] = 'utf8'
+            post.recode_unicode = False
         data = cgi.FieldStorage(**args)
         self['_cgi.FieldStorage'] = data  #http://bugs.python.org/issue18394
         data = data.list or []
@@ -1679,8 +1681,10 @@ class BaseResponse(object):
         copy.status = self.status
         copy._headers = dict((k, v[:]) for (k, v) in self._headers.items())
         if self._cookies:
-            copy._cookies = SimpleCookie()
-            copy._cookies.load(self._cookies.output(header=''))
+            cookies = copy._cookies = SimpleCookie()
+            for k,v in self._cookies.items():
+                cookies[k] = v.value
+                cookies[k].update(v) # also copy cookie attributes
         return copy
 
     def __iter__(self):
@@ -1783,7 +1787,7 @@ class BaseResponse(object):
         return out
 
     content_type = HeaderProperty('Content-Type')
-    content_length = HeaderProperty('Content-Length', reader=int)
+    content_length = HeaderProperty('Content-Length', reader=int, default=-1)
     expires = HeaderProperty(
         'Expires',
         reader=lambda x: datetime.utcfromtimestamp(parse_date(x)),
@@ -1807,7 +1811,7 @@ class BaseResponse(object):
             Additionally, this method accepts all RFC 2109 attributes that are
             supported by :class:`cookie.Morsel`, including:
 
-            :param max_age: maximum age in seconds. (default: None)
+            :param maxage: maximum age in seconds. (default: None)
             :param expires: a datetime object or UNIX timestamp. (default: None)
             :param domain: the domain that is allowed to read the cookie.
               (default: current domain)
@@ -1815,12 +1819,12 @@ class BaseResponse(object):
             :param secure: limit the cookie to HTTPS connections (default: off).
             :param httponly: prevents client-side javascript to read this cookie
               (default: off, requires Python 2.6 or newer).
-            :param same_site: disables third-party use for a cookie.
+            :param samesite: disables third-party use for a cookie.
               Allowed attributes: `lax` and `strict`.
               In strict mode the cookie will never be sent.
               In lax mode the cookie is only sent with a top-level GET request.
 
-            If neither `expires` nor `max_age` is set (default), the cookie will
+            If neither `expires` nor `maxage` is set (default), the cookie will
             expire at the end of the browser session (as soon as the browser
             window is closed).
 
@@ -1841,8 +1845,9 @@ class BaseResponse(object):
         if not self._cookies:
             self._cookies = SimpleCookie()
 
-        # To add "SameSite" cookie support.
-        Morsel._reserved['same-site'] = 'SameSite'
+        # Monkey-patch Cookie lib to support 'SameSite' parameter
+        # https://tools.ietf.org/html/draft-west-first-party-cookies-07#section-4.1
+        Morsel._reserved.setdefault('samesite', 'SameSite')
 
         if secret:
             if not isinstance(value, basestring):
@@ -1863,7 +1868,8 @@ class BaseResponse(object):
         self._cookies[name] = value
 
         for key, value in options.items():
-            if key == 'max_age':
+            if key in ('max_age', 'maxage'): # 'maxage' variant added in 0.13
+                key = 'max-age'
                 if isinstance(value, timedelta):
                     value = value.seconds + value.days * 24 * 3600
             if key == 'expires':
@@ -1872,12 +1878,13 @@ class BaseResponse(object):
                 elif isinstance(value, (int, float)):
                     value = time.gmtime(value)
                 value = time.strftime("%a, %d %b %Y %H:%M:%S GMT", value)
-            # check values for SameSite cookie, because it's not natively supported by http.cookies.
-            if key == 'same_site' and value.lower() not in ('lax', 'strict'):
-                raise CookieError("Invalid attribute %r" % (key,))
+            if key in ('same_site', 'samesite'): # 'samesite' variant added in 0.13
+                key = 'samesite'
+                if value.lower() not in ('lax', 'strict'):
+                    raise CookieError("Invalid value samesite=%r (expected 'lax' or 'strict')" % (key,))
             if key in ('secure', 'httponly') and not value:
                 continue
-            self._cookies[name][key.replace('_', '-')] = value
+            self._cookies[name][key] = value
 
     def delete_cookie(self, key, **kwargs):
         """ Delete a cookie. Be sure to use the same `domain` and `path`
@@ -3746,7 +3753,7 @@ class FileCheckerThread(threading.Thread):
         files = dict()
 
         for module in list(sys.modules.values()):
-            path = getattr(module, '__file__', '')
+            path = getattr(module, '__file__', '') or ''
             if path[-4:] in ('.pyo', '.pyc'): path = path[:-1]
             if path and exists(path): files[path] = mtime(path)
 
@@ -4010,7 +4017,6 @@ class SimpleTemplate(BaseTemplate):
 
 
 class StplSyntaxError(TemplateError):
-
     pass
 
 
@@ -4152,15 +4158,18 @@ class StplParser(object):
                     self.paren_depth -= 1
                 code_line += _pc
             elif _blk1:  # Start-block keyword (if/for/while/def/try/...)
-                code_line, self.indent_mod = _blk1, -1
+                code_line = _blk1
                 self.indent += 1
+                self.indent_mod -= 1
             elif _blk2:  # Continue-block keyword (else/elif/except/...)
-                code_line, self.indent_mod = _blk2, -1
-            elif _end:  # The non-standard 'end'-keyword (ends a block)
-                self.indent -= 1
+                code_line = _blk2
+                self.indent_mod -= 1
             elif _cend:  # The end-code-block template token (usually '%>')
                 if multiline: multiline = False
                 else: code_line += _cend
+            elif _end:
+                self.indent -= 1
+                self.indent_mod += 1
             else:  # \n
                 self.write_code(code_line.strip(), comment)
                 self.lineno += 1

@@ -25,12 +25,12 @@ fi
 
 pushd $PREFIX || exit 1
   echo "Downloading source ..."
-  wget -N http://hg.python.org/cpython/archive/$VERSION.tar.gz  || exit 1
+  wget -N https://www.python.org/ftp/python/$VERSION/Python-$VERSION.tgz || exit 1
 
   echo "Extracting source ..."
-  tar -xzf $VERSION.tar.gz || exit 1
+  tar -xzf Python-$VERSION.tgz || exit 1
 
-  pushd cpython-$VERSION || exit 1
+  pushd Python-$VERSION || exit 1
     echo "Running ./configure --prefix=$PREFIX ..."
     ./configure --prefix=$PREFIX || exit 1
 

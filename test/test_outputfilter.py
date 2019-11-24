@@ -4,7 +4,14 @@
 import unittest
 import bottle
 from bottle import tob, touni
-from tools import ServerTestBase, tobs, warn
+from .tools import ServerTestBase, tobs, warn
+
+USING_UJSON = True
+
+try:
+    import ujson
+except ImportError:
+    USING_UJSON = False
 
 class TestOutputFilter(ServerTestBase):
     ''' Tests for WSGI functionality, routing and output casting (decorators) '''
@@ -70,40 +77,34 @@ class TestOutputFilter(ServerTestBase):
 
     def test_json(self):
         self.app.route('/')(lambda: {'a': 1})
-        try:
-            self.assertBody(bottle.json_dumps({'a': 1}))
-            self.assertHeader('Content-Type','application/json')
-        except ImportError:
-            warn("Skipping JSON tests.")
 
+        self.assertBody(bottle.json_dumps({'a': 1}))
+        self.assertHeader('Content-Type','application/json')
+
+    @unittest.skipIf(USING_UJSON, 'ujson do not throw exception in serialize')
     def test_json_serialization_error(self):
         """
         Verify that 500 errors serializing dictionaries don't return
         content-type application/json
         """
         self.app.route('/')(lambda: {'a': set()})
-        try:
-            self.assertStatus(500)
-            self.assertHeader('Content-Type','text/html; charset=UTF-8')
-        except ImportError:
-            warn("Skipping JSON tests.")
+
+        self.assertStatus(500)
+        self.assertHeader('Content-Type','text/html; charset=UTF-8')
+
 
     def test_json_HTTPResponse(self):
         self.app.route('/')(lambda: bottle.HTTPResponse({'a': 1}, 500))
-        try:
-            self.assertBody(bottle.json_dumps({'a': 1}))
-            self.assertHeader('Content-Type','application/json')
-        except ImportError:
-            warn("Skipping JSON tests.")
+
+        self.assertBody(bottle.json_dumps({'a': 1}))
+        self.assertHeader('Content-Type','application/json')
 
     def test_json_HTTPError(self):
         self.app.error(400)(lambda e: e.body)
         self.app.route('/')(lambda: bottle.HTTPError(400, {'a': 1}))
-        try:
-            self.assertBody(bottle.json_dumps({'a': 1}))
-            self.assertHeader('Content-Type','application/json')
-        except ImportError:
-            warn("Skipping JSON tests.")
+
+        self.assertBody(bottle.json_dumps({'a': 1}))
+        self.assertHeader('Content-Type','application/json')
 
     def test_generator_callback(self):
         @self.app.route('/')
