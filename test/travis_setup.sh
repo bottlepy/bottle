@@ -10,7 +10,7 @@ pip install -U pip
 easy_install distribute
 
 pip install -U coverage
-pip install coveralls
+pip install coveralls flake8
 
 # Server back-ends and template engines. Not all back-ends support all python versions and we only want to test for 2.7 and 3.6 to keep things sane
 if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]]; then
