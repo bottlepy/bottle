@@ -17,5 +17,6 @@ htmlcov/
 .htmlcoverage/
 .coverage
 .name
+.tox/
 
 docs/_locale/_pot/.doctrees/
