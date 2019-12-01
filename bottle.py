@@ -2835,7 +2835,8 @@ def static_file(filename, root,
                 mimetype=True,
                 download=False,
                 charset='UTF-8',
-                etag=None):
+                etag=None,
+                headers=None):
     """ Open a file in a safe way and return an instance of :exc:`HTTPResponse`
         that can be sent back to the client.
 
@@ -2852,6 +2853,7 @@ def static_file(filename, root,
             (default: UTF-8)
         :param etag: Provide a pre-computed ETag header. If set to ``False``,
             ETag handling is disabled. (default: auto-generate ETag header)
+        :param headers: Additional headers dict to add to the response.
 
         While checking user input is always a good idea, this function provides
         additional protection against malicious ``filename`` parameters from
@@ -2869,7 +2871,7 @@ def static_file(filename, root,
 
     root = os.path.join(os.path.abspath(root), '')
     filename = os.path.abspath(os.path.join(root, filename.strip('/\\')))
-    headers = dict()
+    headers = headers or {}
 
     if not filename.startswith(root):
         return HTTPError(403, "Access denied.")
@@ -2883,11 +2885,12 @@ def static_file(filename, root,
             mimetype, encoding = mimetypes.guess_type(download)
         else:
             mimetype, encoding = mimetypes.guess_type(filename)
-        if encoding: headers['Content-Encoding'] = encoding
+        if encoding:
+            headers['Content-Encoding'] = encoding
 
     if mimetype:
         if (mimetype[:5] == 'text/' or mimetype == 'application/javascript')\
-        and charset and 'charset' not in mimetype:
+          and charset and 'charset' not in mimetype:
             mimetype += '; charset=%s' % charset
         headers['Content-Type'] = mimetype
 
