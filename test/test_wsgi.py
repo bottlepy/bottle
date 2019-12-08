@@ -2,7 +2,7 @@
 from __future__ import with_statement
 import bottle
 from .tools import ServerTestBase, chdir
-from bottle import tob, touni
+from bottle import tob, touni, HTTPResponse
 
 class TestWsgi(ServerTestBase):
     ''' Tests for WSGI functionality, routing and output casting (decorators) '''
@@ -57,7 +57,6 @@ class TestWsgi(ServerTestBase):
         bottle.status = 204
         for h, v in bottle.response.headerlist:
             self.assertFalse(h.lower() in bad, "Header %s not deleted" % h)
-
 
     def get304(self):
         """ 304 responses must not return entity headers """
@@ -172,6 +171,7 @@ class TestWsgi(ServerTestBase):
             c = [x.strip() for x in c]
         self.assertTrue('b=b' in c)
         self.assertTrue('c=c; Path=/' in c)
+
 
 class TestErrorHandling(ServerTestBase):
     def test_error_routing(self):
@@ -364,6 +364,26 @@ class TestRouteDecorator(ServerTestBase):
         self.assertInBody("hook_content", "/")
         self.assertEqual(["route", "after"], called)
 
+    def test_after_response_hook_can_set_headers(self):
+        """ Issue #1125  """
+
+        @bottle.route()
+        def test1():
+            return "test"
+        @bottle.route()
+        def test2():
+            return HTTPResponse("test", 200)
+        @bottle.route()
+        def test3():
+            raise HTTPResponse("test", 200)
+
+        @bottle.hook('after_request')
+        def hook():
+            bottle.response.headers["X-Hook"] = 'works'
+
+        for route in ("/test1", "/test2", "/test3"):
+            self.assertBody('test', route)
+            self.assertHeader('X-Hook', 'works', route)
 
     def test_template(self):
         @bottle.route(template='test {{a}} {{b}}')
@@ -458,7 +478,7 @@ class TestDecorators(ServerTestBase):
 class TestAppShortcuts(ServerTestBase):
     def setUp(self):
         ServerTestBase.setUp(self)
-        
+
     def testWithStatement(self):
         default = bottle.default_app()
         inner_app = bottle.Bottle()
