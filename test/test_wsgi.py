@@ -2,7 +2,7 @@
 import unittest
 import bottle
 from tools import ServerTestBase
-from bottle import tob
+from bottle import tob, HTTPResponse
 
 class TestWsgi(ServerTestBase):
     ''' Tests for WSGI functionality, routing and output casting (decorators) '''
@@ -242,6 +242,27 @@ class TestRouteDecorator(ServerTestBase):
             bottle.response.headers['X-Hook'] = 'after'
         self.assertBody('before', '/test')
         self.assertHeader('X-Hook', 'after', '/test')
+
+    def test_after_response_hook_can_set_headers(self):
+        """ Issue #1125  """
+
+        @bottle.route()
+        def test1():
+            return "test"
+        @bottle.route()
+        def test2():
+            return HTTPResponse("test", 200)
+        @bottle.route()
+        def test3():
+            raise HTTPResponse("test", 200)
+
+        @bottle.hook('after_request')
+        def hook():
+            bottle.response.headers["X-Hook"] = 'works'
+
+        for route in ("/test1", "/test2", "/test3"):
+            self.assertBody('test', route)
+            self.assertHeader('X-Hook', 'works', route)
 
     def test_template(self):
         @bottle.route(template='test {{a}} {{b}}')
