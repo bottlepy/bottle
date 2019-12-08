@@ -859,28 +859,37 @@ class Bottle(object):
             environ['bottle.app'] = self
             request.bind(environ)
             response.bind()
+            out = None
             try:
                 self.trigger_hook('before_request')
                 route, args = self.router.match(environ)
                 environ['route.handle'] = route
                 environ['bottle.route'] = route
                 environ['route.url_args'] = args
-                return route.call(**args)
+                out = route.call(**args)
+            except RouteReset:
+                route.reset()
+                return self._handle(environ)
+            except HTTPResponse:
+                out = _e()
             finally:
-                self.trigger_hook('after_request')
-
-        except HTTPResponse:
-            return _e()
-        except RouteReset:
-            route.reset()
-            return self._handle(environ)
+                if isinstance(out, HTTPResponse):
+                    out.apply(response)
+                try:
+                    self.trigger_hook('after_request')
+                except HTTPResponse:
+                    out = _e()
+                    out.apply(response)
         except (KeyboardInterrupt, SystemExit, MemoryError):
             raise
         except Exception:
             if not self.catchall: raise
             stacktrace = format_exc()
             environ['wsgi.errors'].write(stacktrace)
-            return HTTPError(500, "Internal Server Error", _e(), stacktrace)
+            environ['wsgi.errors'].flush()
+            out = HTTPError(500, "Internal Server Error", _e(), stacktrace)
+            out.apply(response)
+        return out
 
     def _cast(self, out, peek=None):
         """ Try to convert the parameter into something WSGI compatible and set
