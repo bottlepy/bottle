@@ -110,7 +110,9 @@ except ImportError:
     except ImportError:
         from inspect import getargspec
 
-py3k = sys.version_info.major > 2
+
+py = sys.version_info
+py3k = py.major > 2
 
 
 # Workaround for the "print is a keyword/function" Python 2/3 dilemma
@@ -1819,10 +1821,8 @@ class BaseResponse(object):
             :param secure: limit the cookie to HTTPS connections (default: off).
             :param httponly: prevents client-side javascript to read this cookie
               (default: off, requires Python 2.6 or newer).
-            :param samesite: disables third-party use for a cookie.
-              Allowed attributes: `lax` and `strict`.
-              In strict mode the cookie will never be sent.
-              In lax mode the cookie is only sent with a top-level GET request.
+            :param samesite: Control or disable third-party use for this cookie.
+              Possible values: `lax`, `strict` or `none` (default).
 
             If neither `expires` nor `maxage` is set (default), the cookie will
             expire at the end of the browser session (as soon as the browser
@@ -1847,7 +1847,8 @@ class BaseResponse(object):
 
         # Monkey-patch Cookie lib to support 'SameSite' parameter
         # https://tools.ietf.org/html/draft-west-first-party-cookies-07#section-4.1
-        Morsel._reserved.setdefault('samesite', 'SameSite')
+        if py < (3, 8, 0):
+            Morsel._reserved.setdefault('samesite', 'SameSite')
 
         if secret:
             if not isinstance(value, basestring):
@@ -1879,9 +1880,9 @@ class BaseResponse(object):
                     value = time.gmtime(value)
                 value = time.strftime("%a, %d %b %Y %H:%M:%S GMT", value)
             if key in ('same_site', 'samesite'): # 'samesite' variant added in 0.13
-                key = 'samesite'
-                if value.lower() not in ('lax', 'strict'):
-                    raise CookieError("Invalid value samesite=%r (expected 'lax' or 'strict')" % (key,))
+                key, value = 'samesite', (value or "none").lower()
+                if value not in ('lax', 'strict', 'none'):
+                    raise CookieError("Invalid value for SameSite")
             if key in ('secure', 'httponly') and not value:
                 continue
             self._cookies[name][key] = value
