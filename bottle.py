@@ -864,7 +864,7 @@ class Bottle(object):
         run(self, **kwargs)
 
     def match(self, environ):
-        """ Search for a matching route and return a (:class:`Route` , urlargs)
+        """ Search for a matching route and return a (:class:`Route`, urlargs)
             tuple. The second value is a dictionary with parameters extracted
             from the URL. Raise :exc:`HTTPError` (404/405) on a non-match."""
         return self.router.match(environ)
@@ -1290,7 +1290,7 @@ class BaseRequest(object):
         """
         ctype = self.environ.get('CONTENT_TYPE', '').lower().split(';')[0]
         if ctype in ('application/json', 'application/json-rpc'):
-            b = self._get_body_string()
+            b = self._get_body_string(self.MEMFILE_MAX)
             if not b:
                 return None
             try:
@@ -1356,15 +1356,13 @@ class BaseRequest(object):
         body.seek(0)
         return body
 
-    def _get_body_string(self):
-        """ read body until content-length or MEMFILE_MAX into a string. Raise
-            HTTPError(413) on requests that are to large. """
-        clen = self.content_length
-        if clen > self.MEMFILE_MAX:
+    def _get_body_string(self, maxread):
+        """ Read body into a string. Raise HTTPError(413) on requests that are
+            to large. """
+        if self.content_length > maxread:
             raise HTTPError(413, 'Request entity too large')
-        if clen < 0: clen = self.MEMFILE_MAX + 1
-        data = self.body.read(clen)
-        if len(data) > self.MEMFILE_MAX:  # Fail fast
+        data = self.body.read(maxread + 1)
+        if len(data) > maxread:
             raise HTTPError(413, 'Request entity too large')
         return data
 
@@ -1397,8 +1395,8 @@ class BaseRequest(object):
         # We default to application/x-www-form-urlencoded for everything that
         # is not multipart and take the fast path (also: 3.1 workaround)
         if not self.content_type.startswith('multipart/'):
-            pairs = _parse_qsl(tonat(self._get_body_string(), 'latin1'))
-            for key, value in pairs:
+            body = tonat(self._get_body_string(self.MEMFILE_MAX), 'latin1')
+            for key, value in _parse_qsl(body):
                 post[key] = value
             return post
 
