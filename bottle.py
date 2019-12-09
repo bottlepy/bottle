@@ -1312,7 +1312,8 @@ class BaseRequest(object):
                 yield part
         else:  # Non Content-Length header
             # Assume 'wsgi.input_terminated' support or 'Connection: close'
-            yield from iter(lambda: read(bufsize), b'')
+            for part in iter(lambda: read(bufsize), b''):
+                yield part
 
     @staticmethod
     def _iter_chunked(read, bufsize):
