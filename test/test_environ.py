@@ -556,6 +556,15 @@ class TestResponse(unittest.TestCase):
         self.assertEqual(rs.status_code, 404)
         self.assertEqual(rs.status_line, '404 Brain not Found')
 
+        # Unicode in status line (thanks RFC7230 :/)
+        if bottle.py3k:
+            def test(): rs.status = '400 Non-ASCÜ'
+            self.assertRaises(ValueError, test)
+            self.assertEqual(rs.status, rs.status_line)
+            self.assertEqual(rs.status_code, 400)
+            wire = rs._wsgi_status_line().encode('latin1')
+            self.assertEqual(rs.status, wire.decode('utf8'))
+
         def test(): rs.status = '5 Illegal Code'
         self.assertRaises(ValueError, test)
         self.assertEqual(rs.status, rs.status_line) # last value

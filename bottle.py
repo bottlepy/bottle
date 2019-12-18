@@ -730,6 +730,13 @@ class Bottle(object):
                 def start_response(status, headerlist, exc_info=None):
                     if exc_info:
                         _raise(*exc_info)
+                    if py3k:
+                        # Errors here mean that the mounted WSGI app did not
+                        # follow PEP-3333 (which requires latin1) or used a
+                        # pre-encoding other than utf8 :/
+                        status = status.encode('latin1').decode('utf8')
+                        headerlist = [k, v.encode('latin1').decode('utf8')
+                                      for k, v in headerlist]
                     rs.status = status
                     for name, value in headerlist:
                         rs.add_header(name, value)
@@ -1108,7 +1115,7 @@ class Bottle(object):
             or environ['REQUEST_METHOD'] == 'HEAD':
                 if hasattr(out, 'close'): out.close()
                 out = []
-            start_response(response._status_line, response.headerlist)
+            start_response(response._wsgi_status_line(), response.headerlist)
             return out
         except (KeyboardInterrupt, SystemExit, MemoryError):
             raise
@@ -1708,6 +1715,8 @@ class BaseResponse(object):
         if isinstance(status, int):
             code, status = status, _HTTP_STATUS_LINES.get(status)
         elif ' ' in status:
+            if '\n' in status or '\r' in status or '\0' in status:
+                raise ValueError('Status line must not include control chars.')
             status = status.strip()
             code = int(status.split()[0])
         else:
@@ -1767,6 +1776,12 @@ class BaseResponse(object):
         """ Yield (header, value) tuples, skipping headers that are not
             allowed with the current response status code. """
         return self.headerlist
+
+    def _wsgi_status_line(self):
+        """ WSGI conform status line (latin1-encodeable) """
+        if py3k:
+            return self._status_line.encode('utf8').decode('latin1')
+        return self._status_line
 
     @property
     def headerlist(self):
