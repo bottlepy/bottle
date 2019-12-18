@@ -735,8 +735,8 @@ class Bottle(object):
                         # follow PEP-3333 (which requires latin1) or used a
                         # pre-encoding other than utf8 :/
                         status = status.encode('latin1').decode('utf8')
-                        headerlist = [k, v.encode('latin1').decode('utf8')
-                                      for k, v in headerlist]
+                        headerlist = [(k, v.encode('latin1').decode('utf8'))
+                                      for (k, v) in headerlist]
                     rs.status = status
                     for name, value in headerlist:
                         rs.add_header(name, value)
