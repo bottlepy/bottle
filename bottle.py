@@ -3494,15 +3494,6 @@ class EventletServer(ServerAdapter):
             wsgi.server(listen(address), handler)
 
 
-class RocketServer(ServerAdapter):
-    """ Untested. """
-
-    def run(self, handler):
-        from rocket import Rocket
-        server = Rocket((self.host, self.port), 'wsgi', {'wsgi_app': handler})
-        server.start()
-
-
 class BjoernServer(ServerAdapter):
     """ Fast server written in C: https://github.com/jonashaag/bjoern """
 
@@ -3516,9 +3507,9 @@ class AsyncioServerAdapter(ServerAdapter):
         pass
 
 class AiohttpServer(AsyncioServerAdapter):
-    """ Untested.
-        aiohttp
+    """ Asynchronous HTTP client/server framework for asyncio
         https://pypi.python.org/pypi/aiohttp/
+        https://pypi.org/project/aiohttp-wsgi/
     """
 
     def get_event_loop(self):
@@ -3527,26 +3518,16 @@ class AiohttpServer(AsyncioServerAdapter):
 
     def run(self, handler):
         import asyncio
-        from aiohttp.wsgi import WSGIServerHttpProtocol
+        from aiohttp_wsgi.wsgi import serve
         self.loop = self.get_event_loop()
         asyncio.set_event_loop(self.loop)
-
-        protocol_factory = lambda: WSGIServerHttpProtocol(
-            handler,
-            readpayload=True,
-            debug=(not self.quiet))
-        self.loop.run_until_complete(self.loop.create_server(protocol_factory,
-                                                             self.host,
-                                                             self.port))
 
         if 'BOTTLE_CHILD' in os.environ:
             import signal
             signal.signal(signal.SIGINT, lambda s, f: self.loop.stop())
 
-        try:
-            self.loop.run_forever()
-        except KeyboardInterrupt:
-            self.loop.stop()
+        serve(handler, host=self.host, port=self.port)
+
 
 class AiohttpUVLoopServer(AiohttpServer):
     """uvloop
@@ -3586,7 +3567,6 @@ server_names = {
     'gunicorn': GunicornServer,
     'eventlet': EventletServer,
     'gevent': GeventServer,
-    'rocket': RocketServer,
     'bjoern': BjoernServer,
     'aiohttp': AiohttpServer,
     'uvloop': AiohttpUVLoopServer,

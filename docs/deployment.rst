@@ -3,7 +3,6 @@
 .. _wsgiref: http://docs.python.org/library/wsgiref.html
 .. _cherrypy: http://www.cherrypy.org/
 .. _paste: http://pythonpaste.org/
-.. _rocket: http://pypi.python.org/pypi/rocket
 .. _gunicorn: http://pypi.python.org/pypi/gunicorn
 .. _fapws3: http://www.fapws.org/
 .. _tornado: http://www.tornadoweb.org/
@@ -68,7 +67,6 @@ gae       gae_          Helper for Google App Engine deployments
 wsgiref   wsgiref_      Single-threaded default server
 cherrypy  cherrypy_     Multi-threaded and very stable
 paste     paste_        Multi-threaded, stable, tried and tested
-rocket    rocket_       Multi-threaded
 waitress  waitress_     Multi-threaded, poweres Pyramid
 gunicorn  gunicorn_     Pre-forked, partly written in C
 eventlet  eventlet_     Asynchronous framework with WSGI support.
