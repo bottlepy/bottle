@@ -2691,7 +2691,8 @@ class ResourceManager(object):
                 res.add_path('./resources/', __file__)
         """
         base = os.path.abspath(os.path.dirname(base or self.base))
-        path = os.path.abspath(os.path.join(base, os.path.dirname(path))) + "/"
+        path = os.path.abspath(os.path.join(base, os.path.dirname(path)))
+        path += os.sep
         if path in self.path:
             self.path.remove(path)
         if create and not os.path.isdir(path):
@@ -3840,7 +3841,7 @@ class BaseTemplate(object):
                        "Refer to templates with names or paths relative to the lookup path.")
 
         for spath in lookup:
-            spath = os.path.abspath(spath) + "/"
+            spath = os.path.abspath(spath) + os.sep
             fname = os.path.abspath(os.path.join(spath, name))
             if not fname.startswith(spath): continue
             if os.path.isfile(fname): return fname
