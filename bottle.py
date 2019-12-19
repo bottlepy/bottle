@@ -3461,7 +3461,7 @@ class GunicornServer(ServerAdapter):
     """ Untested. See http://gunicorn.org/configure.html for options. """
 
     def run(self, handler):
-        from gunicorn.app.base import Application
+        from gunicorn.app.base import BaseApplication
 
         if self.host.startswith("unix:"):
             config = {'bind': self.host}
@@ -3470,9 +3470,10 @@ class GunicornServer(ServerAdapter):
 
         config.update(self.options)
 
-        class GunicornApplication(Application):
-            def init(self, parser, opts, args):
-                return config
+        class GunicornApplication(BaseApplication):
+            def load_config(self):
+                for key, value in config.items():
+                    self.cfg.set(key, value)
 
             def load(self):
                 return handler
