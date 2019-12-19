@@ -760,7 +760,7 @@ class TestResponse(unittest.TestCase):
     def test_expires_header(self):
         import datetime
         response = BaseResponse()
-        now = datetime.datetime.now()
+        now = datetime.datetime.utcnow()
         response.expires = now
 
         def seconds(a, b):
