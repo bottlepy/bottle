@@ -69,8 +69,8 @@ if __name__ == '__main__':
 ###############################################################################
 
 
-import base64, cgi, email.utils, functools, hmac, imp, itertools, mimetypes,\
-        os, re, tempfile, threading, time, warnings, weakref, hashlib
+import base64, calendar, cgi, email.utils, functools, hmac, imp, itertools,\
+       mimetypes, os, re, tempfile, threading, time, warnings, weakref, hashlib
 
 from types import FunctionType
 from datetime import date as datedate, datetime, timedelta
@@ -1887,11 +1887,7 @@ class BaseResponse(object):
                 if isinstance(value, timedelta):
                     value = value.seconds + value.days * 24 * 3600
             if key == 'expires':
-                if isinstance(value, (datedate, datetime)):
-                    value = value.timetuple()
-                elif isinstance(value, (int, float)):
-                    value = time.gmtime(value)
-                value = time.strftime("%a, %d %b %Y %H:%M:%S GMT", value)
+                value = http_date(value)
             if key in ('same_site', 'samesite'): # 'samesite' variant added in 0.13
                 key, value = 'samesite', (value or "none").lower()
                 if value not in ('lax', 'strict', 'none'):
@@ -2965,13 +2961,19 @@ def debug(mode=True):
 
 
 def http_date(value):
-    if isinstance(value, (datedate, datetime)):
+    if isinstance(value, basestring):
+        return value
+    if isinstance(value, datetime):
+        # aware datetime.datetime is converted to UTC time
+        # naive datetime.datetime is treated as UTC time
         value = value.utctimetuple()
-    elif isinstance(value, (int, float)):
-        value = time.gmtime(value)
-    if not isinstance(value, basestring):
-        value = time.strftime("%a, %d %b %Y %H:%M:%S GMT", value)
-    return value
+    elif isinstance(value, datedate):
+        # datetime.date is naive, and is treated as UTC time
+        value = value.timetuple()
+    if not isinstance(value, (int, float)):
+        # convert struct_time in UTC to UNIX timestamp
+        value = calendar.timegm(value)
+    return email.utils.formatdate(value, usegmt=True)
 
 
 def parse_date(ims):
