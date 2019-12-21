@@ -25,4 +25,9 @@ intersphinx_mapping = {'python': ('http://docs.python.org/', None),
 locale_dirs = ['_locale/']
 gettext_compact = False
 
-
+man_pages = [
+    ('cli', 'bottle', u'command line interface', [
+        u'Marcel Hellkamp',
+        u'Federico Ceratto',
+    ], 1)
+]
