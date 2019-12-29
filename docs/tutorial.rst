@@ -354,7 +354,7 @@ The :func:`abort` function is a shortcut for generating HTTP error pages.
 
 To redirect a client to a different URL, you can send a ``303 See Other`` response with the ``Location`` header set to the new URL. :func:`redirect` does that for you::
 
-    from bottle import redirect
+    from bottle import route, redirect
     @route('/wrong/url')
     def wrong():
         redirect("/right/url")
