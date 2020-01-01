@@ -81,9 +81,9 @@ class TestServer(unittest.TestCase):
 
         lines = [line for stream in (self.p.stdout, self.p.stderr) for line in stream]
         for line in lines:
-            if tob('warning') in line.lower():
+            if b'warning' in line.lower():
                tools.warn(line.strip().decode('utf8'))
-            elif tob('error') in line.lower():
+            elif b'error' in line.lower():
                 raise AssertionError(line.strip().decode('utf8'))
 
     def fetch(self, url):
@@ -95,7 +95,7 @@ class TestServer(unittest.TestCase):
     def test_simple(self):
         ''' Test a simple static page with this server adapter. '''
         if self.skip: return
-        self.assertEqual(tob('OK'), self.fetch('test'))
+        self.assertEqual(b'OK', self.fetch('test'))
 
 
 blacklist = ['cgi', 'flup', 'gae', 'wsgiref']

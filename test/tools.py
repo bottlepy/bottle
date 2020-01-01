@@ -95,7 +95,7 @@ class ServerTestBase(unittest.TestCase):
         self.wsgiapp = wsgiref.validate.validator(self.app)
 
     def urlopen(self, path, method='GET', post='', env=None):
-        result = {'code':0, 'status':'error', 'header':{}, 'body':tob('')}
+        result = {'code':0, 'status':'error', 'header':{}, 'body':b''}
         def start_response(status, header, exc_info=None):
             result['code'] = int(status.split()[0])
             result['status'] = status.split(None, 1)[-1]

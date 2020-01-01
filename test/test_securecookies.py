@@ -7,8 +7,8 @@ from bottle import tob, touni
 
 class TestSignedCookies(unittest.TestCase):
     def setUp(self):
-        self.data = touni('υηι¢σ∂є')
-        self.secret = tob('secret')
+        self.data = 'υηι¢σ∂є'
+        self.secret = b'secret'
         bottle.app.push()
         bottle.response.bind()
 
@@ -43,4 +43,4 @@ class TestSignedCookies(unittest.TestCase):
 class TestSignedCookiesWithPickle(TestSignedCookies):
     def setUp(self):
         super(TestSignedCookiesWithPickle, self).setUp()
-        self.data = dict(a=5, b=touni('υηι¢σ∂є'), c=[1,2,3,4,tob('bytestring')])
+        self.data = dict(a=5, b='υηι¢σ∂є', c=[1,2,3,4,b'bytestring'])

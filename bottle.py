@@ -1289,7 +1289,7 @@ class BaseRequest(object):
     @staticmethod
     def _iter_chunked(read, bufsize):
         err = HTTPError(400, 'Error while parsing chunked transfer body.')
-        rn, sem, bs = tob('\r\n'), tob(';'), tob('')
+        rn, sem, bs = b'\r\n', b';', b''
         while True:
             header = read(1)
             while header[-2:] != rn:
@@ -1839,7 +1839,7 @@ class BaseResponse(object):
             encoded = base64.b64encode(pickle.dumps([name, value], -1))
             sig = base64.b64encode(hmac.new(tob(secret), encoded,
                                             digestmod=digestmod).digest())
-            value = touni(tob('!') + sig + tob('?') + encoded)
+            value = touni(b'!' + sig + b'?' + encoded)
         elif not isinstance(value, basestring):
             raise TypeError('Secret key required for non-string cookies.')
 
@@ -3017,7 +3017,7 @@ def cookie_encode(data, key, digestmod=None):
     digestmod = digestmod or hashlib.sha256
     msg = base64.b64encode(pickle.dumps(data, -1))
     sig = base64.b64encode(hmac.new(tob(key), msg, digestmod=digestmod).digest())
-    return tob('!') + sig + tob('?') + msg
+    return b'!' + sig + b'?' + msg
 
 
 def cookie_decode(data, key, digestmod=None):
@@ -3026,7 +3026,7 @@ def cookie_decode(data, key, digestmod=None):
                 "Do not use this API directly.")
     data = tob(data)
     if cookie_is_encoded(data):
-        sig, msg = data.split(tob('?'), 1)
+        sig, msg = data.split(b'?', 1)
         digestmod = digestmod or hashlib.sha256
         hashed = hmac.new(tob(key), msg, digestmod=digestmod).digest()
         if _lscmp(sig[1:], base64.b64encode(hashed)):
@@ -3038,7 +3038,7 @@ def cookie_is_encoded(data):
     """ Return True if the argument looks like a encoded cookie."""
     depr(0, 13, "cookie_is_encoded() will be removed soon.",
                 "Do not use this API directly.")
-    return bool(data.startswith(tob('!')) and tob('?') in data)
+    return bool(data.startswith(b'!') and b'?' in data)
 
 
 def html_escape(string):

@@ -131,7 +131,7 @@ class TestSendFile(unittest.TestCase):
         request.environ['HTTP_RANGE'] = 'bytes=10-25,-80'
         f = static_file(basename, root=root)
         c = open(__file__, 'rb'); c.seek(10)
-        self.assertEqual(c.read(16), tob('').join(f.body))
+        self.assertEqual(c.read(16), b''.join(f.body))
         self.assertEqual('bytes 10-25/%d' % len(open(__file__, 'rb').read()),
                          f.headers['Content-Range'])
         self.assertEqual('bytes', f.headers['Accept-Ranges'])
