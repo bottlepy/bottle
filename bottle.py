@@ -145,8 +145,9 @@ def touni(s, enc='utf8', err='strict'):
     return unicode("" if s is None else s)
 
 
-tonat = touni
-
+def tonat(s, enc='utf8', err='strict'):
+    dept(0, 13, "tonat() no longer needed", "Use touni()")
+    return touni(s, enc, err)
 
 
 # A bug in functools causes it to break if the wrapper is an instance method
@@ -1298,7 +1299,7 @@ class BaseRequest(object):
                 if len(header) > bufsize: raise err
             size, _, _ = header.partition(sem)
             try:
-                maxread = int(tonat(size.strip()), 16)
+                maxread = int(touni(size.strip()), 16)
             except ValueError:
                 raise err
             if maxread == 0: break
@@ -1335,8 +1336,8 @@ class BaseRequest(object):
         return body
 
     def _get_body_string(self, maxread):
-        """ Read body into a string. Raise HTTPError(413) on requests that are
-            to large. """
+        """ Read body into a byte string. Raise HTTPError(413) on requests that
+            are to large. """
         if self.content_length > maxread:
             raise HTTPError(413, 'Request entity too large')
         data = self.body.read(maxread + 1)
@@ -1373,7 +1374,7 @@ class BaseRequest(object):
         # We default to application/x-www-form-urlencoded for everything that
         # is not multipart and take the fast path (also: 3.1 workaround)
         if not self.content_type.startswith('multipart/'):
-            body = tonat(self._get_body_string(self.MEMFILE_MAX), 'latin1')
+            body = self._get_body_string(self.MEMFILE_MAX).decode('latin1')
             for key, value in _parse_qsl(body):
                 post[key] = value
             return post
@@ -1584,7 +1585,7 @@ def _hkey(key):
 
 
 def _hval(value):
-    value = tonat(value)
+    value = touni(value)
     if '\n' in value or '\r' in value or '\0' in value:
         raise ValueError("Header value must not contain control characters: %r" % value)
     return value
