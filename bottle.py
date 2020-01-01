@@ -77,6 +77,15 @@ from datetime import date as datedate, datetime, timedelta
 from tempfile import TemporaryFile
 from traceback import format_exc, print_exc
 from unicodedata import normalize
+import http.client as httplib
+import _thread as thread
+from urllib.parse import urljoin, SplitResult as UrlSplitResult
+from urllib.parse import urlencode, quote as urlquote, unquote as urlunquote
+from http.cookies import SimpleCookie, Morsel, CookieError
+from collections.abc import MutableMapping as DictMixin
+import pickle
+from io import BytesIO
+import configparser
 
 try:
     from ujson import dumps as json_dumps, loads as json_lds
@@ -115,34 +124,13 @@ py = sys.version_info
 if py < (3, 5, 0):
     raise ImportError("Unsupported python version: %d.%d < 3.5.0" % (py.major, py.minor))
 
-
-# Workaround for the "print is a keyword/function" Python 2/3 dilemma
-# and a fallback for mod_wsgi (resticts stdout/err attribute access)
-try:
-    _stdout, _stderr = sys.stdout.write, sys.stderr.write
-except IOError:
-    _stdout = lambda x: sys.stdout.write(x)
-    _stderr = lambda x: sys.stderr.write(x)
-
-import http.client as httplib
-import _thread as thread
-from urllib.parse import urljoin, SplitResult as UrlSplitResult
-from urllib.parse import urlencode, quote as urlquote, unquote as urlunquote
-urlunquote = functools.partial(urlunquote, encoding='latin1')
-from http.cookies import SimpleCookie, Morsel, CookieError
-from collections.abc import MutableMapping as DictMixin
-import pickle
-from io import BytesIO
-import configparser
-
 basestring = str
 unicode = str
 json_loads = lambda s: json_lds(touni(s))
 callable = lambda x: hasattr(x, '__call__')
 imap = map
+urlunquote = functools.partial(urlunquote, encoding='latin1')
 
-def _raise(*a):
-    raise a[0](a[1]).with_traceback(a[2])
 
 # Some helpers for string/byte handling
 def tob(s, enc='utf8'):
@@ -714,7 +702,7 @@ class Bottle(object):
 
                 def start_response(status, headerlist, exc_info=None):
                     if exc_info:
-                        _raise(*exc_info)
+                        raise exc_info[1].with_traceback(exc_info[2])
                     # Errors here mean that the mounted WSGI app did not
                     # follow PEP-3333 (which requires latin1) or used a
                     # pre-encoding other than utf8 :/
@@ -3323,8 +3311,8 @@ class FapwsServer(ServerAdapter):
         evwsgi.start(self.host, port)
         # fapws3 never releases the GIL. Complain upstream. I tried. No luck.
         if 'BOTTLE_CHILD' in os.environ and not self.quiet:
-            _stderr("WARNING: Auto-reloading does not work with Fapws3.\n")
-            _stderr("         (Fapws3 breaks python thread support)\n")
+            print('WARNING: Auto-reloading does not work with Fapws3.',
+                  file=sys.stderr)
         evwsgi.set_base_module(base)
 
         def app(environ, start_response):
@@ -3663,14 +3651,14 @@ def run(app=None,
 
         server.quiet = server.quiet or quiet
         if not server.quiet:
-            _stderr("Bottle v%s server starting up (using %s)...\n" %
-                    (__version__, repr(server)))
+            print("Bottle v%s server starting up (using %s)..." %
+                  (__version__, repr(server)), file=sys.stderr)
             if server.host.startswith("unix:"):
-                _stderr("Listening on %s\n" % server.host)
+                print("Listening on %s" % server.host, file=sys.stderr)
             else:
-                _stderr("Listening on http://%s:%d/\n" %
-                        (server.host, server.port))
-            _stderr("Hit Ctrl-C to quit.\n\n")
+                print("Listening on http://%s:%d/" %
+                      (server.host, server.port), file=sys.stderr)
+            print("Hit Ctrl-C to quit.\n", file=sys.stderr)
 
         if reloader:
             lockfile = os.environ.get('BOTTLE_LOCKFILE')
@@ -4322,11 +4310,11 @@ def _main(argv):  # pragma: no coverage
 
     def _cli_error(cli_msg):
         parser.print_help()
-        _stderr('\nError: %s\n' % cli_msg)
+        print('\nError:', cli_msg, file=sys.stderr)
         sys.exit(1)
 
     if args.version:
-        _stdout('Bottle %s\n' % __version__)
+        print('Bottle', __version__)
         sys.exit(0)
     if not args.app:
         _cli_error("No application entry point specified.")
