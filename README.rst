@@ -61,7 +61,20 @@ Download and Install
 
 .. __: https://github.com/bottlepy/bottle/raw/master/bottle.py
 
-Install the latest stable release with ``pip install bottle`` or download `bottle.py`__ (unstable) into your project directory. There are no hard dependencies other than the Python standard library. Bottle runs with **Python 2.7 and 3.4+**.
+Install the latest stable release with ``pip install bottle`` or download `bottle.py`__ (unstable) into your project directory. There are no hard dependencies other than the Python standard library. Bottle runs with **Python 3.5+**.
+
+
+Python 2 Support (Bottle 0.12-LTS)
+----------------------------------
+
+Bottle usually actively maintains and supports two minor releases (stable and
+old-stable) and keeps minor releases backward compatible to their predecessor.
+This is not possible with Bottle 0.12/0.13, as 0.13 drops support for several
+legacy Python versions, including Python 2.
+
+Since Bottle-0.12 is the last release that supports Python 2, it will enter
+long term support mode as soon as 0.13 is released. LTS releases will receive
+security bug-fixes, but no new features.
 
 
 License
