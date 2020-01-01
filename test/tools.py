@@ -12,7 +12,7 @@ import wsgiref.validate
 import mimetypes
 import uuid
 
-from bottle import tob, tonat, BytesIO, py3k, unicode
+from bottle import tob, tonat, BytesIO, unicode
 
 
 def warn(msg):
@@ -83,10 +83,8 @@ def api(introduced, deprecated=None, removed=None):
 
 
 def wsgistr(s):
-    if py3k:
-        return s.encode('utf8').decode('latin1')
-    else:
-        return s
+    return s.encode('utf8').decode('latin1')
+
 
 class ServerTestBase(unittest.TestCase):
     def setUp(self):
