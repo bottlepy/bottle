@@ -136,7 +136,7 @@ Release 0.10
   * Introduced a :class:`ConfigDict` that makes accessing configuration a lot easier (attribute access and auto-expanding namespaces).
   * Added support for raw WSGI applications to :meth:`Bottle.mount`.
   * :meth:`Bottle.mount` parameter order changed.
-  * :meth:`Bottle.route` now accpets an import string for the ``callback`` parameter.
+  * :meth:`Bottle.route` now accepts an import string for the ``callback`` parameter.
   * Dropped Gunicorn 0.8 support. Current supported version is 0.13.
   * Added custom options to Gunicorn server.
   * Finally dropped support for type filters. Replace with a custom plugin of needed.

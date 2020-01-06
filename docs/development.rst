@@ -80,7 +80,7 @@ The best way to get your changes integrated into the main development branch is 
 
 * **Documentation:** Tell us what your patch does. Comment your code. If you introduced a new feature, add to the documentation so others can learn about it.
 * **Test:** Write tests to prove that your code works as expected and does not break anything. If you fixed a bug, write at least one test-case that triggers the bug. Make sure that all tests pass before you submit a patch.
-* **One patch at a time:** Only fix one bug or add one feature at a time. Design your patches so that they can be applyed as a whole. Keep your patches clean, small and focused. 
+* **One patch at a time:** Only fix one bug or add one feature at a time. Design your patches so that they can be applied as a whole. Keep your patches clean, small and focused. 
 * **Sync with upstream:** If the ``upstream/master`` branch changed while you were working on your patch, rebase or pull to make sure that your patch still applies without conflicts.
 
 

@@ -261,7 +261,7 @@ Using Bottle with Heroku
 ------------------------
 
 Heroku_, a popular cloud application platform now provides support
-for running Python applications on their infastructure. 
+for running Python applications on their infrastructure. 
 
 This recipe is based upon the `Heroku Quickstart 
 <http://devcenter.heroku.com/articles/quickstart>`_, 
