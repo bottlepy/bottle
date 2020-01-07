@@ -116,7 +116,7 @@ py3k = py.major > 2
 
 
 # Workaround for the "print is a keyword/function" Python 2/3 dilemma
-# and a fallback for mod_wsgi (resticts stdout/err attribute access)
+# and a fallback for mod_wsgi (restricts stdout/err attribute access)
 try:
     _stdout, _stderr = sys.stdout.write, sys.stderr.write
 except IOError:
@@ -606,7 +606,7 @@ class Route(object):
     def get_config(self, key, default=None):
         """ Lookup a config field and return its value, first checking the
             route.config, then route.app.config."""
-        depr(0, 13, "Route.get_config() is deprectated.",
+        depr(0, 13, "Route.get_config() is deprecated.",
                     "The Route.config property already includes values from the"
                     " application config for missing keys. Access it directly.")
         return self.config.get(key, default)
@@ -2755,7 +2755,7 @@ class FileUpload(object):
     content_length = HeaderProperty('Content-Length', reader=int, default=-1)
 
     def get_header(self, name, default=None):
-        """ Return the value of a header within the mulripart part. """
+        """ Return the value of a header within the multipart part. """
         return self.headers.get(name, default)
 
     @cached_property
