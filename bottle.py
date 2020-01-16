@@ -985,7 +985,7 @@ class Bottle(object):
         return tob(template(ERROR_PAGE_TEMPLATE, e=res, template_settings=dict(name='__ERROR_PAGE_TEMPLATE')))
 
     def _handle(self, environ):
-        path = environ['bottle.raw_path'] = environ['PATH_INFO']
+        path = environ['bottle.raw_path'] = environ.get('PATH_INFO',environ.get('REQUEST_URI','/'))
         if py3k:
             environ['PATH_INFO'] = path.encode('latin1').decode('utf8', 'ignore')
 
