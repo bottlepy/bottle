@@ -10,5 +10,5 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v1
       - run: pip install codespell flake8
-      - run: codespell
+      - run: codespell -L gae,GAE
       - run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
