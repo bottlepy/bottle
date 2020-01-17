@@ -1,0 +1,14 @@
+# GitHub Action to automate the identification of common misspellings in text files
+#   and Python syntax errors and undefined names.
+# https://github.com/codespell-project/codespell and https://gitlab.com/pycqa/flake8
+name: lint_python
+on: [push, pull_request]
+jobs:
+  lint_python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v1
+      - run: pip install codespell flake8
+      - run: codespell
+      - run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
