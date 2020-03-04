@@ -13,7 +13,7 @@
 .. _mod_wsgi: http://code.google.com/p/modwsgi/
 .. _Paste: http://pythonpaste.org/
 .. _Pound: http://www.apsis.ch/pound/
-.. _`WSGI_Specification`: http://www.wsgi.org/
+.. _WSGI_Specification: http://www.wsgi.org/
 .. _issue: http://github.com/bottlepy/bottle/issues
 .. _Python: http://python.org/
 .. _SimpleCookie: http://docs.python.org/library/cookie.html#morsel-objects
