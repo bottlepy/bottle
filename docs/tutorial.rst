@@ -675,7 +675,7 @@ You can access the raw body data as a file-like object via :attr:`BaseRequest.bo
 WSGI Environment
 --------------------------------------------------------------------------------
 
-Each :class:`BaseRequest` instance wraps a WSGI environment dictionary. The original is stored in :attr:`BaseRequest.environ`, but the request object itself behaves like a dictionary, too. Most of the interesting data is exposed through special methods or attributes, but if you want to access `WSGI environ variables <WSGI specification>`_ directly, you can do so::
+Each :class:`BaseRequest` instance wraps a WSGI environment dictionary. The original is stored in :attr:`BaseRequest.environ`, but the request object itself behaves like a dictionary, too. Most of the interesting data is exposed through special methods or attributes, but if you want to access `WSGI environ variables <WSGI Specification>`_ directly, you can do so::
 
   @route('/my_ip')
   def show_ip():
