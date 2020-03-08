@@ -12,7 +12,7 @@ Release 0.13
 
 .. rubric:: Dropped support for Python 2.5, 2.6, 3.1, 3.2 and 3.3
 
-These three Python versions are no longer maintained by the Python Software Foundation and reached their end of life a long time ago. Keeping up support for ancient Python versions hinders adaptation of new features and serves no real purpose. Even Debian 7 (wheezy) and Ubuntu 12.4 (precise), both outdated, ship with Python 2.7.3 and 3.2.3 already. For this reason, we decided to drop support for Python 2.5, 2.6, 3.1, 3.2 and 3.1. The updated list of tested and supported python releases is as follows:
+These five Python versions are no longer maintained by the Python Software Foundation and reached their end of life a long time ago. Keeping up support for ancient Python versions hinders adaptation of new features and serves no real purpose. Even Debian 7 (wheezy) and Ubuntu 12.04 (precise), both outdated, ship with Python 2.7.3 and 3.2.3 already. For this reason, we decided to drop support for Python 2.5, 2.6, 3.1, 3.2 and 3.3. The updated list of tested and supported python releases is as follows:
 
  * Python 2.7 (>= 2.7.3)
  * Python 3.4
