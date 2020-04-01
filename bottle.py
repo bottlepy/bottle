@@ -3985,6 +3985,8 @@ class SimpleTemplate(BaseTemplate):
     def _include(self, _env, _name=None, **kwargs):
         env = _env.copy()
         env.update(kwargs)
+        env['__name__'] = _name
+        env['__file__'] = self.filename
         if _name not in self.cache:
             self.cache[_name] = self.__class__(name=_name, lookup=self.lookup, syntax=self.syntax)
         return self.cache[_name].execute(env['_stdout'], env)
@@ -3995,22 +3997,26 @@ class SimpleTemplate(BaseTemplate):
         env.update({
             '_stdout': _stdout,
             '_printlist': _stdout.extend,
-            'include': functools.partial(self._include, env),
-            'rebase': functools.partial(self._rebase, env),
             '_rebase': None,
             '_str': self._str,
             '_escape': self._escape,
+        })
+        local = {
+            'include': functools.partial(self._include, env),
+            'rebase': functools.partial(self._rebase, env),
             'get': env.get,
             'setdefault': env.setdefault,
             'defined': env.__contains__
-        })
+        }
+        env.update(local)
         exec(self.co, env)
         if env.get('_rebase'):
             subtpl, rargs = env.pop('_rebase')
             rargs['base'] = ''.join(_stdout)  #copy stdout
             del _stdout[:]  # clear stdout
             return self._include(env, subtpl, **rargs)
-        return env
+        retenv = {k:v for k,v in env.items() if k not in local}
+        return retenv
 
     def render(self, *args, **kwargs):
         """ Render the template using keyword arguments as local variables. """
