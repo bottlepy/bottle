@@ -3985,11 +3985,14 @@ class SimpleTemplate(BaseTemplate):
     def _include(self, _env, _name=None, **kwargs):
         env = _env.copy()
         env.update(kwargs)
-        env['__name__'] = _name
-        env['__file__'] = self.filename
         if _name not in self.cache:
-            self.cache[_name] = self.__class__(name=_name, lookup=self.lookup, syntax=self.syntax)
-        return self.cache[_name].execute(env['_stdout'], env)
+            cached_template = self.cache[_name] = self.__class__(
+                name=_name, lookup=self.lookup, syntax=self.syntax)
+        else:
+            cached_template = self.cache[_name]
+        env['__name__'] = _name
+        env['__file__'] = cached_template.filename
+        return cached_template.execute(env['_stdout'], env)
 
     def execute(self, _stdout, kwargs):
         env = self.defaults.copy()
