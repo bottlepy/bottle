@@ -3983,28 +3983,31 @@ class SimpleTemplate(BaseTemplate):
         _env['_rebase'] = (_name, kwargs)
 
     def _include(self, _env, _name=None, **kwargs):
-        env = _env.copy()
-        env.update(kwargs)
         if _name not in self.cache:
             cached_template = self.cache[_name] = self.__class__(
                 name=_name, lookup=self.lookup, syntax=self.syntax)
         else:
             cached_template = self.cache[_name]
-        env['__name__'] = _name
-        env['__file__'] = cached_template.filename
-        return cached_template.execute(env['_stdout'], env)
+        env = _env.copy()
+        env.update(kwargs)
+        local = {
+            #'env': _env, # this would need doc update
+            '__name__': _name,
+            '__file__': cached_template.filename,
+        }
+        env.update(local)
+        retenv = cached_template.execute(env['_stdout'], env)
+        return {k:v for k,v in retenv.items() if k not in local}
 
     def execute(self, _stdout, kwargs):
         env = self.defaults.copy()
         env.update(kwargs)
-        env.update({
+        local = {
             '_stdout': _stdout,
             '_printlist': _stdout.extend,
             '_rebase': None,
             '_str': self._str,
             '_escape': self._escape,
-        })
-        local = {
             'include': functools.partial(self._include, env),
             'rebase': functools.partial(self._rebase, env),
             'get': env.get,
