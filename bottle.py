@@ -1683,7 +1683,8 @@ class BaseResponse(object):
     def copy(self, cls=None):
         """ Returns a copy of self. """
         cls = cls or BaseResponse
-        assert issubclass(cls, BaseResponse)
+        if not issubclass(cls, BaseResponse):
+            raise AssertionError
         copy = cls()
         copy.status = self.status
         copy._headers = dict((k, v[:]) for (k, v) in self._headers.items())

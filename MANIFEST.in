@@ -4,3 +4,4 @@ include README.rst
 include LICENSE
 include test/views/*.tpl
 include test/*.py
+include *.toml
