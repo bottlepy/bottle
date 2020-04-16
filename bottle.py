@@ -1684,7 +1684,7 @@ class BaseResponse(object):
         """ Returns a copy of self. """
         cls = cls or BaseResponse
         if not issubclass(cls, BaseResponse):
-            raise AssertionError
+            raise TypeError
         copy = cls()
         copy.status = self.status
         copy._headers = dict((k, v[:]) for (k, v) in self._headers.items())
