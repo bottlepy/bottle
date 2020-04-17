@@ -1106,7 +1106,6 @@ class Bottle(object):
 
     def wsgi(self, environ, start_response):
         """ The bottle WSGI-interface. """
-        provided_exc_info = False
         try:
             out = self._cast(self._handle(environ))
             # rfc2616 section 4.3
@@ -1117,13 +1116,11 @@ class Bottle(object):
             exc_info = environ.get('bottle.exc_info')
             if exc_info is not None:
                 del environ['bottle.exc_info']
-                provided_exc_info = True
             start_response(response._wsgi_status_line(), response.headerlist, exc_info)
             return out
         except (KeyboardInterrupt, SystemExit, MemoryError):
             raise
         except Exception as E:
-            if provided_exc_info: raise
             if not self.catchall: raise
             err = '<h1>Critical error while processing request: %s</h1>' \
                   % html_escape(environ.get('PATH_INFO', '/'))
