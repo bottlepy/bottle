@@ -74,6 +74,9 @@ Have a look at :ref:`plugins` for general questions about plugins (installation,
 `Bottle-errorsrest <https://github.com/agalera/bottle-errorsrest>`_
 	All errors generated from bottle are returned in json
 
+`Bottle-tools <https://github.com/theSage21/bottle-tools>`_
+	Decorators that auto-supply function arguments using POST/query string data.
+
 
 Plugins listed here are not part of Bottle or the Bottle project, but developed and maintained by third parties.
 
