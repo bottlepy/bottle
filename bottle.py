@@ -3517,7 +3517,7 @@ class BjoernServer(ServerAdapter):
 
     def run(self, handler):
         from bjoern import run
-        run(handler, self.host, self.port)
+        run(handler, self.host, self.port, reuse_port=True)
 
 class AsyncioServerAdapter(ServerAdapter):
     """ Extend ServerAdapter for adding custom event loop """
