@@ -53,13 +53,13 @@ class TestServer(unittest.TestCase):
             rv = self.p.poll()
             if rv is None:
                 raise AssertionError("Server took too long to start up.")
-            if rv is 128: # Import error
+            if rv == 128: # Import error
                 if os.environ.get('CI') != 'true' or \
                         os.environ.get('TRAVIS_PYTHON_VERSION') not in ('2.7', '3.6'):
                     tools.warn("Skipping %r test (ImportError)." % self.server)
                     self.skip = True
                     return
-            if rv is 3: # Port in use
+            if rv == 3: # Port in use
                 continue
             raise AssertionError("Server exited with error code %d" % rv)
         raise AssertionError("Could not find a free port to test server.")
