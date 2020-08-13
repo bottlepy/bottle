@@ -2051,7 +2051,7 @@ class CorsPlugin(object):
         '''
         Constructor function
         '''
-        self.cors_origins = cors_origins
+        self.cors_origins = origins
         self._options_route()
 
     def apply(self, fn, context):
