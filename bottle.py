@@ -2042,6 +2042,45 @@ class TemplatePlugin(object):
         else:
             return callback
 
+class CorsPlugin(object):
+
+    name = 'cors'
+    api = 2
+
+    def __init__(self, cors_origins="*"):
+        '''
+        Constructor function
+        '''
+        self.cors_origins = cors_origins
+        self._options_route()
+
+    def apply(self, fn, context):
+        def _enable_cors(*args, **kwargs):
+            # set CORS headers
+            response.headers['Access-Control-Allow-Origin'] = self.cors_origins
+            response.headers['Access-Control-Allow-Methods'] = '\
+                GET, POST, PUT, PATCH, OPTIONS, DELETE'
+            response.headers['Access-Control-Allow-Headers'] = '\
+                Origin, Accept, Content-Type, X-Requested-With, X-CSRF-Token, Authorization'
+
+            if request.method != 'OPTIONS':
+                # actual request; reply with the actual response
+                return fn(*args, **kwargs)
+        return _enable_cors
+
+    def _options_route(self):
+        '''
+        function dedicated to add option route to the hole
+        app
+        '''
+        route('/', method='OPTIONS', callback=self.options_function)
+        route(
+            '/<filepath:path>', method='OPTIONS', callback=self.options_function
+        )
+
+    def options_function(self):
+        pass
+
 
 #: Not a plugin, but part of the plugin API. TODO: Find a better place.
 class _ImportRedirect(object):
