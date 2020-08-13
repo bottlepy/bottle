@@ -2047,7 +2047,7 @@ class CorsPlugin(object):
     name = 'cors'
     api = 2
 
-    def __init__(self, cors_origins="*"):
+    def __init__(self, origins="*"):
         '''
         Constructor function
         '''
