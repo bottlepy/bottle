@@ -964,16 +964,29 @@ class Bottle(object):
                     return 'error_handler_404'
 
         """
-
         def decorator(callback):
             if isinstance(callback, basestring): callback = load(callback)
+            if hasattr(self, 'cors'): self._error_cors_headers()
             self.error_handler[int(code)] = callback
             return callback
 
         return decorator(callback) if callback else decorator
 
     def default_error_handler(self, res):
+        if hasattr(self, 'cors'): self._error_cors_headers()
         return tob(template(ERROR_PAGE_TEMPLATE, e=res, template_settings=dict(name='__ERROR_PAGE_TEMPLATE')))
+
+    def _error_cors_headers(self):
+        """ function dedicated to add cors
+            headers on error
+        """
+        response.headers[
+            'Access-Control-Allow-Origin'] = self.origins
+        response.headers[
+            'Access-Control-Allow-Methods'] = 'GET, POST, PUT, OPTIONS'
+        response.headers[
+            'Access-Control-Allow-Headers'] = '\
+                Origin, Accept, Content-Type, X-Requested-With, X-CSRF-Token, Authorization'
 
     def _handle(self, environ):
         path = environ['bottle.raw_path'] = environ['PATH_INFO']
@@ -2047,17 +2060,23 @@ class CorsPlugin(object):
     name = 'cors'
     api = 2
 
-    def __init__(self, origins="*"):
-        '''
-        Constructor function
-        '''
-        self.cors_origins = origins
+    def __init__(self, bottle, origins="*"):
+        """ Constructor function
+
+            param: bottle
+            ptype: Bottle class
+            param: origin
+            ptype: string or array
+        """
+        bottle.cors = True
+        bottle.origins = origins
+        self.bottle = bottle
         self._options_route()
 
     def apply(self, fn, context):
         def _enable_cors(*args, **kwargs):
             # set CORS headers
-            response.headers['Access-Control-Allow-Origin'] = self.cors_origins
+            response.headers['Access-Control-Allow-Origin'] = self.bottle.origins
             response.headers['Access-Control-Allow-Methods'] = '\
                 GET, POST, PUT, PATCH, OPTIONS, DELETE'
             response.headers['Access-Control-Allow-Headers'] = '\
