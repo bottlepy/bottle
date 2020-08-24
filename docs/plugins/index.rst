@@ -14,6 +14,9 @@ Have a look at :ref:`plugins` for general questions about plugins (installation,
 `Bottle-Cork <http://cork.firelet.net/>`_
 	Cork provides a simple set of methods to implement Authentication and Authorization in web applications based on Bottle.
 
+`Bottle-Cors-plugin <http://pypi.org/project/bottle-cors-plugin/>`_
+	Cors-plugin is the easiest way to implement cors on your bottle web application
+
 `Bottle-Extras <http://pypi.python.org/pypi/bottle-extras/>`_
 	Meta package to install the bottle plugin collection.
 
@@ -61,7 +64,7 @@ Have a look at :ref:`plugins` for general questions about plugins (installation,
 
 `bottle-jwt <https://github.com/agile4you/bottle-jwt/>`_
 	JSON Web Token authentication plugin for bottle.py
-	
+
 `Bottle-jwt <https://github.com/agalera/bottlejwt>`_
 	JWT integration for bottle
 
@@ -76,4 +79,3 @@ Have a look at :ref:`plugins` for general questions about plugins (installation,
 
 
 Plugins listed here are not part of Bottle or the Bottle project, but developed and maintained by third parties.
-
