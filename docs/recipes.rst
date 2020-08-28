@@ -1,6 +1,6 @@
 .. module:: bottle
 
-.. _beaker: http://beaker.groovie.org/
+.. _beaker: https://beaker.readthedocs.io/en/latest/
 .. _mod_python: http://www.modpython.org/
 .. _mod_wsgi: http://code.google.com/p/modwsgi/
 .. _werkzeug: http://werkzeug.pocoo.org/documentation/dev/debug.html
