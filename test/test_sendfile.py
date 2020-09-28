@@ -142,3 +142,13 @@ class TestSendFile(unittest.TestCase):
         self.assertEqual([(10, 100)], r('bytes=10-'))
         self.assertEqual([(5, 11)],  r('bytes=5-10'))
         self.assertEqual([(10, 100), (90, 100), (5, 11)],  r('bytes=10-,-10,5-10'))
+
+    def test_custom_headers(self):
+        """ SendFile: Custom headers """
+        headers = {'X-Custom-Header': 'test-value'}
+        headers_orig = headers.copy()
+        res = static_file(basename, root=root, headers=headers)
+        self.assertTrue('X-Custom-Header' in res.headers)
+        self.assertEqual('test-value', res.headers['X-Custom-Header'])
+        # Check the passed in headers dict isn't modified.
+        self.assertEqual(headers_orig, headers)

@@ -2881,7 +2881,7 @@ def static_file(filename, root,
 
     root = os.path.join(os.path.abspath(root), '')
     filename = os.path.abspath(os.path.join(root, filename.strip('/\\')))
-    headers = headers or {}
+    headers = headers.copy() if headers else {}
 
     if not filename.startswith(root):
         return HTTPError(403, "Access denied.")
