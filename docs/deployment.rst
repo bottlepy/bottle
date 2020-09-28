@@ -4,7 +4,6 @@
 .. _cherrypy: http://www.cherrypy.org/
 .. _paste: http://pythonpaste.org/
 .. _gunicorn: http://pypi.python.org/pypi/gunicorn
-.. _fapws3: http://www.fapws.org/
 .. _tornado: http://www.tornadoweb.org/
 .. _twisted: http://twistedmatrix.com/
 .. _diesel: http://dieselweb.org/
@@ -72,7 +71,6 @@ gunicorn  gunicorn_     Pre-forked, partly written in C
 eventlet  eventlet_     Asynchronous framework with WSGI support.
 gevent    gevent_       Asynchronous (greenlets)
 diesel    diesel_       Asynchronous (greenlets)
-fapws3    fapws3_       Asynchronous (network side only), written in C
 tornado   tornado_      Asynchronous, powers some parts of Facebook
 twisted   twisted_      Asynchronous, well tested but... twisted
 meinheld  meinheld_     Asynchronous, partly written in C

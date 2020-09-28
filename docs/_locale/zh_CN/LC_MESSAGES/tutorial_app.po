@@ -760,9 +760,9 @@ msgstr "在大型项目上，Bottle自带的服务器会成为一个性能瓶颈
 #: ../../tutorial_app.rst:475
 msgid ""
 "But Bottle has already various adapters to multi-threaded servers on board, "
-"which perform better on higher load. Bottle supports Cherrypy_, Fapws3_, "
+"which perform better on higher load. Bottle supports Cherrypy_, "
 "Flup_ and Paste_."
-msgstr "Bottle已经可以工作在很多多线程的服务器上面了，例如 Cherrypy_, Fapws3_, Flup_ 和 Paste_ ，所以我们建议在大型项目上使用高性能的服务器。"
+msgstr "Bottle已经可以工作在很多多线程的服务器上面了，例如 Cherrypy_, Flup_ 和 Paste_ ，所以我们建议在大型项目上使用高性能的服务器。"
 
 #: ../../tutorial_app.rst:477
 msgid ""
@@ -772,9 +772,8 @@ msgstr "如果想运行在Paste服务器上面，代码如下(译者注：需要
 
 #: ../../tutorial_app.rst:483
 msgid ""
-"This works exactly the same way with ``FlupServer``, ``CherryPyServer`` and "
-"``FapwsServer``."
-msgstr "其他服务器如 ``FlupServer``, ``CherryPyServer`` 和 ``FapwsServer`` 也类似。"
+"This works exactly the same way with ``FlupServer`` and ``CherryPyServer``."
+msgstr "其他服务器如 ``FlupServer`` 和 ``CherryPyServer`` 也类似。"
 
 #: ../../tutorial_app.rst:487
 msgid "Running Bottle on Apache with mod_wsgi"

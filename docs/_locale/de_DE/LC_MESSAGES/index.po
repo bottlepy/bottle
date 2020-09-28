@@ -49,7 +49,7 @@ msgstr ""
 #: ../../index.rst:29
 msgid ""
 "**Server:** Built-in HTTP development server and support for paste_, "
-"fapws3_, bjoern_, gae_, cherrypy_ or any other WSGI_ capable HTTP server."
+"bjoern_, gae_, cherrypy_ or any other WSGI_ capable HTTP server."
 msgstr ""
 
 #: ../../index.rst:32

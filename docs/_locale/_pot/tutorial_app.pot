@@ -473,7 +473,7 @@ msgid "As said above, the standard server is perfectly suitable for development,
 msgstr ""
 
 #: ../../tutorial_app.rst:475
-msgid "But Bottle has already various adapters to multi-threaded servers on board, which perform better on higher load. Bottle supports Cherrypy_, Fapws3_, Flup_ and Paste_."
+msgid "But Bottle has already various adapters to multi-threaded servers on board, which perform better on higher load. Bottle supports Cherrypy_, Flup_ and Paste_."
 msgstr ""
 
 #: ../../tutorial_app.rst:477
@@ -481,7 +481,7 @@ msgid "If you want to run for example Bottle with the Paste server, use the foll
 msgstr ""
 
 #: ../../tutorial_app.rst:483
-msgid "This works exactly the same way with ``FlupServer``, ``CherryPyServer`` and ``FapwsServer``."
+msgid "This works exactly the same way with ``FlupServer`` and ``CherryPyServer``."
 msgstr ""
 
 #: ../../tutorial_app.rst:487

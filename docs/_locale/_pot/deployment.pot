@@ -214,14 +214,6 @@ msgid "diesel_"
 msgstr ""
 
 #: ../../deployment.rst:74
-msgid "fapws3"
-msgstr ""
-
-#: ../../deployment.rst:74
-msgid "fapws3_"
-msgstr ""
-
-#: ../../deployment.rst:74
 msgid "Asynchronous (network side only), written in C"
 msgstr ""
 

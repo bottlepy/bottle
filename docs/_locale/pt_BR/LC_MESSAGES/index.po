@@ -53,8 +53,8 @@ msgstr "**Utilitários:** Conveniente acesso a dados de formulários, upload de 
 #: ../../index.rst:29
 msgid ""
 "**Server:** Built-in HTTP development server and support for paste_, "
-"fapws3_, bjoern_, gae_, cherrypy_ or any other WSGI_ capable HTTP server."
-msgstr "**Servidor:** Servidor HTTP interno para desenvolvimento e suporte para paste_, fapws3_, bjoern_, gae_, cherrypy_ ou qualquer outro WSGI_ capaz de servir HTTP"
+"bjoern_, gae_, cherrypy_ or any other WSGI_ capable HTTP server."
+msgstr "**Servidor:** Servidor HTTP interno para desenvolvimento e suporte para paste_, bjoern_, gae_, cherrypy_ ou qualquer outro WSGI_ capaz de servir HTTP"
 
 #: ../../index.rst:32
 msgid "Example: \"Hello World\" in a bottle"

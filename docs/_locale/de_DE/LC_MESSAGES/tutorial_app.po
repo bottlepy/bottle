@@ -760,7 +760,7 @@ msgstr ""
 #: ../../tutorial_app.rst:475
 msgid ""
 "But Bottle has already various adapters to multi-threaded servers on board, "
-"which perform better on higher load. Bottle supports Cherrypy_, Fapws3_, "
+"which perform better on higher load. Bottle supports Cherrypy_, "
 "Flup_ and Paste_."
 msgstr ""
 
@@ -772,8 +772,7 @@ msgstr ""
 
 #: ../../tutorial_app.rst:483
 msgid ""
-"This works exactly the same way with ``FlupServer``, ``CherryPyServer`` and "
-"``FapwsServer``."
+"This works exactly the same way with ``FlupServer`` and ``CherryPyServer``."
 msgstr ""
 
 #: ../../tutorial_app.rst:487

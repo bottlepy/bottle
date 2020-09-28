@@ -7,7 +7,6 @@
 .. _`Python DB API`: http://www.python.org/dev/peps/pep-0249/
 .. _`WSGI reference Server`: http://docs.python.org/library/wsgiref.html#module-wsgiref.simple_server
 .. _Cherrypy: http://www.cherrypy.org/
-.. _Fapws3: http://github.com/william-os4y/fapws3
 .. _Flup: https://www.saddi.com/software/flup/
 .. _Paste: http://pythonpaste.org/
 .. _Apache: http://www.apache.org
@@ -486,7 +485,7 @@ The ``port`` and ``host`` parameter can also be applied when Bottle is running w
 
 As said above, the standard server is perfectly suitable for development, personal use or a small group of people only using your application based on Bottle. For larger tasks, the standard server may become a bottleneck, as it is single-threaded, thus it can only serve one request at a time.
 
-But Bottle has already various adapters to multi-threaded servers on board, which perform better on higher load. Bottle supports Cherrypy_, Fapws3_, Flup_ and Paste_.
+But Bottle has already various adapters to multi-threaded servers on board, which perform better on higher load. Bottle supports Cherrypy_, Flup_ and Paste_.
 
 If you want to run for example Bottle with the Paste server, use the following code::
 
@@ -494,7 +493,7 @@ If you want to run for example Bottle with the Paste server, use the following c
     ...
     run(server=PasteServer)
 
-This works exactly the same way with ``FlupServer``, ``CherryPyServer`` and ``FapwsServer``.
+This works exactly the same way with ``FlupServer`` and ``CherryPyServer``.
 
 
 .. rubric:: Running Bottle on Apache with mod_wsgi

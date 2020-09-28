@@ -109,7 +109,6 @@ else:
     blacklist += [
         'bjoern',
         'diesel',
-        'fapws3',
         'flup',
         'gevent',
     ]
