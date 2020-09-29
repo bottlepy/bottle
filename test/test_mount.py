@@ -6,12 +6,17 @@ class TestAppMounting(ServerTestBase):
     def setUp(self):
         ServerTestBase.setUp(self)
         self.subapp = bottle.Bottle()
-        @self.subapp.route('')
+
         @self.subapp.route('/')
-        @self.subapp.route('/test/:test')
+        @self.subapp.route('/test/<test>')
         def test(test='foo'):
             return test
 
+    def test_mount_unicode_path_bug602(self):
+        self.app.mount('/mount/', self.subapp)
+        self.assertBody('äöü', '/mount/test/äöü')
+        self.app.route('/route/<param>', callback=lambda param: param)
+        self.assertBody('äöü', '/route/äöü')
 
     def test_mount_order_bug581(self):
         self.app.mount('/test/', self.subapp)
