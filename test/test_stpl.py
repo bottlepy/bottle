@@ -31,14 +31,14 @@ class TestSimpleTemplate(unittest.TestCase):
             self.assertRenders(t, 'start var end\n', var='var')
 
     def test_unicode(self):
-        self.assertRenders('start {{var}} end', 'start äöü end', var=touni('äöü'))
+        self.assertRenders('start {{var}} end', 'start äöü end', var='äöü')
         self.assertRenders('start {{var}} end', 'start äöü end', var=tob('äöü'))
 
     def test_unicode_code(self):
         """ Templates: utf8 code in file"""
         with chdir(__file__):
             t = SimpleTemplate(name='./views/stpl_unicode.tpl', lookup=['.'])
-            self.assertRenders(t, 'start ñç äöü end\n', var=touni('äöü'))
+            self.assertRenders(t, 'start ñç äöü end\n', var='äöü')
 
     def test_import(self):
         """ Templates: import statement"""
@@ -53,7 +53,7 @@ class TestSimpleTemplate(unittest.TestCase):
         self.assertRenders('<{{var}}>', '<>', var=None)
         self.assertRenders('<{{var}}>', '<0>', var=0)
         self.assertRenders('<{{var}}>', '<5>', var=5)
-        self.assertRenders('<{{var}}>', '<b>', var=tob('b'))
+        self.assertRenders('<{{var}}>', '<b>', var=b'b')
         self.assertRenders('<{{var}}>', '<1.0>', var=1.0)
         self.assertRenders('<{{var}}>', '<[1, 2]>', var=[1,2])
 
@@ -204,29 +204,29 @@ class TestSimpleTemplate(unittest.TestCase):
 
     def test_template_shortcut(self):
         result = template('start {{var}} end', var='middle')
-        self.assertEqual(touni('start middle end'), result)
+        self.assertEqual('start middle end', result)
 
     def test_view_decorator(self):
         @view('start {{var}} end')
         def test():
             return dict(var='middle')
-        self.assertEqual(touni('start middle end'), test())
+        self.assertEqual('start middle end', test())
 
     def test_view_decorator_issue_407(self):
         with chdir(__file__):
             @view('stpl_no_vars')
             def test():
                 pass
-            self.assertEqual(touni('hihi'), test())
+            self.assertEqual('hihi', test())
             @view('aaa {{x}}', x='bbb')
             def test2():
                 pass
-            self.assertEqual(touni('aaa bbb'), test2())
+            self.assertEqual('aaa bbb', test2())
 
     def test_global_config(self):
         SimpleTemplate.global_config('meh', 1)
         t = SimpleTemplate('anything')
-        self.assertEqual(touni('anything'), t.render())
+        self.assertEqual('anything', t.render())
 
     def test_bug_no_whitespace_before_stmt(self):
         self.assertRenders('\n{{var}}', '\nx', var='x')

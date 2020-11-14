@@ -7,7 +7,7 @@ import sys
 import itertools
 
 import bottle
-from bottle import request, tob, touni, tonat, json_dumps, HTTPError, parse_date, CookieError
+from bottle import request, tob, touni, json_dumps, HTTPError, parse_date, CookieError
 from . import tools
 import wsgiref.util
 import base64
@@ -160,7 +160,7 @@ class TestRequest(unittest.TestCase):
 
     def test_get(self):
         """ Environ: GET data """
-        qs = tonat(tob('a=a&a=1&b=b&c=c&cn=%e7%93%b6'), 'latin1')
+        qs = touni(b'a=a&a=1&b=b&c=c&cn=%e7%93%b6', 'latin1')
         request = BaseRequest({'QUERY_STRING':qs})
         self.assertTrue('a' in request.query)
         self.assertTrue('b' in request.query)
@@ -168,12 +168,12 @@ class TestRequest(unittest.TestCase):
         self.assertEqual(['b'], request.query.getall('b'))
         self.assertEqual('1', request.query['a'])
         self.assertEqual('b', request.query['b'])
-        self.assertEqual(tonat(tob('瓶'), 'latin1'), request.query['cn'])
-        self.assertEqual(touni('瓶'), request.query.cn)
+        self.assertEqual(touni(tob('瓶'), 'latin1'), request.query['cn'])
+        self.assertEqual('瓶', request.query.cn)
 
     def test_post(self):
         """ Environ: POST data """
-        sq = tob('a=a&a=1&b=b&c=&d&cn=%e7%93%b6')
+        sq = b'a=a&a=1&b=b&c=&d&cn=%e7%93%b6'
         e = {}
         wsgiref.util.setup_testing_defaults(e)
         e['wsgi.input'].write(sq)
@@ -189,11 +189,11 @@ class TestRequest(unittest.TestCase):
         self.assertEqual('b', request.POST['b'])
         self.assertEqual('', request.POST['c'])
         self.assertEqual('', request.POST['d'])
-        self.assertEqual(tonat(tob('瓶'), 'latin1'), request.POST['cn'])
-        self.assertEqual(touni('瓶'), request.POST.cn)
+        self.assertEqual(touni(tob('瓶'), 'latin1'), request.POST['cn'])
+        self.assertEqual('瓶', request.POST.cn)
 
     def test_bodypost(self):
-        sq = tob('foobar')
+        sq = b'foobar'
         e = {}
         wsgiref.util.setup_testing_defaults(e)
         e['wsgi.input'].write(sq)
@@ -205,7 +205,7 @@ class TestRequest(unittest.TestCase):
 
     def test_body_noclose(self):
         """ Test that the body file handler is not closed after request.POST """
-        sq = tob('a=a&a=1&b=b&c=&d')
+        sq = b'a=a&a=1&b=b&c=&d'
         e = {}
         wsgiref.util.setup_testing_defaults(e)
         e['wsgi.input'].write(sq)
@@ -221,7 +221,7 @@ class TestRequest(unittest.TestCase):
         """ Environ: GET and POST are combined in request.param """
         e = {}
         wsgiref.util.setup_testing_defaults(e)
-        e['wsgi.input'].write(tob('b=b&c=p'))
+        e['wsgi.input'].write(b'b=b&c=p')
         e['wsgi.input'].seek(0)
         e['CONTENT_LENGTH'] = '7'
         e['QUERY_STRING'] = 'a=a&c=g'
@@ -234,7 +234,7 @@ class TestRequest(unittest.TestCase):
         """ Environ: GET and POST should not leak into each other """
         e = {}
         wsgiref.util.setup_testing_defaults(e)
-        e['wsgi.input'].write(tob('b=b'))
+        e['wsgi.input'].write(b'b=b')
         e['wsgi.input'].seek(0)
         e['CONTENT_LENGTH'] = '3'
         e['QUERY_STRING'] = 'a=a'
@@ -247,20 +247,20 @@ class TestRequest(unittest.TestCase):
         """ Environ: Request.body should behave like a file object factory """
         e = {}
         wsgiref.util.setup_testing_defaults(e)
-        e['wsgi.input'].write(tob('abc'))
+        e['wsgi.input'].write(b'abc')
         e['wsgi.input'].seek(0)
         e['CONTENT_LENGTH'] = str(3)
         request = BaseRequest(e)
-        self.assertEqual(tob('abc'), request.body.read())
-        self.assertEqual(tob('abc'), request.body.read(3))
-        self.assertEqual(tob('abc'), request.body.readline())
-        self.assertEqual(tob('abc'), request.body.readline(3))
+        self.assertEqual(b'abc', request.body.read())
+        self.assertEqual(b'abc', request.body.read(3))
+        self.assertEqual(b'abc', request.body.readline())
+        self.assertEqual(b'abc', request.body.readline(3))
 
     def test_bigbody(self):
         """ Environ: Request.body should handle big uploads using files """
         e = {}
         wsgiref.util.setup_testing_defaults(e)
-        e['wsgi.input'].write(tob('x')*1024*1000)
+        e['wsgi.input'].write(b'x'*1024*1000)
         e['wsgi.input'].seek(0)
         e['CONTENT_LENGTH'] = str(1024*1000)
         request = BaseRequest(e)
@@ -274,7 +274,7 @@ class TestRequest(unittest.TestCase):
         """ Environ: Request.body should truncate to Content-Length bytes """
         e = {}
         wsgiref.util.setup_testing_defaults(e)
-        e['wsgi.input'].write(tob('x')*1024)
+        e['wsgi.input'].write(b'x'*1024)
         e['wsgi.input'].seek(0)
         e['CONTENT_LENGTH'] = '42'
         request = BaseRequest(e)
@@ -327,7 +327,7 @@ class TestRequest(unittest.TestCase):
         self.assertTrue('file1' in request.POST)
         self.assertTrue('file1' in request.files)
         self.assertTrue('file1' not in request.forms)
-        cmp = tob('content1') if sys.version_info >= (3,2,0) else 'content1'
+        cmp = b'content1' if sys.version_info >= (3,2,0) else 'content1'
         self.assertEqual(cmp, request.POST['file1'].file.read())
         # File name and meta data
         self.assertTrue('万难' in request.POST)
@@ -351,7 +351,7 @@ class TestRequest(unittest.TestCase):
         self.assertEqual('value1', request.forms['field1'])
         print(request.forms.dict, request.forms.recode_unicode)
         self.assertEqual('万难', request.forms['field2'])
-        self.assertEqual(touni('万难'), request.forms.field2)
+        self.assertEqual('万难', request.forms.field2)
         # Field (multi)
         self.assertEqual(2, len(request.POST.getall('field2')))
         self.assertEqual(['value2', '万难'], request.POST.getall('field2'))
@@ -501,15 +501,8 @@ class TestResponse(unittest.TestCase):
             result = [v for (h, v) in rs.headerlist if h.lower()=='x-test'][0]
             self.assertEqual(wire, result)
 
-        if bottle.py3k:
-            cmp(1, tonat('1', 'latin1'))
-            cmp('öäü', 'öäü'.encode('utf8').decode('latin1'))
-            # Dropped byte header support in Python 3:
-            #cmp(tob('äöü'), 'äöü'.encode('utf8').decode('latin1'))
-        else:
-            cmp(1, '1')
-            cmp('öäü', 'öäü')
-            cmp(touni('äöü'), 'äöü')
+        cmp(1, touni('1', 'latin1'))
+        cmp('öäü', 'öäü'.encode('utf8').decode('latin1'))
 
     def test_set_status(self):
         rs = BaseResponse()
@@ -581,12 +574,11 @@ class TestResponse(unittest.TestCase):
         self.assertEqual(rs.status_line, '404 Brain not Found') # last value
 
         # Unicode in status line (thanks RFC7230 :/)
-        if bottle.py3k:
-            rs.status = '400 Non-ASÎÎ'
-            self.assertEqual(rs.status, rs.status_line)
-            self.assertEqual(rs.status_code, 400)
-            wire = rs._wsgi_status_line().encode('latin1')
-            self.assertEqual(rs.status, wire.decode('utf8'))
+        rs.status = '400 Non-ASÎÎ'
+        self.assertEqual(rs.status, rs.status_line)
+        self.assertEqual(rs.status_code, 400)
+        wire = rs._wsgi_status_line().encode('latin1')
+        self.assertEqual(rs.status, wire.decode('utf8'))
 
     def test_content_type(self):
         rs = BaseResponse()
@@ -732,8 +724,8 @@ class TestResponse(unittest.TestCase):
         self.assertEqual('5', response['x-test'])
         response['x-test'] = None
         self.assertEqual('', response['x-test'])
-        response['x-test'] = touni('瓶')
-        self.assertEqual(tonat(touni('瓶')), response['x-test'])
+        response['x-test'] = '瓶'
+        self.assertEqual('瓶', response['x-test'])
 
     def test_prevent_control_characters_in_headers(self):
         masks = '{}test', 'test{}', 'te{}st'
@@ -893,11 +885,11 @@ class TestWSGIHeaderDict(unittest.TestCase):
         self.assertEqual(self.headers['Test-header'], 'foobar')
 
     def test_bytes(self):
-        self.env['HTTP_TEST_HEADER'] = tob('foobar')
+        self.env['HTTP_TEST_HEADER'] = b'foobar'
         self.assertEqual(self.headers['Test-Header'], 'foobar')
 
     def test_unicode(self):
-        self.env['HTTP_TEST_HEADER'] = touni('foobar')
+        self.env['HTTP_TEST_HEADER'] = 'foobar'
         self.assertEqual(self.headers['Test-Header'], 'foobar')
 
     def test_dict(self):

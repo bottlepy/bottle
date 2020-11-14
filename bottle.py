@@ -77,6 +77,15 @@ from datetime import date as datedate, datetime, timedelta
 from tempfile import TemporaryFile
 from traceback import format_exc, print_exc
 from unicodedata import normalize
+import http.client as httplib
+import _thread as thread
+from urllib.parse import urljoin, SplitResult as UrlSplitResult
+from urllib.parse import urlencode, quote as urlquote, unquote as urlunquote
+from http.cookies import SimpleCookie, Morsel, CookieError
+from collections.abc import MutableMapping as DictMixin
+import pickle
+from io import BytesIO
+import configparser
 
 try:
     from ujson import dumps as json_dumps, loads as json_lds
@@ -112,52 +121,16 @@ except ImportError:
 
 
 py = sys.version_info
-py3k = py.major > 2
+if py < (3, 5, 0):
+    raise ImportError("Unsupported python version: %d.%d < 3.5.0" % (py.major, py.minor))
 
+basestring = str
+unicode = str
+json_loads = lambda s: json_lds(touni(s))
+callable = lambda x: hasattr(x, '__call__')
+imap = map
+urlunquote = functools.partial(urlunquote, encoding='latin1')
 
-# Workaround for the "print is a keyword/function" Python 2/3 dilemma
-# and a fallback for mod_wsgi (resticts stdout/err attribute access)
-try:
-    _stdout, _stderr = sys.stdout.write, sys.stderr.write
-except IOError:
-    _stdout = lambda x: sys.stdout.write(x)
-    _stderr = lambda x: sys.stderr.write(x)
-
-# Lots of stdlib and builtin differences.
-if py3k:
-    import http.client as httplib
-    import _thread as thread
-    from urllib.parse import urljoin, SplitResult as UrlSplitResult
-    from urllib.parse import urlencode, quote as urlquote, unquote as urlunquote
-    urlunquote = functools.partial(urlunquote, encoding='latin1')
-    from http.cookies import SimpleCookie, Morsel, CookieError
-    from collections.abc import MutableMapping as DictMixin
-    import pickle
-    from io import BytesIO
-    import configparser
-
-    basestring = str
-    unicode = str
-    json_loads = lambda s: json_lds(touni(s))
-    callable = lambda x: hasattr(x, '__call__')
-    imap = map
-
-    def _raise(*a):
-        raise a[0](a[1]).with_traceback(a[2])
-else:  # 2.x
-    import httplib
-    import thread
-    from urlparse import urljoin, SplitResult as UrlSplitResult
-    from urllib import urlencode, quote as urlquote, unquote as urlunquote
-    from Cookie import SimpleCookie, Morsel, CookieError
-    from itertools import imap
-    import cPickle as pickle
-    from StringIO import StringIO as BytesIO
-    import ConfigParser as configparser
-    from collections import MutableMapping as DictMixin
-    unicode = unicode
-    json_loads = json_lds
-    exec(compile('def _raise(*a): raise a[0], a[1], a[2]', '<py3fix>', 'exec'))
 
 # Some helpers for string/byte handling
 def tob(s, enc='utf8'):
@@ -172,8 +145,9 @@ def touni(s, enc='utf8', err='strict'):
     return unicode("" if s is None else s)
 
 
-tonat = touni if py3k else tob
-
+def tonat(s, enc='utf8', err='strict'):
+    dept(0, 13, "tonat() no longer needed", "Use touni()")
+    return touni(s, enc, err)
 
 
 # A bug in functools causes it to break if the wrapper is an instance method
@@ -583,8 +557,8 @@ class Route(object):
         """ Return the callback. If the callback is a decorated function, try to
             recover the original function. """
         func = self.callback
-        func = getattr(func, '__func__' if py3k else 'im_func', func)
-        closure_attr = '__closure__' if py3k else 'func_closure'
+        func = getattr(func, '__func__', func)
+        closure_attr = '__closure__'
         while hasattr(func, closure_attr) and getattr(func, closure_attr):
             attributes = getattr(func, closure_attr)
             func = attributes[0].cell_contents
@@ -729,14 +703,13 @@ class Bottle(object):
 
                 def start_response(status, headerlist, exc_info=None):
                     if exc_info:
-                        _raise(*exc_info)
-                    if py3k:
-                        # Errors here mean that the mounted WSGI app did not
-                        # follow PEP-3333 (which requires latin1) or used a
-                        # pre-encoding other than utf8 :/
-                        status = status.encode('latin1').decode('utf8')
-                        headerlist = [(k, v.encode('latin1').decode('utf8'))
-                                      for (k, v) in headerlist]
+                        raise exc_info[1].with_traceback(exc_info[2])
+                    # Errors here mean that the mounted WSGI app did not
+                    # follow PEP-3333 (which requires latin1) or used a
+                    # pre-encoding other than utf8 :/
+                    status = status.encode('latin1').decode('utf8')
+                    headerlist = [(k, v.encode('latin1').decode('utf8'))
+                                  for (k, v) in headerlist]
                     rs.status = status
                     for name, value in headerlist:
                         rs.add_header(name, value)
@@ -986,8 +959,7 @@ class Bottle(object):
 
     def _handle(self, environ):
         path = environ['bottle.raw_path'] = environ['PATH_INFO']
-        if py3k:
-            environ['PATH_INFO'] = path.encode('latin1').decode('utf8', 'ignore')
+        environ['PATH_INFO'] = path.encode('latin1').decode('utf8', 'ignore')
 
         environ['bottle.app'] = self
         request.bind(environ)
@@ -1317,7 +1289,7 @@ class BaseRequest(object):
     @staticmethod
     def _iter_chunked(read, bufsize):
         err = HTTPError(400, 'Error while parsing chunked transfer body.')
-        rn, sem, bs = tob('\r\n'), tob(';'), tob('')
+        rn, sem, bs = b'\r\n', b';', b''
         while True:
             header = read(1)
             while header[-2:] != rn:
@@ -1327,7 +1299,7 @@ class BaseRequest(object):
                 if len(header) > bufsize: raise err
             size, _, _ = header.partition(sem)
             try:
-                maxread = int(tonat(size.strip()), 16)
+                maxread = int(touni(size.strip()), 16)
             except ValueError:
                 raise err
             if maxread == 0: break
@@ -1364,8 +1336,8 @@ class BaseRequest(object):
         return body
 
     def _get_body_string(self, maxread):
-        """ Read body into a string. Raise HTTPError(413) on requests that are
-            to large. """
+        """ Read body into a byte string. Raise HTTPError(413) on requests that
+            are to large. """
         if self.content_length > maxread:
             raise HTTPError(413, 'Request entity too large')
         data = self.body.read(maxread + 1)
@@ -1402,7 +1374,7 @@ class BaseRequest(object):
         # We default to application/x-www-form-urlencoded for everything that
         # is not multipart and take the fast path (also: 3.1 workaround)
         if not self.content_type.startswith('multipart/'):
-            body = tonat(self._get_body_string(self.MEMFILE_MAX), 'latin1')
+            body = self._get_body_string(self.MEMFILE_MAX).decode('latin1')
             for key, value in _parse_qsl(body):
                 post[key] = value
             return post
@@ -1412,9 +1384,8 @@ class BaseRequest(object):
             if key in self.environ: safe_env[key] = self.environ[key]
         args = dict(fp=self.body, environ=safe_env, keep_blank_values=True)
 
-        if py3k:
-            args['encoding'] = 'utf8'
-            post.recode_unicode = False
+        args['encoding'] = 'utf8'
+        post.recode_unicode = False
         data = cgi.FieldStorage(**args)
         self['_cgi.FieldStorage'] = data  #http://bugs.python.org/issue18394
         data = data.list or []
@@ -1614,7 +1585,7 @@ def _hkey(key):
 
 
 def _hval(value):
-    value = tonat(value)
+    value = touni(value)
     if '\n' in value or '\r' in value or '\0' in value:
         raise ValueError("Header value must not contain control characters: %r" % value)
     return value
@@ -1779,9 +1750,7 @@ class BaseResponse(object):
 
     def _wsgi_status_line(self):
         """ WSGI conform status line (latin1-encodeable) """
-        if py3k:
-            return self._status_line.encode('utf8').decode('latin1')
-        return self._status_line
+        return self._status_line.encode('utf8').decode('latin1')
 
     @property
     def headerlist(self):
@@ -1797,8 +1766,7 @@ class BaseResponse(object):
         if self._cookies:
             for c in self._cookies.values():
                 out.append(('Set-Cookie', _hval(c.OutputString())))
-        if py3k:
-            out = [(k, v.encode('utf8').decode('latin1')) for (k, v) in out]
+        out = [(k, v.encode('utf8').decode('latin1')) for (k, v) in out]
         return out
 
     content_type = HeaderProperty('Content-Type')
@@ -1871,7 +1839,7 @@ class BaseResponse(object):
             encoded = base64.b64encode(pickle.dumps([name, value], -1))
             sig = base64.b64encode(hmac.new(tob(secret), encoded,
                                             digestmod=digestmod).digest())
-            value = touni(tob('!') + sig + tob('?') + encoded)
+            value = touni(b'!' + sig + b'?' + encoded)
         elif not isinstance(value, basestring):
             raise TypeError('Secret key required for non-string cookies.')
 
@@ -2119,44 +2087,20 @@ class MultiDict(DictMixin):
     def keys(self):
         return self.dict.keys()
 
-    if py3k:
+    def values(self):
+        return (v[-1] for v in self.dict.values())
 
-        def values(self):
-            return (v[-1] for v in self.dict.values())
+    def items(self):
+        return ((k, v[-1]) for k, v in self.dict.items())
 
-        def items(self):
-            return ((k, v[-1]) for k, v in self.dict.items())
+    def allitems(self):
+        return ((k, v) for k, vl in self.dict.items() for v in vl)
 
-        def allitems(self):
-            return ((k, v) for k, vl in self.dict.items() for v in vl)
+    iterkeys = keys
+    itervalues = values
+    iteritems = items
+    iterallitems = allitems
 
-        iterkeys = keys
-        itervalues = values
-        iteritems = items
-        iterallitems = allitems
-
-    else:
-
-        def values(self):
-            return [v[-1] for v in self.dict.values()]
-
-        def items(self):
-            return [(k, v[-1]) for k, v in self.dict.items()]
-
-        def iterkeys(self):
-            return self.dict.iterkeys()
-
-        def itervalues(self):
-            return (v[-1] for v in self.dict.itervalues())
-
-        def iteritems(self):
-            return ((k, v[-1]) for k, v in self.dict.iteritems())
-
-        def iterallitems(self):
-            return ((k, v) for k, vl in self.dict.iteritems() for v in vl)
-
-        def allitems(self):
-            return [(k, v) for k, vl in self.dict.iteritems() for v in vl]
 
     def get(self, key, default=None, index=-1, type=None):
         """ Return the most recent value for a key.
@@ -2306,12 +2250,9 @@ class WSGIHeaderDict(DictMixin):
 
     def __getitem__(self, key):
         val = self.environ[self._ekey(key)]
-        if py3k:
-            if isinstance(val, unicode):
-                val = val.encode('latin1').decode('utf8')
-            else:
-                val = val.decode('utf8')
-        return val
+        if isinstance(val, unicode):
+            return val.encode('latin1').decode('utf8')
+        return val.decode('utf8')
 
     def __setitem__(self, key, value):
         raise TypeError("%s is read-only." % self.__class__)
@@ -2417,9 +2358,7 @@ class ConfigDict(dict):
 
         """
         options.setdefault('allow_no_value', True)
-        if py3k:
-            options.setdefault('interpolation',
-                               configparser.ExtendedInterpolation())
+        options.setdefault('interpolation', configparser.ExtendedInterpolation())
         conf = configparser.ConfigParser(**options)
         conf.read(filename)
         for section in conf.sections():
@@ -3078,7 +3017,7 @@ def cookie_encode(data, key, digestmod=None):
     digestmod = digestmod or hashlib.sha256
     msg = base64.b64encode(pickle.dumps(data, -1))
     sig = base64.b64encode(hmac.new(tob(key), msg, digestmod=digestmod).digest())
-    return tob('!') + sig + tob('?') + msg
+    return b'!' + sig + b'?' + msg
 
 
 def cookie_decode(data, key, digestmod=None):
@@ -3087,7 +3026,7 @@ def cookie_decode(data, key, digestmod=None):
                 "Do not use this API directly.")
     data = tob(data)
     if cookie_is_encoded(data):
-        sig, msg = data.split(tob('?'), 1)
+        sig, msg = data.split(b'?', 1)
         digestmod = digestmod or hashlib.sha256
         hashed = hmac.new(tob(key), msg, digestmod=digestmod).digest()
         if _lscmp(sig[1:], base64.b64encode(hashed)):
@@ -3099,7 +3038,7 @@ def cookie_is_encoded(data):
     """ Return True if the argument looks like a encoded cookie."""
     depr(0, 13, "cookie_is_encoded() will be removed soon.",
                 "Do not use this API directly.")
-    return bool(data.startswith(tob('!')) and tob('?') in data)
+    return bool(data.startswith(b'!') and b'?' in data)
 
 
 def html_escape(string):
@@ -3373,8 +3312,8 @@ class FapwsServer(ServerAdapter):
         evwsgi.start(self.host, port)
         # fapws3 never releases the GIL. Complain upstream. I tried. No luck.
         if 'BOTTLE_CHILD' in os.environ and not self.quiet:
-            _stderr("WARNING: Auto-reloading does not work with Fapws3.\n")
-            _stderr("         (Fapws3 breaks python thread support)\n")
+            print('WARNING: Auto-reloading does not work with Fapws3.',
+                  file=sys.stderr)
         evwsgi.set_base_module(base)
 
         def app(environ, start_response):
@@ -3713,14 +3652,14 @@ def run(app=None,
 
         server.quiet = server.quiet or quiet
         if not server.quiet:
-            _stderr("Bottle v%s server starting up (using %s)...\n" %
-                    (__version__, repr(server)))
+            print("Bottle v%s server starting up (using %s)..." %
+                  (__version__, repr(server)), file=sys.stderr)
             if server.host.startswith("unix:"):
-                _stderr("Listening on %s\n" % server.host)
+                print("Listening on %s" % server.host, file=sys.stderr)
             else:
-                _stderr("Listening on http://%s:%d/\n" %
-                        (server.host, server.port))
-            _stderr("Hit Ctrl-C to quit.\n\n")
+                print("Listening on http://%s:%d/" %
+                      (server.host, server.port), file=sys.stderr)
+            print("Hit Ctrl-C to quit.\n", file=sys.stderr)
 
         if reloader:
             lockfile = os.environ.get('BOTTLE_LOCKFILE')
@@ -4372,11 +4311,11 @@ def _main(argv):  # pragma: no coverage
 
     def _cli_error(cli_msg):
         parser.print_help()
-        _stderr('\nError: %s\n' % cli_msg)
+        print('\nError:', cli_msg, file=sys.stderr)
         sys.exit(1)
 
     if args.version:
-        _stdout('Bottle %s\n' % __version__)
+        print('Bottle', __version__)
         sys.exit(0)
     if not args.app:
         _cli_error("No application entry point specified.")

@@ -2,7 +2,8 @@
 from __future__ import with_statement
 import bottle
 from .tools import ServerTestBase, chdir
-from bottle import tob, touni, HTTPResponse
+from bottle import tob, HTTPResponse
+
 
 class TestWsgi(ServerTestBase):
     ''' Tests for WSGI functionality, routing and output casting (decorators) '''
@@ -93,7 +94,7 @@ class TestWsgi(ServerTestBase):
 
     def test_500_unicode(self):
         @bottle.route('/')
-        def test(): raise Exception(touni('Unicode äöüß message.'))
+        def test(): raise Exception('Unicode äöüß message.')
         self.assertStatus(500, '/')
 
     def test_utf8_url(self):
@@ -104,8 +105,7 @@ class TestWsgi(ServerTestBase):
 
     def test_utf8_header(self):
         header = 'öäü'
-        if bottle.py3k:
-            header = header.encode('utf8').decode('latin1')
+        header = header.encode('utf8').decode('latin1')
         @bottle.route('/test')
         def test():
             h = bottle.request.get_header('X-Test')

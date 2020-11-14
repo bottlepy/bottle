@@ -41,7 +41,7 @@ class TestJinja2Template(unittest.TestCase):
     def test_custom_filters(self):
         """Templates: jinja2 custom filters """
         from bottle import jinja2_template as template
-        settings = dict(filters = {"star": lambda var: touni("").join((touni('*'), var, touni('*')))})
+        settings = dict(filters = {"star": lambda var: touni("").join(('*', var, '*'))})
         t = Jinja2Template("start {{var|star}} end", **settings)
         self.assertEqual("start *var* end", t.render(var="var"))
 
@@ -56,13 +56,13 @@ class TestJinja2Template(unittest.TestCase):
 
     def test_template_shortcut(self):
         result = jinja2_template('start {{var}} end', var='middle')
-        self.assertEqual(touni('start middle end'), result)
+        self.assertEqual('start middle end', result)
 
     def test_view_decorator(self):
         @jinja2_view('start {{var}} end')
         def test():
             return dict(var='middle')
-        self.assertEqual(touni('start middle end'), test())
+        self.assertEqual('start middle end', test())
 
 
 try:

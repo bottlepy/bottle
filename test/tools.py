@@ -12,7 +12,7 @@ import wsgiref.validate
 import mimetypes
 import uuid
 
-from bottle import tob, tonat, BytesIO, py3k, unicode
+from bottle import tob, BytesIO, unicode
 
 
 def warn(msg):
@@ -83,10 +83,8 @@ def api(introduced, deprecated=None, removed=None):
 
 
 def wsgistr(s):
-    if py3k:
-        return s.encode('utf8').decode('latin1')
-    else:
-        return s
+    return s.encode('utf8').decode('latin1')
+
 
 class ServerTestBase(unittest.TestCase):
     def setUp(self):
@@ -97,7 +95,7 @@ class ServerTestBase(unittest.TestCase):
         self.wsgiapp = wsgiref.validate.validator(self.app)
 
     def urlopen(self, path, method='GET', post='', env=None):
-        result = {'code':0, 'status':'error', 'header':{}, 'body':tob('')}
+        result = {'code':0, 'status':'error', 'header':{}, 'body':b''}
         def start_response(status, header, exc_info=None):
             result['code'] = int(status.split()[0])
             result['status'] = status.split(None, 1)[-1]
