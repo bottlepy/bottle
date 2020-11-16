@@ -3288,6 +3288,20 @@ class WSGIRefServer(ServerAdapter):
             self.srv.server_close()  # Prevent ResourceWarning: unclosed socket
             raise
 
+            
+class ServeLightServer(ServerAdapter):
+    def run(self, app):  # pragma: no cover
+        from sl.server import make_server
+        from sl.server import WSGIRequestHandler, ThreadingWSGIServer
+
+        handler_cls = self.options.get('handler_class', FixedHandler)
+        server_cls = self.options.get('server_class', ThreadingWSGIServer)
+
+        self.srv = make_server(self.host, self.port, app, server_cls,
+                               handler_cls)
+        self.port = self.srv.port  # update port actual port (0 means random)
+        self.srv.serve_forever()
+
 
 class CherryPyServer(ServerAdapter):
     def run(self, handler):  # pragma: no cover
