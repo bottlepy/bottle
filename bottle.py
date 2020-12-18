@@ -613,7 +613,7 @@ class Route(object):
 
     def __repr__(self):
         cb = self.get_undecorated_callback()
-        return '<%s %r %r>' % (self.method, self.rule, cb)
+        return '<%s:%s %s %s>' % (cb.__module__, cb.__name__, self.method, self.rule)
 
 ###############################################################################
 # Application Object ###########################################################
