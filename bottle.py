@@ -2425,7 +2425,7 @@ class ConfigDict(dict):
         for section in conf.sections():
             for key in conf.options(section):
                 value = conf.get(section, key)
-                if section not in ['bottle', 'ROOT']:
+                if section not in ('bottle', 'ROOT'):
                     key = section + '.' + key
                 self[key.lower()] = value
         return self
