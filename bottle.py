@@ -2623,7 +2623,7 @@ class AppStack(list):
 class WSGIFileWrapper(object):
     def __init__(self, fp, buffer_size=1024 * 64):
         self.fp, self.buffer_size = fp, buffer_size
-        for attr in ('fileno', 'close', 'read', 'readlines', 'tell', 'seek'):
+        for attr in 'fileno', 'close', 'read', 'readlines', 'tell', 'seek':
             if hasattr(fp, attr): setattr(self, attr, getattr(fp, attr))
 
     def __iter__(self):
