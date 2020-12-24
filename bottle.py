@@ -4034,7 +4034,7 @@ class StplParser(object):
     # This huge pile of voodoo magic splits python code into 8 different tokens.
     # We use the verbose (?x) regex mode to make this more manageable
 
-    _re_tok = _re_inl = r'''(
+    _re_tok = r'''(
         [urbURB]*
         (?:  ''(?!')
             |""(?!")
