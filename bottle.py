@@ -474,12 +474,7 @@ class Router(object):
         verb = environ['REQUEST_METHOD'].upper()
         path = environ['PATH_INFO'] or '/'
 
-        if verb == 'HEAD':
-            methods = ['PROXY', verb, 'GET', 'ANY']
-        else:
-            methods = ['PROXY', verb, 'ANY']
-
-        for method in methods:
+        for method in ('PROXY', 'HEAD', 'GET', 'ANY') if verb == 'HEAD' else ('PROXY', verb, 'ANY'):
             if method in self.static and path in self.static[method]:
                 target, getargs = self.static[method][path]
                 return target, getargs(path) if getargs else {}
