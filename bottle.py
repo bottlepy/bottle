@@ -3149,13 +3149,11 @@ def path_shift(script_name, path_info, shift=1):
     if pathlist and pathlist[0] == '': pathlist = []
     if scriptlist and scriptlist[0] == '': scriptlist = []
     if 0 < shift <= len(pathlist):
-        moved = pathlist[:shift]
-        scriptlist = scriptlist + moved
-        pathlist = pathlist[shift:]
+        scriptlist += pathlist[:shift]
+        del pathlist[:shift]
     elif 0 > shift >= -len(scriptlist):
-        moved = scriptlist[shift:]
-        pathlist = moved + pathlist
-        scriptlist = scriptlist[:shift]
+        pathlist[:0] = scriptlist[shift:]
+        del scriptlist[shift:]
     else:
         empty = 'SCRIPT_NAME' if shift < 0 else 'PATH_INFO'
         raise AssertionError("Cannot shift. Nothing left from %s" % empty)
