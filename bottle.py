@@ -837,14 +837,14 @@ class Bottle(object):
             object to remove all plugins that match that type, a string to remove
             all plugins with a matching ``name`` attribute or ``True`` to remove all
             plugins. Return the list of removed plugins. """
-        removed, remove = [], plugin
-        for i, plugin in list(enumerate(self.plugins))[::-1]:
-            if remove is True or remove is plugin or remove is type(plugin) \
-            or getattr(plugin, 'name', True) == remove:
-                removed.append(plugin)
-                del self.plugins[i]
-                if hasattr(plugin, 'close'): plugin.close()
-        if removed: self.reset()
+        removed, saved = [], []
+        for p in self.plugins:
+            (removed if plugin is True or plugin is p or plugin is type(p) or
+                        plugin == getattr(p, 'name', True) else saved).append(p)
+        if removed:
+            self.plugins = saved
+            for p in [p for p in removed if hasattr(p, 'close')]: p.close()
+            self.reset()
         return removed
 
     def reset(self, route=None):
