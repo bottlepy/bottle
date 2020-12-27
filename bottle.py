@@ -1607,15 +1607,18 @@ class BaseRequest(object):
             raise AttributeError("Attribute not defined: %s" % name)
 
 
+_control_chars_in = re.compile('[\n\r\0]+').search
+
+
 def _hkey(key):
-    if '\n' in key or '\r' in key or '\0' in key:
+    if _control_chars_in(key):
         raise ValueError("Header names must not contain control characters: %r" % key)
     return key.title().replace('_', '-')
 
 
 def _hval(value):
     value = tonat(value)
-    if '\n' in value or '\r' in value or '\0' in value:
+    if _control_chars_in(value):
         raise ValueError("Header value must not contain control characters: %r" % value)
     return value
 
@@ -1715,7 +1718,7 @@ class BaseResponse(object):
         if isinstance(status, int):
             code, status = status, _HTTP_STATUS_LINES.get(status)
         elif ' ' in status:
-            if '\n' in status or '\r' in status or '\0' in status:
+            if _control_chars_in(status):
                 raise ValueError('Status line must not include control chars.')
             status = status.strip()
             code = int(status.split()[0])
