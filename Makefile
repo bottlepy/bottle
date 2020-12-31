@@ -20,6 +20,7 @@ $(VENV)/.installed: Makefile
 	$(VENV)/bin/python3 -mensurepip
 	$(VENV)/bin/pip install -U pip
 	$(VENV)/bin/pip install -U setuptools wheel twine coverage
+	$(VENV)/bin/pip install -U sphinx sphinx-intl transifex-client
 	touch $(VENV)/.installed
 
 coverage: venv
@@ -35,11 +36,24 @@ push: test_all
 install:
 	python setup.py install
 
-docs:
-	sphinx-build -b html -d build/docs/doctrees docs build/docs/html/;
+docs: venv
+	$(VENV)/bin/sphinx-build -b html -d build/docs/doctrees docs build/docs/html/;
 
+tx-pull: venv
+	. $(VENV)/bin/activate; \
+	cd docs/_locale/ \
+	&& tx pull -af
 
+tx-push: venv
+	. $(VENV)/bin/activate; \
+	cd docs/_locale/ \
+	&& sphinx-build -b gettext -E .. _pot \
+	&& sphinx-intl update-txconfig-resources -p _pot -d . --transifex-project-name bottle \
+	&& tx push -s
 
+tx:
+	$(MAKE) tx-push
+	$(MAKE) tx-pull
 
 test:
 	python3 -m unittest discover

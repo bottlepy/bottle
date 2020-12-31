@@ -1,19 +1,19 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) 2009-2017, Marcel Hellkamp
+# Copyright (C) 2009-2020, Marcel Hellkamp
 # This file is distributed under the same license as the Bottle package.
 # 
 # Translators:
 # alephmelo <alephmelo@icloud.com>, 2015
 # Igor P. Leroy <ip.leroy@gmail.com>, 2015
 # Igor P. Leroy <ip.leroy@gmail.com>, 2015
-# Thiago Avelino <thiago@avelino.xxx>, 2015
+# Thiago Avelino <t@avelino.xxx>, 2015
 msgid ""
 msgstr ""
 "Project-Id-Version: bottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-12-19 14:15+0100\n"
-"PO-Revision-Date: 2015-12-14 18:04+0000\n"
-"Last-Translator: alephmelo <alephmelo@icloud.com>\n"
+"POT-Creation-Date: 2020-12-31 18:35+0100\n"
+"PO-Revision-Date: 2020-12-31 17:35+0000\n"
+"Last-Translator: defnull <marc@gsites.de>\n"
 "Language-Team: Portuguese (Brazil) (http://www.transifex.com/bottle/bottle/language/pt_BR/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -21,112 +21,116 @@ msgstr ""
 "Language: pt_BR\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: ../../index.rst:21
+#: ../../index.rst:20
 msgid "Bottle: Python Web Framework"
 msgstr "Bottle: Python Web Framework"
 
-#: ../../index.rst:23
+#: ../../index.rst:22
 msgid ""
 "Bottle is a fast, simple and lightweight WSGI_ micro web-framework for "
 "Python_. It is distributed as a single file module and has no dependencies "
 "other than the `Python Standard Library <http://docs.python.org/library/>`_."
 msgstr "Bottle é um simples, rápido, e leve WSGI_ micro web-framework para Python_. Ele é distribuído como um único arquivo (módulo) e não tem dependências que além `Biblioteca padrão do Python <http://docs.python.org/library/>`_."
 
-#: ../../index.rst:26
+#: ../../index.rst:25
 msgid ""
 "**Routing:** Requests to function-call mapping with support for clean and  "
 "dynamic URLs."
 msgstr "**Rotas:** Solicitações de chamada de função de mapeamento com suporte para URLs limpas e dinâmicos."
 
-#: ../../index.rst:27
+#: ../../index.rst:26
 msgid ""
 "**Templates:** Fast and pythonic :ref:`built-in template engine <tutorial-"
 "templates>` and support for mako_, jinja2_ and cheetah_ templates."
 msgstr "**Templates:**Rápido e pythonico :ref:`mecanismo de templates interno <tutorial-templates>` e suporte para mako_, jinja2_ and cheetah_ templates."
 
-#: ../../index.rst:28
+#: ../../index.rst:27
 msgid ""
 "**Utilities:** Convenient access to form data, file uploads, cookies, "
 "headers and other HTTP-related metadata."
 msgstr "**Utilitários:** Conveniente acesso a dados de formulários, upload de arquivos, cookies, cabeçalhos e outros metadados relacionados ao HTTP."
 
-#: ../../index.rst:29
+#: ../../index.rst:28
 msgid ""
 "**Server:** Built-in HTTP development server and support for paste_, "
-"fapws3_, bjoern_, gae_, cherrypy_ or any other WSGI_ capable HTTP server."
-msgstr "**Servidor:** Servidor HTTP interno para desenvolvimento e suporte para paste_, fapws3_, bjoern_, gae_, cherrypy_ ou qualquer outro WSGI_ capaz de servir HTTP"
+"bjoern_, gae_, cherrypy_ or any other WSGI_ capable HTTP server."
+msgstr ""
 
-#: ../../index.rst:32
+#: ../../index.rst:31
 msgid "Example: \"Hello World\" in a bottle"
 msgstr "Exemplo: \"Olá Mundo\" em bottle"
 
-#: ../../index.rst:43
+#: ../../index.rst:42
 msgid ""
 "Run this script or paste it into a Python console, then point your browser "
 "to `<http://localhost:8080/hello/world>`_. That's it."
 msgstr "Execute este script ou cole em um console de Python, em seguida, acesse em seu navegador o `<http://localhost:8080/hello/world>`_. Feito!"
 
-#: ../../index.rst:46
+#: ../../index.rst:45
 msgid "Download and Install"
 msgstr "Download e Instalar"
 
-#: ../../index.rst:49
+#: ../../index.rst:48
 msgid ""
-"Install the latest stable release with ``pip install bottle``, "
-"``easy_install -U bottle`` or download `bottle.py`__ (unstable) into your "
-"project directory. There are no hard [1]_ dependencies other than the Python"
-" standard library. Bottle runs with **Python 2.7 and 3.4+**."
-msgstr "Instale a última versão estável com ``pip install bottle``, ``easy_install -U bottle`` ou faça o download do `bottle.py`__(instável) dentro do diretório do seu projeto. Não há depedências [1]_ além das bibliotecas padrões do Python. Bottle é compatível com **Python 2.7 e 3.4+**."
+"Install the latest stable release with ``pip install bottle`` or download "
+"`bottle.py`__ (unstable) into your project directory. There are no hard [1]_"
+" dependencies other than the Python standard library. Bottle supports "
+"**Python 2.7 and Python 3**."
+msgstr ""
 
-#: ../../index.rst:52
+#: ../../index.rst:50
+msgid "Support for Python 2.5 and 2.6 was dropped with this release."
+msgstr ""
+
+#: ../../index.rst:55
 msgid "User's Guide"
 msgstr "Guia do usuário"
 
-#: ../../index.rst:53
+#: ../../index.rst:56
 msgid ""
 "Start here if you want to learn how to use the bottle framework for web "
 "development. If you have any questions not answered here, feel free to ask "
 "the `mailing list <mailto:bottlepy@googlegroups.com>`_."
 msgstr "Comece por aqui se você quer aprender como usar o bottle framework para desenvolvimento web. Se você tiver quaisquer perguntas não respondidas aqui, sinta-se livre para pedir ajuda a `lista de discussão <mailto:bottlepy@googlegroups.com>`_."
 
-#: ../../index.rst:68
+#: ../../index.rst:71
 msgid "Knowledge Base"
 msgstr "Base de conhecimento"
 
-#: ../../index.rst:69
+#: ../../index.rst:72
 msgid "A collection of articles, guides and HOWTOs."
 msgstr "Uma coleção de artigos, guias e COMO FAZER."
 
-#: ../../index.rst:81
+#: ../../index.rst:84
 msgid "Development and Contribution"
 msgstr "Desenvolvimento e contribuição"
 
-#: ../../index.rst:83
+#: ../../index.rst:86
 msgid ""
 "These chapters are intended for developers interested in the bottle "
 "development and release workflow."
 msgstr "Esses capítulos são destinados a desenvolvedores interessados no desenvolvimento do bottle e entender o fluxo de contribuição."
 
-#: ../../index.rst:100
+#: ../../index.rst:103
 msgid "License"
 msgstr "Licença"
 
-#: ../../index.rst:102
+#: ../../index.rst:105
 msgid "Code and documentation are available according to the MIT License:"
 msgstr "Código e documentação estão disponíveis sobre a licença MIT:"
 
-#: ../../index.rst:107
+#: ../../index.rst:110
 msgid ""
 "The Bottle logo however is *NOT* covered by that license. It is allowed to "
 "use the logo as a link to the bottle homepage or in direct context with the "
 "unmodified library. In all other cases please ask first."
 msgstr "O logotipo do bottle no entanto *NÃO é* abrangido pela licença (MIT). É permitido usar o logotipo como um link para a home page do bottle ou em contexto direto com a biblioteca não modificado. Nos outros casos, por favor, pergunte primeiro."
 
-#: ../../index.rst:112
+#: ../../index.rst:115
 msgid "Footnotes"
 msgstr "Notas de rodapé"
 
-#: ../../index.rst:113
+#: ../../index.rst:116
 msgid ""
 "Usage of the template or server adapter classes requires the corresponding "
 "template or server modules."

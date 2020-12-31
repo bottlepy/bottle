@@ -1,14 +1,16 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) 2009-2017, Marcel Hellkamp
+# Copyright (C) 2009-2020, Marcel Hellkamp
 # This file is distributed under the same license as the Bottle package.
 # 
 # Translators:
+# Charles LeMagne, 2017
+# Charles LeMagne, 2017
 msgid ""
 msgstr ""
 "Project-Id-Version: bottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-12-19 14:15+0100\n"
-"PO-Revision-Date: 2015-12-13 21:08+0000\n"
+"POT-Creation-Date: 2020-12-31 18:35+0100\n"
+"PO-Revision-Date: 2020-12-31 17:35+0000\n"
 "Last-Translator: defnull <marc@gsites.de>\n"
 "Language-Team: German (Germany) (http://www.transifex.com/bottle/bottle/language/de_DE/)\n"
 "MIME-Version: 1.0\n"
@@ -19,15 +21,15 @@ msgstr ""
 
 #: ../../faq.rst:10
 msgid "Frequently Asked Questions"
-msgstr ""
+msgstr "Häufig gestellte Fragen"
 
 #: ../../faq.rst:13
 msgid "About Bottle"
-msgstr ""
+msgstr "Über Bottle"
 
 #: ../../faq.rst:16
 msgid "Is bottle suitable for complex applications?"
-msgstr ""
+msgstr "Ist Bottle für komplexe Anwendungen geeignet?"
 
 #: ../../faq.rst:18
 msgid ""
@@ -38,15 +40,15 @@ msgid ""
 " XML-RPC). Although it *is* possible to add these features and build complex"
 " applications with Bottle, you should consider using a full-stack Web "
 "framework like pylons_ or paste_ instead."
-msgstr ""
+msgstr "Bottle ist ein *micro*-Framework, entworfen für Prototyping und kleine Webanwendungen und -services.\nEs hält sich im Hintergrund und erlaubt es dir die Dinge schnell erledigt zu bekommen, ihm fehlen allerdings einige fortgeschnittenere Eigenschaften und ready-to-use Lösungen wie sie in anderen Frameworks zu finden sind (MVC, ORM, Formularvalidierung, Scaffolding, CML-RPC). Auch *wenn* es möglich ist diese hinzuzufügen und komplexere Anwendungen mit Bottle zu entwickeln, solltest du in Betracht ziehen ein vollwertiges Web-Framework wie pylons oder paste zu benutzen."
 
 #: ../../faq.rst:22
 msgid "Common Problems and Pitfalls"
-msgstr ""
+msgstr "Häufige Probleme und Fallstricke"
 
 #: ../../faq.rst:29
 msgid "\"Template Not Found\" in mod_wsgi/mod_python"
-msgstr ""
+msgstr "\"Template nicht gefunden\" in mod_wsgi/mod_python"
 
 #: ../../faq.rst:31
 msgid ""
@@ -54,29 +56,29 @@ msgid ""
 "or mod_wsgi_ environment, the working directory (``./``) depends on your "
 "Apache settings. You should add an absolute path to the template search "
 "path::"
-msgstr ""
+msgstr "Bottle sucht in  ``./`` und ``./views/`` nach Templates. In einer mod_python_ oder mod_wsgi_ Umgebung hängt das Arbeitsverzeichnis  (``./``) von deinen Apache Einstellungen ab. Du solltest dem Templatepfad einen absoluten Pfad hinzufügen"
 
 #: ../../faq.rst:35
 msgid "so bottle searches the right paths."
-msgstr ""
+msgstr "damit Bottle den richtigen Pfad nutzt."
 
 #: ../../faq.rst:38
 msgid "Dynamic Routes and Slashes"
-msgstr ""
+msgstr "Dynamische Routen und Schrägstriche"
 
 #: ../../faq.rst:40
 msgid ""
 "In :ref:`dynamic route syntax <tutorial-dynamic-routes>`, a placeholder "
-"token (``:name``) matches everything up to the next slash. This equals to "
+"token (``<name>``) matches everything up to the next slash. This equals to "
 "``[^/]+`` in regular expression syntax. To accept slashes too, you have to "
 "add a custom regular pattern to the placeholder. An example: "
-"``/images/:filepath#.*#`` would match ``/images/icons/error.png`` but "
-"``/images/:filename`` won't."
+"``/images/<filepath:path>`` would match ``/images/icons/error.png`` but "
+"``/images/<filename>`` won't."
 msgstr ""
 
 #: ../../faq.rst:43
 msgid "Problems with reverse proxies"
-msgstr ""
+msgstr "Probleme mit Reverse-Proxies"
 
 #: ../../faq.rst:45
 msgid ""
@@ -86,4 +88,4 @@ msgid ""
 "example, the ``wsgi.url_scheme`` value or the ``Host`` header might reflect "
 "the local request by your proxy, not the real request by the client. Here is"
 " a small WSGI middleware snippet that helps to fix these values::"
-msgstr ""
+msgstr "Umleitungen und URL-building funktioniert nur wenn Bottle die öffentliche Adresse und den Ort deiner Anwendung kennt. Nutzt du Bottle lokal hinter einem Reverse-Proxie oder einem Load-Balancer können auf dem Weg Informationen verloren gehen.\nZum Beispiel könnte der ``wsgi.url_scheme``-Wert oder der ``Host``-Header die lokale Anfrage deines Proxys widerspiegeln und nicht die echte Anfrage des Clients.\nHier ist eine kleines WSGI-Middleware Snipptes welches dir hilft diese Werte zu korrigieren:"

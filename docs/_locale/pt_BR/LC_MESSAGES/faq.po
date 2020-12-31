@@ -1,15 +1,16 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) 2009-2017, Marcel Hellkamp
+# Copyright (C) 2009-2020, Marcel Hellkamp
 # This file is distributed under the same license as the Bottle package.
 # 
 # Translators:
+# Claudio Rogerio Carvalho Filho <excriptbrasil@gmail.com>, 2017
 msgid ""
 msgstr ""
 "Project-Id-Version: bottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-12-19 14:15+0100\n"
-"PO-Revision-Date: 2015-01-22 19:19+0000\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"POT-Creation-Date: 2020-12-31 18:35+0100\n"
+"PO-Revision-Date: 2020-12-31 17:35+0000\n"
+"Last-Translator: defnull <marc@gsites.de>\n"
 "Language-Team: Portuguese (Brazil) (http://www.transifex.com/bottle/bottle/language/pt_BR/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -19,11 +20,11 @@ msgstr ""
 
 #: ../../faq.rst:10
 msgid "Frequently Asked Questions"
-msgstr ""
+msgstr "Perguntas Frequentes"
 
 #: ../../faq.rst:13
 msgid "About Bottle"
-msgstr ""
+msgstr "Sobre o Bottle"
 
 #: ../../faq.rst:16
 msgid "Is bottle suitable for complex applications?"
@@ -67,11 +68,11 @@ msgstr ""
 #: ../../faq.rst:40
 msgid ""
 "In :ref:`dynamic route syntax <tutorial-dynamic-routes>`, a placeholder "
-"token (``:name``) matches everything up to the next slash. This equals to "
+"token (``<name>``) matches everything up to the next slash. This equals to "
 "``[^/]+`` in regular expression syntax. To accept slashes too, you have to "
 "add a custom regular pattern to the placeholder. An example: "
-"``/images/:filepath#.*#`` would match ``/images/icons/error.png`` but "
-"``/images/:filename`` won't."
+"``/images/<filepath:path>`` would match ``/images/icons/error.png`` but "
+"``/images/<filename>`` won't."
 msgstr ""
 
 #: ../../faq.rst:43

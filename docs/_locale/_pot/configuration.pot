@@ -1,5 +1,5 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) 2009-2017, Marcel Hellkamp
+# Copyright (C) 2009-2020, Marcel Hellkamp
 # This file is distributed under the same license as the Bottle package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Bottle 0.13-dev\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-12-13 21:49+0100\n"
+"POT-Creation-Date: 2020-12-31 18:35+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -76,72 +76,97 @@ msgstr ""
 msgid "With :meth:`ConfigDict.load_config` you can load these ``*.ini`` style configuration files from disk and import their values into your existing configuration::"
 msgstr ""
 
-#: ../../configuration.rst:84
+#: ../../configuration.rst:85
+msgid "Loading Configuration from a python module"
+msgstr ""
+
+#: ../../configuration.rst:89
+msgid "Loading configuration from a Python module is a common pattern for Python programs and frameworks. Bottle assumes that configuration keys are all upper case:"
+msgstr ""
+
+#: ../../configuration.rst:98
+msgid "You can load the this Python module with :met:`ConfigDict.load_module`::"
+msgstr ""
+
+#: ../../configuration.rst:107
+msgid "Note the second parameter to disable loading as namespaced items as in :meth:`ConfigDict.load_dict`. By default, loading from a Python module will call this method, unless you specifically call this method with `False` as the second argument."
+msgstr ""
+
+#: ../../configuration.rst:110
 msgid "Loading Configuration from a nested :class:`dict`"
 msgstr ""
 
-#: ../../configuration.rst:88
+#: ../../configuration.rst:114
 msgid "Another useful method is :meth:`ConfigDict.load_dict`. This method takes an entire structure of nested dictionaries and turns it into a flat list of keys and values with namespaced keys::"
 msgstr ""
 
-#: ../../configuration.rst:109
+#: ../../configuration.rst:135
 msgid "Listening to configuration changes"
 msgstr ""
 
-#: ../../configuration.rst:113
+#: ../../configuration.rst:139
 msgid "The ``config`` hook on the application object is triggered each time a value in :attr:`Bottle.config` is changed. This hook can be used to react on configuration changes at runtime, for example reconnect to a new database, change the debug settings on a background service or resize worker thread pools. The hook callback receives two arguments (key, new_value) and is called before the value is actually changed in the dictionary. Raising an exception from a hook callback cancels the change and the old value is preserved."
 msgstr ""
 
-#: ../../configuration.rst:122
+#: ../../configuration.rst:148
 msgid "The hook callbacks cannot *change* the value that is to be stored to the dictionary. That is what filters are for."
 msgstr ""
 
-#: ../../configuration.rst:128
+#: ../../configuration.rst:154
 msgid "Filters and other Meta Data"
 msgstr ""
 
-#: ../../configuration.rst:132
+#: ../../configuration.rst:158
 msgid ":class:`ConfigDict` allows you to store meta data along with configuration keys. Two meta fields are currently defined:"
 msgstr ""
 
-#: ../../configuration.rst:136
+#: ../../configuration.rst:162
 msgid "help"
 msgstr ""
 
-#: ../../configuration.rst:135
+#: ../../configuration.rst:161
 msgid "A help or description string. May be used by debugging, introspection or admin tools to help the site maintainer configuring their application."
 msgstr ""
 
-#: ../../configuration.rst:139
+#: ../../configuration.rst:165
 msgid "filter"
 msgstr ""
 
-#: ../../configuration.rst:139
+#: ../../configuration.rst:165
 msgid "A callable that accepts and returns a single value. If a filter is defined for a key, any new value stored to that key is first passed through the filter callback. The filter can be used to cast the value to a different type, check for invalid values (throw a ValueError) or trigger side effects."
 msgstr ""
 
-#: ../../configuration.rst:141
+#: ../../configuration.rst:167
 msgid "This feature is most useful for plugins. They can validate their config parameters or trigger side effects using filters and document their configuration via ``help`` fields::"
 msgstr ""
 
-#: ../../configuration.rst:163
+#: ../../configuration.rst:189
 msgid "API Documentation"
 msgstr ""
 
 #: ../../../bottle.py:docstring of bottle.ConfigDict:1
-msgid "A dict-like configuration storage with additional support for namespaces, validators, meta-data, on_change listeners and more."
+msgid "A dict-like configuration storage with additional support for namespaces, validators, meta-data, overlays and more."
+msgstr ""
+
+#: ../../../bottle.py:docstring of bottle.ConfigDict:4
+msgid "This dict-like class is heavily optimized for read access. All read-only methods as well as item access should be as fast as the built-in dict."
 msgstr ""
 
 #: ../../../bottle.py:docstring of bottle.ConfigDict.load_module:1
-msgid "Load values from a Python module. :param squash: Squash nested dicts into namespaces by using"
+msgid "Load values from a Python module."
 msgstr ""
 
 #: ../../../bottle.py:docstring of bottle.ConfigDict.load_module:3
-msgid "load_dict(), otherwise use update()"
+msgid "Example modue ``config.py``::"
 msgstr ""
 
-#: ../../../bottle.py:docstring of bottle.ConfigDict.load_module:4
-msgid "Example: load_config('my.app.settings', True) Example: load_config('my.app.settings', False)"
+#: ../../../bottle.py:docstring of bottle.ConfigDict.load_module:0
+#: ../../../bottle.py:docstring of bottle.ConfigDict.load_config:0
+msgid "Parameters"
+msgstr ""
+
+#: ../../../bottle.py:docstring of bottle.ConfigDict.load_module:17
+msgid "If true (default), dictionary values are assumed to represent namespaces (see :meth:`load_dict`)."
 msgstr ""
 
 #: ../../../bottle.py:docstring of bottle.ConfigDict.load_config:1
@@ -149,7 +174,27 @@ msgid "Load values from an ``*.ini`` style config file."
 msgstr ""
 
 #: ../../../bottle.py:docstring of bottle.ConfigDict.load_config:3
-msgid "If the config file contains sections, their names are used as namespaces for the values within. The two special sections ``DEFAULT`` and ``bottle`` refer to the root namespace (no prefix)."
+msgid "A configuration file consists of sections, each led by a ``[section]`` header, followed by key/value entries separated by either ``=`` or ``:``. Section names and keys are case-insensitive. Leading and trailing whitespace is removed from keys and values. Values can be omitted, in which case the key/value delimiter may also be left out. Values can also span multiple lines, as long as they are indented deeper than the first line of the value. Commands are prefixed by ``#`` or ``;`` and may only appear on their own on an otherwise empty line."
+msgstr ""
+
+#: ../../../bottle.py:docstring of bottle.ConfigDict.load_config:13
+msgid "Both section and key names may contain dots (``.``) as namespace separators. The actual configuration parameter name is constructed by joining section name and key name together and converting to lower case."
+msgstr ""
+
+#: ../../../bottle.py:docstring of bottle.ConfigDict.load_config:18
+msgid "The special sections ``bottle`` and ``ROOT`` refer to the root namespace and the ``DEFAULT`` section defines default values for all other sections."
+msgstr ""
+
+#: ../../../bottle.py:docstring of bottle.ConfigDict.load_config:22
+msgid "With Python 3, extended string interpolation is enabled."
+msgstr ""
+
+#: ../../../bottle.py:docstring of bottle.ConfigDict.load_config:24
+msgid "The path of a config file, or a list of paths."
+msgstr ""
+
+#: ../../../bottle.py:docstring of bottle.ConfigDict.load_config:25
+msgid "All keyword parameters are passed to the underlying :class:`python:configparser.ConfigParser` constructor call."
 msgstr ""
 
 #: ../../../bottle.py:docstring of bottle.ConfigDict.load_dict:1
@@ -157,7 +202,15 @@ msgid "Load values from a dictionary structure. Nesting can be used to represent
 msgstr ""
 
 #: ../../../bottle.py:docstring of bottle.ConfigDict.update:1
-msgid "If the first parameter is a string, all keys are prefixed with this namespace. Apart from that it works just as the usual dict.update(). Example: ``update('some.namespace', key='value')``"
+msgid "If the first parameter is a string, all keys are prefixed with this namespace. Apart from that it works just as the usual dict.update()."
+msgstr ""
+
+#: ../../../bottle.py:docstring of bottle.ConfigDict.setdefault:1
+msgid "Insert key with a value of default if key is not in the dictionary."
+msgstr ""
+
+#: ../../../bottle.py:docstring of bottle.ConfigDict.setdefault:3
+msgid "Return the value for key if key is in the dictionary, else default."
 msgstr ""
 
 #: ../../../bottle.py:docstring of bottle.ConfigDict.meta_get:1
@@ -171,4 +224,3 @@ msgstr ""
 #: ../../../bottle.py:docstring of bottle.ConfigDict.meta_list:1
 msgid "Return an iterable of meta field names defined for a key."
 msgstr ""
-

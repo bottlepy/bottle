@@ -1,5 +1,5 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) 2009-2017, Marcel Hellkamp
+# Copyright (C) 2009-2020, Marcel Hellkamp
 # This file is distributed under the same license as the Bottle package.
 # 
 # Translators:
@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-12-19 14:15+0100\n"
-"PO-Revision-Date: 2015-12-13 21:08+0000\n"
+"POT-Creation-Date: 2020-12-31 18:35+0100\n"
+"PO-Revision-Date: 2017-08-03 11:49+0000\n"
 "Last-Translator: defnull <marc@gsites.de>\n"
 "Language-Team: German (Germany) (http://www.transifex.com/bottle/bottle/language/de_DE/)\n"
 "MIME-Version: 1.0\n"

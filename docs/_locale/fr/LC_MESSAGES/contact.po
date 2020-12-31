@@ -1,0 +1,88 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2009-2020, Marcel Hellkamp
+# This file is distributed under the same license as the Bottle package.
+# 
+# Translators:
+# Ibrahim DERRAZ <ibrahim@derraz.fr>, 2017
+msgid ""
+msgstr ""
+"Project-Id-Version: bottle\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2020-12-31 18:35+0100\n"
+"PO-Revision-Date: 2020-12-31 17:35+0000\n"
+"Last-Translator: defnull <marc@gsites.de>\n"
+"Language-Team: French (http://www.transifex.com/bottle/bottle/language/fr/)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: fr\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: ../../contact.rst:3
+msgid "Contact"
+msgstr "Contact"
+
+#: ../../contact.rst:6
+msgid "About the Author"
+msgstr ""
+
+#: ../../contact.rst:7
+msgid ""
+"Hi, I'm *Marcel Hellkamp* (aka *defnull*), author of Bottle and the guy "
+"behind this website. I'm 27 years old and studying computer science at the "
+"Georg-August-University in Göttingen, Germany. Python is my favorite "
+"language, but I also code in ruby and JavaScript a lot. Watch me on `twitter"
+" <http://twitter.com/bottlepy>`_ or visit my profile at `GitHub "
+"<http://github.com/defnull>`_ to get in contact. A `mailinglist "
+"<http://groups.google.de/group/bottlepy>`_ is open for Bottle related "
+"questions, too."
+msgstr "Bonjour, je suis *Marcel Hellkamp* (alias *defnull*),  développeur de Bottle, et la personne derrière ce site. J'ans 27 ans et j’étudie l’informatique à l’université Georg-August-University à  Göttingen en Allemagne. Python est mon langage préféré, mais je code aussi en Ruby et JavaScript. Suivez moi sur `twitter <http://twitter.com/bottlepy>`_ ou visitez mon profil sur `GitHub <http://github.com/defnull>`_ . Une `mailinglist <http://groups.google.de/group/bottlepy>`_ est disponible pour toutes les questions liés à Bottle"
+
+#: ../../contact.rst:10
+msgid "About Bottle"
+msgstr "À propos de Bottle"
+
+#: ../../contact.rst:11
+msgid ""
+"This is my first open source project so far. It started and a small "
+"experiment but soon got so much positive feedback I decided to make "
+"something real out of it. Here it is."
+msgstr "Il s'agit de mon premier projet open-source. Il s’agissait d'un projet d'expérimentation, mais grâce à tout vos retours positifs, j'ai décidé d'en faire un projet sérieux. Et le voilà."
+
+#: ../../contact.rst:14
+msgid "Impressum und Kontaktdaten"
+msgstr "Impressum und Kontaktdaten"
+
+#: ../../contact.rst:15
+msgid ""
+"(This is required by `German law "
+"<http://bundesrecht.juris.de/tmg/__5.html>`_)"
+msgstr "(Requis par la  `loi Allemande <http://bundesrecht.juris.de/tmg/__5.html>`_)"
+
+#: ../../contact.rst:17
+msgid ""
+"Die Nutzung der folgenden Kontaktdaten ist ausschließlich für die "
+"Kontaktaufnahme mit dem Betreiber dieser Webseite bei rechtlichen Problemen "
+"vorgesehen. Insbesondere die Nutzung zu Werbe- oder ähnlichen Zwecken ist "
+"ausdrücklich untersagt."
+msgstr "Die Nutzung der folgenden Kontaktdaten ist ausschließlich für die Kontaktaufnahme mit dem Betreiber dieser Webseite bei rechtlichen Problemen vorgesehen. Insbesondere die Nutzung zu Werbe- oder ähnlichen Zwecken ist ausdrücklich untersagt."
+
+#: ../../contact.rst:22
+msgid "**Betreiber**: Marcel Hellkamp"
+msgstr "**Betreiber**: Marcel Hellkamp"
+
+#: ../../contact.rst:23
+msgid "**Ort**: D - 37075 Göttingen"
+msgstr "**Ort**: D - 37075 Göttingen"
+
+#: ../../contact.rst:24
+msgid "**Strasse**: Theodor-Heuss Strasse 13"
+msgstr "**Strasse**: Theodor-Heuss Strasse 13"
+
+#: ../../contact.rst:25
+msgid "**Telefon**: +49 (0) 551 20005915"
+msgstr "**Telefon**: +49 (0) 551 20005915"
+
+#: ../../contact.rst:26
+msgid "**E-Mail**: marc at gsites dot de"
+msgstr "**E-Mail**: marc at gsites dot de"

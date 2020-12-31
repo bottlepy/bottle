@@ -1,14 +1,15 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) 2009-2017, Marcel Hellkamp
+# Copyright (C) 2009-2020, Marcel Hellkamp
 # This file is distributed under the same license as the Bottle package.
 # 
 # Translators:
+# Charles LeMagne, 2017
 msgid ""
 msgstr ""
 "Project-Id-Version: bottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-12-19 14:15+0100\n"
-"PO-Revision-Date: 2015-12-13 21:08+0000\n"
+"POT-Creation-Date: 2020-12-31 18:35+0100\n"
+"PO-Revision-Date: 2020-12-31 17:35+0000\n"
 "Last-Translator: defnull <marc@gsites.de>\n"
 "Language-Team: German (Germany) (http://www.transifex.com/bottle/bottle/language/de_DE/)\n"
 "MIME-Version: 1.0\n"
@@ -22,7 +23,7 @@ msgid "Contact"
 msgstr ""
 
 #: ../../contact.rst:6
-msgid "About the Autor"
+msgid "About the Author"
 msgstr ""
 
 #: ../../contact.rst:7
@@ -39,14 +40,14 @@ msgstr ""
 
 #: ../../contact.rst:10
 msgid "About Bottle"
-msgstr ""
+msgstr "Über Bottle"
 
 #: ../../contact.rst:11
 msgid ""
 "This is my first open source project so far. It started and a small "
 "experiment but soon got so much positive feedback I decided to make "
 "something real out of it. Here it is."
-msgstr ""
+msgstr "Dies ist soweit mein erstes Open Source Projekt."
 
 #: ../../contact.rst:14
 msgid "Impressum und Kontaktdaten"

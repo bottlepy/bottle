@@ -1,5 +1,5 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) 2009-2017, Marcel Hellkamp
+# Copyright (C) 2009-2020, Marcel Hellkamp
 # This file is distributed under the same license as the Bottle package.
 # 
 # Translators:
@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-12-19 14:15+0100\n"
-"PO-Revision-Date: 2015-12-13 21:08+0000\n"
+"POT-Creation-Date: 2020-12-31 18:35+0100\n"
+"PO-Revision-Date: 2020-12-31 17:35+0000\n"
 "Last-Translator: defnull <marc@gsites.de>\n"
 "Language-Team: Russian (Russia) (http://www.transifex.com/bottle/bottle/language/ru_RU/)\n"
 "MIME-Version: 1.0\n"
@@ -185,7 +185,7 @@ msgid "The source repository is structured as follows:"
 msgstr ""
 
 #: ../../development.rst:55
-msgid "master branch"
+msgid "``master`` branch"
 msgstr ""
 
 #: ../../development.rst:55
@@ -195,7 +195,7 @@ msgid ""
 msgstr ""
 
 #: ../../development.rst:58
-msgid "release-x.y branches"
+msgid "``release-x.y`` branches"
 msgstr ""
 
 #: ../../development.rst:58
@@ -209,33 +209,22 @@ msgid ""
 "branches, so you can keep up with important changes."
 msgstr ""
 
-#: ../../development.rst:61
-msgid "bugfix_name-x.y branches"
-msgstr ""
-
-#: ../../development.rst:61
-msgid ""
-"These branches are only temporary and used to develop and share non-trivial "
-"bug-fixes for existing releases. They are merged into the corresponding "
-"release branch and deleted soon after that."
-msgstr ""
-
-#: ../../development.rst:65
+#: ../../development.rst:62
 msgid "Feature branches"
 msgstr ""
 
-#: ../../development.rst:64
+#: ../../development.rst:61
 msgid ""
 "All other branches are feature branches. These are based on the master "
 "branch and only live as long as they are still active and not merged back "
 "into ``master``."
 msgstr ""
 
-#: ../../development.rst:68
+#: ../../development.rst:65
 msgid "What does this mean for a developer?"
 msgstr ""
 
-#: ../../development.rst:69
+#: ../../development.rst:66
 msgid ""
 "If you want to add a feature, create a new branch from ``master``. If you "
 "want to fix a bug, branch ``release-x.y`` for each affected release. Please "
@@ -244,17 +233,17 @@ msgid ""
 "page."
 msgstr ""
 
-#: ../../development.rst:71
+#: ../../development.rst:68
 msgid ""
 "Oh, and never ever change the release number. We'll do that on integration. "
 "You never know in which order we pull pending requests anyway :)"
 msgstr ""
 
-#: ../../development.rst:75
+#: ../../development.rst:72
 msgid "What does this mean for a maintainer ?"
 msgstr ""
 
-#: ../../development.rst:76
+#: ../../development.rst:73
 msgid ""
 "Watch the tags (and the mailing list) for bug-fixes and new releases. If you"
 " want to fetch a specific release from the git repository, trust the tags, "
@@ -262,11 +251,11 @@ msgid ""
 "but a tag marks the exact commit which changed the version number."
 msgstr ""
 
-#: ../../development.rst:80
+#: ../../development.rst:77
 msgid "Submitting Patches"
 msgstr ""
 
-#: ../../development.rst:82
+#: ../../development.rst:79
 msgid ""
 "The best way to get your changes integrated into the main development branch"
 " is to fork the main repository at github, create a new feature-branch, "
@@ -276,57 +265,57 @@ msgid ""
 "follow some basic rules:"
 msgstr ""
 
-#: ../../development.rst:84
+#: ../../development.rst:81
 msgid ""
 "**Documentation:** Tell us what your patch does. Comment your code. If you "
 "introduced a new feature, add to the documentation so others can learn about"
 " it."
 msgstr ""
 
-#: ../../development.rst:85
+#: ../../development.rst:82
 msgid ""
 "**Test:** Write tests to prove that your code works as expected and does not"
 " break anything. If you fixed a bug, write at least one test-case that "
 "triggers the bug. Make sure that all tests pass before you submit a patch."
 msgstr ""
 
-#: ../../development.rst:86
+#: ../../development.rst:83
 msgid ""
 "**One patch at a time:** Only fix one bug or add one feature at a time. "
 "Design your patches so that they can be applyed as a whole. Keep your "
 "patches clean, small and focused."
 msgstr ""
 
-#: ../../development.rst:87
+#: ../../development.rst:84
 msgid ""
 "**Sync with upstream:** If the ``upstream/master`` branch changed while you "
 "were working on your patch, rebase or pull to make sure that your patch "
 "still applies without conflicts."
 msgstr ""
 
-#: ../../development.rst:91
+#: ../../development.rst:88
 msgid "Building the Documentation"
 msgstr ""
 
-#: ../../development.rst:93
+#: ../../development.rst:90
 msgid ""
 "You need a recent version of Sphinx to build the documentation. The "
 "recommended way is to install :command:`virtualenv` using your distribution "
 "package repository and install sphinx manually to get an up-to-date version."
 msgstr ""
 
-#: ../../development.rst:124
+#: ../../development.rst:121
 msgid "GIT Workflow Examples"
 msgstr ""
 
-#: ../../development.rst:126
+#: ../../development.rst:123
 msgid ""
 "The following examples assume that you have an (free) `github account "
 "<https://github.com>`_. This is not mandatory, but makes things a lot "
 "easier."
 msgstr ""
 
-#: ../../development.rst:128
+#: ../../development.rst:125
 msgid ""
 "First of all you need to create a fork (a personal clone) of the official "
 "repository. To do this, you simply click the \"fork\" button on the `bottle "
@@ -334,7 +323,7 @@ msgid ""
 "you will be presented with a short introduction to your new repository."
 msgstr ""
 
-#: ../../development.rst:130
+#: ../../development.rst:127
 msgid ""
 "The fork you just created is hosted at github and read-able by everyone, but"
 " write-able only by you. Now you need to clone the fork locally to actually "
@@ -342,7 +331,7 @@ msgid ""
 " the public (read-only) one::"
 msgstr ""
 
-#: ../../development.rst:134
+#: ../../development.rst:131
 msgid ""
 "Once the clone is complete your repository will have a remote named "
 "\"origin\" that points to your fork on github. Don’t let the name confuse "
@@ -351,18 +340,18 @@ msgid ""
 "\"upstream\"::"
 msgstr ""
 
-#: ../../development.rst:140
+#: ../../development.rst:137
 msgid ""
 "Note that \"upstream\" is a public clone URL, which is read-only. You cannot"
 " push changes directly to it. Instead, we will pull from your public "
 "repository. This is described later."
 msgstr ""
 
-#: ../../development.rst:143
+#: ../../development.rst:140
 msgid "Submit a Feature"
 msgstr ""
 
-#: ../../development.rst:144
+#: ../../development.rst:141
 msgid ""
 "New features are developed in separate feature-branches to make integration "
 "easy. Because they are going to be integrated into the ``master`` branch, "
@@ -370,20 +359,20 @@ msgid ""
 "type the following::"
 msgstr ""
 
-#: ../../development.rst:148
+#: ../../development.rst:145
 msgid ""
 "Now implement your feature, write tests, update the documentation, make sure"
 " that all tests pass and commit your changes::"
 msgstr ""
 
-#: ../../development.rst:152
+#: ../../development.rst:149
 msgid ""
 "If the ``upstream/master`` branch changed in the meantime, there may be "
 "conflicts with your changes. To solve these, 'rebase' your feature-branch "
 "onto the top of the updated ``upstream/master`` branch::"
 msgstr ""
 
-#: ../../development.rst:157
+#: ../../development.rst:154
 msgid ""
 "This is equivalent to undoing all your changes, updating your branch to the "
 "latest version and reapplying all your patches again. If you released your "
@@ -392,13 +381,13 @@ msgid ""
 "the tests again and commit."
 msgstr ""
 
-#: ../../development.rst:159
+#: ../../development.rst:156
 msgid ""
 "Now you are almost ready to send a pull request. But first you need to make "
 "your feature-branch public by pushing it to your github fork::"
 msgstr ""
 
-#: ../../development.rst:163
+#: ../../development.rst:160
 msgid ""
 "After you’ve pushed your commit(s) you need to inform us about the new "
 "feature. One way is to send a pull-request using github. Another way would "
@@ -407,39 +396,39 @@ msgid ""
 "for free :)"
 msgstr ""
 
-#: ../../development.rst:165
+#: ../../development.rst:162
 msgid ""
 "If we accept your patch, we will integrate it into the official development "
 "branch and make it part of the next release."
 msgstr ""
 
-#: ../../development.rst:168
+#: ../../development.rst:165
 msgid "Fix a Bug"
 msgstr ""
 
-#: ../../development.rst:169
+#: ../../development.rst:166
 msgid ""
 "The workflow for bug-fixes is very similar to the one for features, but "
 "there are some differences:"
 msgstr ""
 
-#: ../../development.rst:171
+#: ../../development.rst:168
 msgid ""
 "Branch off of the affected release branches instead of just the development "
 "branch."
 msgstr ""
 
-#: ../../development.rst:172
+#: ../../development.rst:169
 msgid "Write at least one test-case that triggers the bug."
 msgstr ""
 
-#: ../../development.rst:173
+#: ../../development.rst:170
 msgid ""
 "Do this for each affected branch including ``upstream/master`` if it is "
 "affected. ``git cherry-pick`` may help you reducing repetitive work."
 msgstr ""
 
-#: ../../development.rst:174
+#: ../../development.rst:171
 msgid ""
 "Name your branch after the release it is based on to avoid confusion. "
 "Examples: ``my_bugfix-x.y`` or ``my_bugfix-dev``."

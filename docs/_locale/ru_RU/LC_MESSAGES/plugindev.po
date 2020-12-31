@@ -1,5 +1,5 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) 2009-2017, Marcel Hellkamp
+# Copyright (C) 2009-2020, Marcel Hellkamp
 # This file is distributed under the same license as the Bottle package.
 # 
 # Translators:
@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-12-19 14:15+0100\n"
-"PO-Revision-Date: 2015-12-13 21:08+0000\n"
+"POT-Creation-Date: 2020-12-31 18:35+0100\n"
+"PO-Revision-Date: 2020-12-31 17:35+0000\n"
 "Last-Translator: defnull <marc@gsites.de>\n"
 "Language-Team: Russian (Russia) (http://www.transifex.com/bottle/bottle/language/ru_RU/)\n"
 "MIME-Version: 1.0\n"
@@ -234,7 +234,7 @@ msgid "rule"
 msgstr ""
 
 #: ../../plugindev.rst:111
-msgid "The rule string (e.g. ``/wiki/:page``)."
+msgid "The rule string (e.g. ``/wiki/<page>``)."
 msgstr ""
 
 #: ../../plugindev.rst:112
@@ -344,7 +344,7 @@ msgid ""
 "different wrapper based on current needs, work with closures, or enable or "
 "disable a plugin at runtime. Let's take the built-in HooksPlugin as an "
 "example: If no hooks are installed, the plugin removes itself from all "
-"affected routes and has virtaully no overhead. As soon as you install the "
+"affected routes and has virtually no overhead. As soon as you install the "
 "first hook, the plugin activates itself and takes effect again."
 msgstr ""
 

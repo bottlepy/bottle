@@ -1,5 +1,5 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) 2009-2017, Marcel Hellkamp
+# Copyright (C) 2009-2020, Marcel Hellkamp
 # This file is distributed under the same license as the Bottle package.
 # 
 # Translators:
@@ -9,9 +9,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-12-19 14:15+0100\n"
-"PO-Revision-Date: 2015-12-14 18:13+0000\n"
-"Last-Translator: alephmelo <alephmelo@icloud.com>\n"
+"POT-Creation-Date: 2020-12-31 18:35+0100\n"
+"PO-Revision-Date: 2020-12-31 17:35+0000\n"
+"Last-Translator: defnull <marc@gsites.de>\n"
 "Language-Team: Portuguese (Brazil) (http://www.transifex.com/bottle/bottle/language/pt_BR/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -62,7 +62,7 @@ msgid ""
 "applications. If you do not have permissions to install packages system-wide"
 " or simply don't want to, create a `virtualenv "
 "<http://pypi.python.org/pypi/virtualenv>`_ first:"
-msgstr "De qualquer maneira, você irá precisar do Python 2.7 ou mais recente (incluindo 3.4+) para executar aplicações bottle. Se você não tem permissões para instalar pacotes globalmente no sistema ou simplesmente não deseja fazer, crie uma `virtualenv <http://pypi.python.org/pypi/virtualenv>`_ primeiro:"
+msgstr ""
 
 #: ../../tutorial.rst:55
 msgid "Or, if virtualenv is not installed on your system:"
@@ -382,7 +382,7 @@ msgid ""
 msgstr ""
 
 #: ../../tutorial.rst:273
-msgid "Empty Strings, False, None or other non-true values:"
+msgid "Empty Strings, ``False``, ``None`` or other non-true values:"
 msgstr ""
 
 #: ../../tutorial.rst:273
@@ -415,7 +415,7 @@ msgid ""
 msgstr ""
 
 #: ../../tutorial.rst:282
-msgid "Instances of HTTPError or HTTPResponse"
+msgid "Instances of :exc:`HTTPError` or :exc:`HTTPResponse`"
 msgstr ""
 
 #: ../../tutorial.rst:282
@@ -545,7 +545,7 @@ msgstr ""
 #: ../../tutorial.rst:365
 msgid ""
 "Both functions will interrupt your callback code by raising an "
-":exc:`HTTPError` exception."
+":exc:`HTTPResponse` exception."
 msgstr ""
 
 #: ../../tutorial.rst:368
@@ -614,7 +614,7 @@ msgid ""
 "read :ref:`ahead <tutorial-cookies>`."
 msgstr ""
 
-#: ../../tutorial.rst:403 ../../tutorial.rst:532
+#: ../../tutorial.rst:403 ../../tutorial.rst:533
 msgid "Cookies"
 msgstr ""
 
@@ -661,25 +661,32 @@ msgid ""
 " off, requires Python 2.7 or newer)."
 msgstr ""
 
-#: ../../tutorial.rst:424
+#: ../../tutorial.rst:423
+msgid ""
+"**same_site:**  Disables third-party use for a cookie. Allowed attributes: "
+"`lax` and `strict`. In strict mode the cookie will never be sent. In lax "
+"mode the cookie is only sent with a top-level GET request."
+msgstr ""
+
+#: ../../tutorial.rst:425
 msgid ""
 "If neither `expires` nor `max_age` is set, the cookie expires at the end of "
 "the browser session or as soon as the browser window is closed. There are "
 "some other gotchas you should consider when using cookies:"
 msgstr ""
 
-#: ../../tutorial.rst:426
+#: ../../tutorial.rst:427
 msgid "Cookies are limited to 4 KB of text in most browsers."
 msgstr ""
 
-#: ../../tutorial.rst:427
+#: ../../tutorial.rst:428
 msgid ""
 "Some users configure their browsers to not accept cookies at all. Most "
 "search engines ignore cookies too. Make sure that your application still "
 "works without cookies."
 msgstr ""
 
-#: ../../tutorial.rst:428
+#: ../../tutorial.rst:429
 msgid ""
 "Cookies are stored at client side and are not encrypted in any way. Whatever"
 " you store in a cookie, the user can read it. Worse than that, an attacker "
@@ -689,15 +696,15 @@ msgid ""
 "cookies, too. Thus, never store confidential information in cookies."
 msgstr ""
 
-#: ../../tutorial.rst:429
+#: ../../tutorial.rst:430
 msgid "Cookies are easily forged by malicious clients. Do not trust cookies."
 msgstr ""
 
-#: ../../tutorial.rst:434
+#: ../../tutorial.rst:435
 msgid "Signed Cookies"
 msgstr ""
 
-#: ../../tutorial.rst:435
+#: ../../tutorial.rst:436
 msgid ""
 "As mentioned above, cookies are easily forged by malicious clients. Bottle "
 "can cryptographically sign your cookies to prevent this kind of "
@@ -707,7 +714,7 @@ msgid ""
 "if the cookie is not signed or the signature keys don't match::"
 msgstr ""
 
-#: ../../tutorial.rst:455
+#: ../../tutorial.rst:456
 msgid ""
 "In addition, Bottle automatically pickles and unpickles any data stored to "
 "signed cookies. This allows you to store any pickle-able object (not only "
@@ -715,7 +722,7 @@ msgid ""
 "limit."
 msgstr ""
 
-#: ../../tutorial.rst:457
+#: ../../tutorial.rst:458
 msgid ""
 "Signed cookies are not encrypted (the client can still see the content) and "
 "not copy-protected (the client can restore an old cookie). The main "
@@ -723,11 +730,11 @@ msgid ""
 "not to store secret information at client side."
 msgstr ""
 
-#: ../../tutorial.rst:470
+#: ../../tutorial.rst:471
 msgid "Request Data"
 msgstr ""
 
-#: ../../tutorial.rst:472
+#: ../../tutorial.rst:473
 msgid ""
 "Cookies, HTTP header, HTML ``<form>`` fields and other request data is "
 "available through the global :data:`request` object. This special object "
@@ -735,25 +742,25 @@ msgid ""
 "where multiple client connections are handled at the same time::"
 msgstr ""
 
-#: ../../tutorial.rst:481
+#: ../../tutorial.rst:482
 msgid ""
 "The :data:`request` object is a subclass of :class:`BaseRequest` and has a "
 "very rich API to access data. We only cover the most commonly used features "
 "here, but it should be enough to get started."
 msgstr ""
 
-#: ../../tutorial.rst:486
+#: ../../tutorial.rst:487
 msgid "Introducing :class:`FormsDict`"
 msgstr ""
 
-#: ../../tutorial.rst:488
+#: ../../tutorial.rst:489
 msgid ""
 "Bottle uses a special type of dictionary to store form data and cookies. "
 ":class:`FormsDict` behaves like a normal dictionary, but has some additional"
 " features to make your life easier."
 msgstr ""
 
-#: ../../tutorial.rst:490
+#: ../../tutorial.rst:491
 msgid ""
 "**Attribute access**: All values in the dictionary are also accessible as "
 "attributes. These virtual attributes return unicode strings, even if the "
@@ -761,7 +768,7 @@ msgid ""
 "empty, but still present::"
 msgstr ""
 
-#: ../../tutorial.rst:505
+#: ../../tutorial.rst:506
 msgid ""
 "**Multiple values per key:** :class:`FormsDict` is a subclass of "
 ":class:`MultiDict` and can store more than one value per key. The standard "
@@ -770,7 +777,7 @@ msgid ""
 "values for a specific key::"
 msgstr ""
 
-#: ../../tutorial.rst:510
+#: ../../tutorial.rst:511
 msgid ""
 "**WTForms support:** Some libraries (e.g. `WTForms "
 "<http://wtforms.simplecodes.com/>`_) want all-unicode dictionaries as input."
@@ -779,7 +786,7 @@ msgid ""
 "the other features."
 msgstr ""
 
-#: ../../tutorial.rst:514
+#: ../../tutorial.rst:515
 msgid ""
 "In **Python 2** all keys and values are byte-strings. If you need unicode, "
 "you can call :meth:`FormsDict.getunicode` or fetch values via attribute "
@@ -787,7 +794,7 @@ msgid ""
 "empty string if that fails. No need to catch :exc:`UnicodeError`::"
 msgstr ""
 
-#: ../../tutorial.rst:521
+#: ../../tutorial.rst:522
 msgid ""
 "In **Python 3** all strings are unicode, but HTTP is a byte-based wire "
 "protocol. The server has to decode the byte strings somehow before they are "
@@ -799,13 +806,13 @@ msgid ""
 " not what you want."
 msgstr ""
 
-#: ../../tutorial.rst:528
+#: ../../tutorial.rst:529
 msgid ""
 "If you need the whole dictionary with correctly decoded values (e.g. for "
 "WTForms), you can call :meth:`FormsDict.decode` to get a re-encoded copy."
 msgstr ""
 
-#: ../../tutorial.rst:534
+#: ../../tutorial.rst:535
 msgid ""
 "Cookies are small pieces of text stored in the clients browser and sent back"
 " to the server with each request. They are useful to keep some state around "
@@ -813,25 +820,25 @@ msgid ""
 " for security related stuff. They can be easily forged by the client."
 msgstr ""
 
-#: ../../tutorial.rst:536
+#: ../../tutorial.rst:537
 msgid ""
 "All cookies sent by the client are available through "
 ":attr:`BaseRequest.cookies` (a :class:`FormsDict`). This example shows a "
 "simple cookie-based view counter::"
 msgstr ""
 
-#: ../../tutorial.rst:546
+#: ../../tutorial.rst:547
 msgid ""
 "The :meth:`BaseRequest.get_cookie` method is a different way do access "
 "cookies. It supports decoding :ref:`signed cookies <tutorial-signed-"
 "cookies>` as described in a separate section."
 msgstr ""
 
-#: ../../tutorial.rst:549
+#: ../../tutorial.rst:550
 msgid "HTTP Headers"
 msgstr ""
 
-#: ../../tutorial.rst:551
+#: ../../tutorial.rst:552
 msgid ""
 "All HTTP headers sent by the client (e.g. ``Referer``, ``Agent`` or "
 "``Accept-Language``) are stored in a :class:`WSGIHeaderDict` and accessible "
@@ -839,11 +846,11 @@ msgid ""
 " is basically a dictionary with case-insensitive keys::"
 msgstr ""
 
-#: ../../tutorial.rst:563
+#: ../../tutorial.rst:564
 msgid "Query Variables"
 msgstr ""
 
-#: ../../tutorial.rst:565
+#: ../../tutorial.rst:566
 msgid ""
 "The query string (as in ``/forum?id=1&page=5``) is commonly used to transmit"
 " a small number of key/value pairs to the server. You can use the "
@@ -852,17 +859,17 @@ msgid ""
 "string."
 msgstr ""
 
-#: ../../tutorial.rst:578
+#: ../../tutorial.rst:579
 msgid "HTML `<form>` Handling"
 msgstr ""
 
-#: ../../tutorial.rst:580
+#: ../../tutorial.rst:581
 msgid ""
 "Let us start from the beginning. In HTML, a typical ``<form>`` looks "
 "something like this:"
 msgstr ""
 
-#: ../../tutorial.rst:590
+#: ../../tutorial.rst:591
 msgid ""
 "The ``action`` attribute specifies the URL that will receive the form data. "
 "``method`` defines the HTTP method to use (``GET`` or ``POST``). With "
@@ -872,77 +879,77 @@ msgid ""
 "in doubt, use ``POST`` forms."
 msgstr ""
 
-#: ../../tutorial.rst:592
+#: ../../tutorial.rst:593
 msgid ""
 "Form fields transmitted via ``POST`` are stored in :attr:`BaseRequest.forms`"
 " as a :class:`FormsDict`. The server side code may look like this::"
 msgstr ""
 
-#: ../../tutorial.rst:615
+#: ../../tutorial.rst:616
 msgid ""
 "There are several other attributes used to access form data. Some of them "
 "combine values from different sources for easier access. The following table"
 " should give you a decent overview."
 msgstr ""
 
-#: ../../tutorial.rst:618
+#: ../../tutorial.rst:619
 msgid "Attribute"
 msgstr ""
 
-#: ../../tutorial.rst:618
+#: ../../tutorial.rst:619
 msgid "GET Form fields"
 msgstr ""
 
-#: ../../tutorial.rst:618
+#: ../../tutorial.rst:619
 msgid "POST Form fields"
 msgstr ""
 
-#: ../../tutorial.rst:618
+#: ../../tutorial.rst:619
 msgid "File Uploads"
 msgstr ""
 
-#: ../../tutorial.rst:620
+#: ../../tutorial.rst:621
 msgid ":attr:`BaseRequest.query`"
 msgstr ""
 
-#: ../../tutorial.rst:620 ../../tutorial.rst:621 ../../tutorial.rst:622
-#: ../../tutorial.rst:623 ../../tutorial.rst:623 ../../tutorial.rst:624
-#: ../../tutorial.rst:625 ../../tutorial.rst:625
+#: ../../tutorial.rst:621 ../../tutorial.rst:622 ../../tutorial.rst:623
+#: ../../tutorial.rst:624 ../../tutorial.rst:624 ../../tutorial.rst:625
+#: ../../tutorial.rst:626 ../../tutorial.rst:626
 msgid "yes"
 msgstr ""
 
-#: ../../tutorial.rst:620 ../../tutorial.rst:620 ../../tutorial.rst:621
-#: ../../tutorial.rst:621 ../../tutorial.rst:622 ../../tutorial.rst:622
-#: ../../tutorial.rst:623 ../../tutorial.rst:624 ../../tutorial.rst:624
-#: ../../tutorial.rst:625
+#: ../../tutorial.rst:621 ../../tutorial.rst:621 ../../tutorial.rst:622
+#: ../../tutorial.rst:622 ../../tutorial.rst:623 ../../tutorial.rst:623
+#: ../../tutorial.rst:624 ../../tutorial.rst:625 ../../tutorial.rst:625
+#: ../../tutorial.rst:626
 msgid "no"
 msgstr ""
 
-#: ../../tutorial.rst:621
+#: ../../tutorial.rst:622
 msgid ":attr:`BaseRequest.forms`"
 msgstr ""
 
-#: ../../tutorial.rst:622
+#: ../../tutorial.rst:623
 msgid ":attr:`BaseRequest.files`"
 msgstr ""
 
-#: ../../tutorial.rst:623
+#: ../../tutorial.rst:624
 msgid ":attr:`BaseRequest.params`"
 msgstr ""
 
-#: ../../tutorial.rst:624
+#: ../../tutorial.rst:625
 msgid ":attr:`BaseRequest.GET`"
 msgstr ""
 
-#: ../../tutorial.rst:625
+#: ../../tutorial.rst:626
 msgid ":attr:`BaseRequest.POST`"
 msgstr ""
 
-#: ../../tutorial.rst:630
+#: ../../tutorial.rst:631
 msgid "File uploads"
 msgstr ""
 
-#: ../../tutorial.rst:632
+#: ../../tutorial.rst:633
 msgid ""
 "To support file uploads, we have to change the ``<form>`` tag a bit. First, "
 "we tell the browser to encode the form data in a different way by adding an "
@@ -951,14 +958,14 @@ msgid ""
 "Here is an example:"
 msgstr ""
 
-#: ../../tutorial.rst:642
+#: ../../tutorial.rst:643
 msgid ""
 "Bottle stores file uploads in :attr:`BaseRequest.files` as "
 ":class:`FileUpload` instances, along with some metadata about the upload. "
 "Let us assume you just want to save the file to disk::"
 msgstr ""
 
-#: ../../tutorial.rst:656
+#: ../../tutorial.rst:657
 msgid ""
 ":attr:`FileUpload.filename` contains the name of the file on the clients "
 "file system, but is cleaned up and normalized to prevent bugs caused by "
@@ -967,7 +974,7 @@ msgid ""
 ":attr:`FileUpload.raw_filename`."
 msgstr ""
 
-#: ../../tutorial.rst:658
+#: ../../tutorial.rst:659
 msgid ""
 "The :attr:`FileUpload.save` method is highly recommended if you want to "
 "store the file to disk. It prevents some common errors (e.g. it does not "
@@ -976,22 +983,22 @@ msgid ""
 ":attr:`FileUpload.file`. Just be careful."
 msgstr ""
 
-#: ../../tutorial.rst:662
+#: ../../tutorial.rst:663
 msgid "JSON Content"
 msgstr ""
 
-#: ../../tutorial.rst:664
+#: ../../tutorial.rst:665
 msgid ""
 "Some JavaScript or REST clients send ``application/json`` content to the "
 "server. The :attr:`BaseRequest.json` attribute contains the parsed data "
 "structure, if available."
 msgstr ""
 
-#: ../../tutorial.rst:668
+#: ../../tutorial.rst:669
 msgid "The raw request body"
 msgstr ""
 
-#: ../../tutorial.rst:670
+#: ../../tutorial.rst:671
 msgid ""
 "You can access the raw body data as a file-like object via "
 ":attr:`BaseRequest.body`. This is a :class:`BytesIO` buffer or a temporary "
@@ -1001,24 +1008,24 @@ msgid ""
 "unbuffered access to the stream, have a look at ``request['wsgi.input']``."
 msgstr ""
 
-#: ../../tutorial.rst:675
+#: ../../tutorial.rst:676
 msgid "WSGI Environment"
 msgstr ""
 
-#: ../../tutorial.rst:677
+#: ../../tutorial.rst:678
 msgid ""
 "Each :class:`BaseRequest` instance wraps a WSGI environment dictionary. The "
 "original is stored in :attr:`BaseRequest.environ`, but the request object "
 "itself behaves like a dictionary, too. Most of the interesting data is "
 "exposed through special methods or attributes, but if you want to access "
-"`WSGI environ variables <WSGI specification>`_ directly, you can do so::"
+"`WSGI environ variables <WSGI_Specification>`_ directly, you can do so::"
 msgstr ""
 
-#: ../../tutorial.rst:695
+#: ../../tutorial.rst:696
 msgid "Templates"
 msgstr ""
 
-#: ../../tutorial.rst:697
+#: ../../tutorial.rst:698
 msgid ""
 "Bottle comes with a fast and powerful built-in template engine called "
 ":doc:`stpl`. To render a template you can use the :func:`template` function "
@@ -1027,7 +1034,7 @@ msgid ""
 "arguments. Here’s a simple example of how to render a template::"
 msgstr ""
 
-#: ../../tutorial.rst:704
+#: ../../tutorial.rst:705
 msgid ""
 "This will load the template file ``hello_template.tpl`` and render it with "
 "the ``name`` variable set. Bottle will look for templates in the "
@@ -1035,17 +1042,17 @@ msgid ""
 "list."
 msgstr ""
 
-#: ../../tutorial.rst:706
+#: ../../tutorial.rst:707
 msgid ""
 "The :func:`view` decorator allows you to return a dictionary with the "
 "template variables instead of calling :func:`template`::"
 msgstr ""
 
-#: ../../tutorial.rst:715
+#: ../../tutorial.rst:716
 msgid "Syntax"
 msgstr ""
 
-#: ../../tutorial.rst:718
+#: ../../tutorial.rst:719
 msgid ""
 "The template syntax is a very thin layer around the Python language. Its "
 "main purpose is to ensure correct indentation of blocks, so you can format "
@@ -1053,26 +1060,26 @@ msgid ""
 " syntax description: :doc:`stpl`"
 msgstr ""
 
-#: ../../tutorial.rst:720
+#: ../../tutorial.rst:721
 msgid "Here is an example template::"
 msgstr ""
 
-#: ../../tutorial.rst:731
+#: ../../tutorial.rst:732
 msgid "Caching"
 msgstr ""
 
-#: ../../tutorial.rst:732
+#: ../../tutorial.rst:733
 msgid ""
 "Templates are cached in memory after compilation. Modifications made to the "
 "template files will have no affect until you clear the template cache. Call "
 "``bottle.TEMPLATES.clear()`` to do so. Caching is disabled in debug mode."
 msgstr ""
 
-#: ../../tutorial.rst:742
+#: ../../tutorial.rst:743
 msgid "Plugins"
 msgstr ""
 
-#: ../../tutorial.rst:746
+#: ../../tutorial.rst:747
 msgid ""
 "Bottle's core features cover most common use-cases, but as a micro-framework"
 " it has its limits. This is where \"Plugins\" come into play. Plugins add "
@@ -1080,7 +1087,7 @@ msgid ""
 "just automate some repetitive work."
 msgstr ""
 
-#: ../../tutorial.rst:748
+#: ../../tutorial.rst:749
 msgid ""
 "We have a growing :doc:`/plugins/index` and most plugins are designed to be "
 "portable and re-usable across applications. The chances are high that your "
@@ -1088,7 +1095,7 @@ msgid ""
 "the :doc:`/plugindev` may help you."
 msgstr ""
 
-#: ../../tutorial.rst:750
+#: ../../tutorial.rst:751
 msgid ""
 "The effects and APIs of plugins are manifold and depend on the specific "
 "plugin. The ``SQLitePlugin`` plugin for example detects callbacks that "
@@ -1097,7 +1104,7 @@ msgid ""
 "use a database::"
 msgstr ""
 
-#: ../../tutorial.rst:770
+#: ../../tutorial.rst:771
 msgid ""
 "Other plugin may populate the thread-safe :data:`local` object, change "
 "details of the :data:`request` object, filter the data returned by the "
@@ -1106,11 +1113,11 @@ msgid ""
 "the original callback. What happens exactly depends on the plugin."
 msgstr ""
 
-#: ../../tutorial.rst:774
+#: ../../tutorial.rst:775
 msgid "Application-wide Installation"
 msgstr ""
 
-#: ../../tutorial.rst:776
+#: ../../tutorial.rst:777
 msgid ""
 "Plugins can be installed application-wide or just to some specific routes "
 "that need additional functionality. Most plugins can safely be installed to "
@@ -1118,7 +1125,7 @@ msgid ""
 " need their functionality."
 msgstr ""
 
-#: ../../tutorial.rst:778
+#: ../../tutorial.rst:779
 msgid ""
 "Let us take the ``SQLitePlugin`` plugin for example. It only affects route "
 "callbacks that need a database connection. Other routes are left alone. "
@@ -1126,13 +1133,13 @@ msgid ""
 "additional overhead."
 msgstr ""
 
-#: ../../tutorial.rst:780
+#: ../../tutorial.rst:781
 msgid ""
 "To install a plugin, just call :func:`install` with the plugin as first "
 "argument::"
 msgstr ""
 
-#: ../../tutorial.rst:785
+#: ../../tutorial.rst:786
 msgid ""
 "The plugin is not applied to the route callbacks yet. This is delayed to "
 "make sure no routes are missed. You can install plugins first and add routes"
@@ -1141,17 +1148,17 @@ msgid ""
 "database plugin first."
 msgstr ""
 
-#: ../../tutorial.rst:789
+#: ../../tutorial.rst:790
 msgid "Uninstall Plugins"
 msgstr ""
 
-#: ../../tutorial.rst:790
+#: ../../tutorial.rst:791
 msgid ""
 "You can use a name, class or instance to :func:`uninstall` a previously "
 "installed plugin::"
 msgstr ""
 
-#: ../../tutorial.rst:800
+#: ../../tutorial.rst:801
 msgid ""
 "Plugins can be installed and removed at any time, even at runtime while "
 "serving requests. This enables some neat tricks (installing slow debugging "
@@ -1160,52 +1167,52 @@ msgid ""
 " re-applied."
 msgstr ""
 
-#: ../../tutorial.rst:803
+#: ../../tutorial.rst:804
 msgid ""
 "The module-level :func:`install` and :func:`uninstall` functions affect the "
 ":ref:`default-app`. To manage plugins for a specific application, use the "
 "corresponding methods on the :class:`Bottle` application object."
 msgstr ""
 
-#: ../../tutorial.rst:807
+#: ../../tutorial.rst:808
 msgid "Route-specific Installation"
 msgstr ""
 
-#: ../../tutorial.rst:809
+#: ../../tutorial.rst:810
 msgid ""
 "The ``apply`` parameter of the :func:`route` decorator comes in handy if you"
 " want to install plugins to only a small number of routes::"
 msgstr ""
 
-#: ../../tutorial.rst:819
+#: ../../tutorial.rst:820
 msgid "Blacklisting Plugins"
 msgstr ""
 
-#: ../../tutorial.rst:821
+#: ../../tutorial.rst:822
 msgid ""
 "You may want to explicitly disable a plugin for a number of routes. The "
 ":func:`route` decorator has a ``skip`` parameter for this purpose::"
 msgstr ""
 
-#: ../../tutorial.rst:843
+#: ../../tutorial.rst:844
 msgid ""
 "The ``skip`` parameter accepts a single value or a list of values. You can "
 "use a name, class or instance to identify the plugin that is to be skipped. "
 "Set ``skip=True`` to skip all plugins at once."
 msgstr ""
 
-#: ../../tutorial.rst:846
+#: ../../tutorial.rst:847
 msgid "Plugins and Sub-Applications"
 msgstr ""
 
-#: ../../tutorial.rst:848
+#: ../../tutorial.rst:849
 msgid ""
 "Most plugins are specific to the application they were installed to. "
 "Consequently, they should not affect sub-applications mounted with "
 ":meth:`Bottle.mount`. Here is an example::"
 msgstr ""
 
-#: ../../tutorial.rst:859
+#: ../../tutorial.rst:860
 msgid ""
 "Whenever you mount an application, Bottle creates a proxy-route on the main-"
 "application that forwards all requests to the sub-application. Plugins are "
@@ -1214,13 +1221,13 @@ msgid ""
 "affect the routes of the ``/blog`` sub-application."
 msgstr ""
 
-#: ../../tutorial.rst:861
+#: ../../tutorial.rst:862
 msgid ""
 "This behavior is intended as a sane default, but can be overridden. The "
 "following example re-activates all plugins for a specific proxy-route::"
 msgstr ""
 
-#: ../../tutorial.rst:865
+#: ../../tutorial.rst:866
 msgid ""
 "But there is a snag: The plugin sees the whole sub-application as a single "
 "route, namely the proxy-route mentioned above. In order to affect each "
@@ -1228,21 +1235,21 @@ msgid ""
 "the mounted application explicitly."
 msgstr ""
 
-#: ../../tutorial.rst:870
+#: ../../tutorial.rst:871
 msgid "Development"
 msgstr ""
 
-#: ../../tutorial.rst:872
+#: ../../tutorial.rst:873
 msgid ""
 "So you have learned the basics and want to write your own application? Here "
-"are some tips that might help you beeing more productive."
+"are some tips that might help you being more productive."
 msgstr ""
 
-#: ../../tutorial.rst:878
+#: ../../tutorial.rst:879
 msgid "Default Application"
 msgstr ""
 
-#: ../../tutorial.rst:880
+#: ../../tutorial.rst:881
 msgid ""
 "Bottle maintains a global stack of :class:`Bottle` instances and uses the "
 "top of the stack as a default for some of the module-level functions and "
@@ -1250,7 +1257,7 @@ msgid ""
 "calling :meth:`Bottle.route` on the default application::"
 msgstr ""
 
-#: ../../tutorial.rst:888
+#: ../../tutorial.rst:889
 msgid ""
 "This is very convenient for small applications and saves you some typing, "
 "but also means that, as soon as your module is imported, routes are "
@@ -1259,28 +1266,28 @@ msgid ""
 "applications::"
 msgstr ""
 
-#: ../../tutorial.rst:898
+#: ../../tutorial.rst:899
 msgid ""
 "Separating the application object improves re-usability a lot, too. Other "
 "developers can safely import the ``app`` object from your module and use "
 ":meth:`Bottle.mount` to merge applications together."
 msgstr ""
 
-#: ../../tutorial.rst:903
+#: ../../tutorial.rst:904
 msgid ""
 "Starting with bottle-0.13 you can use :class:`Bottle` instances as context "
 "managers::"
 msgstr ""
 
-#: ../../tutorial.rst:928
+#: ../../tutorial.rst:929
 msgid "Debug Mode"
 msgstr ""
 
-#: ../../tutorial.rst:930
+#: ../../tutorial.rst:931
 msgid "During early development, the debug mode can be very helpful."
 msgstr ""
 
-#: ../../tutorial.rst:938
+#: ../../tutorial.rst:939
 msgid ""
 "In this mode, Bottle is much more verbose and provides helpful debugging "
 "information whenever an error occurs. It also disables some optimisations "
@@ -1288,31 +1295,31 @@ msgid ""
 " misconfiguration."
 msgstr ""
 
-#: ../../tutorial.rst:940
+#: ../../tutorial.rst:941
 msgid "Here is an incomplete list of things that change in debug mode:"
 msgstr ""
 
-#: ../../tutorial.rst:942
+#: ../../tutorial.rst:943
 msgid "The default error page shows a traceback."
 msgstr ""
 
-#: ../../tutorial.rst:943
+#: ../../tutorial.rst:944
 msgid "Templates are not cached."
 msgstr ""
 
-#: ../../tutorial.rst:944
+#: ../../tutorial.rst:945
 msgid "Plugins are applied immediately."
 msgstr ""
 
-#: ../../tutorial.rst:946
+#: ../../tutorial.rst:947
 msgid "Just make sure not to use the debug mode on a production server."
 msgstr ""
 
-#: ../../tutorial.rst:949
+#: ../../tutorial.rst:950
 msgid "Auto Reloading"
 msgstr ""
 
-#: ../../tutorial.rst:951
+#: ../../tutorial.rst:952
 msgid ""
 "During development, you have to restart the server a lot to test your recent"
 " changes. The auto reloader can do this for you. Every time you edit a "
@@ -1320,14 +1327,14 @@ msgid ""
 "version of your code."
 msgstr ""
 
-#: ../../tutorial.rst:961
+#: ../../tutorial.rst:962
 msgid ""
 "How it works: the main process will not start a server, but spawn a new "
 "child process using the same command line arguments used to start the main "
 "process. All module-level code is executed at least twice! Be careful."
 msgstr ""
 
-#: ../../tutorial.rst:966
+#: ../../tutorial.rst:967
 msgid ""
 "The child process will have ``os.environ['BOTTLE_CHILD']`` set to ``True`` "
 "and start as a normal non-reloading app server. As soon as any of the loaded"
@@ -1336,7 +1343,7 @@ msgid ""
 "debug mode to deactivate template caching."
 msgstr ""
 
-#: ../../tutorial.rst:972
+#: ../../tutorial.rst:973
 msgid ""
 "The reloading depends on the ability to stop the child process. If you are "
 "running on Windows or any other operating system not supporting "
@@ -1345,21 +1352,21 @@ msgid ""
 "finally clauses, etc., are not executed after a ``SIGTERM``."
 msgstr ""
 
-#: ../../tutorial.rst:980
+#: ../../tutorial.rst:981
 msgid "Command Line Interface"
 msgstr ""
 
-#: ../../tutorial.rst:984
+#: ../../tutorial.rst:985
 msgid "Starting with version 0.10 you can use bottle as a command-line tool:"
 msgstr ""
 
-#: ../../tutorial.rst:1008
+#: ../../tutorial.rst:1009
 msgid ""
 "The `ADDRESS` field takes an IP address or an IP:PORT pair and defaults to "
 "``localhost:8080``. The other parameters should be self-explanatory."
 msgstr ""
 
-#: ../../tutorial.rst:1010
+#: ../../tutorial.rst:1011
 msgid ""
 "Both plugins and applications are specified via import expressions. These "
 "consist of an import path (e.g. ``package.module``) and an expression to be "
@@ -1367,52 +1374,52 @@ msgid ""
 ":func:`load` for details. Here are some examples:"
 msgstr ""
 
-#: ../../tutorial.rst:1031
+#: ../../tutorial.rst:1032
 msgid "Deployment"
 msgstr ""
 
-#: ../../tutorial.rst:1033
+#: ../../tutorial.rst:1034
 msgid ""
 "Bottle runs on the built-in `wsgiref WSGIServer "
 "<http://docs.python.org/library/wsgiref.html#module-wsgiref.simple_server>`_"
 "  by default. This non-threading HTTP server is perfectly fine for "
-"development and early production, but may become a performance bottleneck "
-"when server load increases."
+"development, but may become a performance bottleneck when server load "
+"increases."
 msgstr ""
 
-#: ../../tutorial.rst:1035
+#: ../../tutorial.rst:1036
 msgid ""
 "The easiest way to increase performance is to install a multi-threaded "
 "server library like paste_ or cherrypy_ and tell Bottle to use that instead "
 "of the single-threaded server::"
 msgstr ""
 
-#: ../../tutorial.rst:1039
+#: ../../tutorial.rst:1040
 msgid ""
 "This, and many other deployment options are described in a separate article:"
 " :doc:`deployment`"
 msgstr ""
 
-#: ../../tutorial.rst:1047
+#: ../../tutorial.rst:1048
 msgid "Glossary"
 msgstr ""
 
-#: ../../tutorial.rst:1050
+#: ../../tutorial.rst:1051
 msgid "callback"
 msgstr ""
 
-#: ../../tutorial.rst:1052
+#: ../../tutorial.rst:1053
 msgid ""
 "Programmer code that is to be called when some external action happens. In "
 "the context of web frameworks, the mapping between URL paths and application"
 " code is often achieved by specifying a callback function for each URL."
 msgstr ""
 
-#: ../../tutorial.rst:1056
+#: ../../tutorial.rst:1057
 msgid "decorator"
 msgstr ""
 
-#: ../../tutorial.rst:1058
+#: ../../tutorial.rst:1059
 msgid ""
 "A function returning another function, usually applied as a function "
 "transformation using the ``@decorator`` syntax. See `python documentation "
@@ -1421,11 +1428,11 @@ msgid ""
 "about decorators."
 msgstr ""
 
-#: ../../tutorial.rst:1059
+#: ../../tutorial.rst:1060
 msgid "environ"
 msgstr ""
 
-#: ../../tutorial.rst:1061
+#: ../../tutorial.rst:1062
 msgid ""
 "A structure where information about all documents under the root is saved, "
 "and used for cross-referencing.  The environment is pickled after the "
@@ -1433,22 +1440,22 @@ msgid ""
 "changed documents."
 msgstr ""
 
-#: ../../tutorial.rst:1065
+#: ../../tutorial.rst:1066
 msgid "handler function"
 msgstr ""
 
-#: ../../tutorial.rst:1067
+#: ../../tutorial.rst:1068
 msgid ""
 "A function to handle some specific event or situation. In a web framework, "
 "the application is developed by attaching a handler function as callback for"
 " each specific URL comprising the application."
 msgstr ""
 
-#: ../../tutorial.rst:1070
+#: ../../tutorial.rst:1071
 msgid "source directory"
 msgstr ""
 
-#: ../../tutorial.rst:1072
+#: ../../tutorial.rst:1073
 msgid ""
 "The directory which, including its subdirectories, contains all source files"
 " for one Sphinx project."

@@ -1,5 +1,5 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) 2009-2017, Marcel Hellkamp
+# Copyright (C) 2009-2020, Marcel Hellkamp
 # This file is distributed under the same license as the Bottle package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Bottle 0.13-dev\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-12-13 21:49+0100\n"
+"POT-Creation-Date: 2020-12-31 18:35+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -153,7 +153,7 @@ msgid "rule"
 msgstr ""
 
 #: ../../plugindev.rst:111
-msgid "The rule string (e.g. ``/wiki/:page``)."
+msgid "The rule string (e.g. ``/wiki/<page>``)."
 msgstr ""
 
 #: ../../plugindev.rst:112
@@ -229,7 +229,7 @@ msgid "Once all plugins are applied to a route, the wrapped route callback is ca
 msgstr ""
 
 #: ../../plugindev.rst:141
-msgid "For performance reasons, however, it might be worthwhile to choose a different wrapper based on current needs, work with closures, or enable or disable a plugin at runtime. Let's take the built-in HooksPlugin as an example: If no hooks are installed, the plugin removes itself from all affected routes and has virtaully no overhead. As soon as you install the first hook, the plugin activates itself and takes effect again."
+msgid "For performance reasons, however, it might be worthwhile to choose a different wrapper based on current needs, work with closures, or enable or disable a plugin at runtime. Let's take the built-in HooksPlugin as an example: If no hooks are installed, the plugin removes itself from all affected routes and has virtually no overhead. As soon as you install the first hook, the plugin activates itself and takes effect again."
 msgstr ""
 
 #: ../../plugindev.rst:143
@@ -255,4 +255,3 @@ msgstr ""
 #: ../../plugindev.rst:239
 msgid "The first route needs a database connection and tells the plugin to create a handle by requesting a ``db`` keyword argument. The second route does not need a database and is therefore ignored by the plugin. The third route does expect a 'db' keyword argument, but explicitly skips the sqlite plugin. This way the argument is not overruled by the plugin and still contains the value of the same-named url argument."
 msgstr ""
-

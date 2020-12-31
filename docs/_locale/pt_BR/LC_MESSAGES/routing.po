@@ -1,5 +1,5 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) 2009-2017, Marcel Hellkamp
+# Copyright (C) 2009-2020, Marcel Hellkamp
 # This file is distributed under the same license as the Bottle package.
 # 
 # Translators:
@@ -7,9 +7,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-12-19 14:15+0100\n"
-"PO-Revision-Date: 2015-01-22 19:20+0000\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"POT-Creation-Date: 2020-12-31 18:35+0100\n"
+"PO-Revision-Date: 2020-12-31 17:35+0000\n"
+"Last-Translator: defnull <marc@gsites.de>\n"
 "Language-Team: Portuguese (Brazil) (http://www.transifex.com/bottle/bottle/language/pt_BR/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -95,15 +95,24 @@ msgstr ""
 
 #: ../../routing.rst:29
 msgid ""
+"Is it possible to escape characters like colon ``:`` with a backslash "
+"``\\``. This will prevent to trigger the old syntax in case you need to use "
+"``:``. For example: the rule ``/<action>/item:<id>`` triggers the old "
+"syntax, (see below) but ``/action/item\\:<id>`` works as intended with the "
+"new syntax."
+msgstr ""
+
+#: ../../routing.rst:33
+msgid ""
 "You can change the exact behaviour in many ways using filters. This is "
 "described in the next section."
 msgstr ""
 
-#: ../../routing.rst:32
+#: ../../routing.rst:36
 msgid "Wildcard Filters"
 msgstr ""
 
-#: ../../routing.rst:36
+#: ../../routing.rst:40
 msgid ""
 "Filters are used to define more specific wildcards, and/or transform the "
 "matched part of the URL before it is passed to the callback. A filtered "
@@ -111,31 +120,31 @@ msgid ""
 "syntax for the optional config part depends on the filter used."
 msgstr ""
 
-#: ../../routing.rst:38
+#: ../../routing.rst:42
 msgid "The following standard filters are implemented:"
 msgstr ""
 
-#: ../../routing.rst:40
+#: ../../routing.rst:44
 msgid "**:int** matches (signed) digits and converts the value to integer."
 msgstr ""
 
-#: ../../routing.rst:41
+#: ../../routing.rst:45
 msgid "**:float** similar to :int but for decimal numbers."
 msgstr ""
 
-#: ../../routing.rst:42
+#: ../../routing.rst:46
 msgid ""
 "**:path** matches all characters including the slash character in a non-"
 "greedy way and may be used to match more than one path segment."
 msgstr ""
 
-#: ../../routing.rst:43
+#: ../../routing.rst:47
 msgid ""
 "**:re[:exp]** allows you to specify a custom regular expression in the "
 "config field. The matched value is not modified."
 msgstr ""
 
-#: ../../routing.rst:45
+#: ../../routing.rst:49
 msgid ""
 "You can add your own filters to the router. All you need is a function that "
 "returns three elements: A regular expression string, a callable to convert "
@@ -144,81 +153,81 @@ msgid ""
 "parameter and may parse it as needed::"
 msgstr ""
 
-#: ../../routing.rst:71
+#: ../../routing.rst:75
 msgid "Legacy Syntax"
 msgstr ""
 
-#: ../../routing.rst:75
+#: ../../routing.rst:79
 msgid ""
 "The new rule syntax was introduce in **Bottle 0.10** to simplify some common"
 " use cases, but the old syntax still works and you can find lot code "
 "examples still using it. The differences are best described by example:"
 msgstr ""
 
-#: ../../routing.rst:78
+#: ../../routing.rst:82
 msgid "Old Syntax"
 msgstr ""
 
-#: ../../routing.rst:78
+#: ../../routing.rst:82
 msgid "New Syntax"
 msgstr ""
 
-#: ../../routing.rst:80
+#: ../../routing.rst:84
 msgid "``:name``"
 msgstr ""
 
-#: ../../routing.rst:80
+#: ../../routing.rst:84
 msgid "``<name>``"
 msgstr ""
 
-#: ../../routing.rst:81
+#: ../../routing.rst:85
 msgid "``:name#regexp#``"
 msgstr ""
 
-#: ../../routing.rst:81
+#: ../../routing.rst:85
 msgid "``<name:re:regexp>``"
 msgstr ""
 
-#: ../../routing.rst:82
+#: ../../routing.rst:86
 msgid "``:#regexp#``"
 msgstr ""
 
-#: ../../routing.rst:82
+#: ../../routing.rst:86
 msgid "``<:re:regexp>``"
 msgstr ""
 
-#: ../../routing.rst:83
+#: ../../routing.rst:87
 msgid "``:##``"
 msgstr ""
 
-#: ../../routing.rst:83
+#: ../../routing.rst:87
 msgid "``<:re>``"
 msgstr ""
 
-#: ../../routing.rst:86
+#: ../../routing.rst:90
 msgid ""
 "Try to avoid the old syntax in future projects if you can. It is not "
 "currently deprecated, but will be eventually."
 msgstr ""
 
-#: ../../routing.rst:91
+#: ../../routing.rst:95
 msgid "Explicit routing configuration"
 msgstr ""
 
-#: ../../routing.rst:93
+#: ../../routing.rst:97
 msgid ""
 "Route decorator can also be directly called as method. This way provides "
 "flexibility in complex setups, allowing you to directly control, when and "
 "how routing configuration done."
 msgstr ""
 
-#: ../../routing.rst:95
+#: ../../routing.rst:99
 msgid ""
 "Here is a basic example of explicit routing configuration for default bottle"
 " application::"
 msgstr ""
 
-#: ../../routing.rst:101
+#: ../../routing.rst:105
 msgid ""
 "In fact, any :class:`Bottle` instance routing can be configured same way::"
 msgstr ""

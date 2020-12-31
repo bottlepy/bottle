@@ -1,5 +1,5 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) 2009-2017, Marcel Hellkamp
+# Copyright (C) 2009-2020, Marcel Hellkamp
 # This file is distributed under the same license as the Bottle package.
 # 
 # Translators:
@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-12-19 14:15+0100\n"
-"PO-Revision-Date: 2015-12-13 21:06+0000\n"
+"POT-Creation-Date: 2020-12-31 18:35+0100\n"
+"PO-Revision-Date: 2020-12-31 17:35+0000\n"
 "Last-Translator: defnull <marc@gsites.de>\n"
 "Language-Team: Chinese (China) (http://www.transifex.com/bottle/bottle/language/zh_CN/)\n"
 "MIME-Version: 1.0\n"
@@ -30,42 +30,43 @@ msgstr "不添加任何参数，直接运行Bottle的 :func:`run` 函数，会�
 
 #: ../../deployment.rst:31
 msgid ""
-"To get your application available to the outside world, specify the IP of "
-"the interface the server should listen to (e.g. ``run(host='192.168.0.1')``)"
-" or let the server listen to all interfaces at once (e.g. "
-"``run(host='0.0.0.0')``). The listening port can be changed in a similar "
-"way, but you need root or admin rights to choose a port below 1024. Port 80 "
-"is the standard for HTTP servers::"
-msgstr "可更改服务器监听的IP地址(例如： ``run(host='192.168.0.1')`` )，来让应用对其可访问，或者让服务器接受所有地址的请求(例如： ``run(host='0.0.0.0')`` )。可通过类似的方法改变服务器监听的端口，但如果你选择了一个小于1024的端口，则需要root权限。HTTP服务器的标准端口是80端口::"
+"To get your application available to the outside world, specify the IP the "
+"server should listen to (e.g. ``run(host='192.168.0.1')``) or let the server"
+" listen to all interfaces at once (e.g. ``run(host='0.0.0.0')``). The "
+"listening port can be changed in a similar way, but you need root or admin "
+"rights to choose a port below 1024. Port 80 is the standard for HTTP "
+"servers::"
+msgstr ""
 
-#: ../../deployment.rst:36
+#: ../../deployment.rst:37
 msgid "Server Options"
 msgstr "可选服务器"
 
-#: ../../deployment.rst:38
+#: ../../deployment.rst:39
 msgid ""
 "The built-in default server is based on `wsgiref WSGIServer "
 "<http://docs.python.org/library/wsgiref.html#module-"
 "wsgiref.simple_server>`_. This non-threading HTTP server is perfectly fine "
-"for development and early production, but may become a performance "
-"bottleneck when server load increases. There are three ways to eliminate "
-"this bottleneck:"
-msgstr "内置的服务器基于 `wsgiref WSGIServer <http://docs.python.org/library/wsgiref.html#module-wsgiref.simple_server>`_ 。这个单线程的HTTP服务器很适合用于开发，但当服务器的负载上升的时候，会成为一个性能瓶颈。有三种方法可消除这一瓶颈："
-
-#: ../../deployment.rst:40
-msgid "Use a different server that is either multi-threaded or asynchronous."
-msgstr "使用多线程或异步的服务器"
+"for development, but may become a performance bottleneck when server load "
+"increases. There are three ways to eliminate this bottleneck:"
+msgstr ""
 
 #: ../../deployment.rst:41
+msgid ""
+"Use a different server that is either multi-threaded or supports "
+"asynchronous IO."
+msgstr ""
+
+#: ../../deployment.rst:42
 msgid ""
 "Start multiple server processes and spread the load with a load-balancer."
 msgstr "运行多个服务器，使用负载均衡"
 
-#: ../../deployment.rst:42
+#: ../../deployment.rst:43
 msgid "Do both."
 msgstr "同时使用上面两种方法"
 
-#: ../../deployment.rst:44
+#: ../../deployment.rst:45
 msgid ""
 "**Multi-threaded** servers are the 'classic' way to do it. They are very "
 "robust, reasonably fast and easy to manage. As a drawback, they can only "
@@ -76,15 +77,15 @@ msgid ""
 "image processing)."
 msgstr ""
 
-#: ../../deployment.rst:46
+#: ../../deployment.rst:47
 msgid ""
-"**Asynchronous** servers are very fast, can handle a virtually unlimited "
+"**Asynchronous IO** servers are very fast, can handle a virtually unlimited "
 "number of concurrent connections and are easy to manage. To take full "
 "advantage of their potential, you need to design your application "
 "accordingly and understand the concepts of the specific server."
 msgstr ""
 
-#: ../../deployment.rst:48
+#: ../../deployment.rst:49
 msgid ""
 "**Multi-processing** (forking) servers are not limited by the GIL and "
 "utilize more than one CPU core, but make communication between server "
@@ -94,106 +95,102 @@ msgid ""
 "there are good tutorials available."
 msgstr "**多进程** (forking) 服务器就没有受到GIL的限制，能利用多个CPU核心，但服务器实例之间的交流代价比较高昂。你需要一个数据库或消息队列来在进程之间共享状态，或将你的应用设计成根本不需要共享状态。多进程服务器的安装也比较负责，但已经有很多好的教程了。"
 
-#: ../../deployment.rst:51
+#: ../../deployment.rst:52
 msgid "Switching the Server Backend"
 msgstr "更改服务器后端"
 
-#: ../../deployment.rst:53
+#: ../../deployment.rst:54
 msgid ""
 "The easiest way to increase performance is to install a multi-threaded "
 "server library like paste_ or cherrypy_ and tell Bottle to use that instead "
 "of the single-threaded default server::"
 msgstr ""
 
-#: ../../deployment.rst:57
+#: ../../deployment.rst:58
 msgid ""
 "Bottle ships with a lot of ready-to-use adapters for the most common WSGI "
 "servers and automates the setup process. Here is an incomplete list:"
 msgstr "Bottle为很多常见的WSGI服务器都编写了适配器，能自动化安装过程。下面是一个不完整的清单:"
 
-#: ../../deployment.rst:60
+#: ../../deployment.rst:61
 msgid "Name"
 msgstr "名称"
 
-#: ../../deployment.rst:60
+#: ../../deployment.rst:61
 msgid "Homepage"
 msgstr "主页"
 
-#: ../../deployment.rst:60
+#: ../../deployment.rst:61
 msgid "Description"
 msgstr "描述"
 
-#: ../../deployment.rst:62
+#: ../../deployment.rst:63
 msgid "cgi"
 msgstr ""
 
-#: ../../deployment.rst:62
+#: ../../deployment.rst:63
 msgid "Run as CGI script"
 msgstr ""
 
-#: ../../deployment.rst:63
+#: ../../deployment.rst:64
 msgid "flup"
 msgstr ""
 
-#: ../../deployment.rst:63
+#: ../../deployment.rst:64
 msgid "flup_"
 msgstr ""
 
-#: ../../deployment.rst:63
+#: ../../deployment.rst:64
 msgid "Run as FastCGI process"
 msgstr ""
 
-#: ../../deployment.rst:64
+#: ../../deployment.rst:65
 msgid "gae"
 msgstr ""
 
-#: ../../deployment.rst:64
+#: ../../deployment.rst:65
 msgid "gae_"
 msgstr ""
 
-#: ../../deployment.rst:64
+#: ../../deployment.rst:65
 msgid "Helper for Google App Engine deployments"
 msgstr "用于Google App Engine"
 
-#: ../../deployment.rst:65
+#: ../../deployment.rst:66
 msgid "wsgiref"
 msgstr ""
 
-#: ../../deployment.rst:65
+#: ../../deployment.rst:66
 msgid "wsgiref_"
 msgstr ""
 
-#: ../../deployment.rst:65
+#: ../../deployment.rst:66
 msgid "Single-threaded default server"
 msgstr "默认的单线程服务器"
 
-#: ../../deployment.rst:66
+#: ../../deployment.rst:67
 msgid "cherrypy"
 msgstr ""
 
-#: ../../deployment.rst:66
+#: ../../deployment.rst:67
 msgid "cherrypy_"
 msgstr ""
 
-#: ../../deployment.rst:66
+#: ../../deployment.rst:67
 msgid "Multi-threaded and very stable"
 msgstr "多线程，稳定"
 
-#: ../../deployment.rst:67
+#: ../../deployment.rst:68
 msgid "paste"
 msgstr ""
 
-#: ../../deployment.rst:67
+#: ../../deployment.rst:68
 msgid "paste_"
 msgstr ""
 
-#: ../../deployment.rst:67
+#: ../../deployment.rst:68
 msgid "Multi-threaded, stable, tried and tested"
 msgstr "多线程，稳定，久经考验，充分测试"
-
-#: ../../deployment.rst:68
-msgid "Multi-threaded"
-msgstr "多线程"
 
 #: ../../deployment.rst:69
 msgid "waitress"
@@ -252,78 +249,66 @@ msgid "diesel_"
 msgstr ""
 
 #: ../../deployment.rst:74
-msgid "fapws3"
-msgstr ""
-
-#: ../../deployment.rst:74
-msgid "fapws3_"
-msgstr ""
-
-#: ../../deployment.rst:74
-msgid "Asynchronous (network side only), written in C"
-msgstr "异步 (network side only), written in C"
-
-#: ../../deployment.rst:75
 msgid "tornado"
 msgstr ""
 
-#: ../../deployment.rst:75
+#: ../../deployment.rst:74
 msgid "tornado_"
 msgstr ""
 
-#: ../../deployment.rst:75
+#: ../../deployment.rst:74
 msgid "Asynchronous, powers some parts of Facebook"
 msgstr "异步，支撑Facebook的部分应用"
 
-#: ../../deployment.rst:76
+#: ../../deployment.rst:75
 msgid "twisted"
 msgstr ""
 
-#: ../../deployment.rst:76
+#: ../../deployment.rst:75
 msgid "twisted_"
 msgstr ""
 
-#: ../../deployment.rst:76
+#: ../../deployment.rst:75
 msgid "Asynchronous, well tested but... twisted"
 msgstr "异步, well tested but... twisted"
 
-#: ../../deployment.rst:77
+#: ../../deployment.rst:76
 msgid "meinheld"
 msgstr ""
 
-#: ../../deployment.rst:77
+#: ../../deployment.rst:76
 msgid "meinheld_"
 msgstr ""
 
-#: ../../deployment.rst:77
+#: ../../deployment.rst:76
 msgid "Asynchronous, partly written in C"
 msgstr "异步，部分用C语言编写"
 
-#: ../../deployment.rst:78
+#: ../../deployment.rst:77
 msgid "bjoern"
 msgstr ""
 
-#: ../../deployment.rst:78
+#: ../../deployment.rst:77
 msgid "bjoern_"
 msgstr ""
 
-#: ../../deployment.rst:78
+#: ../../deployment.rst:77
 msgid "Asynchronous, very fast and written in C"
 msgstr "异步，用C语言编写，非常快"
 
-#: ../../deployment.rst:79
+#: ../../deployment.rst:78
 msgid "auto"
 msgstr ""
 
-#: ../../deployment.rst:79
+#: ../../deployment.rst:78
 msgid "Automatically selects an available server adapter"
 msgstr "自动选择一个可用的服务器"
 
-#: ../../deployment.rst:82
+#: ../../deployment.rst:81
 msgid "The full list is available through :data:`server_names`."
 msgstr "完整的列表在 :data:`server_names` 。"
 
-#: ../../deployment.rst:84
+#: ../../deployment.rst:83
 msgid ""
 "If there is no adapter for your favorite server or if you need more control "
 "over the server setup, you may want to start the server manually. Refer to "
@@ -331,41 +316,50 @@ msgid ""
 " for paste_::"
 msgstr "如果没有适合你的服务器的适配器，或者你需要更多地控制服务器的安装，你也许需要手动启动服务器。可参考你的服务器的文档，看看是如何运行一个WSGI应用。下面是一个使用 paste_ 的例子。"
 
-#: ../../deployment.rst:93
+#: ../../deployment.rst:91
 msgid "Apache mod_wsgi"
 msgstr ""
 
-#: ../../deployment.rst:95
+#: ../../deployment.rst:93
 msgid ""
 "Instead of running your own HTTP server from within Bottle, you can attach "
 "Bottle applications to an `Apache server <apache>`_ using mod_wsgi_."
 msgstr "除了直接在Bottle里面运行HTTP服务器，你也可以将你的应用部署到一个Apache服务器上，使用 mod_wsgi_ 来运行。"
 
-#: ../../deployment.rst:97
+#: ../../deployment.rst:95
 msgid ""
 "All you need is an ``app.wsgi`` file that provides an ``application`` "
 "object. This object is used by mod_wsgi to start your application and should"
 " be a WSGI-compatible Python callable."
 msgstr "你需要的只是提供一个 ``application`` 对象的 ``app.wsgi`` 文件。mod_wsgi会使用这个对象来启动你的应用，这个对象必须是兼容WSGI的 callable对象。"
 
-#: ../../deployment.rst:99
+#: ../../deployment.rst:97
 msgid "File ``/var/www/yourapp/app.wsgi``::"
 msgstr " ``/var/www/yourapp/app.wsgi`` 文件 "
 
-#: ../../deployment.rst:110
+#: ../../deployment.rst:108
 msgid "The Apache configuration may look like this::"
 msgstr "Apache的配置"
 
 #: ../../deployment.rst:126
-msgid ""
-"With newer versions of Apache (2.4) use a configuration similar to this::"
+msgid "uWSGI"
 msgstr ""
 
-#: ../../deployment.rst:144
+#: ../../deployment.rst:128
+msgid ""
+"uWSGI_ is a modern alternative to FastCGI and the recommended deployment "
+"option on servers like nginx_, lighttpd_, and cherokee_. The uWSGI project "
+"provides an application server that runs your application, and defines a "
+"protocol that frontend webservers can speak to. Have a look at the excellent"
+" `Quickstart for Python/WSGI applications <https://uwsgi-"
+"docs.readthedocs.io/en/latest/WSGIquickstart.html>`_."
+msgstr ""
+
+#: ../../deployment.rst:132
 msgid "Google AppEngine"
 msgstr ""
 
-#: ../../deployment.rst:148
+#: ../../deployment.rst:136
 msgid ""
 "New App Engine applications using the Python 2.7 runtime environment support"
 " any WSGI application and should be configured to use the Bottle application"
@@ -373,40 +367,31 @@ msgid ""
 "``myapp.py``::"
 msgstr ""
 
-#: ../../deployment.rst:158
+#: ../../deployment.rst:146
 msgid ""
 "Then you can configure App Engine's ``app.yaml`` to use the ``app`` object "
 "like so::"
 msgstr ""
 
-#: ../../deployment.rst:169
-msgid ""
-"Bottle also provides a ``gae`` server adapter for legacy App Engine "
-"applications using the Python 2.5 runtime environment. It works similar to "
-"the ``cgi`` adapter in that it does not start a new HTTP server, but "
-"prepares and optimizes your application for Google App Engine and makes sure"
-" it conforms to their API::"
-msgstr ""
-
-#: ../../deployment.rst:173
+#: ../../deployment.rst:158
 msgid ""
 "It is always a good idea to let GAE serve static files directly. Here is "
 "example for a working  ``app.yaml`` (using the legacy Python 2.5 runtime "
 "environment)::"
 msgstr ""
 
-#: ../../deployment.rst:189
+#: ../../deployment.rst:175
 msgid "Load Balancer (Manual Setup)"
 msgstr "负载均衡 (手动安装)"
 
-#: ../../deployment.rst:191
+#: ../../deployment.rst:177
 msgid ""
 "A single Python process can utilize only one CPU at a time, even if there "
 "are more CPU cores available. The trick is to balance the load between "
 "multiple independent Python processes to utilize all of your CPU cores."
 msgstr "单一的Python进程一次只能使用一个CPU内核，即使CPU是多核的。我们的方法就是在多核CPU的机器上，使用多线程来实现负载均衡。"
 
-#: ../../deployment.rst:193
+#: ../../deployment.rst:179
 msgid ""
 "Instead of a single Bottle application server, you start one instance for "
 "each CPU core available using different local port (localhost:8080, 8081, "
@@ -417,29 +402,29 @@ msgid ""
 "spread out the load between different physical servers."
 msgstr "不只是启动一个应用服务器，你需要同时启动多个应用服务器，监听不同的端口(localhost:8080, 8081, 8082, ...)。你可选择任何服务器，甚至那些异步服务器。然后一个高性能的负载均衡器，像一个反向代理那样工作，将新的请求发送到一个随机端口，在多个服务器之间分散压力。这样你就可以利用所有的CPU核心，甚至在多个机器上实现负载均衡。"
 
-#: ../../deployment.rst:195
+#: ../../deployment.rst:181
 msgid ""
 "One of the fastest load balancers available is Pound_ but most common web "
 "servers have a proxy-module that can do the work just fine."
 msgstr " Pound_ 是最快的负载均衡器之一，但是只要有代理模块的Web服务器，也可以充当这一角色。"
 
-#: ../../deployment.rst:197
+#: ../../deployment.rst:183
 msgid "Pound example::"
 msgstr "Pound的例子::"
 
-#: ../../deployment.rst:215
+#: ../../deployment.rst:201
 msgid "Apache example::"
 msgstr "Apache的例子::"
 
-#: ../../deployment.rst:223
+#: ../../deployment.rst:209
 msgid "Lighttpd example::"
 msgstr "Lighttpd的例子::"
 
-#: ../../deployment.rst:235
+#: ../../deployment.rst:221
 msgid "Good old CGI"
 msgstr "CGI这个老好人"
 
-#: ../../deployment.rst:237
+#: ../../deployment.rst:223
 msgid ""
 "A CGI server starts a new process for each request. This adds a lot of "
 "overhead but is sometimes the only option, especially on cheap hosting "
