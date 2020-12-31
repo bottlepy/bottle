@@ -3365,6 +3365,7 @@ class FapwsServer(ServerAdapter):
     """ Extremely fast webserver using libev. See http://www.fapws.org/ """
 
     def run(self, handler):  # pragma: no cover
+        depr(0, 13, "fapws3 is not maintained and support will be dropped.")
         import fapws._evwsgi as evwsgi
         from fapws import base, config
         port = self.port

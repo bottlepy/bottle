@@ -3,7 +3,7 @@ ALLFILES = $(shell echo bottle.py test/*.py test/views/*.tpl)
 VENV = build/venv
 TESTBUILD = build/python
 
-.PHONY: venv release coverage install docs test test_all test_27 test_32 test_33 test_34 test_35 2to3 clean
+.PHONY: venv release coverage install docs test test_27 test_36 test_37 test_38 test_39 clean
 
 release: clean test_all venv
 	$(VENV)/bin/python3 setup.py --version | egrep -q -v '[a-zA-Z]' # Fail on dev/rc versions
@@ -38,32 +38,11 @@ install:
 docs:
 	sphinx-build -b html -d build/docs/doctrees docs build/docs/html/;
 
-test: venv
-	$(VENV)/bin/python3 -m unittest discover
 
-test_all: test_27 test_32 test_33 test_34 test_35 test_37
 
-test_27:
-	$(TESTBUILD)/bin/python2.7 -m unittest discover
 
-test_34:
-	$(TESTBUILD)/bin/python3.4 -m unittest discover
-
-test_35:
-	$(TESTBUILD)/bin/python3.5 -m unittest discover
-
-test_36:
-	$(TESTBUILD)/bin/python3.6 -m unittest discover
-
-test_37:
-	$(TESTBUILD)/bin/python3.7 -m unittest discover
-
-test_setup:
-	bash test/build_python.sh 2.7.3 $(TESTBUILD)
-	bash test/build_python.sh 3.4.9 $(TESTBUILD)
-	bash test/build_python.sh 3.5.6 $(TESTBUILD)
-	bash test/build_python.sh 3.6.7 $(TESTBUILD)
-	bash test/build_python.sh 3.7.1 $(TESTBUILD)
+test:
+	python3 -m unittest discover
 
 clean:
 	rm -rf $(VENV) build/ dist/ MANIFEST .coverage .name htmlcov  2>/dev/null || true
