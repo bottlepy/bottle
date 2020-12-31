@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import bottle
 from .tools import ServerTestBase
 from bottle import response
