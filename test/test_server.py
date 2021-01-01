@@ -98,7 +98,8 @@ class TestServer(unittest.TestCase):
         self.assertEqual(tob('OK'), self.fetch('test'))
 
 
-blacklist = ['cgi', 'flup', 'gae', 'wsgiref', 'fapws3']
+blacklist = ['cgi', 'flup', 'gae', 'wsgiref']
+blacklist += ['fapws3', 'cherrypy'] # deprecated adapters
 
 if sys.version_info.major == 2:
     blacklist += [
