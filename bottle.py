@@ -2629,10 +2629,10 @@ class WSGIFileWrapper(object):
 
     def __iter__(self):
         buff, read = self.buffer_size, self.read
-        while True:
-            part = read(buff)
-            if not part: return
+        part = read(buff)
+        while part:
             yield part
+            part = read(buff)
 
 
 class _closeiter(object):
