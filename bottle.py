@@ -2382,10 +2382,7 @@ class ConfigDict(dict):
         obj = {key: getattr(config_obj, key) for key in dir(config_obj)
                if key.isupper()}
 
-        if squash:
-            self.load_dict(obj)
-        else:
-            self.update(obj)
+        (self.load_dict if squash else self.update)(obj)
         return self
 
     def load_config(self, filename, **options):
