@@ -3196,18 +3196,10 @@ def make_default_app_wrapper(name):
     return wrapper
 
 
-route     = make_default_app_wrapper('route')
-get       = make_default_app_wrapper('get')
-post      = make_default_app_wrapper('post')
-put       = make_default_app_wrapper('put')
-delete    = make_default_app_wrapper('delete')
-patch     = make_default_app_wrapper('patch')
-error     = make_default_app_wrapper('error')
-mount     = make_default_app_wrapper('mount')
-hook      = make_default_app_wrapper('hook')
-install   = make_default_app_wrapper('install')
-uninstall = make_default_app_wrapper('uninstall')
-url       = make_default_app_wrapper('get_url')
+(route, get, post, put, delete, patch, error, mount, hook,
+ install, uninstall, url) = map(make_default_app_wrapper,
+'route  get  post  put  delete  patch  error  mount  hook '
+'install  uninstall  get_url'.split())
 
 ###############################################################################
 # Server Adapter ###############################################################
