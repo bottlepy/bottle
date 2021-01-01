@@ -13,6 +13,7 @@ Copyright (c) 2009-2018, Marcel Hellkamp.
 License: MIT (see LICENSE for details)
 """
 
+from __future__ import print_function
 import sys
 
 __author__ = 'Marcel Hellkamp'
@@ -68,7 +69,6 @@ if __name__ == '__main__':
 # Imports and Python 2/3 unification ##########################################
 ###############################################################################
 
-
 import base64, calendar, cgi, email.utils, functools, hmac, imp, itertools,\
        mimetypes, os, re, tempfile, threading, time, warnings, weakref, hashlib
 
@@ -113,15 +113,6 @@ except ImportError:
 
 py = sys.version_info
 py3k = py.major > 2
-
-
-# Workaround for the "print is a keyword/function" Python 2/3 dilemma
-# and a fallback for mod_wsgi (restricts stdout/err attribute access)
-try:
-    _stdout, _stderr = sys.stdout.write, sys.stderr.write
-except IOError:
-    _stdout = lambda x: sys.stdout.write(x)
-    _stderr = lambda x: sys.stderr.write(x)
 
 # Lots of stdlib and builtin differences.
 if py3k:
@@ -174,6 +165,12 @@ def touni(s, enc='utf8', err='strict'):
 
 tonat = touni if py3k else tob
 
+
+def _stderr(*args):
+    try:
+        print(*args, file=sys.stderr)
+    except (IOError, AttributeError):
+        pass # Some environments do not allow printing (mod_wsgi)
 
 
 # A bug in functools causes it to break if the wrapper is an instance method
@@ -3375,8 +3372,8 @@ class FapwsServer(ServerAdapter):
         evwsgi.start(self.host, port)
         # fapws3 never releases the GIL. Complain upstream. I tried. No luck.
         if 'BOTTLE_CHILD' in os.environ and not self.quiet:
-            _stderr("WARNING: Auto-reloading does not work with Fapws3.\n")
-            _stderr("         (Fapws3 breaks python thread support)\n")
+            _stderr("WARNING: Auto-reloading does not work with Fapws3.")
+            _stderr("         (Fapws3 breaks python thread support)")
         evwsgi.set_base_module(base)
 
         def app(environ, start_response):
@@ -3715,14 +3712,14 @@ def run(app=None,
 
         server.quiet = server.quiet or quiet
         if not server.quiet:
-            _stderr("Bottle v%s server starting up (using %s)...\n" %
+            _stderr("Bottle v%s server starting up (using %s)..." %
                     (__version__, repr(server)))
             if server.host.startswith("unix:"):
-                _stderr("Listening on %s\n" % server.host)
+                _stderr("Listening on %s" % server.host)
             else:
-                _stderr("Listening on http://%s:%d/\n" %
+                _stderr("Listening on http://%s:%d/" %
                         (server.host, server.port))
-            _stderr("Hit Ctrl-C to quit.\n\n")
+            _stderr("Hit Ctrl-C to quit.\n")
 
         if reloader:
             lockfile = os.environ.get('BOTTLE_LOCKFILE')
@@ -4378,7 +4375,7 @@ def _main(argv):  # pragma: no coverage
         sys.exit(1)
 
     if args.version:
-        _stdout('Bottle %s\n' % __version__)
+        print('Bottle %s' % __version__)
         sys.exit(0)
     if not args.app:
         _cli_error("No application entry point specified.")
