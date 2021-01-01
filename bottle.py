@@ -2459,8 +2459,7 @@ class ConfigDict(dict):
         """
         prefix = ''
         if a and isinstance(a[0], basestring):
-            prefix = a[0].strip('.') + '.'
-            a = a[1:]
+            prefix = a.pop(0).strip('.') + '.'
         for key, value in dict(*a, **ka).items():
             self[prefix + key] = value
 
