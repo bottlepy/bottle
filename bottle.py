@@ -2558,10 +2558,7 @@ class ConfigDict(dict):
             self.meta_set(key, 'validate', validate)
 
     def _iter_overlays(self):
-        for ref in self._overlays:
-            overlay = ref()
-            if overlay is not None:
-                yield overlay
+        return filter(None.__ne__, (ref() for ref in self._overlays))
 
     def _make_overlay(self):
         """ (Unstable) Create a new overlay that acts like a chained map: Values
