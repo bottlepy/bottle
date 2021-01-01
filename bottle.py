@@ -2708,11 +2708,8 @@ class ResourceManager(object):
     def __iter__(self):
         """ Iterate over all existing files in all registered paths. """
         search = self.path[:]
-        while search:
-            path = search.pop()
-            if not os.path.isdir(path): continue
-            for name in os.listdir(path):
-                full = os.path.join(path, name)
+        for path in filter(os.path.isdir, search):
+            for full in map(os.path.join, itertools.repeat(path), os.listdir(path)):
                 if os.path.isdir(full): search.append(full)
                 else: yield full
 
