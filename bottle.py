@@ -1471,8 +1471,8 @@ class BaseRequest(object):
             level (server or routing middleware) before the application was
             called. This script path is returned with leading and tailing
             slashes. """
-        script_name = self.environ.get('SCRIPT_NAME', '').strip('/')
-        return '/' + script_name + '/' if script_name else '/'
+        name = self.environ.get('SCRIPT_NAME', '').strip('/')
+        return f'/{name}/' if name else '/'
 
     def path_shift(self, shift=1):
         """ Shift path segments from :attr:`path` to :attr:`script_name` and
