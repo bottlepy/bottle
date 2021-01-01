@@ -3431,6 +3431,7 @@ class DieselServer(ServerAdapter):
     """ Untested. """
 
     def run(self, handler):
+        depr(0, 13, "Diesel is not tested or supported and will be removed.")
         from diesel.protocols.wsgi import WSGIApplication
         app = WSGIApplication(handler, port=self.port)
         app.run()

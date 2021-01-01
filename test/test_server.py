@@ -99,7 +99,7 @@ class TestServer(unittest.TestCase):
 
 
 blacklist = ['cgi', 'flup', 'gae', 'wsgiref']
-blacklist += ['fapws3', 'cherrypy'] # deprecated adapters
+blacklist += ['fapws3', 'cherrypy', 'diesel'] # deprecated adapters
 
 if sys.version_info.major == 2:
     blacklist += [
