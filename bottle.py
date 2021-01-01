@@ -4301,8 +4301,7 @@ HTTP_CODES[429] = "Too Many Requests"
 HTTP_CODES[431] = "Request Header Fields Too Large"
 HTTP_CODES[451] = "Unavailable For Legal Reasons" # RFC 7725
 HTTP_CODES[511] = "Network Authentication Required"
-_HTTP_STATUS_LINES = dict((k, '%d %s' % (k, v))
-                          for (k, v) in HTTP_CODES.items())
+_HTTP_STATUS_LINES = {k: f'{k} {v}' for k, v in HTTP_CODES.items()}
 
 #: The default template used for error pages. Override with @error()
 ERROR_PAGE_TEMPLATE = """
