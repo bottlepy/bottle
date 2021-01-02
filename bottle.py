@@ -2438,11 +2438,11 @@ class ConfigDict(dict):
         """
         for key, value in source.items():
             if isinstance(key, basestring):
-                nskey = (namespace + '.' + key).strip('.')
+                if namespace: key = '%s.%s' % (namespace, key)
                 if isinstance(value, dict):
-                    self.load_dict(value, namespace=nskey)
+                    self.load_dict(value, namespace=key)
                 else:
-                    self[nskey] = value
+                    self[key] = value
             else:
                 raise TypeError('Key has type %r (not a string)' % type(key))
         return self
