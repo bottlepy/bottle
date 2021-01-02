@@ -2695,10 +2695,8 @@ class ResourceManager(object):
             self.path.remove(path)
         if create and not os.path.isdir(path):
             os.makedirs(path)
-        if index is None:
-            self.path.append(path)
-        else:
-            self.path.insert(index, path)
+        if index is None: index = len(self.path)
+        self.path.insert(index, path)
         self.cache.clear()
         return os.path.exists(path)
 
