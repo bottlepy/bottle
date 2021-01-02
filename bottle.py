@@ -2269,9 +2269,8 @@ class HeaderDict(MultiDict):
         return MultiDict.get(self, _hkey(key), default, index)
 
     def filter(self, names):
-        for name in (_hkey(n) for n in names):
-            if name in self.dict:
-                del self.dict[name]
+        for name in names:
+            self.dict.pop(_hkey(name), None)
 
 
 class WSGIHeaderDict(DictMixin):
