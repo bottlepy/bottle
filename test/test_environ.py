@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 ''' Tests for the BaseRequest and BaseResponse objects and their subclasses. '''
 
 import unittest
@@ -418,7 +417,7 @@ class TestRequest(unittest.TestCase):
 
     def test_auth(self):
         user, pwd = 'marc', 'secret'
-        basic = touni(base64.b64encode(tob('%s:%s' % (user, pwd))))
+        basic = touni(base64.b64encode(tob(f'{user}:{pwd}')))
         r = BaseRequest({})
         self.assertEqual(r.auth, None)
         r.environ['HTTP_AUTHORIZATION'] = 'basic %s' % basic
@@ -503,7 +502,7 @@ class TestResponse(unittest.TestCase):
 
         if bottle.py3k:
             cmp(1, tonat('1', 'latin1'))
-            cmp('öäü', 'öäü'.encode('utf8').decode('latin1'))
+            cmp('öäü', 'öäü'.encode().decode('latin1'))
             # Dropped byte header support in Python 3:
             #cmp(tob('äöü'), 'äöü'.encode('utf8').decode('latin1'))
         else:

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import sys
 import os
 import time
@@ -11,8 +10,8 @@ import bottle
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.intersphinx',
               'sphinx.ext.viewcode']
 master_doc = 'index'
-project = u'Bottle'
-copyright = u'2009-%s, %s' % (time.strftime('%Y'), bottle.__author__)
+project = 'Bottle'
+copyright = '2009-{}, {}'.format(time.strftime('%Y'), bottle.__author__)
 version = ".".join(bottle.__version__.split(".")[:2])
 release = bottle.__version__
 add_function_parentheses = True

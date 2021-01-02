@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
 import unittest
 from . import tools
 
 from bottle import HTTPResponse, HTTPError, json_dumps
 
 
-class MyPlugin(object):
+class MyPlugin:
     def __init__(self):
         self.app = None
         self.add_args = {}
@@ -167,10 +166,10 @@ class TestPluginManagement(tools.ServerTestBase):
 class TestPluginAPI(tools.ServerTestBase):
 
     def setUp(self):
-        super(TestPluginAPI, self).setUp()
+        super().setUp()
         @self.app.route('/', test='plugin.cfg')
         def test(**args):
-            return ', '.join('%s:%s' % (k,v) for k,v in args.items())
+            return ', '.join(f'{k}:{v}' for k,v in args.items())
 
     def test_callable(self):
         def plugin(func):
@@ -182,7 +181,7 @@ class TestPluginAPI(tools.ServerTestBase):
 
 
     def test_apply(self):
-        class Plugin(object):
+        class Plugin:
             def apply(self, func, route):
                 def wrapper(*a, **ka):
                     return func(test=route.config['test'], *a, **ka) + '; tail'
@@ -194,7 +193,7 @@ class TestPluginAPI(tools.ServerTestBase):
         self.assertBody('test:plugin.cfg; tail', '/')
 
     def test_instance_method_wrapper(self):
-        class Plugin(object):
+        class Plugin:
             api=2
             def apply(self, callback, route):
                 return self.b
@@ -203,14 +202,14 @@ class TestPluginAPI(tools.ServerTestBase):
         self.assertBody('Hello', '/')
 
     def test_setup(self):
-        class Plugin(object):
+        class Plugin:
             def __call__(self, func): return func
             def setup(self, app): self.app = app
         plugin = self.app.install(Plugin())
         self.assertEqual(getattr(plugin, 'app', None), self.app)
 
     def test_close(self):
-        class Plugin(object):
+        class Plugin:
             def __call__(self, func): return func
             def close(self): self.closed = True
         plugin = self.app.install(Plugin())

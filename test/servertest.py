@@ -27,7 +27,7 @@ def main():
         route('/test', callback=lambda: 'OK')
         run(port=port, server=server, quiet=True)
 
-    except socket.error:
+    except OSError:
         sys.exit(3)
     except ImportError:
         sys.exit(128)

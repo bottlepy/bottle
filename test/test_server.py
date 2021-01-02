@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import unittest
 import time
 import sys
@@ -23,7 +22,7 @@ def ping(server, port):
     try:
         s.connect((server, port))
         return True
-    except socket.error:
+    except OSError:
         return False
     finally:
         s.close()

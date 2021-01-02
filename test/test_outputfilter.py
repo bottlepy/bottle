@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 '''Everything returned by Bottle()._cast() MUST be WSGI compatiple.'''
 
 import unittest
@@ -165,7 +164,7 @@ class TestOutputFilter(ServerTestBase):
         self.assertInBody('Unsupported response type')
 
     def test_iterator_with_close(self):
-        class MyIter(object):
+        class MyIter:
             def __init__(self, data):
                 self.data = data
                 self.closed = False

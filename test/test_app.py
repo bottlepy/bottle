@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """ Tests for the functionality of the application object.
 
     TODO: Move other tests here.

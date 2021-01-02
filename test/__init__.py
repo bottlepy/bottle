@@ -1,4 +1,3 @@
-from __future__ import with_statement
 from .tools import chdir
 import unittest
 import sys, os

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import with_statement
 import os
 
 import bottle
@@ -24,7 +22,7 @@ def tobs(data):
     return BytesIO(tob(data))
 
 
-class chdir(object):
+class chdir:
     def __init__(self, dir):
         if os.path.isfile(dir):
             dir = os.path.dirname(dir)
@@ -38,7 +36,7 @@ class chdir(object):
         os.chdir(self.old)
 
 
-class assertWarn(object):
+class assertWarn:
     def __init__(self, text):
         self.searchtext = text
 
@@ -54,7 +52,7 @@ class assertWarn(object):
         self.warnings = []
 
     def depr(self, msg, strict=False):
-        assert self.searchtext in msg, "Could not find phrase %r in warning message %r" % (self.searchtext, msg)
+        assert self.searchtext in msg, f"Could not find phrase {self.searchtext!r} in warning message {msg!r}"
         self.warnings.append(msg)
 
     def __exit__(self, exc_type, exc_val, tb):
@@ -144,7 +142,7 @@ class ServerTestBase(unittest.TestCase):
     def assertInBody(self, body, route='/', **kargs):
         result = self.urlopen(route, **kargs)['body']
         if tob(body) not in result:
-            self.fail('The search pattern "%s" is not included in body:\n%s' % (body, result))
+            self.fail(f'The search pattern "{body}" is not included in body:\n{result}')
 
     def assertHeader(self, name, value, route='/', **kargs):
         self.assertEqual(value, self.urlopen(route, **kargs)['header'].get(name))
@@ -156,7 +154,7 @@ class ServerTestBase(unittest.TestCase):
         bottle.request.environ['wsgi.errors'].errors.seek(0)
         err = bottle.request.environ['wsgi.errors'].errors.read()
         if search not in err:
-            self.fail('The search pattern "%s" is not included in wsgi.error: %s' % (search, err))
+            self.fail(f'The search pattern "{search}" is not included in wsgi.error: {err}')
 
 def multipart_environ(fields, files):
     boundary = str(uuid.uuid1())

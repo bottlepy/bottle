@@ -4,17 +4,14 @@ Tests & demonstrates various OO approaches to routes
 import unittest
 import sys
 
-if sys.version_info >= (3, 0, 0):
-    from io import BytesIO
-else:
-    from StringIO import StringIO as BytesIO
+from io import BytesIO
 
 __author__ = 'atc'
 
 from bottle import Bottle, request, tob, BaseRequest
 
 
-class TestRouter(object):
+class TestRouter:
     """
     A test class for wrapping routes to test certain OO scenarios
     """

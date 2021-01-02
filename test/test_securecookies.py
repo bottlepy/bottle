@@ -1,4 +1,3 @@
-#coding: utf-8
 import unittest
 
 import bottle
@@ -22,7 +21,7 @@ class TestSignedCookies(unittest.TestCase):
                 yield key.lower().strip(), value.strip()
 
     def set_pairs(self, pairs):
-        header = ','.join(['%s=%s' % (k, v) for k, v in pairs])
+        header = ','.join([f'{k}={v}' for k, v in pairs])
         bottle.request.bind({'HTTP_COOKIE': header})
 
     def testValid(self):
@@ -42,5 +41,5 @@ class TestSignedCookies(unittest.TestCase):
 
 class TestSignedCookiesWithPickle(TestSignedCookies):
     def setUp(self):
-        super(TestSignedCookiesWithPickle, self).setUp()
+        super().setUp()
         self.data = dict(a=5, b=touni('υηι¢σ∂є'), c=[1,2,3,4,tob('bytestring')])

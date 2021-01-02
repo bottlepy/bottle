@@ -25,7 +25,7 @@ class TestRoute(unittest.TestCase):
             return w
         route = bottle.Route(bottle.Bottle(), None, None, d(x))
         self.assertEqual(route.get_undecorated_callback(), x)
-        self.assertEqual(set(route.get_callback_args()), set(['a', 'b']))
+        self.assertEqual(set(route.get_callback_args()), {'a', 'b'})
 
         def d2(foo):
             def d(f):
@@ -36,7 +36,7 @@ class TestRoute(unittest.TestCase):
 
         route = bottle.Route(bottle.Bottle(), None, None, d2('foo')(x))
         self.assertEqual(route.get_undecorated_callback(), x)
-        self.assertEqual(set(route.get_callback_args()), set(['a', 'b']))
+        self.assertEqual(set(route.get_callback_args()), {'a', 'b'})
 
     def test_callback_inspection_multiple_args(self):
         # decorator with argument, modifying kwargs
@@ -57,11 +57,11 @@ class TestRoute(unittest.TestCase):
         route = bottle.Route(bottle.Bottle(), None, None, x)
 
         # triggers the "TypeError: 'foo' is not a Python function"
-        self.assertEqual(set(route.get_callback_args()), set(['a', 'b']))
+        self.assertEqual(set(route.get_callback_args()), {'a', 'b'})
 
     if bottle.py3k:
         def test_callback_inspection_newsig(self):
             env = {}
             eval(compile('def foo(a, *, b=5): pass', '<foo>', 'exec'), env, env)
             route = bottle.Route(bottle.Bottle(), None, None, env['foo'])
-            self.assertEqual(set(route.get_callback_args()), set(['a', 'b']))
+            self.assertEqual(set(route.get_callback_args()), {'a', 'b'})

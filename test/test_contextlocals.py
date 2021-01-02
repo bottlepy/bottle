@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 '''
 Some objects are context-local, meaning that they have different values depending on the context they are accessed from. A context is currently defined as a thread.
 '''

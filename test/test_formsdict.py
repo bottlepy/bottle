@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # '瓶' means "Bottle"
 
 import unittest
