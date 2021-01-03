@@ -3069,24 +3069,22 @@ def _lscmp(a, b):
                    for x, y in zip(a, b)) and len(a) == len(b)
 
 
-def cookie_encode(data, key, digestmod=None):
+def cookie_encode(data, key, digestmod=hashlib.sha256):
     """ Encode and sign a pickle-able object. Return a (byte) string """
     depr(0, 13, "cookie_encode() will be removed soon.",
                 "Do not use this API directly.")
-    digestmod = digestmod or hashlib.sha256
     msg = base64.b64encode(pickle.dumps(data, -1))
     sig = base64.b64encode(hmac.new(tob(key), msg, digestmod=digestmod).digest())
     return tob('!') + sig + tob('?') + msg
 
 
-def cookie_decode(data, key, digestmod=None):
+def cookie_decode(data, key, digestmod=hashlib.sha256):
     """ Verify and decode an encoded string. Return an object or None."""
     depr(0, 13, "cookie_decode() will be removed soon.",
                 "Do not use this API directly.")
     data = tob(data)
     if cookie_is_encoded(data):
         sig, msg = data.split(tob('?'), 1)
-        digestmod = digestmod or hashlib.sha256
         hashed = hmac.new(tob(key), msg, digestmod=digestmod).digest()
         if _lscmp(sig[1:], base64.b64encode(hashed)):
             return pickle.loads(base64.b64decode(msg))
