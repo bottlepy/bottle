@@ -552,7 +552,7 @@ class Route(object):
         """ Yield all Plugins affecting this route. """
         if True in self.skiplist: return
         skips = set(self.skiplist)
-        for p in [*self.plugins[::-1], *self.app.plugins[::-1]]:
+        for p in reversed(self.app.plugins + self.plugins):
             if p not in skips and type(p) not in skips:
                 name = getattr(p, 'name', False)
                 if not name or name and name not in skips:
