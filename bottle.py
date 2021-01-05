@@ -2439,12 +2439,12 @@ class ConfigDict(dict):
             >>> c = ConfigDict()
             >>> c.update('some.namespace', key='value')
         """
-        prefix = ''
-        if a and isinstance(a[0], basestring):
+        if a and isinstance(a[0], str):
             prefix = a[0].strip('.') + '.'
-            a = a[1:]
-        for key, value in dict(*a, **ka).items():
-            self[prefix + key] = value
+            for key, value in itertools.chain(a[1:], ka.items()):
+                self[prefix + key] = value
+        else:
+            dict.update(self, *a, **ka)
 
     def setdefault(self, key, value):
         if key not in self:
