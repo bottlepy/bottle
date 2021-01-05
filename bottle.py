@@ -1090,10 +1090,10 @@ class Bottle(object):
         if isinstance(first, HTTPResponse):
             return self._cast(first)
         elif isinstance(first, bytes):
-            new_iter = itertools.chain([first], iout)
+            new_iter = itertools.chain((first,), iout)
         elif isinstance(first, unicode):
-            encoder = lambda x: x.encode(response.charset)
-            new_iter = imap(encoder, itertools.chain([first], iout))
+            new_iter = map(str.encode, itertools.chain((first,), iout),
+                           itertools.repeat(response.charset))
         else:
             msg = 'Unsupported response type: %s' % type(first)
             return self._cast(HTTPError(500, msg))
