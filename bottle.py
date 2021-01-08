@@ -1527,7 +1527,7 @@ class BaseRequest(object):
             work if all proxies support the ```X-Forwarded-For`` header. Note
             that this information can be forged by malicious clients. """
         proxy = self.environ.get('HTTP_X_FORWARDED_FOR')
-        if proxy: return [ip.strip() for ip in proxy.split(',')]
+        if proxy: return list(map(str.strip, proxy.split(',')))
         remote = self.environ.get('REMOTE_ADDR')
         return [remote] if remote else []
 
