@@ -579,9 +579,10 @@ class Route(object):
         func = self.callback
         func = getattr(func, '__func__' if py3k else 'im_func', func)
         closure_attr = '__closure__' if py3k else 'func_closure'
-        while hasattr(func, closure_attr) and getattr(func, closure_attr):
-            attributes = getattr(func, closure_attr)
+        attributes = getattr(func, closure_attr, False)
+        while attributes:
             func = attributes[0].cell_contents
+            attributes = getattr(func, closure_attr, False)
 
             # in case of decorators with multiple arguments
             if not isinstance(func, FunctionType):
