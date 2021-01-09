@@ -3832,7 +3832,7 @@ class BaseTemplate(object):
     @classmethod
     def search(cls, name, lookup=None):
         """ Search name in all directories specified in lookup.
-        First without, then with common extensions. Return first hit if any or None """
+        First without, then with common extensions. Return first hit if any or None. """
         if not lookup:
             raise depr(0, 12, "Empty template lookup path.", "Configure a template lookup path.")
 
