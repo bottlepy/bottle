@@ -3832,7 +3832,7 @@ class BaseTemplate(object):
     @classmethod
     def search(cls, name, lookup=None):
         """ Search name in all directories specified in lookup.
-        First without, then with common extensions. Return first hit. """
+        First without, then with common extensions. Return first hit if any or None """
         if not lookup:
             raise depr(0, 12, "Empty template lookup path.", "Configure a template lookup path.")
 
@@ -3840,14 +3840,11 @@ class BaseTemplate(object):
             raise depr(0, 12, "Use of absolute path for template name.",
                        "Refer to templates with names or paths relative to the lookup path.")
 
-        for spath in lookup:
-            spath = os.path.abspath(spath) + os.sep
-            fname = os.path.abspath(os.path.join(spath, name))
-            if not fname.startswith(spath): continue
+        for spath, name in itertools.product(
+                map(os.path.abspath, lookup),  # lazy
+                [name] + ['%s.%s' % (name, ext) for ext in cls.extensions]):
+            fname = os.path.join(spath, name)
             if os.path.isfile(fname): return fname
-            for ext in cls.extensions:
-                if os.path.isfile('%s.%s' % (fname, ext)):
-                    return '%s.%s' % (fname, ext)
 
     @classmethod
     def global_config(cls, key, *args):
