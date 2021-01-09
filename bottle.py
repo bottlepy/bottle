@@ -3998,7 +3998,7 @@ class FileCheckerThread(threading.Thread):
         files = dict()
 
         for module in list(sys.modules.values()):
-            path = getattr(module, '__file__', '') or ''
+            path = getattr(module, '__file__', '')
             if path[-4:] in ('.pyo', '.pyc'): path = path[:-1]
             if path and exists(path): files[path] = mtime(path)
 
