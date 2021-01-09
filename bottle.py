@@ -3802,7 +3802,7 @@ class BaseTemplate(object):
     def __init__(self,
                  source=None,
                  name=None,
-                 lookup=None,
+                 lookup=(),
                  encoding='utf8', **settings):
         """ Create a new template.
         If the source parameter (str or buffer) is missing, the name argument
@@ -3817,7 +3817,7 @@ class BaseTemplate(object):
         self.name = name
         self.source = source.read() if hasattr(source, 'read') else source
         self.filename = source.filename if hasattr(source, 'filename') else None
-        self.lookup = [os.path.abspath(x) for x in lookup] if lookup else []
+        self.lookup = lookup
         self.encoding = encoding
         self.settings = self.settings.copy()  # Copy from class variable
         self.settings.update(settings)  # Apply
