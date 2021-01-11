@@ -3835,16 +3835,19 @@ class BaseTemplate(object):
         First without, then with common extensions. Return first hit if any or None. """
         if not lookup:
             raise depr(0, 12, "Empty template lookup path.", "Configure a template lookup path.")
-
+            lookup = TEMPLATE_PATH
         if os.path.isabs(name):
             raise depr(0, 12, "Use of absolute path for template name.",
                        "Refer to templates with names or paths relative to the lookup path.")
-
-        for spath, name in itertools.product(
-                map(os.path.abspath, lookup),  # lazy
-                [name] + ['%s.%s' % (name, ext) for ext in cls.extensions]):
-            fname = os.path.join(spath, name)
+        exts = ['.' + e for e in cls.extensions]
+        exts *= not any(map(name.endswith, exts))
+        for path in map(os.path.abspath, lookup):
+            fname = os.path.abspath(os.path.join(path, name))
             if os.path.isfile(fname): return fname
+            for ext in exts:
+                if os.path.isfile(fname + ext):
+                    return fname + ext
+        abort(500, 'Template (%s) not found at (%r)' % (name, lookup))
 
     @classmethod
     def global_config(cls, key, *args):
