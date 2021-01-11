@@ -4245,8 +4245,7 @@ def template(*args, **kwargs):
             keys.append(source)  # 3th key, template content
     if not isinstance(res, BaseTemplate): abort(500, "can't make temple from (%r)" % tpl)
     if res is tpl and settings: res.prepare(**settings)
-    for key in keys:
-        TEMPLATES[key] = res
+    for key in keys: TEMPLATES[key] = res
     return res.render(kwargs)
 
 
