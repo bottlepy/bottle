@@ -577,19 +577,15 @@ class Route(object):
         """ Return the callback. If the callback is a decorated function, try to
             recover the original function. """
         func = self.callback
-        func = getattr(func, '__func__' if py3k else 'im_func', func)
         closure_attr = '__closure__' if py3k else 'func_closure'
         attributes = getattr(func, closure_attr, False)
         while attributes:
-            func = attributes[0].cell_contents
-            attributes = getattr(func, closure_attr, False)
-
-            # in case of decorators with multiple arguments
-            if not isinstance(func, FunctionType):
-                # pick first FunctionType instance from multiple arguments
-                func = filter(lambda x: isinstance(x, FunctionType),
-                              map(lambda x: x.cell_contents, attributes))
-                func = list(func)[0]  # py3 support
+            for a in attributes:
+                func = a.cell_contents
+                print(func)
+                if isinstance(func, FunctionType):
+                    attributes = getattr(func, closure_attr, False)
+                    break
         return func
 
     def get_callback_args(self):
