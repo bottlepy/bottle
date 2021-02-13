@@ -3841,7 +3841,7 @@ class BaseTemplate(object):
                        "Refer to templates with names or paths relative to the lookup path.")
 
         for spath in lookup:
-            spath = os.path.abspath(spath) + os.sep
+            spath = os.path.abspath(spath)
             fname = os.path.abspath(os.path.join(spath, name))
             if not fname.startswith(spath): continue
             if os.path.isfile(fname): return fname
