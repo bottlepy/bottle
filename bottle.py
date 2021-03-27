@@ -3663,26 +3663,26 @@ def run(app=None,
     if NORUN: return
     if reloader and not os.environ.get('BOTTLE_CHILD'):
         import subprocess
-        lockfile = None
+        fd, lockfile = tempfile.mkstemp(prefix='bottle.', suffix='.lock')
+        environ = os.environ.copy()
+        environ['BOTTLE_CHILD'] = 'true'
+        environ['BOTTLE_LOCKFILE'] = lockfile
+        args = [sys.executable] + sys.argv
+        # If a package was loaded with `python -m`, then `sys.argv` needs to be
+        # restored to the original value, or imports might break. See #1336
+        if getattr(sys.modules.get('__main__'), '__package__', None):
+            args[1:1] = ["-m", sys.modules['__main__'].__package__]
+
         try:
-            fd, lockfile = tempfile.mkstemp(prefix='bottle.', suffix='.lock')
-            os.close(fd)  # We only need this file to exist. We never write to it
+            os.close(fd)  # We never write to this file
             while os.path.exists(lockfile):
-                args = [sys.executable] + sys.argv
-                if getattr(sys.modules.get('__main__'), '__package__', None):
-                    # If a package was loaded with `python -m`, then `sys.argv`
-                    # is wrong and needs fixing in some cases. See #1336
-                    args[1:1] = ["-m", sys.modules['__main__'].__package__]
-                environ = os.environ.copy()
-                environ['BOTTLE_CHILD'] = 'true'
-                environ['BOTTLE_LOCKFILE'] = lockfile
                 p = subprocess.Popen(args, env=environ)
-                while p.poll() is None:  # Busy wait...
-                    os.utime(lockfile, None)  # I am alive!
+                while p.poll() is None:
+                    os.utime(lockfile, None)  # Tell child we are still alive
                     time.sleep(interval)
-                if p.poll() != 3:
-                    if os.path.exists(lockfile): os.unlink(lockfile)
-                    sys.exit(p.poll())
+                if p.returncode == 3:  # Child wants to be restarted
+                    continue
+                sys.exit(p.returncode)
         except KeyboardInterrupt:
             pass
         finally:
