@@ -3669,6 +3669,10 @@ def run(app=None,
             os.close(fd)  # We only need this file to exist. We never write to it
             while os.path.exists(lockfile):
                 args = [sys.executable] + sys.argv
+                if getattr(sys.modules.get('__main__'), '__package__', None):
+                    # If a package was loaded with `python -m`, then `sys.argv`
+                    # is wrong and needs fixing in some cases. See #1336
+                    args[1:1] = ["-m", sys.modules['__main__'].__package__]
                 environ = os.environ.copy()
                 environ['BOTTLE_CHILD'] = 'true'
                 environ['BOTTLE_LOCKFILE'] = lockfile
