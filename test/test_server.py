@@ -27,10 +27,10 @@ def ping(server, port):
     finally:
         s.close()
 
-class TestServerBase(unittest.TestCase):
+class TestServer(unittest.TestCase):
     server = 'wsgiref'
     skip   = False
-    script = []
+    script = [os.path.join(os.path.dirname(__file__), 'servertest.py')]
     extra_args = []
 
     def base_cmd(self, port):
@@ -94,13 +94,16 @@ class TestServerBase(unittest.TestCase):
         except Exception as E:
             return repr(E)
 
-class TestServer(TestServerBase):
-    script = [os.path.join(os.path.dirname(__file__), 'servertest.py')]
-
     def test_simple(self):
         ''' Test a simple static page with this server adapter. '''
         if self.skip: return
         self.assertEqual(tob('OK'), self.fetch('test'))
+
+class TestServerTopModule(TestServer):
+    script = ['-m', 'servertesttop']
+
+class TestServerTopModuleReloader(TestServerTopModule):
+    extra_args = ['--reload']
 
 class TestServerPackage(TestServer):
     script = ['-m', 'servertestpackage']
@@ -108,10 +111,10 @@ class TestServerPackage(TestServer):
 class TestServerPackageReloader(TestServerPackage):
     extra_args = ['--reload']
 
-class TestServerModule(TestServer):
-    script = ['-m', 'servertestpackage.module']
+class TestServerSubmodule(TestServer):
+    script = ['-m', 'servertestpackage.submodule']
 
-class TestServerModuleReloader(TestServerModule):
+class TestServerSubmoduleReloader(TestServerSubmodule):
     extra_args = ['--reload']
 
 blacklist = ['cgi', 'flup', 'gae', 'wsgiref']
