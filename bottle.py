@@ -3633,14 +3633,21 @@ def load_app(target):
 
 _debug = debug
 
-def _main_module_name():
-    package = vars(sys.modules['__main__'])['__package__']
+def _main_module_args():
+    package = sys.modules['__main__'].__package__
+    file_path = sys.argv[0]
     if package is None:
-        return None
+        return [file_path]
     else:
-        file_path = sys.argv[0]
         base_name, _ = os.path.splitext(os.path.basename(file_path))
-        return package if base_name == '__main__' else '.'.join((package, base_name))
+        return [
+            '-m',
+            (
+                package if base_name == '__main__'
+                else '.'.join((package, base_name)) if package
+                else base_name
+            )
+        ]
 
 def run(app=None,
         server='wsgiref',
@@ -3675,9 +3682,7 @@ def run(app=None,
         try:
             fd, lockfile = tempfile.mkstemp(prefix='bottle.', suffix='.lock')
             os.close(fd)  # We only need this file to exist. We never write to it
-            module_name = _main_module_name()
-            options = [sys.argv[0]] if module_name is None else ['-m', module_name]
-            args = [sys.executable] + options + sys.argv[1:]
+            args = [sys.executable] + _main_module_args() + sys.argv[1:]
             environ = os.environ.copy()
             environ['BOTTLE_CHILD'] = 'true'
             environ['BOTTLE_LOCKFILE'] = lockfile
