@@ -3634,7 +3634,7 @@ def load_app(target):
 _debug = debug
 
 def _main_module_args():
-    package = sys.modules['__main__'].__package__
+    from __main__ import __package__ as package
     file_path = sys.argv[0]
     if package is None:
         return [file_path]
