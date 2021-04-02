@@ -3633,6 +3633,21 @@ def load_app(target):
 
 _debug = debug
 
+def _main_module_args():
+    from __main__ import __package__ as package
+    file_path = sys.argv[0]
+    if package is None:
+        return [file_path]
+    else:
+        base_name, _ = os.path.splitext(os.path.basename(file_path))
+        return [
+            '-m',
+            (
+                package if base_name == '__main__'
+                else '.'.join((package, base_name)) if package
+                else base_name
+            )
+        ]
 
 def run(app=None,
         server='wsgiref',
@@ -3667,11 +3682,11 @@ def run(app=None,
         try:
             fd, lockfile = tempfile.mkstemp(prefix='bottle.', suffix='.lock')
             os.close(fd)  # We only need this file to exist. We never write to it
+            args = [sys.executable] + _main_module_args() + sys.argv[1:]
+            environ = os.environ.copy()
+            environ['BOTTLE_CHILD'] = 'true'
+            environ['BOTTLE_LOCKFILE'] = lockfile
             while os.path.exists(lockfile):
-                args = [sys.executable] + sys.argv
-                environ = os.environ.copy()
-                environ['BOTTLE_CHILD'] = 'true'
-                environ['BOTTLE_LOCKFILE'] = lockfile
                 p = subprocess.Popen(args, env=environ)
                 while p.poll() is None:  # Busy wait...
                     os.utime(lockfile, None)  # I am alive!

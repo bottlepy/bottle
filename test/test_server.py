@@ -14,8 +14,7 @@ try:
 except:
     from urllib2 import urlopen
 
-serverscript = os.path.join(os.path.dirname(__file__), 'servertest.py')
-
+test_root = os.path.dirname(os.path.abspath(__file__))
 
 def ping(server, port):
     ''' Check if a server accepts connections on a specific TCP port '''
@@ -28,10 +27,14 @@ def ping(server, port):
     finally:
         s.close()
 
-
 class TestServer(unittest.TestCase):
     server = 'wsgiref'
     skip   = False
+    script = [os.path.join(os.path.dirname(__file__), 'servertest.py')]
+    extra_args = []
+
+    def base_cmd(self, port):
+        return [sys.executable] + self.script + [self.server, str(port)] + self.extra_args
 
     def setUp(self):
         self.skip = self.skip or 'fast' in sys.argv
@@ -40,9 +43,8 @@ class TestServer(unittest.TestCase):
         for port in range(8800, 8900):
             self.port = port
             # Start servertest.py in a subprocess
-            cmd = [sys.executable, serverscript, self.server, str(port)]
-            cmd += sys.argv[1:] # pass cmdline arguments to subprocesses
-            self.p = Popen(cmd, stdout=PIPE, stderr=PIPE)
+            cmd = self.base_cmd(port) + sys.argv[1:] # pass cmdline arguments to subprocesses
+            self.p = Popen(cmd, stdout=PIPE, stderr=PIPE, cwd=test_root)
             # Wait for the socket to accept connections
             for i in range(100):
                 time.sleep(0.1)
@@ -97,6 +99,23 @@ class TestServer(unittest.TestCase):
         if self.skip: return
         self.assertEqual(tob('OK'), self.fetch('test'))
 
+class TestServerTopModule(TestServer):
+    script = ['-m', 'servertesttop']
+
+class TestServerTopModuleReloader(TestServerTopModule):
+    extra_args = ['--reload']
+
+class TestServerPackage(TestServer):
+    script = ['-m', 'servertestpackage']
+
+class TestServerPackageReloader(TestServerPackage):
+    extra_args = ['--reload']
+
+class TestServerSubmodule(TestServer):
+    script = ['-m', 'servertestpackage.submodule']
+
+class TestServerSubmoduleReloader(TestServerSubmodule):
+    extra_args = ['--reload']
 
 blacklist = ['cgi', 'flup', 'gae', 'wsgiref']
 blacklist += ['fapws3', 'cherrypy', 'diesel'] # deprecated adapters
