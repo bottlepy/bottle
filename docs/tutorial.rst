@@ -627,7 +627,7 @@ Attribute                        GET Form fields   POST Form fields   File Uploa
 ==============================   ===============   ================   ============
 
 
-File uploads
+File Uploads
 ------------
 
 To support file uploads, we have to change the ``<form>`` tag a bit. First, we tell the browser to encode the form data in a different way by adding an ``enctype="multipart/form-data"`` attribute to the ``<form>`` tag. Then, we add ``<input type="file" />`` tags to allow the user to select a file. Here is an example:
@@ -665,7 +665,7 @@ JSON Content
 Some JavaScript or REST clients send ``application/json`` content to the server. The :attr:`BaseRequest.json` attribute contains the parsed data structure, if available.
 
 
-The raw request body
+The Raw Request Body
 --------------------
 
 You can access the raw body data as a file-like object via :attr:`BaseRequest.body`. This is a :class:`BytesIO` buffer or a temporary file depending on the content length and :attr:`BaseRequest.MEMFILE_MAX` setting. In both cases the body is completely buffered before you can access the attribute. If you expect huge amounts of data and want to get direct unbuffered access to the stream, have a look at ``request['wsgi.input']``.
