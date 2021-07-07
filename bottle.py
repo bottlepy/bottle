@@ -2919,17 +2919,20 @@ def static_file(filename, root,
                                    clen, filename)
         etag = hashlib.sha1(tob(etag)).hexdigest()
 
+    inm = getenv('HTTP_IF_NONE_MATCH')
+
     if etag:
         headers['ETag'] = etag
-        check = getenv('HTTP_IF_NONE_MATCH')
-        if check and check == etag:
+        if inm and inm == etag:
             return HTTPResponse(status=304, **headers)
 
-    ims = getenv('HTTP_IF_MODIFIED_SINCE')
-    if ims:
-        ims = parse_date(ims.split(";")[0].strip())
-    if ims is not None and ims >= int(stats.st_mtime):
-        return HTTPResponse(status=304, **headers)
+    # If client has If-None-Match, ignore If-Modified-Since.
+    if not inm:
+        ims = getenv('HTTP_IF_MODIFIED_SINCE')
+        if ims:
+            ims = parse_date(ims.split(";")[0].strip())
+        if ims is not None and ims >= int(stats.st_mtime):
+            return HTTPResponse(status=304, **headers)
 
     body = '' if request.method == 'HEAD' else open(filename, 'rb')
 

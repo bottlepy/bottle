@@ -64,6 +64,7 @@ versions should not update to Bottle 0.13 and stick with 0.12 instead.
 These changes might require special care when updating.
 
 * Signed cookies now use a stronger HMAC algorithm by default. This will result in old cookies to appear invalid after the update. Pass an explicit ``digestmod=hashlib.md5`` to :meth:`Request.get_cookie` and :meth:`Response.set_cookie` to get the old behavior.
+* ``If-None-Match`` has precedence when used in combination with ``If-Modified-Since``, skip ``If-Modified-Since`` check even if ``If-None-Match`` check fails.
 
 .. rubric:: Other Improvements
 * Bottle() instances are now context managers. If used in a with-statement, the default application changes to the specific instance and the shortcuts for many instance methods can be used.
