@@ -1417,11 +1417,11 @@ class BaseRequest(object):
         self['_cgi.FieldStorage'] = data  #http://bugs.python.org/issue18394
         data = data.list or []
         for item in data:
-            if item.filename:
+            if item.filename is None:
+                post[item.name] = item.value
+            else:
                 post[item.name] = FileUpload(item.file, item.name,
                                              item.filename, item.headers)
-            else:
-                post[item.name] = item.value
         return post
 
     @property
