@@ -260,7 +260,7 @@ msgstr ""
 msgid ""
 "Because of these requirements, it is the recommendation of the Bottle "
 "project that Gzip compression is best handled by the WSGI server Bottle runs"
-" on top of. WSGI servers such as cherrypy_ provide a GzipFilter_ middleware "
+" on top of. WSGI servers such as cheroot_ provide a GzipFilter_ middleware "
 "that can be used to accomplish this."
 msgstr ""
 

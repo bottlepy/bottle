@@ -102,7 +102,7 @@ msgstr ""
 #: ../../deployment.rst:54
 msgid ""
 "The easiest way to increase performance is to install a multi-threaded "
-"server library like paste_ or cherrypy_ and tell Bottle to use that instead "
+"server library like paste_ or cheroot_ and tell Bottle to use that instead "
 "of the single-threaded default server::"
 msgstr ""
 
@@ -173,7 +173,7 @@ msgid "cherrypy"
 msgstr ""
 
 #: ../../deployment.rst:67
-msgid "cherrypy_"
+msgid "cheroot_"
 msgstr ""
 
 #: ../../deployment.rst:67

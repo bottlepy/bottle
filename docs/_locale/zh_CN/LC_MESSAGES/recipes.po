@@ -260,9 +260,9 @@ msgstr "不缓存小文件，因为寻道时间或许比压缩时间还长"
 msgid ""
 "Because of these requirements, it is the recommendation of the Bottle "
 "project that Gzip compression is best handled by the WSGI server Bottle runs"
-" on top of. WSGI servers such as cherrypy_ provide a GzipFilter_ middleware "
+" on top of. WSGI servers such as cheroot_ provide a GzipFilter_ middleware "
 "that can be used to accomplish this."
-msgstr "因为有上述种种限制，建议由WSGI服务器来处理Gzip压缩而不是Bottle。像 cherrypy_ 就提供了一个 GzipFilter_ 中间件来处理Gzip压缩。"
+msgstr "因为有上述种种限制，建议由WSGI服务器来处理Gzip压缩而不是Bottle。像 cheroot_ 就提供了一个 GzipFilter_ 中间件来处理Gzip压缩。"
 
 #: ../../recipes.rst:236
 msgid "Using the hooks plugin"

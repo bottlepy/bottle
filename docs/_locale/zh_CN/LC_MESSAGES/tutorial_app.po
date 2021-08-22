@@ -773,7 +773,7 @@ msgstr "在大型项目上，Bottle自带的服务器会成为一个性能瓶颈
 #: ../../tutorial_app.rst:488
 msgid ""
 "But Bottle has already various adapters to multi-threaded servers on board, "
-"which perform better on higher load. Bottle supports Cherrypy_, Flup_ and "
+"which perform better on higher load. Bottle supports cheroot_, Flup_ and "
 "Paste_."
 msgstr ""
 

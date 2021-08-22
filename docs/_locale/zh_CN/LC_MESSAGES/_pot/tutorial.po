@@ -1429,7 +1429,7 @@ msgstr ""
 #: ../../tutorial.rst:1048
 msgid ""
 "The easiest way to increase performance is to install a multi-threaded "
-"server library like paste_ or cherrypy_ and tell Bottle to use that instead "
+"server library like paste_ or cheroot_ and tell Bottle to use that instead "
 "of the single-threaded server::"
 msgstr ""
 

@@ -3287,35 +3287,6 @@ class WSGIRefServer(ServerAdapter):
             raise
 
 
-class CherryPyServer(ServerAdapter):
-    def run(self, handler):  # pragma: no cover
-        depr(0, 13, "The wsgi server part of cherrypy was split into a new "
-                    "project called 'cheroot'.", "Use the 'cheroot' server "
-                    "adapter instead of cherrypy.")
-        from cherrypy import wsgiserver # This will fail for CherryPy >= 9
-
-        self.options['bind_addr'] = (self.host, self.port)
-        self.options['wsgi_app'] = handler
-
-        certfile = self.options.get('certfile')
-        if certfile:
-            del self.options['certfile']
-        keyfile = self.options.get('keyfile')
-        if keyfile:
-            del self.options['keyfile']
-
-        server = wsgiserver.CherryPyWSGIServer(**self.options)
-        if certfile:
-            server.ssl_certificate = certfile
-        if keyfile:
-            server.ssl_private_key = keyfile
-
-        try:
-            server.start()
-        finally:
-            server.stop()
-
-
 class CherootServer(ServerAdapter):
     def run(self, handler): # pragma: no cover
         from cheroot import wsgi
@@ -3557,7 +3528,7 @@ class AiohttpUVLoopServer(AiohttpServer):
 
 class AutoServer(ServerAdapter):
     """ Untested. """
-    adapters = [WaitressServer, PasteServer, TwistedServer, CherryPyServer,
+    adapters = [WaitressServer, PasteServer, TwistedServer,
                 CherootServer, WSGIRefServer]
 
     def run(self, handler):
@@ -3573,7 +3544,7 @@ server_names = {
     'flup': FlupFCGIServer,
     'wsgiref': WSGIRefServer,
     'waitress': WaitressServer,
-    'cherrypy': CherryPyServer,
+    'cherrypy': CherootServer,
     'cheroot': CherootServer,
     'paste': PasteServer,
     'fapws3': FapwsServer,
