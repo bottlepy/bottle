@@ -95,6 +95,11 @@ class TestSendFile(unittest.TestCase):
         request.environ['HTTP_IF_MODIFIED_SINCE'] = bottle.http_date(100)
         self.assertEqual(open(__file__,'rb').read(), static_file(basename, root=root).body.read())
 
+    def test_ims_empty(self):
+        """ SendFile: Empty If-Modified-Since"""
+        request.environ['HTTP_IF_MODIFIED_SINCE'] = ''
+        self.assertEqual(open(__file__, 'rb').read(), static_file(basename, root=root).body.read())
+
     def test_etag(self):
         """ SendFile: If-Modified-Since"""
         res = static_file(basename, root=root)
