@@ -2869,12 +2869,12 @@ def static_file(filename, root,
         ``If-None-Match``) are answered with ``304 Not Modified`` whenever
         possible. ``HEAD`` and ``Range`` requests (used by download managers to
         check or continue partial downloads) are also handled automatically.
-
     """
 
     root = os.path.join(os.path.abspath(root), '')
     filename = os.path.abspath(os.path.join(root, filename.strip('/\\')))
     headers = headers.copy() if headers else {}
+    getenv = request.environ.get
 
     if not filename.startswith(root):
         return HTTPError(403, "Access denied.")
@@ -2884,30 +2884,31 @@ def static_file(filename, root,
         return HTTPError(403, "You do not have permission to access this file.")
 
     if mimetype is True:
-        if download and download is not True:
-            mimetype, encoding = mimetypes.guess_type(download)
-        else:
-            mimetype, encoding = mimetypes.guess_type(filename)
-        if encoding:
-            headers['Content-Encoding'] = encoding
+        name = download if isinstance(download, str) else filename
+        mimetype, encoding = mimetypes.guess_type(name)
+        if encoding == 'gzip':
+            mimetype = 'application/gzip'
+        elif encoding: # e.g. bzip2 -> application/x-bzip2
+            mimetype = 'application/x-' + encoding
+
+    if charset and mimetype and 'charset=' not in mimetype \
+        and (mimetype[:5] == 'text/' or mimetype == 'application/javascript'):
+        mimetype += '; charset=%s' % charset
 
     if mimetype:
-        if (mimetype[:5] == 'text/' or mimetype == 'application/javascript')\
-          and charset and 'charset' not in mimetype:
-            mimetype += '; charset=%s' % charset
         headers['Content-Type'] = mimetype
 
+    if download is True:
+        download = os.path.basename(filename)
+
     if download:
-        download = os.path.basename(filename if download is True else download)
+        download = download.replace('"','')
         headers['Content-Disposition'] = 'attachment; filename="%s"' % download
 
     stats = os.stat(filename)
     headers['Content-Length'] = clen = stats.st_size
-    headers['Last-Modified'] = email.utils.formatdate(stats.st_mtime,
-                                                      usegmt=True)
+    headers['Last-Modified'] = email.utils.formatdate(stats.st_mtime, usegmt=True)
     headers['Date'] = email.utils.formatdate(time.time(), usegmt=True)
-
-    getenv = request.environ.get
 
     if etag is None:
         etag = '%d:%d:%d:%d:%s' % (stats.st_dev, stats.st_ino, stats.st_mtime,
