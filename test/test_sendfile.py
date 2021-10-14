@@ -85,6 +85,17 @@ class TestSendFile(unittest.TestCase):
         f = static_file(basename, root=root, mimetype='text/foo', charset='latin1')
         self.assertEqual('text/foo; charset=latin1', f.headers['Content-Type'])
 
+    def test_mime_gzip(self):
+        """ SendFile: Mime Guessing"""
+        try:
+            fp, fn = tempfile.mkstemp(suffix=".txt.gz")
+            f = static_file(fn, root='/')
+            self.assertTrue(f.headers['Content-Type'][0] in ('application/gzip'))
+            self.assertFalse('Content-Encoding' in f.headers)
+        finally:
+            os.close(fp)
+            os.unlink(fn)
+
     def test_ims(self):
         """ SendFile: If-Modified-Since"""
         request.environ['HTTP_IF_MODIFIED_SINCE'] = bottle.http_date(time.time())
@@ -118,7 +129,6 @@ class TestSendFile(unittest.TestCase):
         self.assertTrue('ETag' in res.headers)
         self.assertNotEqual(etag, res.headers['ETag'])
         self.assertEqual(200, res.status_code)
-       
 
     def test_download(self):
         """ SendFile: Download as attachment """

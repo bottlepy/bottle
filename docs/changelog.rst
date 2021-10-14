@@ -74,8 +74,8 @@ These changes might require special care when updating.
 * :meth:`Bottle.mount` now recognizes instances of :class:`Bottle` and mounts them with significantly less overhead than other WSGI applications.
 * The :attr:`BaseRequest.json` property now accepts ``application/json-rpc`` requests.
 * :func:`static_file` gained support for ``ETag`` headers. It will generate ETags and recognizes ``If-None-Match`` headers.
+* :func:`static_file` will now guess the mime type of ``*.gz`` and other compressed files correctly (e.g. ``application/gzip``) and NOT set the ``Content-Encoding`` header.
 * Jinja2 templates will produce better error messages than before.
-
 
 
 
