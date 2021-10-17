@@ -210,7 +210,9 @@ class DictProperty(object):
         self.attr, self.key, self.read_only = attr, key, read_only
 
     def __call__(self, func):
-        functools.update_wrapper(self, func, updated=[])
+        functools.update_wrapper(self, func, updated=None)
+        if updated is None:
+            updated = []
         self.getter, self.key = func, self.key or func.__name__
         return self
 
@@ -3923,7 +3925,9 @@ class CheetahTemplate(BaseTemplate):
 
 
 class Jinja2Template(BaseTemplate):
-    def prepare(self, filters=None, tests=None, globals={}, **kwargs):
+    def prepare(self, filters=None, tests=None, globals=None, **kwargs):
+        if globals is None:
+            globals = {}
         from jinja2 import Environment, FunctionLoader
         self.env = Environment(loader=FunctionLoader(self.loader), **kwargs)
         if filters: self.env.filters.update(filters)
