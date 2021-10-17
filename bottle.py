@@ -210,7 +210,7 @@ class DictProperty(object):
         self.attr, self.key, self.read_only = attr, key, read_only
 
     def __call__(self, func):
-        functools.update_wrapper(self, func, updated=None)
+        functools.update_wrapper(self, func, updated=[])
         if updated is None:
             updated = []
         self.getter, self.key = func, self.key or func.__name__
