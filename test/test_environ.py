@@ -462,6 +462,9 @@ class TestRequest(unittest.TestCase):
             # Attributes are read-only once set.
             self.assertRaises(AttributeError, setattr, r, 'foo', 'x')
 
+            # Properties raise AttributeError.
+            self.assertRaises(AttributeError, setattr, r, 'body', 'x')
+
             # Unknown attributes raise AttributeError.
             self.assertRaises(AttributeError, getattr, r, 'somevalue')
 
