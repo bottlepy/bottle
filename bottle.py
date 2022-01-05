@@ -1655,7 +1655,7 @@ class BaseResponse(object):
     default_status = 200
     default_content_type = 'text/html; charset=UTF-8'
 
-    # Header blacklist for specific response codes
+    # Header denylist for specific response codes
     # (rfc2616 section 10.2.3 and 10.3.5)
     bad_headers = {
         204: frozenset(('Content-Type', 'Content-Length')),
