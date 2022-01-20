@@ -1363,7 +1363,7 @@ class BaseRequest(object):
 
     def _get_body_string(self, maxread):
         """ Read body into a string. Raise HTTPError(413) on requests that are
-            to large. """
+            too large. """
         if self.content_length > maxread:
             raise HTTPError(413, 'Request entity too large')
         data = self.body.read(maxread + 1)
