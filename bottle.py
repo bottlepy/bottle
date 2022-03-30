@@ -69,9 +69,10 @@ if __name__ == '__main__':
 # Imports and Python 2/3 unification ##########################################
 ###############################################################################
 
-import base64, calendar, cgi, email.utils, functools, hmac, imp, itertools,\
+import calendar, cgi, email.utils, functools, hmac, imp, itertools,\
        mimetypes, os, re, tempfile, threading, time, warnings, weakref, hashlib
 
+from base64 import b64encode, b64decode
 from types import FunctionType
 from datetime import date as datedate, datetime, timedelta
 from tempfile import TemporaryFile
@@ -1229,8 +1230,8 @@ class BaseRequest(object):
             if value and value.startswith('!') and '?' in value:
                 sig, msg = map(tob, value[1:].split('?', 1))
                 hash = hmac.new(tob(secret), msg, digestmod=digestmod).digest()
-                if _lscmp(sig, base64.b64encode(hash)):
-                    dst = pickle.loads(base64.b64decode(msg))
+                if _lscmp(sig, b64encode(hash)):
+                    dst = pickle.loads(b64decode(msg))
                     if dst and dst[0] == key:
                         return dst[1]
             return default
@@ -1866,8 +1867,8 @@ class BaseResponse(object):
                 depr(0, 13, "Pickling of arbitrary objects into cookies is "
                             "deprecated.", "Only store strings in cookies. "
                             "JSON strings are fine, too.")
-            encoded = base64.b64encode(pickle.dumps([name, value], -1))
-            sig = base64.b64encode(hmac.new(tob(secret), encoded,
+            encoded = b64encode(pickle.dumps([name, value], -1))
+            sig = b64encode(hmac.new(tob(secret), encoded,
                                             digestmod=digestmod).digest())
             value = touni(tob('!') + sig + tob('?') + encoded)
         elif not isinstance(value, basestring):
@@ -2989,7 +2990,7 @@ def parse_auth(header):
     try:
         method, data = header.split(None, 1)
         if method.lower() == 'basic':
-            user, pwd = touni(base64.b64decode(tob(data))).split(':', 1)
+            user, pwd = touni(b64decode(tob(data))).split(':', 1)
             return user, pwd
     except (KeyError, ValueError):
         return None
@@ -3074,8 +3075,8 @@ def cookie_encode(data, key, digestmod=None):
     depr(0, 13, "cookie_encode() will be removed soon.",
                 "Do not use this API directly.")
     digestmod = digestmod or hashlib.sha256
-    msg = base64.b64encode(pickle.dumps(data, -1))
-    sig = base64.b64encode(hmac.new(tob(key), msg, digestmod=digestmod).digest())
+    msg = b64encode(pickle.dumps(data, -1))
+    sig = b64encode(hmac.new(tob(key), msg, digestmod=digestmod).digest())
     return tob('!') + sig + tob('?') + msg
 
 
@@ -3088,8 +3089,8 @@ def cookie_decode(data, key, digestmod=None):
         sig, msg = data.split(tob('?'), 1)
         digestmod = digestmod or hashlib.sha256
         hashed = hmac.new(tob(key), msg, digestmod=digestmod).digest()
-        if _lscmp(sig[1:], base64.b64encode(hashed)):
-            return pickle.loads(base64.b64decode(msg))
+        if _lscmp(sig[1:], b64encode(hashed)):
+            return pickle.loads(b64decode(msg))
     return None
 
 
