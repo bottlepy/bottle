@@ -20,9 +20,10 @@ class TestRouter(unittest.TestCase):
         return self.r.match(env)
 
     def assertMatches(self, rule, url, method='GET', **args):
-        self.add(rule, rule, method)
+        route = bottle.Route(bottle.app(), rule, method, lambda: None)
+        self.add(rule, route, method)
         target, urlargs = self.match(url, method)
-        self.assertEqual(rule, target)
+        self.assertEqual(route, target)
         self.assertEqual(args, urlargs)
 
     def testBasic(self):
