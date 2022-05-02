@@ -2843,8 +2843,7 @@ def static_file(filename, root,
                 mimetype=True,
                 download=False,
                 charset='UTF-8',
-                etag=None,
-                headers=None):
+                etag=None):
     """ Open a file in a safe way and return an instance of :exc:`HTTPResponse`
         that can be sent back to the client.
 
@@ -2861,7 +2860,7 @@ def static_file(filename, root,
             (default: UTF-8)
         :param etag: Provide a pre-computed ETag header. If set to ``False``,
             ETag handling is disabled. (default: auto-generate ETag header)
-        :param headers: Additional headers dict to add to the response.
+        
 
         While checking user input is always a good idea, this function provides
         additional protection against malicious ``filename`` parameters from
@@ -2879,7 +2878,7 @@ def static_file(filename, root,
 
     root = os.path.join(os.path.abspath(root), '')
     filename = os.path.abspath(os.path.join(root, filename.strip('/\\')))
-    headers = headers.copy() if headers else {}
+    headers = response.headers
 
     if not filename.startswith(root):
         return HTTPError(403, "Access denied.")
