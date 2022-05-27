@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 import unittest
 import sys, os
-import imp
+import bottle
 
 class TestImportHooks(unittest.TestCase):
 
     def make_module(self, name, **args):
-        mod = sys.modules.setdefault(name, imp.new_module(name))
+        mod = sys.modules.setdefault(name, bottle.new_module(name))
         mod.__file__ = '<virtual %s>' % name
         mod.__dict__.update(**args)
         return mod
