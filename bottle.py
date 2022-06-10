@@ -41,7 +41,6 @@ import base64, cgi, email.utils, functools, hmac, itertools, mimetypes,\
 from datetime import date as datedate, datetime, timedelta
 from tempfile import TemporaryFile
 from traceback import format_exc, print_exc
-from inspect import getargspec
 from unicodedata import normalize
 
 
@@ -93,6 +92,7 @@ if py3k:
     import pickle
     from io import BytesIO
     from configparser import ConfigParser
+    from inspect import getfullargspec as getargspec
     basestring = str
     unicode = str
     json_loads = lambda s: json_lds(touni(s))
@@ -110,6 +110,7 @@ else: # 2.x
     from imp import new_module
     from StringIO import StringIO as BytesIO
     from ConfigParser import SafeConfigParser as ConfigParser
+    from inspect import getargspec
     if py25:
         msg  = "Python 2.5 support may be dropped in future versions of Bottle."
         warnings.warn(msg, DeprecationWarning)
