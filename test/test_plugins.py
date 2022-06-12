@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import unittest
-import tools
-
+from . import tools
 
 class MyPlugin(object):
     def __init__(self):

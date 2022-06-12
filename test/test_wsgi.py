@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 import unittest
 import bottle
-from tools import ServerTestBase
+from .tools import ServerTestBase
 from bottle import tob
+import os.path
 
 class TestWsgi(ServerTestBase):
     ''' Tests for WSGI functionality, routing and output casting (decorators) '''
@@ -274,7 +275,7 @@ class TestDecorators(ServerTestBase):
     def test_view(self):
         """ WSGI: Test view-decorator (should override autojson) """
         @bottle.route('/tpl')
-        @bottle.view('stpl_t2main')
+        @bottle.view('stpl_t2main', template_lookup=[os.path.join(os.path.dirname(__file__), 'views')])
         def test():
             return dict(content='1234')
         result = '+base+\n+main+\n!1234!\n+include+\n-main-\n+include+\n-base-\n'

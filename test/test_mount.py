@@ -1,5 +1,5 @@
 import bottle
-from tools import ServerTestBase
+from .tools import ServerTestBase
 from bottle import response
 
 class TestAppMounting(ServerTestBase):

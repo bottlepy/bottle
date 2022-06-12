@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import unittest
 from bottle import Jinja2Template, jinja2_template, jinja2_view, touni
-from tools import warn
+from .tools import warn
 
 
 class TestJinja2Template(unittest.TestCase):

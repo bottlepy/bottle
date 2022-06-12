@@ -3,7 +3,7 @@ VERSION = $(shell python setup.py --version)
 ALLFILES = $(shell echo bottle.py test/*.py test/views/*.tpl)
 VENV = build/venv
 
-.PHONY: release coverage install docs test test_all test_25 test_26 test_27 test_31 test_32 test_33 2to3 clean
+.PHONY: release coverage install docs test 2to3 clean
 
 release: clean venv
 	$(VENV)/bin/python3 setup.py --version | egrep -q -v '[a-zA-Z]' # Fail on dev/rc versions
@@ -25,12 +25,12 @@ $(VENV)/.installed: Makefile
 coverage:
 	-mkdir build/
 	coverage erase
-	COVERAGE_PROCESS_START=.coveragerc test/testall.py
+	COVERAGE_PROCESS_START=.coveragerc python -m unittest discover
 	coverage combine
 	coverage report
 	coverage html
 
-push: test_all
+push: test
 	git push origin HEAD
 
 install:
@@ -40,30 +40,7 @@ docs:
 	sphinx-build -b html -d build/docs/doctrees docs build/docs/html
 
 test:
-	python test/testall.py
-
-test_all: test_25 test_26 test_27 test_31 test_32 test_33 test_34
-
-test_25:
-	python2.5 test/testall.py
-
-test_26:
-	python2.6 test/testall.py
-
-test_27:
-	python2.7 test/testall.py
-
-test_31:
-	python3.1 test/testall.py
-
-test_32:
-	python3.2 test/testall.py
-
-test_33:
-	python3.3 test/testall.py
-
-test_34:
-	python3.4 test/testall.py
+	python -m unittest discover
 
 clean:
 	rm -rf build/ dist/ MANIFEST 2>/dev/null || true

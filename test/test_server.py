@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 import unittest
 import time
-from tools import tob
+from .tools import tob
 import sys
 import os
 import signal
 import socket
 from subprocess import Popen, PIPE
-import tools
+from . import tools
 from bottle import _e
 
 try:
