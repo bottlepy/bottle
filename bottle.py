@@ -2068,10 +2068,15 @@ class _ImportRedirect(object):
         })
         sys.meta_path.append(self)
 
+    def find_spec(self, fullname, path, target=None):
+        if '.' not in fullname: return
+        if fullname.rsplit('.', 1)[0] != self.name: return
+        from importlib.util import spec_from_loader
+        return spec_from_loader(fullname, self)
+
     def find_module(self, fullname, path=None):
         if '.' not in fullname: return
-        packname = fullname.rsplit('.', 1)[0]
-        if packname != self.name: return
+        if fullname.rsplit('.', 1)[0] != self.name: return
         return self
 
     def load_module(self, fullname):
