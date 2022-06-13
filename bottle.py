@@ -2938,7 +2938,11 @@ def static_file(filename, root,
         if ims is not None and ims >= int(stats.st_mtime):
             return HTTPResponse(status=304, **headers)
 
-    body = '' if request.method == 'HEAD' else open(filename, 'rb')
+    if request.method == 'HEAD':
+        body = '' 
+    else:
+        with open(filename, 'rb') as file_data:
+            body = file_data.read()
 
     headers["Accept-Ranges"] = "bytes"
     range_header = getenv('HTTP_RANGE')
