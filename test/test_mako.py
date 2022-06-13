@@ -1,6 +1,9 @@
 import unittest
 from .tools import warn
 from bottle import MakoTemplate, mako_template, mako_view, touni
+import os
+
+views_dir = os.path.join(os.path.dirname(__file__), 'views')
 
 class TestMakoTemplate(unittest.TestCase):
     def test_string(self):
@@ -10,12 +13,12 @@ class TestMakoTemplate(unittest.TestCase):
 
     def test_file(self):
         """ Templates: Mako file"""
-        t = MakoTemplate(name='./views/mako_simple.tpl').render(var='var')
+        t = MakoTemplate(name=views_dir + os.sep + 'mako_simple.tpl').render(var='var')
         self.assertEqual('start var end\n', t)
 
     def test_name(self):
         """ Templates: Mako lookup by name """
-        t = MakoTemplate(name='mako_simple', lookup=['./views/']).render(var='var')
+        t = MakoTemplate(name='mako_simple', lookup=[views_dir]).render(var='var')
         self.assertEqual('start var end\n', t)
 
     def test_notfound(self):
@@ -28,11 +31,11 @@ class TestMakoTemplate(unittest.TestCase):
 
     def test_inherit(self):
         """ Templates: Mako lookup and inherience """
-        t = MakoTemplate(name='mako_inherit', lookup=['./views/']).render(var='v')
+        t = MakoTemplate(name='mako_inherit', lookup=[views_dir]).render(var='v')
         self.assertEqual('o\ncvc\no\n', t)
-        t = MakoTemplate('<%inherit file="mako_base.tpl"/>\nc${var}c\n', lookup=['./views/']).render(var='v')
+        t = MakoTemplate('<%inherit file="mako_base.tpl"/>\nc${var}c\n', lookup=[views_dir]).render(var='v')
         self.assertEqual('o\ncvc\no\n', t)
-        t = MakoTemplate('<%inherit file="views/mako_base.tpl"/>\nc${var}c\n', lookup=['./']).render(var='v')
+        t = MakoTemplate('<%inherit file="views/mako_base.tpl"/>\nc${var}c\n', lookup=[os.path.dirname(views_dir)]).render(var='v')
         self.assertEqual('o\ncvc\no\n', t)
 
     def test_template_shortcut(self):

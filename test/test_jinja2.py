@@ -2,7 +2,9 @@
 import unittest
 from bottle import Jinja2Template, jinja2_template, jinja2_view, touni
 from .tools import warn
+import os
 
+views_dir = os.path.join(os.path.dirname(__file__), 'views')
 
 class TestJinja2Template(unittest.TestCase):
 
@@ -13,12 +15,12 @@ class TestJinja2Template(unittest.TestCase):
 
     def test_file(self):
         """ Templates: Jinja2 file"""
-        t = Jinja2Template(name='./views/jinja2_simple.tpl').render(var='var')
+        t = Jinja2Template(name=views_dir + os.sep + 'jinja2_simple.tpl').render(var='var')
         self.assertEqual('start var end', ''.join(t))
 
     def test_name(self):
         """ Templates: Jinja2 lookup by name """
-        t = Jinja2Template(name='jinja2_simple', lookup=['./views/']).render(var='var')
+        t = Jinja2Template(name='jinja2_simple', lookup=[views_dir]).render(var='var')
         self.assertEqual('start var end', ''.join(t))
 
     def test_notfound(self):
@@ -31,7 +33,7 @@ class TestJinja2Template(unittest.TestCase):
 
     def test_inherit(self):
         """ Templates: Jinja2 lookup and inherience """
-        t = Jinja2Template(name='jinja2_inherit', lookup=['./views/']).render()
+        t = Jinja2Template(name='jinja2_inherit', lookup=[views_dir]).render()
         self.assertEqual('begin abc end', ''.join(t))
 
     def test_custom_filters(self):
