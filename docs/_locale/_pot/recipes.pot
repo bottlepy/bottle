@@ -194,7 +194,7 @@ msgid "Do not cache small files because a disk seek would take longer than on-th
 msgstr ""
 
 #: ../../recipes.rst:232
-msgid "Because of these requirements, it is the recommendation of the Bottle project that Gzip compression is best handled by the WSGI server Bottle runs on top of. WSGI servers such as cherrypy_ provide a GzipFilter_ middleware that can be used to accomplish this."
+msgid "Because of these requirements, it is the recommendation of the Bottle project that Gzip compression is best handled by the WSGI server Bottle runs on top of. WSGI servers such as cheroot_ provide a GzipFilter_ middleware that can be used to accomplish this."
 msgstr ""
 
 #: ../../recipes.rst:236

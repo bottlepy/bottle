@@ -8,8 +8,7 @@
 .. _pylons: http://pylonshq.com/
 .. _gevent: http://www.gevent.org/
 .. _compression: https://github.com/bottlepy/bottle/issues/92
-.. _GzipFilter: http://www.cherrypy.org/wiki/GzipFilter
-.. _cherrypy: http://www.cherrypy.org
+.. _cheroot: http://www.cherrypy.org
 .. _heroku: http://heroku.com
 
 Recipes
@@ -229,7 +228,7 @@ Supporting Gzip compression is not a straightforward proposition, due to a numbe
 * Make sure the cache does not get to big.
 * Do not cache small files because a disk seek would take longer than on-the-fly compression.
 
-Because of these requirements, it is the recommendation of the Bottle project that Gzip compression is best handled by the WSGI server Bottle runs on top of. WSGI servers such as cherrypy_ provide a GzipFilter_ middleware that can be used to accomplish this.
+Because of these requirements, it is the recommendation of the Bottle project that Gzip compression is best handled by the WSGI server Bottle runs on top of. WSGI servers such as cheroot_ provide a GzipFilter_ middleware that can be used to accomplish this.
 
 
 Using the hooks plugin

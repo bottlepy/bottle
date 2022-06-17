@@ -1,7 +1,7 @@
 .. _flup: http://trac.saddi.com/flup
 .. _gae: http://code.google.com/appengine/docs/python/overview.html
 .. _wsgiref: http://docs.python.org/library/wsgiref.html
-.. _cherrypy: http://www.cherrypy.org/
+.. _cheroot: https://cheroot.rtfd.io/
 .. _paste: http://pythonpaste.org/
 .. _gunicorn: http://pypi.python.org/pypi/gunicorn
 .. _tornado: http://www.tornadoweb.org/
@@ -51,7 +51,7 @@ The built-in default server is based on `wsgiref WSGIServer <http://docs.python.
 Switching the Server Backend
 ================================================================================
 
-The easiest way to increase performance is to install a multi-threaded server library like paste_ or cherrypy_ and tell Bottle to use that instead of the single-threaded default server::
+The easiest way to increase performance is to install a multi-threaded server library like paste_ or cheroot_ and tell Bottle to use that instead of the single-threaded default server::
 
     run(server='paste')
 
@@ -64,7 +64,7 @@ cgi                     Run as CGI script
 flup      flup_         Run as FastCGI process
 gae       gae_          Helper for Google App Engine deployments
 wsgiref   wsgiref_      Single-threaded default server
-cherrypy  cherrypy_     Multi-threaded and very stable
+cheroot   cheroot_      Multi-threaded and very stable
 paste     paste_        Multi-threaded, stable, tried and tested
 waitress  waitress_     Multi-threaded, poweres Pyramid
 gunicorn  gunicorn_     Pre-forked, partly written in C

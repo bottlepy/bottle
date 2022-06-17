@@ -53,7 +53,7 @@ msgstr "**Utilitários:** Conveniente acesso a dados de formulários, upload de 
 #: ../../index.rst:28
 msgid ""
 "**Server:** Built-in HTTP development server and support for paste_, "
-"bjoern_, gae_, cherrypy_ or any other WSGI_ capable HTTP server."
+"bjoern_, gae_, cheroot_ or any other WSGI_ capable HTTP server."
 msgstr ""
 
 #: ../../index.rst:31

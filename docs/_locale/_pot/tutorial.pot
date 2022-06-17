@@ -890,7 +890,7 @@ msgid "Bottle runs on the built-in `wsgiref WSGIServer <http://docs.python.org/l
 msgstr ""
 
 #: ../../tutorial.rst:1036
-msgid "The easiest way to increase performance is to install a multi-threaded server library like paste_ or cherrypy_ and tell Bottle to use that instead of the single-threaded server::"
+msgid "The easiest way to increase performance is to install a multi-threaded server library like paste_ or cheroot_ and tell Bottle to use that instead of the single-threaded server::"
 msgstr ""
 
 #: ../../tutorial.rst:1040

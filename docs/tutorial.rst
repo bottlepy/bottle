@@ -2,7 +2,7 @@
 
 .. _Apache Server:
 .. _Apache: http://www.apache.org/
-.. _cherrypy: http://www.cherrypy.org/
+.. _cheroot: https://cheroot.rtfd.io/
 .. _decorator: http://docs.python.org/glossary.html#term-decorator
 .. _flup: http://trac.saddi.com/flup
 .. _http_code: http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
@@ -1033,7 +1033,7 @@ Deployment
 
 Bottle runs on the built-in `wsgiref WSGIServer <http://docs.python.org/library/wsgiref.html#module-wsgiref.simple_server>`_  by default. This non-threading HTTP server is perfectly fine for development, but may become a performance bottleneck when server load increases.
 
-The easiest way to increase performance is to install a multi-threaded server library like paste_ or cherrypy_ and tell Bottle to use that instead of the single-threaded server::
+The easiest way to increase performance is to install a multi-threaded server library like paste_ or cheroot_ and tell Bottle to use that instead of the single-threaded server::
 
     bottle.run(server='paste')
 
