@@ -2,7 +2,7 @@
 .. _gae: http://code.google.com/appengine/docs/python/overview.html
 .. _wsgiref: http://docs.python.org/library/wsgiref.html
 .. _cherrypy: http://www.cherrypy.org/
-.. _paste: http://pythonpaste.org/
+.. _paste: http://pythonpaste.readthedocs.io/
 .. _gunicorn: http://pypi.python.org/pypi/gunicorn
 .. _tornado: http://www.tornadoweb.org/
 .. _twisted: http://twistedmatrix.com/
