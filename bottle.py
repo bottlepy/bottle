@@ -74,7 +74,7 @@ import base64, calendar, cgi, email.utils, functools, hmac, itertools,\
 
 from types import FunctionType
 from datetime import date as datedate, datetime, timedelta
-from tempfile import TemporaryFile
+from tempfile import NamedTemporaryFile
 from traceback import format_exc, print_exc
 from unicodedata import normalize
 
@@ -257,6 +257,7 @@ class lazy_attribute(object):
         value = self.getter(cls)
         setattr(cls, self.__name__, value)
         return value
+
 
 ###############################################################################
 # Exceptions and Events #######################################################
@@ -1355,7 +1356,7 @@ class BaseRequest(object):
             body.write(part)
             body_size += len(part)
             if not is_temp_file and body_size > self.MEMFILE_MAX:
-                body, tmp = TemporaryFile(mode='w+b'), body
+                body, tmp = NamedTemporaryFile(mode='w+b'), body
                 body.write(tmp.getvalue())
                 del tmp
                 is_temp_file = True
