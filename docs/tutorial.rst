@@ -2,7 +2,7 @@
 
 .. _Apache Server:
 .. _Apache: http://www.apache.org/
-.. _cherrypy: http://www.cherrypy.org/
+.. _cherrypy: https://cherrypy.dev/
 .. _decorator: http://docs.python.org/glossary.html#term-decorator
 .. _flup: http://trac.saddi.com/flup
 .. _http_code: http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
@@ -11,7 +11,7 @@
 .. _lighttpd: http://www.lighttpd.net/
 .. _mako: http://www.makotemplates.org/
 .. _mod_wsgi: http://code.google.com/p/modwsgi/
-.. _Paste: http://pythonpaste.org/
+.. _Paste: https://pythonpaste.readthedocs.io
 .. _Pound: http://www.apsis.ch/pound/
 .. _WSGI_Specification: http://www.wsgi.org/
 .. _issue: http://github.com/bottlepy/bottle/issues
