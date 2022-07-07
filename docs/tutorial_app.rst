@@ -6,9 +6,9 @@
 .. _`decorator statement`: http://docs.python.org/glossary.html#term-decorator
 .. _`Python DB API`: http://www.python.org/dev/peps/pep-0249/
 .. _`WSGI reference Server`: http://docs.python.org/library/wsgiref.html#module-wsgiref.simple_server
-.. _Cherrypy: http://www.cherrypy.org/
+.. _Cherrypy: https://cherrypy.dev/
 .. _Flup: https://www.saddi.com/software/flup/
-.. _Paste: http://pythonpaste.org/
+.. _Paste: https://pythonpaste.readthedocs.io
 .. _Apache: http://www.apache.org
 .. _`Bottle documentation`: http://bottlepy.org/docs/dev/tutorial.html
 .. _`mod_wsgi`: http://code.google.com/p/modwsgi/
