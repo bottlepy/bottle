@@ -1994,6 +1994,7 @@ class JSONPlugin(object):
         dumps = self.json_dumps
         if not self.json_dumps: return callback
 
+        @functools.wraps(callback)
         def wrapper(*a, **ka):
             try:
                 rv = callback(*a, **ka)
