@@ -232,29 +232,35 @@ Supporting Gzip compression is not a straightforward proposition, due to a numbe
 Because of these requirements, it is the recommendation of the Bottle project that Gzip compression is best handled by the WSGI server Bottle runs on top of. WSGI servers such as cherrypy_ provide a GzipFilter_ middleware that can be used to accomplish this.
 
 
-Using the hooks plugin
-----------------------
+Using hooks to handle CORS
+--------------------------
 
-For example, if you want to allow Cross-Origin Resource Sharing for
-the content returned by all of your URL, you can use the hook
-decorator and setup a callback function::
+Hooks are useful to unconditionally do something before or after each
+request. For example, if you want to allow Cross-Origin requests for your
+entire application, instead of writing a :doc:`plugin <plugin>` you can
+use hooks to add the appropiate headers::
 
-    from bottle import hook, response, route
+    from bottle import hook, response, HTTPResponse
+
+    cors_headers = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+        # 'Access-Control-Allow-Headers': 'X-Token, ...',
+        # 'Access-Control-Expose-Headers': 'X-My-Custom-Header, ...',
+        # 'Access-Control-Max-Age': '86400',
+        # 'Access-Control-Allow-Credentials': 'true',
+    }
+
+    @hook('before_request')
+    def handle_options():
+        if request.method == 'OPTIONS':
+            # Bypass request routing and immediately return a response
+            raise HTTPResponse(headers=cors_headers)
 
     @hook('after_request')
     def enable_cors():
-        response.headers['Access-Control-Allow-Origin'] = '*'
-
-    @route('/foo')
-    def say_foo():
-        return 'foo!'
-
-    @route('/bar')
-    def say_bar():
-        return {'type': 'friendly', 'content': 'Hi!'}
-
-You can also use the ``before_request`` to take an action before
-every function gets called.
+        for key, value in cors_headers.items():
+           response.set_header(key, value)
 
 
 Using Bottle with Heroku
