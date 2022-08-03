@@ -92,7 +92,12 @@ if py3k:
     import pickle
     from io import BytesIO
     from configparser import ConfigParser
-    from inspect import getfullargspec as getargspec
+    from inspect import getfullargspec
+    def getargspec(func):
+        spec = getfullargspec(func)
+        kwargs = makelist(spec[0]) + makelist(spec.kwonlyargs)
+        return kwargs, spec[1], spec[2], spec[3]
+
     basestring = str
     unicode = str
     json_loads = lambda s: json_lds(touni(s))
