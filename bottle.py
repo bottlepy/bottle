@@ -3347,7 +3347,7 @@ class MeinheldServer(ServerAdapter):
 
 
 class FapwsServer(ServerAdapter):
-    """ Extremely fast webserver using libev. See http://www.fapws.org/ """
+    """ Extremely fast webserver using libev. See https://github.com/william-os4y/fapws3 """
 
     def run(self, handler):  # pragma: no cover
         depr(0, 13, "fapws3 is not maintained and support will be dropped.")
