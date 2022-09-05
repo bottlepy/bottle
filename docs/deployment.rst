@@ -5,7 +5,7 @@
 .. _paste: http://pythonpaste.org/
 .. _rocket: http://pypi.python.org/pypi/rocket
 .. _gunicorn: http://pypi.python.org/pypi/gunicorn
-.. _fapws3: http://www.fapws.org/
+.. _fapws3: https://github.com/william-os4y/fapws3
 .. _tornado: http://www.tornadoweb.org/
 .. _twisted: http://twistedmatrix.com/
 .. _diesel: http://dieselweb.org/
