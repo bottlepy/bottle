@@ -55,8 +55,8 @@ tx:
 	$(MAKE) tx-push
 	$(MAKE) tx-pull
 
-test:
-	pytest
+test: venv
+	. $(VENV)/bin/activate; pytest
 
 clean:
 	rm -rf $(VENV) build/ dist/ MANIFEST .coverage .name htmlcov  2>/dev/null || true
