@@ -19,13 +19,13 @@ $(VENV)/.installed: Makefile
 	python3 -mvenv $(VENV)
 	$(VENV)/bin/python3 -mensurepip
 	$(VENV)/bin/pip install -U pip
-	$(VENV)/bin/pip install -U setuptools wheel twine coverage
+	$(VENV)/bin/pip install -U setuptools wheel twine pytest coverage
 	$(VENV)/bin/pip install -U sphinx sphinx-intl transifex-client
 	touch $(VENV)/.installed
 
 coverage: venv
 	$(VENV)/bin/coverage erase
-	$(VENV)/bin/coverage run -m unittest discover
+	$(VENV)/bin/coverage run -m pytest
 	$(VENV)/bin/coverage combine
 	$(VENV)/bin/coverage report
 	$(VENV)/bin/coverage html
@@ -56,7 +56,7 @@ tx:
 	$(MAKE) tx-pull
 
 test:
-	python3 -m unittest discover
+	pytest
 
 clean:
 	rm -rf $(VENV) build/ dist/ MANIFEST .coverage .name htmlcov  2>/dev/null || true
