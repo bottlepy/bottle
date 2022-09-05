@@ -18,11 +18,11 @@
 .. _mako: http://www.makotemplates.org/
 .. _cheetah: http://www.cheetahtemplate.org/
 .. _jinja2: http://jinja.pocoo.org/
-.. _paste: http://pythonpaste.org/
+.. _paste: https://pythonpaste.readthedocs.io/
 .. _fapws3: https://github.com/william-os4y/fapws3
 .. _bjoern: https://github.com/jonashaag/bjoern
-.. _cherrypy: http://www.cherrypy.org/
-.. _WSGI: http://www.wsgi.org/
+.. _cherrypy: https://docs.cherrypy.dev/
+.. _WSGI: https://wsgi.readthedocs.io/
 .. _Python: http://python.org/
 
 ============================
