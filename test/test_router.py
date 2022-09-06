@@ -64,9 +64,9 @@ class TestRouter(unittest.TestCase):
 
     def testFloatFilter(self):
         self.assertMatches('/object/<id:float>', '/object/1', id=1)
-        self.assertMatches('/object/<id:float>', '/object/1.1', id=1.1)
-        self.assertMatches('/object/<id:float>', '/object/.1', id=0.1)
-        self.assertMatches('/object/<id:float>', '/object/1.', id=1)
+        self.assertMatches('/object2/<id:float>', '/object2/1.1', id=1.1)
+        self.assertMatches('/object3/<id:float>', '/object3/.1', id=0.1)
+        self.assertMatches('/object4/<id:float>', '/object4/1.', id=1)
         self.assertRaises(bottle.HTTPError, self.match, '/object/abc')
         self.assertRaises(bottle.HTTPError, self.match, '/object/')
         self.assertRaises(bottle.HTTPError, self.match, '/object/.')
@@ -82,7 +82,7 @@ class TestRouter(unittest.TestCase):
     def testParentheses(self):
         self.assertMatches('/func(:param)', '/func(foo)', param='foo')
         self.assertMatches('/func2(:param#(foo|bar)#)', '/func2(foo)', param='foo')
-        self.assertMatches('/func2(:param#(foo|bar)#)', '/func2(bar)', param='bar')
+        self.assertMatches('/func3(:param#(foo|bar)#)', '/func3(bar)', param='bar')
         self.assertRaises(bottle.HTTPError, self.match, '/func2(baz)')
 
     def testErrorInPattern(self):
