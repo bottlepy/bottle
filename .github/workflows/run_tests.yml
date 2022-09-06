@@ -16,5 +16,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: .github/workflows/install-deps.sh
+    - name: Run flake8
+      run: flake8 bottle.py
     - name: Run tests
       run: pytest
