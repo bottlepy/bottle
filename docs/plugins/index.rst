@@ -79,6 +79,9 @@ Have a look at :ref:`plugins` for general questions about plugins (installation,
 
 `Bottle-tools <https://github.com/theSage21/bottle-tools>`_
 	Decorators that auto-supply function arguments using POST/query string data.
+	
+`bottle-postgresql <https://github.com/bernardocouto/bottle-postgresql>`_
+	Bottle PostgreSQL is a simple adapter for PostgreSQL with connection pooling.
 
 
 Plugins listed here are not part of Bottle or the Bottle project, but developed and maintained by third parties.
