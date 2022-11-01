@@ -3489,7 +3489,7 @@ class StplParser(object):
     # Match the start tokens of code areas in a template
     _re_split = '(?m)^[ \t]*(\\\\?)((%(line_start)s)|(%(block_start)s))(%%?)'
     # Match inline statements (may contain python strings)
-    _re_inl = '(?m)%%(inline_start)s((?:%s|[^\'"\n]*?)+)%%(inline_end)s' % _re_inl
+    _re_inl = '(?m)%%(inline_start)s((?:%s|[^\'"\n])*?)%%(inline_end)s' % _re_inl
     _re_tok = '(?m)' + _re_tok
 
     default_syntax = '<% %> % {{ }}'
