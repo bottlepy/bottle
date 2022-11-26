@@ -2826,7 +2826,8 @@ def _rangeiter(fp, offset, limit, bufsize=1024 * 1024):
         yield part
 
 
-def static_file(filename, root,
+def static_file(filename,
+                root=None,
                 mimetype=True,
                 download=False,
                 charset='UTF-8',
@@ -2863,8 +2864,11 @@ def static_file(filename, root,
         check or continue partial downloads) are also handled automatically.
 
     """
+    if not( root ):
+        root = STATICS_PATH
+    else:
+        root = os.path.join(os.path.abspath(root), '')
 
-    root = os.path.join(os.path.abspath(root), '')
     filename = os.path.abspath(os.path.join(root, filename.strip('/\\')))
     headers = headers.copy() if headers else {}
 
@@ -4282,6 +4286,7 @@ jinja2_view = functools.partial(view, template_adapter=Jinja2Template)
 
 TEMPLATE_PATH = ['./', './views/']
 TEMPLATES = {}
+STATICS_PATH = None
 DEBUG = False
 NORUN = False  # If set, run() does nothing. Used by load_app()
 
