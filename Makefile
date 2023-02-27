@@ -12,7 +12,7 @@ release: clean venv
 	git push origin HEAD                                # Fail on out-of-sync upstream
 	git push origin tag $(VERSION)                      # Fail on dublicate tag
 	$(VENV)/bin/python3 setup.py sdist bdist_wheel      # Build project
-	$(VENV)/bin/twine upload dist/$(VERSION)*           # Release to pypi
+	$(VENV)/bin/twine upload dist/bottle-$(VERSION)*    # Release to pypi
 
 venv: $(VENV)/.installed
 $(VENV)/.installed: Makefile
