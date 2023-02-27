@@ -1757,7 +1757,7 @@ class JSONPlugin(object):
         def wrapper(*a, **ka):
             try:
                 rv = callback(*a, **ka)
-            except HTTPError:
+            except HTTPResponse:
                 rv = _e()
 
             if isinstance(rv, dict):
