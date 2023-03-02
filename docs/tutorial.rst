@@ -56,10 +56,9 @@ Or, if virtualenv is not installed on your system:
 
 .. code-block:: bash
 
-    $ wget https://raw.github.com/pypa/virtualenv/master/virtualenv.py
-    $ python virtualenv.py develop    # Create virtual environment
-    $ source develop/bin/activate     # Change default python to virtual one
-    (develop)$ pip install -U bottle  # Install bottle to virtual environment
+    $ python -m venv develop            # Create virtual environment
+    $ source develop/Scripts/activate   # Change default python to virtual one
+    (develop)$ pip install -U bottle    # Install bottle to virtual environment
 
 
 
