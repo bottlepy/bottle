@@ -257,7 +257,7 @@ class TestRouteDecorator(ServerTestBase):
     def test_name(self):
         @bottle.route(name='foo')
         def test(x=5): return 'ok'
-        self.assertEquals('/test/6', bottle.url('foo', x=6))
+        self.assertEqual('/test/6', bottle.url('foo', x=6))
 
     def test_callback(self):
         def test(x=5): return str(x)
