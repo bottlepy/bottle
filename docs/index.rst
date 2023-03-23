@@ -7,7 +7,7 @@
 .. _paste: http://pythonpaste.org/
 .. _bjoern: https://github.com/jonashaag/bjoern
 .. _flup: http://trac.saddi.com/flup
-.. _cherrypy: http://www.cherrypy.org/
+.. _cherrypy: http://www.cherrypy.dev/
 .. _WSGI: http://www.wsgi.org/
 .. _Python: http://python.org/
 .. _testing: https://github.com/bottlepy/bottle/raw/master/bottle.py
