@@ -166,17 +166,17 @@ def multipart_environ(fields, files):
     boundary = '--' + boundary
     body = ''
     for name, value in fields:
-        body += boundary + '\n'
-        body += 'Content-Disposition: form-data; name="%s"\n\n' % name
-        body += value + '\n'
+        body += boundary + '\r\n'
+        body += 'Content-Disposition: form-data; name="%s"\r\n\r\n' % name
+        body += value + '\r\n'
     for name, filename, content in files:
         mimetype = str(mimetypes.guess_type(filename)[0]) or 'application/octet-stream'
-        body += boundary + '\n'
-        body += 'Content-Disposition: file; name="%s"; filename="%s"\n' % \
+        body += boundary + '\r\n'
+        body += 'Content-Disposition: file; name="%s"; filename="%s"\r\n' % \
              (name, filename)
-        body += 'Content-Type: %s\n\n' % mimetype
-        body += content + '\n'
-    body += boundary + '--\n'
+        body += 'Content-Type: %s\r\n\r\n' % mimetype
+        body += content + '\r\n'
+    body += boundary + '--\r\n'
     if isinstance(body, unicode):
         body = body.encode('utf8')
     env['CONTENT_LENGTH'] = str(len(body))
