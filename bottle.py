@@ -69,7 +69,7 @@ if __name__ == '__main__':
 # Imports and Python 2/3 unification ##########################################
 ###############################################################################
 
-import base64, calendar, cgi, email.utils, functools, hmac, itertools,\
+import base64, calendar, email.utils, functools, hmac, itertools,\
        mimetypes, os, re, tempfile, threading, time, warnings, weakref, hashlib
 
 from types import FunctionType
@@ -1389,23 +1389,56 @@ class BaseRequest(object):
                 post[key] = value
             return post
 
-        safe_env = {'QUERY_STRING': ''}  # Build a safe environment for cgi
-        for key in ('REQUEST_METHOD', 'CONTENT_TYPE', 'CONTENT_LENGTH'):
-            if key in self.environ: safe_env[key] = self.environ[key]
-        args = dict(fp=self.body, environ=safe_env, keep_blank_values=True)
+        try:
+            import cgi
 
+            safe_env = {'QUERY_STRING': ''}  # Build a safe environment for cgi
+            for key in ('REQUEST_METHOD', 'CONTENT_TYPE', 'CONTENT_LENGTH'):
+                if key in self.environ: safe_env[key] = self.environ[key]
+            args = dict(fp=self.body, environ=safe_env, keep_blank_values=True)
+
+            if py3k:
+                args['encoding'] = 'utf8'
+                post.recode_unicode = False
+            data = cgi.FieldStorage(**args)
+            self['_cgi.FieldStorage'] = data  #http://bugs.python.org/issue18394
+            data = data.list or []
+            for item in data:
+                if item.filename is None:
+                    post[item.name] = item.value
+                else:
+                    post[item.name] = FileUpload(item.file, item.name,
+                                                 item.filename, item.headers)
+            return post
+        except ImportError:
+            pass
+
+
+        import email.parser, io
+
+        parser = email.parser.FeedParser()
+        for key in ('Content-Type', 'Content-Length'):
+            k = key.upper().replace('-', '_')
+            if k not in self.environ:
+                continue
+            parser.feed("{}: {}\r\n".format(key, self.environ[k]))
+        parser.feed('\r\n')
+        parser.feed(self.body.getvalue().decode())
+        msg = parser.close()
         if py3k:
-            args['encoding'] = 'utf8'
             post.recode_unicode = False
-        data = cgi.FieldStorage(**args)
-        self['_cgi.FieldStorage'] = data  #http://bugs.python.org/issue18394
-        data = data.list or []
-        for item in data:
-            if item.filename is None:
-                post[item.name] = item.value
+        for item in list(msg.walk())[1:]:  # skip the multipart it self
+            filename = item.get_filename()
+            name = item.get_param('name', header='content-disposition')
+            if filename is None:
+                post[name] = item.get_payload()
             else:
-                post[item.name] = FileUpload(item.file, item.name,
-                                             item.filename, item.headers)
+                headers = HeaderDict()
+                for k, v in item.items():
+                    headers[k] = v
+                f = io.BytesIO(item.get_payload().encode())
+                post[name] = FileUpload(f, item.get('name'), filename,
+                                            headers)
         return post
 
     @property
