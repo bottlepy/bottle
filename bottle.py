@@ -2050,8 +2050,10 @@ class _ImportRedirect(object):
             '__loader__': self
         })
         sys.meta_path.append(self)
+        self.fullname = None
 
     def find_spec(self, fullname, path, target=None):
+        self.fullname = fullname
         if '.' not in fullname: return
         if fullname.rsplit('.', 1)[0] != self.name: return
         from importlib.util import spec_from_loader
@@ -2071,6 +2073,13 @@ class _ImportRedirect(object):
         setattr(self.module, modname, module)
         module.__loader__ = self
         return module
+
+    def create_module(self, spec):
+        if self.fullname:
+            return self.load_module(self.fullname)
+
+    def exec_module(self, module):
+        pass
 
 ###############################################################################
 # Common Utilities #############################################################
