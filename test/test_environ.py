@@ -349,7 +349,6 @@ class TestRequest(unittest.TestCase):
         self.assertEqual('value1', request.POST['field1'])
         self.assertTrue('field1' not in request.files)
         self.assertEqual('value1', request.forms['field1'])
-        print(request.forms.dict, request.forms.recode_unicode)
         self.assertEqual('万难', request.forms['field2'])
         self.assertEqual(touni('万难'), request.forms.field2)
         # Field (multi)

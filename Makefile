@@ -3,7 +3,7 @@ ALLFILES = $(shell echo bottle.py test/*.py test/views/*.tpl)
 VENV = build/venv
 TESTBUILD = build/python
 
-.PHONY: venv release coverage install docs test test_27 test_36 test_37 test_38 test_39 clean
+.PHONY: venv release coverage install docs test clean
 
 release: clean test_all venv
 	$(VENV)/bin/python3 setup.py --version | egrep -q -v '[a-zA-Z]' # Fail on dev/rc versions
