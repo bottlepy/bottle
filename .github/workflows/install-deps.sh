@@ -3,7 +3,7 @@ set -e
 set -x
 
 # Test utilities
-pip install -U pip pytest coverage
+pip install -U pip pytest coverage flake8
 
 # Test dependencies (Server back-ends and template engines)
 sudo apt-get install -y libev-dev

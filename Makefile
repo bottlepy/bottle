@@ -19,7 +19,7 @@ $(VENV)/.installed: Makefile
 	python3 -mvenv $(VENV)
 	$(VENV)/bin/python3 -mensurepip
 	$(VENV)/bin/pip install -U pip
-	$(VENV)/bin/pip install -U setuptools wheel twine pytest coverage
+	$(VENV)/bin/pip install -U setuptools wheel twine pytest coverage flake8
 	$(VENV)/bin/pip install -U sphinx sphinx-intl transifex-client
 	touch $(VENV)/.installed
 
@@ -57,6 +57,9 @@ tx:
 
 test: venv
 	. $(VENV)/bin/activate; pytest
+
+lint: venv
+	. $(VENV)/bin/activate; flake8 bottle.py
 
 clean:
 	rm -rf $(VENV) build/ dist/ MANIFEST .coverage .name htmlcov  2>/dev/null || true
