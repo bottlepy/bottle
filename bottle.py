@@ -2811,7 +2811,7 @@ def redirect(url, code=None):
     res = response.copy(cls=HTTPResponse)
     res.status = code
     res.body = ""
-    res.set_header('Location', urljoin(request.url, url))
+    res.set_header('Location', url)
     raise res
 
 
