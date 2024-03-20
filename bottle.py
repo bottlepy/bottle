@@ -959,6 +959,11 @@ class Bottle(object):
 
         return decorator(callback) if callback else decorator
 
+    def all_errors(self,handler):
+        """ Decorator: Register a new default handler for all HTTP errors"""
+
+        self.default_error_handler = handler
+
     def default_error_handler(self, res):
         return tob(template(ERROR_PAGE_TEMPLATE, e=res, template_settings=dict(name='__ERROR_PAGE_TEMPLATE')))
 
@@ -3191,6 +3196,7 @@ put       = make_default_app_wrapper('put')
 delete    = make_default_app_wrapper('delete')
 patch     = make_default_app_wrapper('patch')
 error     = make_default_app_wrapper('error')
+all_errors= make_default_app_wrapper('all_errors')
 mount     = make_default_app_wrapper('mount')
 hook      = make_default_app_wrapper('hook')
 install   = make_default_app_wrapper('install')
