@@ -1280,13 +1280,11 @@ class BaseRequest(object):
         ctype = self.environ.get('CONTENT_TYPE', '').lower().split(';')[0]
         if ctype in ('application/json', 'application/json-rpc'):
             b = self._get_body_string(self.MEMFILE_MAX)
-            if not b:
-                return None
-            try:
-                return json_loads(b)
-            except (ValueError, TypeError):
-                raise HTTPError(400, 'Invalid JSON')
-        return None
+            if b:
+                try:
+                    return json_loads(b)
+                except (ValueError, TypeError):
+                    raise HTTPError(400, 'Invalid JSON')
 
     def _iter_body(self, read, bufsize):
         maxread = max(0, self.content_length)
@@ -1502,7 +1500,6 @@ class BaseRequest(object):
         if basic: return basic
         ruser = self.environ.get('REMOTE_USER')
         if ruser: return (ruser, None)
-        return None
 
     @property
     def remote_route(self):
@@ -2969,7 +2966,7 @@ def parse_date(ims):
         ts = email.utils.parsedate_tz(ims)
         return calendar.timegm(ts[:8] + (0, )) - (ts[9] or 0)
     except (TypeError, ValueError, IndexError, OverflowError):
-        return None
+        pass
 
 
 def parse_auth(header):
@@ -2980,7 +2977,7 @@ def parse_auth(header):
             user, pwd = touni(base64.b64decode(tob(data))).split(':', 1)
             return user, pwd
     except (KeyError, ValueError):
-        return None
+        pass
 
 
 def parse_range_header(header, maxlen=0):
@@ -3078,7 +3075,6 @@ def cookie_decode(data, key, digestmod=None):
         hashed = hmac.new(tob(key), msg, digestmod=digestmod).digest()
         if _lscmp(sig[1:], base64.b64encode(hashed)):
             return pickle.loads(base64.b64decode(msg))
-    return None
 
 
 def cookie_is_encoded(data):
