@@ -1788,7 +1788,7 @@ class BaseResponse(object):
     expires = HeaderProperty(
         'Expires',
         reader=lambda x: datetime.utcfromtimestamp(parse_date(x)),
-        writer=lambda x: http_date(x))
+        writer=http_date)
 
     @property
     def charset(self, default='UTF-8'):
