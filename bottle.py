@@ -3994,7 +3994,8 @@ class SimpleTemplate(BaseTemplate):
             '_escape': self._escape,
             'get': env.get,
             'setdefault': env.setdefault,
-            'defined': env.__contains__
+            'defined': env.__contains__,
+            '__builtins__':__builtins__
         })
         exec(self.co, env)
         if env.get('_rebase'):
