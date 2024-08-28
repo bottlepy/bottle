@@ -7,14 +7,18 @@ jobs:
     strategy:
       max-parallel: 5
       matrix:
-        python-version: ['2.7', '3.6', '3.7', '3.8', '3.9', '3.10', '3.11', '3.12']
+        python-version:
+          - "2.7"
+          - "3.8"
+          - "3.9"
+          - "3.10"
+          - "3.11"
+          - "3.12"
+    container:
+      image: "python:${{ matrix.python-version }}"
     steps:
     - uses: actions/checkout@v2
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: .github/workflows/install-deps.sh
     - name: Run tests
-      run: pytest
+      run: pytest . -ra -q --cov=bottle --cov-report=term
