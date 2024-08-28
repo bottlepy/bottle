@@ -5,6 +5,7 @@
 *.mo
 ._*
 *.*~
+__pycache__
 
 dist/
 build/
@@ -18,5 +19,6 @@ htmlcov/
 .coverage
 .name
 .tox/
+.pytest_cache
 
 docs/_locale/_pot/.doctrees/
