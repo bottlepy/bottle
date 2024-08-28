@@ -26,7 +26,7 @@ class TestJinja2Template(unittest.TestCase):
 
     def test_notfound(self):
         """ Templates: Unavailable templates"""
-        self.assertRaises(Exception, Jinja2Template, name="abcdef")
+        self.assertRaises(Exception, Jinja2Template, name="abcdef", lookup=['./views/'])
 
     def test_error(self):
         """ Templates: Exceptions"""

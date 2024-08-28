@@ -3,6 +3,7 @@ import unittest
 
 import bottle
 from bottle import tob, touni
+from .tools import api
 
 
 class TestSignedCookies(unittest.TestCase):
@@ -44,3 +45,11 @@ class TestSignedCookiesWithPickle(TestSignedCookies):
     def setUp(self):
         super(TestSignedCookiesWithPickle, self).setUp()
         self.data = dict(a=5, b=touni('υηι¢σ∂є'), c=[1,2,3,4,tob('bytestring')])
+
+    @api("0.9", "0.13")
+    def testValid(self):
+        super(TestSignedCookiesWithPickle, self).testValid()
+
+    @api("0.9", "0.13")
+    def testWrongKey(self):
+        super(TestSignedCookiesWithPickle, self).testWrongKey()
