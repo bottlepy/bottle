@@ -1,7 +1,7 @@
 import bottle
 from .tools import ServerTestBase
 
-class TestError(Exception):
+class SomeError(Exception):
     pass
 
 class TestAppException(ServerTestBase):
@@ -14,17 +14,25 @@ class TestAppException(ServerTestBase):
     def test_memory_error(self):
         @bottle.route('/')
         def test(): raise MemoryError
-        self.assertRaises(MemoryError)
+        with self.assertRaises(MemoryError):
+            self.urlopen("/")
+
+    def test_system_Exit(self):
+        @bottle.route('/')
+        def test(): raise SystemExit
+        with self.assertRaises(SystemExit):
+            self.urlopen("/")
 
     def test_other_error(self):
         @bottle.route('/')
-        def test(): raise TestError
-        self.assertRaises(TestError)
+        def test(): raise SomeError
+        self.assertStatus(500, '/')
+        self.assertInBody('SomeError')
 
     def test_noncatched_error(self):
         @bottle.route('/')
-        def test(): raise TestError
+        def test(): raise SomeError
         bottle.request.environ['exc_info'] = None
         bottle.catchall = False
         self.assertStatus(500, '/')
-        self.assertInBody('TestError')
+        self.assertInBody('SomeError')
