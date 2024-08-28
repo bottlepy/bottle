@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import bottle
-from .tools import ServerTestBase
+from .tools import ServerTestBase, api
 from bottle import response
 
 class TestAppMounting(ServerTestBase):
@@ -44,6 +44,7 @@ class TestAppMounting(ServerTestBase):
         self.assertEqual(
             self.subapp.config['_mount.app'], self.app)
 
+    @api('0.9', '0.13')
     def test_no_slash_prefix(self):
         self.app.mount('/test', self.subapp)
         self.assertStatus(404, '/')
@@ -82,7 +83,7 @@ class TestAppMounting(ServerTestBase):
         def test_cookie():
             response.set_cookie('a', 'a')
             response.set_cookie('b', 'b')
-        self.app.mount('/test', self.subapp)
+        self.app.mount('/test/', self.subapp)
         c = self.urlopen('/test/cookie')['header']['Set-Cookie']
         self.assertEqual(['a=a', 'b=b'], list(sorted(c.split(', '))))
 
@@ -96,17 +97,17 @@ class TestAppMounting(ServerTestBase):
 
     def test_mount_json_bug(self):
         @self.subapp.route('/json')
-        def test_cookie():
+        def route():
             return {'a': 5}
-        self.app.mount('/test', self.subapp)
+        self.app.mount('/test/', self.subapp)
         self.assertHeader('Content-Type', 'application/json', '/test/json')
 
     def test_mount_get_url(self):
         @self.subapp.route('/test', name="test")
-        def test_cookie():
-            return self.subapp.get_url("test")
+        def route():
+            return bottle.url("test")
 
-        self.app.mount('/test', self.subapp)
+        self.app.mount('/test/', self.subapp)
         self.assertBody('/test/test', '/test/test')
 
 
@@ -115,7 +116,7 @@ class TestAppMerging(ServerTestBase):
         ServerTestBase.setUp(self)
         self.subapp = bottle.Bottle()
         @self.subapp.route('/')
-        @self.subapp.route('/test/:test')
+        @self.subapp.route('/test/<test>')
         def test(test='foo'):
             return test
 

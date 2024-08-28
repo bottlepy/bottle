@@ -8,6 +8,7 @@ import unittest
 import wsgiref
 import wsgiref.util
 import wsgiref.validate
+import warnings
 
 import mimetypes
 import uuid
@@ -44,23 +45,15 @@ class assertWarn(object):
 
     def __call__(self, func):
         def wrapper(*a, **ka):
-            with self:
-                return func(*a, **ka)
+            with warnings.catch_warnings(record=True) as wr:
+                warnings.simplefilter("always")
+                out = func(*a, **ka)
+            messages = [repr(w.message) for w in wr]
+            for msg in messages:
+                if self.searchtext in msg:
+                    return out
+            raise AssertionError("Could not find phrase %r in any warning messaged: %r" % (self.searchtext, messages))
         return wrapper
-
-    def __enter__(self):
-        self.orig = bottle.depr
-        bottle.depr = self.depr
-        self.warnings = []
-
-    def depr(self, msg, strict=False):
-        assert self.searchtext in msg, "Could not find phrase %r in warning message %r" % (self.searchtext, msg)
-        self.warnings.append(msg)
-
-    def __exit__(self, exc_type, exc_val, tb):
-        bottle.depr = self.orig
-        assert self.warnings, "Expected warning with message %r bot no warning was triggered" % self.searchtext
-
 
 def api(introduced, deprecated=None, removed=None):
     current    = tuple(map(int, bottle.__version__.split('-')[0].split('.')))
@@ -76,7 +69,7 @@ def api(introduced, deprecated=None, removed=None):
             return func
         elif current < removed:
             func.__doc__ = '(deprecated) ' + (func.__doc__ or '')
-            return assertWarn('deprecationWarning')(func)
+            return assertWarn('DeprecationWarning')(func)
         else:
             return None
     return decorator

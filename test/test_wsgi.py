@@ -98,7 +98,7 @@ class TestWsgi(ServerTestBase):
 
     def test_utf8_url(self):
         """ WSGI: UTF-8 Characters in the URL """
-        @bottle.route('/my-öäü/:string')
+        @bottle.route('/my-öäü/<string>')
         def test(string): return string
         self.assertBody(tob('urf8-öäü'), '/my-öäü/urf8-öäü')
 
@@ -436,7 +436,7 @@ class TestDecorators(ServerTestBase):
 
     def test_truncate_body(self):
         """ WSGI: Some HTTP status codes must not be used with a response-body """
-        @bottle.route('/test/:code')
+        @bottle.route('/test/<code>')
         def test(code):
             bottle.response.status = int(code)
             return 'Some body content'
@@ -449,7 +449,7 @@ class TestDecorators(ServerTestBase):
     def test_routebuild(self):
         """ WSGI: Test route builder """
         def foo(): pass
-        bottle.route('/a/:b/c', name='named')(foo)
+        bottle.route('/a/<b>/c', name='named')(foo)
         bottle.request.environ['SCRIPT_NAME'] = ''
         self.assertEqual('/a/xxx/c', bottle.url('named', b='xxx'))
         self.assertEqual('/a/xxx/c', bottle.app().get_url('named', b='xxx'))
