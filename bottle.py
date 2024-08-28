@@ -2441,7 +2441,7 @@ class ConfigDict(dict):
         for key, value in dict(*a, **ka).items():
             self[prefix + key] = value
 
-    def setdefault(self, key, value):
+    def setdefault(self, key, value=None):
         if key not in self:
             self[key] = value
         return self[key]
