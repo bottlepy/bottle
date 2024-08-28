@@ -167,14 +167,13 @@ def update_wrapper(wrapper, wrapped, *a, **ka):
 # And yes, I know PEP-8, but sometimes a lower-case classname makes more sense.
 
 
-def depr(major, minor, cause, fix):
+def depr(major, minor, cause, fix, stacklevel=3):
     text = "Warning: Use of deprecated feature or API. (Deprecated in Bottle-%d.%d)\n"\
            "Cause: %s\n"\
            "Fix: %s\n" % (major, minor, cause, fix)
     if DEBUG == 'strict':
         raise DeprecationWarning(text)
-    warnings.warn(text, DeprecationWarning, stacklevel=3)
-    return DeprecationWarning(text)
+    warnings.warn(text, DeprecationWarning, stacklevel=stacklevel)
 
 
 def makelist(data):  # This is just too handy
@@ -339,7 +338,8 @@ class Router(object):
             g = match.groups()
             if g[2] is not None:
                 depr(0, 13, "Use of old route syntax.",
-                            "Use <name> instead of :name in routes.")
+                            "Use <name> instead of :name in routes.",
+                            stacklevel=4)
             if len(g[0]) % 2:  # Escaped wildcard
                 prefix += match.group(0)[len(g[0]):]
                 offset = match.end()
@@ -416,7 +416,7 @@ class Router(object):
         if (flatpat, method) in self._groups:
             if DEBUG:
                 msg = 'Route <%s %s> overwrites a previously defined route'
-                warnings.warn(msg % (method, rule), RuntimeWarning)
+                warnings.warn(msg % (method, rule), RuntimeWarning, stacklevel=3)
             self.dyna_routes[method][
                 self._groups[flatpat, method]] = whole_rule
         else:
