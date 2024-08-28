@@ -2,6 +2,7 @@
 
 import unittest
 import bottle
+import warnings
 
 
 class TestRouter(unittest.TestCase):
@@ -11,7 +12,9 @@ class TestRouter(unittest.TestCase):
         self.r = bottle.Router()
     
     def add(self, path, target, method='GET', **ka):
-        self.r.add(path, method, target, **ka)
+        with warnings.catch_warnings() as r:
+            warnings.simplefilter("ignore")
+            self.r.add(path, method, target, **ka)
 
     def match(self, path, method='GET'):
         env = {'PATH_INFO': path, 'REQUEST_METHOD': method}
