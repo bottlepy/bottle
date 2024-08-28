@@ -7,8 +7,9 @@
 .. _paste: http://pythonpaste.org/
 .. _bjoern: https://github.com/jonashaag/bjoern
 .. _flup: http://trac.saddi.com/flup
-.. _cherrypy: http://www.cherrypy.org/
-.. _WSGI: http://www.wsgi.org/
+.. _gunicorn: https://gunicorn.org/
+.. _cheroot: https://cheroot.cherrypy.dev/
+.. _WSGI: https://peps.python.org/pep-3333/
 .. _Python: http://python.org/
 .. _testing: https://github.com/bottlepy/bottle/raw/master/bottle.py
 .. _issue_tracker: https://github.com/bottlepy/bottle/issues
@@ -22,10 +23,10 @@ Bottle: Python Web Framework
 Bottle is a fast, simple and lightweight WSGI_ micro web-framework for Python_. It is distributed as a single file module and has no dependencies other than the `Python Standard Library <http://docs.python.org/library/>`_.
 
 
-* **Routing:** Requests to function-call mapping with support for clean and  dynamic URLs.
+* **Routing:** Requests to function-call mapping with support for clean and dynamic URLs.
 * **Templates:** Fast and pythonic :ref:`built-in template engine <tutorial-templates>` and support for mako_, jinja2_ and cheetah_ templates.
 * **Utilities:** Convenient access to form data, file uploads, cookies, headers and other HTTP-related metadata.
-* **Server:** Built-in HTTP development server and support for paste_, bjoern_, gae_, cherrypy_ or any other WSGI_ capable HTTP server.
+* **Server:** Built-in HTTP development server and support for a wide range of WSGI_ capable HTTP server (e.g. gunicorn_, paste_ or cheroot_).
 
 .. rubric:: Example: "Hello World" in a bottle
 
@@ -45,59 +46,84 @@ Run this script or paste it into a Python console, then point your browser to `<
 
 .. __: https://github.com/bottlepy/bottle/raw/master/bottle.py
 
-Install the latest stable release with ``pip install bottle`` or download `bottle.py`__ (unstable) into your project directory. There are no hard [1]_ dependencies other than the Python standard library. Bottle supports **Python 2.7 and Python 3**.
+Install the latest stable release with ``pip install bottle`` or download `bottle.py`__ (unstable) into your project directory. There are no hard [1]_ dependencies other than the Python standard library.
 
-.. deprecated:: 0.13
-    Support for Python 2.5 and 2.6 was dropped with this release.
+.. rubric:: Python compatibility
 
+Bottle aims to support `all maintained versions of Python <https://devguide.python.org/versions/>`_
+and not use features that may not work with older Python releases. Unless you are running a truly
+ancient version of Python, the newest Bottle release should work for you. If you are in the
+unfortunate position to have to rely on "dead snakes", you can stick with an older Bottle release.
 
-User's Guide
+.. list-table:: Python Compatibility
+   :widths: 25 25 50
+   :header-rows: 1
+
+   * - Bottle Version
+     - Python 2
+     - Python 3
+   * - 0.12
+     - 2.5 - 2.7
+     - 3.2 - 3.12
+   * - 0.13
+     - 2.7
+     - 3.8 - 3.x
+   * - 1.0 (planned)
+     - *dropped*
+     - 3.8 - 3.x
+
+Getting Started
 ===============
 Start here if you want to learn how to use the bottle framework for web development. If you have any questions not answered here, feel free to ask the `mailing list <mailto:bottlepy@googlegroups.com>`_.
 
 .. toctree::
    :maxdepth: 2
+   :caption: Getting Started
 
    tutorial
-   configuration
-   routing
-   stpl
-   deployment
    api
-   plugins/index
-
-
-Knowledge Base
-==============
-A collection of articles, guides and HOWTOs.
+   changelog
+   faq
 
 .. toctree::
    :maxdepth: 2
+   :caption: Advanced Topics
+
+   routing
+   configuration
+   stpl
+   deployment
+   async
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Plugins
+
+   plugins/index
+   plugins/dev
+   plugins/list
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Additional Notes
 
    tutorial_app
-   async
-   recipes
-   faq
 
 
-Development and Contribution
-============================
+
+
+Development
+===========
 
 These chapters are intended for developers interested in the bottle development and release workflow.
 
 .. toctree::
    :maxdepth: 2
+   :caption: Development
 
-   changelog
    development
-   plugindev
+   contributors
 
-
-.. toctree::
-   :hidden:
-
-   plugins/index
-   contact
 
 License
 ==================

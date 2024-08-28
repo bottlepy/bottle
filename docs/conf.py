@@ -18,9 +18,10 @@ release = bottle.__version__
 add_function_parentheses = True
 add_module_names = False
 autodoc_member_order = 'bysource'
+autodoc_class_signature = 'separated'
 pygments_style = 'sphinx'
-intersphinx_mapping = {'python': ('http://docs.python.org/', None),
-                       'werkzeug': ('http://werkzeug.pocoo.org/docs/', None)}
+intersphinx_mapping = {'python': ('https://docs.python.org/3', None),
+                       'werkzeug': ('https://werkzeug.palletsprojects.com/en/3.0.x', None)}
 
 locale_dirs = ['_locale/']
 gettext_compact = False

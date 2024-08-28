@@ -1,41 +1,38 @@
 ﻿.. highlight:: python
 .. currentmodule:: bottle
 
-===========================
-Release Notes and Changelog
-===========================
+=============
+Release Notes
+=============
 
 Release 0.13
 ==============
 
-.. warning:: Not released yet.
+.. warning:: This release contains breaking changers, please read the notes below
 
 .. rubric:: Dropped support for Python versions that reached their end-of-life.
 
-Keeping up support for ancient Python versions hinders adaptation of new features
-and serves no real purpose. If you need support for older Python versions, you can
-stay on bottle-0.12. The updated list of tested and supported python releases is
-as follows:
+Bottle up to 0.12 supported an absurd range of Python versions (2.5 to 3.12) and
+keeping support for Python versions as ancient as 2.5 required a ton of workarounds
+and compromises, but served no real purpose. If you need support for older Python
+versions, you can stay on bottle 0.12. The updated list of tested and supported python
+releases is as follows:
 
- * Python 2.7 (>= 2.7.3)
- * Python 3.6
- * Python 3.7
- * Python 3.8
- * Python 3.9
- * PyPy 2.7
- * PyPy 3.6
- * PyPy 3.7
+ * Python 2 >= 2.7.3
+ * Python 3 >= 3.8
 
 Support for Python 2.5 was marked as deprecated since 0.12. We decided to go a step further
-and also remove support for 2.6 and 3.1 to 3.5 even if it was never deprecated explicitly
+and also remove support for 2.6 and 3.1 to 3.7 even if it was never deprecated explicitly
 in bottle. This means that this release is *not* backwards compatible in Python <2.7.3 or
-<3.6 environments. Maintainers for distributions or systems that still use these old python
+<3.8 environments. Maintainers for distributions or systems that still use these old python
 versions should not update to Bottle 0.13 and stick with 0.12 instead.
 
 .. rubric:: Stabilized APIs
+
 * The documented API of the :class:`ConfigDict` class is now considered stable and ready to use.
 
 .. rubric:: Deprecated APIs
+
 * The old route syntax (``/hello/:name``) is deprecated in favor of the more readable and flexible ``/hello/<name>`` syntax.
 * :meth:`Bottle.mount` now recognizes Bottle instance and will warn about parameters that are not compatible with the new mounting behavior. The old behavior (mount applications as WSGI callable) still works and is used as a fallback automatically.
 * The undocumented :func:`local_property` helper is now deprecated.
@@ -43,6 +40,7 @@ versions should not update to Bottle 0.13 and stick with 0.12 instead.
 * Bottle uses pickle to store arbitrary objects into signed cookies. This is safe, as long as the signature key remains a secret. Unfortunately, people tend to push code with signature keys to github all the time, so we decided to remove pickle-support from bottle. Signed cookies will now issue a deprecation warning if the value is not a string, and support for non-string values will be removed in 0.14. The global :func:`cookie_encode`, :func:`cookie_decode` and :func:`is_cookie_encoded` are now also deprecated. If you are using this feature, think about using json to serialize your objects before storing them into cookies, or switch to a session system that stores data server-side instead of client-side.
 
 .. rubric:: Removed APIs (deprecated since 0.12)
+
 * Plugins with the old API (``api=1`` or no api attribute) will no longer work.
 * Parameter order of :meth:`Bottle.mount` changed in 0.10. The old order will now result in an error instead of a warning.
 * The :class:`ConfigDict` class was introduced in 0.11 and changed during 0.12. These changes are now final.
@@ -55,18 +53,21 @@ versions should not update to Bottle 0.13 and stick with 0.12 instead.
 * Bottle 0.12 changed some aspects of the Simple Template Engine. These changes are now final and the old syntax will now longer work.
 
   * The magic ``{{rebase()}}`` call was replaced by a ``base`` variable. Example: ``{{base}}``
-  * In STPL Templates, the 'rebase' and 'include' keywords were replaced with functions in 0.12.
+  * In STPL Templates, the ``rebase`` and ``include`` keywords were replaced with functions in 0.12.
   * PEP-263 encoding strings are no longer recognized. Templates are always utf-8.
 
 * The 'geventSocketIO' server adapter was removed without notice. It did not work anyway.
 
 .. rubric:: Changes
+
 These changes might require special care when updating.
 
 * Signed cookies now use a stronger HMAC algorithm by default. This will result in old cookies to appear invalid after the update. Pass an explicit ``digestmod=hashlib.md5`` to :meth:`Request.get_cookie` and :meth:`Response.set_cookie` to get the old behavior.
+* Bottle now ships with its own multipart form data parser (borrowed from `multipart <https://pypi.org/project/multipart/>`_) and no longer relies on ``cgi.FieldStorage``, which was removed in Python 3.13. This may change the way broken (non-standard) form submissions are parsed. The new parser is more strict and correct than ohe old one.
 
 .. rubric:: Other Improvements
-* Bottle() instances are now context managers. If used in a with-statement, the default application changes to the specific instance and the shortcuts for many instance methods can be used.
+
+* :class:`Bottle` instances are now context managers. If used in a with-statement, the default application changes to the specific instance and the shortcuts for many instance methods can be used.
 * Added support for ``PATCH`` requests and the :meth:`Bottle.patch` decorator.
 * Added `aiohttp <http://aiohttp.readthedocs.io/en/stable/>`_ and `uvloop <https://github.com/MagicStack/uvloop>`_ server adapters.
 * Added command-line arguments for config from json or ini files.
@@ -155,7 +156,7 @@ Release 0.9
 
 .. rubric:: Whats new?
 
-* A brand new plugin-API. See :ref:`plugins` and :doc:`plugindev` for details.
+* A brand new plugin-API. See :doc:`plugins/index` and :doc:`plugins/dev` for details.
 * The :func:`route` decorator got a lot of new features. See :meth:`Bottle.route` for details.
 * New server adapters for `gevent <http://www.gevent.org/>`_, `meinheld <http://meinheld.org/>`_ and `bjoern <https://github.com/jonashaag/bjoern>`_.
 * Support for SimpleTAL templates.
@@ -218,10 +219,3 @@ This is an incomplete list of new features and improved functionality.
 * The :class:`SimpleTemplate` engine got full unicode support.
 * Lots of non-critical bugfixes.
 
-
-
-============
-Contributors
-============
-
-.. include:: ../AUTHORS

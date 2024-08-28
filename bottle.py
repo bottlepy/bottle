@@ -1576,6 +1576,7 @@ class BaseRequest(object):
             raise AttributeError('Attribute %r not defined.' % name)
 
     def __setattr__(self, name, value):
+        """ Define new attributes that are local to the bound request environment. """
         if name == 'environ': return object.__setattr__(self, name, value)
         key = 'bottle.request.ext.%s' % name
         if hasattr(self, name):
@@ -1626,14 +1627,6 @@ class BaseResponse(object):
         This class does support dict-like case-insensitive item-access to
         headers, but is NOT a dict. Most notably, iterating over a response
         yields parts of the body and not the headers.
-
-        :param body: The response body as one of the supported types.
-        :param status: Either an HTTP status code (e.g. 200) or a status line
-                       including the reason phrase (e.g. '200 OK').
-        :param headers: A dictionary or a list of name-value pairs.
-
-        Additional keyword arguments are added to the list of headers.
-        Underscores in the header name are replaced with dashes.
     """
 
     default_status = 200
@@ -1649,6 +1642,16 @@ class BaseResponse(object):
     }
 
     def __init__(self, body='', status=None, headers=None, **more_headers):
+        """ Create a new response object.
+
+        :param body: The response body as one of the supported types.
+        :param status: Either an HTTP status code (e.g. 200) or a status line
+                       including the reason phrase (e.g. '200 OK').
+        :param headers: A dictionary or a list of name-value pairs.
+
+        Additional keyword arguments are added to the list of headers.
+        Underscores in the header name are replaced with dashes.
+        """
         self._cookies = None
         self._headers = {}
         self.body = body
@@ -1939,10 +1942,18 @@ Response = BaseResponse
 
 
 class HTTPResponse(Response, BottleException):
+    """ A subclass of :class:`Response` that can be raised or returned from request
+        handlers to short-curcuit request processing and override changes made to the
+        global :data:`request` object. This bypasses error handlers, even if the status
+        code indicates an error. Return or raise :class:`HTTPError` to trigger error
+        handlers.
+    """
+
     def __init__(self, body='', status=None, headers=None, **more_headers):
         super(HTTPResponse, self).__init__(body, status, headers, **more_headers)
 
     def apply(self, other):
+        """ Copy the state of this response to a different :class:`Response` object. """
         other._status_code = self._status_code
         other._status_line = self._status_line
         other._headers = self._headers
@@ -1951,6 +1962,8 @@ class HTTPResponse(Response, BottleException):
 
 
 class HTTPError(HTTPResponse):
+    """ A subclass of :class:`HTTPResponse` that triggers error handlers. """
+
     default_status = 500
 
     def __init__(self,
@@ -2327,10 +2340,10 @@ _UNSET = object()
 
 class ConfigDict(dict):
     """ A dict-like configuration storage with additional support for
-        namespaces, validators, meta-data, overlays and more.
+        namespaces, validators, meta-data and overlays.
 
-        This dict-like class is heavily optimized for read access. All read-only
-        methods as well as item access should be as fast as the built-in dict.
+        This dict-like class is heavily optimized for read access.
+        Read-only methods and item access should be as fast as a native dict.
     """
 
     __slots__ = ('_meta', '_change_listener', '_overlays', '_virtual_keys', '_source', '__weakref__')
@@ -2345,29 +2358,19 @@ class ConfigDict(dict):
         #: Keys of values copied from the source (values we do not own)
         self._virtual_keys = set()
 
-    def load_module(self, path, squash=True):
+    def load_module(self, name, squash=True):
         """Load values from a Python module.
 
-           Example modue ``config.py``::
+           Import a python module by name and add all upper-case module-level
+           variables to this config dict.
 
-                DEBUG = True
-                SQLITE = {
-                    "db": ":memory:"
-                }
-
-
-           >>> c = ConfigDict()
-           >>> c.load_module('config')
-           {DEBUG: True, 'SQLITE.DB': 'memory'}
-           >>> c.load_module("config", False)
-           {'DEBUG': True, 'SQLITE': {'DB': 'memory'}}
-
-           :param squash: If true (default), dictionary values are assumed to
-                          represent namespaces (see :meth:`load_dict`).
+           :param name: Module name to import and load.
+           :param squash: If true (default), nested dicts are assumed to
+              represent namespaces and flattened (see :meth:`load_dict`).
         """
-        config_obj = load(path)
-        obj = {key: getattr(config_obj, key) for key in dir(config_obj)
-               if key.isupper()}
+        config_obj = load(name)
+        obj = {key: getattr(config_obj, key)
+               for key in dir(config_obj) if key.isupper()}
 
         if squash:
             self.load_dict(obj)
@@ -2376,28 +2379,15 @@ class ConfigDict(dict):
         return self
 
     def load_config(self, filename, **options):
-        """ Load values from an ``*.ini`` style config file.
+        """ Load values from ``*.ini`` style config files using configparser.
 
-            A configuration file consists of sections, each led by a
-            ``[section]`` header, followed by key/value entries separated by
-            either ``=`` or ``:``. Section names and keys are case-insensitive.
-            Leading and trailing whitespace is removed from keys and values.
-            Values can be omitted, in which case the key/value delimiter may
-            also be left out. Values can also span multiple lines, as long as
-            they are indented deeper than the first line of the value. Commands
-            are prefixed by ``#`` or ``;`` and may only appear on their own on
-            an otherwise empty line.
+            INI style sections (e.g. ``[section]``) are used as namespace for
+            all keys within that section. Both section and key names may contain
+            dots as namespace separators and are converted to lower-case.
 
-            Both section and key names may contain dots (``.``) as namespace
-            separators. The actual configuration parameter name is constructed
-            by joining section name and key name together and converting to
-            lower case.
-
-            The special sections ``bottle`` and ``ROOT`` refer to the root
-            namespace and the ``DEFAULT`` section defines default values for all
+            The special sections ``[bottle]`` and ``[ROOT]`` refer to the root
+            namespace and the ``[DEFAULT]`` section defines default values for all
             other sections.
-
-            With Python 3, extended string interpolation is enabled.
 
             :param filename: The path of a config file, or a list of paths.
             :param options: All keyword parameters are passed to the underlying
@@ -2489,8 +2479,7 @@ class ConfigDict(dict):
                 overlay._delete_virtual(key)
 
     def _set_virtual(self, key, value):
-        """ Recursively set or update virtual keys. Do nothing if non-virtual
-            value is present. """
+        """ Recursively set or update virtual keys. """
         if key in self and key not in self._virtual_keys:
             return  # Do nothing for non-virtual keys.
 
@@ -2502,8 +2491,7 @@ class ConfigDict(dict):
             overlay._set_virtual(key, value)
 
     def _delete_virtual(self, key):
-        """ Recursively delete virtual entry. Do nothing if key is not virtual.
-        """
+        """ Recursively delete virtual entry. """
         if key not in self._virtual_keys:
             return  # Do nothing for non-virtual keys.
 
@@ -2528,7 +2516,10 @@ class ConfigDict(dict):
         return self._meta.get(key, {}).get(metafield, default)
 
     def meta_set(self, key, metafield, value):
-        """ Set the meta field for a key to a new value. """
+        """ Set the meta field for a key to a new value.
+        
+            Meta-fields are shared between all members of an overlay tree.
+        """
         self._meta.setdefault(key, {})[metafield] = value
 
     def meta_list(self, key):
@@ -2729,7 +2720,7 @@ class ResourceManager(object):
 
 class FileUpload(object):
     def __init__(self, fileobj, name, filename, headers=None):
-        """ Wrapper for file uploads. """
+        """ Wrapper for a single file uploaded via ``multipart/form-data``. """
         #: Open file(-like) object (BytesIO buffer or temporary file)
         self.file = fileobj
         #: Name of the upload form field

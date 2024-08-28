@@ -1,4 +1,4 @@
-.. _Bottle: http://bottle.paws.org
+.. _Bottle: http://bottlepy.org
 .. _Python: http://www.python.org
 .. _SQLite: http://www.sqlite.org
 .. _Windows: http://www.sqlite.org/download.html
@@ -14,13 +14,13 @@
 .. _`mod_wsgi`: http://code.google.com/p/modwsgi/
 .. _`json`: http://www.json.org
 
-===============================
-Tutorial: Todo-List Application
-===============================
+=================
+Todo-List Example
+=================
 
 .. note::
 
-   This tutorial is a work in progress and written by `noisefloor <http://github.com/noisefloor>`_.
+   This tutorial is outdated, better start here: :doc:`tutorial`. If you want to help and improve this tutorial, see :doc:`development`. 
 
 
 This tutorial should give a brief introduction to the Bottle_ WSGI Framework. The main goal is to be able, after reading through this tutorial, to create a project using Bottle. Within this document, not all abilities will be shown, but at least the main and important ones like routing, utilizing the Bottle template abilities to format output and handling GET / POST parameters.
