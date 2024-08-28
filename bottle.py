@@ -69,7 +69,7 @@ if __name__ == '__main__':
 # Imports and Python 2/3 unification ##########################################
 ###############################################################################
 
-import base64, calendar, cgi, email.utils, functools, hmac, itertools,\
+import base64, calendar, email.utils, functools, hmac, itertools,\
        mimetypes, os, re, tempfile, threading, time, warnings, weakref, hashlib
 
 from types import FunctionType
