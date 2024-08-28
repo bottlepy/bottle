@@ -99,6 +99,8 @@ if py3k:
     import pickle
     from io import BytesIO
     import configparser
+    from datetime import timezone
+    UTC = timezone.utc
     # getfullargspec was deprecated in 3.5 and un-deprecated in 3.6
     # getargspec was deprecated in 3.0 and removed in 3.11
     from inspect import getfullargspec
@@ -128,9 +130,17 @@ else:  # 2.x
     import ConfigParser as configparser
     from collections import MutableMapping as DictMixin
     from inspect import getargspec
+    from datetime import tzinfo
+
+    class _UTC(tzinfo):
+        def utcoffset(self, dt): return timedelta(0)
+        def tzname(self, dt): return "UTC"
+        def dst(self, dt): return timedelta(0)
+    UTC = _UTC()
 
     unicode = unicode
     json_loads = json_lds
+
     exec(compile('def _raise(*a): raise a[0], a[1], a[2]', '<py3fix>', 'exec'))
 
 # Some helpers for string/byte handling
@@ -1790,7 +1800,7 @@ class BaseResponse(object):
     content_length = HeaderProperty('Content-Length', reader=int, default=-1)
     expires = HeaderProperty(
         'Expires',
-        reader=lambda x: datetime.utcfromtimestamp(parse_date(x)),
+        reader=lambda x: datetime.fromtimestamp(parse_date(x), UTC),
         writer=lambda x: http_date(x))
 
     @property
