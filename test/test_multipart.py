@@ -42,6 +42,7 @@ class BaseMultipartTest(unittest.TestCase):
             if part.name != name: continue
             self.assertEqual(part.filename, None)
             self.assertEqual(part.content_type, None)
+            self.assertEqual(part.charset, "utf8")
             self.assertEqual(part.value, data)
             break
         else:
@@ -340,7 +341,7 @@ RSjOllPhkAAAAABJRU5ErkJggg=="""
             ),
         ),
     },
-    "forms": {"text": "example text"},
+    "forms": {"text": u"example text"},
 }
 
 browser_test_cases["firefox3-2pnglongtext"] = {
@@ -427,7 +428,7 @@ u/MilaFJCae1nw2fbz1DnVOxyGTlKeZft/Ff8x1BRssfACjTwQAAAABJRU5ErkJggg=="""
             ),
         ),
     },
-    "forms": {"text": "--long text\r\n--with boundary\r\n--lookalikes--"},
+    "forms": {"text": u"--long text\r\n--with boundary\r\n--lookalikes--"},
 }
 
 browser_test_cases["opera8-2png1txt"] = {
@@ -506,7 +507,7 @@ vHp8s3ziNZ49i1q6HrR1YHGBNnt1dG2Z++gC4TdvrqNkK1eHj7ljQ/ujHx6NyPw8BFIiKPmNpKar
             ),
         ),
     },
-    "forms": {"text": "blafasel öäü"},
+    "forms": {"text": u"blafasel öäü"},
 }
 
 browser_test_cases["webkit3-2png1txt"] = {
@@ -608,7 +609,7 @@ KKWc3CmFLCN/JyMuQ+ASuJIJwH8C25TmkHULEgAAAABJRU5ErkJggg=="""
             ),
         ),
     },
-    "forms": {"text": "this is another text with ümläüts"},
+    "forms": {"text": u"this is another text with ümläüts"},
 }
 
 browser_test_cases["ie6-2png1txt"] = {
@@ -687,7 +688,7 @@ RSjOllPhkAAAAABJRU5ErkJggg=="""
             ),
         ),
     },
-    "forms": {"text": "ie6 sucks :-/"},
+    "forms": {"text": u"ie6 sucks :-/"},
 }
 
 class TestWerkzeugExamples(BaseMultipartTest):
