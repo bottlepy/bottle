@@ -761,8 +761,9 @@ class TestResponse(unittest.TestCase):
 
     def test_expires_header(self):
         import datetime
+        from bottle import UTC
         response = BaseResponse()
-        now = datetime.datetime.utcnow()
+        now = datetime.datetime.now(UTC)
         response.expires = now
 
         def seconds(a, b):
@@ -770,8 +771,8 @@ class TestResponse(unittest.TestCase):
             return td.days*360*24 + td.seconds
 
         self.assertEqual(0, seconds(response.expires, now))
-        now2 = datetime.datetime.utcfromtimestamp(
-            parse_date(response.headers['Expires']))
+        now2 = datetime.datetime.fromtimestamp(
+            parse_date(response.headers['Expires']), tz=UTC)
         self.assertEqual(0, seconds(now, now2))
 
 
