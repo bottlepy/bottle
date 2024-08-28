@@ -1,11 +1,8 @@
-=====================
-Configuration (DRAFT)
-=====================
+=============
+Configuration
+=============
 
 .. currentmodule:: bottle
-
-.. warning::
-    This is a draft for a new API. `Tell us <mailto:bottlepy@googlegroups.com>`_ what you think.
 
 Bottle applications can store their configuration in :attr:`Bottle.config`, a dict-like object and central place for application specific settings. This dictionary controls many aspects of the framework, tells (newer) plugins what to do, and can be used to store your own configuration as well.
 
@@ -41,7 +38,8 @@ The :attr:`Bottle.config` object behaves a lot like an ordinary dictionary. All 
         email = app.config.get('my.email', 'nomail@example.com')
         return {'email': email}
 
-The app object is not always available, but as long as you are within a request context, you can use the `request` object to get the current application and its configuration::
+Helper functions can rely on :attr:`BaseRequest.app` to get the application
+and configuration associated with the *current* request::
 
     from bottle import request
     def is_admin(user):
@@ -58,7 +56,7 @@ To make life easier, plugins and applications should follow some simple rules wh
 - Your own application should use a separate namespace (e.g. ``myapp.*``).
 
 
-Loading Configuration from a File
+Load configuration from a File
 =================================
 
 .. versionadded 0.12
@@ -81,38 +79,39 @@ files from disk and import their values into your existing configuration::
     app.config.load_config('/etc/myapp.conf')
 
 
-Loading Configuration from a python module
+Load configuration from a python module
 ==========================================
 
 .. versionadded 0.13
 
 Loading configuration from a Python module is a common pattern for Python
-programs and frameworks. Bottle assumes that configuration keys are all upper
-case:
+programs and frameworks. :meth:`ConfigDict.load_module` imports a python
+module by name and adds all upper-case variables to configuration.
 
-.. code-block::
+.. code-block:: python
 
      DEBUG = True
      SQLITE = {"db": ":memory:"}
 
-You can load the this Python module with :met:`ConfigDict.load_module`::
+.. code-block::
 
    >>> c = ConfigDict()
    >>> c.load_module('config')
-   {DEBUG: True, 'SQLITE.DB': 'memory'}
-   >>> c.load_module("config", False)
-   {'DEBUG': True, 'SQLITE': {'DB': 'memory'}}
+   {'debug': True, 'sqlite.db': 'memory'}
+   >>> c.load_module("config", squash=False)
+   {'debug': True, 'sqlite': {'db': 'memory'}}
+
+Configuration is flattened by default, similar to the behavior of :meth:`ConfigDict.load_dict`. You can prevent that by passing ``squash=False`` as a parameter.
 
 
-Note the second parameter to disable loading as namespaced items as in :meth:`ConfigDict.load_dict`. By default, loading from a Python module will call this method, unless you specifically call this method with `False` as the second argument.
-
-Loading Configuration from a nested :class:`dict`
-=================================================
+Loading configuration from a :class:`dict`
+==========================================
 
 .. versionadded 0.12
 
 Another useful method is :meth:`ConfigDict.load_dict`. This method takes
-an entire structure of nested dictionaries and turns it into a flat list of keys and values with namespaced keys::
+an entire structure of nested dictionaries and turns it into a flat list
+of keys and values with namespaced keys::
 
     # Load an entire dict structure
     app.config.load_dict({
@@ -130,13 +129,24 @@ an entire structure of nested dictionaries and turns it into a flat list of keys
     with open('/etc/myapp.json') as fp:
         app.config.load_dict(json.load(fp))
 
+.. _conf-hook:
 
 Listening to configuration changes
 ==================================
 
 .. versionadded 0.12
 
-The ``config`` hook on the application object is triggered each time a value in :attr:`Bottle.config` is changed. This hook can be used to react on configuration changes at runtime, for example reconnect to a new database, change the debug settings on a background service or resize worker thread pools. The hook callback receives two arguments (key, new_value) and is called before the value is actually changed in the dictionary. Raising an exception from a hook callback cancels the change and the old value is preserved.
+Bottle triggers the ``config`` application hook each time a value in :attr:`Bottle.config` is about to be changed.
+This hook can be used to dynamically re-configure plugins or parts of your application once configuration changes at runtime.
+For example:
+
+  * Enable or disable maintenance or debug mode.
+  * Reconnect to a new database.
+  * Change the settings on a plugin or background service.
+  * Resize worker thread pools.
+  
+The hook callback receives two arguments (key, new_value) and is called before the value is actually changed in the dictionary.
+Raising an exception from this callback will prevent the change and preserve the old value.
 
 ::
 
@@ -148,7 +158,7 @@ The ``config`` hook on the application object is triggered each time a value in 
 The hook callbacks cannot *change* the value that is to be stored to the dictionary. That is what filters are for.
 
 
-.. conf-meta:
+.. _conf-meta:
 
 Filters and other Meta Data
 ===========================
@@ -157,11 +167,10 @@ Filters and other Meta Data
 
 :class:`ConfigDict` allows you to store meta data along with configuration keys. Two meta fields are currently defined:
 
-help
+``help``
     A help or description string. May be used by debugging, introspection or
     admin tools to help the site maintainer configuring their application.
-
-filter
+``filter``
     A callable that accepts and returns a single value. If a filter is defined for a key, any new value stored to that key is first passed through the filter callback. The filter can be used to cast the value to a different type, check for invalid values (throw a ValueError) or trigger side effects.
 
 This feature is most useful for plugins. They can validate their config parameters or trigger side effects using filters and document their configuration via ``help`` fields::
@@ -192,3 +201,4 @@ API Documentation
 
 .. autoclass:: ConfigDict
    :members:
+   :no-index:

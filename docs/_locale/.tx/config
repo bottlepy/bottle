@@ -74,9 +74,9 @@ source_file = _pot/tutorial_app.pot
 source_lang = en
 type = PO
 
-[bottle.plugindev]
-file_filter = <lang>/LC_MESSAGES/plugindev.po
-source_file = _pot/plugindev.pot
+[bottle.plugins]
+file_filter = <lang>/LC_MESSAGES/plugins.po
+source_file = _pot/plugins.pot
 source_lang = en
 type = PO
 

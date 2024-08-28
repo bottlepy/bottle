@@ -1,84 +1,140 @@
-.. module:: bottle
+.. currentmodule:: bottle
 
-=========================
-List of available Plugins
-=========================
+.. _plugins:
 
-This is a list of third-party plugins that add extend Bottles core functionality or integrate other libraries with the Bottle framework.
+=============
+Using Plugins
+=============
 
-Have a look at :ref:`plugins` for general questions about plugins (installation, usage). If you plan to develop a new plugin, the :doc:`/plugindev` may help you.
+.. versionadded:: 0.9
 
-`Bottle-Beaker <http://pypi.python.org/pypi/bottle-beaker/>`_
-    Beaker to session and caching library with WSGI Middleware
+Bottle's core features cover most common use-cases, but as a micro-framework it has its limits. This is where "Plugins" come into play. Plugins add missing functionality to the framework, integrate third party libraries, or just automate some repetitive work.
 
-`Bottle-Cork <http://cork.firelet.net/>`_
-	Cork provides a simple set of methods to implement Authentication and Authorization in web applications based on Bottle.
+We have a growing list of :doc:`/plugins/list` and most plugins are designed to be portable and re-usable across applications. Maybe your problem has already been solved and a ready-to-use plugin exists. If not, write your own. See :doc:`/plugins/dev` for details.
 
-`Bottle-Cors-plugin <http://pypi.org/project/bottle-cors-plugin/>`_
-	Cors-plugin is the easiest way to implement cors on your bottle web application
+.. _plugin-basics:
 
-`Bottle-Extras <http://pypi.python.org/pypi/bottle-extras/>`_
-	Meta package to install the bottle plugin collection.
+Plugin Basics
+=============
 
-`Bottle-Flash <http://pypi.python.org/pypi/bottle-flash/>`_
-	flash plugin for bottle
+Bottles Plugin system builds on the concept of `decorators <http://docs.python.org/glossary.html#term-decorator>`_. To put it briefly, a plugin is a decorator applied to all route callback in an application. Plugins can do more than just decorating route callbacks, but it is still a good starting point to understand the concept. Lets have a look at a practical example::
 
-`Bottle-Hotqueue <http://pypi.python.org/pypi/bottle-hotqueue/>`_
-	FIFO Queue for Bottle built upon redis
+    from bottle import response
 
-`Macaron <http://nobrin.github.com/macaron/webapp.html>`_
-	Macaron is an object-relational mapper (ORM) for SQLite.
+    def stopwatch(callback):
+        def wrapper(*args, **kwargs):
+            start = time.time()
+            result = callback(*args, **kwargs)
+            end = time.time()
+            response.headers['X-Exec-Time'] = str(end - start)
+            return result
+        return wrapper
 
-`Bottle-Memcache <http://pypi.python.org/pypi/bottle-memcache/>`_
-	Memcache integration for Bottle.
+This "stopwatch" decorator measures the execution time of the wrapped function and then writes the result in the non-standard ``X-Exec-Time`` response header. You could just manually apply this decorator to all your route callbacks and call it a day::
+    
+    from bottle import route
 
-`Bottle-Mongo <http://pypi.python.org/pypi/bottle-mongo/>`_
-	MongoDB integration for Bottle
+    @route("/timed")
+    @stopwatch  # <-- This works, but do not do this
+    def timed():
+        time.sleep(1)
+        return "DONE"
 
-`Bottle-OAuthlib <http://pypi.python.org/pypi/bottle-oauthlib/>`_
-	Adapter for oauthlib - create your own OAuth2.0 implementation
+But we wouldn't be talking about a plugin system if there wasn't a better way to do this!
 
-`Bottle-Redis <http://pypi.python.org/pypi/bottle-redis/>`_
-	Redis integration for Bottle.
+Managing Plugins
+================
 
-`Bottle-Renderer <http://pypi.python.org/pypi/bottle-renderer/>`_
-	Renderer plugin for bottle
+Explicitly applying decorators to every single route in a growing application quickly becomes tedious and error-prone. If you really want to apply something to *all* routes, there is a simpler way::
 
-`Bottle-Servefiles <http://pypi.python.org/pypi/bottle-servefiles/>`_
-	A reusable app that serves static files for bottle apps
+    from bottle import route, install
 
-`Bottle-Sqlalchemy <http://pypi.python.org/pypi/bottle-sqlalchemy/>`_
-	SQLAlchemy integration for Bottle.
+    install(stopwatch)
 
-`Bottle-Sqlite <http://pypi.python.org/pypi/bottle-sqlite/>`_
-	SQLite3 database integration for Bottle.
+    @route("/timed")
+    def timed():
+        ...
 
-`Bottle-Web2pydal <http://pypi.python.org/pypi/bottle-web2pydal/>`_
-	Web2py Dal integration for Bottle.
+The :func:`install` method registries a plugin to be automatically applied to all routes in an application. It does not matter if you call :func:`install` before or after binding routes, all plugins are always applied to all routes. The order of :func:`install` calls is important though. If there are multiple plugins, they are applied in the same order the were installed.
 
-`Bottle-Werkzeug <http://pypi.python.org/pypi/bottle-werkzeug/>`_
-	Integrates the `werkzeug` library (alternative request and response objects, advanced debugging middleware and more).
+Any callable object that works as a route callback decorator is a valid plugin. This includes normal decorators, classes, callables instances, but also plugins that implement the extended :class:`Plugin` API. See :ref:`plugindev` for details. 
 
-`bottle-smart-filters <https://github.com/agile4you/bottle-smart-filters/>`_
-	Bottle Querystring smart guessing.
+You can also :func:`uninstall` a previously installed plugin by name, class or instance::
 
-`bottle-jwt <https://github.com/agile4you/bottle-jwt/>`_
-	JSON Web Token authentication plugin for bottle.py
+    sqlite_plugin = SQLitePlugin(dbfile='/tmp/test.db')
+    install(sqlite_plugin)
 
-`Bottle-jwt <https://github.com/agalera/bottlejwt>`_
-	JWT integration for bottle
+    uninstall(sqlite_plugin) # uninstall a specific plugin
+    uninstall(SQLitePlugin)  # uninstall all plugins of that type
+    uninstall('sqlite')      # uninstall all plugins with that name
+    uninstall(True)          # uninstall all plugins at once
 
-`canister <https://github.com/dagnelies/canister>`_
-	a bottle wrapper to provide logging, sessions and authentication
+Plugins can be installed and also removed at any time, even at runtime while serving requests. They are applied on-demand, that is, as soon as the route is requested for the first time. This enables some neat tricks (e.g. installing slow debugging or profiling plugins only when needed) but should not be overused. Each time the list of plugins changes, the route cache is flushed and all plugins need to be re-applied.
 
-`bottle-cerberus <https://github.com/agalera/bottle-cerberus>`_
-	Cerberus integration for bottle
+.. note::
+    The module-level :func:`install` and :func:`uninstall` functions affect the :ref:`default application <default-app>`. To manage plugins for a specific application, use the corresponding methods on a :class:`Bottle` instance.
 
-`Bottle-errorsrest <https://github.com/agalera/bottle-errorsrest>`_
-	All errors generated from bottle are returned in json
+Selectively apply or skip Plugins
+---------------------------------
 
-`Bottle-tools <https://github.com/theSage21/bottle-tools>`_
-	Decorators that auto-supply function arguments using POST/query string data.
+Most plugins are smart enough to ignore routes that do not need their functionality and do not add any overhead to those routes, but you can also apply or skip specific plugins per route if you need to.
+
+To apply a decorator or plugin to just a single route, do not :func:`install` it, but use the ``apply`` keyword of the :func:`route` decorator instead::
+
+    @route('/timed', apply=[stopwatch])
+    def timed():
+        ...
+
+Route-level plugins are applied first (before application-wide plugins) but handled exactly like normal plugins otherwise.
+
+You can also explicitly disable an installed plugin for a number of routes. The :func:`route` decorator has a ``skip`` parameter for this purpose::
+
+    install(stopwatch)
+
+    @route('/notime', skip=[stopwatch])
+    def no_time():
+        pass
+
+The ``skip`` parameter accepts a single value or a list of values. You can use a plugin name, class or instance to identify the plugin that should be skipped. Set ``skip=True`` to skip all plugins at once.
 
 
-Plugins listed here are not part of Bottle or the Bottle project, but developed and maintained by third parties.
+Plugins and :meth:`Bottle.mount`
+--------------------------------
+
+Most plugins are specific to the application they were installed to and should not affect sub-applications mounted with :meth:`Bottle.mount`. Here is an example::
+
+    root = Bottle()
+    root.install(plugins.WTForms())
+    root.mount('/blog', apps.blog)
+
+    @root.route('/contact')
+    def contact():
+        return template('contact', email='contact@example.com')
+
+When mounting an application, Bottle creates a proxy-route on the mounting application that forwards all requests to the mounted application. Plugins are disabled for this kind of proxy-route by default. Our (fictional) ``WTForms`` plugin affects the ``/contact`` route, but does not affect the routes of the ``/blog`` sub-application.
+
+This behavior is intended as a sane default, but can be overridden. The following example re-activates all plugins for a specific proxy-route::
+
+    root.mount('/blog', apps.blog, skip=None)
+
+Note that a plugin sees the whole sub-application as a single route, namely the proxy-route mentioned above. To wrap each individual route of the sub-application, you have to install the plugin to the mounted application directly.
+
+Configuring Plugins
+===================
+
+Most plugins accept configuration as parameters passed to their constructor. This is the easiest and most obvious way to configure a plugin, e.g. to tell a database plugin which database to connect to::
+
+    install(SQLitePlugin(dbfile='/tmp/test.db', ...))
+
+Newer plugins may also read values from :attr:`Bottle.config` (see :doc:`../configuration`). This is useful for configuration that should be easy to change or override for a specific deployment. This pattern even supports runtime changes using :ref:`config hooks <conf-hook>`::
+
+    app.config["sqlite.db"] = '/tmp/test.db'
+    app.install(SQLitePlugin())
+
+Plugins can also inspect the routes they are applied to and change their behavior for individual routes. Plugin authors have full access to the undecorated route callback as well as parameters passed to the :meth:`route` decorator, including custom parameters that are otherwise ignored by bottle. This allows for a great level of flexibility. Common patterns include:
+
+* A database plugin may automatically start a transaction if the route callback accepts a ``db`` keyword.
+* A forms plugin may ignore routes that do not listen to ``POST`` requests.
+* An access control plugin may check for a custom ``roles_allowed`` parameter passed to the :meth:`route` decorator.
+
+In any case, check the plugin documentation for details. If you want to write your own plugins, check out :doc:`dev`.

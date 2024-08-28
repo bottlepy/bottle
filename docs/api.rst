@@ -12,37 +12,32 @@ narrative :doc:`tutorial` more helpful.
 
 
 
-
-Module Contents
-=====================================
+Global functions
+================
 
 The module defines several functions, constants, and an exception.
-
-.. autofunction:: debug
-
-.. autofunction:: run
-
-.. autofunction:: load
-
-.. autofunction:: load_app
-
-.. autodata:: request
-
-.. autodata:: response
-
-.. autodata:: HTTP_CODES
 
 .. function:: app()
               default_app()
 
-    Return the current :ref:`default-app`. Actually, these are callable instances of :class:`AppStack` and implement a stack-like API.
+    Return the current :ref:`default-app`. This is actually a callable instances of :class:`AppStack`.
+
+.. autofunction:: debug
+
+.. autofunction:: install
+
+.. autofunction:: uninstall
+
+.. autofunction:: run
 
 
-Routing
--------------------
 
-Bottle maintains a stack of :class:`Bottle` instances (see :func:`app` and :class:`AppStack`) and uses the top of the stack as a *default application* for some of the module-level functions and decorators.
+Global decorators
+=================
 
+Bottle maintains a stack of :class:`Bottle` instances (see :func:`app` and :class:`AppStack`)
+and uses the top of the stack as a :ref:`default-app` for some of the module-level functions
+and decorators. All of those have a corresponding method on the :class:`Bottle` class.
 
 .. function:: route(path, method='GET', callback=None, **options)
               get(...)
@@ -53,64 +48,46 @@ Bottle maintains a stack of :class:`Bottle` instances (see :func:`app` and :clas
 
    Decorator to install a route to the current default application. See :meth:`Bottle.route` for details.
 
-
 .. function:: error(...)
 
    Decorator to install an error handler to the current default application. See :meth:`Bottle.error` for details.
 
-
-WSGI and HTTP Utilities
-----------------------------
-
-.. autofunction:: parse_date
-
-.. autofunction:: parse_auth
-
-.. autofunction:: cookie_encode
-
-.. autofunction:: cookie_decode
-
-.. autofunction:: cookie_is_encoded
-
-.. autofunction:: yieldroutes
-
-.. autofunction:: path_shift
+.. autofunction:: hook
 
 
-Data Structures
-----------------------
+Request Context
+===============
 
-.. autoclass:: MultiDict
-   :members:
+The global :data:`request` and :data:`response` instances are only valid from within an request handler function and represent the *current* HTTP request or response.
 
-.. autoclass:: HeaderDict
-   :members:
+.. autodata:: request
 
-.. autoclass:: FormsDict
-   :members:
+.. autodata:: response
 
-.. autoclass:: WSGIHeaderDict
-   :members:
 
-.. autoclass:: AppStack
-   :members:
+Utilities
+=========
 
-   .. method:: pop()
+.. autofunction:: abort
 
-      Return the current default application and remove it from the stack.
+.. autofunction:: redirect
 
-.. autoclass:: ResourceManager
-   :members:
+.. autofunction:: static_file
 
-.. autoclass:: FileUpload
-   :members:
+
+
 
 Exceptions
----------------
+==========
 
 .. autoexception:: BottleException
    :members:
 
+.. autoexception:: HTTPResponse
+   :members:
+
+.. autoexception:: HTTPError
+   :members:
 
 
 The :class:`Bottle` Class
@@ -118,9 +95,6 @@ The :class:`Bottle` Class
 
 .. autoclass:: Bottle
    :members:
-
-.. autoclass:: Route
-    :members:
 
 
 The :class:`Request` Object
@@ -133,17 +107,14 @@ The :class:`Request` class wraps a WSGI environment and provides helpful methods
 
 .. autoclass:: BaseRequest
    :members:
-
-The module-level :data:`bottle.request` is a proxy object (implemented in :class:`LocalRequest`) and always refers to the `current` request, or in other words, the request that is currently processed by the request handler in the current thread. This `thread locality` ensures that you can safely use a global instance in a multi-threaded environment.
+   :special-members: __setattr__
 
 .. autoclass:: LocalRequest
    :members:
 
 
-.. autodata:: request
-
 The :class:`Response` Object
-===================================================
+============================
 
 The :class:`Response` class stores the HTTP status code as well as headers and cookies that are to be sent to the client. Similar to :data:`bottle.request` there is a thread-local :data:`bottle.response` instance that can be used to adjust the `current` response. Moreover, you can instantiate :class:`Response` and return it from your request handler. In this case, the custom instance overrules the headers and cookies defined in the global one.
 
@@ -157,30 +128,61 @@ The :class:`Response` class stores the HTTP status code as well as headers and c
    :members:
 
 
-The following two classes can be raised as an exception. The most noticeable difference is that bottle invokes error handlers for :class:`HTTPError`, but not for :class:`HTTPResponse` or other response types.
+Data Structures
+===============
 
-.. autoexception:: HTTPResponse
+.. autoclass:: AppStack
    :members:
 
-.. autoexception:: HTTPError
+   .. method:: pop()
+
+      Return the current default application and remove it from the stack.
+
+.. autoclass:: ConfigDict
+   :members:
+
+.. autoclass:: MultiDict
+   :members:
+
+.. autoclass:: WSGIHeaderDict
+   :members:
+
+.. autoclass:: HeaderDict
+   :members:
+
+.. autoclass:: FormsDict
+   :members:
+
+.. autoclass:: FileUpload
    :members:
 
 
+Request routing
+===============
+
+.. autoclass:: Router
+    :members:
+
+.. autoclass:: Route
+    :members:
 
 
-Templates
-=========
+Templating
+==========
 
 All template engines supported by :mod:`bottle` implement the :class:`BaseTemplate` API. This way it is possible to switch and mix template engines without changing the application code at all.
 
 .. autoclass:: BaseTemplate
    :members:
 
-   .. automethod:: __init__
-
 .. autofunction:: view
 
 .. autofunction:: template
+
+.. autodata:: TEMPLATE_PATH
+
+   Global search path for templates.
+
 
 You can write your own adapter for your favourite template engine or use one of the predefined adapters. Currently there are four fully supported template engines:
 
@@ -197,3 +199,36 @@ To use :class:`MakoTemplate` as your default template engine, just import its sp
 
   from bottle import mako_view as view, mako_template as template
 
+HTTP utilities
+==============
+
+.. autofunction:: parse_date
+
+.. autofunction:: parse_auth
+
+.. autofunction:: cookie_encode
+
+.. autofunction:: cookie_decode
+
+.. autofunction:: cookie_is_encoded
+
+.. autofunction:: path_shift
+
+.. autodata:: HTTP_CODES
+  :no-value:
+
+Misc utilities
+==============
+
+.. autoclass:: DictProperty
+
+.. autoclass:: cached_property
+
+.. autoclass:: lazy_attribute
+
+.. autofunction:: yieldroutes
+
+.. autofunction:: load
+
+.. autofunction:: load_app
+   

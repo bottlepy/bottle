@@ -1,6 +1,6 @@
-======================
-SimpleTemplate Engine
-======================
+==============
+SimpleTemplate
+==============
 
 .. currentmodule:: bottle
 
@@ -63,7 +63,9 @@ Embedded python code
 
 .. highlight:: html+django
 
-The template engine allows you to embed lines or blocks of python code within your template. Code lines start with ``%`` and code blocks are surrounded by ``<%`` and ``%>`` tokens::
+The template engine allows you to embed lines or blocks of python code within your template. Code lines start with ``%`` and code blocks are surrounded by ``<%`` and ``%>`` tokens:
+
+ .. code-block:: text
 
   % name = "Bob"  # a line of python code
   <p>Some plain text in between</p>
@@ -78,7 +80,7 @@ Embedded python code follows regular python syntax, but with two additional synt
 * **Indentation is ignored.** You can put as much whitespace in front of statements as you want. This allows you to align your code with the surrounding markup and can greatly improve readability.
 * Blocks that are normally indented now have to be closed explicitly with an ``end`` keyword.
 
-::
+ .. code-block:: text
 
   <ul>
     % for item in basket:
@@ -86,29 +88,15 @@ Embedded python code follows regular python syntax, but with two additional synt
     % end
   </ul>
 
-Both the ``%`` and the ``<%`` tokens are only recognized if they are the first non-whitespace characters in a line. You don't have to escape them if they appear mid-text in your template markup. Only if a line of text starts with one of these tokens, you have to escape it with a backslash. In the rare case where the backslash + token combination appears in your markup at the beginning of a line, you can always help yourself with a string literal in an inline expression::
+Both the ``%`` and the ``<%`` tokens are only recognized if they are the first non-whitespace characters in a line. You don't have to escape them if they appear mid-text in your template markup. Only if a line of text starts with one of these tokens, you have to escape it with a backslash. In the rare case where the backslash + token combination appears in your markup at the beginning of a line, you can always help yourself with a string literal in an inline expression:
+
+ .. code-block:: text
 
   This line contains % and <% but no python code.
   \% This text-line starts with the '%' token.
   \<% Another line that starts with a token but is rendered as text.
   {{'\\%'}} this line starts with an escaped token.
 
-If you find yourself needing to escape a lot, consider using :ref:`custom tokens <stpl-custom-tokens>`.
-
-Note that ``%`` and ``<% %>`` work in *exactly* the same way. The latter is only a convenient way to type less and avoid clutter for longer code segments. This means that in ``<% %>`` blocks, all indented code must be terminated with an ``end``, as in the following example::
-
-    <%
-        if some_condition:
-            some_operation()
-        elif some_other_condition:
-            some_other_operation()
-        else:
-            yet_another_operation()
-            if yet_another_condition:
-              some_more_stuff()
-            end
-        end
-    %>
 
 Whitespace Control
 -----------------------
@@ -166,7 +154,9 @@ Each template is preloaded with a bunch of functions that help with the most com
     % rebase('base.tpl', title='Page Title')
     <p>Page Content ...</p>
 
-  This can be combined with the following ``base.tpl``::
+  This can be combined with the following ``base.tpl``:
+
+  .. code-block:: html
 
     <html>
     <head>
