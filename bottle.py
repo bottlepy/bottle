@@ -1391,7 +1391,8 @@ class BaseRequest(object):
             instances of :class:`FileUpload`.
         """
         post = FormsDict()
-        content_type, options = _parse_http_header(self.content_type)[0]
+        content_type = self.environ.get('CONTENT_TYPE', '')
+        content_type, options = _parse_http_header(content_type)[0]
         # We default to application/x-www-form-urlencoded for everything that
         # is not multipart and take the fast path (also: 3.1 workaround)
         if not content_type.startswith('multipart/'):
