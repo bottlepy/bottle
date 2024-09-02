@@ -152,11 +152,11 @@ class ServerTestBase(unittest.TestCase):
             self.fail('The search pattern "%s" is not included in wsgi.error: %s' % (search, err))
 
 def multipart_environ(fields, files):
-    boundary = str(uuid.uuid1())
+    boundary = 'lowerUPPER-1234'
     env = {'REQUEST_METHOD':'POST',
            'CONTENT_TYPE':  'multipart/form-data; boundary='+boundary}
     wsgiref.util.setup_testing_defaults(env)
-    boundary = '--' + boundary
+    boundary = '--' + boundary 
     body = ''
     for name, value in fields:
         body += boundary + '\r\n'
