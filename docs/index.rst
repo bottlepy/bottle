@@ -52,7 +52,7 @@ Install the latest stable release with ``pip install bottle`` or download `bottl
 Dead Snakes
 ===========
 
-Bottle up to version 0.12 supported an absurd number of python versions, some of which reached their end of life well over a decade ago. Starting with Bottle 0.13 we try to support `all actively maintained versions of Python <https://devguide.python.org/versions/>`_ and not use features that may not work with older Python releases. Unless you are running a truly ancient version of Python, the newest Bottle release should work for you. If you are in the unfortunate position to have to rely on "dead snakes", you can stick with an older Bottle release.
+Bottle up to version 0.12 supported an absurd number of python versions, some of which reached their end-of-life well over a decade ago. Starting with Bottle 0.13 we will keep compatibility with `maintained versions of Python <https://devguide.python.org/versions/>`_ only and drop support for "dead snakes" with each new bottle release. If you are in the unfortunate position to have to rely on a truly ancient version of Python, just stick with a compatible bottle release. Everyone else should update regularly to benefit from new features and improvements.
 
 .. list-table:: Python Support Matrix
    :widths: 50 25 25
