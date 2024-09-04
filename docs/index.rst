@@ -42,28 +42,27 @@ Bottle is a fast, simple and lightweight WSGI_ micro web-framework for Python_. 
 
 Run this script or paste it into a Python console, then point your browser to `<http://localhost:8080/hello/world>`_. That's it.
 
-.. rubric:: Download and Install
+Download and Install
+====================
 
 .. __: https://github.com/bottlepy/bottle/raw/master/bottle.py
 
 Install the latest stable release with ``pip install bottle`` or download `bottle.py`__ (unstable) into your project directory. There are no hard [1]_ dependencies other than the Python standard library.
 
-.. rubric:: Python compatibility
+Dead Snakes
+===========
 
-Bottle aims to support `all maintained versions of Python <https://devguide.python.org/versions/>`_
-and not use features that may not work with older Python releases. Unless you are running a truly
-ancient version of Python, the newest Bottle release should work for you. If you are in the
-unfortunate position to have to rely on "dead snakes", you can stick with an older Bottle release.
+Bottle up to version 0.12 supported an absurd number of python versions, some of which reached their end of live well over a decade ago. Starting with Bottle 0.13 we try to support `all actively maintained versions of Python <https://devguide.python.org/versions/>`_ and not use features that may not work with older Python releases. Unless you are running a truly ancient version of Python, the newest Bottle release should work for you. If you are in the unfortunate position to have to rely on "dead snakes", you can stick with an older Bottle release.
 
-.. list-table:: Python Compatibility
-   :widths: 25 25 50
+.. list-table:: Python Support Matrix
+   :widths: 50 25 25
    :header-rows: 1
 
    * - Bottle Version
      - Python 2
      - Python 3
    * - 0.12
-     - 2.5 - 2.7
+     - 2.5, 2.6, 2.7
      - 3.2 - 3.12
    * - 0.13
      - 2.7
@@ -72,9 +71,8 @@ unfortunate position to have to rely on "dead snakes", you can stick with an old
      - *dropped*
      - 3.8 - 3.x
 
-Getting Started
-===============
-Start here if you want to learn how to use the bottle framework for web development. If you have any questions not answered here, feel free to ask the `mailing list <mailto:bottlepy@googlegroups.com>`_.
+Documentation
+=============
 
 .. toctree::
    :maxdepth: 2
@@ -108,14 +106,6 @@ Start here if you want to learn how to use the bottle framework for web developm
    :caption: Additional Notes
 
    tutorial_app
-
-
-
-
-Development
-===========
-
-These chapters are intended for developers interested in the bottle development and release workflow.
 
 .. toctree::
    :maxdepth: 2
