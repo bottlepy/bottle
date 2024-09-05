@@ -4,7 +4,7 @@
 .. _mako: http://www.makotemplates.org/
 .. _cheetah: http://www.cheetahtemplate.org/
 .. _jinja2: http://jinja.pocoo.org/
-.. _paste: http://pythonpaste.org/
+.. _paste: https://pythonpaste.readthedocs.io/
 .. _bjoern: https://github.com/jonashaag/bjoern
 .. _flup: http://trac.saddi.com/flup
 .. _gunicorn: https://gunicorn.org/

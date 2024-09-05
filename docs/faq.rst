@@ -3,8 +3,8 @@
 .. _beaker: https://beaker.readthedocs.io/en/latest/
 .. _mod_python: http://www.modpython.org/
 .. _mod_wsgi: http://code.google.com/p/modwsgi/
-.. _paste: http://pythonpaste.org/modules/evalexception.html
-.. _pylons: http://pylonshq.com/
+.. _paste: https://pythonpaste.readthedocs.io/
+.. _pylons: https://pylonsproject.org/
 .. _gevent: http://www.gevent.org/
 .. _compression: https://github.com/bottlepy/bottle/issues/92
 .. _GzipFilter: http://www.cherrypy.org/wiki/GzipFilter
@@ -167,7 +167,7 @@ Functional Testing Bottle Applications
 
 Any HTTP-based testing system can be used with a running WSGI server, but some testing frameworks work more intimately with WSGI, and provide the ability the call WSGI applications in a controlled environment, with tracebacks and full use of debugging tools.
 
-Example using `WebTest <http://webtest.pythonpaste.org/>`_::
+Example using `WebTest <https://docs.pylonsproject.org/projects/webtest/en/latest/index.html>`_::
 
     from webtest import TestApp
     import myapp
