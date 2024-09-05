@@ -3474,6 +3474,15 @@ class ServerAdapter(object):
     def run(self, handler):  # pragma: no cover
         pass
 
+    @property
+    def _listen_url(self):
+        if self.host.startswith("unix:"):
+            return self.host
+        elif ':' in self.host:
+            return "http://[%s]:%d/" % (self.host, self.port)
+        else:
+            return "http://%s:%d/" % (self.host, self.port)
+
     def __repr__(self):
         args = ', '.join('%s=%s' % (k, repr(v))
                           for k, v in self.options.items())
@@ -3965,11 +3974,7 @@ def run(app=None,
         if not server.quiet:
             _stderr("Bottle v%s server starting up (using %s)..." %
                     (__version__, repr(server)))
-            if server.host.startswith("unix:"):
-                _stderr("Listening on %s" % server.host)
-            else:
-                _stderr("Listening on http://%s:%d/" %
-                        (server.host, server.port))
+            _stderr("Listening on %s" % server._listen_url)
             _stderr("Hit Ctrl-C to quit.\n")
 
         if reloader:
