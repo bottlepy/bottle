@@ -5,6 +5,11 @@
 Release Notes
 =============
 
+Release 0.14 (in development)
+=============================
+
+* No noteworthy changes yet
+
 Release 0.13
 ==============
 
