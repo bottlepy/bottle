@@ -2086,6 +2086,12 @@ class _ImportRedirect(object):
         if fullname.rsplit('.', 1)[0] != self.name: return
         return self
 
+    def create_module(self, spec):
+        return self.load_module(spec.name)
+
+    def exec_module(self, module):
+        pass # This probably breaks importlib.reload() :/
+
     def load_module(self, fullname):
         if fullname in sys.modules: return sys.modules[fullname]
         modname = fullname.rsplit('.', 1)[1]
