@@ -23,7 +23,7 @@ class TestMakoTemplate(unittest.TestCase):
 
     def test_notfound(self):
         """ Templates: Unavailable templates"""
-        self.assertRaises(Exception, MakoTemplate, name="abcdef")
+        self.assertRaises(Exception, MakoTemplate, lookup=['./views/'], name="abcdef")
 
     def test_error(self):
         """ Templates: Exceptions"""
