@@ -7,8 +7,7 @@ API Reference
    :synopsis: WSGI micro framework
 .. moduleauthor:: Marcel Hellkamp <marc@gsites.de>
 
-This is a mostly auto-generated API. If you are new to bottle, you might find the
-narrative :doc:`tutorial` more helpful.
+Bottle prides itself on having source code that is easy to read and follow, so most questions about APIs or inner workings can be answered quickly by inspecting sources. Your IDE should give you the same information you'll find on this page, as most of it is auto-generates from docstrings and method signatures anyway. If you are new to bottle, you may find the :doc:`tutorial` more helpful as a starting point.
 
 
 
@@ -29,7 +28,6 @@ The module defines several functions, constants, and an exception.
 .. autofunction:: uninstall
 
 .. autofunction:: run
-
 
 
 Global decorators
@@ -55,6 +53,7 @@ and decorators. All of those have a corresponding method on the :class:`Bottle` 
 .. autofunction:: hook
 
 
+
 Request Context
 ===============
 
@@ -65,16 +64,14 @@ The global :data:`request` and :data:`response` instances are only valid from wi
 .. autodata:: response
 
 
-Utilities
-=========
+Helper Functions
+================
 
 .. autofunction:: abort
 
 .. autofunction:: redirect
 
 .. autofunction:: static_file
-
-
 
 
 Exceptions

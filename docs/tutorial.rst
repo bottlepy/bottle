@@ -1,25 +1,6 @@
 .. currentmodule:: bottle
 
-.. _Apache Server:
-.. _Apache: http://www.apache.org/
-.. _cherrypy: https://cherrypy.dev/
-.. _decorator: http://docs.python.org/glossary.html#term-decorator
-.. _flup: http://trac.saddi.com/flup
-.. _http_code: https://www.rfc-editor.org/rfc/rfc9110.html#name-status-codes
-.. _http_method: https://www.rfc-editor.org/rfc/rfc9110.html#name-methods
-.. _json: http://de.wikipedia.org/wiki/JavaScript_Object_Notation
-.. _lighttpd: http://www.lighttpd.net/
-.. _mako: http://www.makotemplates.org/
-.. _mod_wsgi: http://code.google.com/p/modwsgi/
-.. _Paste: https://pythonpaste.readthedocs.io
-.. _Pound: http://www.apsis.ch/pound/
-.. _WSGI: https://peps.python.org/pep-3333/
-.. _issue: http://github.com/bottlepy/bottle/issues
-.. _Python: http://python.org/
-.. _SimpleCookie: http://docs.python.org/library/cookie.html#morsel-objects
-.. _testing: http://github.com/bottlepy/bottle/raw/master/bottle.py
-.. _gunicorn: https://gunicorn.org/
-.. _cheroot: https://cheroot.cherrypy.dev/
+
 
 ===============
 User's Guide
@@ -228,9 +209,7 @@ You can add your own filters as well. See :doc:`routing` for details.
 HTTP Request Methods
 ------------------------------------------------------------------------------
 
-.. __: http_method_
-
-The HTTP protocol defines several `request methods`__ (sometimes referred to as "verbs") for different tasks. GET is the default for all routes with no other method specified. These routes will match GET requests only. To handle other methods such as POST, PUT, DELETE or PATCH, add a ``method`` keyword argument to the :func:`route` decorator or use one of the five alternative decorators: :func:`get`, :func:`post`, :func:`put`, :func:`delete` or :func:`patch`.
+The HTTP protocol defines several `request methods <https://www.rfc-editor.org/rfc/rfc9110.html#name-methods>`_ (sometimes referred to as "verbs") for different tasks. GET is the default for all routes with no other method specified. These routes will match GET requests only. To handle other methods such as POST, PUT, DELETE or PATCH, add a ``method`` keyword argument to the :func:`route` decorator or use one of the five alternative decorators: :func:`get`, :func:`post`, :func:`put`, :func:`delete` or :func:`patch`.
 
 The POST method is commonly used for HTML form submission. This example shows how to handle a login form using POST::
 
@@ -255,7 +234,7 @@ The POST method is commonly used for HTML form submission. This example shows ho
         else:
             return "<p>Login failed.</p>"
 
-In this example the ``/login`` URL is linked to two distinct callbacks, one for GET requests and another for POST requests. The first one displays a HTML form to the user. The second callback is invoked on a form submission and checks the login credentials the user entered into the form. The use of :attr:`Request.forms` is further described in the :ref:`tutorial-request` section.
+In this example the ``/login`` URL is linked to two distinct callbacks, one for GET requests and another for POST requests. The first one displays a HTML form to the user. The second callback is invoked on a form submission and checks the login credentials the user entered into the form. The use of :attr:`BaseRequest.forms` is further described in the :ref:`tutorial-request` section.
 
 .. rubric:: Special Methods: HEAD and ANY
 
@@ -321,7 +300,7 @@ Instances of :exc:`HTTPError` or :exc:`HTTPResponse`
     Raising or returning an instance of :exc:`HTTPResponse` will overwrite any changes made to the global :data:`request` object and then continue as usual. In case of an :exc:`HTTPError`, error handler are applied first. See :ref:`tutorial-errorhandling` for details.
 
 Files or file-like objects
-    Anything that has a ``.read()`` method is treated as a file or file-like object and passed to the ``wsgi.file_wrapper`` callable defined by the WSGI server framework. Some WSGI server implementations can make use of optimized system calls (e.g. sendfile) to transmit files more efficiently. In other cases this just iterates over chunks that fit into memory. Optional headers such as ``Content-Length`` or ``Content-Type`` are *not* set automatically. For security and other reasons you sould always prefer :func:`send_file` over returning raw files, though. See :ref:`tutorial-static-files` for details.
+    Anything that has a ``.read()`` method is treated as a file or file-like object and passed to the ``wsgi.file_wrapper`` callable defined by the WSGI server framework. Some WSGI server implementations can make use of optimized system calls (e.g. sendfile) to transmit files more efficiently. In other cases this just iterates over chunks that fit into memory. Optional headers such as ``Content-Length`` or ``Content-Type`` are *not* set automatically. For security and other reasons you should always prefer :func:`static_file` over returning raw files, though. See :ref:`tutorial-static-files` for details.
 
 Iterables or generators
     You can ``yield`` either byte- or unicode strings (not both) from your route callback and bottle will write those to the response in a streaming fashion. The ``Content-Length`` header is not set in this case, because the final response size is not known. Nested iterables are not supported, sorry. Please note that HTTP status code and headers are sent to the browser as soon as the iterable yields its first non-empty value. Changing these later has no effect. If the first element of the iterable is either :exc:`HTTPError` or :exc:`HTTPResponse`, the rest of the iterator is ignored.
@@ -330,7 +309,7 @@ The ordering of this list is significant. You may for example return a subclass 
 
 .. rubric:: Changing the Default Encoding
 
-Bottle uses the `charset` parameter of the ``Content-Type`` header to decide how to encode unicode strings. This header defaults to ``text/html; charset=UTF8`` and can be changed using the :attr:`response.content_type` attribute or by setting the :attr:`response.charset` attribute directly. (The :class:`Response` object is described in the section :ref:`tutorial-response`.)
+Bottle uses the `charset` parameter of the ``Content-Type`` header to decide how to encode unicode strings. This header defaults to ``text/html; charset=UTF8`` and can be changed using the :attr:`BaseResponse.content_type` attribute or by setting the :attr:`BaseResponse.charset` attribute directly. (The :class:`Response` object is described in the section :ref:`tutorial-response`.)
 
 ::
 
@@ -345,7 +324,7 @@ Bottle uses the `charset` parameter of the ``Content-Type`` header to decide how
         response.content_type = 'text/html; charset=latin9'
         return u'ISO-8859-15 is also known as latin9.'
 
-In some rare cases the Python encoding names differ from the names supported by the HTTP specification. Then, you have to do both: first set the :attr:`Response.content_type` header (which is sent to the client unchanged) and then set the :attr:`Response.charset` attribute (which is used to encode unicode).
+In some rare cases the Python encoding names differ from the names supported by the HTTP specification. Then, you have to do both: first set the :attr:`BaseResponse.content_type` header (which is sent to the client unchanged) and then set the :attr:`BaseResponse.charset` attribute (which is used to encode unicode).
 
 
 .. _tutorial-errorhandling:
@@ -363,7 +342,7 @@ If anything goes wrong, Bottle displays an informative but fairly plain error pa
 
 From now on, ``404`` (File not found) errors will display a custom error page to the user. The only parameter passed to the error-handler is an instance of :exc:`HTTPError`. Apart from that, an error-handler is quite similar to a regular request callback. You can read from :data:`request`, write to :data:`response` and return any supported data-type except for :exc:`HTTPError` instances.
 
-Error handlers are used only if your application returns or raises an :exc:`HTTPError` exception (:func:`abort` does just that). Setting :attr:`request.status` to an error code or returning :exc:`HTTPResponse` won't trigger error handlers.
+Error handlers are used only if your application returns or raises an :exc:`HTTPError` exception (:func:`abort` does just that). Setting :attr:`BaseRequest.status` to an error code or returning :exc:`HTTPResponse` won't trigger error handlers.
 
 .. rubric:: Triggering errors with :func:`abort`
 
@@ -393,7 +372,7 @@ Response metadata such as the HTTP status code, response headers and cookies are
 
 .. rubric:: Status Code
 
-The `HTTP status code <http_code>`_ controls the behavior of the browser and defaults to ``200 OK``. In most scenarios you won't need to set the :attr:`BaseResponse.status` attribute manually, but use the :func:`abort` helper or return an :exc:`HTTPResponse` instance with the appropriate status code. Any integer is allowed, but codes other than the ones defined by the `HTTP specification <http_code>`_ will only confuse the browser and break standards.
+The HTTP status code controls the behavior of the browser and defaults to ``200 OK``. In most scenarios you won't need to set the :attr:`BaseResponse.status` attribute manually, but use the :func:`abort` helper or return an :exc:`HTTPResponse` instance with the appropriate status code. Any integer is allowed, but codes other than the ones defined by the `HTTP specification <https://www.rfc-editor.org/rfc/rfc9110.html#name-status-codes>`_ will only confuse the browser and break standards.
 
 .. rubric:: Response Headers
 
@@ -426,7 +405,7 @@ To redirect a client to a different URL, you can send a ``303 See Other`` respon
 Cookies
 -------------------------------------------------------------------------------
 
-A cookie is a named piece of text stored in the user's browser profile. You can access previously defined cookies via :meth:`Request.get_cookie` and set new cookies with :meth:`Response.set_cookie`::
+A cookie is a named piece of text stored in the user's browser profile. You can access previously defined cookies via :meth:`BaseRequest.get_cookie` and set new cookies with :meth:`BaseResponse.set_cookie`::
 
     @route('/hello')
     def hello_again():
@@ -436,7 +415,7 @@ A cookie is a named piece of text stored in the user's browser profile. You can 
             response.set_cookie("visited", "yes")
             return "Hello there! Nice to meet you"
 
-The :meth:`Response.set_cookie` method accepts a number of additional keyword arguments that control the cookies lifetime and behavior. Some of the most common settings are described here:
+The :meth:`BaseResponse.set_cookie` method accepts a number of additional keyword arguments that control the cookies lifetime and behavior. Some of the most common settings are described here:
 
 * **max_age:**    Maximum age in seconds. (default: ``None``)
 * **expires:**    A datetime object or UNIX timestamp. (default: ``None``)
@@ -457,7 +436,7 @@ If neither `expires` nor `max_age` is set, the cookie expires at the end of the 
 
 .. rubric:: Signed Cookies
 
-As mentioned above, cookies are easily forged by malicious clients. Bottle can cryptographically sign your cookies to prevent this kind of manipulation. All you have to do is to provide a signature key via the `secret` keyword argument whenever you read or set a cookie and keep that key a secret. As a result, :meth:`Request.get_cookie` will return ``None`` if the cookie is not signed or the signature keys don't match::
+As mentioned above, cookies are easily forged by malicious clients. Bottle can cryptographically sign your cookies to prevent this kind of manipulation. All you have to do is to provide a signature key via the `secret` keyword argument whenever you read or set a cookie and keep that key a secret. As a result, :meth:`BaseRequest.get_cookie` will return ``None`` if the cookie is not signed or the signature keys don't match::
 
     @route('/login')
     def do_login():
@@ -571,6 +550,8 @@ To simplify dealing with lots of unreliable user input, :class:`FormsDict` expos
 
 HTTP is a byte-based wire protocol. The server has to decode byte strings somehow before they are passed to the application. To be on the safe side, WSGI suggests ISO-8859-1 (aka latin1), a reversible single-byte codec that can be re-encoded with a different encoding later. Bottle does that for :meth:`FormsDict.getunicode` and attribute access, but not for :meth:`FormsDict.get` or item-access. These return the unchanged values as provided by the server implementation, which is probably not what you want.
 
+::
+
     >>> request.query['city']
     'GÃ¶ttingen' # An utf8 string provisionally decoded as ISO-8859-1 by the server
     >>> request.query.city
@@ -676,13 +657,13 @@ requests or those that did not contain ``application/json`` data. Parsing errors
 Raw Request Data
 --------------------
 
-You can access the raw body data as a file-like object via :attr:`BaseRequest.body`. This is a :class:`BytesIO` buffer or a temporary file depending on the content length and :attr:`BaseRequest.MEMFILE_MAX` setting. In both cases the body is completely buffered before you can access the attribute. If you expect huge amounts of data and want to get direct unbuffered access to the stream, have a look at ``request['wsgi.input']``.
+You can access the raw body data as a file-like object via :attr:`BaseRequest.body`. This is a :class:`io.BytesIO` buffer or a temporary file depending on the content length and :attr:`BaseRequest.MEMFILE_MAX` setting. In both cases the body is completely buffered before you can access the attribute. If you expect huge amounts of data and want to get direct unbuffered access to the stream, have a look at ``request['wsgi.input']``.
 
 
 WSGI Environment
 --------------------------------------------------------------------------------
 
-Each :class:`BaseRequest` instance wraps a WSGI environment dictionary which is stored in :attr:`BaseRequest.environ`. Most of the interesting information is also exposed through special methods or properties, but if you want to access the raw `WSGI environ <WSGI>`_ directly, you can do so::
+Each :class:`BaseRequest` instance wraps a WSGI environment dictionary which is stored in :attr:`BaseRequest.environ`. Most of the interesting information is also exposed through special methods or properties, but if you want to access the raw `WSGI environ <https://peps.python.org/pep-3333/>`_ directly, you can do so::
 
   @route('/my_ip')
   def show_ip():
