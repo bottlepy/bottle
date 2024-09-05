@@ -6,9 +6,6 @@
 .. _paste: https://pythonpaste.readthedocs.io/
 .. _pylons: https://pylonsproject.org/
 .. _gevent: http://www.gevent.org/
-.. _compression: https://github.com/bottlepy/bottle/issues/92
-.. _GzipFilter: http://www.cherrypy.org/wiki/GzipFilter
-.. _cherrypy: http://www.cherrypy.org
 .. _heroku: http://heroku.com
 .. _django: https://www.djangoproject.com/
 .. _werkzeug: https://werkzeug.palletsprojects.com/en/3.0.x/
@@ -248,9 +245,6 @@ If you browse to ``http://localhost:8080/stream``, you should see 'START', 'MIDD
 Gzip Compression in Bottle
 --------------------------
 
-.. note::
-   For a detailed discussion, see compression_
-
 A common feature request is for Bottle to support Gzip compression, which speeds up sites by compressing static resources (like CSS and JS files) during a request.
 
 Supporting Gzip compression is not a straightforward proposition, due to a number of corner cases that crop up frequently. A proper Gzip implementation must:
@@ -265,7 +259,7 @@ Supporting Gzip compression is not a straightforward proposition, due to a numbe
 * Make sure the cache does not get to big.
 * Do not cache small files because a disk seek would take longer than on-the-fly compression.
 
-Because of these requirements, it is the recommendation of the Bottle project that Gzip compression is best handled by the WSGI server Bottle runs on top of. WSGI servers such as cherrypy_ provide a GzipFilter_ middleware that can be used to accomplish this.
+Because of these requirements, it is the recommendation of the Bottle project that Gzip compression is best handled by the WSGI server Bottle runs on top of. WSGI servers and reverse proxies often provide built-in features that allow transparent compression without changing the application itself.
 
 
 Using hooks to handle CORS
