@@ -267,13 +267,7 @@ class RouteError(BottleException):
     """ This is a base class for all routing related exceptions """
 
 
-class RouteReset(BottleException):
-    """ If raised by a plugin or request handler, the route is reset and all
-        plugins are re-applied. """
-
-
 class RouterUnknownModeError(RouteError):
-
     pass
 
 
@@ -556,13 +550,10 @@ class Route(object):
     def _make_callback(self):
         callback = self.callback
         for plugin in self.all_plugins():
-            try:
-                if hasattr(plugin, 'apply'):
-                    callback = plugin.apply(callback, self)
-                else:
-                    callback = plugin(callback)
-            except RouteReset:  # Try again with changed configuration.
-                return self._make_callback()
+            if hasattr(plugin, 'apply'):
+                callback = plugin.apply(callback, self)
+            else:
+                callback = plugin(callback)
             if callback is not self.callback:
                 update_wrapper(callback, self.callback)
         return callback
@@ -982,33 +973,24 @@ class Bottle(object):
         response.bind()
 
         try:
-            while True: # Remove in 0.14 together with RouteReset
-                out = None
+            out = None
+            try:
+                self.trigger_hook('before_request')
+                route, args = self.router.match(environ)
+                environ['route.handle'] = route
+                environ['bottle.route'] = route
+                environ['route.url_args'] = args
+                out = route.call(**args)
+            except HTTPResponse as E:
+                out = E
+            finally:
+                if isinstance(out, HTTPResponse):
+                    out.apply(response)
                 try:
-                    self.trigger_hook('before_request')
-                    route, args = self.router.match(environ)
-                    environ['route.handle'] = route
-                    environ['bottle.route'] = route
-                    environ['route.url_args'] = args
-                    out = route.call(**args)
-                    break
+                    self.trigger_hook('after_request')
                 except HTTPResponse as E:
                     out = E
-                    break
-                except RouteReset:
-                    depr(0, 13, "RouteReset exception deprecated",
-                                "Call route.call() after route.reset() and "
-                                "return the result.")
-                    route.reset()
-                    continue
-                finally:
-                    if isinstance(out, HTTPResponse):
-                        out.apply(response)
-                    try:
-                        self.trigger_hook('after_request')
-                    except HTTPResponse as E:
-                        out = E
-                        out.apply(response)
+                    out.apply(response)
         except (KeyboardInterrupt, SystemExit, MemoryError):
             raise
         except Exception as E:

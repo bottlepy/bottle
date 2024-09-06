@@ -68,7 +68,7 @@ The :class:`Route` instance passed to :meth:`Plugin.apply` provides detailed inf
 
 Keep in mind that :attr:`Route.config` is local to the route, but shared between all plugins. It is always a good idea to add a unique prefix or, if your plugin needs a lot of configuration, store it in a separate namespace within the `config` dictionary. This helps to avoid naming collisions between plugins.
 
-While some :class:`Route` attributes are mutable, changes may have unwanted effects on other plugins and also only affect plugins that were not applied yet. If you need to make changes to the route that are recognized by all plugins, raise :exc:`RouteReset` as an exception. This removes the current route from the cache and causes all plugins to be re-applied again. The router is not updated, however. Changes to `rule` or `method` values have no effect on the router, only on plugins. This may change in the future.
+While some :class:`Route` attributes are mutable, changes may have unwanted effects on other plugins and also only affect plugins that were not applied yet. If you need to make changes to the route that are recognized by all plugins, call :meth:`Route.reset` afterwards. This will clear the route cache and apply all plugins again next time the route is called, giving all plugins a chance to adapt to the new config. The router is not updated, however. Changes to `rule` or `method` values have no effect on the router, only on plugins. This may change in the future.
 
 
 Runtime optimizations
@@ -79,8 +79,6 @@ Once all plugins are applied to a route, the wrapped route callback is cached to
 For performance reasons however, it might be worthwhile to return a different wrapper based on current needs, work with closures, or enable or disable a plugin at runtime. Let's take the built-in ``HooksPlugin`` as an example: If no hooks are installed, the plugin removes itself from all routes and has virtually no overhead. As soon as you install the first hook, the plugin activates itself and takes effect again.
 
 To achieve this, you need control over the callback cache: :meth:`Route.reset` clears the cache for a single route and :meth:`Bottle.reset` clears all caches for all routes of an application at once. On the next request, all plugins are re-applied to the route as if it were requested for the first time.
-
-Both methods won't affect the current request if called from within a route callback, though. To force a complete restart of the *current* request, raise :exc:`RouteReset` as an exception.
 
 
 Common patterns

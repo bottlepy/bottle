@@ -1,4 +1,4 @@
-﻿.. highlight:: python
+.. highlight:: python
 .. currentmodule:: bottle
 
 =============
@@ -8,7 +8,9 @@ Release Notes
 Release 0.14 (in development)
 =============================
 
-* No noteworthy changes yet
+.. rubric:: Removed APIs (deprecated since 0.13)
+
+* Removed the ``RouteReset`` exception and associated logic.
 
 Release 0.13
 ==============
