@@ -3,7 +3,7 @@
 
 .. _mako: http://www.makotemplates.org/
 .. _cheetah: http://www.cheetahtemplate.org/
-.. _jinja2: http://jinja.pocoo.org/
+.. _jinja2: https://jinja.palletsprojects.com/
 .. _paste: https://pythonpaste.readthedocs.io/
 .. _bjoern: https://github.com/jonashaag/bjoern
 .. _flup: http://trac.saddi.com/flup
@@ -25,7 +25,7 @@ Bottle is a fast, simple and lightweight WSGI_ micro web-framework for Python_. 
 
 * **Routing:** Requests to function-call mapping with support for clean and dynamic URLs.
 * **Templates:** Fast and pythonic :ref:`built-in template engine <tutorial-templates>` and support for mako_, jinja2_ and cheetah_ templates.
-* **Utilities:** Convenient access to form data, file uploads, cookies, headers and other HTTP-related metadata.
+* **Utilities:** Convenient access to form data, file uploads, cookies, headers and other HTTP features.
 * **Server:** Built-in HTTP development server and support for a wide range of WSGI_ capable HTTP server (e.g. gunicorn_, paste_ or cheroot_).
 
 .. rubric:: Example: "Hello World" in a bottle
@@ -52,7 +52,7 @@ Install the latest stable release with ``pip install bottle`` or download `bottl
 Dead Snakes
 ===========
 
-Bottle up to version 0.12 supported an absurd number of python versions, some of which reached their end-of-life well over a decade ago. Starting with Bottle 0.13 we will keep compatibility with `maintained versions of Python <https://devguide.python.org/versions/>`_ only and drop support for "dead snakes" with each new bottle release. If you are in the unfortunate position to have to rely on a truly ancient version of Python, just stick with a compatible bottle release. Everyone else should update regularly to benefit from new features and improvements.
+Bottle up to version 0.12 supported an absurd number of python versions, some of which reached their end-of-life well over a decade ago. Starting with Bottle 0.13 we will ensure compatibility with `maintained versions of Python <https://devguide.python.org/versions/>`_ but drop support for "dead snakes" with each new bottle release. If you are in the unfortunate position to have to rely on such a truly ancient version of Python, just stick with a compatible bottle release. Everyone else should update regularly to benefit from new features and improvements.
 
 .. list-table:: Python Support Matrix
    :widths: 50 25 25

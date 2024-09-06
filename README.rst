@@ -15,15 +15,15 @@
     :target: https://pypi.python.org/pypi/bottle/
     :alt: License
 
-.. _mako: http://www.makotemplates.org/
-.. _cheetah: http://www.cheetahtemplate.org/
-.. _jinja2: http://jinja.pocoo.org/
+.. _Python: https://python.org/
+.. _mako: https://www.makotemplates.org/
+.. _cheetah: https://www.cheetahtemplate.org/
+.. _jinja2: https://jinja.palletsprojects.com/
+
+.. _WSGI: https://peps.python.org/pep-3333/
+.. _gunicorn: https://gunicorn.org/
 .. _paste: https://pythonpaste.readthedocs.io/
-.. _fapws3: https://github.com/william-os4y/fapws3
-.. _bjoern: https://github.com/jonashaag/bjoern
-.. _cherrypy: https://docs.cherrypy.dev/
-.. _WSGI: https://wsgi.readthedocs.io/
-.. _Python: http://python.org/
+.. _cheroot: https://cheroot.cherrypy.dev/
 
 ============================
 Bottle: Python Web Framework
@@ -31,11 +31,11 @@ Bottle: Python Web Framework
 
 Bottle is a fast, simple and lightweight WSGI_ micro web-framework for Python_. It is distributed as a single file module and has no dependencies other than the `Python Standard Library <http://docs.python.org/library/>`_.
 
-
-* **Routing:** Requests to function-call mapping with support for clean and  dynamic URLs.
+* **Routing:** Requests to function-call mapping with support for clean and dynamic URLs.
 * **Templates:** Fast and pythonic `*built-in template engine* <http://bottlepy.org/docs/dev/tutorial.html#tutorial-templates>`_ and support for mako_, jinja2_ and cheetah_ templates.
-* **Utilities:** Convenient access to form data, file uploads, cookies, headers and other HTTP-related metadata.
-* **Server:** Built-in HTTP development server and support for paste_, fapws3_, bjoern_, `Google App Engine <https://cloud.google.com/appengine/>`_, cherrypy_ or any other WSGI_ capable HTTP server.
+* **Utilities:** Convenient access to form data, file uploads, cookies, headers and other HTTP features.
+* **Server:** Built-in development server and ready-to-use adapters for a wide range of WSGI_ capable HTTP server (e.g. gunicorn_, paste_ or cheroot_).
+
 
 Homepage and documentation: http://bottlepy.org
 
