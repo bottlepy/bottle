@@ -1122,8 +1122,7 @@ class Bottle(object):
     def __setattr__(self, name, value):
         if name in self.__dict__:
             raise AttributeError("Attribute %s already defined. Plugin conflict?" % name)
-        self.__dict__[name] = value
-
+        object.__setattr__(self, name, value)
 
 ###############################################################################
 # HTTP and WSGI Tools ##########################################################

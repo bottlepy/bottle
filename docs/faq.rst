@@ -107,7 +107,7 @@ Bottle catches all Exceptions raised in your app code to prevent your WSGI serve
 
     import bottle
     app = bottle.Bottle() 
-    app.catchall = False #Now most exceptions are re-raised within bottle.
+    app.catchall = False  # Now most exceptions are re-raised within bottle.
     myapp = DebuggingMiddleware(app) #Replace this with a middleware of your choice (see below)
     bottle.run(app=myapp)
 

@@ -33,6 +33,9 @@ class TestAppException(ServerTestBase):
         @bottle.route('/')
         def test(): raise SomeError
         bottle.request.environ['exc_info'] = None
-        bottle.catchall = False
+        self.app.catchall = False
+        with self.assertRaises(SomeError):
+            self.urlopen("/")
+        self.app.catchall = True
         self.assertStatus(500, '/')
         self.assertInBody('SomeError')
