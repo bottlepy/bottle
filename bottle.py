@@ -69,8 +69,8 @@ if __name__ == '__main__':
 # Imports and Python 2/3 unification ##########################################
 ###############################################################################
 
-import base64, calendar, email.utils, functools, hmac, itertools,\
-       mimetypes, os, re, tempfile, threading, time, warnings, weakref, hashlib
+import base64, calendar, email.utils, functools, hmac, itertools, \
+    mimetypes, os, re, tempfile, threading, time, warnings, weakref, hashlib
 
 from types import FunctionType
 from datetime import date as datedate, datetime, timedelta
@@ -104,6 +104,7 @@ if py3k:
     # getfullargspec was deprecated in 3.5 and un-deprecated in 3.6
     # getargspec was deprecated in 3.0 and removed in 3.11
     from inspect import getfullargspec
+
     def getargspec(func):
         spec = getfullargspec(func)
         kwargs = makelist(spec[0]) + makelist(spec.kwonlyargs)
@@ -117,6 +118,7 @@ if py3k:
 
     def _raise(*a):
         raise a[0](a[1]).with_traceback(a[2])
+
 else:  # 2.x
     import httplib
     import thread
@@ -2007,9 +2009,9 @@ class JSONPlugin(object):
                 rv = resp
 
             if isinstance(rv, dict):
-                #Attempt to serialize, raises exception on failure
+                # Attempt to serialize, raises exception on failure
                 json_response = dumps(rv)
-                #Set content type only if serialization successful
+                # Set content type only if serialization successful
                 response.content_type = 'application/json'
                 return json_response
             elif isinstance(rv, HTTPResponse) and isinstance(rv.body, dict):
@@ -4032,8 +4034,8 @@ class TemplateError(BottleException):
 class BaseTemplate(object):
     """ Base class and minimal API for template adapters """
     extensions = ['tpl', 'html', 'thtml', 'stpl']
-    settings = {}  #used in prepare()
-    defaults = {}  #used in render()
+    settings = {}  # used in prepare()
+    defaults = {}  # used in render()
 
     def __init__(self,
                  source=None,
@@ -4243,7 +4245,7 @@ class SimpleTemplate(BaseTemplate):
         exec(self.co, env)
         if env.get('_rebase'):
             subtpl, rargs = env.pop('_rebase')
-            rargs['base'] = ''.join(_stdout)  #copy stdout
+            rargs['base'] = ''.join(_stdout)  # copy stdout
             del _stdout[:]  # clear stdout
             return self._include(env, subtpl, **rargs)
         return env
