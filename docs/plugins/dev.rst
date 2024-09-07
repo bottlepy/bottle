@@ -90,7 +90,7 @@ Plugins may checks if the callback accepts a specific keyboard parameter and onl
 
 .. rubric:: Request context properties
 
-Plugins may add new request-local properties to the current :data:`request`, for example ``request.session`` for a durable session or ``request.user`` for logged in users. See :class:`BaseRequest.__setattr__`.
+Plugins may add new request-local properties to the current :data:`request`, for example ``request.session`` for a durable session or ``request.user`` for logged in users. See :class:`Request.__setattr__ <BaseRequest.__setattr__>`.
 
 .. rubric:: Response type mapping
 

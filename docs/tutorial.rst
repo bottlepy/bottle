@@ -234,7 +234,7 @@ The POST method is commonly used for HTML form submission. This example shows ho
         else:
             return "<p>Login failed.</p>"
 
-In this example the ``/login`` URL is linked to two distinct callbacks, one for GET requests and another for POST requests. The first one displays a HTML form to the user. The second callback is invoked on a form submission and checks the login credentials the user entered into the form. The use of :attr:`BaseRequest.forms` is further described in the :ref:`tutorial-request` section.
+In this example the ``/login`` URL is linked to two distinct callbacks, one for GET requests and another for POST requests. The first one displays a HTML form to the user. The second callback is invoked on a form submission and checks the login credentials the user entered into the form. The use of :attr:`Request.forms <BaseRequest.forms> is further described in the :ref:`tutorial-request` section.
 
 .. rubric:: Special Methods: HEAD and ANY
 
@@ -309,7 +309,7 @@ The ordering of this list is significant. You may for example return a subclass 
 
 .. rubric:: Changing the Default Encoding
 
-Bottle uses the `charset` parameter of the ``Content-Type`` header to decide how to encode unicode strings. This header defaults to ``text/html; charset=UTF8`` and can be changed using the :attr:`BaseResponse.content_type` attribute or by setting the :attr:`BaseResponse.charset` attribute directly. (The :class:`Response` object is described in the section :ref:`tutorial-response`.)
+Bottle uses the `charset` parameter of the ``Content-Type`` header to decide how to encode unicode strings. This header defaults to ``text/html; charset=UTF8`` and can be changed using the :attr:`Response.content_type <BaseResponse.content_type>` attribute or by setting the :attr:`Response.charset <BaseResponse.charset>` attribute directly. (The :class:`Response` object is described in the section :ref:`tutorial-response`.)
 
 ::
 
@@ -324,7 +324,7 @@ Bottle uses the `charset` parameter of the ``Content-Type`` header to decide how
         response.content_type = 'text/html; charset=latin9'
         return u'ISO-8859-15 is also known as latin9.'
 
-In some rare cases the Python encoding names differ from the names supported by the HTTP specification. Then, you have to do both: first set the :attr:`BaseResponse.content_type` header (which is sent to the client unchanged) and then set the :attr:`BaseResponse.charset` attribute (which is used to encode unicode).
+In some rare cases the Python encoding names differ from the names supported by the HTTP specification. Then, you have to do both: first set the :attr:`Response.content_type <BaseResponse.content_type>` header (which is sent to the client unchanged) and then set the :attr:`Response.charset <BaseResponse.charset>` attribute (which is used to encode unicode).
 
 
 .. _tutorial-errorhandling:
@@ -342,7 +342,7 @@ If anything goes wrong, Bottle displays an informative but fairly plain error pa
 
 From now on, ``404`` (File not found) errors will display a custom error page to the user. The only parameter passed to the error-handler is an instance of :exc:`HTTPError`. Apart from that, an error-handler is quite similar to a regular request callback. You can read from :data:`request`, write to :data:`response` and return any supported data-type except for :exc:`HTTPError` instances.
 
-Error handlers are used only if your application returns or raises an :exc:`HTTPError` exception (:func:`abort` does just that). Setting :attr:`BaseRequest.status` to an error code or returning :exc:`HTTPResponse` won't trigger error handlers.
+Error handlers are used only if your application returns or raises an :exc:`HTTPError` exception (:func:`abort` does just that). Setting :attr:`Response.status <BaseResponse.status>` to an error code or returning :exc:`HTTPResponse` won't trigger error handlers.
 
 .. rubric:: Triggering errors with :func:`abort`
 
@@ -372,18 +372,18 @@ Response metadata such as the HTTP status code, response headers and cookies are
 
 .. rubric:: Status Code
 
-The HTTP status code controls the behavior of the browser and defaults to ``200 OK``. In most scenarios you won't need to set the :attr:`BaseResponse.status` attribute manually, but use the :func:`abort` helper or return an :exc:`HTTPResponse` instance with the appropriate status code. Any integer is allowed, but codes other than the ones defined by the `HTTP specification <https://www.rfc-editor.org/rfc/rfc9110.html#name-status-codes>`_ will only confuse the browser and break standards.
+The HTTP status code controls the behavior of the browser and defaults to ``200 OK``. In most scenarios you won't need to set the :attr:`Response.status <BaseResponse.status>` attribute manually, but use the :func:`abort` helper or return an :exc:`HTTPResponse` instance with the appropriate status code. Any integer is allowed, but codes other than the ones defined by the `HTTP specification <https://www.rfc-editor.org/rfc/rfc9110.html#name-status-codes>`_ will only confuse the browser and break standards.
 
 .. rubric:: Response Headers
 
-Response headers such as ``Cache-Control`` or ``Location`` are defined via :meth:`BaseResponse.set_header`. This method takes two parameters, a header name and a value. The name part is case-insensitive::
+Response headers such as ``Cache-Control`` or ``Location`` are defined via :meth:`Response.set_header <BaseResponse.set_header>`. This method takes two parameters, a header name and a value. The name part is case-insensitive::
 
   @route('/wiki/<page>')
   def wiki(page):
       response.set_header('Content-Language', 'en')
       ...
 
-Most headers are unique, meaning that only one header per name is send to the client. Some special headers however are allowed to appear more than once in a response. To add an additional header, use :meth:`BaseResponse.add_header` instead of :meth:`BaseResponse.set_header`::
+Most headers are unique, meaning that only one header per name is send to the client. Some special headers however are allowed to appear more than once in a response. To add an additional header, use :meth:`Response.add_header <BaseResponse.add_header>` instead of :meth:`Response.set_header <BaseResponse.set_header>`::
 
     response.set_header('Set-Cookie', 'name=value')
     response.add_header('Set-Cookie', 'name=value2')
@@ -405,7 +405,7 @@ To redirect a client to a different URL, you can send a ``303 See Other`` respon
 Cookies
 -------------------------------------------------------------------------------
 
-A cookie is a named piece of text stored in the user's browser profile. You can access previously defined cookies via :meth:`BaseRequest.get_cookie` and set new cookies with :meth:`BaseResponse.set_cookie`::
+A cookie is a named piece of text stored in the user's browser profile. You can access previously defined cookies via :meth:`Request.get_cookie <BaseRequest.get_cookie>` and set new cookies with :meth:`Response.set_cookie <BaseResponse.set_cookie>`::
 
     @route('/hello')
     def hello_again():
@@ -415,7 +415,7 @@ A cookie is a named piece of text stored in the user's browser profile. You can 
             response.set_cookie("visited", "yes")
             return "Hello there! Nice to meet you"
 
-The :meth:`BaseResponse.set_cookie` method accepts a number of additional keyword arguments that control the cookies lifetime and behavior. Some of the most common settings are described here:
+The :meth:`Response.set_cookie <BaseResponse.set_cookie>` method accepts a number of additional keyword arguments that control the cookies lifetime and behavior. Some of the most common settings are described here:
 
 * **max_age:**    Maximum age in seconds. (default: ``None``)
 * **expires:**    A datetime object or UNIX timestamp. (default: ``None``)
@@ -436,7 +436,7 @@ If neither `expires` nor `max_age` is set, the cookie expires at the end of the 
 
 .. rubric:: Signed Cookies
 
-As mentioned above, cookies are easily forged by malicious clients. Bottle can cryptographically sign your cookies to prevent this kind of manipulation. All you have to do is to provide a signature key via the `secret` keyword argument whenever you read or set a cookie and keep that key a secret. As a result, :meth:`BaseRequest.get_cookie` will return ``None`` if the cookie is not signed or the signature keys don't match::
+As mentioned above, cookies are easily forged by malicious clients. Bottle can cryptographically sign your cookies to prevent this kind of manipulation. All you have to do is to provide a signature key via the `secret` keyword argument whenever you read or set a cookie and keep that key a secret. As a result, :meth:`Request.get_cookie <BaseRequest.get_cookie>` will return ``None`` if the cookie is not signed or the signature keys don't match::
 
     @route('/login')
     def do_login():
@@ -488,7 +488,7 @@ The :data:`request` object is a subclass of :class:`BaseRequest` and has a very 
 HTTP Headers
 --------------------------------------------------------------------------------
 
-All HTTP headers sent by the client (e.g. ``Referer``, ``Agent`` or ``Accept-Language``) are stored in a :class:`WSGIHeaderDict` and accessible through the :attr:`BaseRequest.headers` attribute. A :class:`WSGIHeaderDict` is basically a dictionary with case-insensitive keys::
+All HTTP headers sent by the client (e.g. ``Referer``, ``Agent`` or ``Accept-Language``) are stored in a :class:`WSGIHeaderDict` and accessible through the :attr:`Request.headers <BaseRequest.headers>` attribute. A :class:`WSGIHeaderDict` is basically a dictionary with case-insensitive keys::
 
   from bottle import route, request
   @route('/is_ajax')
@@ -504,7 +504,7 @@ Cookies
 
 Cookies are small pieces of text stored in the clients browser and sent back to the server with each request. They are useful to keep some state around for more than one request (HTTP itself is stateless), but should not be used for security related stuff. They can be easily forged by the client.
 
-All cookies sent by the client are available through :attr:`BaseRequest.cookies` (a :class:`FormsDict`). This example shows a simple cookie-based view counter::
+All cookies sent by the client are available through :attr:`Request.cookies <BaseRequest.cookies>` (a :class:`FormsDict`). This example shows a simple cookie-based view counter::
 
   from bottle import route, request, response
   @route('/counter')
@@ -514,7 +514,7 @@ All cookies sent by the client are available through :attr:`BaseRequest.cookies`
       response.set_cookie('counter', str(count))
       return 'You visited this page %d times' % count
 
-The :meth:`BaseRequest.get_cookie` method is a different way do access cookies. It supports decoding :ref:`signed cookies <tutorial-signed-cookies>` as described in a separate section.
+The :meth:`Request.get_cookie <BaseRequest.get_cookie>` method is a different way do access cookies. It supports decoding :ref:`signed cookies <tutorial-signed-cookies>` as described in a separate section.
 
 
 Query parameters, Forms and File uploads
@@ -522,16 +522,16 @@ Query parameters, Forms and File uploads
 
 Query and form data is parsed on demand and accessible via :data:`request` properties and methods. Some of those properties combine values from different sources for easier access. Have a look at the following table for a quick overview.
 
-==============================   ==============================================================
-Property                         Data source
-==============================   ==============================================================
-:attr:`BaseRequest.GET`          Query parameters
-:attr:`BaseRequest.query`        Alias for :attr:`BaseRequest.GET`
-:attr:`BaseRequest.POST`         Form fields and file uploads combined
-:attr:`BaseRequest.forms`        Form fields
-:attr:`BaseRequest.files`        File uploads or very large form fields
-:attr:`BaseRequest.params`       Query parameters and form fields combined
-==============================   ==============================================================
+============================================   ==============================================================
+Property                                       Data source
+============================================   ==============================================================
+:attr:`Request.GET <BaseRequest.GET>`          Query parameters
+:attr:`Request.query <BaseRequest.query>`      Alias for :attr:`Request.GET <BaseRequest.GET>`
+:attr:`Request.POST <BaseRequest.POST>`        orm fields and file uploads combined
+:attr:`Request.forms <BaseRequest.forms>`      orm fields
+:attr:`Request.files <BaseRequest.files>`      File uploads or very large form fields
+:attr:`Request.params <BaseRequest.params>`    Query parameters and form fields combined
+============================================   ==============================================================
 
 .. rubric:: Introducing :class:`FormsDict`
 
@@ -563,7 +563,7 @@ If you need the whole dictionary with correctly decoded values (e.g. for WTForms
 Query Parameters
 --------------------------------------------------------------------------------
 
-The query string (as in ``/forum?id=1&page=5``) is commonly used to transmit a small number of key/value pairs to the server. You can use the :attr:`BaseRequest.query` attribute (a :class:`FormsDict`) to access these values and the :attr:`BaseRequest.query_string` attribute to get the whole string.
+The query string (as in ``/forum?id=1&page=5``) is commonly used to transmit a small number of key/value pairs to the server. You can use the :attr:`Request.query <BaseRequest.query>` attribute (a :class:`FormsDict`) to access these values and the :attr:`Request.query_string <BaseRequest.query_string>` attribute to get the whole string.
 
 ::
 
@@ -588,9 +588,9 @@ Let us start from the beginning. In HTML, a typical ``<form>`` looks something l
         <input value="Login" type="submit" />
     </form>
 
-The ``action`` attribute specifies the URL that will receive the form data. ``method`` defines the HTTP method to use (``GET`` or ``POST``). With ``method="get"`` the form values are appended to the URL and available through :attr:`BaseRequest.query` as described above. This is sometimes considered insecure and has other limitations, so we use ``method="post"`` here. If in doubt, use ``POST`` forms.
+The ``action`` attribute specifies the URL that will receive the form data. ``method`` defines the HTTP method to use (``GET`` or ``POST``). With ``method="get"`` the form values are appended to the URL and available through :attr:`Request.query <BaseRequest.query>` as described above. This is sometimes considered insecure and has other limitations, so we use ``method="post"`` here. If in doubt, use ``POST`` forms.
 
-Form fields transmitted via ``POST`` are stored in :attr:`BaseRequest.forms` as a :class:`FormsDict`. The server side code may look like this::
+Form fields transmitted via ``POST`` are stored in :attr:`Request.forms <BaseRequest.forms>` as a :class:`FormsDict`. The server side code may look like this::
 
     from bottle import route, request
 
@@ -627,7 +627,7 @@ To support file uploads, we have to change the ``<form>`` tag a bit. First, we t
       <input type="submit" value="Start upload" />
     </form>
 
-Bottle stores file uploads in :attr:`BaseRequest.files` as :class:`FileUpload` instances, along with some metadata about the upload. Let us assume you just want to save the file to disk::
+Bottle stores file uploads in :attr:`Request.files <BaseRequest.files>` as :class:`FileUpload` instances, along with some metadata about the upload. Let us assume you just want to save the file to disk::
 
     @route('/upload', method='POST')
     def do_upload():
@@ -650,20 +650,20 @@ JSON
 --------------------
 
 For JavaScript and REST APIs it is very common to send ``application/json`` to the server instead of from data.
-The :attr:`BaseRequest.json` attribute contains the parsed data structure if available, or ``None`` for empty
+The :attr:`Request.json <BaseRequest.json>` attribute contains the parsed data structure if available, or ``None`` for empty
 requests or those that did not contain ``application/json`` data. Parsing errors trigger an appropiate :exc:`HTTPError`.
 
 
 Raw Request Data
 --------------------
 
-You can access the raw body data as a file-like object via :attr:`BaseRequest.body`. This is a :class:`io.BytesIO` buffer or a temporary file depending on the content length and :attr:`BaseRequest.MEMFILE_MAX` setting. In both cases the body is completely buffered before you can access the attribute. If you expect huge amounts of data and want to get direct unbuffered access to the stream, have a look at ``request['wsgi.input']``.
+You can access the raw body data as a file-like object via :attr:`Request.body <BaseRequest.body>`. This is a :class:`io.BytesIO` buffer or a temporary file depending on the content length and :attr:`Request.MEMFILE_MAX <BaseRequest.MEMFILE_MAX>` setting. In both cases the body is completely buffered before you can access the attribute. If you expect huge amounts of data and want to get direct unbuffered access to the stream, have a look at ``request['wsgi.input']``.
 
 
 WSGI Environment
 --------------------------------------------------------------------------------
 
-Each :class:`BaseRequest` instance wraps a WSGI environment dictionary which is stored in :attr:`BaseRequest.environ`. Most of the interesting information is also exposed through special methods or properties, but if you want to access the raw `WSGI environ <https://peps.python.org/pep-3333/>`_ directly, you can do so::
+Each :class:`BaseRequest` instance wraps a WSGI environment dictionary which is stored in :attr:`Request.environ <BaseRequest.environ>`. Most of the interesting information is also exposed through special methods or properties, but if you want to access the raw `WSGI environ <https://peps.python.org/pep-3333/>`_ directly, you can do so::
 
   @route('/my_ip')
   def show_ip():

@@ -38,7 +38,7 @@ The :attr:`Bottle.config` object behaves a lot like an ordinary dictionary. All 
         email = app.config.get('my.email', 'nomail@example.com')
         return {'email': email}
 
-Helper functions can rely on :attr:`BaseRequest.app` to get the application
+Helper functions can rely on :attr:`Request.app <BaseRequest.app>` to get the application
 and configuration associated with the *current* request::
 
     from bottle import request

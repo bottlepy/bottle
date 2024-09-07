@@ -1,4 +1,4 @@
-.. highlight:: python
+﻿.. highlight:: python
 .. currentmodule:: bottle
 
 =============
@@ -69,7 +69,7 @@ versions should not update to Bottle 0.13 and stick with 0.12 instead.
 
 These changes might require special care when updating.
 
-* Signed cookies now use a stronger HMAC algorithm by default. This will result in old cookies to appear invalid after the update. Pass an explicit ``digestmod=hashlib.md5`` to :meth:`BaseRequest.get_cookie` and :meth:`BaseResponse.set_cookie` to get the old behavior.
+* Signed cookies now use a stronger HMAC algorithm by default. This will result in old cookies to appear invalid after the update. Pass an explicit ``digestmod=hashlib.md5`` to :meth:`Request.get_cookie <BaseRequest.get_cookie>` and :meth:`Response.set_cookie <BaseResponse.set_cookie>` to get the old behavior.
 * Bottle now ships with its own multipart form data parser (borrowed from `multipart <https://pypi.org/project/multipart/>`_) and no longer relies on ``cgi.FieldStorage``, which was removed in Python 3.13. This may change the way broken (non-standard) form submissions are parsed. The new parser is more strict and correct than ohe old one.
 
 .. rubric:: Other Improvements
@@ -79,7 +79,7 @@ These changes might require special care when updating.
 * Added `aiohttp <http://aiohttp.readthedocs.io/en/stable/>`_ and `uvloop <https://github.com/MagicStack/uvloop>`_ server adapters.
 * Added command-line arguments for config from json or ini files.
 * :meth:`Bottle.mount` now recognizes instances of :class:`Bottle` and mounts them with significantly less overhead than other WSGI applications.
-* The :attr:`BaseRequest.json` property now accepts ``application/json-rpc`` requests.
+* The :attr:`Request.json <BaseRequest.json>` property now accepts ``application/json-rpc`` requests.
 * :func:`static_file` gained support for ``ETag`` headers. It will generate ETags and recognizes ``If-None-Match`` headers.
 * :func:`static_file` will now guess the mime type of ``*.gz`` and other compressed files correctly (e.g. ``application/gzip``) and NOT set the ``Content-Encoding`` header.
 * Jinja2 templates will produce better error messages than before.
@@ -94,8 +94,8 @@ Release 0.12
   * Support for multi-line code blocks (`<% ... %>`).
   * The keywords `include` and `rebase` are functions now and can accept variable template names.
 
-* The new :attr:`BaseRequest.route` property returns the :class:`Route` that originally matched the request.
-* Removed the ``BaseRequest.MAX_PARAMS`` limit. The hash collision bug in CPythons dict() implementation was fixed over a year ago. If you are still using Python 2.5 in production, consider upgrading or at least make sure that you get security fixed from your distributor.
+* The new :attr:`Request.route <BaseRequest.route>` property returns the :class:`Route` that originally matched the request.
+* Removed the ``Request.MAX_PARAMS`` limit. The hash collision bug in CPythons dict() implementation was fixed over a year ago. If you are still using Python 2.5 in production, consider upgrading or at least make sure that you get security fixed from your distributor.
 * New :class:`ConfigDict` API (see :doc:`configuration`)
 
 More information can be found in this `development blog post <http://blog.bottlepy.org/2013/07/19/preview-bottle-012.html>`_.
@@ -109,13 +109,13 @@ Release 0.11
 * The new :class:`ResourceManager` interface helps locating files bundled with an application.
 * Added a server adapter for `waitress <http://docs.pylonsproject.org/projects/waitress/en/latest/>`_.
 * New :meth:`Bottle.merge` method to install all routes from one application into another.
-* New :attr:`BaseRequest.app` property to get the application object that handles a request.
+* New :attr:`Request.app <BaseRequest.app>` property to get the application object that handles a request.
 * Added :meth:`FormsDict.decode()` to get an all-unicode version (needed by WTForms).
 * :class:`MultiDict` and subclasses are now pickle-able.
 
 .. rubric:: API Changes
 
-* :attr:`BaseResponse.status` is a read-write property that can be assigned either a numeric status code or a status string with a reason phrase (``200 OK``). The return value is now a string to better match existing APIs (WebOb, werkzeug). To be absolutely clear, you can use the read-only properties :attr:`BaseResponse.status_code` and :attr:`BaseResponse.status_line`.
+* :attr:`Response.status <BaseResponse.status>` is a read-write property that can be assigned either a numeric status code or a status string with a reason phrase (``200 OK``). The return value is now a string to better match existing APIs (WebOb, werkzeug). To be absolutely clear, you can use the read-only properties :attr:`Response.status_code <BaseResponse.status_code>` and :attr:`Response.status_line <BaseResponse.status_line>`.
 
 .. rubric:: API Deprecations
 
@@ -132,8 +132,8 @@ Release 0.10
 
 * The Request/Response Objects
 
-  * Added :attr:`BaseRequest.json`, :attr:`BaseRequest.remote_route`, :attr:`BaseRequest.remote_addr`, :attr:`BaseRequest.query` and :attr:`BaseRequest.script_name`.
-  * Added :attr:`BaseResponse.status_line` and :attr:`BaseResponse.status_code` attributes. In future releases, :attr:`BaseResponse.status` will return a string (e.g. ``200 OK``) instead of an integer to match the API of other common frameworks. To make the transition as smooth as possible, you should use the verbose attributes from now on.
+  * Added :attr:`Request.json <BaseRequest.json>`, :attr:`Request.remote_route <BaseRequest.remote_route>`, :attr:`Request.remote_addr <BaseRequest.remote_addr>`, :attr:`Request.query <BaseRequest.query>` and :attr:`Request.script_name <BaseRequest.script_name>`.
+  * Added :attr:`Response.status_line <BaseResponse.status_line>` and :attr:`Response.status_code <BaseResponse.status_code>` attributes. In future releases, :attr:`Response.status <BaseResponse.status>` will return a string (e.g. ``200 OK``) instead of an integer to match the API of other common frameworks. To make the transition as smooth as possible, you should use the verbose attributes from now on.
   * Replaced :class:`MultiDict` with a specialized :class:`FormsDict` in many places. The new dict implementation allows attribute access and handles unicode form values transparently.
 
 * Templates
@@ -169,7 +169,7 @@ Release 0.9
 * Support for SimpleTAL templates.
 * Better runtime exception handling for mako templates in debug mode.
 * Lots of documentation, fixes and small improvements.
-* A new :data:`BaseRequest.urlparts` property.
+* A new :data:`Request.urlparts <BaseRequest.urlparts>` property.
 
 .. rubric:: Performance improvements
 
@@ -205,8 +205,8 @@ These changes may break compatibility with previous versions.
 * ``bottle.optimize()`` and the automatic route optimization is obsolete.
 * Some functions and attributes were renamed:
 
-  * :attr:`BaseRequest._environ` is now :attr:`BaseRequest.environ`
-  * :attr:`BaseResponse.header` is now :attr:`BaseResponse.headers`
+  * :attr:`Request._environ <BaseRequest._environ>` is now :attr:`Request.environ <BaseRequest.environ>`
+  * :attr:`Response.header <BaseResponse.header>` is now :attr:`Response.headers <BaseResponse.headers>`
   * :func:`default_app` is obsolete. Use :func:`app` instead.
 
 * The default :func:`redirect` code changed from 307 to 303.
@@ -217,8 +217,8 @@ These changes may break compatibility with previous versions.
 
 This is an incomplete list of new features and improved functionality.
 
-* The :class:`Request` object got new properties: :attr:`BaseRequest.body`, :attr:`BaseRequest.auth`, :attr:`BaseRequest.url`, :attr:`BaseRequest.header`, :attr:`BaseRequest.forms`, :attr:`BaseRequest.files`.
-* The :meth:`BaseResponse.set_cookie` and :meth:`BaseRequest.get_cookie` methods are now able to encode and decode python objects. This is called a *secure cookie* because the encoded values are signed and protected from changes on client side. All pickle-able data structures are allowed.
+* The :class:`Request` object got new properties: :attr:`Request.body <BaseRequest.body>`, :attr:`Request.auth <BaseRequest.auth>`, :attr:`Request.url <BaseRequest.url>`, :attr:`Request.header <BaseRequest.header>`, :attr:`Request.forms <BaseRequest.forms>`, :attr:`Request.files <BaseRequest.files>`.
+* The :meth:`Response.set_cookie <BaseResponse.set_cookie>` and :meth:`Request.get_cookie <BaseRequest.get_cookie>` methods are now able to encode and decode python objects. This is called a *secure cookie* because the encoded values are signed and protected from changes on client side. All pickle-able data structures are allowed.
 * The new :class:`Router` class drastically improves performance for setups with lots of dynamic routes and supports named routes (named route + dict = URL string).
 * It is now possible (and recommended) to return :exc:`HTTPError` and :exc:`HTTPResponse` instances or other exception objects instead of raising them.
 * The new function :func:`static_file` equals :func:`send_file` but returns a :exc:`HTTPResponse` or :exc:`HTTPError` instead of raising it. :func:`send_file` is deprecated.

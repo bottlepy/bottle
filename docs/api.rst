@@ -183,14 +183,14 @@ All template engines supported by :mod:`bottle` implement the :class:`BaseTempla
 
 You can write your own adapter for your favourite template engine or use one of the predefined adapters. Currently there are four fully supported template engines:
 
-========================   ===============================   ====================   ========================
-Class                      URL                               Decorator              Render function
-========================   ===============================   ====================   ========================
-:class:`SimpleTemplate`    :doc:`stpl`                       :func:`view`           :func:`template`
-:class:`MakoTemplate`      http://www.makotemplates.org      :func:`mako_view`      :func:`mako_template`
-:class:`CheetahTemplate`   http://www.cheetahtemplate.org/   :func:`cheetah_view`   :func:`cheetah_template`
-:class:`Jinja2Template`    http://jinja.pocoo.org/           :func:`jinja2_view`    :func:`jinja2_template`
-========================   ===============================   ====================   ========================
+========================   ==================================   ====================   ========================
+Class                      URL                                  Decorator              Render function
+========================   ==================================   ====================   ========================
+:class:`SimpleTemplate`    :doc:`stpl`                          :func:`view`           :func:`template`
+:class:`MakoTemplate`      http://www.makotemplates.org         :func:`mako_view`      :func:`mako_template`
+:class:`CheetahTemplate`   http://www.cheetahtemplate.org/      :func:`cheetah_view`   :func:`cheetah_template`
+:class:`Jinja2Template`    https://jinja.palletsprojects.com/   :func:`jinja2_view`    :func:`jinja2_template`
+========================   ==================================   ====================   ========================
 
 To use :class:`MakoTemplate` as your default template engine, just import its specialised decorator and render function::
 
