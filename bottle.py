@@ -1518,8 +1518,8 @@ class BaseRequest(object):
         """ Return a new :class:`Request` with a shallow :attr:`environ` copy. """
         return Request(self.environ.copy())
 
-    def get(self, value, default=None):
-        return self.environ.get(value, default)
+    def get(self, key, default=None):
+        return self.environ.get(key, default)
 
     def __getitem__(self, key):
         return self.environ[key]
