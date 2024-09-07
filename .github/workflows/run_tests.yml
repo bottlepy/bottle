@@ -18,7 +18,7 @@ jobs:
       image: "python:${{ matrix.python-version }}"
     steps:
     - uses: actions/checkout@v2
-    - name: Install dependencies
-      run: .github/workflows/install-deps.sh
+    - name: Install dev dependencies
+      run: pip install .[dev]
     - name: Run tests
-      run: pytest . -ra -q --cov=bottle --cov-report=term
+      run: pytest -ra -q --cov=bottle --cov-report=term

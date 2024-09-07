@@ -4613,7 +4613,7 @@ def _main(argv):  # pragma: no coverage
         sys.exit(1)
 
     if args.version:
-        print('Bottle %s' % __version__)
+        print(__version__)
         sys.exit(0)
     if not args.app:
         _cli_error("No application entry point specified.")

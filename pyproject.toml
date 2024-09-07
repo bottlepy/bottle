@@ -1,0 +1,62 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bottle"
+dynamic = ["version"]
+requires-python = ">=3.8"
+license = {file = "LICENSE"}
+description = "Fast and simple WSGI-framework for small web-applications."
+readme = "README.rst"
+keywords = ["bottle", "wsgi", "microframework"]
+authors = [
+  {name = "Marcel Hellkamp", email = "marc@gsites.de"},
+]
+classifiers = [
+    "Development Status :: 6 - Mature",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Framework :: Bottle",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+    "Topic :: Internet :: WWW/HTTP :: Dynamic Content :: CGI Tools/Libraries",
+    "Topic :: Internet :: WWW/HTTP :: WSGI",
+    "Topic :: Internet :: WWW/HTTP :: WSGI :: Application",
+    "Topic :: Internet :: WWW/HTTP :: WSGI :: Middleware",
+    "Topic :: Internet :: WWW/HTTP :: WSGI :: Server",
+    "Topic :: Software Development :: Libraries :: Application Frameworks",
+    "Programming Language :: Python :: 3",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "sphinx",
+    "sphinx-intl",
+    "build",
+    "twine",
+]
+
+[project.urls]
+Homepage = "https://bottlepy.org"
+Documentation = "https://bottlepy.org"
+Repository = "http://github.com/bottlepy/bottle.git"
+Issues = "https://github.com/bottlepy/bottle/issues"
+Changelog = "https://bottlepy.org/docs/dev/changelog.html"
+
+[project.scripts]
+"bottle.py" = "bottle:main"
+
+[tool.setuptools]
+py-modules = ["bottle"]
+platforms = ["any"]
+
+[tool.setuptools.dynamic]
+version = {attr = "bottle.__version__"}
+
+[tool.pytest.ini_options]
+addopts = "-ra"
+testpaths = [ "test" ]
