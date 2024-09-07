@@ -13,10 +13,12 @@ jobs:
           - "3.10"
           - "3.11"
           - "3.12"
-    container:
-      image: "python:${{ matrix.python-version }}"
     steps:
     - uses: actions/checkout@v2
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: pip
     - name: Install dev dependencies
       run: pip install .[dev]
     - name: Run tests
