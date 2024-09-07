@@ -1,6 +1,0 @@
-include bottle.py
-include README.rst
-include LICENSE
-include AUTHORS
-include test/views/*.tpl
-include test/*.py

@@ -1,6 +1,6 @@
 [build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
+requires = ["flit_core >=3.9,<4"]
+build-backend = "flit_core.buildapi"
 
 [project]
 name = "bottle"
@@ -50,12 +50,12 @@ Changelog = "https://bottlepy.org/docs/dev/changelog.html"
 [project.scripts]
 "bottle.py" = "bottle:main"
 
-[tool.setuptools]
-py-modules = ["bottle"]
-platforms = ["any"]
-
-[tool.setuptools.dynamic]
-version = {attr = "bottle.__version__"}
+[tool.flit.sdist]
+include = [
+  "test/*.py",
+  "test/views/*.tpl",
+  "AUTHORS"
+]
 
 [tool.pytest.ini_options]
 addopts = "-ra"
