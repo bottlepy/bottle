@@ -118,6 +118,7 @@ if py3k:
     def _raise(*a):
         raise a[0](a[1]).with_traceback(a[2])
 else:  # 2.x
+    warnings.warn("Python 2 support will be dropped in Bottle 0.14", DeprecationWarning)
     import httplib
     import thread
     from urlparse import urljoin, SplitResult as UrlSplitResult
