@@ -52,24 +52,28 @@ Install the latest stable release with ``pip install bottle`` or download `bottl
 Dead Snakes
 ===========
 
-Bottle up to version 0.12 supported an absurd number of python versions, some of which reached their end-of-life well over a decade ago. Starting with Bottle 0.13 we will ensure compatibility with `maintained versions of Python <https://devguide.python.org/versions/>`_ but drop support for "dead snakes" with each new bottle release. If you are in the unfortunate position to have to rely on such a truly ancient version of Python, just stick with a compatible bottle release. Everyone else should update regularly to benefit from new features and improvements.
+Bottle up to version 0.12 supported an absurd range of Python versions, some of which reached their end-of-life well over a decade ago. Starting with Bottle 0.13 we ensure backwards compatibility with `maintained versions of Python <https://devguide.python.org/versions/>`_ only. Outdated Python versions may still work, but are no longer tested for compatibility.
+
+If you are in the unfortunate position to have to rely on "dead snakes" for production, just stick with Bottle 0.12 (LTS) or whichever release of Bottle still supports it. Everyone else should upgrade regularly to benefit from new features and improvements.
 
 .. list-table:: Python Support Matrix
    :widths: 50 25 25
    :header-rows: 1
 
-   * - Bottle Version
+   * - Bottle Release
      - Python 2
      - Python 3
    * - 0.12
-     - 2.5, 2.6, 2.7
+     - 2.5 - 2.7
      - 3.2 - 3.12
    * - 0.13
      - 2.7
-     - 3.8 - 3.x
-   * - 1.0 (planned)
+     - >=3.8 [2]_
+   * - 0.14 (planned)
      - *dropped*
-     - 3.8 - 3.x
+     - >=3.8
+
+
 
 Documentation
 =============
@@ -130,4 +134,5 @@ the unmodified library. In all other cases please ask first.
 .. rubric:: Footnotes
 
 .. [1] Usage of the template or server adapter classes requires the corresponding template or server modules.
+.. [2] Bottle 0.13 technically still works with Python 3.6 and 3.7 but is not tested with those versions.
 
