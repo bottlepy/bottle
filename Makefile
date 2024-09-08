@@ -19,7 +19,8 @@ docs: venv
 
 .PHONY: watchdocs
 watchdocs: venv
-	$(VENV)/bin/sphinx-autobuild -b html docs build/docs/html/;
+	-mkdir -p build/docs/watch/
+	$(VENV)/bin/sphinx-autobuild -b html docs build/docs/watch/;
 
 .PHONY: version
 version:
