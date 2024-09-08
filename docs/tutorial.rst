@@ -106,7 +106,7 @@ Just make sure not to use the debug mode on a production server.
 Auto Reloading
 --------------
 
-Tired of restarting the server every time you change youzr code?
+Tired of restarting the server every time you change your code?
 The auto reloader can do this for you. Every time you edit a module
 file, the reloader restarts the server process and loads the newest
 version of your code.
