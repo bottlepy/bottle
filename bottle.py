@@ -2307,7 +2307,7 @@ class WSGIHeaderDict(DictMixin):
 
     def __getitem__(self, key):
         val = self.environ[self._ekey(key)]
-        if py3k:
+        if val and py3k:
             if isinstance(val, unicode):
                 val = val.encode('latin1').decode('utf8')
             else:
