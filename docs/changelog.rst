@@ -11,6 +11,8 @@ Release 0.14 (in development)
 .. rubric:: Removed APIs (deprecated since 0.13)
 
 * Removed the ``RouteReset`` exception and associated logic.
+* ``bottle.HTTPError``\s raised on Invalid JSON now include the underlying exception
+  in their ``exception`` field.
 
 Release 0.13
 ==============
