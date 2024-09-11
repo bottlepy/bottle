@@ -1277,8 +1277,8 @@ class BaseRequest(object):
                 return None
             try:
                 return json_loads(b)
-            except (ValueError, TypeError):
-                raise HTTPError(400, 'Invalid JSON')
+            except (ValueError, TypeError) as err:
+                raise HTTPError(400, 'Invalid JSON', exception=err)
         return None
 
     def _iter_body(self, read, bufsize):
