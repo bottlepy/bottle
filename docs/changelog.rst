@@ -33,6 +33,7 @@ versions should not update to Bottle 0.13 and stick with 0.12 instead.
 
 .. rubric:: Deprecated APIs
 
+* Python 2 support is now deprecated and will be dropped with the next release.
 * The old route syntax (``/hello/:name``) is deprecated in favor of the more readable and flexible ``/hello/<name>`` syntax.
 * :meth:`Bottle.mount` now recognizes Bottle instance and will warn about parameters that are not compatible with the new mounting behavior. The old behavior (mount applications as WSGI callable) still works and is used as a fallback automatically.
 * The undocumented :func:`local_property` helper is now deprecated.
