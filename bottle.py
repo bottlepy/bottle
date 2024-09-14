@@ -66,7 +66,7 @@ if __name__ == '__main__':
     _cli_patch(sys.argv)
 
 ###############################################################################
-# Imports and Python 2/3 unification ##########################################
+# Imports and Helpers used everywhere else #####################################
 ###############################################################################
 
 import base64, calendar, email.utils, functools, hmac, itertools, \
@@ -84,66 +84,38 @@ except ImportError:
     from json import dumps as json_dumps, loads as json_lds
 
 py = sys.version_info
-py3k = py.major > 2
 
-# Lots of stdlib and builtin differences.
-if py3k:
-    import http.client as httplib
-    import _thread as thread
-    from urllib.parse import urljoin, SplitResult as UrlSplitResult
-    from urllib.parse import urlencode, quote as urlquote, unquote as urlunquote
-    urlunquote = functools.partial(urlunquote, encoding='latin1')
-    from http.cookies import SimpleCookie, Morsel, CookieError
-    from collections.abc import MutableMapping as DictMixin
-    from types import ModuleType as new_module
-    import pickle
-    from io import BytesIO
-    import configparser
-    from datetime import timezone
-    UTC = timezone.utc
-    # getfullargspec was deprecated in 3.5 and un-deprecated in 3.6
-    # getargspec was deprecated in 3.0 and removed in 3.11
-    from inspect import getfullargspec
+import http.client as httplib
+import _thread as thread
+from urllib.parse import urljoin, SplitResult as UrlSplitResult
+from urllib.parse import urlencode, quote as urlquote, unquote as urlunquote
+urlunquote = functools.partial(urlunquote, encoding='latin1')
+from http.cookies import SimpleCookie, Morsel, CookieError
+from collections.abc import MutableMapping as DictMixin
+from types import ModuleType as new_module
+import pickle
+from io import BytesIO
+import configparser
+from datetime import timezone
+UTC = timezone.utc
+# getfullargspec was deprecated in 3.5 and un-deprecated in 3.6
+# getargspec was deprecated in 3.0 and removed in 3.11
+from inspect import getfullargspec
 
-    def getargspec(func):
-        spec = getfullargspec(func)
-        kwargs = makelist(spec[0]) + makelist(spec.kwonlyargs)
-        return kwargs, spec[1], spec[2], spec[3]
+def getargspec(func):
+    spec = getfullargspec(func)
+    kwargs = makelist(spec[0]) + makelist(spec.kwonlyargs)
+    return kwargs, spec[1], spec[2], spec[3]
 
-    basestring = str
-    unicode = str
-    json_loads = lambda s: json_lds(touni(s))
-    callable = lambda x: hasattr(x, '__call__')
-    imap = map
+basestring = str
+unicode = str
+json_loads = lambda s: json_lds(touni(s))
+callable = lambda x: hasattr(x, '__call__')
+imap = map
 
-    def _raise(*a):
-        raise a[0](a[1]).with_traceback(a[2])
+def _raise(*a):
+    raise a[0](a[1]).with_traceback(a[2])
 
-else:  # 2.x
-    import httplib
-    import thread
-    from urlparse import urljoin, SplitResult as UrlSplitResult
-    from urllib import urlencode, quote as urlquote, unquote as urlunquote
-    from Cookie import SimpleCookie, Morsel, CookieError
-    from itertools import imap
-    import cPickle as pickle
-    from imp import new_module
-    from StringIO import StringIO as BytesIO
-    import ConfigParser as configparser
-    from collections import MutableMapping as DictMixin
-    from inspect import getargspec
-    from datetime import tzinfo
-
-    class _UTC(tzinfo):
-        def utcoffset(self, dt): return timedelta(0)
-        def tzname(self, dt): return "UTC"
-        def dst(self, dt): return timedelta(0)
-    UTC = _UTC()
-
-    unicode = unicode
-    json_loads = json_lds
-
-    exec(compile('def _raise(*a): raise a[0], a[1], a[2]', '<py3fix>', 'exec'))
 
 # Some helpers for string/byte handling
 def tob(s, enc='utf8'):
@@ -158,7 +130,7 @@ def touni(s, enc='utf8', err='strict'):
     return unicode("" if s is None else s)
 
 
-tonat = touni if py3k else tob
+tonat = touni
 
 
 def _stderr(*args):
@@ -565,10 +537,9 @@ class Route(object):
         """ Return the callback. If the callback is a decorated function, try to
             recover the original function. """
         func = self.callback
-        func = getattr(func, '__func__' if py3k else 'im_func', func)
-        closure_attr = '__closure__' if py3k else 'func_closure'
-        while hasattr(func, closure_attr) and getattr(func, closure_attr):
-            attributes = getattr(func, closure_attr)
+        func = getattr(func, '__func__', func)
+        while hasattr(func, '__closure__') and getattr(func, '__closure__'):
+            attributes = getattr(func, '__closure__')
             func = attributes[0].cell_contents
 
             # in case of decorators with multiple arguments
@@ -712,13 +683,12 @@ class Bottle(object):
                 def start_response(status, headerlist, exc_info=None):
                     if exc_info:
                         _raise(*exc_info)
-                    if py3k:
-                        # Errors here mean that the mounted WSGI app did not
-                        # follow PEP-3333 (which requires latin1) or used a
-                        # pre-encoding other than utf8 :/
-                        status = status.encode('latin1').decode('utf8')
-                        headerlist = [(k, v.encode('latin1').decode('utf8'))
-                                      for (k, v) in headerlist]
+                    # Errors here mean that the mounted WSGI app did not
+                    # follow PEP-3333 (which requires latin1) or used a
+                    # pre-encoding other than utf8 :/
+                    status = status.encode('latin1').decode('utf8')
+                    headerlist = [(k, v.encode('latin1').decode('utf8'))
+                                    for (k, v) in headerlist]
                     rs.status = status
                     for name, value in headerlist:
                         rs.add_header(name, value)
@@ -968,8 +938,7 @@ class Bottle(object):
 
     def _handle(self, environ):
         path = environ['bottle.raw_path'] = environ['PATH_INFO']
-        if py3k:
-            environ['PATH_INFO'] = path.encode('latin1').decode('utf8', 'ignore')
+        environ['PATH_INFO'] = path.encode('latin1').decode('utf8', 'ignore')
 
         environ['bottle.app'] = self
         request.bind(environ)
@@ -1759,9 +1728,7 @@ class BaseResponse(object):
 
     def _wsgi_status_line(self):
         """ WSGI conform status line (latin1-encodeable) """
-        if py3k:
-            return self._status_line.encode('utf8').decode('latin1')
-        return self._status_line
+        return self._status_line.encode('utf8').decode('latin1')
 
     @property
     def headerlist(self):
@@ -1777,8 +1744,7 @@ class BaseResponse(object):
         if self._cookies:
             for c in self._cookies.values():
                 out.append(('Set-Cookie', _hval(c.OutputString())))
-        if py3k:
-            out = [(k, v.encode('utf8').decode('latin1')) for (k, v) in out]
+        out = [(k, v.encode('utf8').decode('latin1')) for (k, v) in out]
         return out
 
     content_type = HeaderProperty('Content-Type')
@@ -2121,44 +2087,19 @@ class MultiDict(DictMixin):
     def keys(self):
         return self.dict.keys()
 
-    if py3k:
+    def values(self):
+        return (v[-1] for v in self.dict.values())
 
-        def values(self):
-            return (v[-1] for v in self.dict.values())
+    def items(self):
+        return ((k, v[-1]) for k, v in self.dict.items())
 
-        def items(self):
-            return ((k, v[-1]) for k, v in self.dict.items())
+    def allitems(self):
+        return ((k, v) for k, vl in self.dict.items() for v in vl)
 
-        def allitems(self):
-            return ((k, v) for k, vl in self.dict.items() for v in vl)
-
-        iterkeys = keys
-        itervalues = values
-        iteritems = items
-        iterallitems = allitems
-
-    else:
-
-        def values(self):
-            return [v[-1] for v in self.dict.values()]
-
-        def items(self):
-            return [(k, v[-1]) for k, v in self.dict.items()]
-
-        def iterkeys(self):
-            return self.dict.iterkeys()
-
-        def itervalues(self):
-            return (v[-1] for v in self.dict.itervalues())
-
-        def iteritems(self):
-            return ((k, v[-1]) for k, v in self.dict.iteritems())
-
-        def iterallitems(self):
-            return ((k, v) for k, vl in self.dict.iteritems() for v in vl)
-
-        def allitems(self):
-            return [(k, v) for k, vl in self.dict.iteritems() for v in vl]
+    iterkeys = keys
+    itervalues = values
+    iteritems = items
+    iterallitems = allitems
 
     def get(self, key, default=None, index=-1, type=None):
         """ Return the most recent value for a key.
@@ -2308,11 +2249,10 @@ class WSGIHeaderDict(DictMixin):
 
     def __getitem__(self, key):
         val = self.environ[self._ekey(key)]
-        if py3k:
-            if isinstance(val, unicode):
-                val = val.encode('latin1').decode('utf8')
-            else:
-                val = val.decode('utf8')
+        if isinstance(val, unicode):
+            val = val.encode('latin1').decode('utf8')
+        else:
+            val = val.decode('utf8')
         return val
 
     def __setitem__(self, key, value):
@@ -2396,9 +2336,7 @@ class ConfigDict(dict):
 
         """
         options.setdefault('allow_no_value', True)
-        if py3k:
-            options.setdefault('interpolation',
-                               configparser.ExtendedInterpolation())
+        options.setdefault('interpolation', configparser.ExtendedInterpolation())
         conf = configparser.ConfigParser(**options)
         conf.read(filename)
         for section in conf.sections():

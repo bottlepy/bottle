@@ -38,6 +38,7 @@ Release 0.14 (in development)
 
 .. rubric:: Removed APIs (deprecated since 0.13)
 
+* Dropped support and workarounds for Python 2.x
 * Removed the ``RouteReset`` exception and associated logic.
 * Removed the `bottle.py` console script entrypoint in favour of the new `bottle` script. You can still execute `bottle.py` directly or via `python -m bottle`. The only change is that the command installed by pip or similar tools into the bin/Scripts folder of the (virtual) environment is now called `bottle` to avoid circular import errors.
 
