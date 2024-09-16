@@ -38,7 +38,7 @@ Release 0.14 (in development)
 
 .. rubric:: Removed APIs (deprecated since 0.13)
 
-* Dropped support and workarounds for Python 2.x
+* Dropped support for Python 2 and removed helpers and workarounds that only make sense in a Python 2/3 dual codebase (e.g. ``tonat()`` or the ``py3k`` flag). 
 * Removed the ``RouteReset`` exception and associated logic.
 * Removed the `bottle.py` console script entrypoint in favour of the new `bottle` script. You can still execute `bottle.py` directly or via `python -m bottle`. The only change is that the command installed by pip or similar tools into the bin/Scripts folder of the (virtual) environment is now called `bottle` to avoid circular import errors.
 
@@ -75,7 +75,7 @@ versions should not update to Bottle 0.13 and stick with 0.12 instead.
 
 .. rubric:: Deprecated APIs
 
-* Python 2 support is now deprecated and will be dropped with the next release.
+* Python 2 support is now deprecated and will be dropped with the next release. This includes helpers and workarounds that only make sense in a Python 2/3 dual codebase (e.g. ``tonat()`` or the ``py3k`` flag). 
 * The command line executable installed along with bottle will be renamed from `bottle.py` to just `bottle`. You can still execute bottle directly as a script (e.g. `./bottle.py` or `python3 bottle.py`) or as a module (via `python3 -m bottle`). Just the executable installed by your packaging tool (e.g. `pip`) into the `bin` folder of your (virtual) environment will change.
 * The old route syntax (``/hello/:name``) is deprecated in favor of the more readable and flexible ``/hello/<name>`` syntax.
 * :meth:`Bottle.mount` now recognizes Bottle instance and will warn about parameters that are not compatible with the new mounting behavior. The old behavior (mount applications as WSGI callable) still works and is used as a fallback automatically.

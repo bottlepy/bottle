@@ -7,7 +7,7 @@ import sys
 import itertools
 
 import bottle
-from bottle import request, tob, touni, tonat, json_dumps, HTTPError, parse_date, CookieError
+from bottle import request, tob, touni, json_dumps, HTTPError, parse_date, CookieError
 from . import tools
 import wsgiref.util
 import base64
@@ -160,7 +160,7 @@ class TestRequest(unittest.TestCase):
 
     def test_get(self):
         """ Environ: GET data """
-        qs = tonat(tob('a=a&a=1&b=b&c=c&cn=%e7%93%b6'), 'latin1')
+        qs = touni(tob('a=a&a=1&b=b&c=c&cn=%e7%93%b6'), 'latin1')
         request = BaseRequest({'QUERY_STRING':qs})
         self.assertTrue('a' in request.query)
         self.assertTrue('b' in request.query)
@@ -168,7 +168,7 @@ class TestRequest(unittest.TestCase):
         self.assertEqual(['b'], request.query.getall('b'))
         self.assertEqual('1', request.query['a'])
         self.assertEqual('b', request.query['b'])
-        self.assertEqual(tonat(tob('瓶'), 'latin1'), request.query['cn'])
+        self.assertEqual(touni(tob('瓶'), 'latin1'), request.query['cn'])
         self.assertEqual(touni('瓶'), request.query.cn)
 
     def test_post(self):
@@ -189,7 +189,7 @@ class TestRequest(unittest.TestCase):
         self.assertEqual('b', request.POST['b'])
         self.assertEqual('', request.POST['c'])
         self.assertEqual('', request.POST['d'])
-        self.assertEqual(tonat(tob('瓶'), 'latin1'), request.POST['cn'])
+        self.assertEqual(touni(tob('瓶'), 'latin1'), request.POST['cn'])
         self.assertEqual(touni('瓶'), request.POST.cn)
 
     def test_bodypost(self):
@@ -503,7 +503,7 @@ class TestResponse(unittest.TestCase):
             result = [v for (h, v) in rs.headerlist if h.lower()=='x-test'][0]
             self.assertEqual(wire, result)
 
-        cmp(1, tonat('1', 'latin1'))
+        cmp(1, touni('1', 'latin1'))
         cmp('öäü', 'öäü'.encode('utf8').decode('latin1'))
         # Dropped byte header support in Python 3:
         #cmp(tob('äöü'), 'äöü'.encode('utf8').decode('latin1'))
@@ -730,7 +730,7 @@ class TestResponse(unittest.TestCase):
         response['x-test'] = None
         self.assertEqual('', response['x-test'])
         response['x-test'] = touni('瓶')
-        self.assertEqual(tonat(touni('瓶')), response['x-test'])
+        self.assertEqual(touni('瓶'), response['x-test'])
 
     def test_prevent_control_characters_in_headers(self):
         masks = '{}test', 'test{}', 'te{}st'

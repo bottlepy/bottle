@@ -13,7 +13,7 @@ import warnings
 import mimetypes
 import uuid
 
-from bottle import tob, tonat, BytesIO, unicode
+from bottle import tob, BytesIO, unicode
 
 
 def warn(msg):

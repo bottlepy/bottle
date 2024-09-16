@@ -130,9 +130,6 @@ def touni(s, enc='utf8', err='strict'):
     return unicode("" if s is None else s)
 
 
-tonat = touni
-
-
 def _stderr(*args):
     try:
         print(*args, file=sys.stderr)
@@ -1272,7 +1269,7 @@ class BaseRequest(object):
                 if len(header) > bufsize: raise err
             size, _, _ = header.partition(sem)
             try:
-                maxread = int(tonat(size.strip()), 16)
+                maxread = int(size.strip(), 16)
             except ValueError:
                 raise err
             if maxread == 0: break
@@ -1349,7 +1346,7 @@ class BaseRequest(object):
         # We default to application/x-www-form-urlencoded for everything that
         # is not multipart and take the fast path (also: 3.1 workaround)
         if not content_type.startswith('multipart/'):
-            body = tonat(self._get_body_string(self.MEMFILE_MAX), 'latin1')
+            body = self._get_body_string(self.MEMFILE_MAX).decode('latin1')
             for key, value in _parse_qsl(body):
                 post[key] = value
             return post
@@ -1365,7 +1362,7 @@ class BaseRequest(object):
 
         for part in parser.parse():
             if not part.filename and part.is_buffered():
-                post[part.name] = tonat(part.value, 'utf8')
+                post[part.name] = part.value
             else:
                 post[part.name] = FileUpload(part.file, part.name,
                                             part.filename, part.headerlist)
@@ -1555,13 +1552,14 @@ class BaseRequest(object):
 
 
 def _hkey(key):
+    key = touni(key)
     if '\n' in key or '\r' in key or '\0' in key:
         raise ValueError("Header names must not contain control characters: %r" % key)
     return key.title().replace('_', '-')
 
 
 def _hval(value):
-    value = tonat(value)
+    value = touni(value)
     if '\n' in value or '\r' in value or '\0' in value:
         raise ValueError("Header value must not contain control characters: %r" % value)
     return value
