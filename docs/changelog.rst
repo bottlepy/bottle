@@ -11,9 +11,12 @@ Release 0.14 (in development)
 .. rubric:: Removed APIs (deprecated since 0.13)
 
 * Removed the ``RouteReset`` exception and associated logic.
-* ``bottle.HTTPError``\s raised on Invalid JSON now include the underlying exception
-  in their ``exception`` field.
 * Removed the `bottle.py` console script entrypoint in favour of the new `bottle` script. You can still execute `bottle.py` directly or via `python -m bottle`. The only change is that the command installed by pip or similar tools into the bin/Scripts folder of the (virtual) environment is now called `bottle` to avoid circular import errors.
+
+.. rubric:: Changes
+
+* ``bottle.HTTPError`` raised on Invalid JSON now include the underlying exception in their ``exception`` field.
+
 
 Release 0.13
 ==============
