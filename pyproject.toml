@@ -49,7 +49,7 @@ Issues = "https://github.com/bottlepy/bottle/issues"
 Changelog = "https://bottlepy.org/docs/dev/changelog.html"
 
 [project.scripts]
-"bottle.py" = "bottle:main"
+"bottle" = "bottle:main"
 
 [tool.flit.sdist]
 include = [

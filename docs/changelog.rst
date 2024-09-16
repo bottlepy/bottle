@@ -42,6 +42,8 @@ versions should not update to Bottle 0.13 and stick with 0.12 instead.
 
 .. rubric:: Deprecated APIs
 
+* Python 2 support is now deprecated and will be dropped with the next release.
+* The command line executable installed along with bottle will be renamed from `bottle.py` to just `bottle`. You can still execute bottle directly as a script (e.g. `./bottle.py` or `python3 bottle.py`) or as a module (via `python3 -m bottle`). Just the executable installed by your packaging tool (e.g. `pip`) into the `bin` folder of your (virtual) environment will change.
 * The old route syntax (``/hello/:name``) is deprecated in favor of the more readable and flexible ``/hello/<name>`` syntax.
 * :meth:`Bottle.mount` now recognizes Bottle instance and will warn about parameters that are not compatible with the new mounting behavior. The old behavior (mount applications as WSGI callable) still works and is used as a fallback automatically.
 * The undocumented :func:`local_property` helper is now deprecated.
@@ -73,6 +75,7 @@ These changes might require special care when updating.
 
 * Signed cookies now use a stronger HMAC algorithm by default. This will result in old cookies to appear invalid after the update. Pass an explicit ``digestmod=hashlib.md5`` to :meth:`Request.get_cookie <BaseRequest.get_cookie>` and :meth:`Response.set_cookie <BaseResponse.set_cookie>` to get the old behavior.
 * Bottle now ships with its own multipart form data parser (borrowed from `multipart <https://pypi.org/project/multipart/>`_) and no longer relies on ``cgi.FieldStorage``, which was removed in Python 3.13. This may change the way broken (non-standard) form submissions are parsed. The new parser is more strict and correct than ohe old one.
+* Installing bottle with `pip` or similar tools will now install an additional command line executable named `bottle` into the `bin` folder of your (virtual) environment. This will replace the now deprecated `bottle.py` executable in a later release. See above.
 
 .. rubric:: Other Improvements
 
