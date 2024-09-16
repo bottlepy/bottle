@@ -48,13 +48,13 @@ The easiest way to increase performance is to install a multi-threaded server li
     run(server='cheroot', ...)   # Pure Python, runs everywhere
     run(server='gunicorn', ...)  # High performance
 
-Or using the ``bottle.py`` command line interface:
+Or using the ``bottle`` command line interface:
 
 .. code-block:: sh
 
-    ./bottle.py --server gunicorn [...] mymodule:app
+    python3 -m bottle --server gunicorn [...] mymodule:app
 
-For production deployments gunicorn_ is a really good choice. It comes with its own command line utility that supports a lot more options than ``bottle.py``. Since :class:`Bottle` instances are WSGI applications, you can tell gunicorn_ (or any other WSGI server) to load your app instead of calling :func:`run` yourself:
+For production deployments gunicorn_ is a really good choice. It comes with its own command line utility that supports a lot more options than bottle. Since :class:`Bottle` instances are WSGI applications, you can tell gunicorn_ (or any other WSGI server) to load your app instead of calling :func:`run` yourself:
 
 .. code-block:: sh
 
@@ -65,7 +65,7 @@ This will start your application with 4 gunicorn workers and sane default settin
 Server adapters
 ------------------------------------------------------------------------------
 
-Bottle ships with a bunch of ready-to-use adapters for the most common WSGI servers so you can try out different server backends easily. You can select a server backend via `run(server='NAME')` or `bottle.py --server NAME`. Here is an incomplete list:
+Bottle ships with a bunch of ready-to-use adapters for the most common WSGI servers so you can try out different server backends easily. You can select a server backend via `run(server='NAME')` or `python3 -m bottle --server NAME`. Here is an incomplete list:
 
 ========  ============  ======================================================
 Name      Homepage      Description

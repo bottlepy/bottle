@@ -30,9 +30,9 @@ It is usually a better idea to create a `virtualenv <https://docs.python.org/3/l
 
 .. code-block:: bash
 
-    $ python3 -m venv develop         # Create virtual environment
-    $ source develop/bin/activate     # Change default python to virtual one
-    (develop)$ pip install -U bottle  # Install bottle to virtual environment
+    $ python3 -m venv venv         # Create virtual environment
+    $ source venv/bin/activate     # Change default python to virtual one
+    (venv)$ pip install -U bottle  # Install bottle to virtual environment
 
 
 
@@ -60,10 +60,11 @@ The :func:`run` call in the last line starts a built-in development server. It r
 
 This is just a demonstration of the basic concept of how applications are built with Bottle. Continue reading and you'll see what else is possible.
 
+
 .. _tutorial-default:
 
 The Application Object
-------------------------------------------------------------------------------
+==============================================================================
 
 For the sake of simplicity, most examples in this tutorial use a module-level :func:`route` and other decorators to define routes. Those refer to a global "default application", an instance of :class:`Bottle` that is automatically created the first time you call :func:`route` or its friends. If you prefer a more explicit approach and don't mind the extra typing, you can create a separate application object and use that instead of the global one::
 
@@ -84,7 +85,7 @@ The object-oriented approach is further described in the :ref:`default-app` sect
 .. _tutorial-debugging:
 
 Debug Mode
---------------------------------------------------------------------------------
+==============================================================================
 
 During early development, the debug mode can be very helpful.
 
@@ -127,19 +128,33 @@ the main process. Changes in template files will not trigger a reload.
 Please use debug mode to deactivate template caching.
 
 
-Command Line Interface
-----------------------
 
-Instead of running your script directly which then calls ``bottle.run()``, you can also use ``bottle.py`` as a command line tool to load and serve your application. This is especially useful during development:
+.. _tutorial-cli:
+
+Command Line Interface
+==============================================================================
+
+Bottle is not only a module, but also a command line executable that can be used to start your app instead of calling :func:`run` programmatically. If you installed bottle via `pip` or similar tools, there will also be a handy `bottle` command on your path. Try one of the following:
 
 .. code-block:: console
 
-    $ python -m bottle --debug --reload mymodule
+    bottle --help
+    python3 -m bottle --help
+    ./path/to/bottle.py --help
+
+Here is a quick example:
+
+.. code-block:: console
+
+    $ bottle --debug --reload mymodule
     Bottle v0.13-dev server starting up (using WSGIRefServer())...
     Listening on http://localhost:8080/
     Hit Ctrl-C to quit.
 
-Call ``python3 bottle.py --help`` or ``python3 -m bottle --help`` to get a list of parameters and features.
+.. versionchanged:: 0.13
+
+    The executable script installed into (virtual) environments was named ``bottle.py``, which could result in circular imports. The old name is now deprecated and the new executable ist named just ``bottle``.
+
 
 .. _tutorial-routing:
 

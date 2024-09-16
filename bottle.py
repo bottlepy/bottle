@@ -4671,5 +4671,9 @@ def _main(argv):  # pragma: no coverage
         config=config)
 
 
-if __name__ == '__main__':  # pragma: no coverage
+def main():
     _main(sys.argv)
+
+
+if __name__ == '__main__':  # pragma: no coverage
+    main()

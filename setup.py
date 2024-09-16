@@ -21,6 +21,11 @@ setup(name='bottle',
       },
       py_modules=['bottle'],
       scripts=['bottle.py'],
+      entry_points={
+        'console_scripts': [
+          'bottle = bottle:main',
+        ]
+      },
       license='MIT',
       platforms='any',
       classifiers=['Development Status :: 4 - Beta',
