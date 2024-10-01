@@ -28,7 +28,7 @@ Path         Result
 //123        `No Match`
 ============ =========================================
 
-Is it possible to escape characters like colon ``:`` with a backslash ``\``. This will prevent to trigger the old syntax in case you need to use ``:``.
+It is possible to escape characters like colon ``:`` with a backslash ``\``. This will prevent to trigger the old syntax in case you need to use ``:``.
 For example: the rule ``/<action>/item:<id>`` triggers the old syntax, (see below) but ``/action/item\:<id>`` works as intended with the new syntax. 
 
 
@@ -78,7 +78,7 @@ Legacy Syntax
 
 .. versionchanged:: 0.10
 
-The new rule syntax was introduce in **Bottle 0.10** to simplify some common use cases, but the old syntax still works and you can find lot code examples still using it. The differences are best described by example:
+The new rule syntax was introduced in **Bottle 0.10** to simplify some common use cases, but the old syntax still works and you can find lot of code examples still using it. The differences are best described by example:
 
 =================== ====================
 Old Syntax          New Syntax
