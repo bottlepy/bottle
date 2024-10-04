@@ -36,15 +36,19 @@ to receive updates on a best-effort basis.
 Release 0.14 (in development)
 =============================
 
-.. rubric:: Removed APIs (deprecated since 0.13)
+.. rubric:: Removed APIs
 
-* Dropped support for Python 2 and removed helpers and workarounds that only make sense in a Python 2/3 dual codebase (e.g. ``tonat()`` or the ``py3k`` flag). 
+* Dropped support for Python 2 and removed workarounds or helpers that only make sense in a Python 2/3 dual codebase.
 * Removed the ``RouteReset`` exception and associated logic.
 * Removed the `bottle.py` console script entrypoint in favour of the new `bottle` script. You can still execute `bottle.py` directly or via `python -m bottle`. The only change is that the command installed by pip or similar tools into the bin/Scripts folder of the (virtual) environment is now called `bottle` to avoid circular import errors.
 
 .. rubric:: Changes
 
-* ``bottle.HTTPError`` raised on Invalid JSON now include the underlying exception in their ``exception`` field.
+* Form values, query parameters, path elements and cookies are now always decoded as `utf8` with `errors='surrogateescape'`. This is the correct approach for almost all modern web applications, but still allows applications to recover the original byte sequence if needed. This also means that ``bottle.FormsDict`` no longer re-encodes PEP-3333 `latin1` strings to `utf8` on demand (via attribute access). The ``FormsDict.getunicode()`` and ``FormsDict.decode()`` methods are deprecated and do nothing, as all values are already transcoded to `utf8`.
+
+.. rubric:: New features
+
+* ``bottle.HTTPError`` raised on Invalid JSON now include the underlying exception in the ``exception`` field.
 
 
 Release 0.13

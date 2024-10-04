@@ -168,8 +168,8 @@ class TestRequest(unittest.TestCase):
         self.assertEqual(['b'], request.query.getall('b'))
         self.assertEqual('1', request.query['a'])
         self.assertEqual('b', request.query['b'])
-        self.assertEqual(touni(tob('瓶'), 'latin1'), request.query['cn'])
-        self.assertEqual(touni('瓶'), request.query.cn)
+        self.assertEqual('瓶', request.query['cn'])
+        self.assertEqual('瓶', request.query.cn)
 
     def test_post(self):
         """ Environ: POST data """
@@ -189,8 +189,8 @@ class TestRequest(unittest.TestCase):
         self.assertEqual('b', request.POST['b'])
         self.assertEqual('', request.POST['c'])
         self.assertEqual('', request.POST['d'])
-        self.assertEqual(touni(tob('瓶'), 'latin1'), request.POST['cn'])
-        self.assertEqual(touni('瓶'), request.POST.cn)
+        self.assertEqual('瓶', request.POST['cn'])
+        self.assertEqual('瓶', request.POST.cn)
 
     def test_bodypost(self):
         sq = tob('foobar')
@@ -889,10 +889,6 @@ class TestWSGIHeaderDict(unittest.TestCase):
     def test_native(self):
         self.env['HTTP_TEST_HEADER'] = 'foobar'
         self.assertEqual(self.headers['Test-header'], 'foobar')
-
-    def test_bytes(self):
-        self.env['HTTP_TEST_HEADER'] = tob('foobar')
-        self.assertEqual(self.headers['Test-Header'], 'foobar')
 
     def test_unicode(self):
         self.env['HTTP_TEST_HEADER'] = touni('foobar')

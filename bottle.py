@@ -88,7 +88,6 @@ import http.client as httplib
 import _thread as thread
 from urllib.parse import urljoin, SplitResult as UrlSplitResult
 from urllib.parse import urlencode, quote as urlquote, unquote as urlunquote
-urlunquote = functools.partial(urlunquote, encoding='latin1')
 from http.cookies import SimpleCookie, Morsel, CookieError
 from collections.abc import MutableMapping as DictMixin
 from types import ModuleType as new_module
@@ -111,6 +110,14 @@ unicode = str
 json_loads = lambda s: json_lds(touni(s))
 callable = lambda x: hasattr(x, '__call__')
 imap = map
+
+
+def _wsgi_recode(src):
+    """ Translate a PEP-3333 latin1-string to utf8+surrogateescape """
+    if src.isascii():
+        return src
+    return src.encode('latin1').decode('utf8', 'surrogateescape')
+
 
 def _raise(*a):
     raise a[0](a[1]).with_traceback(a[2])
@@ -679,11 +686,8 @@ class Bottle(object):
                 def start_response(status, headerlist, exc_info=None):
                     if exc_info:
                         _raise(*exc_info)
-                    # Errors here mean that the mounted WSGI app did not
-                    # follow PEP-3333 (which requires latin1) or used a
-                    # pre-encoding other than utf8 :/
-                    status = status.encode('latin1').decode('utf8')
-                    headerlist = [(k, v.encode('latin1').decode('utf8'))
+                    status = _wsgi_recode(status)
+                    headerlist = [(k, _wsgi_recode(v))
                                     for (k, v) in headerlist]
                     rs.status = status
                     for name, value in headerlist:
@@ -934,7 +938,7 @@ class Bottle(object):
 
     def _handle(self, environ):
         path = environ['bottle.raw_path'] = environ['PATH_INFO']
-        environ['PATH_INFO'] = path.encode('latin1').decode('utf8', 'ignore')
+        environ['PATH_INFO'] = _wsgi_recode(path)
 
         environ['bottle.app'] = self
         request.bind(environ)
@@ -1158,7 +1162,8 @@ class BaseRequest(object):
     def cookies(self):
         """ Cookies parsed into a :class:`FormsDict`. Signed cookies are NOT
             decoded. Use :meth:`get_cookie` if you expect signed cookies. """
-        cookies = SimpleCookie(self.environ.get('HTTP_COOKIE', '')).values()
+        cookie_header = _wsgi_recode(self.environ.get('HTTP_COOKIE', ''))
+        cookies = SimpleCookie(cookie_header).values()
         return FormsDict((c.key, c.value) for c in cookies)
 
     def get_cookie(self, key, default=None, secret=None, digestmod=hashlib.sha256):
@@ -1186,7 +1191,7 @@ class BaseRequest(object):
             not to be confused with "URL wildcards" as they are provided by the
             :class:`Router`. """
         get = self.environ['bottle.get'] = FormsDict()
-        pairs = _parse_qsl(self.environ.get('QUERY_STRING', ''))
+        pairs = _parse_qsl(self.environ.get('QUERY_STRING', ''), 'utf8')
         for key, value in pairs:
             get[key] = value
         return get
@@ -1198,7 +1203,6 @@ class BaseRequest(object):
             :class:`FormsDict`. All keys and values are strings. File uploads
             are stored separately in :attr:`files`. """
         forms = FormsDict()
-        forms.recode_unicode = self.POST.recode_unicode
         for name, item in self.POST.allitems():
             if not isinstance(item, FileUpload):
                 forms[name] = item
@@ -1222,7 +1226,6 @@ class BaseRequest(object):
 
         """
         files = FormsDict()
-        files.recode_unicode = self.POST.recode_unicode
         for name, item in self.POST.allitems():
             if isinstance(item, FileUpload):
                 files[name] = item
@@ -1345,12 +1348,11 @@ class BaseRequest(object):
         # We default to application/x-www-form-urlencoded for everything that
         # is not multipart and take the fast path (also: 3.1 workaround)
         if not content_type.startswith('multipart/'):
-            body = self._get_body_string(self.MEMFILE_MAX).decode('latin1')
-            for key, value in _parse_qsl(body):
+            body = self._get_body_string(self.MEMFILE_MAX).decode('utf8', 'surrogateescape')
+            for key, value in _parse_qsl(body, 'utf8'):
                 post[key] = value
             return post
 
-        post.recode_unicode = False
         charset = options.get("charset", "utf8")
         boundary = options.get("boundary")
         if not boundary:
@@ -1725,7 +1727,7 @@ class BaseResponse(object):
 
     def _wsgi_status_line(self):
         """ WSGI conform status line (latin1-encodeable) """
-        return self._status_line.encode('utf8').decode('latin1')
+        return self._status_line.encode('utf8', 'surrogateescape').decode('latin1')
 
     @property
     def headerlist(self):
@@ -1741,7 +1743,7 @@ class BaseResponse(object):
         if self._cookies:
             for c in self._cookies.values():
                 out.append(('Set-Cookie', _hval(c.OutputString())))
-        out = [(k, v.encode('utf8').decode('latin1')) for (k, v) in out]
+        out = [(k, v.encode('utf8', 'surrogateescape').decode('latin1')) for (k, v) in out]
         return out
 
     content_type = HeaderProperty('Content-Type')
@@ -2134,49 +2136,32 @@ class MultiDict(DictMixin):
 
 class FormsDict(MultiDict):
     """ This :class:`MultiDict` subclass is used to store request form data.
-        Additionally to the normal dict-like item access methods (which return
-        unmodified data as native strings), this container also supports
-        attribute-like access to its values. Attributes are automatically de-
-        or recoded to match :attr:`input_encoding` (default: 'utf8'). Missing
-        attributes default to an empty string. """
+        Additionally to the normal dict-like item access methods, this container
+        also supports attribute-like access to its values. Missing attributes
+        default to an empty string.
 
-    #: Encoding used for attribute values.
-    input_encoding = 'utf8'
-    #: If true (default), unicode strings are first encoded with `latin1`
-    #: and then decoded to match :attr:`input_encoding`.
-    recode_unicode = True
-
-    def _fix(self, s, encoding=None):
-        if isinstance(s, unicode) and self.recode_unicode:  # Python 3 WSGI
-            return s.encode('latin1').decode(encoding or self.input_encoding)
-        elif isinstance(s, bytes):  # Python 2 WSGI
-            return s.decode(encoding or self.input_encoding)
-        else:
-            return s
+        .. versionchanged:: 0.14
+            All keys and values are now decoded as utf8 by default, item and
+            attribute access will return the same string.
+    """
 
     def decode(self, encoding=None):
-        """ Returns a copy with all keys and values de- or recoded to match
-            :attr:`input_encoding`. Some libraries (e.g. WTForms) want a
-            unicode dictionary. """
+        """ (deprecated) Starting with 0.13 all keys and values are already
+            correctly decoded. """
         copy = FormsDict()
-        enc = copy.input_encoding = encoding or self.input_encoding
-        copy.recode_unicode = False
         for key, value in self.allitems():
-            copy.append(self._fix(key, enc), self._fix(value, enc))
+            copy[key] = value
         return copy
 
     def getunicode(self, name, default=None, encoding=None):
-        """ Return the value as a unicode string, or the default. """
-        try:
-            return self._fix(self[name], encoding)
-        except (UnicodeError, KeyError):
-            return default
+        """ (deprecated) Return the value as a unicode string, or the default. """
+        return self.get(name, default)
 
     def __getattr__(self, name, default=unicode()):
         # Without this guard, pickle generates a cryptic TypeError:
         if name.startswith('__') and name.endswith('__'):
             return super(FormsDict, self).__getattr__(name)
-        return self.getunicode(name, default=default)
+        return self.get(name, default=default)
 
 class HeaderDict(MultiDict):
     """ A case-insensitive version of :class:`MultiDict` that defaults to
@@ -2218,14 +2203,7 @@ class HeaderDict(MultiDict):
 
 class WSGIHeaderDict(DictMixin):
     """ This dict-like class wraps a WSGI environ dict and provides convenient
-        access to HTTP_* fields. Keys and values are native strings
-        (2.x bytes or 3.x unicode) and keys are case-insensitive. If the WSGI
-        environment contains non-native string values, these are de- or encoded
-        using a lossless 'latin1' character set.
-
-        The API will remain stable even on changes to the relevant PEPs.
-        Currently PEP 333, 444 and 3333 are supported. (PEP 444 is the only one
-        that uses non-native strings.)
+        access to HTTP_* fields. Header names are case-insensitive and titled by default.
     """
     #: List of keys that do not have a ``HTTP_`` prefix.
     cgikeys = ('CONTENT_TYPE', 'CONTENT_LENGTH')
@@ -2241,16 +2219,11 @@ class WSGIHeaderDict(DictMixin):
         return 'HTTP_' + key
 
     def raw(self, key, default=None):
-        """ Return the header value as is (may be bytes or unicode). """
+        """ Return the header value as is (not utf8-translated). """
         return self.environ.get(self._ekey(key), default)
 
     def __getitem__(self, key):
-        val = self.environ[self._ekey(key)]
-        if isinstance(val, unicode):
-            val = val.encode('latin1').decode('utf8')
-        else:
-            val = val.decode('utf8')
-        return val
+        return _wsgi_recode(self.environ[self._ekey(key)])
 
     def __setitem__(self, key, value):
         raise TypeError("%s is read-only." % self.__class__)
@@ -2684,8 +2657,6 @@ class FileUpload(object):
             or dashes are removed. The filename is limited to 255 characters.
         """
         fname = self.raw_filename
-        if not isinstance(fname, unicode):
-            fname = fname.decode('utf8', 'ignore')
         fname = normalize('NFKD', fname)
         fname = fname.encode('ASCII', 'ignore').decode('ASCII')
         fname = os.path.basename(fname.replace('\\', os.path.sep))
@@ -2966,14 +2937,14 @@ def _parse_http_header(h):
     return values
 
 
-def _parse_qsl(qs):
+def _parse_qsl(qs, encoding="utf8"):
     r = []
     for pair in qs.split('&'):
         if not pair: continue
         nv = pair.split('=', 1)
         if len(nv) != 2: nv.append('')
-        key = urlunquote(nv[0].replace('+', ' '))
-        value = urlunquote(nv[1].replace('+', ' '))
+        key = urlunquote(nv[0].replace('+', ' '), encoding)
+        value = urlunquote(nv[1].replace('+', ' '), encoding)
         r.append((key, value))
     return r
 
@@ -3283,7 +3254,7 @@ class _MultipartPart(object):
         return self.write_header(line, nl)
 
     def write_header(self, line, nl):
-        line = line.decode(self.charset)
+        line = str(line, self.charset)
 
         if not nl:
             raise MultipartError("Unexpected end of line in header.")
@@ -3355,8 +3326,7 @@ class _MultipartPart(object):
     @property
     def value(self):
         """ Data decoded with the specified charset """
-
-        return self.raw.decode(self.charset)
+        return str(self.raw, self.charset)
 
     @property
     def raw(self):
