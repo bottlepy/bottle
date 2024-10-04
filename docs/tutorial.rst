@@ -552,28 +552,18 @@ Property                                       Data source
 
 Bottle uses a special type of dictionary to store those parameters. :class:`FormsDict` behaves like a normal dictionary, but has some additional features to make your life easier.
 
-First of all, :class:`FormsDict` is a subclass of :class:`MultiDict` and can store more than one value per key. The standard dictionary access methods will only return the first of many values, but the :meth:`MultiDict.getall` method returns a (possibly empty) list of all values for a specific key::
+First of all, :class:`FormsDict` is a subclass of :class:`MultiDict` and can store more than one value per key. Only the first value is returned by default, but :meth:`MultiDict.getall` can be used to get a (possibly empty) list of all values for a specific key::
 
   for choice in request.forms.getall('multiple_choice'):
       do_something(choice)
 
-To simplify dealing with lots of unreliable user input, :class:`FormsDict` exposes all its values as attributes, but with a twist: These virtual attributes always return properly encoded unicode strings, even if the value is missing or character decoding fails. They never return ``None`` or throw an exception, but return an empty string instead::
+Attribute-like access is also supported, returning empty strings for missing values. This simplifies code a lot whend ealing with lots of optional attributes::
 
   name = request.query.name    # may be an empty string
 
 .. rubric:: A word on unicode and character encodings
 
-HTTP is a byte-based wire protocol. The server has to decode byte strings somehow before they are passed to the application. To be on the safe side, WSGI suggests ISO-8859-1 (aka latin1), a reversible single-byte codec that can be re-encoded with a different encoding later. Bottle does that for :meth:`FormsDict.getunicode` and attribute access, but not for :meth:`FormsDict.get` or item-access. These return the unchanged values as provided by the server implementation, which is probably not what you want.
-
-::
-
-    >>> request.query['city']
-    'GÃ¶ttingen' # An utf8 string provisionally decoded as ISO-8859-1 by the server
-    >>> request.query.city
-    'Göttingen'  # The same string correctly re-encoded as utf8 by bottle
-
-If you need the whole dictionary with correctly decoded values (e.g. for WTForms), you can call :meth:`FormsDict.decode` to get a fully re-encoded copy.
-
+Unicode characters in the request path, query parameters or cookies are a bit tricky. HTTP is a very old byte-based protocol that predates unicode and lacks explicit encoding information. This is why WSGI servers have to fall back on `ISO-8859-1` (aka `latin1`, a reversible input encoding) for those estrings. Modern browsers default to `utf8`, though. It's a bit much to ask application developers to translate every single user input string to the correct encoding manually. Bottle makes this easy and just assumes `utf8` for everything. All strings returned by Bottle APIs support the full range of unicode characters, as long as the webpage or HTTP client follows best practices and does not break with established standards.
 
 Query Parameters
 --------------------------------------------------------------------------------
