@@ -17,7 +17,7 @@ from __future__ import print_function
 import sys
 
 __author__ = 'Marcel Hellkamp'
-__version__ = '0.13.1'
+__version__ = '0.13.2'
 __license__ = 'MIT'
 
 ###############################################################################
