@@ -131,9 +131,9 @@ def tob(s, enc='utf8'):
 
 
 def touni(s, enc='utf8', err='strict'):
-    if isinstance(s, bytes):
-        return s.decode(enc, err)
-    return unicode("" if s is None else s)
+    if isinstance(s, (bytes, bytearray)):
+        return str(s, enc, err)
+    return "" if s is None else str(s)
 
 
 def _stderr(*args):
