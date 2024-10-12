@@ -185,6 +185,7 @@ def depr(major, minor, cause, fix, stacklevel=3):
     if DEBUG == 'strict':
         raise DeprecationWarning(text)
     warnings.warn(text, DeprecationWarning, stacklevel=stacklevel)
+    return DeprecationWarning(text)
 
 
 def makelist(data):  # This is just too handy
