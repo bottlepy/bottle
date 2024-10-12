@@ -5,7 +5,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
-      max-parallel: 5
+      max-parallel: 6
       matrix:
         python-version:
           - "3.8"
@@ -13,6 +13,7 @@ jobs:
           - "3.10"
           - "3.11"
           - "3.12"
+          - "3.13"
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-python@v5
