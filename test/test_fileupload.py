@@ -33,8 +33,7 @@ class TestFileUpload(unittest.TestCase):
         self.assertFilename('.name.cfg', 'name.cfg')
         self.assertFilename(' . na me . ', 'na-me')
         self.assertFilename('path/', 'empty')
-        self.assertFilename(bottle.tob('ümläüts$'), 'umlauts')
-        self.assertFilename(bottle.touni('ümläüts$'), 'umlauts')
+        self.assertFilename('ümläüts$', 'umlauts')
         self.assertFilename('', 'empty')
         self.assertFilename('a'+'b'*1337+'c', 'a'+'b'*254)
 
