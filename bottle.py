@@ -636,7 +636,7 @@ class Bottle(object):
             depr(0, 13, "Bottle(autojson) keyword argument.",
                  "The 'autojson' setting is now part of the app "
                  "configuration. Fix: `app.config['json.enable'] = False`")
-            self.config['json.disable'] = True
+            self.config['json.enable'] = False
 
         self._mounts = []
 
