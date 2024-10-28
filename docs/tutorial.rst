@@ -276,7 +276,7 @@ Note that we used the ``:path`` route filter here to allow slash characters in `
 
 The :func:`static_file` helper function has a lot of benefits compared to handling files manually. Most importantly it prevents `directory traversal attacks <https://owasp.org/www-community/attacks/Path_Traversal>`_ (e.g. ``GET /static/../../../../etc/secrets``) by restricting file access to the specified ``root`` directory. Make sure to use an absolut path for ``root``, though. Relative paths (staring with ``./``) are resolved against the current work directory which may not always be the same as your project directory.
 
-The :func:`static_file` function returns :class:`HTTPResponse` or :class:`HTTPError`, which can be raied as an exception if you need to.
+The :func:`static_file` function returns :class:`HTTPResponse` or :class:`HTTPError`, which can be raised as an exception if you need to.
 
 .. rubric:: File downloads
 
