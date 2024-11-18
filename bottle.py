@@ -105,12 +105,8 @@ def getargspec(func):
     kwargs = makelist(spec[0]) + makelist(spec.kwonlyargs)
     return kwargs, spec[1], spec[2], spec[3]
 
-basestring = str
-unicode = str
 json_loads = lambda s: json_lds(touni(s))
 callable = lambda x: hasattr(x, '__call__')
-imap = map
-
 
 def _wsgi_recode(src):
     """ Translate a PEP-3333 latin1-string to utf8+surrogateescape """
@@ -125,7 +121,7 @@ def _raise(*a):
 
 # Some helpers for string/byte handling
 def tob(s, enc='utf8'):
-    if isinstance(s, unicode):
+    if isinstance(s, str):
         return s.encode(enc)
     return b'' if s is None else bytes(s)
 
@@ -878,7 +874,7 @@ class Bottle(object):
         skiplist = makelist(skip)
 
         def decorator(callback):
-            if isinstance(callback, basestring): callback = load(callback)
+            if isinstance(callback, str): callback = load(callback)
             for rule in makelist(path) or yieldroutes(callback):
                 for verb in makelist(method):
                     verb = verb.upper()
@@ -927,7 +923,7 @@ class Bottle(object):
         """
 
         def decorator(callback):
-            if isinstance(callback, basestring): callback = load(callback)
+            if isinstance(callback, str): callback = load(callback)
             self.error_handler[int(code)] = callback
             return callback
 
@@ -979,8 +975,8 @@ class Bottle(object):
     def _cast(self, out, peek=None):
         """ Try to convert the parameter into something WSGI compatible and set
         correct HTTP headers when possible.
-        Support: False, str, unicode, dict, HTTPResponse, HTTPError, file-like,
-        iterable of strings and iterable of unicodes
+        Support: False, bytes/bytearray, str, dict, HTTPResponse, HTTPError, file-like,
+        iterable of bytes/bytearray or str instances.
         """
 
         # Empty output is done here
@@ -990,10 +986,10 @@ class Bottle(object):
             return []
         # Join lists of byte or unicode strings. Mixed lists are NOT supported
         if isinstance(out, (tuple, list))\
-        and isinstance(out[0], (bytes, unicode)):
+        and isinstance(out[0], (bytes, str)):
             out = out[0][0:0].join(out)  # b'abc'[0:0] -> b''
         # Encode unicode strings
-        if isinstance(out, unicode):
+        if isinstance(out, str):
             out = out.encode(response.charset)
         # Byte Strings are just returned
         if isinstance(out, bytes):
@@ -1039,9 +1035,9 @@ class Bottle(object):
             return self._cast(first)
         elif isinstance(first, bytes):
             new_iter = itertools.chain([first], iout)
-        elif isinstance(first, unicode):
+        elif isinstance(first, str):
             encoder = lambda x: x.encode(response.charset)
-            new_iter = imap(encoder, itertools.chain([first], iout))
+            new_iter = map(encoder, itertools.chain([first], iout))
         else:
             msg = 'Unsupported response type: %s' % type(first)
             return self._cast(HTTPError(500, msg))
@@ -1809,7 +1805,7 @@ class BaseResponse(object):
             Morsel._reserved.setdefault('samesite', 'SameSite')
 
         if secret:
-            if not isinstance(value, basestring):
+            if not isinstance(value, str):
                 depr(0, 13, "Pickling of arbitrary objects into cookies is "
                             "deprecated.", "Only store strings in cookies. "
                             "JSON strings are fine, too.")
@@ -1817,7 +1813,7 @@ class BaseResponse(object):
             sig = base64.b64encode(hmac.new(tob(secret), encoded,
                                             digestmod=digestmod).digest())
             value = touni(b'!' + sig + b'?' + encoded)
-        elif not isinstance(value, basestring):
+        elif not isinstance(value, str):
             raise TypeError('Secret key required for non-string cookies.')
 
         # Cookie size plus options must not exceed 4kb.
@@ -2157,7 +2153,7 @@ class FormsDict(MultiDict):
         """ (deprecated) Return the value as a unicode string, or the default. """
         return self.get(name, default)
 
-    def __getattr__(self, name, default=unicode()):
+    def __getattr__(self, name, default=str()):
         # Without this guard, pickle generates a cryptic TypeError:
         if name.startswith('__') and name.endswith('__'):
             return super(FormsDict, self).__getattr__(name)
@@ -2326,7 +2322,7 @@ class ConfigDict(dict):
             {'some.namespace.key': 'value'}
         """
         for key, value in source.items():
-            if isinstance(key, basestring):
+            if isinstance(key, str):
                 nskey = (namespace + '.' + key).strip('.')
                 if isinstance(value, dict):
                     self.load_dict(value, namespace=nskey)
@@ -2344,7 +2340,7 @@ class ConfigDict(dict):
             >>> c.update('some.namespace', key='value')
         """
         prefix = ''
-        if a and isinstance(a[0], basestring):
+        if a and isinstance(a[0], str):
             prefix = a[0].strip('.') + '.'
             a = a[1:]
         for key, value in dict(*a, **ka).items():
@@ -2356,7 +2352,7 @@ class ConfigDict(dict):
         return self[key]
 
     def __setitem__(self, key, value):
-        if not isinstance(key, basestring):
+        if not isinstance(key, str):
             raise TypeError('Key has type %r (not a string)' % type(key))
 
         self._virtual_keys.discard(key)
@@ -2681,7 +2677,7 @@ class FileUpload(object):
             :param overwrite: If True, replace existing files. (default: False)
             :param chunk_size: Bytes to read at a time. (default: 64kb)
         """
-        if isinstance(destination, basestring):  # Except file-likes here
+        if isinstance(destination, str):  # Except file-likes here
             if os.path.isdir(destination):
                 destination = os.path.join(destination, self.filename)
             if not overwrite and os.path.exists(destination):
@@ -2847,7 +2843,7 @@ def debug(mode=True):
 
 
 def http_date(value):
-    if isinstance(value, basestring):
+    if isinstance(value, str):
         return value
     if isinstance(value, datetime):
         # aware datetime.datetime is converted to UTC time
@@ -3836,13 +3832,13 @@ def run(app=None,
     try:
         if debug is not None: _debug(debug)
         app = app or default_app()
-        if isinstance(app, basestring):
+        if isinstance(app, str):
             app = load_app(app)
         if not callable(app):
             raise ValueError("Application is not callable: %r" % app)
 
         for plugin in plugins or []:
-            if isinstance(plugin, basestring):
+            if isinstance(plugin, str):
                 plugin = load(plugin)
             app.install(plugin)
 
@@ -3851,7 +3847,7 @@ def run(app=None,
 
         if server in server_names:
             server = server_names.get(server)
-        if isinstance(server, basestring):
+        if isinstance(server, str):
             server = load(server)
         if isinstance(server, type):
             server = server(host=host, port=port, **kargs)

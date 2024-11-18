@@ -13,7 +13,7 @@ import warnings
 import mimetypes
 import uuid
 
-from bottle import tob, BytesIO, unicode
+from bottle import tob, BytesIO
 
 
 def warn(msg):
@@ -167,7 +167,7 @@ def multipart_environ(fields, files):
         body += 'Content-Type: %s\r\n\r\n' % mimetype
         body += content + '\r\n'
     body += boundary + '--\r\n'
-    if isinstance(body, unicode):
+    if isinstance(body, str):
         body = body.encode('utf8')
     env['CONTENT_LENGTH'] = str(len(body))
     env['wsgi.input'].write(body)
