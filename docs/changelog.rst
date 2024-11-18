@@ -5,6 +5,34 @@
 Release Notes
 =============
 
+This project loosly follows Semantic Versioning (``major.minor.patch``), with
+the exception that changes are allowed in minor releases as long as the change
+is necessary to match documentation, specification or expectation. 
+In other words: Bugfixes do not count as backward incompatible changes, even if
+they technically change something from *incorrect* to *correct* and may break
+applications that rely on *incorrect*, *undefined* or *undocumented* behavior.
+
+As long as the major version is still ``0.x``, breaking API changes are also
+allowed in minor releases, but we try our best to provide fallbacks and emit
+deprecation warnings for at least one minor release circle.
+
+.. rubric:: How to upgrade
+
+* Upgrade to the most recent patch release available for your current minor
+  release. (e.g. ``0.12.3`` to ``0.12.25``)
+* Read the release notes for the next minor release, run your tests and fix all
+  deprecation warnings.
+* Upgrade to the next minor release (e.g. ``0.12.25`` to ``0.13.2``), run test
+  again, fix all warnings and continue.
+
+.. rubric:: Support for old releases
+
+Bugs and security issues are usually fixed in the latest minor release of the
+two most recent major releases (named stable and old-stable). With each new major
+release, stable becomes old-stable and the old old-stable will no longer receive
+regular updates. LTS releases (e.g. 0.12) are an exception. Those will continue
+to receive updates on a best-effort basis.
+
 Release 0.14 (in development)
 =============================
 
