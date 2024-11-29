@@ -569,6 +569,7 @@ class Route(object):
         closure_attr = '__closure__' if py3k else 'func_closure'
         while hasattr(func, closure_attr) and getattr(func, closure_attr):
             attributes = getattr(func, closure_attr)
+            prev_func = func
             func = attributes[0].cell_contents
 
             # in case of decorators with multiple arguments
@@ -576,7 +577,11 @@ class Route(object):
                 # pick first FunctionType instance from multiple arguments
                 func = filter(lambda x: isinstance(x, FunctionType),
                               map(lambda x: x.cell_contents, attributes))
-                func = list(func)[0]  # py3 support
+                func_list = list(func)
+                if len(func_list)==0:
+                    func = prev_func
+                    break
+                func = func_list[0]  # py3 support
         return func
 
     def get_callback_args(self):
