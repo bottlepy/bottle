@@ -36,14 +36,19 @@ to receive updates on a best-effort basis.
 Release 0.14 (in development)
 =============================
 
-.. rubric:: Removed APIs (deprecated since 0.13)
+.. rubric:: Removed APIs
 
+* Dropped support for Python 2 and removed workarounds or helpers that only make sense in a Python 2/3 dual codebase.
 * Removed the ``RouteReset`` exception and associated logic.
 * Removed the `bottle.py` console script entrypoint in favour of the new `bottle` script. You can still execute `bottle.py` directly or via `python -m bottle`. The only change is that the command installed by pip or similar tools into the bin/Scripts folder of the (virtual) environment is now called `bottle` to avoid circular import errors.
 
 .. rubric:: Changes
 
-* ``bottle.HTTPError`` raised on Invalid JSON now include the underlying exception in their ``exception`` field.
+* Form values, query parameters, path elements and cookies are now always decoded as `utf8` with `errors='surrogateescape'`. This is the correct approach for almost all modern web applications, but still allows applications to recover the original byte sequence if needed. This also means that ``bottle.FormsDict`` no longer re-encodes PEP-3333 `latin1` strings to `utf8` on demand (via attribute access). The ``FormsDict.getunicode()`` and ``FormsDict.decode()`` methods are deprecated and do nothing, as all values are already transcoded to `utf8`.
+
+.. rubric:: New features
+
+* ``bottle.HTTPError`` raised on Invalid JSON now include the underlying exception in the ``exception`` field.
 
 
 Release 0.13
@@ -74,7 +79,7 @@ versions should not update to Bottle 0.13 and stick with 0.12 instead.
 
 .. rubric:: Deprecated APIs
 
-* Python 2 support is now deprecated and will be dropped with the next release.
+* Python 2 support is now deprecated and will be dropped with the next release. This includes helpers and workarounds that only make sense in a Python 2/3 dual codebase (e.g. ``tonat()`` or the ``py3k`` flag). 
 * The command line executable installed along with bottle will be renamed from `bottle.py` to just `bottle`. You can still execute bottle directly as a script (e.g. `./bottle.py` or `python3 bottle.py`) or as a module (via `python3 -m bottle`). Just the executable installed by your packaging tool (e.g. `pip`) into the `bin` folder of your (virtual) environment will change.
 * The old route syntax (``/hello/:name``) is deprecated in favor of the more readable and flexible ``/hello/<name>`` syntax.
 * :meth:`Bottle.mount` now recognizes Bottle instance and will warn about parameters that are not compatible with the new mounting behavior. The old behavior (mount applications as WSGI callable) still works and is used as a fallback automatically.

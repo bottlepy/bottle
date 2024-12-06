@@ -7,7 +7,7 @@ import sys
 import itertools
 
 import bottle
-from bottle import request, tob, touni, tonat, json_dumps, HTTPError, parse_date, CookieError
+from bottle import request, tob, touni, json_dumps, HTTPError, parse_date, CookieError
 from . import tools
 import wsgiref.util
 import base64
@@ -160,7 +160,7 @@ class TestRequest(unittest.TestCase):
 
     def test_get(self):
         """ Environ: GET data """
-        qs = tonat(tob('a=a&a=1&b=b&c=c&cn=%e7%93%b6'), 'latin1')
+        qs = touni(tob('a=a&a=1&b=b&c=c&cn=%e7%93%b6'), 'latin1')
         request = BaseRequest({'QUERY_STRING':qs})
         self.assertTrue('a' in request.query)
         self.assertTrue('b' in request.query)
@@ -168,8 +168,8 @@ class TestRequest(unittest.TestCase):
         self.assertEqual(['b'], request.query.getall('b'))
         self.assertEqual('1', request.query['a'])
         self.assertEqual('b', request.query['b'])
-        self.assertEqual(tonat(tob('瓶'), 'latin1'), request.query['cn'])
-        self.assertEqual(touni('瓶'), request.query.cn)
+        self.assertEqual('瓶', request.query['cn'])
+        self.assertEqual('瓶', request.query.cn)
 
     def test_post(self):
         """ Environ: POST data """
@@ -189,8 +189,8 @@ class TestRequest(unittest.TestCase):
         self.assertEqual('b', request.POST['b'])
         self.assertEqual('', request.POST['c'])
         self.assertEqual('', request.POST['d'])
-        self.assertEqual(tonat(tob('瓶'), 'latin1'), request.POST['cn'])
-        self.assertEqual(touni('瓶'), request.POST.cn)
+        self.assertEqual('瓶', request.POST['cn'])
+        self.assertEqual('瓶', request.POST.cn)
 
     def test_bodypost(self):
         sq = tob('foobar')
@@ -503,15 +503,11 @@ class TestResponse(unittest.TestCase):
             result = [v for (h, v) in rs.headerlist if h.lower()=='x-test'][0]
             self.assertEqual(wire, result)
 
-        if bottle.py3k:
-            cmp(1, tonat('1', 'latin1'))
-            cmp('öäü', 'öäü'.encode('utf8').decode('latin1'))
-            # Dropped byte header support in Python 3:
-            #cmp(tob('äöü'), 'äöü'.encode('utf8').decode('latin1'))
-        else:
-            cmp(1, '1')
-            cmp('öäü', 'öäü')
-            cmp(touni('äöü'), 'äöü')
+        cmp(1, touni('1', 'latin1'))
+        cmp('öäü', 'öäü'.encode('utf8').decode('latin1'))
+        # Dropped byte header support in Python 3:
+        #cmp(tob('äöü'), 'äöü'.encode('utf8').decode('latin1'))
+
 
     def test_set_status(self):
         rs = BaseResponse()
@@ -583,12 +579,11 @@ class TestResponse(unittest.TestCase):
         self.assertEqual(rs.status_line, '404 Brain not Found') # last value
 
         # Unicode in status line (thanks RFC7230 :/)
-        if bottle.py3k:
-            rs.status = '400 Non-ASÎÎ'
-            self.assertEqual(rs.status, rs.status_line)
-            self.assertEqual(rs.status_code, 400)
-            wire = rs._wsgi_status_line().encode('latin1')
-            self.assertEqual(rs.status, wire.decode('utf8'))
+        rs.status = '400 Non-ASÎÎ'
+        self.assertEqual(rs.status, rs.status_line)
+        self.assertEqual(rs.status_code, 400)
+        wire = rs._wsgi_status_line().encode('latin1')
+        self.assertEqual(rs.status, wire.decode('utf8'))
 
     def test_content_type(self):
         rs = BaseResponse()
@@ -735,7 +730,7 @@ class TestResponse(unittest.TestCase):
         response['x-test'] = None
         self.assertEqual('', response['x-test'])
         response['x-test'] = touni('瓶')
-        self.assertEqual(tonat(touni('瓶')), response['x-test'])
+        self.assertEqual(touni('瓶'), response['x-test'])
 
     def test_prevent_control_characters_in_headers(self):
         masks = '{}test', 'test{}', 'te{}st'
@@ -894,10 +889,6 @@ class TestWSGIHeaderDict(unittest.TestCase):
     def test_native(self):
         self.env['HTTP_TEST_HEADER'] = 'foobar'
         self.assertEqual(self.headers['Test-header'], 'foobar')
-
-    def test_bytes(self):
-        self.env['HTTP_TEST_HEADER'] = tob('foobar')
-        self.assertEqual(self.headers['Test-Header'], 'foobar')
 
     def test_unicode(self):
         self.env['HTTP_TEST_HEADER'] = touni('foobar')

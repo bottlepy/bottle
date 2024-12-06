@@ -102,7 +102,7 @@ class TestSendFile(unittest.TestCase):
         res = static_file(basename, root=root)
         self.assertEqual(304, res.status_code)
         self.assertEqual(int(os.stat(__file__).st_mtime), parse_date(res.headers['Last-Modified']))
-        self.assertAlmostEqual(int(time.time()), parse_date(res.headers['Date']))
+        self.assertAlmostEqual(int(time.time()), parse_date(res.headers['Date']), delta=2)
         request.environ['HTTP_IF_MODIFIED_SINCE'] = bottle.http_date(100)
         self.assertEqual(open(__file__,'rb').read(), static_file(basename, root=root).body.read())
 

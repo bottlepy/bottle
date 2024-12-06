@@ -13,7 +13,7 @@ import warnings
 import mimetypes
 import uuid
 
-from bottle import tob, tonat, BytesIO, py3k, unicode
+from bottle import tob, BytesIO
 
 
 def warn(msg):
@@ -76,10 +76,7 @@ def api(introduced, deprecated=None, removed=None):
 
 
 def wsgistr(s):
-    if py3k:
-        return s.encode('utf8').decode('latin1')
-    else:
-        return s
+    return s.encode('utf8').decode('latin1')
 
 class ServerTestBase(unittest.TestCase):
     def setUp(self):
@@ -170,7 +167,7 @@ def multipart_environ(fields, files):
         body += 'Content-Type: %s\r\n\r\n' % mimetype
         body += content + '\r\n'
     body += boundary + '--\r\n'
-    if isinstance(body, unicode):
+    if isinstance(body, str):
         body = body.encode('utf8')
     env['CONTENT_LENGTH'] = str(len(body))
     env['wsgi.input'].write(body)
