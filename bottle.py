@@ -96,14 +96,7 @@ from io import BytesIO
 import configparser
 from datetime import timezone
 UTC = timezone.utc
-# getfullargspec was deprecated in 3.5 and un-deprecated in 3.6
-# getargspec was deprecated in 3.0 and removed in 3.11
-from inspect import getfullargspec
-
-def getargspec(func):
-    spec = getfullargspec(func)
-    kwargs = makelist(spec[0]) + makelist(spec.kwonlyargs)
-    return kwargs, spec[1], spec[2], spec[3]
+import inspect
 
 json_loads = lambda s: json_lds(touni(s))
 callable = lambda x: hasattr(x, '__call__')
@@ -553,7 +546,10 @@ class Route(object):
         """ Return a list of argument names the callback (most likely) accepts
             as keyword arguments. If the callback is a decorated function, try
             to recover the original function before inspection. """
-        return getargspec(self.get_undecorated_callback())[0]
+        sig = inspect.signature(self.get_undecorated_callback())
+        return [p.name for p in sig.parameters.values() if p.kind in (
+            p.POSITIONAL_OR_KEYWORD, p.KEYWORD_ONLY
+        )]
 
     def get_config(self, key, default=None):
         """ Lookup a config field and return its value, first checking the
@@ -3006,13 +3002,15 @@ def yieldroutes(func):
         d(x=5, y=6) -> '/d' and '/d/<x>' and '/d/<x>/<y>'
     """
     path = '/' + func.__name__.replace('__', '/').lstrip('/')
-    spec = getargspec(func)
-    argc = len(spec[0]) - len(spec[3] or [])
-    path += ('/<%s>' * argc) % tuple(spec[0][:argc])
+    sig = inspect.signature(func, follow_wrapped=False)
+    for p in sig.parameters.values():
+        if p.kind == p.POSITIONAL_ONLY:
+            raise ValueError("Invalid signature for yieldroutes: %s" % sig)
+        if p.kind in (p.POSITIONAL_OR_KEYWORD, p.KEYWORD_ONLY):
+            if p.default != p.empty:
+                yield path  # Yield path without this (optional) parameter.
+            path += "/<%s>" % p.name
     yield path
-    for arg in spec[0][argc:]:
-        path += '/<%s>' % arg
-        yield path
 
 
 def path_shift(script_name, path_info, shift=1):
