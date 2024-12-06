@@ -32,7 +32,7 @@ $(VENV)/.installed: Makefile pyproject.toml
 	test -d $(VENV) || python3 -m venv $(VENV)
 	$(VENV)/bin/python3 -m ensurepip
 	$(VENV)/bin/pip install -q -U pip
-	$(VENV)/bin/pip install -q -e .[dev]
+	$(VENV)/bin/pip install -q -e .[dev,docs]
 	touch $(VENV)/.installed
 
 .PHONY: venv
