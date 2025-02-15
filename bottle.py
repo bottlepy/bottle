@@ -3398,12 +3398,9 @@ class WSGIRefServer(ServerAdapter):
         import socket
 
         class FixedHandler(WSGIRequestHandler):
-            def address_string(self):  # Prevent reverse DNS lookups please.
-                return self.client_address[0]
-
-            def log_request(*args, **kw):
+            def log_message(other, format, *args):
                 if not self.quiet:
-                    return WSGIRequestHandler.log_request(*args, **kw)
+                    return WSGIRequestHandler.log_message(other, format, *args)
 
         handler_cls = self.options.get('handler_class', FixedHandler)
         server_cls = self.options.get('server_class', WSGIServer)
