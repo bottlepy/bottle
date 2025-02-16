@@ -1,190 +1,263 @@
 .. _Bottle: http://bottlepy.org
+.. _WSGI: https://peps.python.org/pep-3333/
 .. _Python: http://www.python.org
 .. _SQLite: http://www.sqlite.org
-.. _Windows: http://www.sqlite.org/download.html
-.. _PySQLite: http://pypi.python.org/pypi/pysqlite/
-.. _`decorator statement`: http://docs.python.org/glossary.html#term-decorator
+.. _`SQLite module`: https://docs.python.org/3/library/sqlite3.html#module-sqlite3
+.. _`HTML tutorial`: https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Structuring_content
+.. _venv: https://docs.python.org/3/library/venv.html
+.. _`decorator function`: http://docs.python.org/glossary.html#term-decorator
 .. _`Python DB API`: http://www.python.org/dev/peps/pep-0249/
 .. _`WSGI reference Server`: http://docs.python.org/library/wsgiref.html#module-wsgiref.simple_server
-.. _Cherrypy: https://cherrypy.dev/
-.. _Flup: https://www.saddi.com/software/flup/
-.. _Paste: https://pythonpaste.readthedocs.io
-.. _Apache: http://www.apache.org
 .. _`Bottle documentation`: http://bottlepy.org/docs/dev/tutorial.html
-.. _`mod_wsgi`: http://code.google.com/p/modwsgi/
-.. _`json`: http://www.json.org
+.. _JSON: http://www.json.org
+.. _`match statement`: https://peps.python.org/pep-0634/
+.. _f-strings: https://docs.python.org/3/library/string.html#format-string-syntax
+.. _`Bottle class`: https://bottlepy.org/docs/dev/api.html#the-bottle-class
+.. _`Zen of Python`: https://peps.python.org/pep-0020/
+.. _`dynamic routes`: https://bottlepy.org/docs/dev/tutorial.html#dynamic-routes
+.. _`RegEx module`: https://docs.python.org/3/library/re.html
+.. _pathlib: https://docs.python.org/3/library/pathlib.html
+.. _`static_file documentation`: https://bottlepy.org/docs/dev/api.html#bottle.static_file
+.. _`server adapters`: https://bottlepy.org/docs/dev/deployment.html#server-adapters
+.. _`Waitress`: https://docs.pylonsproject.org/projects/waitress/en/latest/
 
-=================
-Todo-List Example
-=================
 
-.. note::
+=========================
+ToDo Application Example
+=========================
 
-   This tutorial is outdated, better start here: :doc:`tutorial`. If you want to help and improve this tutorial, see :doc:`development`. 
+This tutorial gives a brief introduction to the Bottle_ WSGI_ Framework. The main goal this tutorial is, after finishing working yourself through, to be able to create a project using Bottle. Within this document, by far not all features are shown, but at least the main and important ones like request routing, utilizing the Bottle template engine to format output as well as handling GET and POST request are featured. The last section gives a brief introduction how to serve a Bottle application by a WSGI application server.
 
+To understand the content of this tutorial, it is not really necessary to have a basic knowledge of WSGI, as Bottle tries to keep WSGI away from the user anyway as much as possible. A fair bit of understanding of the Python_ programming language is of course required. Furthermore, the example application created in this tutorial retrieves and stores data in a SQL database, so (very) basic knowledge on SQL helps, but is not a must to understand the concepts of Bottle. Right here, SQLite_ is used. As Bottle is a framework for web-based application, most of output send to the Browser is HTML. Thus, a basic idea about the common HTML tags certainly helps as well. In case HTML basic still need to be learned, a good starting point is the `HTML tutorial`_ on the Mozilla Developer Network website.
 
-This tutorial should give a brief introduction to the Bottle_ WSGI Framework. The main goal is to be able, after reading through this tutorial, to create a project using Bottle. Within this document, not all abilities will be shown, but at least the main and important ones like routing, utilizing the Bottle template abilities to format output and handling GET / POST parameters.
-
-To understand the content here, it is not necessary to have a basic knowledge of WSGI, as Bottle tries to keep WSGI away from the user anyway. You should have a fair understanding of the Python_ programming language. Furthermore, the example used in the tutorial retrieves and stores data in a SQL database, so a basic idea about SQL helps, but is not a must to understand the concepts of Bottle. Right here, SQLite_ is used. The output of Bottle sent to the browser is formatted in some examples by the help of HTML. Thus, a basic idea about the common HTML tags does help as well.
-
-For the sake of introducing Bottle, the Python code "in between" is kept short, in order to keep the focus. Also all code within the tutorial is working fine, but you may not necessarily use it "in the wild", e.g. on a public web server. In order to do so, you may add e.g. more error handling, protect the database with a password, test and escape the input etc.
+For the sake of introducing Bottle, the Python code "in between" is kept short, in order to keep the focus. Although all code within the tutorial works fine, it may not necessarily be used as-is "in the wild", e.g. on a publically accessible server. To do so, e.g. input validtion, better database protection, better error handling and other things need to be added.
 
 .. contents:: Table of Contents
 
 Goals
-===========
+======
 
-At the end of this tutorial, we will have a simple, web-based ToDo list. The list contains a text (with max 100 characters) and a status (0 for closed, 1 for open) for each item. Through the web-based user interface, open items can be view and edited and new items can be added.
+At the end of this tutorial, a ready-to-use, simple, web-based ToDo application is going to be programmed. The app takes tasks, each one consisting of a text (with max 100 characters) and a status (0 for closed, 1 for open). Through the web-based user interface, open task can be view and edited and new tasks can be added.
 
-During development, all pages will be available on ``localhost`` only, but later on it will be shown how to adapt the application for a "real" server, including how to use with Apache's mod_wsgi.
+During development, all pages will be available under the address ``127.0.0.1`` (aka: ``localhost``) in a web browser running on the same machine as the Bottle application code. Later on it will be shown how to adapt the application for a "real" server.
 
-Bottle will do the routing and format the output, with the help of templates. The items of the list will be stored inside a SQLite database. Reading and  writing the database will be done by Python code.
+Bottle will do the routing and format the output with the help of templates. The tasks will be stored inside a SQLite database. Reading and writing the database will be done by Python code.
 
-We will end up with an application with the following pages and functionality:
+The result of this tutorial is going to be an application with the following pages and functionality:
 
- * start page ``http://localhost:8080/todo``
- * adding new items to the list: ``http://localhost:8080/new``
- * page for editing items: ``http://localhost:8080/edit/<no:int>``
+ * start page ``http://127.0.0.1:8080/todo``
+ * adding a new task to the list: ``http://127.0.0.1:8080/new``
+ * page for editing a task: ``http://127.0.0.1:8080/edit/<number:int>``
+ * show details about a task: ``http://127.0.0.1:8080/details/<number:int>``
+ * show a task formated as JSON: ``http://127.0.0.1:8080/as_json/<number:int>``
+ * redirect ``http://127.0.0.1:8080/`` to ``http://127.0.0.1:8080/todo``
  * catching errors
 
-Before We Start...
-====================
+
+Prior to Starting ...
+======================
+
+.. rubric:: A Note on Python Versions
+
+Bottle supports a wide range of Python version. Bottle 0.13 supports Python 3.8 and newer as well as Python 2 starting with 2.7.3, although Python 2 support will be dropped with Bottle 0.14. As Python 2 support was dropped by the Python core developers on Jan 1st 2020 already, it is highly encourage to use a recent Python 3 release.
+
+This tutorial requires at least Python 3.10, as at one point the `match statement`_ is going to be used, which was introduced with Python 3.10. In case Python 3.8 or 3.9 is going to be used, the match statement needs to be replaced with an if-elif-else cascade, all other sections will work just fine. If really Python 2.7.x must be used, additionally the f-strings_ used at some places needs to be replaced with the string formatting methods available in Python 2.7.x.
+
+And, finally, ``python`` will be used in this tutorial to run Python 3.10 and newer. On some platforms it may be necessary to type ``python3`` instead to run the installed Python 3 interpreter.
 
 
 .. rubric:: Install Bottle
 
-Assuming that you have a fairly new installation of Python (version 2.5 or higher), you only need to install Bottle in addition to that. Bottle has no other dependencies than Python itself.
+Assuming that a fairly new installation of Python (version 3.10 or higher) is used, only Bottle needs to be installed in addition to that. Bottle has no other dependencies than Python itself. Following the recommended best-pratice for Python and installing Python modules, let's create a venv_ first and install Bottle inside the venv. Open the directory of choice where the venv should be created and execute the following commands:
 
-You can either manually install Bottle or use Python's easy_install: ``easy_install bottle``
+.. code::
+
+    python -m venv bottle_venv
+    cd bottle_venv
+    #for Linux & MacOS
+    source bin/activate
+    #for Windows
+    .\Scripts\activate
+    pip3 install bottle
 
 
-.. rubric:: Further Software Necessities
+.. rubric:: SQLite
 
-As we use SQLite3 as a database, make sure it is installed. On Linux systems, most distributions have SQLite3 installed by default. SQLite is available for Windows and MacOS X as well and the `sqlite3` module is part of the python standard library.
+This tutorial uses _SQLite as the database. The standard release of Python has SQlite already on board and have `SQLite module`_ included to interact with the database. So no further installation is required here.
 
 .. rubric:: Create An SQL Database
 
-First, we need to create the database we use later on. To do so, save the following script in your project directory and run it with python. You can use the interactive interpreter too::
+Prior to starting to work on the ToDo application, the database to be used later on needs to be created. To do so, save the following script in the project directory and run it with python. Alternatively, the lines of code can be executed in the interactive Python interpreter, too::
 
     import sqlite3
-    conn = sqlite3.connect('todo.db') # Warning: This file is created in the current directory
-    conn.execute("CREATE TABLE todo (id INTEGER PRIMARY KEY, task char(100) NOT NULL, status bool NOT NULL)")
-    conn.execute("INSERT INTO todo (task,status) VALUES ('Read A-byte-of-python to get a good introduction into Python',0)")
-    conn.execute("INSERT INTO todo (task,status) VALUES ('Visit the Python website',1)")
-    conn.execute("INSERT INTO todo (task,status) VALUES ('Test various editors for and check the syntax highlighting',1)")
-    conn.execute("INSERT INTO todo (task,status) VALUES ('Choose your favorite WSGI-Framework',0)")
+    connection = sqlite3.connect('todo.db') # Warning: This file is created in the current directory
+    cursor = connection.cursor()
+    cursor.execute("CREATE TABLE todo (id INTEGER PRIMARY KEY, task char(100) NOT NULL, status bool NOT NULL)")
+    cursor.execute("INSERT INTO todo (task,status) VALUES ('Read the Python tutorial to get a good introduction into Python',0)")
+    cursor.execute("INSERT INTO todo (task,status) VALUES ('Visit the Python website',1)")
+    cursor.execute("INSERT INTO todo (task,status) VALUES ('Test various editors for and check the syntax highlighting',1)")
+    cursor.execute("INSERT INTO todo (task,status) VALUES ('Choose your favorite WSGI-Framework',0)")
     conn.commit()
 
-This generates a database-file `todo.db` with tables called ``todo`` and three columns ``id``, ``task``, and ``status``. ``id`` is a unique id for each row, which is used later on to reference the rows. The column ``task`` holds the text which describes the task, it can be max 100 characters long. Finally, the column ``status`` is used to mark a task as open (value 1) or closed (value 0).
+These commands generate a database-file named `todo.db` with a table called ``todo``. The table has three columns ``id``, ``task``, and ``status``. ``id`` is a unique id for each row, which is used later to reference rows of data. The column ``task`` holds the text which describes the task, it is limited to max 100 characters. Finally, the column ``status`` is used to mark a task as open (represented by the value 1) or closed (represented by the value 0).
 
-Using Bottle for a Web-Based ToDo List
-================================================
 
-Now it is time to introduce Bottle in order to create a web-based application. But first, we need to look into a basic concept of Bottle: routes.
+Writing a Web-Based ToDo Application with Bottle
+=================================================
+
+Let's dive into Bottle and create the web-based ToDo application. But first, let's look into a basic concept of Bottle: routes.
 
 
 .. rubric:: Understanding routes
 
-Basically, each page visible in the browser is dynamically generated when the page address is called. Thus, there is no static content. That is exactly what is called a "route" within Bottle: a certain address on the server. So, for example, when the page ``http://localhost:8080/todo`` is called from the browser, Bottle "grabs" the call and checks if there is any (Python) function defined for the route "todo". If so, Bottle will execute the corresponding Python code and return its result.
+Basically, each page visible in the browser is dynamically generated when the page address is called. Thus, there is no static content. That is exactly what is called a "route" within Bottle: a certain address on the server. So, for example, opening the URL ``http://127.0.0.1:8080/todo`` from the browser, Bottle "grabs" the call on the server-side and checks if there is any (Python) function defined for the route "todo". If so, Bottle executes the corresponding Python code and returns its result. So, what Bottle (as well as other Python WSGI frameworks) does: it binds an URL to a function.
+
+
+.. rubric:: Bottle basic by a "Hello World" example
+
+Before finally starting the ToDo app, let's create a very basic "Hello World" example:
+
+.. code-block:: python
+
+    from bottle import Bottle
+
+
+    app = Bottle()
+
+    @app.route('/')
+    def index():
+        return 'Hello from Bottle'
+
+    if __name__ == '__main__':
+        app.run(host='127.0.0.1', port=8080)
+
+
+Save the file under a name of choice, e.g. ``hello_bottle.py`` and execute the file ``python hello_bottle.py``. Then open the browser and enter ``http://127.0.0.1:8080`` in the address bar. The browser window should now show the text "Hello from Bottle".
+
+So, what happens here? Let's dissect line by line:
+
+- ``from bottle import Bottle`` imports the ``Bottle`` class from the Bottle module. Each instance derived from the class
+  represents a single, distinct web application.
+- ``app = Bottle()`` creates an instance of ``Bottle``. ``app`` is the web application object.
+- ``@app.route('/')``  creates a new route bond to ``/`` for the app.
+- ``def index()`` defines a function which is "linked" to the route ``/``, as the ``index`` function is decorated with
+  the ``app.route`` decorator (more on that below).
+- ``return 'Hello from Bottle'`` "Hello from Bottle" is the plain text send to the browser when the route is called.
+- ``if __name__ == '__main__':``: The following code is only execute when the file holding the code is directly executed
+  by the Python interpreter. In case e.g. a WSGI server is serving the code (more on that later), the following code
+  is not executed.
+- ``app.run(host='127.0.0.1', port=8080)`` starts the build-in development server, listing on the address ``127.0.0.1``
+  and port ``8080``.
 
 
 .. rubric:: First Step - Showing All Open Items
 
-So, after understanding the concept of routes, let's create the first one. The goal is to see all open items from the ToDo list::
+So, after understanding the concept of routes and the basics of Bottle, let's create the first real route for the ToDo application. The goal is to see all open items from the ToDo list:
+
+.. code-block:: python
 
     import sqlite3
-    from bottle import route, run
+    from bottle import Bottle
 
-    @route('/todo')
+
+    app = Bottle()
+
+    @app.route('/todo')
     def todo_list():
-        conn = sqlite3.connect('todo.db')
-        c = conn.cursor()
-        c.execute("SELECT id, task FROM todo WHERE status LIKE '1'")
-        result = c.fetchall()
-        return str(result)
+        with sqlite3.connect('todo.db') as connection:
+            cursor = connection.cursor()
+            cursor.execute("SELECT id, task, status FROM todo WHERE status LIKE '1'")
+            result = cursor.fetchall()
+            return str(result)
 
-    run()
+    if __name__ == '__main__':
+        app.run(host='127.0.0.1', port=8080)
 
-Save the code a ``todo.py``, preferably in the same directory as the file ``todo.db``. Otherwise, you need to add the path to ``todo.db`` in the ``sqlite3.connect()`` statement.
 
-Let's have a look what we just did: We imported the necessary module ``sqlite3`` to access to SQLite database and from Bottle we imported ``route`` and ``run``. The ``run()`` statement simply starts the web server included in Bottle. By default, the web server serves the pages on localhost and port 8080. Furthermore, we imported ``route``, which is the function responsible for Bottle's routing. As you can see, we defined one function, ``todo_list()``, with a few lines of code reading from the database. The important point is the `decorator statement`_ ``@route('/todo')`` right before the ``def todo_list()`` statement. By doing this, we bind this function to the route ``/todo``, so every time the browsers calls ``http://localhost:8080/todo``, Bottle returns the result of the function ``todo_list()``. That is how routing within bottle works.
+Save the code as ``todo.py``, preferably in the same directory as the database file ``todo.db``. Otherwise, the path to ``todo.db`` must be added in the ``sqlite3.connect()`` statement.
 
-Actually you can bind more than one route to a function. So the following code::
+Let's have a look what happens here: the required module ``sqlite3`` is imported to access to SQLite database, and from Bottle the ``Bottle`` class is imported. One function is defined, ``todo_list()``, with a few lines of code reading from the database. The important point here is the `decorator function`_ ``@route('/todo')`` right before the ``def todo_list()`` statement. By doing this, this function is bound to the route ``/todo``, so every time the browsers calls ``http://127.0.0.1:8080/todo``, Bottle returns the result of the function ``todo_list()``. That is how routing within bottle works.
+
+Actually, more than one route can be bound to a function. The following code:
+
+.. code-block:: python
 
     @route('/todo')
     @route('/my_todo_list')
     def todo_list():
         ...
 
-will work fine, too. What will not work is to bind one route to more than one function.
+works fine, too. What will not work is to bind one route to more than one function.
 
-What you will see in the browser is what is returned, thus the value given by the ``return`` statement. In this example, we need to convert ``result`` in to a string by ``str()``, as Bottle expects a string or a list of strings from the return statement. But here, the result of the database query is a list of tuples, which is the standard defined by the `Python DB API`_.
+What the browser displays is what is returned, thus the value given by the ``return`` statement. In this example, it is necessary to convert ``result`` in to a string by ``str()``, as Bottle expects a string or a list of strings from the return statement. But here, the result of the database query is a list of tuples, which is the standard defined by the `Python DB API`_.
 
-Now, after understanding the little script above, it is time to execute it and watch the result yourself. Remember that on Linux- / Unix-based systems the file ``todo.py`` needs to be executable first. Then, just run ``python todo.py`` and call the page ``http://localhost:8080/todo`` in your browser. In case you made no mistake writing the script, the output should look like this::
+Now, after understanding the little script above, it is time to execute it and watch the result. Just run ``python todo.py`` and open the URL ``http://127.0.0.1:8080/todo`` in the browser. In case no mistake was made writing the code, the output should look like this::
 
-    [(2, u'Visit the Python website'), (3, u'Test various editors for and check the syntax highlighting')]
+    [(2, 'Visit the Python website', 1), (3, 'Test various editors for and check the syntax highlighting', 1)]
 
-If so - congratulations! You are now a successful user of Bottle. In case it did not work and you need to make some changes to the script, remember to stop Bottle serving the page, otherwise the revised version will not be loaded.
+If so - congratulations! Bottle is successful used. In case it did not work, and changes need to be made, remember to stop Bottle serving the page, otherwise the revised version will not be loaded.
 
-Actually, the output is not really exciting nor nice to read. It is the raw result returned from the SQL query.
-
-So, in the next step we format the output in a nicer way. But before we do that, we make our life easier.
+The output is not really exciting nor nice to read. It is the raw result returned from the SQL query. In the next step the output is formated in a nicer way. But before that, let's make life a bit easier while developing the app.
 
 
-.. rubric:: Debugging and Auto-Reload
+.. rubric:: Debugging and Auto-Reloading
 
-Maybe you already noticed that Bottle sends a short error message to the browser in case something within the script is wrong, e.g. the connection to the database is not working. For debugging purposes it is quite helpful to get more details. This can be easily achieved by adding the following statement to the script::
+Maybe it was already noticed that Bottle sends a short error message to the browser in case something within the script went wrong, e.g. the connection to the database is not working. For debugging purposes, it is quite helpful to get more details. This can be easily achieved by adding the following to the script:
 
-    from bottle import run, route, debug
+.. code-block:: python
+
+    from bottle import Bottle
     ...
-    #add this at the very end:
-    debug(True)
-    run()
+    if __name__ == '__main__':
+        app.run(host='127.0.0.1', port=8080, debug=True)
 
-By enabling "debug", you will get a full stacktrace of the Python interpreter, which usually contains useful information for finding bugs. Furthermore, templates (see below) are not cached, thus changes to templates will take effect without stopping the server.
+
+By enabling "debug", a full stacktrace of the Python interpreter will be received in case of an error, which usually contains useful information, helping to find the error. Furthermore, templates (see below) are not cached, thus changes to templates will take effect without stopping and restarting the server.
 
 .. warning::
 
-   That ``debug(True)`` is supposed to be used for development only, it should *not* be used in production environments.
+    ``debug=True`` is supposed to be used for development only, it should *not* be used in production environments.
 
 
+Another nice feature while developing is auto-reloading, which is enabled by modifying the ``app.run()`` statement to
 
-Another quite nice feature is auto-reloading, which is enabled by modifying the ``run()`` statement to
+.. code:: python
 
-::
+    app.run(host='127.0.0.1', port=8080, reloader=True)
 
-    run(reloader=True)
 
 This will automatically detect changes to the script and reload the new version once it is called again, without the need to stop and start the server.
 
 Again, the feature is mainly supposed to be used while developing, not on production systems.
 
 
-.. rubric:: Bottle Template To Format The Output
+.. rubric:: Bottle's SimpleTemplate To Format The Output
 
-Now let's have a look at casting the output of the script into a proper format.
+Now let's have a look at casting the output of the script into a proper format. Actually, Bottle expects to receive a string or a list of strings from a function and returns them to the browser. Bottle does not bother about the content of the string itself, so it can be e.g. text formatted with HTML markup.
 
-Actually Bottle expects to receive a string or a list of strings from a function and returns them by the help of the built-in server to the browser. Bottle does not bother about the content of the string itself, so it can be text formatted with HTML markup, too.
+Bottle has its own easy-to-use, build-in template engine called "SimpleTemplate". Templates are stored as separate files having a ``.tpl`` extension. And by default, they are expected to be in a directory called ``views`` below the directory where the Python code of the application is located. A template can be called from within a function. Templates can contain any type of text (which will be most likely HTML-markup mixed with Python statements). Furthermore, templates can take arguments, e.g. the result set of a database query, which will be then formatted nicely within the template.
 
-Bottle brings its own easy-to-use template engine with it. Templates are stored as separate files having a ``.tpl`` extension. The template can be called then from within a function. Templates can contain any type of text (which will be most likely HTML-markup mixed with Python statements). Furthermore, templates can take arguments, e.g. the result set of a database query, which will be then formatted nicely within the template.
+Right here, the result of the query showing the open ToDo tasks is cast into a simple HTML table with two columns: the first column will contain the ID of the item, the second column the text. The result is, as seen above, a list of tuples, each tuple contains one set of results.
 
-Right here, we are going to cast the result of our query showing the open ToDo items into a simple table with two columns: the first column will contain the ID of the item, the second column the text. The result set is, as seen above, a list of tuples, each tuple contains one set of results.
+To include the template in the example, just add the following lines:
 
-To include the template in our example, just add the following lines::
+.. code-block:: python
 
-    from bottle import route, run, debug, template
+    from bottle import Bottle, template
     ...
-    result = c.fetchall()
-    c.close()
-    output = template('make_table', rows=result)
+        result = cursor.fetchall()
+    output = template('show_tasks', rows=result)
     return output
     ...
 
-So we do here two things: first, we import ``template`` from Bottle in order to be able to use templates. Second, we assign the output of the template ``make_table`` to the variable ``output``, which is then returned. In addition to calling the template, we assign ``result``, which we received from the database query, to the variable ``rows``, which is later on used within the template. If necessary, you can assign more than one variable / value to a template.
 
-Templates always return a list of strings, thus there is no need to convert anything. We can save one line of code by writing ``return template('make_table', rows=result)``, which gives exactly the same result as above.
+Two things are done here: first, ``template`` additionally imported from bottle in order to be able to use templates. Second, the output of the template ``show_tasks`` is assigned to the variable ``output``, which then is returned. In addition to calling the template, ``result`` is assigned, which is received from the database query, to the variable ``rows``, which passed to the template to be used within the template later on. If necessary, more than one variable / value can be passed to a template.
 
-Now it is time to write the corresponding template, which looks like this::
+Templates always return a list of strings, thus there is no need to convert anything. One line of code can be saved by writing ``return template('show_tasks', rows=result)``, which gives exactly the same result as above.
+
+Now it is time to write the corresponding template, which looks like this:
+
+.. code-block:: html
 
     %#template to generate a HTML table from a list of tuples (or list of lists, or tuple of tuples or ...)
     <p>The open items are as follows:</p>
@@ -198,484 +271,551 @@ Now it is time to write the corresponding template, which looks like this::
     %end
     </table>
 
-Save the code as ``make_table.tpl`` in the same directory where ``todo.py`` is stored.
+Save the code as ``show_tasks.tpl`` in the ``views`` directory.
 
-Let's have a look at the code: every line starting with % is interpreted as Python code. Because it is effectively Python, only valid Python statements are allowed. The template will raise exceptions, just as any other Python code would. The other lines are plain HTML markup.
+Let's have a look at the code: every line starting with % is interpreted as Python code. Because it is effectively Python, only valid Python statements are allowed. The template will raise exceptions, just as any other Python code would, in case of wrong code. The other lines are plain HTML markup.
 
-As you can see, we use Python's ``for`` statement two times, in order to go through ``rows``. As seen above, ``rows`` is a variable which holds the result of the database query, so it is a list of tuples. The first ``for`` statement accesses the tuples within the list, the second one the items within the tuple, which are put each into a cell of the table. It is important that you close all ``for``, ``if``, ``while`` etc. statements with ``%end``, otherwise the output may not be what you expect.
+As can be seen, Python's ``for`` statement is used two times, to go through ``rows``. As seen above, ``rows`` is a variable which holds the result of the database query, so it is a list of tuples. The first ``for`` statement accesses the tuples within the list, the second one the items within the tuple, which are put each into a cell of the table. It is important that all ``for``, ``if``, ``while`` etc. statements are closed with ``%end``, otherwise the output will not be as expected.
 
-If you need to access a variable within a non-Python code line inside the template, you need to put it into double curly braces. This tells the template to insert the actual value of the variable right in place.
+If a variable within a non-Python code line needs to be accessed inside the template, put it into double curly braces, like ``{{ col  }}`` in the example above. This tells the template to insert the actual value of the variable right at this place.
 
-Run the script again and look at the output. Still not really nice, but at least more readable than the list of tuples. You can spice-up the very simple HTML markup above, e.g. by using in-line styles to get a better looking output.
+Run the script again and look at the output. Still not really nice and not complete HTML, but at least more readable than the list of tuples.
 
 
-.. rubric:: Using GET and POST Values
+.. rubric:: Adding a Base Template
 
-As we can review all open items properly, we move to the next step, which is adding new items to the ToDo list. The new item should be received from a regular HTML-based form, which sends its data by the GET method.
+Bottle's SimpleTempate allows, like other template engines, nesting templates. This is pretty handy, as it allows to define a base template holding e.g. the HTML doctype definition, the head and the body section, which is then used as the base for all other templates generating the actual output. The base template looks like this:
 
-To do so, we first add a new route to our script and tell the route that it should get GET data::
+.. code-block:: html
 
-    from bottle import route, run, debug, template, request
+    <!doctype html>
+    <html lang="en-US">
+    <head>
+    <meta charset="utf-8" />
+    <title>ToDo App powered by Bottle</title>
+    </head>
+    <body>
+    {{!base}}
+    </body>
+    </html>
+
+
+Save this template with the name ``base.tpl`` in the ``views`` folder.
+
+As can be seen, the template holds a basic HTML skeleton for a typically website. The ``{{!base}}`` inserts the content of the other template using the base template.
+
+To use the base template from another template like e.g. ``shows_task.tpl``, just add the following line at the beginning of this template:
+
+.. code::
+
+    % rebase('base.tpl')
     ...
-    return template('make_table', rows=result)
-    ...
 
-    @route('/new', method='GET')
-    def new_item():
 
-        new = request.GET.task.strip()
+This tells the template to rebase its content into the template ``base.tpl``.
 
-        conn = sqlite3.connect('todo.db')
-        c = conn.cursor()
+Reload ``http://127.0.0.1:8000/todo`` and the output is now valid HTML. Of couse the base template can extended as required, e.g. by loading a CSS style sheet or defining own styles in a ``<style>...</style>`` section in the header.
 
-        c.execute("INSERT INTO todo (task,status) VALUES (?,?)", (new, 1))
-        new_id = c.lastrowid
 
-        conn.commit()
-        c.close()
+.. rubric:: Using GET Parameters
 
-        return '<p>The new task was inserted into the database, the ID is %s</p>' % new_id
+The app has its first route showing task, but so far it only shows the open tasks. Let's modify this functionality and add an (optional) GET parameter to the route which lets the user choose whether to show open tasks only (which is at the same time the default), only closed tasks or all tasks stored in the database. This should be achieved by checking for a key named ``show``, which can have one of the following three values: ``open``, ``closed``  or ``all``. So e.g. opening the URL ``http://127.0.0.1:8080?show=all`` should make the application show all tasks from the database.
 
-To access GET (or POST) data, we need to import ``request`` from Bottle. To assign the actual data to a variable, we use the statement ``request.GET.task.strip()`` statement, where ``task`` is the name of the GET data we want to access. That's all. If your GET data has more than one variable, multiple ``request.GET.get()`` statements can be used and assigned to other variables.
+The updated route and corresponding function look like this:
 
-The rest of this piece of code is just processing of the gained data: writing to the database, retrieve the corresponding id from the database and generate the output.
-
-But where do we get the GET data from? Well, we can use a static HTML page holding the form. Or, what we do right now, is to use a template which is output when the route ``/new`` is called without GET data.
-
-The code needs to be extended to::
+.. code-block:: python
 
     ...
-    @route('/new', method='GET')
-    def new_item():
+    from bottle import request
+    ...
+    @app.get('/todo')
+    def todo_list():
+        show  = request.query.show or 'open'
+        match show:
+            case 'open':
+                db_query = "SELECT id, task FROM todo WHERE status LIKE '1'"
+            case 'closed':
+                db_query = "SELECT id, task FROM todo WHERE status LIKE '0'"
+            case 'all':
+                db_query = "SELECT id, task FROM todo"
+            case _:
+                return template('message.tpl',
+                    message = 'Wrong query parameter: show must be either open, closed or all.')
+        with sqlite3.connect('todo.db') as connection:
+            cursor = connection.cursor()
+            cursor.execute(db_query)
+            result = cursor.fetchall()
+        output = template('show_tasks.tpl', rows=result)
+        return output
+    ...
 
-        if request.GET.save:
 
-            new = request.GET.task.strip()
-            conn = sqlite3.connect('todo.db')
-            c = conn.cursor()
+At first, ``request`` is added to the imports from Bottle. The ``request`` object of Bottle holds all data from a request sent to the application. Additionally, the route is change to ``@app.get(...)`` to explicitly state that this route only excepts GET requests only.
 
-            c.execute("INSERT INTO todo (task,status) VALUES (?,?)", (new,1))
-            new_id = c.lastrowid
+.. note::
 
-            conn.commit()
-            c.close()
+    This change is not strictly necessary, as ``app.route()`` accepts implicitly GET request only, too. However, following the `Zen of Python`_ : "Explicit is better than implicit."
 
-            return '<p>The new task was inserted into the database, the ID is %s</p>' % new_id
+The line ``show_all  = request.query.show or 'open'`` does the following: ``query`` is the attribute of the ``request`` object holding the data from a GET request. So ``request.query.show`` returns the value of the key ``show`` from the request. If ``show`` is not present, the value ``open`` is assigned to the ``show`` variable. This also implies that any other key in the GET request is ignored.
+
+The following ``match`` statement assigns a SQL query to the variable ``db_query`` depending on the value of ``show``, respectively shows an error message if ``show`` is neither ``open`` nor ``closed`` nor ``all``. The remaining code of the ``todo_list()`` function remains unchanged.
+
+While working on this route, let's make one addition to the ``show_tasks`` template. Add the line
+
+.. code-block:: html
+
+    <p><a href="/new">Add a new task</a></p>
+
+
+at the end of the template to add a link for adding a new task to the database. The corresponding route and function will be created in the following section.
+
+And, finally, the new template ``message.tpl`` used in the code about, looks like this:
+
+.. code-block:: html
+
+    % rebase('base.tpl')
+    <p>{{ message }}</p>
+    <p><a href="/todo">Back to main page</p>
+
+
+.. rubric:: Using Forms and POST Data
+
+As all tasks now can be viewed properly, let's move to the next step and add the functionality to add a new task to the ToDo list. The new task should be received from a regular HTML form, sending its data by a POST request.
+
+To do so, first a new route is added to the code. The route should accept GET and POST requests:
+
+.. code-block:: python
+
+    @app.route('/new', method=['GET', 'POST'])
+    def new_task():
+        if request.POST:
+            new_task = request.forms.task.strip()
+            with sqlite3.connect('todo.db') as connection:
+                cursor = connection.cursor()
+                cursor.execute("INSERT INTO todo (task,status) VALUES (?,?)", (new_task, 1))
+                new_id = cursor.lastrowid
+            return template('message.tpl',
+                message=f'The new task was inserted into the database, the ID is {new_id}')
         else:
             return template('new_task.tpl')
 
 
-``new_task.tpl`` looks like this::
+A new route is created, assigned to ``/new``, which accepts GET as well as POST requests. Inside the function ``new_task`` assigned to this route, the ``request`` object introduced in the previous section is checked to see whether a GET or a POST request was received:
 
+.. code-block:: python
+
+    ...
+    if request.POST:
+        #The code here is only executed if POST data, e.g. from a
+        #HTML form, is inside the request.
+    else:
+        #the code here is only executed if no POST data was received.
+    ...
+
+
+``request.forms`` is the attribute which holds data submitted by an HTML from. ``request.forms.task`` holds the data from the field ``task`` of the form. As ``task`` is a string, the ``strip`` method is additionally applied to remove any white spaces before or after the string.
+
+Then the new task is written to the database, and the ID of the new task is return. If no POST data was received, the template ``new_task`` is send. This template holds the HTML form to enter a new task. The template looks like this:
+
+.. code-block:: html
+
+    %#template of the form for a new task
+    % rebase('base.tpl')
     <p>Add a new task to the ToDo list:</p>
-    <form action="/new" method="GET">
-      <input type="text" size="100" maxlength="100" name="task">
-      <input type="submit" name="save" value="save">
+    <form action="/new" method="post">
+      <p><input type="text" size="100" maxlength="100" name="task"></p>
+      <p><input type="submit" name="save" value="save"></p>
     </form>
-
-That's all. As you can see, the template is plain HTML this time.
-
-Now we are able to extend our to do list.
-
-By the way, if you prefer to use POST data: this works exactly the same way, just use ``request.POST.get()`` instead.
 
 
 .. rubric:: Editing Existing Items
 
-The last point to do is to enable editing of existing items.
+The last piece missing to complete the simple ToDo app is the functionality to edit existing tasks in the database. Either to change their status or to update the text of a task.
 
-By using only the routes we know so far it is possible, but may be quite tricky. But Bottle knows something called "dynamic routes", which makes this task quite easy.
+By using only the routes introduced so far it is possible, but will be quite tricky. To make things easier, let's use Bottle's feature called `dynamic routes`_ , which makes this coding task quite easy.
 
 The basic statement for a dynamic route looks like this::
 
-    @route('/myroute/<something>')
+.. code-block:: python
 
-This tells Bottle to accept for ``<something>`` any string up to the next slash. Furthermore, the value of ``something`` will be passed to the function assigned to that route, so the data can be processed within the function, like this::
+    @app.route('some_route/<something>')
 
-    @route('/edit/<no:int>', method='GET')
-    def edit_item(no):
+``<something>`` is called a "wildcard". Furthermore, the value of the wildcard ``something`` is be passed to the function assigned to this route, so the data can be processed within the function. Optionally, a filter can be applied to the wildcard. The filter does one thing: it checks whether the wildcard matches a certain type of data, e.g. an integer value or a regular expression. If not, an error is raised.
 
-        if request.GET.save:
-            edit = request.GET.task.strip()
-            status = request.GET.status.strip()
+The ``int`` filter is used for this route, which checks at first if the wildcard matches an integer value and. If yes, the wildcard string is converted to a Python integer object.
 
+The complete route for editing a task looks like this:
+
+.. code-block:: python
+
+    @app.route('/edit/<number:int>', method=['GET', 'POST'])
+    def edit_task(number):
+        if request.POST:
+            new_data = request.forms.task.strip()
+            status = request.forms.status.strip()
             if status == 'open':
                 status = 1
             else:
                 status = 0
-
-            conn = sqlite3.connect('todo.db')
-            c = conn.cursor()
-            c.execute("UPDATE todo SET task = ?, status = ? WHERE id LIKE ?", (edit, status, no))
-            conn.commit()
-
-            return '<p>The item number %s was successfully updated</p>' % no
+            with sqlite3.connect('todo.db') as connection:
+                cursor = connection.cursor()
+                cursor.execute("UPDATE todo SET task = ?, status = ? WHERE id LIKE ?", (new_data, status, number))
+            return template('message.tpl',
+                message=f'The task number {number} was successfully updated')
         else:
-            conn = sqlite3.connect('todo.db')
-            c = conn.cursor()
-            c.execute("SELECT task FROM todo WHERE id LIKE ?", (str(no),))
-            cur_data = c.fetchone()
-
-            return template('edit_task', old=cur_data, no=no)
-
-It is basically pretty much the same what we already did above when adding new items, like using ``GET`` data etc. The main addition here is using the dynamic route ``<no:int>``, which here passes the number to the corresponding function. As you can see, ``no`` is integer ID and used within the function to access the right row of data within the database.
+            with sqlite3.connect('todo.db') as connection:
+                cursor = connection.cursor()
+                cursor.execute("SELECT task FROM todo WHERE id LIKE ?", (number,))
+                current_data = cursor.fetchone()
+            return template('edit_task', current_data=current_data, number=number)
 
 
-The template ``edit_task.tpl`` called within the function looks like this::
+A lot of the code's logic is pretty similat to the ``/new`` route and the corresponding ``new_task`` function: the route accepts GET and POST requests and, depending on the request, either sends the template ``edit_task`` or updates a task in the database according to the form data received.
+
+What's new here is the dynamic routing ``@app.route('/edit/<number:int>' ...)`` which accepts one wildcard, supposed to be an integer value. The wildcard is assigned to the variable ``number``, which is also expected by the function ``edit_task``. So e.g. opening the URL ``http:/127.0.0.1:8080/edit/2`` would open the task with the ID for editing. In case no number is passed, either because of omitting the parameter or passing a string which is not an integer only, an error will be raised.
+
+The template ``edit_task.tpl`` called within the function looks like this:
+
+.. code-block:: html
 
     %#template for editing a task
-    %#the template expects to receive a value for "no" as well a "old", the text of the selected ToDo item
-    <p>Edit the task with ID = {{no}}</p>
-    <form action="/edit/{{no}}" method="get">
-      <input type="text" name="task" value="{{old[0]}}" size="100" maxlength="100">
+    %#the template expects to receive a value for "number" as well a "old", the text of the selected ToDo item
+    % rebase('base.tpl')
+    <p>Edit the task with ID = {{number}}</p>
+    <form action="/edit/{{number}}" method="post">
+      <p>
+      <input type="text" name="task" value="{{current_data[0]}}" size="100" maxlength="100">
       <select name="status">
         <option>open</option>
         <option>closed</option>
       </select>
-      <br>
-      <input type="submit" name="save" value="save">
+      </p>
+      <p><input type="submit" name="save" value="save"></p>
     </form>
 
-Again, this template is a mix of Python statements and HTML, as already explained above.
 
-A last word on dynamic routes: you can even use a regular expression for a dynamic route, as demonstrated later.
-
-
-.. rubric:: Validating Dynamic Routes
-
-Using dynamic routes is fine, but for many cases it makes sense to validate the dynamic part of the route. For example, we expect an integer number in our route for editing above. But if a float, characters or so are received, the Python interpreter throws an exception, which is not what we want.
-
-For those cases, Bottle offers the ``<name:int>`` wildcard filter, which matches (signed) digits and converts the value to integer. In order to apply the wildcard filter, extend the code as follows::
-
-    from bottle import route, run, debug, template, request
-    ...
-    @route('/edit/<no:int>', method='GET')
-    def edit_item(no):
-    ...
-
-Save the code and call the page again using incorrect value for ``<no:int>``, e.g. a float. You will receive not an exception, but a "404 Not Found" error.
-
-
-.. rubric:: Dynamic Routes Using Regular Expressions
-
-Bottle can also handle dynamic routes, where the "dynamic part" of the route can be a regular expression.
-
-So, just to demonstrate that, let's assume that all single items in our ToDo list should be accessible by their plain number, by a term like e.g. "item1". For obvious reasons, you do not want to create a route for every item. Furthermore, the simple dynamic routes do not work either, as part of the route, the term "item" is static.
-
-As said above, the solution is a regular expression::
-
-    @route('/item<item:re:[0-9]+>')
-    def show_item(item):
-        conn = sqlite3.connect('todo.db')
-        c = conn.cursor()
-        c.execute("SELECT task FROM todo WHERE id LIKE ?", (item,))
-        result = c.fetchall()
-        c.close()
-        if not result:
-            return 'This item number does not exist!'
-        else:
-            return 'Task: %s' % result[0]
-
-
-The line ``@route(/item<item:re:[0-9]+>)`` starts like a normal route, but the third part of the wildcard is interpreted as a regular expression, which is the dynamic part of the route. So in this case, we want to match any digit between 0 and 9. The following function "show_item" just checks whether the given item is present in the database or not. In case it is present, the corresponding text of the task is returned. As you can see, only the regular expression part of the route is passed forward. Furthermore, it is always forwarded as a string, even if it is a plain integer number, like in this case.
-
-
-.. rubric:: Returning Static Files
-
-Sometimes it may become necessary to associate a route not to a Python function, but just return a static file. So if you have for example a help page for your application, you may want to return this page as plain HTML. This works as follows::
-
-    from bottle import route, run, debug, template, request, static_file
-
-    @route('/help')
-    def help():
-        return static_file('help.html', root='/path/to/file')
-
-At first, we need to import the ``static_file`` function from Bottle. As you can see, the ``return static_file`` statement replaces the ``return`` statement. It takes at least two arguments: the name of the file to be returned and the path to the file. Even if the file is in the same directory as your application, the path needs to be stated. But in this case, you can use ``'.'`` as a path, too. Bottle guesses the MIME-type of the file automatically, but in case you like to state it explicitly, add a third argument to ``static_file``, which would be here ``mimetype='text/html'``. ``static_file`` works with any type of route, including the dynamic ones.
+The next section "Returning JSON Data" shows another example of a dynamic route using a filter.
 
 
 .. rubric:: Returning JSON Data
 
-There may be cases where you do not want your application to generate the output directly, but return data to be processed further on, e.g. by JavaScript. For those cases, Bottle offers the possibility to return JSON objects, which is sort of standard for exchanging data between web applications. Furthermore, JSON can be processed by many programming languages, including Python
+A nice feature of Bottle is that it automatically generates a response with content type JSON_ is a Python dictionary is passed to the return statement of a route. Which makes it very easy to build web-based APIs with Bottle. Let's build a route for the ToDo app application which returns a task from the database as JSON. This is pretty straight forward; the code looks like this:
 
-So, let's assume we want to return the data generated in the regular expression route example as a JSON object. The code looks like this::
+.. code-block:: python
 
-    @route('/json<json:re:[0-9]+>')
-    def show_json(json):
-        conn = sqlite3.connect('todo.db')
-        c = conn.cursor()
-        c.execute("SELECT task FROM todo WHERE id LIKE ?", (json,))
-        result = c.fetchall()
-        c.close()
-
+    @app.route('/as_json/<number:re:[0-9]+>')
+    def task_as_json(number):
+        with sqlite3.connect('todo.db') as connection:
+            cursor = connection.cursor()
+            cursor.execute("SELECT id, task, status FROM todo WHERE id LIKE ?", (number,))
+            result = cursor.fetchone()
         if not result:
-            return {'task': 'This item number does not exist!'}
+            return {'task': 'This task ID number does not exist!'}
         else:
-            return {'task': result[0]}
+            return {'id': result[0], 'task': result[1], 'status': result[2]}
 
-As you can, that is fairly simple: just return a regular Python dictionary and Bottle will convert it automatically into a JSON object prior to sending. So if you e.g. call "http://localhost/json1" Bottle should in this case return the JSON object ``{"task": ["Read A-byte-of-python to get a good introduction into Python"]}``.
 
+As can be seen, the only difference is the dictionary returned. Either resulting in a JSON object with the three keys "id", "task" and "status" or with one key named "task" only, having the error message as the value.
+
+Additionally, the ``re`` filter applying a RegEx is used for the wildcard ``number`` of this route. Of course the ``int`` filter as used for the `/edit`` route could be used here, too (and would be probably more appropriate), but the RegEx filter is used just to showcase it here. The filter can basically handle any regular expression Python's `RegEx module`_ can handle.
+
+
+.. rubric:: Returning Static Files
+
+Sometimes it may become necessary to associate a route not to a Python function but just return a static file. A static file could be e.g. a JPG or PNG graphics, a PDF file or a static HTML file instead of a template. In any case, another import needs to be added first
+
+.. code:: python
+
+    from bottle import static_file
+
+
+to the code to import Bottle's function ``static_file``, which handles sending static files. Let's assume all the static files are located in a subdirectory named ``static`` relativ to the application. The code to serve static files from there looks as follows:
+
+.. code-block:: python
+
+    ...
+    from pathlib import Path
+
+    ABSOLUTE_APPLICATION_PATH = Path(__file__).parent[0]
+    ...
+
+    @app.route('/static/<filepath:path>')
+    def send_static_file(filepath):
+        ROOT_PATH = ABSOLUTE_APPLICATION_PATH / 'static'
+        return static_file(filepath,
+                           root=ROOT_PATH)
+
+
+The ``Path`` class of Python's pathlib_ module is imported and then used to determine the absolute path where the application is located. This is necessary, as the ``static_file`` method requires an absolute path to the static content. Of course, the path could be hard coded into the code, but using pathlib is more elegant.
+
+The route ``/static/<filepath:path>`` makes use of Bottle's build-in ``path`` filter and the wildcard holding the name of the file to be served is assigned to the ``filepath``. As can be seen from the code, the ``static_file`` function requires the name of the file to be served as well as the root path to the directory where the file is located.
+
+Bottle guesses the MIME-type of the file automatically. But it can also be stated explicitly by adding a third argument to ``static_file``, e.g. ``mimetype='text/html'`` for serving a static HTML file. More information on ``static_file`` can be found in the `static_file documentation`_ .
 
 
 .. rubric:: Catching Errors
 
-The next step may is to catch the error with Bottle itself, to keep away any type of error message from the user of your application. To do that, Bottle has an "error-route", which can be a assigned to a HTML-error.
+When trying to open a webpage which doesn't exist, a "404 Not Found" error message is displayed in the browser. Bottle offers an option to catch these errors and return a customized error message instead. This works as follows:
 
-In our case, we want to catch a 403 error. The code is as follows::
+.. code-block:: python
 
-    from bottle import error
-
-    @error(403)
-    def mistake(code):
-        return 'The parameter you passed has the wrong format!'
-
-So, at first we need to import ``error`` from Bottle and define a route by ``error(403)``, which catches all "403 forbidden" errors. The function "mistake" is assigned to that. Please note that ``error()`` always passes the error-code to the function - even if you do not need it. Thus, the function always needs to accept one argument, otherwise it will not work.
-
-Again, you can assign more than one error-route to a function, or catch various errors with one function each. So this code::
-
-    @error(404)
-    @error(403)
-    def mistake(code):
-        return 'There is something wrong!'
-
-works fine, the following one as well::
-
-    @error(403)
-    def mistake403(code):
-        return 'The parameter you passed has the wrong format!'
-
-    @error(404)
-    def mistake404(code):
+    @app.error(404)
+    def error_404(error):
         return 'Sorry, this page does not exist!'
+
+
+In the event a 404 Not Found error occurs, the function decorated with ``app.error(404)`` is run and returns the customized error message of choice. The ``error`` argument passed to the function holds a tuple with two elements: the first element is the actual error code and the second element the actual error message. This tuple can be used within the function but does not have to. Of course, if is also possible, like for all routes, to assign more than one error / route to a function, like e.g.:
+
+.. code-block:: python
+
+    @app.error(404)
+    @error(403)
+    def something_went_wrong(error):
+        return f'{error}: There is something wrong!'
+
+
+.. rubric:: Create a Redirect (Bonus Section)
+
+Although the ToDo application works just fine, it still has one little flaw: When trying to open ``127.0.01:8080`` in the browser, the root route, a 404 error will occur, as no route is established for ```/``.  Which is not too much of a problem, but at least a little bit unexpected. Of course this could be changed by modifiying the route ``app.route('/todo')`` to ``app.route('/')``. Or, if the /todo route should be kept, a redirect can be added to the code. Again, this is pretty straight forward:
+
+.. code-block:: python
+
+    ...
+    from bottle import redirect
+    ...
+
+    @app.route('/')
+    def index():
+        redirect('/todo')
+
+
+At first, the (so far) missing route ``app.route('/')`` is added, decorating the ``index()`` function. It has only one line of code, redirecting the browser to the todo route. When opening the URL ``127.0.0.1:8080``, the browser will be automatically redirect to ``http://127.0.0.1:8080/todo``.
 
 
 .. rubric:: Summary
 
-After going through all the sections above, you should have a brief understanding how the Bottle WSGI framework works. Furthermore you have all the knowledge necessary to use Bottle for your applications.
+After going through all the sections above, a brief understanding on how Bottle works is hopefully achieved so new Bottle-based web applications can be written.
 
-The following chapter give a short introduction how to adapt Bottle for larger projects. Furthermore, we will show how to operate Bottle with web servers which perform better on a higher load / more web traffic than the one we used so far.
+The following chapter will be show how to serve Bottle with web servers with perform better on a higher load / more web traffic than the one used so far.
 
-Server Setup
-================================
 
-So far, we used the standard server used by Bottle, which is the `WSGI reference Server`_ shipped along with Python. Although this server is perfectly suitable for development purposes, it is not really suitable for larger applications. But before we have a look at the alternatives, let's have a look how to tweak the settings of the standard server first.
+Deployment
+===========
+
+So far, the built-in development server of Bottle was used, which based on the `WSGI reference Server`_ included in Python. Although this server is perfectly fine and very handy for development purposes, it is not really suitable to serve "real world" applications. But before looking at the alternatives, let's have a look how to tweak the settings of the build-in server first.
 
 
 .. rubric:: Running Bottle on a different port and IP
 
-As standard, Bottle serves the pages on the IP address 127.0.0.1, also known as ``localhost``, and on port ``8080``. To modify the setting is pretty simple, as additional parameters can be passed to Bottle's ``run()`` function to change the port and the address.
+As a standard, Bottle serves on the IP address 127.0.0.1, also known as ``localhost``, and on port ``8080``. To modify the setting is pretty simple, as additional parameters can be passed to Bottle's ``run()`` function to change the port and the address.
 
-To change the port, just add ``port=portnumber`` to the run command. So, for example::
+In the very first "Hello World" example, the server is started with ``app.run(host='127.0.0.1', port=8080)``. To change the port, just pass a different port number to the ``port`` argument. To change the IP address which Bottle is listening on, just pass a different IP address to the ``host`` argument.
 
-    run(port=80)
+.. warning::
 
-would make Bottle listen to port 80.
-
-To change the IP address where Bottle is listening::
-
-    run(host='123.45.67.89')
-
-If needed, both parameters can be combined, like::
-
-   run(port=80, host='123.45.67.89')
-
-The ``port`` and ``host`` parameter can also be applied when Bottle is running with a different server, as shown in the following section.
+    It is highly recommended *not* to run an application based on Bottle - or any web application - with Root / administrator rights! The whole code is excuted with elevated rights, which gives a (much) higher risk to harm the system in case of programming mistakes. Plus, in case an outside person can capture the application, e.g. by utilizes a bug in the code, this person may be able to work with elevated rights on the server. It is highly recommended to run Bottle with user rights, probably in case of a real application, by a dedicated user specifically set-up for this. In case the application should listen on a privileged port like 80 and / or 443, it is a common and a well-established practice to serve Bottle - or any WSGI-based application - with an WSGI application server with user rights on an unprivileged port locally and use a reverse proxy web server in front of the WSGI application server. More on this below.
 
 
 .. rubric:: Running Bottle with a different server
 
-As said above, the standard server is perfectly suitable for development, personal use or a small group of people only using your application based on Bottle. For larger tasks, the standard server may become a bottleneck, as it is single-threaded, thus it can only serve one request at a time.
+As said above, the build-in server is perfectly suitable for local development, personal use or a very small group of people within an internal network. For everything else, the development server may become a bottleneck, as it is single-threaded, thus it can only serve one request at a time. Plus, it may not be robust enough in general.
 
-But Bottle has already various adapters to multi-threaded servers on board, which perform better on higher load. Bottle supports Cherrypy_, Flup_ and Paste_.
+Bottle comes with a range of `server adapters`_ . To run the Bottle application with a different server than the build-in development server, simple pass the ``server`` argument to the run function. For the following example, the Waitress_ WSGI application server from the Pylons project is used. Waitress works equally good on Linux, MacOS and Windows.
 
-If you want to run for example Bottle with the Paste server, use the following code::
+.. note::
 
-    from bottle import PasteServer
-    ...
-    run(server=PasteServer)
+    Although Bottle comes with a variety of server adapters, each server except the build-in server must be installed separately. The servers are *not* installed as a dependency of Bottle!
 
-This works exactly the same way with ``FlupServer``, ``CherryPyServer`` and ``FapwsServer``.
+To install Waitress, go the venv in which Bottle is installed and run:
+
+.. code:: shell
+
+    pip3 install waitress
 
 
-.. rubric:: Running Bottle on Apache with mod_wsgi
+To server the application via Waitress, just use Bottle's server adapter for Waitress by changing the ``app.run`` to:
 
-Maybe you already have an Apache_ or you want to run a Bottle-based application large scale - then it is time to think about Apache with mod_wsgi_.
+.. code:: python
 
-We assume that your Apache server is up and running and mod_wsgi is working fine as well. On a lot of Linux distributions, mod_wsgi can be easily installed via whatever package management system is in use.
+    app.run(host='127.0.0.1', port=8080, server='waitress')
 
-Bottle brings an adapter for mod_wsgi with it, so serving your application is an easy task.
 
-In the following example, we assume that you want to make your application "ToDo list" accessible through ``http://www.mypage.com/todo`` and your code, templates and SQLite database are stored in the path ``/var/www/todo``.
+After starting the application with ``python todo.py``, a line in the output like ``Bottle v0.13.2 server starting up (using WaitressServer())...`` should be printed. Which confirms that the Waitress server instead of the WSGIRefServer is used.
 
-When you run your application via mod_wsgi, it is imperative to remove the ``run()`` statement from your code, otherwise it won't work here.
+This works exactly the same way with other servers supported by Bottle. However, there is one potential downside with this: it is not possible to pass any extra arguments to the server. Which may be necessary in many "real world" scenarios. A solution to that is shown in the next section.
 
-After that, create a file called ``adapter.wsgi`` with the following content::
 
-    import sys, os, bottle
+.. rubric:: Serving a Bottle App with a WSGI Application Server
 
-    sys.path = ['/var/www/todo/'] + sys.path
-    os.chdir(os.path.dirname(__file__))
+Like any other Python WSGI framework, an application written with a Bottle has a so-called entry point, which can be passed to a WSGI Application server, which then serves the web application. In case of Bottle, the entry points is the ``app`` instance created with the code line ``app = Bottle()``.
 
-    import todo # This loads your application
+Sticking to Waitress (as used already in the previous section), serving the application works as follows:
 
-    application = bottle.default_app()
+.. code:: shell
 
-and save it in the same path, ``/var/www/todo``. Actually the name of the file can be anything, as long as the extension is ``.wsgi``. The name is only used to reference the file from your virtual host.
+    waitress-serve todo:app
 
-Finally, we need to add a virtual host to the Apache configuration, which looks like this::
 
-    <VirtualHost *>
-        ServerName mypage.com
+whereas ``todo`` is the name of the file holding the Bottle application and ``app`` is the entry point, the instance of Bottle. Calling the WSGI application server directly allows to pass as many arguments to the server as need, e.g.
 
-        WSGIDaemonProcess todo user=www-data group=www-data processes=1 threads=5
-        WSGIScriptAlias / /var/www/todo/adapter.wsgi
+.. code:: shell
 
-        <Directory /var/www/todo>
-            WSGIProcessGroup todo
-            WSGIApplicationGroup %{GLOBAL}
-            Order deny,allow
-            Allow from all
-        </Directory>
-    </VirtualHost>
+    waitress-serve --listen:127.0.0.1:8080 --threads=2 todo:app
 
-After restarting the server, your ToDo list should be accessible at ``http://www.mypage.com/todo``
 
 Final Words
-=========================
+============
 
-Now we are at the end of this introduction and tutorial to Bottle. We learned about the basic concepts of Bottle and wrote a first application using the Bottle framework. In addition to that, we saw how to adapt Bottle for large tasks and serve Bottle through an Apache web server with mod_wsgi.
+This is the end of this tutorial for Bottle. The basic concepts of Bottle are shown and a first application utilizin the Bottle WSGI framework was written. Additionally, it was shown how to serve a Bottle application for real applications with a WSGI application server.
 
-As said in the introduction, this tutorial is not showing all shades and possibilities of Bottle. What we skipped here is e.g. receiving file objects and streams and how to handle authentication data. Furthermore, we did not show how templates can be called from within another template. For an introduction into those points, please refer to the full `Bottle documentation`_ .
+As said in the introduction, this tutorial is not showing all possibilities Bottle offers. What was skipped here is e.g. receiving file objects and streams and how to handle authentication data. For a complete overview of all features of Bottle, please refer to the full `Bottle documentation`_ .
+
 
 Complete Example Listing
 =========================
 
-As the ToDo list example was developed piece by piece, here is the complete listing:
+As the ToDo list example was developed piece by piece, here is the complete listing and the templates:
 
-Main code for the application ``todo.py``::
+Main code for the application ``todo.py``:
+
+.. code-block:: python
 
     import sqlite3
-    from bottle import route, run, debug, template, request, static_file, error
-
-    # only needed when you run Bottle on mod_wsgi
-    from bottle import default_app
+    from pathlib import Path
+    from bottle import Bottle, template, request, redirect
 
 
-    @route('/todo')
+    ABSOLUTE_APPLICATION_PATH = Path(__file__).parents[0]
+    app = Bottle()
+
+    @app.route('/')
+    def index():
+        redirect('/todo')
+
+
+    @app.get('/todo')
     def todo_list():
-
-        conn = sqlite3.connect('todo.db')
-        c = conn.cursor()
-        c.execute("SELECT id, task FROM todo WHERE status LIKE '1'")
-        result = c.fetchall()
-        c.close()
-
-        output = template('make_table', rows=result)
+        show  = request.query.show or 'open'
+        match show:
+            case 'open':
+                db_query = "SELECT id, task, status FROM todo WHERE status LIKE '1'"
+            case 'closed':
+                db_query = "SELECT id, task, status FROM todo WHERE status LIKE '0'"
+            case 'all':
+                db_query = "SELECT id, task, status FROM todo"
+            case _:
+                return template('message.tpl',
+                    message = 'Wrong query parameter: show must be either open, closed or all.')
+        with sqlite3.connect('todo.db') as connection:
+            cursor = connection.cursor()
+            cursor.execute(db_query)
+            result = cursor.fetchall()
+        output = template('show_tasks.tpl', rows=result)
         return output
 
 
-    @route('/new', method='GET')
-    def new_item():
-
-        if request.GET.save:
-
-            new = request.GET.task.strip()
-            conn = sqlite3.connect('todo.db')
-            c = conn.cursor()
-
-            c.execute("INSERT INTO todo (task,status) VALUES (?,?)", (new, 1))
-            new_id = c.lastrowid
-
-            conn.commit()
-            c.close()
-
-            return '<p>The new task was inserted into the database, the ID is %s</p>' % new_id
-
+    @app.route('/new', method=['GET', 'POST'])
+    def new_task():
+        if request.POST:
+            new_task = request.forms.task.strip()
+            with sqlite3.connect('todo.db') as connection:
+                cursor = connection.cursor()
+                cursor.execute("INSERT INTO todo (task,status) VALUES (?,?)", (new_task, 1))
+                new_id = cursor.lastrowid
+            return template('message.tpl',
+                message=f'The new task was inserted into the database, the ID is {new_id}')
         else:
             return template('new_task.tpl')
 
 
-    @route('/edit/<no:int>', method='GET')
-    def edit_item(no):
-
-        if request.GET.save:
-            edit = request.GET.task.strip()
-            status = request.GET.status.strip()
-
+    @app.route('/edit/<number:int>', method=['GET', 'POST'])
+    def edit_task(number):
+        if request.POST:
+            new_data = request.forms.task.strip()
+            status = request.forms.status.strip()
             if status == 'open':
                 status = 1
             else:
                 status = 0
-
-            conn = sqlite3.connect('todo.db')
-            c = conn.cursor()
-            c.execute("UPDATE todo SET task = ?, status = ? WHERE id LIKE ?", (edit, status, no))
-            conn.commit()
-
-            return '<p>The item number %s was successfully updated</p>' % no
+            with sqlite3.connect('todo.db') as connection:
+                cursor = connection.cursor()
+                cursor.execute("UPDATE todo SET task = ?, status = ? WHERE id LIKE ?", (new_data, status, number))
+            return template('message.tpl',
+                message=f'The task number {number} was successfully updated')
         else:
-            conn = sqlite3.connect('todo.db')
-            c = conn.cursor()
-            c.execute("SELECT task FROM todo WHERE id LIKE ?", (str(no)))
-            cur_data = c.fetchone()
+            with sqlite3.connect('todo.db') as connection:
+                cursor = connection.cursor()
+                cursor.execute("SELECT task FROM todo WHERE id LIKE ?", (number,))
+                current_data = cursor.fetchone()
+            return template('edit_task', current_data=current_data, number=number)
 
-            return template('edit_task', old=cur_data, no=no)
 
-
-    @route('/item<item:re:[0-9]+>')
-    def show_item(item):
-
-            conn = sqlite3.connect('todo.db')
-            c = conn.cursor()
-            c.execute("SELECT task FROM todo WHERE id LIKE ?", (item,))
-            result = c.fetchall()
-            c.close()
-
+    @app.route('/details/<task:re:[0-9]+>')
+    def show_item(task):
+            with sqlite3.connect('todo.db') as connection:
+                cursor = connection.cursor()
+                cursor.execute("SELECT task, status FROM todo WHERE id LIKE ?", (task,))
+                result = cursor.fetchone()
             if not result:
-                return 'This item number does not exist!'
+                return template('message.tpl',
+                message = f'The task number {item} does not exist!')
             else:
-                return 'Task: %s' % result[0]
+                return template('message.tpl',
+                message = f'Task: {result[0]}, status: {result[1]}')
 
 
-    @route('/help')
-    def help():
-
-        static_file('help.html', root='.')
-
-
-    @route('/json<json:re:[0-9]+>')
-    def show_json(json):
-
-        conn = sqlite3.connect('todo.db')
-        c = conn.cursor()
-        c.execute("SELECT task FROM todo WHERE id LIKE ?", (json,))
-        result = c.fetchall()
-        c.close()
-
+    @app.route('/as_json/<number:re:[0-9]+>')
+    def task_as_json(number):
+        with sqlite3.connect('todo.db') as connection:
+            cursor = connection.cursor()
+            cursor.execute("SELECT id, task, status FROM todo WHERE id LIKE ?", (number,))
+            result = cursor.fetchone()
         if not result:
-            return {'task': 'This item number does not exist!'}
+            return {'task': 'This task IF number does not exist!'}
         else:
-            return {'task': result[0]}
+            return {'id': result[0], 'task': result[1], 'status': result[2]}
 
 
-    @error(403)
-    def mistake403(code):
-        return 'There is a mistake in your url!'
+    @app.route('/static/<filepath:path>')
+    def send_static_file(filepath):
+        ROOT_PATH = ABSOLUTE_APPLICATION_PATH / 'static'
+        return static_file(filepath, root= ROOT_PATH)
 
 
-    @error(404)
-    def mistake404(code):
+    @app.error(404)
+    def mistake404(error):
         return 'Sorry, this page does not exist!'
 
 
-    debug(True)
-    run(reloader=True)
-    # remember to remove reloader=True and debug(True) when you move your
-    # application from development to a productive environment
+    if __name__ == '__main__':
+        app.run(host='127.0.0.1', port=8080, debug=True, reloader=True)
+        # remember to remove reloader=True and debug=True when moving
+        # the application from development to a productive environment
 
-Template ``make_table.tpl``::
+
+Template ``base.tpl``:
+
+.. code-block:: html
+
+    <!doctype html>
+    <html lang="en-US">
+      <head>
+        <meta charset="utf-8" />
+        <title>ToDo App powered by Bottle</title>
+      </head>
+      <body>
+        {{!base}}
+      </body>
+    </html>
+
+
+Template ``show_tasks.tpl``:
+
+.. code-block:: html
 
     %#template to generate a HTML table from a list of tuples (or list of lists, or tuple of tuples or ...)
-    <p>The open items are as follows:</p>
+    % rebase('base.tpl')
+    <p>The open ToDo tasks are as follows:</p>
     <table border="1">
     %for row in rows:
       <tr>
@@ -685,8 +825,34 @@ Template ``make_table.tpl``::
       </tr>
     %end
     </table>
+    <p><a href="/new">Add a new task</a></p>
 
-Template ``edit_task.tpl``::
+
+Template ``message.tpl``:
+
+.. code-block:: html
+
+    % rebase('base.tpl')
+    <p>{{ message }}</p>
+    <p><a href="/todo">Back to main page</p>
+
+
+Template ``new_task.tpl``:
+
+.. code-block:: html
+
+    %#template of the form for a new task
+    % rebase('base.tpl')
+    <p>Add a new task to the ToDo list:</p>
+    <form action="/new" method="post">
+      <p><input type="text" size="100" maxlength="100" name="task"></p>
+      <p><input type="submit" name="save" value="save"></p>
+    </form>
+
+
+Template ``edit_task.tpl``:
+
+.. code-block:: html
 
     %#template for editing a task
     %#the template expects to receive a value for "no" as well a "old", the text of the selected ToDo item
@@ -698,14 +864,5 @@ Template ``edit_task.tpl``::
         <option>closed</option>
       </select>
       <br>
-      <input type="submit" name="save" value="save">
-    </form>
-
-Template ``new_task.tpl``::
-
-    %#template for the form for a new task
-    <p>Add a new task to the ToDo list:</p>
-    <form action="/new" method="GET">
-      <input type="text" size="100" maxlength="100" name="task">
       <input type="submit" name="save" value="save">
     </form>
