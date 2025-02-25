@@ -4030,6 +4030,21 @@ class MakoTemplate(BaseTemplate):
         _defaults.update(kwargs)
         return self.tpl.render(**_defaults)
 
+class ChevronTemplate(BaseTemplate):
+    def prepare(self, **options):
+        if self.source:
+            self.template = self.source
+        else:
+            self.template = self.filename
+
+    def render(self, *args, **kwargs):
+        import chevron
+        for dictarg in args:
+            kwargs.update(dictarg)
+        _defaults = self.defaults.copy()
+        _defaults.update(kwargs)
+        with open(self.template, 'r') as f:
+            return chevron.render(f, **_defaults)
 
 class CheetahTemplate(BaseTemplate):
     def prepare(self, **options):
@@ -4383,7 +4398,7 @@ mako_template = functools.partial(template, template_adapter=MakoTemplate)
 cheetah_template = functools.partial(template,
                                      template_adapter=CheetahTemplate)
 jinja2_template = functools.partial(template, template_adapter=Jinja2Template)
-
+chevron_template = functools.partial(template, template_adapter=ChevronTemplate)
 
 def view(tpl_name, **defaults):
     """ Decorator: renders a template for a handler.
