@@ -2823,6 +2823,7 @@ def static_file(filename, root,
         headers["Content-Length"] = str(rlen)
         if body: body = _closeiter(_rangeiter(body, offset, rlen), body.close)
         return HTTPResponse(body, status=206, **headers)
+    if body: body = _closeiter(_rangeiter(body, 0, clen), body.close)
     return HTTPResponse(body, **headers)
 
 ###############################################################################
