@@ -314,7 +314,7 @@ To use the base template from another template like e.g. ``shows_task.tpl``, jus
 
 This tells the template to rebase its content into the template ``base.tpl``.
 
-Reload ``http://127.0.0.1:8000/todo`` and the output is now valid HTML. Of couse the base template can extended as required, e.g. by loading a CSS style sheet or defining own styles in a ``<style>...</style>`` section in the header.
+Reload ``http://127.0.0.1:8000/todo`` and the output is now valid HTML. Of course the base template can extended as required, e.g. by loading a CSS style sheet or defining own styles in a ``<style>...</style>`` section in the header.
 
 
 .. rubric:: Using GET Parameters
