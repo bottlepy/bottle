@@ -30,7 +30,7 @@ This tutorial gives a brief introduction to the Bottle_ WSGI_ Framework. The mai
 
 To understand the content of this tutorial, it is not really necessary to have a basic knowledge of WSGI, as Bottle tries to keep WSGI away from the user anyway as much as possible. A fair bit of understanding of the Python_ programming language is of course required. Furthermore, the example application created in this tutorial retrieves and stores data in a SQL database, so (very) basic knowledge on SQL helps, but is not a must to understand the concepts of Bottle. Right here, SQLite_ is used. As Bottle is a framework for web-based application, most of output send to the Browser is HTML. Thus, a basic idea about the common HTML tags certainly helps as well. In case HTML basic still need to be learned, a good starting point is the `HTML tutorial`_ on the Mozilla Developer Network website.
 
-For the sake of introducing Bottle, the Python code "in between" is kept short, in order to keep the focus. Although all code within the tutorial works fine, it may not necessarily be used as-is "in the wild", e.g. on a publically accessible server. To do so, e.g. input validtion, better database protection, better error handling and other things need to be added.
+For the sake of introducing Bottle, the Python code "in between" is kept short, in order to keep the focus. Although all code within the tutorial works fine, it may not necessarily be used as-is "in the wild", e.g. on a publically accessible server. To do so, e.g. input validation, better database protection, better error handling and other things need to be added.
 
 .. contents:: Table of Contents
 
