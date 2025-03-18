@@ -542,8 +542,8 @@ Property                                       Data source
 ============================================   ==============================================================
 :attr:`Request.GET <BaseRequest.GET>`          Query parameters
 :attr:`Request.query <BaseRequest.query>`      Alias for :attr:`Request.GET <BaseRequest.GET>`
-:attr:`Request.POST <BaseRequest.POST>`        orm fields and file uploads combined
-:attr:`Request.forms <BaseRequest.forms>`      orm fields
+:attr:`Request.POST <BaseRequest.POST>`        Form fields and file uploads combined
+:attr:`Request.forms <BaseRequest.forms>`      Form fields
 :attr:`Request.files <BaseRequest.files>`      File uploads or very large form fields
 :attr:`Request.params <BaseRequest.params>`    Query parameters and form fields combined
 ============================================   ==============================================================
