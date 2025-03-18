@@ -656,7 +656,7 @@ JSON
 
 For JavaScript and REST APIs it is very common to send ``application/json`` to the server instead of from data.
 The :attr:`Request.json <BaseRequest.json>` attribute contains the parsed data structure if available, or ``None`` for empty
-requests or those that did not contain ``application/json`` data. Parsing errors trigger an appropiate :exc:`HTTPError`.
+requests or those that did not contain ``application/json`` data. Parsing errors trigger an appropriate :exc:`HTTPError`.
 
 
 Raw Request Data

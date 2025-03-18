@@ -268,7 +268,7 @@ Using hooks to handle CORS
 Hooks are useful to unconditionally do something before or after each
 request. For example, if you want to allow Cross-Origin requests for your
 entire application, instead of writing a :doc:`plugin <plugins/dev>` you can
-use hooks to add the appropiate headers::
+use hooks to add the appropriate headers::
 
     from bottle import hook, response, HTTPResponse
 
