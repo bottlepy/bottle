@@ -33,7 +33,7 @@ class TestJinja2Template(unittest.TestCase):
         self.assertRaises(Exception, Jinja2Template, '{% for badsyntax')
 
     def test_inherit(self):
-        """ Templates: Jinja2 lookup and inherience """
+        """ Templates: Jinja2 lookup and inheritance """
         with chdir(__file__):
             t = Jinja2Template(name='jinja2_inherit', lookup=['./views/']).render()
             self.assertEqual('begin abc end', ''.join(t))
