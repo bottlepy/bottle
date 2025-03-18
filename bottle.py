@@ -1895,7 +1895,7 @@ Response = BaseResponse
 
 class HTTPResponse(Response, BottleException):
     """ A subclass of :class:`Response` that can be raised or returned from request
-        handlers to short-curcuit request processing and override changes made to the
+        handlers to short-circuit request processing and override changes made to the
         global :data:`request` object. This bypasses error handlers, even if the status
         code indicates an error. Return or raise :class:`HTTPError` to trigger error
         handlers.
