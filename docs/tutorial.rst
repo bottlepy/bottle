@@ -563,7 +563,7 @@ Attribute-like access is also supported, returning empty strings for missing val
 
 .. rubric:: A word on unicode and character encodings
 
-Unicode characters in the request path, query parameters or cookies are a bit tricky. HTTP is a very old byte-based protocol that predates unicode and lacks explicit encoding information. This is why WSGI servers have to fall back on `ISO-8859-1` (aka `latin1`, a reversible input encoding) for those estrings. Modern browsers default to `utf8`, though. It's a bit much to ask application developers to translate every single user input string to the correct encoding manually. Bottle makes this easy and just assumes `utf8` for everything. All strings returned by Bottle APIs support the full range of unicode characters, as long as the webpage or HTTP client follows best practices and does not break with established standards.
+Unicode characters in the request path, query parameters or cookies are a bit tricky. HTTP is a very old byte-based protocol that predates unicode and lacks explicit encoding information. This is why WSGI servers have to fall back on `ISO-8859-1` (aka `latin1`, a reversible input encoding) for those strings. Modern browsers default to `utf8`, though. It's a bit much to ask application developers to translate every single user input string to the correct encoding manually. Bottle makes this easy and just assumes `utf8` for everything. All strings returned by Bottle APIs support the full range of unicode characters, as long as the webpage or HTTP client follows best practices and does not break with established standards.
 
 Query Parameters
 --------------------------------------------------------------------------------
