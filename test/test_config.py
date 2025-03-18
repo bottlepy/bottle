@@ -6,7 +6,7 @@ from bottle import ConfigDict
 class TestConfDict(unittest.TestCase):
     def test_isadict(self):
         """ ConfigDict should behaves like a normal dict. """
-        # It is a dict-subclass, so this kind of pointless, but it doen't hurt.
+        # It is a dict-subclass, so this kind of pointless, but it doesn't hurt.
         d, m = dict(), ConfigDict()
         d['key'], m['key'] = 'value', 'value'
         d['k2'], m['k2'] = 'v1', 'v1'
