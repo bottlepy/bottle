@@ -738,7 +738,7 @@ class Bottle(object):
             application, install them separately.
 
             While it is possible to use path wildcards within the prefix path
-            (:class:`Bottle` childs only), it is highly discouraged.
+            (:class:`Bottle` children only), it is highly discouraged.
 
             The prefix path must end with a slash. If you want to access the
             root of the child application via `/prefix` in addition to

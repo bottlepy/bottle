@@ -621,7 +621,7 @@ msgstr ""
 #: ../../../bottle.pydocstring of bottle.Bottle.mount:13
 msgid ""
 "While it is possible to use path wildcards within the prefix path "
-"(:class:`Bottle` childs only), it is highly discouraged."
+"(:class:`Bottle` children only), it is highly discouraged."
 msgstr ""
 
 #: ../../../bottle.pydocstring of bottle.Bottle.mount:16
