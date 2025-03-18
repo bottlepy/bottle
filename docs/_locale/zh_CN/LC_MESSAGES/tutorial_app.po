@@ -139,9 +139,9 @@ msgstr "其它软件"
 msgid ""
 "As we use SQLite3 as a database, make sure it is installed. On Linux "
 "systems, most distributions have SQLite3 installed by default. SQLite is "
-"available for Windows and MacOS X as well and the `sqlite3` module is part "
+"available for Windows and macOS as well and the `sqlite3` module is part "
 "of the python standard library."
-msgstr "因为我们使用SQLite3来做数据库，请确保它已安装。如果是Linux系统，大多数的发行版已经默认安装了SQLite3。SQLite同时可工作在Windows系统和MacOS X系统上面。Pyhton标准库中，已经包含了 `sqlite3` 模块。"
+msgstr "因为我们使用SQLite3来做数据库，请确保它已安装。如果是Linux系统，大多数的发行版已经默认安装了SQLite3。SQLite同时可工作在Windows系统和macOS系统上面。Pyhton标准库中，已经包含了 `sqlite3` 模块。"
 
 #: ../../tutorial_app.rst:66
 msgid "Create An SQL Database"

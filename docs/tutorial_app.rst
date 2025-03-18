@@ -74,7 +74,7 @@ Assuming that a fairly new installation of Python (version 3.10 or higher) is us
 
     python -m venv bottle_venv
     cd bottle_venv
-    #for Linux & MacOS
+    #for Linux & macOS
     source bin/activate
     #for Windows
     .\Scripts\activate
@@ -620,7 +620,7 @@ In the very first "Hello World" example, the server is started with ``app.run(ho
 
 As said above, the build-in server is perfectly suitable for local development, personal use or a very small group of people within an internal network. For everything else, the development server may become a bottleneck, as it is single-threaded, thus it can only serve one request at a time. Plus, it may not be robust enough in general.
 
-Bottle comes with a range of `server adapters`_ . To run the Bottle application with a different server than the build-in development server, simple pass the ``server`` argument to the run function. For the following example, the Waitress_ WSGI application server from the Pylons project is used. Waitress works equally good on Linux, MacOS and Windows.
+Bottle comes with a range of `server adapters`_ . To run the Bottle application with a different server than the build-in development server, simple pass the ``server`` argument to the run function. For the following example, the Waitress_ WSGI application server from the Pylons project is used. Waitress works equally good on Linux, macOS and Windows.
 
 .. note::
 
