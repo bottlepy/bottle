@@ -86,7 +86,7 @@ class TestSimpleTemplate(unittest.TestCase):
         self.assertRenders(t, 'start\nend', i=False)
 
     def test_elsebug(self):
-        ''' Whirespace between block keyword and colon is allowed '''
+        ''' Whitespace between block keyword and colon is allowed '''
         self.assertRenders("%if 1:\nyes\n%else:\nno\n%end\n", "yes\n")
         self.assertRenders("%if 1:\nyes\n%else     :\nno\n%end\n", "yes\n")
 
