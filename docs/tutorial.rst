@@ -274,7 +274,7 @@ Static files or assets such as images or CSS files are not served automatically.
 
 Note that we used the ``:path`` route filter here to allow slash characters in ``filepath`` and serve files from sub-directories, too.
 
-The :func:`static_file` helper function has a lot of benefits compared to handling files manually. Most importantly it prevents `directory traversal attacks <https://owasp.org/www-community/attacks/Path_Traversal>`_ (e.g. ``GET /static/../../../../etc/secrets``) by restricting file access to the specified ``root`` directory. Make sure to use an absolut path for ``root``, though. Relative paths (staring with ``./``) are resolved against the current work directory which may not always be the same as your project directory.
+The :func:`static_file` helper function has a lot of benefits compared to handling files manually. Most importantly it prevents `directory traversal attacks <https://owasp.org/www-community/attacks/Path_Traversal>`_ (e.g. ``GET /static/../../../../etc/secrets``) by restricting file access to the specified ``root`` directory. Make sure to use an absolute path for ``root``, though. Relative paths (staring with ``./``) are resolved against the current work directory which may not always be the same as your project directory.
 
 The :func:`static_file` function returns :class:`HTTPResponse` or :class:`HTTPError`, which can be raised as an exception if you need to.
 

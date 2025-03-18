@@ -38,7 +38,7 @@ Common errors and pitfalls
 
 Bottle searches in ``./`` and ``./views/`` for templates. In a mod_python_ or mod_wsgi_ environment, the working directory (``./``) depends on your Apache settings. You should add an absolute path to the template search path::
 
-    bottle.TEMPLATE_PATH.insert(0,'/absolut/path/to/templates/')
+    bottle.TEMPLATE_PATH.insert(0,'/absolute/path/to/templates/')
 
 so bottle searches the right paths.
 
