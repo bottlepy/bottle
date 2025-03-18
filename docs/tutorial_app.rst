@@ -576,7 +576,7 @@ In the event a 404 Not Found error occurs, the function decorated with ``app.err
 
 .. rubric:: Create a Redirect (Bonus Section)
 
-Although the ToDo application works just fine, it still has one little flaw: When trying to open ``127.0.01:8080`` in the browser, the root route, a 404 error will occur, as no route is established for ```/``.  Which is not too much of a problem, but at least a little bit unexpected. Of course this could be changed by modifiying the route ``app.route('/todo')`` to ``app.route('/')``. Or, if the /todo route should be kept, a redirect can be added to the code. Again, this is pretty straight forward:
+Although the ToDo application works just fine, it still has one little flaw: When trying to open ``127.0.01:8080`` in the browser, the root route, a 404 error will occur, as no route is established for ```/``.  Which is not too much of a problem, but at least a little bit unexpected. Of course this could be changed by modifying the route ``app.route('/todo')`` to ``app.route('/')``. Or, if the /todo route should be kept, a redirect can be added to the code. Again, this is pretty straight forward:
 
 .. code-block:: python
 
