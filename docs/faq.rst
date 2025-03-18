@@ -64,7 +64,7 @@ Redirects and url-building only works if bottle knows the public address and loc
   
 
 
-Recieps for common tasks
+Recipes for common tasks
 ============================
 
 
