@@ -2448,7 +2448,7 @@ class ConfigDict(dict):
             share the same meta entries.
 
             Entries that were copied from the source are called 'virtual'. You
-            can not delete virtual keys, but overwrite them, which turns them
+            cannot delete virtual keys, but overwrite them, which turns them
             into non-virtual entries. Setting keys on an overlay never affects
             its source, but may affect any number of child overlays.
 
