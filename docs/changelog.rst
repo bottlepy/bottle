@@ -5,7 +5,7 @@
 Release Notes
 =============
 
-This project loosly follows Semantic Versioning (``major.minor.patch``), with
+This project loosely follows Semantic Versioning (``major.minor.patch``), with
 the exception that changes are allowed in minor releases as long as the change
 is necessary to match documentation, specification or expectation. 
 In other words: Bugfixes do not count as backward incompatible changes, even if
