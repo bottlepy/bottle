@@ -189,7 +189,7 @@ Actually, more than one route can be bound to a function. The following code:
 
 works fine, too. What will not work is to bind one route to more than one function.
 
-What the browser displays is what is returned, thus the value given by the ``return`` statement. In this example, it is necessary to convert ``result`` in to a string by ``str()``, as Bottle expects a string or a list of strings from the return statement. But here, the result of the database query is a list of tuples, which is the standard defined by the `Python DB API`_.
+What the browser displays is what is returned, thus the value given by the ``return`` statement. In this example, it is necessary to convert ``result`` into a string by ``str()``, as Bottle expects a string or a list of strings from the return statement. But here, the result of the database query is a list of tuples, which is the standard defined by the `Python DB API`_.
 
 Now, after understanding the little script above, it is time to execute it and watch the result. Just run ``python todo.py`` and open the URL ``http://127.0.0.1:8080/todo`` in the browser. In case no mistake was made writing the code, the output should look like this::
 
