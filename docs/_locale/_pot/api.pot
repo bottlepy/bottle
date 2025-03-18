@@ -394,7 +394,7 @@ msgid "Current value of the 'Content-Length' header."
 msgstr ""
 
 #: ../../../bottle.py:docstring of bottle.FileUpload.get_header:1
-msgid "Return the value of a header within the mulripart part."
+msgid "Return the value of a header within the multipart part."
 msgstr ""
 
 #: ../../../bottle.py:docstring of bottle.FileUpload.filename:1
