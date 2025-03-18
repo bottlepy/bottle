@@ -529,7 +529,7 @@ Sometimes it may become necessary to associate a route not to a Python function 
     from bottle import static_file
 
 
-to the code to import Bottle's function ``static_file``, which handles sending static files. Let's assume all the static files are located in a subdirectory named ``static`` relativ to the application. The code to serve static files from there looks as follows:
+to the code to import Bottle's function ``static_file``, which handles sending static files. Let's assume all the static files are located in a subdirectory named ``static`` relative to the application. The code to serve static files from there looks as follows:
 
 .. code-block:: python
 
