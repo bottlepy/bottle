@@ -68,7 +68,7 @@ And, finally, ``python`` will be used in this tutorial to run Python 3.10 and ne
 
 .. rubric:: Install Bottle
 
-Assuming that a fairly new installation of Python (version 3.10 or higher) is used, only Bottle needs to be installed in addition to that. Bottle has no other dependencies than Python itself. Following the recommended best-pratice for Python and installing Python modules, let's create a venv_ first and install Bottle inside the venv. Open the directory of choice where the venv should be created and execute the following commands:
+Assuming that a fairly new installation of Python (version 3.10 or higher) is used, only Bottle needs to be installed in addition to that. Bottle has no other dependencies than Python itself. Following the recommended best-practice for Python and installing Python modules, let's create a venv_ first and install Bottle inside the venv. Open the directory of choice where the venv should be created and execute the following commands:
 
 .. code::
 
