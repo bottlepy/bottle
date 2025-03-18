@@ -97,7 +97,7 @@ msgid "Minor Release (x.y)"
 msgstr ""
 
 #: ../../development.rst:40
-msgid "The minor release number is increased on updates that change the API or behaviour in some way. You might get some depreciation warnings any may have to tweak some configuration settings to restore the old behaviour, but in most cases these changes are designed to be backward compatible for at least one minor release. You should update to stay up do date, but don't have to. An exception is 0.8, which *will* break backward compatibility hard. (This is why 0.7 was skipped). Sorry about that."
+msgid "The minor release number is increased on updates that change the API or behaviour in some way. You might get some deprecation warnings any may have to tweak some configuration settings to restore the old behaviour, but in most cases these changes are designed to be backward compatible for at least one minor release. You should update to stay up do date, but don't have to. An exception is 0.8, which *will* break backward compatibility hard. (This is why 0.7 was skipped). Sorry about that."
 msgstr ""
 
 #: ../../development.rst:43
