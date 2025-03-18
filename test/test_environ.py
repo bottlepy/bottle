@@ -829,7 +829,7 @@ class TestRedirect(unittest.TestCase):
         self.assertRedirect('../baz/../test.html', 'http://127.0.0.1/foo/test.html',
                             PATH_INFO='/foo/bar/')
 
-    def test_sheme(self):
+    def test_scheme(self):
         self.assertRedirect('./test.html', 'https://127.0.0.1/test.html',
                             wsgi_url_scheme='https')
         self.assertRedirect('./test.html', 'https://127.0.0.1:80/test.html',
