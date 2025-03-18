@@ -173,7 +173,7 @@ class TestSimpleTemplate(unittest.TestCase):
         self.assertRenders(t, '1234', x='1234')
         self.assertRenders(t, 'default')
 
-    def test_defnied(self):
+    def test_defined(self):
         self.assertRenders('{{x if defined("x") else "no"}}', 'yes', x='yes')
         self.assertRenders('{{x if defined("x") else "no"}}', 'no')
 
