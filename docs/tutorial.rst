@@ -557,7 +557,7 @@ First of all, :class:`FormsDict` is a subclass of :class:`MultiDict` and can sto
   for choice in request.forms.getall('multiple_choice'):
       do_something(choice)
 
-Attribute-like access is also supported, returning empty strings for missing values. This simplifies code a lot whend ealing with lots of optional attributes::
+Attribute-like access is also supported, returning empty strings for missing values. This simplifies code a lot when dealing with lots of optional attributes::
 
   name = request.query.name    # may be an empty string
 
