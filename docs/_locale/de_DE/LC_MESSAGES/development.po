@@ -283,7 +283,7 @@ msgstr "**Test:** Schreibe Tests um nachzuweisen dass dein Code wie geplant funk
 #: ../../development.rst:83
 msgid ""
 "**One patch at a time:** Only fix one bug or add one feature at a time. "
-"Design your patches so that they can be applyed as a whole. Keep your "
+"Design your patches so that they can be applied as a whole. Keep your "
 "patches clean, small and focused."
 msgstr "**Ein Patch zur selben Zeit:** Behebe nur einen Fehler oder füge nur ein Feature zur selben Zeit hinzu. Entwickle deine Patches so, dass sie als Ganzes angewendet werden können. Halte deine Patches sauber, klein und fokussiert."
 
