@@ -470,7 +470,7 @@ The complete route for editing a task looks like this:
             return template('edit_task', current_data=current_data, number=number)
 
 
-A lot of the code's logic is pretty similat to the ``/new`` route and the corresponding ``new_task`` function: the route accepts GET and POST requests and, depending on the request, either sends the template ``edit_task`` or updates a task in the database according to the form data received.
+A lot of the code's logic is pretty similar to the ``/new`` route and the corresponding ``new_task`` function: the route accepts GET and POST requests and, depending on the request, either sends the template ``edit_task`` or updates a task in the database according to the form data received.
 
 What's new here is the dynamic routing ``@app.route('/edit/<number:int>' ...)`` which accepts one wildcard, supposed to be an integer value. The wildcard is assigned to the variable ``number``, which is also expected by the function ``edit_task``. So e.g. opening the URL ``http:/127.0.0.1:8080/edit/2`` would open the task with the ID for editing. In case no number is passed, either because of omitting the parameter or passing a string which is not an integer only, an error will be raised.
 
