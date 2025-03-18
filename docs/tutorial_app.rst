@@ -284,7 +284,7 @@ Run the script again and look at the output. Still not really nice and not compl
 
 .. rubric:: Adding a Base Template
 
-Bottle's SimpleTempate allows, like other template engines, nesting templates. This is pretty handy, as it allows to define a base template holding e.g. the HTML doctype definition, the head and the body section, which is then used as the base for all other templates generating the actual output. The base template looks like this:
+Bottle's SimpleTemplate allows, like other template engines, nesting templates. This is pretty handy, as it allows to define a base template holding e.g. the HTML doctype definition, the head and the body section, which is then used as the base for all other templates generating the actual output. The base template looks like this:
 
 .. code-block:: html
 
