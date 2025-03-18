@@ -198,7 +198,7 @@ class TestSimpleTemplate(unittest.TestCase):
         self.assertRenders('%for i in test:\r\n{{i}}\r\n%end\r\n', '1\r\n2\r\n3\r\n', **d)
 
     def test_commentonly(self):
-        """ Templates: Commentd should behave like code-lines (e.g. flush text-lines) """
+        """ Templates: Comment should behave like code-lines (e.g. flush text-lines) """
         t = SimpleTemplate('...\n%#test\n...')
         self.assertNotEqual('#test', t.code.splitlines()[0])
 
