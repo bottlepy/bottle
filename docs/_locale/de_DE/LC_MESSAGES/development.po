@@ -125,7 +125,7 @@ msgid ""
 " in at least the two latest minor releases and announced in all available "
 "channels (mailinglist, twitter, github). Non-critical bugs or features are "
 "not guaranteed to be backported. This may change in the future, through."
-msgstr "Die Bottle Versionsnummer ist in drei Teile unterteilt (**major.minor.revision**). Diese werden *nicht* dazu genutzt um neue Funktionen zu bewerben, sondern um wichtige bug-fixes und/oder Änderungen an der API zu indizieren. Kritische Fehler werden in den letzten zwei stabilen Veröffentlichungen behoben und über alle Kanäle mitgeteilt (Mailinglisten, Twitter, Github). Nicht kritische Fehler oder Features  werden garantiert zurückgestellt. Dies wird sich eventuell in der Zukunft ändern. "
+msgstr "Die Bottle Versionsnummer ist in drei Teile unterteilt (**major.minor.revision**). Diese werden *nicht* dazu genutzt um neue Funktionen zu bewerben, sondern um wichtige bug-fixes und/oder Änderungen an der API zu indizieren. Kritische Fehler werden in den letzten zwei stabilen Veröffentlichungen behoben und über alle Kanäle mitgeteilt (Mailinglisten, Twitter, GitHub). Nicht kritische Fehler oder Features  werden garantiert zurückgestellt. Dies wird sich eventuell in der Zukunft ändern. "
 
 #: ../../development.rst:37
 msgid "Major Release (x.0)"
@@ -314,7 +314,7 @@ msgid ""
 "The following examples assume that you have an (free) `github account "
 "<https://github.com>`_. This is not mandatory, but makes things a lot "
 "easier."
-msgstr "Die folgenden Beispiele nehmen an dass du einen (kostnelosen) `Github Account <https://github.com>`_ besitzt. Dies ist nicht notwendig, erleichtert die Dinge jedoch sehr."
+msgstr "Die folgenden Beispiele nehmen an dass du einen (kostnelosen) `GitHub Account <https://github.com>`_ besitzt. Dies ist nicht notwendig, erleichtert die Dinge jedoch sehr."
 
 #: ../../development.rst:125
 msgid ""
@@ -386,7 +386,7 @@ msgstr "Dies ist gleichbedeutend mit der Rückgängigmachung all deiner Änderun
 msgid ""
 "Now you are almost ready to send a pull request. But first you need to make "
 "your feature-branch public by pushing it to your github fork::"
-msgstr "Jetzt bist du beinahe bereit ein pull-request zu senden. Aber als ersten muss du deinen Feature-Branch öffentlich machen indem du ihn in deine Github-Fork pushst. "
+msgstr "Jetzt bist du beinahe bereit ein pull-request zu senden. Aber als ersten muss du deinen Feature-Branch öffentlich machen indem du ihn in deine GitHub-Fork pushst. "
 
 #: ../../development.rst:160
 msgid ""
@@ -395,7 +395,7 @@ msgid ""
 "be to start a thread in the mailing-list, which is recommended. It allows "
 "other developers to see and discuss your patches and you get some feedback "
 "for free :)"
-msgstr "Nachdem du deinen commit gepusht hast musst du uns über das neue Feature informieren. Eine Möglichkeit ist, ein pull-request über Github zu senden. Eine Andere wäre, einen neuen Thread in der Mailingliste zu starten, was empfohlen wird. Es erlaubt anderen Entwicklern deine Patches zu sehen und zu diskutieren und du bekommst gratis Feedback :)"
+msgstr "Nachdem du deinen commit gepusht hast musst du uns über das neue Feature informieren. Eine Möglichkeit ist, ein pull-request über GitHub zu senden. Eine Andere wäre, einen neuen Thread in der Mailingliste zu starten, was empfohlen wird. Es erlaubt anderen Entwicklern deine Patches zu sehen und zu diskutieren und du bekommst gratis Feedback :)"
 
 #: ../../development.rst:162
 msgid ""
