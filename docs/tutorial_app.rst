@@ -666,7 +666,7 @@ whereas ``todo`` is the name of the file holding the Bottle application and ``ap
 Final Words
 ============
 
-This is the end of this tutorial for Bottle. The basic concepts of Bottle are shown and a first application utilizin the Bottle WSGI framework was written. Additionally, it was shown how to serve a Bottle application for real applications with a WSGI application server.
+This is the end of this tutorial for Bottle. The basic concepts of Bottle are shown and a first application utilizing the Bottle WSGI framework was written. Additionally, it was shown how to serve a Bottle application for real applications with a WSGI application server.
 
 As said in the introduction, this tutorial is not showing all possibilities Bottle offers. What was skipped here is e.g. receiving file objects and streams and how to handle authentication data. For a complete overview of all features of Bottle, please refer to the full `Bottle documentation`_ .
 
