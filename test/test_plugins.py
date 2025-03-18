@@ -87,7 +87,7 @@ class TestPluginManagement(tools.ServerTestBase):
         self.assertBody('plugin', '/a')
         self.assertBody('plugin;foo', '/b')
 
-    def test_plugin_oder(self):
+    def test_plugin_order(self):
         self.app.install(MyPlugin()).add_content = ';global-1'
         self.app.install(MyPlugin()).add_content = ';global-2'
         l1 = MyPlugin()
