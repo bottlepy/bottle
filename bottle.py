@@ -3184,7 +3184,7 @@ class _MultipartParser(object):
         else:
             raise MultipartError("Stream does not contain boundary")
 
-        # First line is termainating boundary -> empty multipart stream
+        # First line is terminating boundary -> empty multipart stream
         if line == terminator:
             for _ in lines:
                 raise MultipartError("Found data after empty multipart stream")
