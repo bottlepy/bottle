@@ -1,5 +1,5 @@
-name: Tests
-on: [push, pull_request]
+name: Run Tests
+on: [push, pull_request, workflow_call]
 
 jobs:
   build:
@@ -22,5 +22,7 @@ jobs:
         cache: pip
     - name: Install dev dependencies
       run: pip install .[dev]
+    - name: Install dependencies
+      run: .github/workflows/install-deps.sh
     - name: Run tests
       run: pytest -ra -q --cov=bottle --cov-report=term

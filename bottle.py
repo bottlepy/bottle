@@ -935,9 +935,9 @@ class Bottle(object):
         environ['bottle.app'] = self
         request.bind(environ)
         response.bind()
+        out = None
 
         try:
-            out = None
             try:
                 self.trigger_hook('before_request')
                 route, args = self.router.match(environ)
@@ -958,6 +958,7 @@ class Bottle(object):
         except (KeyboardInterrupt, SystemExit, MemoryError):
             raise
         except Exception as E:
+            _try_close(out)
             if not self.catchall: raise
             stacktrace = format_exc()
             environ['wsgi.errors'].write(stacktrace)
@@ -1017,12 +1018,14 @@ class Bottle(object):
             while not first:
                 first = next(iout)
         except StopIteration:
+            _try_close(out)
             return self._cast('')
         except HTTPResponse as E:
             first = E
         except (KeyboardInterrupt, SystemExit, MemoryError):
             raise
         except Exception as error:
+            _try_close(out)
             if not self.catchall: raise
             first = HTTPError(500, 'Unhandled exception', error, format_exc())
 
@@ -1035,6 +1038,7 @@ class Bottle(object):
             encoder = lambda x: x.encode(response.charset)
             new_iter = map(encoder, itertools.chain([first], iout))
         else:
+            _try_close(out)
             msg = 'Unsupported response type: %s' % type(first)
             return self._cast(HTTPError(500, msg))
         if hasattr(out, 'close'):
@@ -1043,6 +1047,7 @@ class Bottle(object):
 
     def wsgi(self, environ, start_response):
         """ The bottle WSGI-interface. """
+        out = None
         try:
             out = self._cast(self._handle(environ))
             # rfc2616 section 4.3
@@ -1058,6 +1063,7 @@ class Bottle(object):
         except (KeyboardInterrupt, SystemExit, MemoryError):
             raise
         except Exception as E:
+            _try_close(out)
             if not self.catchall: raise
             err = '<h1>Critical error while processing request: %s</h1>' \
                   % html_escape(environ.get('PATH_INFO', '/'))
@@ -2531,6 +2537,15 @@ class _closeiter(object):
     def close(self):
         for func in self.close_callbacks:
             func()
+
+
+def _try_close(obj):
+    """ Call obj.close() if present and ignore exceptions """
+    try:
+        if hasattr(obj, 'close'):
+            obj.close()
+    except Exception:
+        pass
 
 
 class ResourceManager(object):

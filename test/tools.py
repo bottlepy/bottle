@@ -86,9 +86,11 @@ class ServerTestBase(unittest.TestCase):
         self.app = bottle.app.push()
         self.wsgiapp = wsgiref.validate.validator(self.app)
 
-    def urlopen(self, path, method='GET', post='', env=None):
+    def urlopen(self, path, method='GET', post='', env=None, crash=None):
         result = {'code':0, 'status':'error', 'header':{}, 'body':tob('')}
         def start_response(status, header, exc_info=None):
+            if crash == "start_response":
+                raise RuntimeError("Unittest requested crash in start_response")
             result['code'] = int(status.split()[0])
             result['status'] = status.split(None, 1)[-1]
             for name, value in header:
@@ -108,14 +110,14 @@ class ServerTestBase(unittest.TestCase):
             env['wsgi.input'].write(tob(post))
             env['wsgi.input'].seek(0)
         response = self.wsgiapp(env, start_response)
-        for part in response:
-            try:
-                result['body'] += part
-            except TypeError:
-                raise TypeError('WSGI app yielded non-byte object %s', type(part))
-        if hasattr(response, 'close'):
-            response.close()
-            del response
+        try:
+            for part in response:
+                try:
+                    result['body'] += part
+                except TypeError:
+                    raise TypeError('WSGI app yielded non-byte object %s', type(part))
+        finally:
+            bottle._try_close(response)
         return result
 
     def postmultipart(self, path, fields, files):

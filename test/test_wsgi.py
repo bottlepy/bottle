@@ -198,6 +198,51 @@ class TestErrorHandling(ServerTestBase):
         self.assertBody("999 Unknown", '/999')
 
 
+class CloseableBody:
+
+    def __init__(self, body):
+        self.body = body
+        self.close_events = []
+
+    def __iter__(self):
+        return iter(self.body)
+
+    def close(self):
+        self.close_events.append(True)
+
+
+class TestCloseable(ServerTestBase):
+    """ Test that close-able return types are actually closed """
+
+    def setUp(self):
+        super().setUp()
+
+    def closeable(self, body=["OK"]):
+        self.closeable = CloseableBody(body)
+
+    def assertClosed(self, body, open_args=None):
+        closeable = CloseableBody(body)
+        self.app.route("/close")(lambda: closeable)
+        try:
+            self.urlopen("/close", **(open_args or {}))
+        finally:
+            self.assertTrue(len(closeable.close_events) > 0, "Response object was not closed")
+
+    def test_direct(self):
+        self.assertClosed(["OK"])
+        self.assertClosed([b"OK"])
+        self.assertClosed("OK")
+        self.assertClosed(b"OK")
+        self.assertClosed(["OK" for ok in range(10)])
+        self.assertClosed([b"OK" for ok in range(10)])
+        self.assertClosed(["OK" for ok in range(0)])
+        self.assertClosed(5) # Internal server error in Bottle._cast
+        try:
+            self.assertClosed(["CRASH"], open_args={'crash': 'start_response'})
+        except RuntimeError:
+            pass
+
+
 class TestRouteDecorator(ServerTestBase):
     def test_decorators(self):
         def foo(): return bottle.request.method
