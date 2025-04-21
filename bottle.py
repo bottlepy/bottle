@@ -3906,7 +3906,7 @@ class FileCheckerThread(threading.Thread):
     def run(self):
         exists = os.path.exists
         mtime = lambda p: os.stat(p).st_mtime
-        files = dict()
+        files = {}
 
         for module in list(sys.modules.values()):
             path = getattr(module, '__file__', '') or ''
