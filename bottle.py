@@ -162,7 +162,7 @@ def makelist(data):  # This is just too handy
         return []
 
 
-class DictProperty(object):
+class DictProperty:
     """ Property that maps to a key in a local dict-like attribute. """
 
     def __init__(self, attr, key=None, read_only=False):
@@ -188,7 +188,7 @@ class DictProperty(object):
         del getattr(obj, self.attr)[self.key]
 
 
-class cached_property(object):
+class cached_property:
     """ A property that is only computed once per instance and then replaces
         itself with an ordinary attribute. Deleting the attribute resets the
         property. """
@@ -203,7 +203,7 @@ class cached_property(object):
         return value
 
 
-class lazy_attribute(object):
+class lazy_attribute:
     """ A property that caches itself to the class object. """
 
     def __init__(self, func):
@@ -255,7 +255,7 @@ def _re_flatten(p):
                   len(m.group(1)) % 2 else m.group(1) + '(?:', p)
 
 
-class Router(object):
+class Router:
     """ A Router is an ordered collection of route->target pairs. It is used to
         efficiently match WSGI requests against a number of routes and return
         the first target that satisfies the request. The target may be anything,
@@ -458,7 +458,7 @@ class Router(object):
         raise HTTPError(404, "Not found: " + repr(path))
 
 
-class Route(object):
+class Route:
     """ This class wraps a route callback along with route specific metadata and
         configuration and applies Plugins on demand. It is also responsible for
         turning an URL path rule into a regular expression usable by the Router.
@@ -568,7 +568,7 @@ class Route(object):
 ###############################################################################
 
 
-class Bottle(object):
+class Bottle:
     """ Each Bottle object represents a single, distinct web application and
         consists of routes, callbacks, plugins, resources and configuration.
         Instances are callable WSGI applications.
@@ -1099,7 +1099,7 @@ class Bottle(object):
 ###############################################################################
 
 
-class BaseRequest(object):
+class BaseRequest:
     """ A wrapper for WSGI environment dictionaries that adds a lot of
         convenient access methods and properties. Most of them are read-only.
 
@@ -1564,7 +1564,7 @@ def _hval(value):
     return value
 
 
-class HeaderProperty(object):
+class HeaderProperty:
     def __init__(self, name, reader=None, writer=None, default=''):
         self.name, self.default = name, default
         self.reader, self.writer = reader, writer
@@ -1582,7 +1582,7 @@ class HeaderProperty(object):
         del obj[self.name]
 
 
-class BaseResponse(object):
+class BaseResponse:
     """ Storage class for a response body as well as headers and cookies.
 
         This class does support dict-like case-insensitive item-access to
@@ -1942,7 +1942,7 @@ class PluginError(BottleException):
     pass
 
 
-class JSONPlugin(object):
+class JSONPlugin:
     name = 'json'
     api = 2
 
@@ -1986,7 +1986,7 @@ class JSONPlugin(object):
         return wrapper
 
 
-class TemplatePlugin(object):
+class TemplatePlugin:
     """ This plugin applies the :func:`view` decorator to all routes with a
         `template` config parameter. If the parameter is a tuple, the second
         element must be a dict with additional options (e.g. `template_engine`)
@@ -2008,7 +2008,7 @@ class TemplatePlugin(object):
 
 
 #: Not a plugin, but part of the plugin API. TODO: Find a better place.
-class _ImportRedirect(object):
+class _ImportRedirect:
     def __init__(self, name, impmask):
         """ Create a virtual package that redirects imports (see PEP 302). """
         self.name = name
@@ -2509,7 +2509,7 @@ class AppStack(list):
             return self.push()
 
 
-class WSGIFileWrapper(object):
+class WSGIFileWrapper:
     def __init__(self, fp, buffer_size=1024 * 64):
         self.fp, self.buffer_size = fp, buffer_size
         for attr in 'fileno', 'close', 'read', 'readlines', 'tell', 'seek':
@@ -2523,7 +2523,7 @@ class WSGIFileWrapper(object):
             part = read(buff)
 
 
-class _closeiter(object):
+class _closeiter:
     """ This only exists to be able to attach a .close method to iterators that
         do not support attribute assignment (most of itertools). """
 
@@ -2548,7 +2548,7 @@ def _try_close(obj):
         pass
 
 
-class ResourceManager(object):
+class ResourceManager:
     """ This class manages a list of search paths and helps to find and open
         application-bound resources (files).
 
@@ -2634,7 +2634,7 @@ class ResourceManager(object):
         return self.opener(fname, mode=mode, *args, **kwargs)
 
 
-class FileUpload(object):
+class FileUpload:
     def __init__(self, fileobj, name, filename, headers=None):
         """ Wrapper for a single file uploaded via ``multipart/form-data``. """
         #: Open file(-like) object (BytesIO buffer or temporary file)
@@ -3118,7 +3118,7 @@ class MultipartError(HTTPError):
         HTTPError.__init__(self, 400, "MultipartError: " + msg)
 
 
-class _MultipartParser(object):
+class _MultipartParser:
     def __init__(
         self,
         stream,
@@ -3242,7 +3242,7 @@ class _MultipartParser(object):
             raise MultipartError("Unexpected end of multipart stream.")
 
 
-class _MultipartPart(object):
+class _MultipartPart:
     def __init__(self, buffer_size=2 ** 16, memfile_limit=2 ** 18, charset="latin1"):
         self.headerlist = []
         self.headers = None
@@ -3361,7 +3361,7 @@ class _MultipartPart(object):
 # - https://github.com/bottlepy/bottle/pull/647#issuecomment-60152870
 # - https://github.com/bottlepy/bottle/pull/865#issuecomment-242795341
 
-class ServerAdapter(object):
+class ServerAdapter:
     quiet = False
 
     def __init__(self, host='127.0.0.1', port=8080, **options):
@@ -3942,7 +3942,7 @@ class TemplateError(BottleException):
     pass
 
 
-class BaseTemplate(object):
+class BaseTemplate:
     """ Base class and minimal API for template adapters """
     extensions = ['tpl', 'html', 'thtml', 'stpl']
     settings = {}  # used in prepare()
@@ -4176,7 +4176,7 @@ class StplSyntaxError(TemplateError):
     pass
 
 
-class StplParser(object):
+class StplParser:
     """ Parser for stpl templates. """
     _re_cache = {}  #: Cache for compiled re patterns
 
