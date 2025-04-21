@@ -38,7 +38,8 @@ Release 0.14 (in development)
 
 .. rubric:: Removed APIs
 
-* Dropped support for Python 2 and removed workarounds or helpers that only make sense in a Python 2/3 dual codebase.
+* Dropped support for Python 2 (EOL: 2020-01-01) and removed workarounds or helpers that only make sense in a Python 2/3 dual codebase.
+* Dropped support for Python 3.8 (EOL: 2024-10-07).
 * Removed the ``RouteReset`` exception and associated logic.
 * Removed the `bottle.py` console script entrypoint in favour of the new `bottle` script. You can still execute `bottle.py` directly or via `python -m bottle`. The only change is that the command installed by pip or similar tools into the bin/Scripts folder of the (virtual) environment is now called `bottle` to avoid circular import errors.
 
@@ -48,7 +49,7 @@ Release 0.14 (in development)
 
 .. rubric:: New features
 
-* ``bottle.HTTPError`` raised on Invalid JSON now include the underlying exception in the ``exception`` field.
+* ``bottle.HTTPError`` raised on invalid JSON now include the underlying exception in the ``exception`` field.
 
 
 Release 0.13

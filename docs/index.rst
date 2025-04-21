@@ -71,7 +71,7 @@ If you are in the unfortunate position to have to rely on "dead snakes" for prod
      - >=3.8 [2]_
    * - 0.14 (planned)
      - *dropped*
-     - >=3.8
+     - >=3.9 [2]_
 
 
 
@@ -134,5 +134,4 @@ the unmodified library. In all other cases please ask first.
 .. rubric:: Footnotes
 
 .. [1] Usage of the template or server adapter classes requires the corresponding template or server modules.
-.. [2] Bottle 0.13 technically still works with Python 3.6 and 3.7 but is not tested with those versions.
-
+.. [2] Bottle often still works with recently discontinued Python 3.x versions. We will not intentionally break compatibility, but also no longer test against those versions. Use at your own risk.

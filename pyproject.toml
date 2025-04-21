@@ -5,7 +5,7 @@ build-backend = "flit_core.buildapi"
 [project]
 name = "bottle"
 dynamic = ["version"]
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 license = {file = "LICENSE"}
 description = "Fast and simple WSGI-framework for small web-applications."
 readme = "README.rst"
