@@ -97,7 +97,7 @@ Prior to starting to work on the ToDo application, the database to be used later
     cursor.execute("INSERT INTO todo (task,status) VALUES ('Visit the Python website',1)")
     cursor.execute("INSERT INTO todo (task,status) VALUES ('Test various editors for and check the syntax highlighting',1)")
     cursor.execute("INSERT INTO todo (task,status) VALUES ('Choose your favorite WSGI-Framework',0)")
-    conn.commit()
+    connection.commit()
 
 These commands generate a database-file named `todo.db` with a table called ``todo``. The table has three columns ``id``, ``task``, and ``status``. ``id`` is a unique id for each row, which is used later to reference rows of data. The column ``task`` holds the text which describes the task, it is limited to max 100 characters. Finally, the column ``status`` is used to mark a task as open (represented by the value 1) or closed (represented by the value 0).
 
