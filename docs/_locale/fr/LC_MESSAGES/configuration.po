@@ -223,7 +223,7 @@ msgid "Load values from a Python module."
 msgstr ""
 
 #: ../../../bottle.pydocstring of bottle.ConfigDict.load_module:3
-msgid "Example modue ``config.py``::"
+msgid "Example module ``config.py``::"
 msgstr ""
 
 #: ../../../bottle.pydocstring of bottle.ConfigDict.load_module:0

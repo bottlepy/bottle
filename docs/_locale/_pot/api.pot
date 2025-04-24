@@ -394,7 +394,7 @@ msgid "Current value of the 'Content-Length' header."
 msgstr ""
 
 #: ../../../bottle.py:docstring of bottle.FileUpload.get_header:1
-msgid "Return the value of a header within the mulripart part."
+msgid "Return the value of a header within the multipart part."
 msgstr ""
 
 #: ../../../bottle.py:docstring of bottle.FileUpload.filename:1
@@ -510,7 +510,7 @@ msgid "Plugins from the parent application are not applied to the routes of the 
 msgstr ""
 
 #: ../../../bottle.py:docstring of bottle.Bottle.mount:13
-msgid "While it is possible to use path wildcards within the prefix path (:class:`Bottle` childs only), it is highly discouraged."
+msgid "While it is possible to use path wildcards within the prefix path (:class:`Bottle` children only), it is highly discouraged."
 msgstr ""
 
 #: ../../../bottle.py:docstring of bottle.Bottle.mount:16
