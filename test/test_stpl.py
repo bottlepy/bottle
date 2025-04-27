@@ -157,6 +157,12 @@ class TestSimpleTemplate(unittest.TestCase):
             t = SimpleTemplate(name='stpl_include', lookup=['./views/'])
             self.assertRenders(t, 'before\nstart var end\nafter\n', var='var')
 
+    def test_include_to_global(self):
+        """ Templates: Updated globals() with include() result"""
+        with chdir(__file__):
+            t = SimpleTemplate(name='stpl_include_to_global', lookup=['./views/'])
+            self.assertRenders(t, 'before\nstart var end\nstart 3 then var end\nafter\n', var='var')
+
     def test_rebase(self):
         """ Templates: %rebase and method passing """
         with chdir(__file__):
