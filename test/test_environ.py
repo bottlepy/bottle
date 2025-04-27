@@ -861,6 +861,12 @@ class TestRedirect(unittest.TestCase):
                             HTTP_X_FORWARDED_HOST='example.com',
                             HTTP_HOST='127.0.0.1')
 
+    def test_host_http_multiple_proxies(self):
+        # Trust first proxy when multiple proxies are in front of bottle.
+        self.assertRedirect('./test.html', 'http://example.com/test.html',
+                            HTTP_X_FORWARDED_HOST='example.com, example.net',
+                            HTTP_HOST='127.0.0.1')
+
     def test_specialchars(self):
         ''' The target URL is not quoted automatically. '''
         self.assertRedirect('./te st.html',

@@ -1385,7 +1385,10 @@ class BaseRequest:
         env = self.environ
         http = env.get('HTTP_X_FORWARDED_PROTO') \
              or env.get('wsgi.url_scheme', 'http')
-        host = env.get('HTTP_X_FORWARDED_HOST') or env.get('HTTP_HOST')
+        if env.get('HTTP_X_FORWARDED_HOST'):
+            host = env.get('HTTP_X_FORWARDED_HOST').split(",")[0].strip()
+        else:
+            host = env.get('HTTP_HOST')
         if not host:
             # HTTP 1.1 requires a Host-header. This is for HTTP/1.0 clients.
             host = env.get('SERVER_NAME', '127.0.0.1')
