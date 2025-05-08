@@ -417,7 +417,7 @@ class Router:
             for i, value in enumerate(anons):
                 query['anon%d' % i] = value
             url = ''.join([f(query.pop(n)) if n else f for (n, f) in builder])
-            return url if not query else url + '?' + urlencode(query)
+            return url if not query else url + '?' + urlencode(query, doseq=True)
         except KeyError as E:
             raise RouteBuildError('Missing URL argument: %r' % E.args[0])
 
