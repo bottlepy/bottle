@@ -236,7 +236,7 @@ msgstr ""
 
 #: ../../changelog.rst:80
 msgid ""
-":meth:`Bottle.route` now accpets an import string for the ``callback`` "
+":meth:`Bottle.route` now accepts an import string for the ``callback`` "
 "parameter."
 msgstr ""
 
