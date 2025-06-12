@@ -1,3 +1,4 @@
+import os
 import tempfile
 import unittest
 from bottle import ConfigDict
@@ -167,7 +168,7 @@ class TestINIConfigLoader(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.config_file = tempfile.NamedTemporaryFile(suffix='.example.ini',
-                                                       delete=True)
+                                                       delete=False)
         self.config_file.write(b'[DEFAULT]\n'
                                b'default: 45\n'
                                b'[bottle]\n'
@@ -184,6 +185,7 @@ class TestINIConfigLoader(unittest.TestCase):
     @classmethod
     def tearDownClass(self):
         self.config_file.close()
+        os.unlink(self.config_file.name)
 
     def test_load_config(self):
         c = ConfigDict()
