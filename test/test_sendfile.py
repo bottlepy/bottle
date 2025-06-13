@@ -1,3 +1,4 @@
+import sys
 import unittest
 from bottle import static_file, request, response, parse_date, parse_range_header, Bottle, tob
 import bottle
@@ -63,6 +64,8 @@ class TestSendFile(unittest.TestCase):
         self.assertEqual(403, f.status_code)
 
     def test_file_not_readable(self):
+        if sys.platform == 'win32':
+            return
         if os.geteuid() == 0:
             return # Root can read anything
 
@@ -89,6 +92,7 @@ class TestSendFile(unittest.TestCase):
         """ SendFile: Mime Guessing"""
         try:
             fp, fn = tempfile.mkstemp(suffix=".txt.gz")
+            os.close(fp) #  File needs to be closed before it can be accessed on Windows
             f = static_file(fn, root='/')
             self.assertTrue(f.headers['Content-Type'][0] in ('application/gzip'))
             self.assertFalse('Content-Encoding' in f.headers)
