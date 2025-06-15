@@ -65,3 +65,45 @@ class TestRoute(unittest.TestCase):
             eval(compile('def foo(a, *, b=5): pass', '<foo>', 'exec'), env, env)
             route = bottle.Route(bottle.Bottle(), None, None, env['foo'])
             self.assertEqual(set(route.get_callback_args()), set(['a', 'b']))
+
+    def test_unwrap_wrapped(self):
+        import functools
+        def func(): pass
+        @functools.wraps(func)
+        def wrapped():
+            return func()
+
+        route = bottle.Route(bottle.Bottle(), None, None, wrapped)
+        self.assertEqual(route.get_undecorated_callback(), func)
+
+    def test_unwrap_closure(self):
+        def func(): pass
+        wrapped = _null_decorator(func)
+        route = bottle.Route(bottle.Bottle(), None, None, wrapped)
+        self.assertEqual(route.get_undecorated_callback(), func)
+
+    def test_unwrap_callable(self):
+        class Foo:
+            def __call__(self): pass
+
+        func = Foo()
+        wrapped = _null_decorator(func)
+        route = bottle.Route(bottle.Bottle(), None, None, wrapped)
+        self.assertEqual(route.get_undecorated_callback(), func)
+        repr(route) # Raised cause cb has no '__name__'
+
+    def test_unwrap_method(self):
+        def func(self): pass
+
+        class Foo:
+            test = _null_decorator(func)
+
+        wrapped = Foo().test
+        route = bottle.Route(bottle.Bottle(), None, None, wrapped)
+        self.assertEqual(route.get_undecorated_callback(), func)
+
+
+def _null_decorator(func):
+    def wrapper():
+        return func()
+    return wrapper

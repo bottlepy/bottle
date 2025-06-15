@@ -573,18 +573,17 @@ class Route(object):
         """ Return the callback. If the callback is a decorated function, try to
             recover the original function. """
         func = self.callback
-        func = getattr(func, '__func__' if py3k else 'im_func', func)
-        closure_attr = '__closure__' if py3k else 'func_closure'
-        while hasattr(func, closure_attr) and getattr(func, closure_attr):
-            attributes = getattr(func, closure_attr)
-            func = attributes[0].cell_contents
-
-            # in case of decorators with multiple arguments
-            if not isinstance(func, FunctionType):
-                # pick first FunctionType instance from multiple arguments
-                func = filter(lambda x: isinstance(x, FunctionType),
-                              map(lambda x: x.cell_contents, attributes))
-                func = list(func)[0]  # py3 support
+        while True:
+            if getattr(func, '__wrapped__', False):
+                func = func.__wrapped__
+            elif getattr(func, '__func__', False):
+                func = func.__func__
+            elif getattr(func, '__closure__', False):
+                cells_values = (cell.cell_contents for cell in func.__closure__)
+                isfunc = lambda x: isinstance(x, FunctionType) or hasattr(x, '__call__')
+                func = next(iter(filter(isfunc, cells_values)), func)
+            else:
+                break
         return func
 
     def get_callback_args(self):
@@ -603,7 +602,9 @@ class Route(object):
 
     def __repr__(self):
         cb = self.get_undecorated_callback()
-        return '<%s %s -> %s:%s>' % (self.method, self.rule, cb.__module__, cb.__name__)
+        return '<%s %s -> %s:%s>' % (
+            self.method, self.rule, cb.__module__, getattr(cb, '__name__', '__call__')
+        )
 
 ###############################################################################
 # Application Object ###########################################################
