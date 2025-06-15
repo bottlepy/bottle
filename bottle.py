@@ -100,6 +100,8 @@ import inspect
 
 json_loads = lambda s: json_lds(touni(s))
 callable = lambda x: hasattr(x, '__call__')
+_UNSET = object()
+
 
 def _wsgi_recode(src):
     """ Translate a PEP-3333 latin1-string to utf8+surrogateescape """
@@ -129,7 +131,7 @@ def _stderr(*args):
     try:
         print(*args, file=sys.stderr)
     except (IOError, AttributeError):
-        pass # Some environments do not allow printing (mod_wsgi)
+        pass  # Some environments do not allow printing (mod_wsgi)
 
 
 # A bug in functools causes it to break if the wrapper is an instance method
@@ -139,14 +141,15 @@ def update_wrapper(wrapper, wrapped, *a, **ka):
     except AttributeError:
         pass
 
+
 # These helpers are used at module level and need to be defined first.
 # And yes, I know PEP-8, but sometimes a lower-case classname makes more sense.
 
 
 def depr(major, minor, cause, fix, stacklevel=3):
-    text = "Warning: Use of deprecated feature or API. (Deprecated in Bottle-%d.%d)\n"\
-           "Cause: %s\n"\
-           "Fix: %s\n" % (major, minor, cause, fix)
+    text = "Use of feature or API deprecated since Bottle-%d.%d\n"\
+        "Cause: %s\n"\
+        "Fix: %s\n" % (major, minor, cause, fix)
     if DEBUG == 'strict':
         raise DeprecationWarning(text)
     warnings.warn(text, DeprecationWarning, stacklevel=stacklevel)
@@ -536,9 +539,9 @@ class Route:
                 func = func.__func__
             elif getattr(func, '__closure__', False):
                 depr(0, 14, "Decorated callback without __wrapped__",
-                     "When applying decorators to route callbacks, make sure" \
-                     " the decorator uses @functools.wraps or update_wrapper." \
-                     " This warning may also trigger if you reference callables" \
+                     "When applying decorators to route callbacks, make sure"
+                     " the decorator uses @functools.wraps or update_wrapper."
+                     " This warning may also trigger if you reference callables"
                      " from a nonlocal scope.")
                 cells_values = (cell.cell_contents for cell in func.__closure__)
                 isfunc = lambda x: isinstance(x, FunctionType) or hasattr(x, '__call__')
@@ -685,8 +688,7 @@ class Bottle:
                     if exc_info:
                         _raise(*exc_info)
                     status = _wsgi_recode(status)
-                    headerlist = [(k, _wsgi_recode(v))
-                                    for (k, v) in headerlist]
+                    headerlist = [(k, _wsgi_recode(v)) for (k, v) in headerlist]
                     rs.status = status
                     for name, value in headerlist:
                         rs.add_header(name, value)
@@ -790,7 +792,7 @@ class Bottle:
         removed, remove = [], plugin
         for i, plugin in list(enumerate(self.plugins))[::-1]:
             if remove is True or remove is plugin or remove is type(plugin) \
-            or getattr(plugin, 'name', True) == remove:
+               or getattr(plugin, 'name', True) == remove:
                 removed.append(plugin)
                 del self.plugins[i]
                 if hasattr(plugin, 'close'): plugin.close()
@@ -977,9 +979,9 @@ class Bottle:
 
     def _cast(self, out, peek=None):
         """ Try to convert the parameter into something WSGI compatible and set
-        correct HTTP headers when possible.
-        Support: False, bytes/bytearray, str, dict, HTTPResponse, HTTPError, file-like,
-        iterable of bytes/bytearray or str instances.
+            correct HTTP headers when possible.
+            Support: False, bytes/bytearray, str, dict, HTTPResponse, HTTPError,
+            file-like, iterable of bytes/bytearray or str instances.
         """
 
         # Empty output is done here
@@ -988,8 +990,7 @@ class Bottle:
                 response['Content-Length'] = 0
             return []
         # Join lists of byte or unicode strings. Mixed lists are NOT supported
-        if isinstance(out, (tuple, list))\
-        and isinstance(out[0], (bytes, str)):
+        if isinstance(out, (tuple, list)) and isinstance(out[0], (bytes, str)):
             out = out[0][0:0].join(out)  # b'abc'[0:0] -> b''
         # Encode unicode strings
         if isinstance(out, str):
@@ -1057,8 +1058,8 @@ class Bottle:
         try:
             out = self._cast(self._handle(environ))
             # rfc2616 section 4.3
-            if response._status_code in (100, 101, 204, 304)\
-            or environ['REQUEST_METHOD'] == 'HEAD':
+            if response._status_code in (100, 101, 204, 304) \
+               or environ['REQUEST_METHOD'] == 'HEAD':
                 if hasattr(out, 'close'): out.close()
                 out = []
             exc_info = environ.get('bottle.exc_info')
@@ -1389,8 +1390,7 @@ class BaseRequest:
             but the fragment is always empty because it is not visible to the
             server. """
         env = self.environ
-        http = env.get('HTTP_X_FORWARDED_PROTO') \
-             or env.get('wsgi.url_scheme', 'http')
+        http = env.get('HTTP_X_FORWARDED_PROTO') or env.get('wsgi.url_scheme', 'http')
         host = env.get('HTTP_X_FORWARDED_HOST') or env.get('HTTP_HOST')
         if not host:
             # HTTP 1.1 requires a Host-header. This is for HTTP/1.0 clients.
@@ -1641,9 +1641,9 @@ class BaseResponse:
         copy._headers = dict((k, v[:]) for (k, v) in self._headers.items())
         if self._cookies:
             cookies = copy._cookies = SimpleCookie()
-            for k,v in self._cookies.items():
+            for k, v in self._cookies.items():
                 cookies[k] = v.value
-                cookies[k].update(v) # also copy cookie attributes
+                cookies[k].update(v)  # also copy cookie attributes
         return copy
 
     def __iter__(self):
@@ -1831,13 +1831,13 @@ class BaseResponse:
         self._cookies[name] = value
 
         for key, value in options.items():
-            if key in ('max_age', 'maxage'): # 'maxage' variant added in 0.13
+            if key in ('max_age', 'maxage'):  # 'maxage' variant added in 0.13
                 key = 'max-age'
                 if isinstance(value, timedelta):
                     value = value.seconds + value.days * 24 * 3600
             if key == 'expires':
                 value = http_date(value)
-            if key in ('same_site', 'samesite'): # 'samesite' variant added in 0.13
+            if key in ('same_site', 'samesite'):  # 'samesite' variant added in 0.13
                 key, value = 'samesite', (value or "none").lower()
                 if value not in ('lax', 'strict', 'none'):
                     raise CookieError("Invalid value for SameSite")
@@ -2043,7 +2043,7 @@ class _ImportRedirect:
         return self.load_module(spec.name)
 
     def exec_module(self, module):
-        pass # This probably breaks importlib.reload() :/
+        pass  # This probably breaks importlib.reload() :/
 
     def load_module(self, fullname):
         if fullname in sys.modules: return sys.modules[fullname]
@@ -2167,6 +2167,7 @@ class FormsDict(MultiDict):
             return super(FormsDict, self).__getattr__(name)
         return self.get(name, default=default)
 
+
 class HeaderDict(MultiDict):
     """ A case-insensitive version of :class:`MultiDict` that defaults to
         replace the old value instead of appending it. """
@@ -2251,7 +2252,6 @@ class WSGIHeaderDict(DictMixin):
     def __contains__(self, key):
         return self._ekey(key) in self.environ
 
-_UNSET = object()
 
 class ConfigDict(dict):
     """ A dict-like configuration storage with additional support for
@@ -2430,7 +2430,7 @@ class ConfigDict(dict):
 
     def meta_set(self, key, metafield, value):
         """ Set the meta field for a key to a new value.
-        
+
             Meta-fields are shared between all members of an overlay tree.
         """
         self._meta.setdefault(key, {})[metafield] = value
@@ -2488,8 +2488,6 @@ class ConfigDict(dict):
         for key in self:
             overlay._set_virtual(key, self[key])
         return overlay
-
-
 
 
 class AppStack(list):
@@ -2791,11 +2789,11 @@ def static_file(filename, root,
         mimetype, encoding = mimetypes.guess_type(name)
         if encoding == 'gzip':
             mimetype = 'application/gzip'
-        elif encoding: # e.g. bzip2 -> application/x-bzip2
+        elif encoding:  # e.g. bzip2 -> application/x-bzip2
             mimetype = 'application/x-' + encoding
 
     if charset and mimetype and 'charset=' not in mimetype \
-        and (mimetype[:5] == 'text/' or mimetype == 'application/javascript'):
+       and (mimetype[:5] == 'text/' or mimetype == 'application/javascript'):
         mimetype += '; charset=%s' % charset
 
     if mimetype:
@@ -2805,7 +2803,7 @@ def static_file(filename, root,
         download = os.path.basename(filename)
 
     if download:
-        download = download.replace('"','')
+        download = download.replace('"', '')
         headers['Content-Disposition'] = 'attachment; filename="%s"' % download
 
     stats = os.stat(filename)
@@ -2917,6 +2915,7 @@ def parse_range_header(header, maxlen=0):
 #: Header tokenizer used by _parse_http_header()
 _hsplit = re.compile('(?:(?:"((?:[^"\\\\]|\\\\.)*)")|([^;,=]+))([;,=]?)').findall
 
+
 def _parse_http_header(h):
     """ Parses a typical multi-valued and parametrised HTTP header (e.g. Accept headers) and returns a list of values
         and parameters. For non-standard or broken input, this implementation may return partial results.
@@ -3008,8 +3007,8 @@ def html_escape(string):
 
 def html_quote(string):
     """ Escape and quote a string to be used as an HTTP attribute."""
-    return '"%s"' % html_escape(string).replace('\n', '&#10;')\
-                    .replace('\r', '&#13;').replace('\t', '&#9;')
+    return '"%s"' % html_escape(string).replace('\n', '&#10;') \
+        .replace('\r', '&#13;').replace('\t', '&#9;')
 
 
 def yieldroutes(func):
@@ -3098,18 +3097,18 @@ def make_default_app_wrapper(name):
     return wrapper
 
 
-route     = make_default_app_wrapper('route')
-get       = make_default_app_wrapper('get')
-post      = make_default_app_wrapper('post')
-put       = make_default_app_wrapper('put')
-delete    = make_default_app_wrapper('delete')
-patch     = make_default_app_wrapper('patch')
-error     = make_default_app_wrapper('error')
-mount     = make_default_app_wrapper('mount')
-hook      = make_default_app_wrapper('hook')
-install   = make_default_app_wrapper('install')
+route = make_default_app_wrapper('route')
+get = make_default_app_wrapper('get')
+post = make_default_app_wrapper('post')
+put = make_default_app_wrapper('put')
+delete = make_default_app_wrapper('delete')
+patch = make_default_app_wrapper('patch')
+error = make_default_app_wrapper('error')
+mount = make_default_app_wrapper('mount')
+hook = make_default_app_wrapper('hook')
+install = make_default_app_wrapper('install')
 uninstall = make_default_app_wrapper('uninstall')
-url       = make_default_app_wrapper('get_url')
+url = make_default_app_wrapper('get_url')
 
 
 ###############################################################################
@@ -3180,7 +3179,7 @@ class _MultipartParser:
                 if i >= 0:
                     yield chunk[scanpos:i], b'\r\n'
                     scanpos = i + 2
-                else: # CRLF not found
+                else:  # CRLF not found
                     partial = chunk[scanpos:] if scanpos else chunk
                     break
 
@@ -3322,7 +3321,7 @@ class _MultipartPart:
         if "filename" in self.options:
             self.filename = self.options.get("filename")
             if self.filename[1:3] == ":\\" or self.filename[:2] == "\\\\":
-                self.filename = self.filename.split("\\")[-1] # ie6 bug
+                self.filename = self.filename.split("\\")[-1]  # ie6 bug
 
         self.content_type, options = _parse_http_header(content_type)[0] if content_type else (None, {})
         self.charset = options.get("charset") or self.charset
@@ -3366,6 +3365,7 @@ class _MultipartPart:
 # Before you edit or add a server adapter, please read:
 # - https://github.com/bottlepy/bottle/pull/647#issuecomment-60152870
 # - https://github.com/bottlepy/bottle/pull/865#issuecomment-242795341
+
 
 class ServerAdapter:
     quiet = False
@@ -3447,7 +3447,7 @@ class CherryPyServer(ServerAdapter):
         depr(0, 13, "The wsgi server part of cherrypy was split into a new "
                     "project called 'cheroot'.", "Use the 'cheroot' server "
                     "adapter instead of cherrypy.")
-        from cherrypy import wsgiserver # This will fail for CherryPy >= 9
+        from cherrypy import wsgiserver  # This will fail for CherryPy >= 9
 
         self.options['bind_addr'] = (self.host, self.port)
         self.options['wsgi_app'] = handler
@@ -3472,7 +3472,7 @@ class CherryPyServer(ServerAdapter):
 
 
 class CherootServer(ServerAdapter):
-    def run(self, handler): # pragma: no cover
+    def run(self, handler):  # pragma: no cover
         from cheroot import wsgi
         from cheroot.ssl import builtin
         self.options['bind_addr'] = (self.host, self.port)
@@ -3483,7 +3483,7 @@ class CherootServer(ServerAdapter):
         server = wsgi.Server(**self.options)
         if certfile and keyfile:
             server.ssl_adapter = builtin.BuiltinSSLAdapter(
-                    certfile, keyfile, chainfile)
+                certfile, keyfile, chainfile)
         try:
             server.start()
         finally:
@@ -3674,10 +3674,12 @@ class BjoernServer(ServerAdapter):
         from bjoern import run
         run(handler, self.host, self.port, reuse_port=True)
 
+
 class AsyncioServerAdapter(ServerAdapter):
     """ Extend ServerAdapter for adding custom event loop """
     def get_event_loop(self):
         pass
+
 
 class AiohttpServer(AsyncioServerAdapter):
     """ Asynchronous HTTP client/server framework for asyncio
@@ -3709,6 +3711,7 @@ class AiohttpUVLoopServer(AiohttpServer):
     def get_event_loop(self):
         import uvloop
         return uvloop.new_event_loop()
+
 
 class AutoServer(ServerAdapter):
     """ Untested. """
@@ -3890,7 +3893,7 @@ def run(app=None,
         pass
     except (SystemExit, MemoryError):
         raise
-    except:
+    except:  # noqa: E722
         if not reloader: raise
         if not getattr(server, 'quiet', quiet):
             print_exc()
@@ -3921,7 +3924,7 @@ class FileCheckerThread(threading.Thread):
 
         while not self.status:
             if not exists(self.lockfile)\
-            or mtime(self.lockfile) < time.time() - self.interval - 5:
+               or mtime(self.lockfile) < time.time() - self.interval - 5:
                 self.status = 'error'
                 thread.interrupt_main()
             for path, lmtime in list(files.items()):
@@ -4203,25 +4206,19 @@ class StplParser:
     )'''
 
     _re_inl = _re_tok.replace(r'|\n', '')  # We re-use this string pattern later
-
     _re_tok += r'''
         # 2: Comments (until end of line, but not the newline itself)
         |(\#.*)
-
         # 3: Open and close (4) grouping tokens
         |([\[\{\(])
         |([\]\}\)])
-
         # 5,6: Keywords that start or continue a python block (only start of line)
         |^([\ \t]*(?:if|for|while|with|try|def|class)\b)
         |^([\ \t]*(?:elif|else|except|finally)\b)
-
         # 7: Our special 'end' keyword (but only if it stands alone)
         |((?:^|;)[\ \t]*end[\ \t]*(?=(?:%(block_close)s[\ \t]*)?\r?$|;|\#))
-
         # 8: A customizable end-of-code-block template token (only end of line)
         |(%(block_close)s[\ \t]*(?=\r?$))
-
         # 9: And finally, a single newline. The 10th token is 'everything else'
         |(\r?\n)
     '''
@@ -4230,12 +4227,10 @@ class StplParser:
     _re_split = r'''(?m)^[ \t]*(\\?)((%(line_start)s)|(%(block_start)s))'''
     # Match inline statements (may contain python strings)
     _re_inl = r'''%%(inline_start)s((?:%s|[^'"\n])*?)%%(inline_end)s''' % _re_inl
-
     # add the flag in front of the regexp to avoid Deprecation warning (see Issue #949)
     # verbose and dot-matches-newline mode
     _re_tok = '(?mx)' + _re_tok
     _re_inl = '(?mx)' + _re_inl
-
 
     default_syntax = '<% %> % {{ }}'
 
@@ -4275,8 +4270,8 @@ class StplParser:
                 self.offset = m.end()
                 if m.group(1):  # Escape syntax
                     line, sep, _ = self.source[self.offset:].partition('\n')
-                    self.text_buffer.append(self.source[m.start():m.start(1)] +
-                                            m.group(2) + line + sep)
+                    self.text_buffer.append(
+                        self.source[m.start():m.start(1)] + m.group(2) + line + sep)
                     self.offset += len(line + sep)
                     continue
                 self.flush_text()
@@ -4454,7 +4449,7 @@ HTTP_CODES[418] = "I'm a teapot"  # RFC 2324
 HTTP_CODES[428] = "Precondition Required"
 HTTP_CODES[429] = "Too Many Requests"
 HTTP_CODES[431] = "Request Header Fields Too Large"
-HTTP_CODES[451] = "Unavailable For Legal Reasons" # RFC 7725
+HTTP_CODES[451] = "Unavailable For Legal Reasons"  # RFC 7725
 HTTP_CODES[511] = "Network Authentication Required"
 _HTTP_STATUS_LINES = dict((k, '%d %s' % (k, v))
                           for (k, v) in HTTP_CODES.items())
