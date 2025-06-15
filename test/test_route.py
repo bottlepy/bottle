@@ -1,3 +1,4 @@
+import functools
 import unittest
 import bottle
 from .tools import api
@@ -20,6 +21,7 @@ class TestRoute(unittest.TestCase):
     def test_callback_inspection(self):
         def x(a, b): pass
         def d(f):
+            @functools.wraps(f)
             def w():
                 return f()
             return w
@@ -29,6 +31,7 @@ class TestRoute(unittest.TestCase):
 
         def d2(foo):
             def d(f):
+                @functools.wraps(f)
                 def w():
                     return f()
                 return w
@@ -42,6 +45,7 @@ class TestRoute(unittest.TestCase):
         # decorator with argument, modifying kwargs
         def d2(f="1"):
             def d(fn):
+                @functools.wraps(fn)
                 def w(*args, **kwargs):
                     # modification of kwargs WITH the decorator argument
                     # is necessary requirement for the error
@@ -64,3 +68,57 @@ class TestRoute(unittest.TestCase):
         eval(compile('def foo(a, *, b=5): pass', '<foo>', 'exec'), env, env)
         route = bottle.Route(bottle.Bottle(), None, None, env['foo'])
         self.assertEqual(set(route.get_callback_args()), set(['a', 'b']))
+
+    def test_unwrap_wrapped(self):
+        import functools
+        def func(): pass
+        @functools.wraps(func)
+        def wrapped():
+            return func()
+
+        route = bottle.Route(bottle.Bottle(), None, None, wrapped)
+        self.assertEqual(route.get_undecorated_callback(), func)
+
+    @api("0.12", "0.14")
+    def test_unwrap_closure(self):
+        def func(): pass
+        wrapped = _null_decorator(func, update_wrapper=False)
+        route = bottle.Route(bottle.Bottle(), None, None, wrapped)
+        self.assertEqual(route.get_undecorated_callback(), func)
+
+    # @api("0.15")
+    # def test_not_unwrap_closure(self):
+    #     def other(): pass
+    #     def func():
+    #         return other()
+    #     route = bottle.Route(bottle.Bottle(), None, None, func)
+    #     self.assertEqual(route.get_undecorated_callback(), func)
+
+    @api("0.13", "0.14")
+    def test_unwrap_closure_callable(self):
+        class Foo:
+            def __call__(self): pass
+
+        func = Foo()
+        wrapped = _null_decorator(func, update_wrapper=False)
+        route = bottle.Route(bottle.Bottle(), None, None, wrapped)
+        self.assertEqual(route.get_undecorated_callback(), func)
+        repr(route) # Raised cause cb has no '__name__'
+
+    def test_unwrap_method(self):
+        def func(self): pass
+
+        class Foo:
+            test = _null_decorator(func)
+
+        wrapped = Foo().test
+        route = bottle.Route(bottle.Bottle(), None, None, wrapped)
+        self.assertEqual(route.get_undecorated_callback(), func)
+
+
+def _null_decorator(func, update_wrapper=True):
+    def wrapper():
+        return func()
+    if update_wrapper:
+        functools.update_wrapper(wrapper, func)
+    return wrapper

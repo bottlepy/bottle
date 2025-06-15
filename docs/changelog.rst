@@ -36,6 +36,10 @@ to receive updates on a best-effort basis.
 Release 0.14 (in development)
 =============================
 
+.. rubric:: Deprecated APIs or behavior
+
+* ``Route.get_undecorated_callback()`` was able to look into closure cells to guess the original function wrapped by a decorator, but this is too aggressive in some cases and may return the wrong function. To avoid this, we will depend on proper use of ``@functools.wraps(orig)`` or ``functools.update_wrapper(wrapper, orig)`` in decorators in the future.
+
 .. rubric:: Removed APIs
 
 * Dropped support for Python 2 (EOL: 2020-01-01) and removed workarounds or helpers that only make sense in a Python 2/3 dual codebase.
