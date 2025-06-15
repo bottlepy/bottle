@@ -17,7 +17,7 @@ License: MIT (see LICENSE for details)
 import sys
 
 __author__ = 'Marcel Hellkamp'
-__version__ = '0.13.3'
+__version__ = '0.13.4'
 __license__ = 'MIT'
 
 ###############################################################################
