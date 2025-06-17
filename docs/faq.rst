@@ -38,14 +38,14 @@ Common errors and pitfalls
 
 Bottle searches in ``./`` and ``./views/`` for templates. In a mod_python_ or mod_wsgi_ environment, the working directory (``./``) depends on your Apache settings. You should add an absolute path to the template search path::
 
-    bottle.TEMPLATE_PATH.insert(0,'/absolut/path/to/templates/')
+    bottle.TEMPLATE_PATH.insert(0,'/absolute/path/to/templates/')
 
 so bottle searches the right paths.
 
 Dynamic Routes and Slashes
 --------------------------------------------------------------------------------
 
-In :ref:`dynamic route syntax <tutorial-dynamic-routes>`, a placeholder token (``<name>``) matches everything up to the next slash. This equals to ``[^/]+`` in regular expression syntax. To accept slashes too, you have to add a custom regular pattern to the placeholder. An example: ``/images/<filepath:path>`` would match ``/images/icons/error.png`` but ``/images/<filename>`` won't.
+In :ref:`dynamic route syntax <tutorial-dynamic-routes>`, a placeholder token (``<name>``) matches everything up to the next slash. This equals ``[^/]+`` in regular expression syntax. To accept slashes too, you have to add a custom regular pattern to the placeholder. An example: ``/images/<filepath:path>`` would match ``/images/icons/error.png`` but ``/images/<filename>`` won't.
 
 Problems with reverse proxies
 --------------------------------------------------------------------------------
@@ -64,7 +64,7 @@ Redirects and url-building only works if bottle knows the public address and loc
   
 
 
-Recieps for common tasks
+Recipes for common tasks
 ============================
 
 
@@ -268,7 +268,7 @@ Using hooks to handle CORS
 Hooks are useful to unconditionally do something before or after each
 request. For example, if you want to allow Cross-Origin requests for your
 entire application, instead of writing a :doc:`plugin <plugins/dev>` you can
-use hooks to add the appropiate headers::
+use hooks to add the appropriate headers::
 
     from bottle import hook, response, HTTPResponse
 

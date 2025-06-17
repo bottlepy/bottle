@@ -11,7 +11,7 @@ class TestImportHooks(unittest.TestCase):
         mod.__dict__.update(**args)
         return mod
 
-    def test_direkt_import(self):
+    def test_direct_import(self):
         mod = self.make_module('bottle_test')
         import bottle.ext.test
         self.assertEqual(bottle.ext.test, mod)
