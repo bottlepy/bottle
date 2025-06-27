@@ -878,7 +878,8 @@ class Bottle:
         skiplist = makelist(skip)
 
         def decorator(callback):
-            if isinstance(callback, str): callback = load(callback)
+            if isinstance(callback, str):
+                callback = load(callback) # type: Callable
             for rule in makelist(path) or yieldroutes(callback):
                 for verb in makelist(method):
                     verb = verb.upper()
