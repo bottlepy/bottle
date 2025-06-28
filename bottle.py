@@ -20,51 +20,6 @@ __version__ = '0.14-dev'
 __license__ = 'MIT'
 
 ###############################################################################
-# Command-line interface ######################################################
-###############################################################################
-# INFO: Some server adapters need to monkey-patch std-lib modules before they
-# are imported. This is why some of the command-line handling is done here, but
-# the actual call to _main() is at the end of the file.
-
-
-def _cli_parse(args):  # pragma: no coverage
-    from argparse import ArgumentParser
-
-    parser = ArgumentParser(prog=args[0], usage="%(prog)s [options] package.module:app")
-    opt = parser.add_argument
-    opt("--version", action="store_true", help="show version number.")
-    opt("-b", "--bind", metavar="ADDRESS", help="bind socket to ADDRESS.")
-    opt("-s", "--server", default='wsgiref', help="use SERVER as backend.")
-    opt("-p", "--plugin", action="append", help="install additional plugin/s.")
-    opt("-c", "--conf", action="append", metavar="FILE",
-        help="load config values from FILE.")
-    opt("-C", "--param", action="append", metavar="NAME=VALUE",
-        help="override config values.")
-    opt("--debug", action="store_true", help="start server in debug mode.")
-    opt("--reload", action="store_true", help="auto-reload on file changes.")
-    opt('app', help='WSGI app entry point.', nargs='?')
-
-    cli_args = parser.parse_args(args[1:])
-
-    return cli_args, parser
-
-
-def _cli_patch(cli_args):  # pragma: no coverage
-    parsed_args, _ = _cli_parse(cli_args)
-    opts = parsed_args
-    if opts.server:
-        if opts.server.startswith('gevent'):
-            import gevent.monkey
-            gevent.monkey.patch_all()
-        elif opts.server.startswith('eventlet'):
-            import eventlet
-            eventlet.monkey_patch()
-
-
-if __name__ == '__main__':
-    _cli_patch(sys.argv)
-
-###############################################################################
 # Imports and Helpers used everywhere else #####################################
 ###############################################################################
 
@@ -4525,6 +4480,31 @@ apps = app = default_app = AppStack()
 #: Example: ``import bottle.ext.sqlite`` actually imports `bottle_sqlite`.
 ext = _ImportRedirect('bottle.ext' if __name__ == '__main__' else
                       __name__ + ".ext", 'bottle_%s').module
+
+###############################################################################
+# Command-line interface ######################################################
+###############################################################################
+
+def _cli_parse(args):  # pragma: no coverage
+    from argparse import ArgumentParser
+
+    parser = ArgumentParser(prog=args[0], usage="%(prog)s [options] package.module:app")
+    opt = parser.add_argument
+    opt("--version", action="store_true", help="show version number.")
+    opt("-b", "--bind", metavar="ADDRESS", help="bind socket to ADDRESS.")
+    opt("-s", "--server", default='wsgiref', help="use SERVER as backend.")
+    opt("-p", "--plugin", action="append", help="install additional plugin/s.")
+    opt("-c", "--conf", action="append", metavar="FILE",
+        help="load config values from FILE.")
+    opt("-C", "--param", action="append", metavar="NAME=VALUE",
+        help="override config values.")
+    opt("--debug", action="store_true", help="start server in debug mode.")
+    opt("--reload", action="store_true", help="auto-reload on file changes.")
+    opt('app', help='WSGI app entry point.', nargs='?')
+
+    cli_args = parser.parse_args(args[1:])
+
+    return cli_args, parser
 
 
 def _main(argv):  # pragma: no coverage
