@@ -68,8 +68,8 @@ if __name__ == '__main__':
 # Imports and Helpers used everywhere else #####################################
 ###############################################################################
 
-import base64, calendar, email.utils, functools, hmac, itertools, \
-    mimetypes, os, re, tempfile, threading, time, warnings, weakref, hashlib
+import base64, calendar, contextvars, email.utils, functools, hmac, itertools
+import mimetypes, os, re, tempfile, threading, time, warnings, weakref, hashlib
 
 from types import FunctionType
 from datetime import date as datedate, datetime, timedelta
@@ -1860,46 +1860,66 @@ class BaseResponse:
         return out
 
 
-def _local_property():
-    ls = threading.local()
+def _local_property(ctx, name, doc=None):
+    errmsg = f"Property not available outside of request context"
 
     def fget(_):
         try:
-            return ls.var
-        except AttributeError:
-            raise RuntimeError("Request context not initialized.")
+            return ctx.get()[name]
+        except LookupError:
+            raise RuntimeError(errmsg)
+        except KeyError:
+            raise AttributeError(name)
 
     def fset(_, value):
-        ls.var = value
+        try:
+            ctx.get()[name] = value
+        except LookupError:
+            raise RuntimeError(errmsg)
 
-    def fdel(_):
-        del ls.var
-
-    return property(fget, fset, fdel, 'Thread-local property')
+    return property(fget, fset, None, doc or f'Context-local property')
 
 
 class LocalRequest(BaseRequest):
-    """ A thread-local subclass of :class:`BaseRequest` with a different
-        set of attributes for each thread. There is usually only one global
-        instance of this class (:data:`request`). If accessed during a
-        request/response cycle, this instance always refers to the *current*
-        request (even on a multithreaded server). """
-    bind = BaseRequest.__init__
-    environ = _local_property()
+    """ A context-aware subclass of :class:`BaseRequest`. The module-level
+        :data:`request` instance always represents the request handled by the
+        *current* thread or greenlet, even in multi-threaded environments. Use
+        :meth:`copy` to get a context-independent copy (e.g. to pass to to a
+        separate worker thread).
+    """
+
+    _ctx = contextvars.ContextVar("LocalRequest")
+
+    def __init__(self):
+        pass
+
+    def bind(self, *a, **ka):
+        LocalRequest._ctx.set({})
+        BaseRequest.__init__(self, *a, **ka)
+
+    environ = _local_property(_ctx, "environ", "PEP-3333 environment dict")
 
 
 class LocalResponse(BaseResponse):
-    """ A thread-local subclass of :class:`BaseResponse` with a different
-        set of attributes for each thread. There is usually only one global
-        instance of this class (:data:`response`). Its attributes are used
-        to build the HTTP response at the end of the request/response cycle.
+    """ A context-aware subclass of :class:`BaseResponse`. The module-level
+        :data:`response` instance always corresponds to the request handled by
+        the *current* thread or greenlet, even in multi-threaded environments.
     """
-    bind = BaseResponse.__init__
-    _status_line = _local_property()
-    _status_code = _local_property()
-    _cookies = _local_property()
-    _headers = _local_property()
-    body = _local_property()
+
+    _ctx = contextvars.ContextVar("LocalResponse")
+
+    def __init__(self):
+        pass
+
+    def bind(self, *a, **ka):
+        LocalResponse._ctx.set({})
+        BaseResponse.__init__(self, *a, **ka)
+
+    _status_line = _local_property(_ctx, "_status_line")
+    _status_code = _local_property(_ctx, "_status_code")
+    _cookies = _local_property(_ctx, "_cookies")
+    _headers = _local_property(_ctx, "_headers")
+    body = _local_property(_ctx, "body", "Response body")
 
 
 Request = BaseRequest
@@ -3600,10 +3620,7 @@ class GeventServer(ServerAdapter):
     """
 
     def run(self, handler):
-        from gevent import pywsgi, local
-        if not isinstance(threading.local(), local.local):
-            msg = "Bottle requires gevent.monkey.patch_all() (before import)"
-            raise RuntimeError(msg)
+        from gevent import pywsgi
         if self.quiet:
             self.options['log'] = None
         address = (self.host, self.port)
@@ -3649,10 +3666,7 @@ class EventletServer(ServerAdapter):
     """
 
     def run(self, handler):
-        from eventlet import wsgi, listen, patcher
-        if not patcher.is_monkey_patched(os):
-            msg = "Bottle requires eventlet.monkey_patch() (before import)"
-            raise RuntimeError(msg)
+        from eventlet import wsgi, listen
         socket_args = {}
         for arg in ('backlog', 'family'):
             try:
@@ -4059,22 +4073,17 @@ class MakoTemplate(BaseTemplate):
 class CheetahTemplate(BaseTemplate):
     def prepare(self, **options):
         from Cheetah.Template import Template
-        self.context = threading.local()
-        self.context.vars = {}
-        options['searchList'] = [self.context.vars]
         if self.source:
-            self.tpl = Template(source=self.source, **options)
+            self.tpl = Template.compile(source=self.source, **options)
         else:
-            self.tpl = Template(file=self.filename, **options)
+            self.tpl = Template.compile(file=self.filename, **options)
 
     def render(self, *args, **kwargs):
         for dictarg in args:
             kwargs.update(dictarg)
-        self.context.vars.update(self.defaults)
-        self.context.vars.update(kwargs)
-        out = str(self.tpl)
-        self.context.vars.clear()
-        return out
+        _defaults = self.defaults.copy()
+        _defaults.update(kwargs)
+        return str(self.tpl(searchList=[_defaults]))
 
 
 class Jinja2Template(BaseTemplate):
@@ -4505,7 +4514,7 @@ request = LocalRequest()
 #: HTTP response for the *current* request.
 response = LocalResponse()
 
-#: A thread-safe namespace. Not used by Bottle.
+#: An instance of threading.local(). Not used by Bottle. (deprecated since 0.14)
 local = threading.local()
 
 # Initialize app stack (create first empty Bottle app now deferred until needed)
