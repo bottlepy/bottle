@@ -20,56 +20,11 @@ __version__ = '0.14-dev'
 __license__ = 'MIT'
 
 ###############################################################################
-# Command-line interface ######################################################
-###############################################################################
-# INFO: Some server adapters need to monkey-patch std-lib modules before they
-# are imported. This is why some of the command-line handling is done here, but
-# the actual call to _main() is at the end of the file.
-
-
-def _cli_parse(args):  # pragma: no coverage
-    from argparse import ArgumentParser
-
-    parser = ArgumentParser(prog=args[0], usage="%(prog)s [options] package.module:app")
-    opt = parser.add_argument
-    opt("--version", action="store_true", help="show version number.")
-    opt("-b", "--bind", metavar="ADDRESS", help="bind socket to ADDRESS.")
-    opt("-s", "--server", default='wsgiref', help="use SERVER as backend.")
-    opt("-p", "--plugin", action="append", help="install additional plugin/s.")
-    opt("-c", "--conf", action="append", metavar="FILE",
-        help="load config values from FILE.")
-    opt("-C", "--param", action="append", metavar="NAME=VALUE",
-        help="override config values.")
-    opt("--debug", action="store_true", help="start server in debug mode.")
-    opt("--reload", action="store_true", help="auto-reload on file changes.")
-    opt('app', help='WSGI app entry point.', nargs='?')
-
-    cli_args = parser.parse_args(args[1:])
-
-    return cli_args, parser
-
-
-def _cli_patch(cli_args):  # pragma: no coverage
-    parsed_args, _ = _cli_parse(cli_args)
-    opts = parsed_args
-    if opts.server:
-        if opts.server.startswith('gevent'):
-            import gevent.monkey
-            gevent.monkey.patch_all()
-        elif opts.server.startswith('eventlet'):
-            import eventlet
-            eventlet.monkey_patch()
-
-
-if __name__ == '__main__':
-    _cli_patch(sys.argv)
-
-###############################################################################
 # Imports and Helpers used everywhere else #####################################
 ###############################################################################
 
-import base64, calendar, email.utils, functools, hmac, itertools, \
-    mimetypes, os, re, tempfile, threading, time, warnings, weakref, hashlib
+import base64, calendar, contextvars, email.utils, functools, hmac, itertools
+import mimetypes, os, re, tempfile, threading, time, warnings, weakref, hashlib
 
 from types import FunctionType
 from datetime import date as datedate, datetime, timedelta
@@ -1860,46 +1815,66 @@ class BaseResponse:
         return out
 
 
-def _local_property():
-    ls = threading.local()
+def _local_property(ctx, name, doc=None):
+    errmsg = f"Property not available outside of request context"
 
     def fget(_):
         try:
-            return ls.var
-        except AttributeError:
-            raise RuntimeError("Request context not initialized.")
+            return ctx.get()[name]
+        except LookupError:
+            raise RuntimeError(errmsg)
+        except KeyError:
+            raise AttributeError(name)
 
     def fset(_, value):
-        ls.var = value
+        try:
+            ctx.get()[name] = value
+        except LookupError:
+            raise RuntimeError(errmsg)
 
-    def fdel(_):
-        del ls.var
-
-    return property(fget, fset, fdel, 'Thread-local property')
+    return property(fget, fset, None, doc or f'Context-local property')
 
 
 class LocalRequest(BaseRequest):
-    """ A thread-local subclass of :class:`BaseRequest` with a different
-        set of attributes for each thread. There is usually only one global
-        instance of this class (:data:`request`). If accessed during a
-        request/response cycle, this instance always refers to the *current*
-        request (even on a multithreaded server). """
-    bind = BaseRequest.__init__
-    environ = _local_property()
+    """ A context-aware subclass of :class:`BaseRequest`. The module-level
+        :data:`request` instance always represents the request handled by the
+        *current* thread or greenlet, even in multi-threaded environments. Use
+        :meth:`copy` to get a context-independent copy (e.g. to pass to to a
+        separate worker thread).
+    """
+
+    _ctx = contextvars.ContextVar("LocalRequest")
+
+    def __init__(self):
+        pass
+
+    def bind(self, *a, **ka):
+        LocalRequest._ctx.set({})
+        BaseRequest.__init__(self, *a, **ka)
+
+    environ = _local_property(_ctx, "environ", "PEP-3333 environment dict")
 
 
 class LocalResponse(BaseResponse):
-    """ A thread-local subclass of :class:`BaseResponse` with a different
-        set of attributes for each thread. There is usually only one global
-        instance of this class (:data:`response`). Its attributes are used
-        to build the HTTP response at the end of the request/response cycle.
+    """ A context-aware subclass of :class:`BaseResponse`. The module-level
+        :data:`response` instance always corresponds to the request handled by
+        the *current* thread or greenlet, even in multi-threaded environments.
     """
-    bind = BaseResponse.__init__
-    _status_line = _local_property()
-    _status_code = _local_property()
-    _cookies = _local_property()
-    _headers = _local_property()
-    body = _local_property()
+
+    _ctx = contextvars.ContextVar("LocalResponse")
+
+    def __init__(self):
+        pass
+
+    def bind(self, *a, **ka):
+        LocalResponse._ctx.set({})
+        BaseResponse.__init__(self, *a, **ka)
+
+    _status_line = _local_property(_ctx, "_status_line")
+    _status_code = _local_property(_ctx, "_status_code")
+    _cookies = _local_property(_ctx, "_cookies")
+    _headers = _local_property(_ctx, "_headers")
+    body = _local_property(_ctx, "body", "Response body")
 
 
 Request = BaseRequest
@@ -3600,10 +3575,7 @@ class GeventServer(ServerAdapter):
     """
 
     def run(self, handler):
-        from gevent import pywsgi, local
-        if not isinstance(threading.local(), local.local):
-            msg = "Bottle requires gevent.monkey.patch_all() (before import)"
-            raise RuntimeError(msg)
+        from gevent import pywsgi
         if self.quiet:
             self.options['log'] = None
         address = (self.host, self.port)
@@ -3649,10 +3621,7 @@ class EventletServer(ServerAdapter):
     """
 
     def run(self, handler):
-        from eventlet import wsgi, listen, patcher
-        if not patcher.is_monkey_patched(os):
-            msg = "Bottle requires eventlet.monkey_patch() (before import)"
-            raise RuntimeError(msg)
+        from eventlet import wsgi, listen
         socket_args = {}
         for arg in ('backlog', 'family'):
             try:
@@ -4059,22 +4028,17 @@ class MakoTemplate(BaseTemplate):
 class CheetahTemplate(BaseTemplate):
     def prepare(self, **options):
         from Cheetah.Template import Template
-        self.context = threading.local()
-        self.context.vars = {}
-        options['searchList'] = [self.context.vars]
         if self.source:
-            self.tpl = Template(source=self.source, **options)
+            self.tpl = Template.compile(source=self.source, **options)
         else:
-            self.tpl = Template(file=self.filename, **options)
+            self.tpl = Template.compile(file=self.filename, **options)
 
     def render(self, *args, **kwargs):
         for dictarg in args:
             kwargs.update(dictarg)
-        self.context.vars.update(self.defaults)
-        self.context.vars.update(kwargs)
-        out = str(self.tpl)
-        self.context.vars.clear()
-        return out
+        _defaults = self.defaults.copy()
+        _defaults.update(kwargs)
+        return str(self.tpl(searchList=[_defaults]))
 
 
 class Jinja2Template(BaseTemplate):
@@ -4505,7 +4469,7 @@ request = LocalRequest()
 #: HTTP response for the *current* request.
 response = LocalResponse()
 
-#: A thread-safe namespace. Not used by Bottle.
+#: An instance of threading.local(). Not used by Bottle. (deprecated since 0.14)
 local = threading.local()
 
 # Initialize app stack (create first empty Bottle app now deferred until needed)
@@ -4516,6 +4480,31 @@ apps = app = default_app = AppStack()
 #: Example: ``import bottle.ext.sqlite`` actually imports `bottle_sqlite`.
 ext = _ImportRedirect('bottle.ext' if __name__ == '__main__' else
                       __name__ + ".ext", 'bottle_%s').module
+
+###############################################################################
+# Command-line interface ######################################################
+###############################################################################
+
+def _cli_parse(args):  # pragma: no coverage
+    from argparse import ArgumentParser
+
+    parser = ArgumentParser(prog=args[0], usage="%(prog)s [options] package.module:app")
+    opt = parser.add_argument
+    opt("--version", action="store_true", help="show version number.")
+    opt("-b", "--bind", metavar="ADDRESS", help="bind socket to ADDRESS.")
+    opt("-s", "--server", default='wsgiref', help="use SERVER as backend.")
+    opt("-p", "--plugin", action="append", help="install additional plugin/s.")
+    opt("-c", "--conf", action="append", metavar="FILE",
+        help="load config values from FILE.")
+    opt("-C", "--param", action="append", metavar="NAME=VALUE",
+        help="override config values.")
+    opt("--debug", action="store_true", help="start server in debug mode.")
+    opt("--reload", action="store_true", help="auto-reload on file changes.")
+    opt('app', help='WSGI app entry point.', nargs='?')
+
+    cli_args = parser.parse_args(args[1:])
+
+    return cli_args, parser
 
 
 def _main(argv):  # pragma: no coverage
