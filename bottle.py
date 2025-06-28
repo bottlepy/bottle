@@ -76,6 +76,7 @@ from datetime import date as datedate, datetime, timedelta
 from tempfile import NamedTemporaryFile
 from traceback import format_exc, print_exc
 from unicodedata import normalize
+from pathlib import Path
 
 try:
     from ujson import dumps as json_dumps, loads as json_lds
@@ -2693,6 +2694,8 @@ class FileUpload:
             :param overwrite: If True, replace existing files. (default: False)
             :param chunk_size: Bytes to read at a time. (default: 64kb)
         """
+        if isinstance(destination, Path):
+            destination = str(destination)
         if isinstance(destination, str):  # Except file-likes here
             if os.path.isdir(destination):
                 destination = os.path.join(destination, self.filename)
