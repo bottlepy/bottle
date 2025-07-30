@@ -2071,7 +2071,7 @@ class MultiDict(DictMixin):
     """
 
     def __init__(self, *a, **k):
-        self.dict = dict((k, [v]) for (k, v) in dict(*a, **k).items())
+        self.dict = {key: [value] for key, value in dict(*a, **k).items()}
 
     def __len__(self):
         return len(self.dict)
