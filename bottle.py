@@ -950,7 +950,6 @@ class Bottle:
             try:
                 self.trigger_hook('before_request')
                 route, args = self.router.match(environ)
-                environ['route.handle'] = route
                 environ['bottle.route'] = route
                 environ['route.url_args'] = args
                 out = route.call(**args)
