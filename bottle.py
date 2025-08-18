@@ -2676,15 +2676,20 @@ class FileUpload:
         fname = re.sub(r'[-\s]+', '-', fname).strip('.-')
         return fname[:255] or 'empty'
 
-    def _copy_file(self, fp, chunk_size=2 ** 16):
+    def _copy_file(self, fp, chunk_size=2 ** 16, max_size=None):
         read, write, offset = self.file.read, fp.write, self.file.tell()
         while 1:
             buf = read(chunk_size)
             if not buf: break
+            if max_size is not None:
+                max_size -= len(buf) # Last chunk may be smaller than chunk_size
+                if max_size < 0:
+                    raise IOError('File size exceeds maximum size.')
             write(buf)
         self.file.seek(offset)
 
-    def save(self, destination, overwrite=False, chunk_size=2 ** 16):
+    def save(self, destination, overwrite=False, chunk_size=2 ** 16,
+             max_size=None):
         """ Save file to disk or copy its content to an open file(-like) object.
             If *destination* is a directory, :attr:`filename` is added to the
             path. Existing files are not overwritten by default (IOError).
@@ -2692,6 +2697,8 @@ class FileUpload:
             :param destination: File path, directory or file(-like) object.
             :param overwrite: If True, replace existing files. (default: False)
             :param chunk_size: Bytes to read at a time. (default: 64kb)
+            :param max_size: If not None: Maximum number of bytes to write.
+                If exceeded by file size, raise IOError. (default: None)
         """
         if isinstance(destination, str):  # Except file-likes here
             if os.path.isdir(destination):
@@ -2699,9 +2706,9 @@ class FileUpload:
             if not overwrite and os.path.exists(destination):
                 raise IOError('File exists.')
             with open(destination, 'wb') as fp:
-                self._copy_file(fp, chunk_size)
+                self._copy_file(fp, chunk_size, max_size)
         else:
-            self._copy_file(destination, chunk_size)
+            self._copy_file(destination, chunk_size, max_size)
 
 ###############################################################################
 # Application Helper ###########################################################
