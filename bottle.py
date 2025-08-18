@@ -4142,34 +4142,46 @@ class SimpleTemplate(BaseTemplate):
         _env['_rebase'] = (_name, kwargs)
 
     def _include(self, _env, _name=None, **kwargs):
+        if _name not in self.cache:
+            cached_template = self.cache[_name] = self.__class__(
+                name=_name, lookup=self.lookup, syntax=self.syntax)
+        else:
+            cached_template = self.cache[_name]
         env = _env.copy()
         env.update(kwargs)
-        if _name not in self.cache:
-            self.cache[_name] = self.__class__(name=_name, lookup=self.lookup, syntax=self.syntax)
-        return self.cache[_name].execute(env['_stdout'], env)
+        local = {
+            #'env': _env, # this would need doc update
+            '__name__': _name,
+            '__file__': cached_template.filename,
+        }
+        env.update(local)
+        retenv = cached_template.execute(env['_stdout'], env)
+        return {k:v for k,v in retenv.items() if k not in local}
 
     def execute(self, _stdout, kwargs):
         env = self.defaults.copy()
         env.update(kwargs)
-        env.update({
+        local = {
             '_stdout': _stdout,
             '_printlist': _stdout.extend,
-            'include': functools.partial(self._include, env),
-            'rebase': functools.partial(self._rebase, env),
             '_rebase': None,
             '_str': self._str,
             '_escape': self._escape,
+            'include': functools.partial(self._include, env),
+            'rebase': functools.partial(self._rebase, env),
             'get': env.get,
             'setdefault': env.setdefault,
             'defined': env.__contains__
-        })
+        }
+        env.update(local)
         exec(self.co, env)
         if env.get('_rebase'):
             subtpl, rargs = env.pop('_rebase')
             rargs['base'] = ''.join(_stdout)  # copy stdout
             del _stdout[:]  # clear stdout
             return self._include(env, subtpl, **rargs)
-        return env
+        retenv = {k:v for k,v in env.items() if k not in local}
+        return retenv
 
     def render(self, *args, **kwargs):
         """ Render the template using keyword arguments as local variables. """
