@@ -3427,6 +3427,33 @@ class WSGIRefServer(ServerAdapter):
         handler_cls = self.options.get('handler_class', FixedHandler)
         server_cls = self.options.get('server_class', WSGIServer)
 
+        if server_cls is WSGIServer:
+            from wsgiref.simple_server import ServerHandler
+            from wsgiref.handlers import SimpleHandler
+
+            _handle_error = SimpleHandler.handle_error
+
+            def handle_error(self, *args, **kwargs):
+                if sys.exc_info()[0] ==  KeyboardInterrupt:
+                    raise
+                else:
+                    _handle_error(self, *args, **kwargs)
+
+            def close(self):
+                self.result = self.headers = self.status = self.environ = None
+                self.bytes_sent = 0; self.headers_sent = False
+
+            ServerHandler.handle_error = handle_error
+            ServerHandler.close = close
+
+            class _WSGIServer(WSGIServer):
+                def handle_error(self, *args, **kwargs):
+                    if sys.exc_info()[0] ==  KeyboardInterrupt:
+                        raise
+                    else:
+                        return super(_WSGIServer, self).handle_error(*args, **kwargs)
+            server_cls = _WSGIServer
+
         if ':' in self.host:  # Fix wsgiref for IPv6 addresses.
             if getattr(server_cls, 'address_family') == socket.AF_INET:
 
