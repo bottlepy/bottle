@@ -2713,13 +2713,15 @@ def abort(code=500, text='Unknown Error.'):
     raise HTTPError(code, text)
 
 
-def redirect(url, code=None):
+def redirect(url, code=None, cache=None):
     """ Aborts execution and causes a 303 or 302 redirect, depending on
         the HTTP protocol version. """
     if not code:
         code = 303 if request.get('SERVER_PROTOCOL') == "HTTP/1.1" else 302
     res = response.copy(cls=HTTPResponse)
     res.status = code
+    if type(cache) is int:
+        res.set_header('Cache-Control', 'max-age=%s' % cache)
     res.body = ""
     res.set_header('Location', urljoin(request.url, url))
     raise res
