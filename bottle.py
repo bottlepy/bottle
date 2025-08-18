@@ -2965,8 +2965,7 @@ def _parse_qsl(qs, encoding="utf8"):
 def _lscmp(a, b):
     """ Compares two strings in a cryptographically safe way:
         Runtime is not affected by length of common prefix. """
-    return not sum(0 if x == y else 1
-                   for x, y in zip(a, b)) and len(a) == len(b)
+    return not sum(map(str.__ne__, a, b)) and len(a) == len(b)
 
 
 def cookie_encode(data, key, digestmod=None):
