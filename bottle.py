@@ -2678,10 +2678,10 @@ class FileUpload:
 
     def _copy_file(self, fp, chunk_size=2 ** 16):
         read, write, offset = self.file.read, fp.write, self.file.tell()
-        while 1:
-            buf = read(chunk_size)
-            if not buf: break
+        buf = read(chunk_size)
+        while buf:
             write(buf)
+            buf = read(chunk_size)
         self.file.seek(offset)
 
     def save(self, destination, overwrite=False, chunk_size=2 ** 16):
