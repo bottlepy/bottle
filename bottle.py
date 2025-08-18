@@ -2245,7 +2245,7 @@ class WSGIHeaderDict(DictMixin):
                 yield _hkey(key)
 
     def keys(self):
-        return [x for x in self]
+        return list(self)
 
     def __len__(self):
         return len(self.keys())
