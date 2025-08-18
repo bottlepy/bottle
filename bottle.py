@@ -1257,12 +1257,20 @@ class BaseRequest:
         return None
 
     def _iter_body(self, read, bufsize):
-        maxread = max(0, self.content_length)
-        while maxread:
-            part = read(min(maxread, bufsize))
-            if not part: break
-            yield part
-            maxread -= len(part)
+        maxread = self.content_length
+        if maxread == 0:
+            return
+        elif maxread > 0:
+            while maxread > 0:
+                part = read(min(maxread, bufsize))
+                if not part:
+                    raise HTTPError(400, "Unexpected end of stream")
+                maxread -= len(part)
+                yield part
+        else:  # Non Content-Length header
+            # Assume 'wsgi.input_terminated' support or 'Connection: close'
+            for part in iter(lambda: read(bufsize), b''):
+                yield part
 
     @staticmethod
     def _iter_chunked(read, bufsize):
