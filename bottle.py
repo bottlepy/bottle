@@ -2417,9 +2417,7 @@ class ConfigDict(dict):
             overlay._delete_virtual(key)
 
     def _on_change(self, key, value):
-        for cb in self._change_listener:
-            if cb(self, key, value):
-                return True
+        return any(cb(self, key, value) for cb in self._change_listener)
 
     def _add_change_listener(self, func):
         self._change_listener.append(func)
