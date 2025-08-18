@@ -4376,24 +4376,28 @@ def template(*args, **kwargs):
     Template rendering arguments can be passed as dictionaries
     or directly (as keyword arguments).
     """
-    tpl = args[0] if args else None
-    for dictarg in args[1:]:
-        kwargs.update(dictarg)
-    adapter = kwargs.pop('template_adapter', SimpleTemplate)
-    lookup = kwargs.pop('template_lookup', TEMPLATE_PATH)
-    tplid = (id(lookup), tpl)
-    if tplid not in TEMPLATES or DEBUG:
-        settings = kwargs.pop('template_settings', {})
-        if isinstance(tpl, adapter):
-            TEMPLATES[tplid] = tpl
-            if settings: TEMPLATES[tplid].prepare(**settings)
-        elif "\n" in tpl or "{" in tpl or "%" in tpl or '$' in tpl:
-            TEMPLATES[tplid] = adapter(source=tpl, lookup=lookup, **settings)
-        else:
-            TEMPLATES[tplid] = adapter(name=tpl, lookup=lookup, **settings)
-    if not TEMPLATES[tplid]:
-        abort(500, 'Template (%s) not found' % tpl)
-    return TEMPLATES[tplid].render(kwargs)
+    tpl = name = source = res = args[0] if args else None
+    for dictarg in args[1:]: kwargs.update(dictarg)
+    settings, keys = kwargs.pop('template_settings', {}), []
+    while isinstance(res, str):
+        lookup = kwargs.pop('template_lookup', TEMPLATE_PATH)
+        adapter = kwargs.pop('template_adapter', SimpleTemplate)
+        if not ('\n' in name or '{' in name or '%' in name or '$' in name):
+            keys.append('\n'.join([name] + lookup))  # 1st cache key
+            res = TEMPLATES.get(keys[-1])
+            if res: break
+            name = adapter.search(name=name, lookup=lookup)
+            keys.append(name)  # 2st cache key, abspath
+            with open(name) as f:
+                source = f.read()
+        res = TEMPLATES.get(source)
+        if not res:
+            res = adapter(source=source, lookup=lookup, **settings)
+            keys.append(source)  # 3th key, template content
+    if not isinstance(res, BaseTemplate): abort(500, "can't make temple from (%r)" % tpl)
+    if res is tpl and settings: res.prepare(**settings)
+    for key in keys: TEMPLATES[key] = res
+    return res.render(kwargs)
 
 
 mako_template = functools.partial(template, template_adapter=MakoTemplate)
