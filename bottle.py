@@ -443,7 +443,7 @@ class Router:
                         return target, getargs(path) if getargs else {}
 
         # No matching route found. Collect alternative methods for 405 response
-        allowed = set([])
+        allowed = set()
         nocheck = set(methods)
         for method in set(self.static) - nocheck:
             if path in self.static[method]:
