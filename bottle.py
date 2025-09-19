@@ -65,7 +65,7 @@ if __name__ == '__main__':
     _cli_patch(sys.argv)
 
 ###############################################################################
-# Imports and Helpers used everywhere else #####################################
+# Imports and Helpers used everywhere else ####################################
 ###############################################################################
 
 import base64, calendar, email.utils, functools, hmac, itertools, \
@@ -229,7 +229,7 @@ class BottleException(Exception):
     pass
 
 ###############################################################################
-# Routing ######################################################################
+# Routing #####################################################################
 ###############################################################################
 
 
@@ -573,7 +573,7 @@ class Route:
         )
 
 ###############################################################################
-# Application Object ###########################################################
+# Application Object ##########################################################
 ###############################################################################
 
 
@@ -746,7 +746,7 @@ class Bottle:
             application, install them separately.
 
             While it is possible to use path wildcards within the prefix path
-            (:class:`Bottle` childs only), it is highly discouraged.
+            (:class:`Bottle` children only), it is highly discouraged.
 
             The prefix path must end with a slash. If you want to access the
             root of the child application via `/prefix` in addition to
@@ -1103,7 +1103,7 @@ class Bottle:
         object.__setattr__(self, name, value)
 
 ###############################################################################
-# HTTP and WSGI Tools ##########################################################
+# HTTP and WSGI Tools #########################################################
 ###############################################################################
 
 
@@ -1908,7 +1908,7 @@ Response = BaseResponse
 
 class HTTPResponse(Response, BottleException):
     """ A subclass of :class:`Response` that can be raised or returned from request
-        handlers to short-curcuit request processing and override changes made to the
+        handlers to short-circuit request processing and override changes made to the
         global :data:`request` object. This bypasses error handlers, even if the status
         code indicates an error. Return or raise :class:`HTTPError` to trigger error
         handlers.
@@ -1941,7 +1941,7 @@ class HTTPError(HTTPResponse):
         super(HTTPError, self).__init__(body, status, **more_headers)
 
 ###############################################################################
-# Plugins ######################################################################
+# Plugins #####################################################################
 ###############################################################################
 
 
@@ -2057,7 +2057,7 @@ class _ImportRedirect:
         return module
 
 ###############################################################################
-# Common Utilities #############################################################
+# Common Utilities ############################################################
 ###############################################################################
 
 
@@ -2461,7 +2461,7 @@ class ConfigDict(dict):
             share the same meta entries.
 
             Entries that were copied from the source are called 'virtual'. You
-            can not delete virtual keys, but overwrite them, which turns them
+            cannot delete virtual keys, but overwrite them, which turns them
             into non-virtual entries. Setting keys on an overlay never affects
             its source, but may affect any number of child overlays.
 
@@ -2704,7 +2704,7 @@ class FileUpload:
             self._copy_file(destination, chunk_size)
 
 ###############################################################################
-# Application Helper ###########################################################
+# Application Helper ##########################################################
 ###############################################################################
 
 
@@ -2846,7 +2846,7 @@ def static_file(filename, root,
     return HTTPResponse(body, **headers)
 
 ###############################################################################
-# HTTP Utilities and MISC (TODO) ###############################################
+# HTTP Utilities and MISC (TODO) ##############################################
 ###############################################################################
 
 
@@ -3113,7 +3113,7 @@ url = make_default_app_wrapper('get_url')
 
 
 ###############################################################################
-# Multipart Handling ###########################################################
+# Multipart Handling ##########################################################
 ###############################################################################
 # cgi.FieldStorage was deprecated in Python 3.11 and removed in 3.13
 # This implementation is based on https://github.com/defnull/multipart/
@@ -3205,7 +3205,7 @@ class _MultipartParser:
         else:
             raise MultipartError("Stream does not contain boundary")
 
-        # First line is termainating boundary -> empty multipart stream
+        # First line is terminating boundary -> empty multipart stream
         if line == terminator:
             for _ in lines:
                 raise MultipartError("Found data after empty multipart stream")
@@ -3360,7 +3360,7 @@ class _MultipartPart:
             self.file = False
 
 ###############################################################################
-# Server Adapter ###############################################################
+# Server Adapter ##############################################################
 ###############################################################################
 
 # Before you edit or add a server adapter, please read:
@@ -3751,7 +3751,7 @@ server_names = {
 }
 
 ###############################################################################
-# Application Control ##########################################################
+# Application Control #########################################################
 ###############################################################################
 
 
@@ -3944,7 +3944,7 @@ class FileCheckerThread(threading.Thread):
         return exc_type is not None and issubclass(exc_type, KeyboardInterrupt)
 
 ###############################################################################
-# Template Adapters ############################################################
+# Template Adapters ###########################################################
 ###############################################################################
 
 
@@ -4436,7 +4436,7 @@ cheetah_view = functools.partial(view, template_adapter=CheetahTemplate)
 jinja2_view = functools.partial(view, template_adapter=Jinja2Template)
 
 ###############################################################################
-# Constants and Globals ########################################################
+# Constants and Globals #######################################################
 ###############################################################################
 
 TEMPLATE_PATH = ['./', './views/']

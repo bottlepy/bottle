@@ -318,7 +318,7 @@ class TestRequest(unittest.TestCase):
         self._test_chunked('abcdef', HTTPError)
 
     def test_multipart(self):
-        """ Environ: POST (multipart files and multible values per key) """
+        """ Environ: POST (multipart files and multiple values per key) """
         fields = [('field1','value1'), ('field2','value2'), ('field2','万难')]
         files = [('file1','filename1.txt','content1'), ('万难','万难foo.py', 'ä\nö\rü')]
         e = tools.multipart_environ(fields=fields, files=files)
@@ -829,7 +829,7 @@ class TestRedirect(unittest.TestCase):
         self.assertRedirect('../baz/../test.html', 'http://127.0.0.1/foo/test.html',
                             PATH_INFO='/foo/bar/')
 
-    def test_sheme(self):
+    def test_scheme(self):
         self.assertRedirect('./test.html', 'https://127.0.0.1/test.html',
                             wsgi_url_scheme='https')
         self.assertRedirect('./test.html', 'https://127.0.0.1:80/test.html',

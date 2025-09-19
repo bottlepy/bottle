@@ -86,7 +86,7 @@ class TestSimpleTemplate(unittest.TestCase):
         self.assertRenders(t, 'start\nend', i=False)
 
     def test_elsebug(self):
-        ''' Whirespace between block keyword and colon is allowed '''
+        ''' Whitespace between block keyword and colon is allowed '''
         self.assertRenders("%if 1:\nyes\n%else:\nno\n%end\n", "yes\n")
         self.assertRenders("%if 1:\nyes\n%else     :\nno\n%end\n", "yes\n")
 
@@ -103,7 +103,7 @@ class TestSimpleTemplate(unittest.TestCase):
         self.assertRenders("%a=[1,\n%2]\n{{len(a)}}", "2")
 
     def test_dedentbug(self):
-        ''' One-Line dednet blocks should not change indention '''
+        ''' One-Line dedent blocks should not change indention '''
         t = '%if x: a="if"\n%else: a="else"\n%end\n{{a}}'
         self.assertRenders(t, "if", x=True)
         self.assertRenders(t, "else", x=False)
@@ -173,7 +173,7 @@ class TestSimpleTemplate(unittest.TestCase):
         self.assertRenders(t, '1234', x='1234')
         self.assertRenders(t, 'default')
 
-    def test_defnied(self):
+    def test_defined(self):
         self.assertRenders('{{x if defined("x") else "no"}}', 'yes', x='yes')
         self.assertRenders('{{x if defined("x") else "no"}}', 'no')
 
@@ -198,7 +198,7 @@ class TestSimpleTemplate(unittest.TestCase):
         self.assertRenders('%for i in test:\r\n{{i}}\r\n%end\r\n', '1\r\n2\r\n3\r\n', **d)
 
     def test_commentonly(self):
-        """ Templates: Commentd should behave like code-lines (e.g. flush text-lines) """
+        """ Templates: Comment should behave like code-lines (e.g. flush text-lines) """
         t = SimpleTemplate('...\n%#test\n...')
         self.assertNotEqual('#test', t.code.splitlines()[0])
 

@@ -5,7 +5,7 @@
 Release Notes
 =============
 
-This project loosly follows Semantic Versioning (``major.minor.patch``), with
+This project loosely follows Semantic Versioning (``major.minor.patch``), with
 the exception that changes are allowed in minor releases as long as the change
 is necessary to match documentation, specification or expectation. 
 In other words: Bugfixes do not count as backward incompatible changes, even if
@@ -116,7 +116,7 @@ versions should not update to Bottle 0.13 and stick with 0.12 instead.
 These changes might require special care when updating.
 
 * Signed cookies now use a stronger HMAC algorithm by default. This will result in old cookies to appear invalid after the update. Pass an explicit ``digestmod=hashlib.md5`` to :meth:`Request.get_cookie <BaseRequest.get_cookie>` and :meth:`Response.set_cookie <BaseResponse.set_cookie>` to get the old behavior.
-* Bottle now ships with its own multipart form data parser (borrowed from `multipart <https://pypi.org/project/multipart/>`_) and no longer relies on ``cgi.FieldStorage``, which was removed in Python 3.13. This may change the way broken (non-standard) form submissions are parsed. The new parser is more strict and correct than ohe old one.
+* Bottle now ships with its own multipart form data parser (borrowed from `multipart <https://pypi.org/project/multipart/>`_) and no longer relies on ``cgi.FieldStorage``, which was removed in Python 3.13. This may change the way broken (non-standard) form submissions are parsed. The new parser is more strict and correct than the old one.
 * Installing bottle with `pip` or similar tools will now install an additional command line executable named `bottle` into the `bin` folder of your (virtual) environment. This will replace the now deprecated `bottle.py` executable in a later release. See above.
 
 .. rubric:: Other Improvements
