@@ -773,6 +773,14 @@ Starting with bottle-0.13 you can use :class:`Bottle` instances as context manag
         import some_package.more_routes
 
 
+Cache Busting for Static Assets
+===============================
+
+Use :class:`CacheBustingFileManager` to generate content-hash versioned URLs for
+static assets and serve them with CDN-friendly caching headers.
+
+See :doc:`cache_busting`.
+
 .. _tutorial-glossary:
 
 Glossary
