@@ -2642,6 +2642,284 @@ class ResourceManager:
         return self.opener(fname, mode=mode, *args, **kwargs)
 
 
+class CacheBustingFileManager:
+    """ Generates and resolves content-hash-versioned URLs for static assets.
+
+        Asset URLs embed a truncated content hash directly in the filename,
+        producing deterministic, CDN-friendly URLs that change whenever the
+        underlying file changes::
+
+            style.css  ->  /static/style.a1b2c3d4e5f6.css
+
+        This encourages long-lived ``Cache-Control: max-age`` headers and high
+        cache-hit rates, while guaranteeing that deployments with changed assets
+        are never masked by stale browser or proxy caches.
+
+        :param root: Absolute path to the directory containing static assets.
+        :param prefix: URL path prefix for asset URLs (default ``/static``).
+        :param maxcache: Maximum number of hash results to keep in the
+            in-memory LRU cache.  Limits memory even when the set of served
+            files is very large.  (default: 1024)
+        :param hash_length: Number of hex characters from the content hash to
+            embed in the URL.  12 hex chars = 48 bits, enough to make
+            accidental collisions negligible for any realistic asset set.
+            (default: 12)
+
+        Thread safety:  All mutable state is guarded by a single
+        :class:`threading.Lock` whose critical section is kept as short as
+        possible (dictionary lookup or insertion only — no I/O under the lock).
+        Hash computation (the expensive part) is performed outside the lock so
+        that concurrent requests for *different* files never block each other.
+
+        Under high concurrency it is possible for two threads to both compute
+        the hash for the same file simultaneously.  This is harmless: both
+        will arrive at the same value and one of the two cache insertions will
+        simply overwrite the other with an identical result.  Avoiding this
+        minor redundancy would require holding the lock across the file read,
+        which would serialize unrelated requests — a worse trade-off.
+
+        Error signaling:  Both :meth:`get_url` and :meth:`resolve` raise
+        :exc:`HTTPError` on failure (e.g. missing file, path traversal)
+        rather than returning sentinel values, so callers never need to check
+        for ``None`` and the framework's standard error handling applies
+        uniformly.
+
+        Usage::
+
+            mgr = CacheBustingFileManager('/srv/app/static')
+
+            # In a template or helper — generate a versioned URL:
+            mgr.get_url('css/style.css')
+            # => '/static/css/style.a1b2c3d4e5f6.css'
+
+            # As a Bottle route handler:
+            @app.get('/static/<versioned_path:path>')
+            def serve(versioned_path):
+                return mgr.resolve(versioned_path)
+    """
+
+    def __init__(self, root, prefix='/static', maxcache=1024, hash_length=12):
+        # Resolve symlinks and normalize case so the root boundary is
+        # anchored to the real filesystem path, not a potentially
+        # misleading logical path.
+        self._root_dir = os.path.realpath(root)
+        self.root = self._root_dir + os.sep
+        # Pre-compute the normcased root for component-based containment
+        # checks.  normcase folds case on case-insensitive platforms
+        # (Windows, macOS) and is a no-op on case-sensitive ones (Linux).
+        self._root_normcased = os.path.normcase(self._root_dir)
+        self.prefix = '/' + prefix.strip('/') if prefix else ''
+        self.maxcache = max(1, int(maxcache))
+        self.hash_length = max(4, int(hash_length))
+
+        # Pre-compile a regex that accepts *only* the exact digest length
+        # we generate, rejecting shorter, longer, or arbitrary hex segments.
+        self._versioned_re = re.compile(
+            r'^(.+)\.([0-9a-f]{%d})(\.[^.]+)$' % self.hash_length
+        )
+
+        # _cache maps relative filename -> content_hash.
+        # The hash itself is the sole freshness token: it is derived from
+        # file content, so a cache hit is correct by definition.  A changed
+        # file will produce a different hash on the next _compute_hash
+        # call, which replaces the stale entry.  This eliminates the
+        # mtime-only staleness window where file content could change
+        # without its mtime advancing (e.g. sub-second writes, restored
+        # backups, NFS, or truncate-and-rewrite within the same second).
+        self._cache = {}   # type: dict[str, str]
+        self._cache_order = []  # type: list[str]
+        self._lock = threading.Lock()
+
+    # ------------------------------------------------------------------
+    # Public API
+    # ------------------------------------------------------------------
+
+    def get_url(self, filename):
+        """ Return a versioned URL path for *filename*.
+
+            The filename is relative to *root* and uses forward slashes as
+            separators on all platforms.  Directory-traversal components
+            (``..``) are rejected.
+
+            :raises HTTPError: 403 if the path escapes *root*, 404 if the
+                file does not exist or cannot be read.
+        """
+        filename = self._normalize(filename)
+        content_hash = self._get_hash(filename)
+        stem, ext = self._split_ext(filename)
+        versioned = '%s.%s%s' % (stem, content_hash, ext)
+        return '%s/%s' % (self.prefix, versioned)
+
+    def resolve(self, versioned_path):
+        """ Resolve a versioned URL path back to the real file and serve it.
+
+            Strips the embedded content hash, verifies it matches the current
+            file contents, and returns the result of :func:`static_file` with
+            aggressive caching headers.
+
+            If the hash does not match (stale URL after a deployment), a
+            ``302 Found`` redirect is returned pointing to the current
+            versioned URL so the client fetches the fresh copy.
+
+            :raises HTTPError: 404 if the URL format is invalid or the
+                underlying file does not exist.  403 if the path escapes
+                *root*.
+        """
+        versioned_path = versioned_path.strip('/')
+        m = self._versioned_re.match(versioned_path)
+        if not m:
+            raise HTTPError(404, "File does not exist.")
+        stem, url_hash, ext = m.group(1), m.group(2), m.group(3)
+        filename = stem + ext
+        filename = self._normalize(filename)
+        current_hash = self._get_hash(filename)
+        if url_hash != current_hash:
+            new_url = self.get_url(filename)
+            res = HTTPResponse(status=302, body='')
+            res.set_header('Location', new_url)
+            return res
+        headers = {'Cache-Control': 'public, max-age=31536000, immutable'}
+        return static_file(filename, root=self.root, headers=headers)
+
+    def clear(self):
+        """ Clear the internal hash cache. """
+        with self._lock:
+            self._cache.clear()
+            self._cache_order.clear()
+
+    # ------------------------------------------------------------------
+    # Internal helpers
+    # ------------------------------------------------------------------
+
+    def _normalize(self, filename):
+        """ Normalize and validate a relative filename.
+
+            Returns the normalized relative path (forward slashes, no leading
+            slash).
+
+            Containment is decided using path-component semantics, not string
+            prefixes.  Both the candidate and the root are resolved through
+            :func:`os.path.realpath` (which follows symlinks and collapses
+            ``..``) and then compared via :func:`os.path.commonpath` after
+            :func:`os.path.normcase`.  This eliminates three classes of bugs:
+
+            * ``..`` traversal that escapes root but whose *string*
+              representation still starts with the root prefix.
+            * Symlinks whose logical path is inside root but whose real
+              target is outside it.
+            * Case-only mismatches on case-insensitive / case-preserving
+              filesystems (macOS HFS+/APFS, Windows NTFS, Linux VFAT/CIFS
+              mounts) where ``startswith`` would give the wrong answer.
+
+            :raises HTTPError: 403 if the resolved real path escapes *root*.
+        """
+        # Strip leading separators and normalize OS separators
+        filename = filename.replace('\\', '/').strip('/')
+        # Resolve symlinks and collapse .. / . on both sides so the
+        # comparison is always between real filesystem identities.
+        joined = os.path.join(self.root, filename)
+        real = os.path.realpath(joined)
+
+        # Component-based containment: normcase makes the comparison
+        # case-insensitive on platforms where the filesystem is (NTFS,
+        # HFS+, VFAT), and is a no-op on case-sensitive systems.
+        # self._root_normcased is the normcased root *without* the
+        # trailing separator so that commonpath can match it exactly.
+        try:
+            common = os.path.normcase(os.path.commonpath([real, self._root_dir]))
+        except ValueError:
+            # commonpath raises ValueError when paths are on different
+            # drives (Windows) — definitely not contained.
+            raise HTTPError(403, "Access denied.")
+        if common != self._root_normcased:
+            raise HTTPError(403, "Access denied.")
+
+        # Return the relative portion using forward slashes
+        rel = os.path.relpath(real, self._root_dir)
+        return rel.replace(os.sep, '/')
+
+    def _split_ext(self, filename):
+        """ Split into (stem, ext) keeping the dot on the extension.
+
+            ``'css/style.css'`` -> ``('css/style', '.css')``
+            ``'readme'``        -> ``('readme', '')``
+        """
+        # Find the last slash to avoid splitting on dots in directory names
+        slash_pos = filename.rfind('/')
+        basename = filename[slash_pos + 1:] if slash_pos >= 0 else filename
+        dot_pos = basename.rfind('.')
+        if dot_pos <= 0:
+            return (filename, '')
+        prefix_len = slash_pos + 1 if slash_pos >= 0 else 0
+        return (filename[:prefix_len + dot_pos], basename[dot_pos:])
+
+    def _get_hash(self, filename):
+        """ Return the truncated content hash for *filename*, using the
+            cache when possible.
+
+            Cache freshness is validated by content rather than metadata:
+            on every call the current file hash is computed (slow path) or
+            compared against the cached hash (fast path).  When the fast-path
+            hash still matches the file, the cached value is returned
+            directly.  When it does not, the new hash replaces the stale
+            entry.  This avoids the mtime-only staleness window entirely.
+
+            :raises HTTPError: 404 if the file cannot be read.
+        """
+        abspath = os.path.realpath(os.path.join(self.root, filename))
+
+        # Fast path: if we have a cached hash, verify it is still current
+        # by computing the real hash and comparing.  When the file has not
+        # changed this is exactly as expensive as the old mtime stat, but
+        # it can never return a stale result.
+        with self._lock:
+            cached_hash = self._cache.get(filename)
+
+        # Always compute the current hash (the I/O happens outside the lock)
+        current_hash = self._compute_hash(abspath)
+
+        if cached_hash == current_hash:
+            # Content unchanged — promote in LRU order and return
+            with self._lock:
+                try:
+                    self._cache_order.remove(filename)
+                except ValueError:
+                    pass
+                self._cache_order.append(filename)
+            return cached_hash
+
+        # Content is new or changed — store and return
+        with self._lock:
+            self._cache[filename] = current_hash
+            try:
+                self._cache_order.remove(filename)
+            except ValueError:
+                pass
+            self._cache_order.append(filename)
+            while len(self._cache_order) > self.maxcache:
+                evict = self._cache_order.pop(0)
+                self._cache.pop(evict, None)
+
+        return current_hash
+
+    def _compute_hash(self, abspath):
+        """ Read *abspath* and return a truncated hex SHA-256 digest.
+
+            :raises HTTPError: 404 if the file cannot be read.
+        """
+        try:
+            h = hashlib.sha256()
+            with open(abspath, 'rb') as fp:
+                while True:
+                    chunk = fp.read(65536)
+                    if not chunk:
+                        break
+                    h.update(chunk)
+            return h.hexdigest()[:self.hash_length]
+        except OSError:
+            raise HTTPError(404, "File does not exist.")
+
+
 class FileUpload:
     def __init__(self, fileobj, name, filename, headers=None):
         """ Wrapper for a single file uploaded via ``multipart/form-data``. """
