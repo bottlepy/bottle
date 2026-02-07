@@ -138,3 +138,11 @@ Plugins can also inspect the routes they are applied to and change their behavio
 * An access control plugin may check for a custom ``roles_allowed`` parameter passed to the :meth:`route` decorator.
 
 In any case, check the plugin documentation for details. If you want to write your own plugins, check out :doc:`dev`.
+
+SessionPlugin
+-------------
+
+The :class:`SessionPlugin` provides optional server-side sessions backed by an
+in-memory store and signed session-identifier cookies.
+
+See :doc:`session` for details.
