@@ -89,6 +89,7 @@ import _thread as thread
 from urllib.parse import urljoin, SplitResult as UrlSplitResult
 from urllib.parse import urlencode, quote as urlquote, unquote as urlunquote
 from http.cookies import SimpleCookie, Morsel, CookieError
+from collections import UserDict
 from collections.abc import MutableMapping as DictMixin
 from types import ModuleType as new_module
 import pickle
@@ -2015,6 +2016,275 @@ class TemplatePlugin:
             return view(conf)(callback)
         else:
             return callback
+
+
+class Session(UserDict):
+    """ A dict-like session object with metadata for expiry tracking.
+
+        Subclasses :class:`~collections.UserDict` so session data can be
+        accessed with familiar key/value operations. Metadata attributes track
+        creation time, last access time, and modification state.
+    """
+
+    def __init__(self, sid, data=None):
+        super().__init__(data)
+        self.sid = sid
+        self._created = time.time()
+        self._accessed = self._created
+        self._modified = False
+        self._new = True
+
+    def __setitem__(self, key, value):
+        self._modified = True
+        super().__setitem__(key, value)
+
+    def __delitem__(self, key):
+        self._modified = True
+        super().__delitem__(key)
+
+    def pop(self, *args):
+        self._modified = True
+        return super().pop(*args)
+
+    def update(self, *args, **kwargs):
+        self._modified = True
+        super().update(*args, **kwargs)
+
+    def setdefault(self, key, default=None):
+        if key not in self:
+            self._modified = True
+        return super().setdefault(key, default)
+
+    def clear(self):
+        self._modified = True
+        super().clear()
+
+    @property
+    def modified(self):
+        """ True if session data was changed since creation or last save. """
+        return self._modified
+
+    def touch(self):
+        """ Update the last-accessed timestamp. """
+        self._accessed = time.time()
+
+    def is_expired(self, timeout):
+        """ Return True if the session has been idle longer than *timeout*
+            seconds. """
+        return (time.time() - self._accessed) > timeout
+
+
+class SessionStore:
+    """ Thread-safe in-memory session store with automatic cleanup.
+
+        Manages session lifecycle including creation, retrieval, deletion,
+        and periodic purging of expired sessions via a background thread.
+    """
+
+    def __init__(self, timeout=3600, cleanup_interval=300):
+        self._store = {}
+        self._lock = threading.Lock()
+        self.timeout = timeout
+        self._cleanup_interval = cleanup_interval
+        self._closed = False
+        self._cleanup_thread = None
+
+    def start_cleanup_thread(self):
+        """ Start a background daemon thread that periodically purges
+            expired sessions. """
+        self._cleanup_thread = threading.Thread(
+            target=self._cleanup_loop,
+            name='bottle-session-cleanup',
+            daemon=True
+        )
+        self._cleanup_thread.start()
+
+    def _cleanup_loop(self):
+        while not self._closed:
+            time.sleep(self._cleanup_interval)
+            if self._closed:
+                break
+            self._purge_expired()
+
+    def _purge_expired(self):
+        now = time.time()
+        with self._lock:
+            expired = [sid for sid, s in self._store.items()
+                       if (now - s._accessed) > self.timeout]
+            for sid in expired:
+                del self._store[sid]
+
+    def get(self, sid):
+        """ Retrieve a session by ID. Returns None if not found or expired. """
+        with self._lock:
+            session = self._store.get(sid)
+            if session is None:
+                return None
+            if session.is_expired(self.timeout):
+                del self._store[sid]
+                return None
+            session.touch()
+            return session
+
+    def create(self):
+        """ Create a new session with a cryptographically random ID and
+            store it. Returns the new :class:`Session` instance. """
+        sid = os.urandom(24).hex()
+        session = Session(sid)
+        with self._lock:
+            self._store[sid] = session
+        return session
+
+    def save(self, session):
+        """ Persist changes to a session in the store. """
+        session._modified = False
+        session._new = False
+        with self._lock:
+            self._store[session.sid] = session
+
+    def delete(self, sid):
+        """ Remove a session from the store by its ID. """
+        with self._lock:
+            self._store.pop(sid, None)
+
+    def close(self):
+        """ Stop the background cleanup thread. """
+        self._closed = True
+        if self._cleanup_thread and self._cleanup_thread.is_alive():
+            self._cleanup_thread.join(timeout=2.0)
+
+
+class SessionPlugin:
+    """ Server-side in-memory session management plugin.
+
+        Stores session data in server memory and transports only a signed
+        session ID cookie to the client. Provides ``request.session`` as a
+        dict-like object for reading and writing session data.
+
+        Usage::
+
+            app = Bottle()
+            app.install(SessionPlugin(secret='my-secret-key'))
+
+            @app.route('/')
+            def index():
+                request.session['visits'] = request.session.get('visits', 0) + 1
+                return 'Visits: %d' % request.session['visits']
+
+        :param secret: Secret key for HMAC signing the session cookie (required).
+        :param cookie_name: Name of the session cookie (default: ``bottle.session``).
+        :param timeout: Session idle timeout in seconds (default: 3600).
+        :param cleanup_interval: Seconds between expired session purges (default: 300).
+        :param cookie_path: Cookie ``Path`` attribute (default: ``/``).
+        :param cookie_domain: Cookie ``Domain`` attribute (default: None).
+        :param cookie_secure: Set cookie ``Secure`` flag (default: False).
+        :param cookie_httponly: Set cookie ``HttpOnly`` flag (default: True).
+        :param cookie_samesite: Cookie ``SameSite`` attribute (default: ``Lax``).
+        :param cookie_maxage: Cookie ``Max-Age`` in seconds (default: None).
+        :param digestmod: HMAC digest algorithm (default: :func:`hashlib.sha256`).
+    """
+
+    name = 'session'
+    api = 2
+
+    def __init__(self, secret=None, cookie_name='bottle.session',
+                 timeout=3600, cleanup_interval=300,
+                 cookie_path='/', cookie_domain=None,
+                 cookie_secure=False, cookie_httponly=True,
+                 cookie_samesite='Lax', cookie_maxage=None,
+                 digestmod=None):
+        if not secret:
+            raise PluginError("SessionPlugin requires a 'secret' parameter "
+                              "for signing session cookies.")
+        self.secret = secret
+        self.cookie_name = cookie_name
+        self.timeout = timeout
+        self.cleanup_interval = cleanup_interval
+        self.cookie_path = cookie_path
+        self.cookie_domain = cookie_domain
+        self.cookie_secure = cookie_secure
+        self.cookie_httponly = cookie_httponly
+        self.cookie_samesite = cookie_samesite
+        self.cookie_maxage = cookie_maxage
+        self.digestmod = digestmod or hashlib.sha256
+        self.store = None
+
+    def setup(self, app):
+        """ Called when plugin is installed. Initializes session store and
+            starts the background cleanup thread. """
+        app.config._define('session.secret', default=self.secret,
+                          help="Secret key for signing session cookies.")
+        app.config._define('session.timeout', default=self.timeout,
+                          validate=int,
+                          help="Session timeout in seconds.")
+        app.config._define('session.cookie_name', default=self.cookie_name,
+                          help="Name of the session cookie.")
+        app.config._define('session.cleanup_interval',
+                          default=self.cleanup_interval, validate=int,
+                          help="Seconds between expired session purges.")
+        self.store = SessionStore(
+            timeout=self.timeout,
+            cleanup_interval=self.cleanup_interval
+        )
+        self.store.start_cleanup_thread()
+
+    def apply(self, callback, route):
+        """ Wrap route callbacks with session management. """
+        if route.config.get('session') is False:
+            return callback
+
+        @functools.wraps(callback)
+        def wrapper(*args, **kwargs):
+            sid = request.get_cookie(
+                self.cookie_name,
+                secret=self.secret,
+                digestmod=self.digestmod
+            )
+            session = self.store.get(sid) if sid else None
+            if session is None:
+                session = self.store.create()
+            environ = request.environ
+            environ['bottle.request.ext.session'] = session
+            try:
+                result = callback(*args, **kwargs)
+            except HTTPResponse as exc:
+                self._save_session(session, exc)
+                raise
+            self._save_session(session, response)
+            return result
+
+        return wrapper
+
+    def _save_session(self, session, target):
+        if not session._new and not session._modified:
+            return
+        self.store.save(session)
+        cookie_opts = {}
+        if self.cookie_path:
+            cookie_opts['path'] = self.cookie_path
+        if self.cookie_domain:
+            cookie_opts['domain'] = self.cookie_domain
+        if self.cookie_secure:
+            cookie_opts['secure'] = self.cookie_secure
+        if self.cookie_httponly:
+            cookie_opts['httponly'] = self.cookie_httponly
+        if self.cookie_samesite:
+            cookie_opts['samesite'] = self.cookie_samesite
+        if self.cookie_maxage is not None:
+            cookie_opts['maxage'] = self.cookie_maxage
+        target.set_cookie(
+            self.cookie_name,
+            session.sid,
+            secret=self.secret,
+            digestmod=self.digestmod,
+            **cookie_opts
+        )
+
+    def close(self):
+        """ Called when the plugin is uninstalled or the app is closed.
+            Stops the background cleanup thread. """
+        if self.store:
+            self.store.close()
 
 
 #: Not a plugin, but part of the plugin API. TODO: Find a better place.
