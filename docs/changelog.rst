@@ -54,6 +54,9 @@ Release 0.14 (in development)
 .. rubric:: New features
 
 * ``bottle.HTTPError`` raised on invalid JSON now include the underlying exception in the ``exception`` field.
+* Added ``--list-routes`` command line option to print a table of all registered routes (including mounted sub-applications) and exit without starting the server.
+* Added ``--sort-routes`` command line option to control the sort order of ``--list-routes``. Accepts ``definition`` (default, matches router precedence) or ``alphabetical`` (sorted by route rule, then HTTP method).
+* Added :func:`_format_routes` to produce a formatted route table as a string, suitable for logging, file output or non-terminal environments.
 
 
 Release 0.13

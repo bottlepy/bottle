@@ -151,6 +151,41 @@ Here is a quick example:
     Listening on http://localhost:8080/
     Hit Ctrl-C to quit.
 
+Route inspection
+^^^^^^^^^^^^^^^^
+
+The ``--list-routes`` flag loads your application and prints a table of all
+registered routes (including those from mounted sub-applications), then exits
+without starting the server. This is useful for quickly verifying route
+registration or generating documentation.
+
+.. code-block:: console
+
+    $ bottle --list-routes mymodule:app
+    Method  Route           Handler
+    ------  -------------   -----------
+    GET     /hello          hello
+    POST    /users          create_user
+    GET     /sub/status     status_check
+
+By default routes are printed in **definition order**, which reflects the
+actual request-matching precedence of the router. You can switch to
+**alphabetical order** (sorted by route rule, then by HTTP method) with the
+``--sort-routes`` option:
+
+.. code-block:: console
+
+    $ bottle --list-routes --sort-routes alphabetical mymodule:app
+    Method  Route           Handler
+    ------  -------------   -----------
+    GET     /hello          hello
+    GET     /sub/status     status_check
+    POST    /users          create_user
+
+.. versionadded:: 0.14
+
+    The ``--list-routes`` and ``--sort-routes`` command line options.
+
 .. versionchanged:: 0.13
 
     The executable script installed into (virtual) environments was named ``bottle.py``, which could result in circular imports. The old name is now deprecated and the new executable ist named just ``bottle``.

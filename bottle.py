@@ -42,6 +42,11 @@ def _cli_parse(args):  # pragma: no coverage
         help="override config values.")
     opt("--debug", action="store_true", help="start server in debug mode.")
     opt("--reload", action="store_true", help="auto-reload on file changes.")
+    opt("--list-routes", action="store_true",
+        help="list all routes of the application and exit.")
+    opt("--sort-routes", default="definition",
+        choices=["definition", "alphabetical"],
+        help="sort order for --list-routes (default: definition).")
     opt('app', help='WSGI app entry point.', nargs='?')
 
     cli_args = parser.parse_args(args[1:])
@@ -4521,6 +4526,47 @@ ext = _ImportRedirect('bottle.ext' if __name__ == '__main__' else
                       __name__ + ".ext", 'bottle_%s').module
 
 
+def _format_routes(app, sort="definition"):
+    """ Return a formatted table string of all routes in the application.
+
+        :param app: A :class:`Bottle` application instance.
+        :param sort: Sort order for the routes.  ``"definition"`` (default)
+            preserves the registration order, which reflects actual request
+            precedence.  ``"alphabetical"`` sorts by route rule then by HTTP
+            method, which is easier to scan in large applications or
+            documentation.
+        :return: A multi-line string ready for printing or logging.
+    """
+    rows = []
+    for route in app.routes:
+        method = route.method
+        rule = route.rule
+        callback = route.get_undecorated_callback()
+        name = getattr(callback, '__name__', '?')
+        rows.append((method, rule, name))
+
+    if not rows:
+        return "No routes found."
+
+    if sort == "alphabetical":
+        rows.sort(key=lambda r: (r[1], r[0]))
+
+    headers = ("Method", "Route", "Handler")
+    widths = [max(len(headers[i]), max(len(r[i]) for r in rows))
+              for i in range(3)]
+    fmt = "%%-%ds  %%-%ds  %%-%ds" % tuple(widths)
+    border = "-" * widths[0] + "  " + "-" * widths[1] + "  " + "-" * widths[2]
+
+    lines = [fmt % headers, border]
+    lines.extend(fmt % row for row in rows)
+    return "\n".join(lines)
+
+
+def _list_routes(app, sort="definition"):
+    """ Print the formatted route table produced by :func:`_format_routes`. """
+    print(_format_routes(app, sort=sort))
+
+
 def _main(argv):  # pragma: no coverage
     args, parser = _cli_parse(argv)
 
@@ -4537,6 +4583,11 @@ def _main(argv):  # pragma: no coverage
 
     sys.path.insert(0, '.')
     sys.modules.setdefault('bottle', sys.modules['__main__'])
+
+    if args.list_routes:
+        app = load_app(args.app)
+        _list_routes(app, sort=args.sort_routes)
+        sys.exit(0)
 
     host, port = (args.bind or 'localhost'), 8080
     if ':' in host and host.rfind(']') < host.rfind(':'):

@@ -54,6 +54,14 @@ Or using the ``bottle`` command line interface:
 
     python3 -m bottle --server gunicorn [...] mymodule:app
 
+You can verify all registered routes before starting the server with ``--list-routes``:
+
+.. code-block:: sh
+
+    python3 -m bottle --list-routes mymodule:app
+
+This prints a table of all routes (including mounted sub-applications) and exits. Add ``--sort-routes alphabetical`` to sort by route path instead of definition order. See :ref:`tutorial-cli` for details.
+
 For production deployments gunicorn_ is a really good choice. It comes with its own command line utility that supports a lot more options than bottle. Since :class:`Bottle` instances are WSGI applications, you can tell gunicorn_ (or any other WSGI server) to load your app instead of calling :func:`run` yourself:
 
 .. code-block:: sh

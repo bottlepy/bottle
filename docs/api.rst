@@ -228,4 +228,15 @@ Misc utilities
 .. autofunction:: load
 
 .. autofunction:: load_app
-   
+
+
+Command Line Utilities
+======================
+
+The following functions support the :ref:`tutorial-cli` and can also be used
+programmatically, for example to write route tables to log files or generate
+documentation.
+
+.. autofunction:: _format_routes
+
+.. autofunction:: _list_routes
