@@ -2177,7 +2177,7 @@ class HeaderDict(MultiDict):
         replace the old value instead of appending it. """
 
     def __init__(self, *a, **ka):
-        self.dict = {}
+        super(HeaderDict, self).__init__()
         if a or ka: self.update(*a, **ka)
 
     def __contains__(self, key):
@@ -2268,6 +2268,7 @@ class ConfigDict(dict):
     __slots__ = ('_meta', '_change_listener', '_overlays', '_virtual_keys', '_source', '__weakref__')
 
     def __init__(self):
+        super(ConfigDict, self).__init__()
         self._meta = {}
         self._change_listener = []
         #: Weak references of overlays that need to be kept in sync.
@@ -3521,7 +3522,8 @@ class FapwsServer(ServerAdapter):
     """ Extremely fast webserver using libev. See https://github.com/william-os4y/fapws3 """
 
     def run(self, handler):  # pragma: no cover
-        depr(0, 13, "fapws3 is not maintained and support will be dropped.")
+        depr(0, 13, "fapws3 is not maintained and support will be dropped.",
+                    "Use a different server adapter.")
         import fapws._evwsgi as evwsgi
         from fapws import base, config
         port = self.port
@@ -3590,7 +3592,8 @@ class DieselServer(ServerAdapter):
     """ Untested. """
 
     def run(self, handler):
-        depr(0, 13, "Diesel is not tested or supported and will be removed.")
+        depr(0, 13, "Diesel is not tested or supported and will be removed.",
+                    "Use a different server adapter.")
         from diesel.protocols.wsgi import WSGIApplication
         app = WSGIApplication(handler, port=self.port)
         app.run()
