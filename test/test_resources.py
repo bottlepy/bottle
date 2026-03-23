@@ -87,7 +87,7 @@ class TestResourceManager(unittest.TestCase):
         rm.add_path('/first/')
         rm.add_path(__file__)
         rm.add_path('/last/')
-        self.assertEqual(None, rm.lookup('notexist.txt'))
+        self.assertEqual(None, rm.lookup('nonexistent.txt'))
         self.assertEqual(__file__, rm.lookup(os.path.basename(__file__)))
 
     def test_open(self):
