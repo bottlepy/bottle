@@ -4482,7 +4482,7 @@ ERROR_PAGE_TEMPLATE = """
               <h2>Exception:</h2>
               %%try:
                 %%exc = repr(e.exception)
-              %%except:
+              %%except Exception:
                 %%exc = '<unprintable %%s object>' %% type(e.exception).__name__
               %%end
               <pre>{{exc}}</pre>

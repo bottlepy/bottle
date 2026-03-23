@@ -164,7 +164,7 @@ class TestWsgi(ServerTestBase):
             return 'hello'
         try:
             c = self.urlopen('/cookie')['header'].get_all('Set-Cookie', '')
-        except:
+        except Exception:
             c = self.urlopen('/cookie')['header'].get('Set-Cookie', '').split(',')
             c = [x.strip() for x in c]
         self.assertTrue('b=b' in c)
