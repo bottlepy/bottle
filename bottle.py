@@ -258,6 +258,20 @@ def _re_flatten(p):
                   len(m.group(1)) % 2 else m.group(1) + '(?:', p)
 
 
+class TrieNode:
+    """ Trie tree node for optimizing route matching performance. """
+    __slots__ = ('children', 'wildcard', 'target', 'getargs', 'methods', 'filter', 'conf')
+
+    def __init__(self):
+        self.children = {}  # Dictionary of static child nodes, key is path segment (e.g., '/users/', '/api/')
+        self.wildcard = None  # Wildcard child node for handling dynamic parameters (e.g., <id>, <name>)
+        self.target = None  # Route handler
+        self.getargs = None  # Function to extract parameters from URL
+        self.methods = {}  # Dictionary of supported HTTP methods
+        self.filter = None  # Filter type for dynamic parameters (e.g., 'int', 're', 'path')
+        self.conf = None  # Filter configuration parameters (e.g., regex)
+
+
 class Router:
     """ A Router is an ordered collection of route->target pairs. It is used to
         efficiently match WSGI requests against a number of routes and return
@@ -293,6 +307,7 @@ class Router:
             'float': lambda conf: (r'-?[\d.]+', float, lambda x: str(float(x))),
             'path': lambda conf: (r'.+?', None, None)
         }
+        self._trie = TrieNode()  # Trie tree root node, used to speed up route matching
 
     def add_filter(self, name, func):
         """ Add a filter. The provided function is called with the configuration
@@ -334,6 +349,7 @@ class Router:
         filters = []  # Lists of wildcard input filters
         builder = []  # Data structure for the URL builder
         is_static = True
+        segments = []
 
         for key, mode, conf in self._itertokens(rule):
             if mode:
@@ -347,9 +363,11 @@ class Router:
                 keys.append(key)
                 if in_filter: filters.append((key, in_filter))
                 builder.append((key, out_filter or str))
+                segments.append((key, mode, conf))
             elif key:
                 pattern += re.escape(key)
                 builder.append((None, key))
+                segments.append((key, None, None))
 
         self.builder[rule] = builder
         if name: self.builder[name] = builder
@@ -357,6 +375,7 @@ class Router:
         if is_static and not self.strict_order:
             self.static.setdefault(method, {})
             self.static[method][self.build(rule)] = (target, None)
+            self._add_to_trie(segments, method, target, None)
             return
 
         try:
@@ -401,6 +420,7 @@ class Router:
             self._groups[flatpat, method] = len(self.dyna_routes[method]) - 1
 
         self._compile(method)
+        self._add_to_trie(segments, method, target, getargs)
 
     def _compile(self, method):
         all_rules = self.dyna_routes[method]
@@ -413,6 +433,50 @@ class Router:
             combined = re.compile(combined).match
             rules = [(target, getargs) for (_, _, target, getargs) in some]
             comborules.append((combined, rules))
+
+    def _add_to_trie(self, segments, method, target, getargs):
+        """ Insert route into Trie tree. """
+        if not segments:
+            return
+        node = self._trie
+        for key, mode, conf in segments:
+            if mode is None:
+                if key not in node.children:
+                    node.children[key] = TrieNode()
+                node = node.children[key]
+            else:
+                if node.wildcard is None:
+                    node.wildcard = TrieNode()
+                    node.wildcard.filter = mode
+                    node.wildcard.conf = conf
+                node = node.wildcard
+        if method not in node.methods:
+            node.methods[method] = (target, getargs)
+        else:
+            node.methods[method] = (target, getargs)
+
+    def _match_trie(self, path, methods):
+        """ Match URL path using Trie tree. """
+        parts = path.split('/')
+        node = self._trie
+        wildcard_matches = []
+
+        for i, part in enumerate(parts):
+            if not part and i == 0:
+                continue
+            if part in node.children:
+                node = node.children[part]
+            elif node.wildcard:
+                wildcard_matches.append((node.wildcard, part))
+                node = node.wildcard
+            else:
+                return None
+
+        for m in methods:
+            if m in node.methods:
+                target, getargs = node.methods[m]
+                return target, getargs(path) if getargs else {}
+        return None
 
     def build(self, _name, *anons, **query):
         """ Build an URL by filling the wildcards in a rule. """
@@ -434,6 +498,12 @@ class Router:
 
         methods = ('PROXY', 'HEAD', 'GET', 'ANY') if verb == 'HEAD' else ('PROXY', verb, 'ANY')
 
+        # Level 1: Trie tree matching (new optimization)
+        result = self._match_trie(path, methods)
+        if result:
+            return result
+
+        # Level 2: Static and dynamic route regex matching (original logic)
         for method in methods:
             if method in self.static and path in self.static[method]:
                 target, getargs = self.static[method][path]
