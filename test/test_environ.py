@@ -357,6 +357,24 @@ class TestRequest(unittest.TestCase):
         self.assertEqual(['value2', '万难'], request.forms.getall('field2'))
         self.assertTrue('field2' not in request.files)
 
+    def test_multipart_large_total_payload(self):
+        """ Multipart uploads should not fail once the aggregate buffered size
+            exceeds MEMFILE_MAX, as long as individual files stay below the
+            per-file memory threshold.
+        """
+        fields = []
+        files = [
+            ('file1', 'filename1.txt', 'x' * 60000),
+            ('file2', 'filename2.txt', 'y' * 60000),
+        ]
+        e = tools.multipart_environ(fields=fields, files=files)
+        request = BaseRequest(e)
+
+        self.assertEqual('filename1.txt', request.POST['file1'].filename)
+        self.assertEqual('filename2.txt', request.POST['file2'].filename)
+        self.assertEqual('x' * 60000, request.POST['file1'].file.read().decode('utf8'))
+        self.assertEqual('y' * 60000, request.POST['file2'].file.read().decode('utf8'))
+
     def test_json_empty(self):
         """ Environ: Request.json property with empty body. """
         self.assertEqual(BaseRequest({}).json, None)

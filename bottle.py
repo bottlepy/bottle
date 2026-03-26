@@ -1367,8 +1367,7 @@ class BaseRequest:
         if not boundary:
             raise MultipartError("Invalid content type header, missing boundary")
         parser = _MultipartParser(self.body, boundary, self.content_length,
-            mem_limit=self.MEMFILE_MAX, memfile_limit=self.MEMFILE_MAX,
-            charset=charset)
+            memfile_limit=self.MEMFILE_MAX, charset=charset)
 
         for part in parser.parse():
             if not part.filename and part.is_buffered():
