@@ -14,6 +14,7 @@ License: MIT (see LICENSE for details)
 """
 
 import sys
+from pathlib import Path
 
 __author__ = 'Marcel Hellkamp'
 __version__ = '0.14-dev'
@@ -2309,10 +2310,16 @@ class ConfigDict(dict):
             other sections.
 
             :param filename: The path of a config file, or a list of paths.
+                Can be a string or a :class:`pathlib.Path` object.
             :param options: All keyword parameters are passed to the underlying
                 :class:`python:configparser.ConfigParser` constructor call.
 
         """
+        if isinstance(filename, Path):
+            filename = str(filename)
+        elif isinstance(filename, (list, tuple)):
+            filename = [str(f) if isinstance(f, Path) else f for f in filename]
+
         options.setdefault('allow_no_value', True)
         options.setdefault('interpolation', configparser.ExtendedInterpolation())
         conf = configparser.ConfigParser(**options)
@@ -2749,8 +2756,9 @@ def static_file(filename, root,
         that can be sent back to the client.
 
         :param filename: Name or path of the file to send, relative to ``root``.
+            Can be a string or a :class:`pathlib.Path` object.
         :param root: Root path for file lookups. Should be an absolute directory
-            path.
+            path. Can be a string or a :class:`pathlib.Path` object.
         :param mimetype: Provide the content-type header (default: guess from
             file extension)
         :param download: If True, ask the browser to open a `Save as...` dialog
@@ -2775,6 +2783,11 @@ def static_file(filename, root,
         possible. ``HEAD`` and ``Range`` requests (used by download managers to
         check or continue partial downloads) are also handled automatically.
     """
+
+    if isinstance(root, Path):
+        root = str(root)
+    if isinstance(filename, Path):
+        filename = str(filename)
 
     root = os.path.join(os.path.abspath(root), '')
     filename = os.path.abspath(os.path.join(root, filename.strip('/\\')))
@@ -3979,7 +3992,10 @@ class BaseTemplate:
         self.name = name
         self.source = source.read() if hasattr(source, 'read') else source
         self.filename = source.filename if hasattr(source, 'filename') else None
-        self.lookup = [os.path.abspath(x) for x in lookup] if lookup else []
+        if lookup:
+            self.lookup = [os.path.abspath(str(x) if isinstance(x, Path) else x) for x in lookup]
+        else:
+            self.lookup = []
         self.encoding = encoding
         self.settings = self.settings.copy()  # Copy from class variable
         self.settings.update(settings)  # Apply
@@ -4001,6 +4017,8 @@ class BaseTemplate:
         if os.path.isabs(name):
             raise depr(0, 12, "Use of absolute path for template name.",
                        "Refer to templates with names or paths relative to the lookup path.")
+
+        lookup = [str(path) if isinstance(path, Path) else path for path in lookup]
 
         for spath in lookup:
             spath = os.path.abspath(spath) + os.sep
