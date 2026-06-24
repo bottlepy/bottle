@@ -119,6 +119,17 @@ This behavior is intended as a sane default, but can be overridden. The followin
 
 Note that a plugin sees the whole sub-application as a single route, namely the proxy-route mentioned above. To wrap each individual route of the sub-application, you have to install the plugin to the mounted application directly.
 
+Hooks, Error Handlers and Application Mounting
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Similarly to plugins, when a :class:`Bottle` instance is mounted directly into a parent application, its individual hooks (e.g. ``@hook('before_request')``) and custom error handlers are not run. Instead, requests routed to the sub-application will trigger the hooks and error handlers defined on the parent/root application.
+
+If you need complete isolation so that the sub-application runs its own hooks and error handlers, you should mount the sub-application as a standard WSGI application by passing its WSGI interface (e.g., ``child_app.wsgi`` or wrapping it as a raw WSGI application)::
+
+    root = Bottle()
+    root.mount('/blog', apps.blog.wsgi)
+
+
 Configuring Plugins
 ===================
 

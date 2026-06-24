@@ -755,6 +755,17 @@ class Bottle:
             root of the child application via `/prefix` in addition to
             `/prefix/`, consider adding a route with a 307 redirect to the
             parent application.
+
+            .. note::
+                When mounting a :class:`Bottle` instance directly, hooks (e.g.
+                ``@hook('before_request')``) and custom error handlers registered
+                on the child application are not run. Instead, the parent
+                application's hooks and error handlers are used.
+
+                If you require complete isolation for the sub-application's hooks
+                and error handlers, mount it as a WSGI application by passing
+                its WSGI interface (e.g. ``child_app.wsgi`` or wrapping it as a
+                raw WSGI application) instead of the :class:`Bottle` instance.
         """
 
         if not prefix.startswith('/'):
