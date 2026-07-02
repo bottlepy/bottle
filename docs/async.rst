@@ -85,6 +85,8 @@ Lets forget about the low-level details for a while and speak about WebSockets. 
 
 Thankfully the `gevent-websocket <https://pypi.python.org/pypi/gevent-websocket/>`_ package does all the hard work for us. Here is a simple WebSocket endpoint that receives messages and just sends them back to the client::
 
+    from gevent import monkey; monkey.patch_all()
+
     from bottle import request, Bottle, abort
     app = Bottle()
 
@@ -110,6 +112,21 @@ Thankfully the `gevent-websocket <https://pypi.python.org/pypi/gevent-websocket/
 
 The while-loop runs until the client closes the connection. You get the idea :)
 
+The ``monkey.patch_all()`` call must happen before importing ``bottle`` so
+that gevent can patch Python's blocking APIs before Bottle or the standard
+library modules it uses are imported. If you run the application with
+Gunicorn, ``gevent-websocket`` also provides a worker class that sets up the
+server-side WebSocket handling for you::
+
+    gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker my_wsgi:app
+
+If WebSockets are the only asynchronous part of your system, another option is
+to run the WebSocket service separately, for example as an ASGI or Node.js
+application, and route both it and the Bottle application through a reverse
+proxy such as nginx, Traefik, or Caddy. This keeps the Bottle application on
+WSGI while letting the WebSocket endpoint use tooling designed for long-lived
+bidirectional connections.
+
 The client-site JavaScript API is really straight forward, too::
 
     <!DOCTYPE html>
@@ -126,4 +143,3 @@ The client-site JavaScript API is really straight forward, too::
       </script>
     </head>
     </html>
-
