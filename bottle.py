@@ -749,7 +749,7 @@ class Bottle:
             application, install them separately.
 
             While it is possible to use path wildcards within the prefix path
-            (:class:`Bottle` childs only), it is highly discouraged.
+            (:class:`Bottle` children only), it is highly discouraged.
 
             The prefix path must end with a slash. If you want to access the
             root of the child application via `/prefix` in addition to
@@ -2472,7 +2472,7 @@ class ConfigDict(dict):
             approach does not resolve missing keys on demand, but instead
             actively copies all values from the source to the overlay and keeps
             track of virtual and non-virtual keys internally. This removes any
-            lookup-overhead. Read-access is as fast as a build-in dict for both
+            lookup-overhead. Read-access is as fast as a built-in dict for both
             virtual and non-virtual keys.
 
             Changes are propagated recursively and depth-first. A failing
@@ -3198,7 +3198,7 @@ class _MultipartParser:
         separator = b"--" + tob(self.boundary)
         terminator = separator + b"--"
         mem_used, disk_used = 0, 0  # Track used resources to prevent DoS
-        is_tail = False  # True if the last line was incomplete (cutted)
+        is_tail = False  # True if the last line was incomplete (cut)
 
         # Consume first boundary. Ignore any preamble, as required by RFC
         # 2046, section 5.1.1.
