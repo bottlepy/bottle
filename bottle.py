@@ -89,7 +89,7 @@ import _thread as thread
 from urllib.parse import urljoin, SplitResult as UrlSplitResult
 from urllib.parse import urlencode, quote as urlquote, unquote as urlunquote
 from http.cookies import SimpleCookie, Morsel, CookieError
-from collections.abc import MutableMapping as DictMixin
+from collections.abc import MutableMapping as DictMixin, ValuesView, ItemsView
 from types import ModuleType as new_module
 import pickle
 from io import BytesIO
@@ -2095,10 +2095,10 @@ class MultiDict(DictMixin):
         return self.dict.keys()
 
     def values(self):
-        return (v[-1] for v in self.dict.values())
+        return ValuesView(self)
 
     def items(self):
-        return ((k, v[-1]) for k, v in self.dict.items())
+        return ItemsView(self)
 
     def allitems(self):
         return ((k, v) for k, vl in self.dict.items() for v in vl)
