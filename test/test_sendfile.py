@@ -134,6 +134,44 @@ class TestSendFile(unittest.TestCase):
         self.assertNotEqual(etag, res.headers['ETag'])
         self.assertEqual(200, res.status_code)
 
+    def test_etag_overrides_stale_ims(self):
+        """ SendFile: a non-matching If-None-Match must not be overridden
+        by an If-Modified-Since that would otherwise return 304.
+
+        Regression test for
+        https://github.com/bottlepy/bottle/issues/1132
+
+        This can happen, for instance, when a path is reused for
+        different content between requests (e.g. after directory
+        renames): the ETag -- a strong validator -- correctly reports
+        the content changed, but the file's mtime can still be older
+        than what the client's stale If-Modified-Since claims. Per RFC
+        7232 sec 3.3, If-Modified-Since must be ignored whenever
+        If-None-Match is present in the request.
+        """
+        res = static_file(basename, root=root)
+        real_etag = res.headers['ETag']
+        real_lm = res.headers['Last-Modified']
+
+        # A client presents an ETag that does NOT match the current
+        # file, alongside an If-Modified-Since that (considered alone)
+        # would be satisfied by the file's actual mtime.
+        request.environ['HTTP_IF_NONE_MATCH'] = '"some-stale-etag"'
+        request.environ['HTTP_IF_MODIFIED_SINCE'] = real_lm
+        res = static_file(basename, root=root)
+
+        # Must NOT be 304: the ETag says the content is different, and
+        # that must take precedence over the (misleading) date check.
+        self.assertEqual(200, res.status_code)
+        self.assertEqual(real_etag, res.headers['ETag'])
+
+        # Sanity check: when the ETag *does* match, 304 is still
+        # correctly returned even with an If-Modified-Since present.
+        request.environ['HTTP_IF_NONE_MATCH'] = real_etag
+        request.environ['HTTP_IF_MODIFIED_SINCE'] = real_lm
+        res = static_file(basename, root=root)
+        self.assertEqual(304, res.status_code)
+
     def test_download(self):
         """ SendFile: Download as attachment """
         f = static_file(basename, root=root, download="foo.mp3")

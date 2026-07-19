@@ -2820,17 +2820,27 @@ def static_file(filename, root,
                                    clen, filename)
         etag = hashlib.sha1(tob(etag)).hexdigest()
 
+    check = None
     if etag:
         headers['ETag'] = etag
         check = getenv('HTTP_IF_NONE_MATCH')
         if check and check == etag:
             return HTTPResponse(status=304, **headers)
 
-    ims = getenv('HTTP_IF_MODIFIED_SINCE')
-    if ims:
-        ims = parse_date(ims.split(";")[0].strip())
-        if ims is not None and ims >= int(stats.st_mtime):
-            return HTTPResponse(status=304, **headers)
+    # RFC 7232 sec 3.3: a recipient MUST ignore If-Modified-Since if the
+    # request contains an If-None-Match header, regardless of whether
+    # that ETag matched (a non-match was already handled above and
+    # falls through to a normal response). This also avoids a false
+    # 304 when a path is reused for different content between requests
+    # (e.g. after directory renames) but happens to have an older
+    # mtime than the client's cached copy, even though the ETag -- a
+    # stronger validator -- no longer matches.
+    if not check:
+        ims = getenv('HTTP_IF_MODIFIED_SINCE')
+        if ims:
+            ims = parse_date(ims.split(";")[0].strip())
+            if ims is not None and ims >= int(stats.st_mtime):
+                return HTTPResponse(status=304, **headers)
 
     body = '' if request.method == 'HEAD' else open(filename, 'rb')
 
