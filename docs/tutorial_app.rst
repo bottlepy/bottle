@@ -49,7 +49,7 @@ The result of this tutorial is going to be an application with the following pag
  * adding a new task to the list: ``http://127.0.0.1:8080/new``
  * page for editing a task: ``http://127.0.0.1:8080/edit/<number:int>``
  * show details about a task: ``http://127.0.0.1:8080/details/<number:int>``
- * show a task formated as JSON: ``http://127.0.0.1:8080/as_json/<number:int>``
+ * show a task formatted as JSON: ``http://127.0.0.1:8080/as_json/<number:int>``
  * redirect ``http://127.0.0.1:8080/`` to ``http://127.0.0.1:8080/todo``
  * catching errors
 
@@ -197,7 +197,7 @@ Now, after understanding the little script above, it is time to execute it and w
 
 If so - congratulations! Bottle is successful used. In case it did not work, and changes need to be made, remember to stop Bottle serving the page, otherwise the revised version will not be loaded.
 
-The output is not really exciting nor nice to read. It is the raw result returned from the SQL query. In the next step the output is formated in a nicer way. But before that, let's make life a bit easier while developing the app.
+The output is not really exciting nor nice to read. It is the raw result returned from the SQL query. In the next step the output is formatted in a nicer way. But before that, let's make life a bit easier while developing the app.
 
 
 .. rubric:: Debugging and Auto-Reloading
