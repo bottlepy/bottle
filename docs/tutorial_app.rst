@@ -30,7 +30,7 @@ This tutorial gives a brief introduction to the Bottle_ WSGI_ Framework. The mai
 
 To understand the content of this tutorial, it is not really necessary to have a basic knowledge of WSGI, as Bottle tries to keep WSGI away from the user anyway as much as possible. A fair bit of understanding of the Python_ programming language is of course required. Furthermore, the example application created in this tutorial retrieves and stores data in a SQL database, so (very) basic knowledge on SQL helps, but is not a must to understand the concepts of Bottle. Right here, SQLite_ is used. As Bottle is a framework for web-based application, most of output send to the Browser is HTML. Thus, a basic idea about the common HTML tags certainly helps as well. In case HTML basic still need to be learned, a good starting point is the `HTML tutorial`_ on the Mozilla Developer Network website.
 
-For the sake of introducing Bottle, the Python code "in between" is kept short, in order to keep the focus. Although all code within the tutorial works fine, it may not necessarily be used as-is "in the wild", e.g. on a publically accessible server. To do so, e.g. input validtion, better database protection, better error handling and other things need to be added.
+For the sake of introducing Bottle, the Python code "in between" is kept short, in order to keep the focus. Although all code within the tutorial works fine, it may not necessarily be used as-is "in the wild", e.g. on a publically accessible server. To do so, e.g. input validation, better database protection, better error handling and other things need to be added.
 
 .. contents:: Table of Contents
 
@@ -68,13 +68,13 @@ And, finally, ``python`` will be used in this tutorial to run Python 3.10 and ne
 
 .. rubric:: Install Bottle
 
-Assuming that a fairly new installation of Python (version 3.10 or higher) is used, only Bottle needs to be installed in addition to that. Bottle has no other dependencies than Python itself. Following the recommended best-pratice for Python and installing Python modules, let's create a venv_ first and install Bottle inside the venv. Open the directory of choice where the venv should be created and execute the following commands:
+Assuming that a fairly new installation of Python (version 3.10 or higher) is used, only Bottle needs to be installed in addition to that. Bottle has no other dependencies than Python itself. Following the recommended best-practice for Python and installing Python modules, let's create a venv_ first and install Bottle inside the venv. Open the directory of choice where the venv should be created and execute the following commands:
 
 .. code::
 
     python -m venv bottle_venv
     cd bottle_venv
-    #for Linux & MacOS
+    #for Linux & macOS
     source bin/activate
     #for Windows
     .\Scripts\activate
@@ -189,7 +189,7 @@ Actually, more than one route can be bound to a function. The following code:
 
 works fine, too. What will not work is to bind one route to more than one function.
 
-What the browser displays is what is returned, thus the value given by the ``return`` statement. In this example, it is necessary to convert ``result`` in to a string by ``str()``, as Bottle expects a string or a list of strings from the return statement. But here, the result of the database query is a list of tuples, which is the standard defined by the `Python DB API`_.
+What the browser displays is what is returned, thus the value given by the ``return`` statement. In this example, it is necessary to convert ``result`` into a string by ``str()``, as Bottle expects a string or a list of strings from the return statement. But here, the result of the database query is a list of tuples, which is the standard defined by the `Python DB API`_.
 
 Now, after understanding the little script above, it is time to execute it and watch the result. Just run ``python todo.py`` and open the URL ``http://127.0.0.1:8080/todo`` in the browser. In case no mistake was made writing the code, the output should look like this::
 
@@ -284,7 +284,7 @@ Run the script again and look at the output. Still not really nice and not compl
 
 .. rubric:: Adding a Base Template
 
-Bottle's SimpleTempate allows, like other template engines, nesting templates. This is pretty handy, as it allows to define a base template holding e.g. the HTML doctype definition, the head and the body section, which is then used as the base for all other templates generating the actual output. The base template looks like this:
+Bottle's SimpleTemplate allows, like other template engines, nesting templates. This is pretty handy, as it allows to define a base template holding e.g. the HTML doctype definition, the head and the body section, which is then used as the base for all other templates generating the actual output. The base template looks like this:
 
 .. code-block:: html
 
@@ -314,7 +314,7 @@ To use the base template from another template like e.g. ``shows_task.tpl``, jus
 
 This tells the template to rebase its content into the template ``base.tpl``.
 
-Reload ``http://127.0.0.1:8000/todo`` and the output is now valid HTML. Of couse the base template can extended as required, e.g. by loading a CSS style sheet or defining own styles in a ``<style>...</style>`` section in the header.
+Reload ``http://127.0.0.1:8000/todo`` and the output is now valid HTML. Of course, the base template can extended as required, e.g. by loading a CSS style sheet or defining own styles in a ``<style>...</style>`` section in the header.
 
 
 .. rubric:: Using GET Parameters
@@ -470,7 +470,7 @@ The complete route for editing a task looks like this:
             return template('edit_task', current_data=current_data, number=number)
 
 
-A lot of the code's logic is pretty similat to the ``/new`` route and the corresponding ``new_task`` function: the route accepts GET and POST requests and, depending on the request, either sends the template ``edit_task`` or updates a task in the database according to the form data received.
+A lot of the code's logic is pretty similar to the ``/new`` route and the corresponding ``new_task`` function: the route accepts GET and POST requests and, depending on the request, either sends the template ``edit_task`` or updates a task in the database according to the form data received.
 
 What's new here is the dynamic routing ``@app.route('/edit/<number:int>' ...)`` which accepts one wildcard, supposed to be an integer value. The wildcard is assigned to the variable ``number``, which is also expected by the function ``edit_task``. So e.g. opening the URL ``http:/127.0.0.1:8080/edit/2`` would open the task with the ID for editing. In case no number is passed, either because of omitting the parameter or passing a string which is not an integer only, an error will be raised.
 
@@ -529,7 +529,7 @@ Sometimes it may become necessary to associate a route not to a Python function 
     from bottle import static_file
 
 
-to the code to import Bottle's function ``static_file``, which handles sending static files. Let's assume all the static files are located in a subdirectory named ``static`` relativ to the application. The code to serve static files from there looks as follows:
+to the code to import Bottle's function ``static_file``, which handles sending static files. Let's assume all the static files are located in a subdirectory named ``static`` relative to the application. The code to serve static files from there looks as follows:
 
 .. code-block:: python
 
@@ -576,7 +576,7 @@ In the event a 404 Not Found error occurs, the function decorated with ``app.err
 
 .. rubric:: Create a Redirect (Bonus Section)
 
-Although the ToDo application works just fine, it still has one little flaw: When trying to open ``127.0.01:8080`` in the browser, the root route, a 404 error will occur, as no route is established for ```/``.  Which is not too much of a problem, but at least a little bit unexpected. Of course this could be changed by modifiying the route ``app.route('/todo')`` to ``app.route('/')``. Or, if the /todo route should be kept, a redirect can be added to the code. Again, this is pretty straight forward:
+Although the ToDo application works just fine, it still has one little flaw: When trying to open ``127.0.01:8080`` in the browser, the root route, a 404 error will occur, as no route is established for ```/``.  Which is not too much of a problem, but at least a little bit unexpected. Of course this could be changed by modifying the route ``app.route('/todo')`` to ``app.route('/')``. Or, if the /todo route should be kept, a redirect can be added to the code. Again, this is pretty straight forward:
 
 .. code-block:: python
 
@@ -613,14 +613,14 @@ In the very first "Hello World" example, the server is started with ``app.run(ho
 
 .. warning::
 
-    It is highly recommended *not* to run an application based on Bottle - or any web application - with Root / administrator rights! The whole code is excuted with elevated rights, which gives a (much) higher risk to harm the system in case of programming mistakes. Plus, in case an outside person can capture the application, e.g. by utilizes a bug in the code, this person may be able to work with elevated rights on the server. It is highly recommended to run Bottle with user rights, probably in case of a real application, by a dedicated user specifically set-up for this. In case the application should listen on a privileged port like 80 and / or 443, it is a common and a well-established practice to serve Bottle - or any WSGI-based application - with an WSGI application server with user rights on an unprivileged port locally and use a reverse proxy web server in front of the WSGI application server. More on this below.
+    It is highly recommended *not* to run an application based on Bottle - or any web application - with Root / administrator rights! The whole code is executed with elevated rights, which gives a (much) higher risk to harm the system in case of programming mistakes. Plus, in case an outside person can capture the application, e.g. by utilizes a bug in the code, this person may be able to work with elevated rights on the server. It is highly recommended to run Bottle with user rights, probably in case of a real application, by a dedicated user specifically set-up for this. In case the application should listen on a privileged port like 80 and / or 443, it is a common and a well-established practice to serve Bottle - or any WSGI-based application - with an WSGI application server with user rights on an unprivileged port locally and use a reverse proxy web server in front of the WSGI application server. More on this below.
 
 
 .. rubric:: Running Bottle with a different server
 
 As said above, the build-in server is perfectly suitable for local development, personal use or a very small group of people within an internal network. For everything else, the development server may become a bottleneck, as it is single-threaded, thus it can only serve one request at a time. Plus, it may not be robust enough in general.
 
-Bottle comes with a range of `server adapters`_ . To run the Bottle application with a different server than the build-in development server, simple pass the ``server`` argument to the run function. For the following example, the Waitress_ WSGI application server from the Pylons project is used. Waitress works equally good on Linux, MacOS and Windows.
+Bottle comes with a range of `server adapters`_ . To run the Bottle application with a different server than the build-in development server, simple pass the ``server`` argument to the run function. For the following example, the Waitress_ WSGI application server from the Pylons project is used. Waitress works equally good on Linux, macOS and Windows.
 
 .. note::
 
@@ -666,7 +666,7 @@ whereas ``todo`` is the name of the file holding the Bottle application and ``ap
 Final Words
 ============
 
-This is the end of this tutorial for Bottle. The basic concepts of Bottle are shown and a first application utilizin the Bottle WSGI framework was written. Additionally, it was shown how to serve a Bottle application for real applications with a WSGI application server.
+This is the end of this tutorial for Bottle. The basic concepts of Bottle are shown and a first application utilizing the Bottle WSGI framework was written. Additionally, it was shown how to serve a Bottle application for real applications with a WSGI application server.
 
 As said in the introduction, this tutorial is not showing all possibilities Bottle offers. What was skipped here is e.g. receiving file objects and streams and how to handle authentication data. For a complete overview of all features of Bottle, please refer to the full `Bottle documentation`_ .
 

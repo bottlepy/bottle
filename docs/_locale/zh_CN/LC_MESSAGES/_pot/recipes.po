@@ -261,7 +261,7 @@ msgstr ""
 #: ../../recipes.rst:237
 msgid ""
 "Heroku_, a popular cloud application platform now provides support for "
-"running Python applications on their infastructure."
+"running Python applications on their infrastructure."
 msgstr ""
 
 #: ../../recipes.rst:240

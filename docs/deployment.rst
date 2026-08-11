@@ -74,10 +74,10 @@ cgi                     Run as CGI script
 flup      flup_         Run as FastCGI process
 gae       gae_          Helper for Google App Engine deployments
 wsgiref   wsgiref_      Single-threaded default server
-cherrypy  cherrypy_     Multi-threaded (deprectated))
-cheroot   cheroot_      Successor of cheerypy
+cherrypy  cherrypy_     Multi-threaded (deprecated))
+cheroot   cheroot_      Successor of cherrypy
 paste     paste_        Multi-threaded, stable, tried and tested
-waitress  waitress_     Multi-threaded, poweres Pyramid
+waitress  waitress_     Multi-threaded, powers Pyramid
 gunicorn  gunicorn_     Pre-forked, partly written in C
 eventlet  eventlet_     Asynchronous framework with WSGI support.
 gevent    gevent_       Asynchronous (greenlets)

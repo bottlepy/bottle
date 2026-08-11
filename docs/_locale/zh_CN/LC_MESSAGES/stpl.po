@@ -101,7 +101,7 @@ msgstr "{{}}中的Python语句会在渲染的时候被执行，可访问传递�
 
 #: ../../stpl.rst:62
 msgid "Embedded python code"
-msgstr "嵌入Pyhton代码"
+msgstr "嵌入Python代码"
 
 #: ../../stpl.rst:66
 msgid ""
