@@ -2933,7 +2933,7 @@ def _parse_http_header(h):
             parts = value.split(';')
             values.append((parts[0].strip(), {}))
             for attr in parts[1:]:
-                name, value = attr.split('=', 1)
+                name, _, value = attr.partition('=')
                 values[-1][1][name.strip().lower()] = value.strip()
     else:
         lop, key, attrs = ',', None, {}
