@@ -102,6 +102,34 @@ class TestAppMounting(ServerTestBase):
         self.app.mount('/test/', self.subapp)
         self.assertHeader('Content-Type', 'application/json', '/test/json')
 
+    def test_mount_uses_own_error_handler_bug1205(self):
+        @self.subapp.route('/broken')
+        def broken():
+            bottle.abort(403, 'child says no')
+
+        @self.subapp.error(403)
+        def child_403(error):
+            return 'child handler'
+
+        @self.app.error(403)
+        def parent_403(error):
+            return 'parent handler'
+
+        self.app.mount('/test/', self.subapp)
+        self.assertBody('child handler', '/test/broken')
+
+    def test_mount_parent_route_keeps_parent_error_handler(self):
+        @self.app.route('/broken')
+        def broken():
+            bottle.abort(403, 'parent says no')
+
+        @self.app.error(403)
+        def parent_403(error):
+            return 'parent handler'
+
+        self.app.mount('/test/', self.subapp)
+        self.assertBody('parent handler', '/broken')
+
     def test_mount_get_url(self):
         @self.subapp.route('/test', name="test")
         def route():
