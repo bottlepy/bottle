@@ -633,15 +633,15 @@ class Bottle:
     #: If true, most exceptions are caught and returned as :exc:`HTTPError`
     catchall = DictProperty('config', 'catchall')
 
-    __hook_names = 'before_request', 'after_request', 'app_reset', 'config'
-    __hook_reversed = {'after_request'}
+    __hook_names = 'before_request', 'after_request', 'app_reset', 'config', 'asgi_startup', 'asgi_shutdown'
+    __hook_reversed = {'after_request', 'asgi_shutdown'}
 
     @cached_property
     def _hooks(self):
         return dict((name, []) for name in self.__hook_names)
 
     def add_hook(self, name, func):
-        """ Attach a callback to a hook. Three hooks are currently implemented:
+        """ Attach a callback to a hook. Supported hooks include:
 
             before_request
                 Executed once before each request. The request context is
@@ -650,11 +650,16 @@ class Bottle:
                 Executed once after each request regardless of its outcome.
             app_reset
                 Called whenever :meth:`Bottle.reset` is called.
+            asgi_startup
+                Called when an ASGI lifespan startup event is received.
+            asgi_shutdown
+                Called when an ASGI lifespan shutdown event is received.
         """
+        hooks = self._hooks.setdefault(name, [])
         if name in self.__hook_reversed:
-            self._hooks[name].insert(0, func)
+            hooks.insert(0, func)
         else:
-            self._hooks[name].append(func)
+            hooks.append(func)
 
     def remove_hook(self, name, func):
         """ Remove a callback from a hook. """
@@ -664,7 +669,9 @@ class Bottle:
 
     def trigger_hook(self, __name, *args, **kwargs):
         """ Trigger a hook and return a list of results. """
-        return [hook(*args, **kwargs) for hook in self._hooks[__name][:]]
+        hooks = self._hooks.get(__name, [])
+        return [hook(*args, **kwargs) for hook in hooks[:]]
+
 
     def hook(self, name):
         """ Return a decorator that attaches a callback to a hook. See
@@ -1092,6 +1099,15 @@ class Bottle:
         """ Each instance of :class:'Bottle' is a WSGI application. """
         return self.wsgi(environ, start_response)
 
+    def to_asgi(self):
+        """ Return an ASGI 3.0 compatible application wrapper. """
+        return ASGIAdapter(self)
+
+    @property
+    def asgi(self):
+        """ ASGI 3.0 application interface. """
+        return ASGIAdapter(self)
+
     def __enter__(self):
         """ Use this application as default for all module-level shortcuts. """
         default_app.push(self)
@@ -1105,9 +1121,190 @@ class Bottle:
             raise AttributeError("Attribute %s already defined. Plugin conflict?" % name)
         object.__setattr__(self, name, value)
 
+
+class ASGIAdapter:
+    """ ASGI 3.0 interface adapter for Bottle applications.
+        Enables running Bottle apps under ASGI servers like Uvicorn, Hypercorn,
+        and Granian with support for HTTP requests, Lifespan protocol, and
+        asynchronous route handlers.
+    """
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        scope_type = scope.get('type')
+        if scope_type == 'http':
+            await self._handle_http(scope, receive, send)
+        elif scope_type == 'lifespan':
+            await self._handle_lifespan(scope, receive, send)
+        elif scope_type == 'websocket':
+            await send({'type': 'websocket.close', 'code': 1000})
+        else:
+            raise NotImplementedError(f"Unsupported ASGI scope type: {scope_type}")
+
+    async def _handle_lifespan(self, scope, receive, send):
+        while True:
+            message = await receive()
+            msg_type = message.get('type')
+            if msg_type == 'lifespan.startup':
+                try:
+                    self.app.trigger_hook('asgi_startup')
+                    await send({'type': 'lifespan.startup.complete'})
+                except Exception as exc:
+                    await send({'type': 'lifespan.startup.failed', 'message': str(exc)})
+                    return
+            elif msg_type == 'lifespan.shutdown':
+                try:
+                    self.app.trigger_hook('asgi_shutdown')
+                    self.app.close()
+                    await send({'type': 'lifespan.shutdown.complete'})
+                except Exception as exc:
+                    await send({'type': 'lifespan.shutdown.failed', 'message': str(exc)})
+                return
+
+    async def _handle_http(self, scope, receive, send):
+        # 1. Read entire request body from ASGI receive channel
+        body_parts = []
+        more_body = True
+        while more_body:
+            msg = await receive()
+            if msg.get('type') != 'http.request':
+                return
+            body_parts.append(msg.get('body', b''))
+            more_body = msg.get('more_body', False)
+
+        body_bytes = b"".join(body_parts)
+        body_stream = BytesIO(body_bytes)
+
+        # 2. Build WSGI-compatible environ dictionary from ASGI scope
+        server = scope.get('server') or ('localhost', 80)
+        client = scope.get('client') or ('127.0.0.1', 0)
+        raw_path = scope.get('raw_path', scope.get('path', '/').encode('latin1'))
+        query_string = scope.get('query_string', b'').decode('latin1')
+
+        headers = {}
+        for name_b, val_b in scope.get('headers', []):
+            name = name_b.decode('latin1')
+            val = val_b.decode('latin1')
+            key = 'HTTP_' + name.upper().replace('-', '_')
+            if key in ('HTTP_CONTENT_TYPE', 'HTTP_CONTENT_LENGTH'):
+                key = key[5:]
+            headers[key] = val
+
+        environ = {
+            'REQUEST_METHOD': scope.get('method', 'GET'),
+            'SCRIPT_NAME': scope.get('root_path', ''),
+            'PATH_INFO': urlunquote(raw_path.decode('latin1')),
+            'QUERY_STRING': query_string,
+            'SERVER_NAME': str(server[0]),
+            'SERVER_PORT': str(server[1]),
+            'SERVER_PROTOCOL': f"HTTP/{scope.get('http_version', '1.1')}",
+            'REMOTE_ADDR': str(client[0]),
+            'REMOTE_PORT': str(client[1]),
+            'wsgi.version': (1, 0),
+            'wsgi.url_scheme': scope.get('scheme', 'http'),
+            'wsgi.input': body_stream,
+            'wsgi.errors': sys.stderr,
+            'wsgi.multithread': False,
+            'wsgi.multiprocess': False,
+            'wsgi.run_once': False,
+            'asgi.scope': scope,
+        }
+        environ.update(headers)
+
+        # 3. Handle request using Bottle's router and dispatch pipeline
+        request.bind(environ)
+        response.bind()
+        out = None
+
+        try:
+            try:
+                self.app.trigger_hook('before_request')
+                route, args = self.app.router.match(environ)
+                environ['route.handle'] = route
+                environ['bottle.route'] = route
+                environ['route.url_args'] = args
+
+                if inspect.iscoroutinefunction(getattr(route, 'callback', None)):
+                    out = await route.callback(**args)
+                else:
+                    out = route.call(**args)
+                    if inspect.iscoroutine(out):
+                        out = await out
+            except HTTPResponse as E:
+                out = E
+            finally:
+                if isinstance(out, HTTPResponse):
+                    out.apply(response)
+                try:
+                    self.app.trigger_hook('after_request')
+                except HTTPResponse as E:
+                    out = E
+                    out.apply(response)
+        except (KeyboardInterrupt, SystemExit, MemoryError):
+            raise
+        except Exception as E:
+            _try_close(out)
+            if not self.app.catchall:
+                raise
+            stacktrace = format_exc()
+            environ['bottle.exc_info'] = sys.exc_info()
+            out = HTTPError(500, "Internal Server Error", E, stacktrace)
+            out.apply(response)
+
+        # 4. Cast output into iterable response chunks
+        body_chunks = self.app._cast(out)
+
+        # 5. Send ASGI response start
+        headers_list = [
+            (tob(k.lower()), tob(str(v)))
+            for k, v in response.headerlist
+        ]
+        status_code = response._status_code or 200
+
+        if status_code in (100, 101, 204, 304) or environ['REQUEST_METHOD'] == 'HEAD':
+            if hasattr(body_chunks, 'close'):
+                body_chunks.close()
+            body_chunks = []
+
+        await send({
+            'type': 'http.response.start',
+            'status': status_code,
+            'headers': headers_list,
+        })
+
+        # 6. Stream body chunks
+        try:
+            if hasattr(body_chunks, '__aiter__'):
+                async for chunk in body_chunks:
+                    if chunk:
+                        await send({
+                            'type': 'http.response.body',
+                            'body': tob(chunk),
+                            'more_body': True,
+                        })
+                await send({'type': 'http.response.body', 'body': b'', 'more_body': False})
+            else:
+                chunks_list = list(body_chunks)
+                for idx, chunk in enumerate(chunks_list):
+                    is_last = (idx == len(chunks_list) - 1)
+                    await send({
+                        'type': 'http.response.body',
+                        'body': tob(chunk),
+                        'more_body': not is_last,
+                    })
+                if not chunks_list:
+                    await send({'type': 'http.response.body', 'body': b'', 'more_body': False})
+        finally:
+            if hasattr(body_chunks, 'close'):
+                body_chunks.close()
+
+
 ###############################################################################
 # HTTP and WSGI Tools ##########################################################
 ###############################################################################
+#
 
 
 class BaseRequest:
@@ -3731,6 +3928,14 @@ class AutoServer(ServerAdapter):
                 pass
 
 
+class UvicornServer(ServerAdapter):
+    """ Server adapter for Uvicorn ASGI server: https://www.uvicorn.org/ """
+    def run(self, handler):
+        import uvicorn
+        asgi_app = ASGIAdapter(handler) if not isinstance(handler, ASGIAdapter) else handler
+        uvicorn.run(asgi_app, host=self.host, port=self.port, **self.options)
+
+
 server_names = {
     'cgi': CGIServer,
     'flup': FlupFCGIServer,
@@ -3751,8 +3956,10 @@ server_names = {
     'bjoern': BjoernServer,
     'aiohttp': AiohttpServer,
     'uvloop': AiohttpUVLoopServer,
+    'uvicorn': UvicornServer,
     'auto': AutoServer,
 }
+
 
 ###############################################################################
 # Application Control ##########################################################
