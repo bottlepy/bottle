@@ -456,6 +456,7 @@ class Router:
                 match = combined(path)
                 if match:
                     allowed.add(method)
+                    break
         if allowed:
             allow_header = ",".join(sorted(allowed))
             raise HTTPError(405, "Method not allowed.", Allow=allow_header)
@@ -1642,6 +1643,7 @@ class BaseResponse:
         assert issubclass(cls, BaseResponse)
         copy = cls()
         copy.status = self.status
+        copy.body = self.body
         copy._headers = dict((k, v[:]) for (k, v) in self._headers.items())
         if self._cookies:
             cookies = copy._cookies = SimpleCookie()
@@ -1972,11 +1974,13 @@ class JSONPlugin:
                                " apply.")
 
     def apply(self, callback, route):
-        dumps = self.json_dumps
-        if not self.json_dumps: return callback
+        dumps = route.config.get('json.dump_func') or self.json_dumps
+        if not dumps: return callback
 
         @functools.wraps(callback)
         def wrapper(*a, **ka):
+            if not route.config.get('json.enable', True):
+                return callback(*a, **ka)
             try:
                 rv = callback(*a, **ka)
             except HTTPResponse as resp:
@@ -2168,7 +2172,7 @@ class FormsDict(MultiDict):
     def __getattr__(self, name, default=str()):
         # Without this guard, pickle generates a cryptic TypeError:
         if name.startswith('__') and name.endswith('__'):
-            return super(FormsDict, self).__getattr__(name)
+            raise AttributeError(name)
         return self.get(name, default=default)
 
 
@@ -2905,6 +2909,7 @@ def parse_range_header(header, maxlen=0):
     ranges = [r.split('-', 1) for r in header[6:].split(',') if '-' in r]
     for start, end in ranges:
         try:
+            start, end = start.strip(), end.strip()
             if not start:  # bytes=-100    -> last 100 bytes
                 start, end = max(0, maxlen - int(end)), maxlen
             elif not end:  # bytes=100-    -> all but the first 99 bytes
@@ -2933,8 +2938,11 @@ def _parse_http_header(h):
             parts = value.split(';')
             values.append((parts[0].strip(), {}))
             for attr in parts[1:]:
-                name, value = attr.split('=', 1)
-                values[-1][1][name.strip().lower()] = value.strip()
+                if '=' in attr:
+                    name, value = attr.split('=', 1)
+                    values[-1][1][name.strip().lower()] = value.strip()
+                elif attr.strip():
+                    values[-1][1][attr.strip().lower()] = ''
     else:
         lop, key, attrs = ',', None, {}
         for quoted, plain, tok in _hsplit(h):
@@ -2969,8 +2977,7 @@ def _parse_qsl(qs, encoding="utf8"):
 def _lscmp(a, b):
     """ Compares two strings in a cryptographically safe way:
         Runtime is not affected by length of common prefix. """
-    return not sum(0 if x == y else 1
-                   for x, y in zip(a, b)) and len(a) == len(b)
+    return hmac.compare_digest(tob(a), tob(b))
 
 
 def cookie_encode(data, key, digestmod=None):

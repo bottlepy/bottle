@@ -195,3 +195,20 @@ class TestOutputFilter(ServerTestBase):
             c = [x.strip() for x in c]
         self.assertTrue('b=b' in c)
         self.assertTrue('c=c; Path=/' in c)
+
+    def test_json_disabled(self):
+        self.app.route('/nojson', **{'json.enable': False})(lambda: {'a': 1})
+        self.assertNotEqual('application/json', self.urlopen('/nojson')['header'].get('Content-Type'))
+
+    def test_parse_http_header_bare_attributes(self):
+        from bottle import _parse_http_header
+        res = _parse_http_header('text/html; charset=utf-8; foo')
+        self.assertEqual([('text/html', {'charset': 'utf-8', 'foo': ''})], res)
+        res_quoted = _parse_http_header('text/html; foo; bar="baz"')
+        self.assertEqual([('text/html', {'foo': '', 'bar': 'baz'})], res_quoted)
+
+    def test_response_copy_body(self):
+        res = bottle.BaseResponse(body="hello world", status=200)
+        copy = res.copy()
+        self.assertEqual(copy.body, "hello world")
+        self.assertEqual(copy.status, res.status)

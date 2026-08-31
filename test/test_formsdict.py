@@ -15,3 +15,9 @@ class TestFormsDict(unittest.TestCase):
         """ FomsDict.attribute returs u'' on missing keys. """
         d = FormsDict()
         self.assertEqual('', d.missing)
+
+    def test_attr_dunder(self):
+        """ FormsDict raises AttributeError on missing dunder attributes. """
+        d = FormsDict()
+        with self.assertRaises(AttributeError):
+            _ = d.__nonexistent__

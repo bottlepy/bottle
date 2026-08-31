@@ -176,9 +176,13 @@ class TestSendFile(unittest.TestCase):
     def test_range_parser(self):
         r = lambda rs: list(parse_range_header(rs, 100))
         self.assertEqual([(90, 100)], r('bytes=-10'))
+        self.assertEqual([(90, 100)], r('bytes= -10'))
         self.assertEqual([(10, 100)], r('bytes=10-'))
+        self.assertEqual([(10, 100)], r('bytes= 10- '))
         self.assertEqual([(5, 11)],  r('bytes=5-10'))
+        self.assertEqual([(5, 11)],  r('bytes= 5-10 '))
         self.assertEqual([(10, 100), (90, 100), (5, 11)],  r('bytes=10-,-10,5-10'))
+        self.assertEqual([(10, 100), (90, 100), (5, 11)],  r('bytes=10-, -10, 5-10'))
 
     def test_custom_headers(self):
         """ SendFile: Custom headers """
