@@ -2824,7 +2824,7 @@ def static_file(filename, root,
         headers['ETag'] = etag
 
     inm = getenv('HTTP_IF_NONE_MATCH')
-    if inm and inm == etag:
+    if etag_matches(inm, etag):
         return HTTPResponse(status=304, **headers)
 
     ims = getenv('HTTP_IF_MODIFIED_SINCE')
@@ -2876,6 +2876,31 @@ def http_date(value):
         # convert struct_time in UTC to UNIX timestamp
         value = calendar.timegm(value)
     return email.utils.formatdate(value, usegmt=True)
+
+
+def parse_etag_list(header):
+    """ Parse an ``If-None-Match`` (or ``If-Match``) header and yield the
+        entity-tag values it lists, with the optional weak indicator and the
+        surrounding quotes removed. A lone ``*`` is yielded as-is. """
+    for tag in header.split(','):
+        tag = tag.strip()
+        if tag[:2] in ('W/', 'w/'):
+            tag = tag[2:].strip()
+        yield tag[1:-1] if len(tag) > 1 and tag[0] == tag[-1] == '"' else tag
+
+
+def etag_matches(header, etag):
+    """ Check an ``If-None-Match`` header against an entity-tag using the weak
+        comparison rfc9110 sec 8.8.3.2 requires for that header. ``*`` matches
+        because ``static_file`` only gets here for a file that exists. """
+    if not header:
+        return False
+    if header.strip() == '*':
+        return True
+    if not etag:
+        return False
+    wanted = next(parse_etag_list(etag))
+    return any(tag == wanted for tag in parse_etag_list(header))
 
 
 def parse_date(ims):

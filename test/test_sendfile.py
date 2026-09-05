@@ -134,6 +134,33 @@ class TestSendFile(unittest.TestCase):
         self.assertNotEqual(etag, res.headers['ETag'])
         self.assertEqual(200, res.status_code)
 
+    def test_etag_list_and_star(self):
+        """ rfc9110 sec 13.1.2: If-None-Match carries a list of entity-tags, or
+        ``*``, and is compared weakly, so the quotes and any ``W/`` prefix are
+        not part of the value. """
+        etag = static_file(basename, root=root).headers['ETag']
+
+        for header in ('*',
+                       '"%s"' % etag,
+                       'W/"%s"' % etag,
+                       'W/%s' % etag,
+                       '"other", %s' % etag,
+                       '%s , "other"' % etag):
+            request.environ['HTTP_IF_NONE_MATCH'] = header
+            res = static_file(basename, root=root)
+            self.assertEqual(304, res.status_code, header)
+
+        for header in ('"nope"', '"a", "b"', ''):
+            request.environ['HTTP_IF_NONE_MATCH'] = header
+            res = static_file(basename, root=root)
+            self.assertEqual(200, res.status_code, header)
+
+    def test_etag_star_without_etag(self):
+        """ ``*`` asks whether any representation exists, which does not depend
+        on the file having an entity-tag. """
+        request.environ['HTTP_IF_NONE_MATCH'] = '*'
+        self.assertEqual(304, static_file(basename, root=root, etag=False).status_code)
+
     def test_etag_overrides_ims(self):
         """ RFC 7232 sec 3.3: If-Modified-Since MUST be ignored whenever
         If-None-Match is present in the request. """
