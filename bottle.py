@@ -492,6 +492,8 @@ class Route:
         #: decorator are stored in this dictionary. Used for route-specific
         #: plugin configuration and meta-data.
         self.config = app.config._make_overlay()
+        if 'config' in config and isinstance(config['config'], dict):
+            self.config.load_dict(config.pop('config'))
         self.config.load_dict(config)
 
     @cached_property
@@ -1962,21 +1964,24 @@ class JSONPlugin:
     def setup(self, app):
         app.config._define('json.enable', default=True, validate=bool,
                           help="Enable or disable automatic dict->json filter.")
-        app.config._define('json.ascii', default=False, validate=bool,
-                          help="Use only 7-bit ASCII characters in output.")
-        app.config._define('json.indent', default=True, validate=bool,
-                          help="Add whitespace to make json more readable.")
         app.config._define('json.dump_func', default=None,
                           help="If defined, use this function to transform"
-                               " dict into json. The other options no longer"
-                               " apply.")
+                               " dict into json.")
 
     def apply(self, callback, route):
-        dumps = self.json_dumps
-        if not self.json_dumps: return callback
+        dumps = route.config.get('json.dump_func') or self.json_dumps
+        if not dumps: return callback
+        if route.config.get('json.disable') or not route.config.get('json.enable', True):
+            return callback
 
         @functools.wraps(callback)
         def wrapper(*a, **ka):
+            if route.config.get('json.disable') or not route.config.get('json.enable', True):
+                return callback(*a, **ka)
+
+            dumps = route.config.get('json.dump_func') or self.json_dumps
+            if not dumps: return callback(*a, **ka)
+
             try:
                 rv = callback(*a, **ka)
             except HTTPResponse as resp:

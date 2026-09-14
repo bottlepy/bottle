@@ -106,6 +106,32 @@ class TestOutputFilter(ServerTestBase):
         self.assertBody(bottle.json_dumps({'a': 1}))
         self.assertHeader('Content-Type','application/json')
 
+    def test_json_disabled_via_config(self):
+        self.app.config['json.enable'] = False
+        self.app.route('/')(lambda: {'a': 1})
+        self.assertBody('a')
+        self.assertHeader('Content-Type', 'text/html; charset=UTF-8')
+
+    def test_json_disabled_via_route_config(self):
+        self.app.route('/json')(lambda: {'a': 1})
+        self.app.route('/raw', config={'json.enable': False})(lambda: {'a': 1})
+        self.assertBody(bottle.json_dumps({'a': 1}), '/json')
+        self.assertHeader('Content-Type', 'application/json', '/json')
+        self.assertBody('a', '/raw')
+        self.assertHeader('Content-Type', 'text/html; charset=UTF-8', '/raw')
+
+    def test_json_custom_dump_func(self):
+        self.app.config['json.dump_func'] = lambda x: 'custom_json'
+        self.app.route('/')(lambda: {'a': 1})
+        self.assertBody('custom_json')
+        self.assertHeader('Content-Type', 'application/json')
+
+    def test_json_route_custom_dump_func(self):
+        self.app.route('/default')(lambda: {'a': 1})
+        self.app.route('/custom', config={'json.dump_func': lambda x: 'route_custom'})(lambda: {'a': 1})
+        self.assertBody(bottle.json_dumps({'a': 1}), '/default')
+        self.assertBody('route_custom', '/custom')
+
     def test_generator_callback(self):
         @self.app.route('/')
         def test():

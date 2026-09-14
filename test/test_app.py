@@ -18,3 +18,7 @@ class TestApplicationObject(unittest.TestCase):
         del app.test
         app.test = 6
         self.assertEqual(6, app.test)
+
+    def test_autojson_kwarg(self):
+        app = Bottle(autojson=False)
+        self.assertFalse(app.config['json.enable'])
