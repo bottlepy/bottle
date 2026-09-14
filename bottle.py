@@ -1967,17 +1967,20 @@ class JSONPlugin:
         app.config._define('json.dump_func', default=None,
                           help="If defined, use this function to transform"
                                " dict into json.")
+        if self.json_dumps is not json_dumps:
+            app.config['json.enable'] = True
+            if not app.config.get('json.dump_func'):
+                app.config['json.dump_func'] = self.json_dumps
 
     def apply(self, callback, route):
         dumps = route.config.get('json.dump_func') or self.json_dumps
         if not dumps: return callback
-        if route.config.get('json.disable') or not route.config.get('json.enable', True):
-            return callback
 
         @functools.wraps(callback)
         def wrapper(*a, **ka):
-            if route.config.get('json.disable') or not route.config.get('json.enable', True):
-                return callback(*a, **ka)
+            if route.config.get('json.disable') or route.config.get('autojson') is False or not route.config.get('json.enable', True):
+                if self.json_dumps is json_dumps:
+                    return callback(*a, **ka)
 
             dumps = route.config.get('json.dump_func') or self.json_dumps
             if not dumps: return callback(*a, **ka)

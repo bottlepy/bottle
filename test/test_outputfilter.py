@@ -112,13 +112,38 @@ class TestOutputFilter(ServerTestBase):
         self.assertBody('a')
         self.assertHeader('Content-Type', 'text/html; charset=UTF-8')
 
+    def test_json_disabled_via_json_disable(self):
+        self.app.config['json.disable'] = True
+        self.app.route('/')(lambda: {'a': 1})
+        self.assertBody('a')
+        self.assertHeader('Content-Type', 'text/html; charset=UTF-8')
+
     def test_json_disabled_via_route_config(self):
         self.app.route('/json')(lambda: {'a': 1})
         self.app.route('/raw', config={'json.enable': False})(lambda: {'a': 1})
+        self.app.route('/disabled', config={'json.disable': True})(lambda: {'a': 1})
         self.assertBody(bottle.json_dumps({'a': 1}), '/json')
         self.assertHeader('Content-Type', 'application/json', '/json')
         self.assertBody('a', '/raw')
         self.assertHeader('Content-Type', 'text/html; charset=UTF-8', '/raw')
+        self.assertBody('a', '/disabled')
+        self.assertHeader('Content-Type', 'text/html; charset=UTF-8', '/disabled')
+
+    def test_json_enable_dynamic_toggle(self):
+        self.app.config['json.enable'] = False
+        self.app.route('/')(lambda: {'a': 1})
+        self.assertBody('a')
+        self.app.config['json.enable'] = True
+        self.assertBody(bottle.json_dumps({'a': 1}))
+
+    def test_replacement_json_plugin_after_autojson_false(self):
+        app = bottle.Bottle(autojson=False)
+        app.install(bottle.JSONPlugin(lambda d: 'replacement'))
+        app.route('/')(lambda: {'a': 1})
+        env = {'PATH_INFO': '/', 'REQUEST_METHOD': 'GET', 'SERVER_NAME': 'localhost', 'SERVER_PORT': '80', 'wsgi.url_scheme': 'http', 'wsgi.input': None, 'wsgi.errors': None}
+        headers = []
+        body = list(app(env, lambda s, h, e=None: headers.extend(h)))
+        self.assertEqual(body, [b'replacement'])
 
     def test_json_custom_dump_func(self):
         self.app.config['json.dump_func'] = lambda x: 'custom_json'

@@ -115,7 +115,7 @@ of keys and values with namespaced keys::
 
     # Load an entire dict structure
     app.config.load_dict({
-        'autojson': False,
+        'json.enable': False,
         'sqlite': { 'db': ':memory:' },
         'myapp': {
             'param': 'value',
