@@ -14,13 +14,13 @@ The :attr:`Bottle.config` object behaves a lot like an ordinary dictionary. All 
     import bottle
     app = bottle.default_app()             # or bottle.Bottle() if you prefer
 
-    app.config['autojson']    = False      # Turns off the "autojson" feature
+    app.config['json.enable'] = False      # Turns off the automatic json serialization feature
     app.config['sqlite.db']   = ':memory:' # Tells the sqlite plugin which db to use
     app.config['myapp.param'] = 'value'    # Example for a custom config value.
 
     # Change many values at once
     app.config.update({
-        'autojson': False,
+        'json.enable': False,
         'sqlite.db': ':memory:',
         'myapp.param': 'value'
     })
@@ -115,7 +115,7 @@ of keys and values with namespaced keys::
 
     # Load an entire dict structure
     app.config.load_dict({
-        'autojson': False,
+        'json.enable': False,
         'sqlite': { 'db': ':memory:' },
         'myapp': {
             'param': 'value',
