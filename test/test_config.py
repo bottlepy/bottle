@@ -7,7 +7,7 @@ from bottle import ConfigDict
 class TestConfDict(unittest.TestCase):
     def test_isadict(self):
         """ ConfigDict should behaves like a normal dict. """
-        # It is a dict-subclass, so this kind of pointless, but it doen't hurt.
+        # It is a dict-subclass, so this kind of pointless, but it doesn't hurt.
         d, m = dict(), ConfigDict()
         d['key'], m['key'] = 'value', 'value'
         d['k2'], m['k2'] = 'v1', 'v1'
@@ -115,7 +115,7 @@ class TestConfDict(unittest.TestCase):
         self.assertEqual(intermediate['key'], 'source2')
         self.assertEqual(overlay['key'], 'overlay')
 
-        # Deleting an overlayed key restores the value from source
+        # Deleting an overlaid key restores the value from source
         del overlay['key']
         self.assertEqual(source['key'], 'source2')
         self.assertEqual(overlay['key'], 'source2')
@@ -149,7 +149,7 @@ class TestConfDict(unittest.TestCase):
         self.assertEqual(intermediate['key3'], 'source')
         self.assertEqual(overlay['key3'], 'overlay')
 
-        # But as soon as the overlayed key is deleted, it gets the
+        # But as soon as the overlaid key is deleted, it gets the
         # copy from the source
         del overlay['key3']
         self.assertEqual(source['key3'], 'source')

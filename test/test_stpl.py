@@ -103,7 +103,7 @@ class TestSimpleTemplate(unittest.TestCase):
         self.assertRenders("%a=[1,\n%2]\n{{len(a)}}", "2")
 
     def test_dedentbug(self):
-        ''' One-Line dednet blocks should not change indention '''
+        ''' One-Line dednet blocks should not change indentation '''
         t = '%if x: a="if"\n%else: a="else"\n%end\n{{a}}'
         self.assertRenders(t, "if", x=True)
         self.assertRenders(t, "else", x=False)
@@ -114,7 +114,7 @@ class TestSimpleTemplate(unittest.TestCase):
         self.assertRaises(NameError, t.render)
 
     def test_onelinebugs(self):
-        ''' One-Line blocks should not change indention '''
+        ''' One-Line blocks should not change indentation '''
         t = '%if x:\n%a=1\n%end\n{{a}}'
         self.assertRenders(t, "1", x=True)
         t = '%if x: a=1; end\n{{a}}'
@@ -299,7 +299,7 @@ class TestSTPLDir(unittest.TestCase):
         '''
         self.assertRenders(source, result)
 
-    def test_multiline_indention(self):
+    def test_multiline_indentation(self):
         source = '''
             <%   if True:
                    a = 2

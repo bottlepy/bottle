@@ -318,7 +318,7 @@ class TestRequest(unittest.TestCase):
         self._test_chunked('abcdef', HTTPError)
 
     def test_multipart(self):
-        """ Environ: POST (multipart files and multible values per key) """
+        """ Environ: POST (multipart files and multiple values per key) """
         fields = [('field1','value1'), ('field2','value2'), ('field2','万难')]
         files = [('file1','filename1.txt','content1'), ('万难','万难foo.py', 'ä\nö\rü')]
         e = tools.multipart_environ(fields=fields, files=files)
