@@ -106,6 +106,28 @@ class TestOutputFilter(ServerTestBase):
         self.assertBody(bottle.json_dumps({'a': 1}))
         self.assertHeader('Content-Type','application/json')
 
+    def test_json_config_enable_false(self):
+        self.app.config['json.enable'] = False
+        self.app.route('/')(lambda: {'t': 1, 'e': 2, 'st': 3})
+
+        self.assertBody('test')
+        self.assertHeader('Content-Type','text/html; charset=UTF-8')
+
+    def test_json_config_dump_func(self):
+        self.app.config['json.dump_func'] = lambda x: bottle.json_dumps([*x])
+        self.app.route('/')(lambda: {'a': 1})
+
+        self.assertBody(bottle.json_dumps(['a']))
+        self.assertHeader('Content-Type','application/json')
+
+    def test_json_custom_plugin(self):
+        self.app.uninstall(bottle.JSONPlugin)
+        self.app.install(bottle.JSONPlugin(lambda x: bottle.json_dumps([*x])))
+        self.app.route('/')(lambda: {'a': 1})
+
+        self.assertBody(bottle.json_dumps(['a']))
+        self.assertHeader('Content-Type','application/json')
+
     def test_generator_callback(self):
         @self.app.route('/')
         def test():

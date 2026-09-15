@@ -1956,24 +1956,20 @@ class JSONPlugin:
     name = 'json'
     api = 2
 
-    def __init__(self, json_dumps=json_dumps):
+    def __init__(self, json_dumps=None):
         self.json_dumps = json_dumps
 
     def setup(self, app):
         app.config._define('json.enable', default=True, validate=bool,
                           help="Enable or disable automatic dict->json filter.")
-        app.config._define('json.ascii', default=False, validate=bool,
-                          help="Use only 7-bit ASCII characters in output.")
-        app.config._define('json.indent', default=True, validate=bool,
-                          help="Add whitespace to make json more readable.")
         app.config._define('json.dump_func', default=None,
                           help="If defined, use this function to transform"
-                               " dict into json. The other options no longer"
-                               " apply.")
+                               " dict into json.")
 
     def apply(self, callback, route):
-        dumps = self.json_dumps
-        if not self.json_dumps: return callback
+        if self.json_dumps is None and route.config['json.enable'] is False:
+            return callback
+        dumps = self.json_dumps or route.config['json.dump_func'] or json_dumps
 
         @functools.wraps(callback)
         def wrapper(*a, **ka):
