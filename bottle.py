@@ -2090,18 +2090,12 @@ class MultiDict(DictMixin):
     def keys(self):
         return self.dict.keys()
 
-    def values(self):
-        return (v[-1] for v in self.dict.values())
-
-    def items(self):
-        return ((k, v[-1]) for k, v in self.dict.items())
-
     def allitems(self):
         return ((k, v) for k, vl in self.dict.items() for v in vl)
 
     iterkeys = keys
-    itervalues = values
-    iteritems = items
+    itervalues = DictMixin.values
+    iteritems = DictMixin.items
     iterallitems = allitems
 
     def get(self, key, default=None, index=-1, type=None):
