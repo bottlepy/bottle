@@ -1008,8 +1008,16 @@ class Bottle:
         # TODO: Handle these explicitly in handle() or make them iterable.
         if isinstance(out, HTTPError):
             out.apply(response)
-            out = self.error_handler.get(out.status_code,
-                                         self.default_error_handler)(out)
+            # A natively mounted app's routes are merged straight into the
+            # parent's router (see _mount_app), so self here is the parent
+            # even when the error came from a route the child app defined.
+            # The route itself still remembers which app it belongs to,
+            # and that is whose error_handler should format the response,
+            # not whichever app happens to own the WSGI entry point.
+            route = request.environ.get('bottle.route')
+            owner = route.app if route else self
+            out = owner.error_handler.get(out.status_code,
+                                          owner.default_error_handler)(out)
             return self._cast(out)
         if isinstance(out, HTTPResponse):
             out.apply(response)
