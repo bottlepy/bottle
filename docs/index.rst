@@ -11,7 +11,7 @@
 .. _cheroot: https://cheroot.cherrypy.dev/
 .. _WSGI: https://peps.python.org/pep-3333/
 .. _Python: https://python.org/
-.. _testing: https://github.com/bottlepy/bottle/raw/master/bottle.py
+.. _testing: https://github.com/bottlepy/bottle/raw/main/bottle.py
 .. _issue_tracker: https://github.com/bottlepy/bottle/issues
 .. _PyPI: https://pypi.python.org/pypi/bottle
 .. _gae: https://developers.google.com/appengine/
@@ -45,7 +45,7 @@ Run this script or paste it into a Python console, then point your browser to `<
 Download and Install
 ====================
 
-.. __: https://github.com/bottlepy/bottle/raw/master/bottle.py
+.. __: https://github.com/bottlepy/bottle/raw/main/bottle.py
 
 Install the latest stable release with ``pip install bottle`` or download `bottle.py`__ (unstable) into your project directory. There are no hard [1]_ dependencies other than the Python standard library.
 

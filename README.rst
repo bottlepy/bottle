@@ -59,14 +59,14 @@ Run this script or paste it into a Python console, then point your browser to `<
 Download and Install
 --------------------
 
-.. __: https://github.com/bottlepy/bottle/raw/master/bottle.py
+.. __: https://github.com/bottlepy/bottle/raw/main/bottle.py
 
 Install the latest stable release with ``pip install bottle`` or download `bottle.py`__ (unstable) into your project directory. There are no hard dependencies other than the Python standard library.
 
 License
 -------
 
-.. __: https://github.com/bottlepy/bottle/raw/master/LICENSE
+.. __: https://github.com/bottlepy/bottle/raw/main/LICENSE
 
 Code and documentation are available according to the MIT License (see LICENSE__).
 

@@ -1,0 +1,29 @@
+name: Sync master branch
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-master
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout master
+        uses: actions/checkout@v7
+        with:
+          ref: master
+          fetch-depth: 0
+
+      - name: Fast-forward master to main
+        run: |
+          git fetch origin main:refs/remotes/origin/main
+          git merge --ff-only origin/main
+          git push origin master

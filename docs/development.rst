@@ -20,7 +20,7 @@ The bottle `development repository <https://github.com/bottlepy/bottle>`_ and th
 
 * **git:** ``git clone git://github.com/bottlepy/bottle.git``
 * **git/https:** ``git clone https://github.com/bottlepy/bottle.git``
-* **Download:** Development branch as `tar archive <https://github.com/bottlepy/bottle/tarball/master>`_ or `zip file <https://github.com/bottlepy/bottle/zipball/master>`_.
+* **Download:** Development branch as `tar archive <https://github.com/bottlepy/bottle/tarball/main>`_ or `zip file <https://github.com/bottlepy/bottle/zipball/main>`_.
 
 
 Releases and Updates
@@ -48,19 +48,19 @@ Repository Structure
 
 The source repository is structured as follows:
 
-``master`` branch
+``main`` branch
   This is the integration, testing and development branch. All changes that are planned to be part of the next release are merged and tested here.
 
 ``release-x.y`` branches
-  As soon as the master branch is (almost) ready for a new release, it is branched into a new release branch. This "release candidate" is feature-frozen but may receive bug-fixes and last-minute changes until it is considered production ready and officially released. From that point on it is called a "maintenance branch" and still receives bug-fixes, but only important ones. The patch number is increased on each push to these branches, so you can keep up with important changes.
+  As soon as the main branch is (almost) ready for a new release, it is branched into a new release branch. This "release candidate" is feature-frozen but may receive bug-fixes and last-minute changes until it is considered production ready and officially released. From that point on it is called a "maintenance branch" and still receives bug-fixes, but only important ones. The patch number is increased on each push to these branches, so you can keep up with important changes.
 
 Feature branches
-  All other branches are feature branches. These are based on the master branch and only live as long as they are still active and not merged back into ``master``.
+  All other branches are feature branches. These are based on the main branch and only live as long as they are still active and not merged back into ``main``.
 
 
 .. rubric:: What does this mean for a developer?
 
-If you want to add a feature, create a new feature branch from ``master``. If you want to fix a bug, branch off of ``release-x.y`` for each affected release. Please use a separate branch for each feature or bug to make integration as easy as possible.
+If you want to add a feature, create a new feature branch from ``main``. If you want to fix a bug, branch off of ``release-x.y`` for each affected release. Please use a separate branch for each feature or bug to make integration as easy as possible.
 
 .. rubric:: What does this mean for a maintainer ?
 
@@ -75,7 +75,7 @@ The best way to get your changes integrated into the main development branch is 
 * **Documentation:** Tell us what your patch does. Comment your code. If you introduced a new feature, add to the documentation so others can learn about it.
 * **Test:** Write tests to prove that your code works as expected and does not break anything. If you fixed a bug, write at least one test-case that triggers the bug. Make sure that all tests pass before you submit a patch.
 * **One patch at a time:** Only fix one bug or add one feature at a time. Design your patches so that they can be applied as a whole. Keep your patches clean, small and focused. 
-* **Sync with upstream:** If the ``upstream/master`` branch changed while you were working on your patch, rebase or pull to make sure that your patch still applies without conflicts.
+* **Sync with upstream:** If the ``upstream/main`` branch changed while you were working on your patch, rebase or pull to make sure that your patch still applies without conflicts.
 
 
 
