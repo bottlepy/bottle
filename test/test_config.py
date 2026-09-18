@@ -65,6 +65,16 @@ class TestConfDict(unittest.TestCase):
         self.assertEqual(c['int'], 6)
         self.assertRaises(ValueError, lambda: c.update(int='not an int'))
 
+    def test_overlay_filter_error_keeps_virtual_key(self):
+        root = ConfigDict()
+        root.meta_set("key", "filter", int)
+        root["key"] = 1
+        overlay = root._make_overlay()
+
+        self.assertTrue("key" in overlay._virtual_keys)
+        self.assertRaises(ValueError, lambda: overlay.update(key="not an int"))
+        self.assertTrue("key" in overlay._virtual_keys)
+
     def test_load_dict(self):
         c = ConfigDict()
         d = dict(a=dict(b=dict(foo=5, bar=6), baz=7))

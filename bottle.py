@@ -592,7 +592,8 @@ class Bottle:
     @lazy_attribute
     def _global_config(cls):
         cfg = ConfigDict()
-        cfg.meta_set('catchall', 'validate', bool)
+        cfg._define('catchall', default=True, filter=bool,
+            help="Catch all unhandled exceptions and display an error page.")
         return cfg
 
     def __init__(self, **kwargs):
@@ -600,10 +601,6 @@ class Bottle:
         self.config = self._global_config._make_overlay()
         self.config._add_change_listener(
             functools.partial(self.trigger_hook, 'config'))
-
-        self.config.update({
-            "catchall": True
-        })
 
         if kwargs.get('catchall') is False:
             depr(0, 13, "Bottle(catchall) keyword argument.",
@@ -1960,7 +1957,7 @@ class JSONPlugin:
         self.json_dumps = json_dumps
 
     def setup(self, app):
-        app.config._define('json.enable', default=True, validate=bool,
+        app.config._define('json.enable', default=True, filter=bool,
                           help="Enable or disable automatic dict->json filter.")
         app.config._define('json.dump_func', default=None,
                           help="If defined, use this function to transform"
@@ -2363,9 +2360,8 @@ class ConfigDict(dict):
         if not isinstance(key, str):
             raise TypeError('Key has type %r (not a string)' % type(key))
 
-        self._virtual_keys.discard(key)
-
         value = self.meta_get(key, 'filter', lambda x: x)(value)
+        self._virtual_keys.discard(key)
         if key in self and self[key] is value:
             return
 
@@ -2439,14 +2435,14 @@ class ConfigDict(dict):
         """ Return an iterable of meta field names defined for a key. """
         return self._meta.get(key, {}).keys()
 
-    def _define(self, key, default=_UNSET, help=_UNSET, validate=_UNSET):
+    def _define(self, key, default=_UNSET, help=_UNSET, filter=_UNSET):
         """ (Unstable) Shortcut for plugins to define own config parameters. """
         if default is not _UNSET:
             self.setdefault(key, default)
         if help is not _UNSET:
             self.meta_set(key, 'help', help)
-        if validate is not _UNSET:
-            self.meta_set(key, 'validate', validate)
+        if filter is not _UNSET:
+            self.meta_set(key, 'filter', filter)
 
     def _iter_overlays(self):
         for ref in self._overlays:
