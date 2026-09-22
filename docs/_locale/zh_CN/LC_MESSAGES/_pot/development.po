@@ -281,7 +281,7 @@ msgstr ""
 #: ../../development.rst:85
 msgid ""
 "**One patch at a time:** Only fix one bug or add one feature at a time. "
-"Design your patches so that they can be applyed as a whole. Keep your "
+"Design your patches so that they can be applied as a whole. Keep your "
 "patches clean, small and focused."
 msgstr ""
 

@@ -198,7 +198,7 @@ msgid "waitress_"
 msgstr ""
 
 #: ../../deployment.rst:69
-msgid "Multi-threaded, poweres Pyramid"
+msgid "Multi-threaded, powers Pyramid"
 msgstr ""
 
 #: ../../deployment.rst:70

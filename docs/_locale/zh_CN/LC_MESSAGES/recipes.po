@@ -288,7 +288,7 @@ msgstr "在Heroku中使用Bottle"
 #: ../../recipes.rst:263
 msgid ""
 "Heroku_, a popular cloud application platform now provides support for "
-"running Python applications on their infastructure."
+"running Python applications on their infrastructure."
 msgstr "Heroku_ ，一个流行的云应用平台，提供Python支持。"
 
 #: ../../recipes.rst:266

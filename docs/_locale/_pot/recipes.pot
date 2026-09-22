@@ -214,7 +214,7 @@ msgid "Using Bottle with Heroku"
 msgstr ""
 
 #: ../../recipes.rst:263
-msgid "Heroku_, a popular cloud application platform now provides support for running Python applications on their infastructure."
+msgid "Heroku_, a popular cloud application platform now provides support for running Python applications on their infrastructure."
 msgstr ""
 
 #: ../../recipes.rst:266

@@ -145,7 +145,7 @@ msgstr ""
 #: ../../development.rst:40
 msgid ""
 "The minor release number is increased on updates that change the API or "
-"behaviour in some way. You might get some depreciation warnings any may have"
+"behaviour in some way. You might get some deprecation warnings any may have"
 " to tweak some configuration settings to restore the old behaviour, but in "
 "most cases these changes are designed to be backward compatible for at least"
 " one minor release. You should update to stay up do date, but don't have to."
@@ -282,7 +282,7 @@ msgstr ""
 #: ../../development.rst:83
 msgid ""
 "**One patch at a time:** Only fix one bug or add one feature at a time. "
-"Design your patches so that they can be applyed as a whole. Keep your "
+"Design your patches so that they can be applied as a whole. Keep your "
 "patches clean, small and focused."
 msgstr ""
 

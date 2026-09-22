@@ -12,7 +12,7 @@ PREFIX=`cd $PREFIX; pwd`
 
 PATH="$PREFIX/bin:$PATH"
 
-# Add ubuntus special lib and include dirs so python can find them.
+# Add ubuntu's special lib and include dirs so python can find them.
 export arch=$(dpkg-architecture -qDEB_HOST_MULTIARCH)
 export LDFLAGS="-L/usr/lib/$arch -L/lib/$arch"
 export CFLAGS="-I/usr/include/$arch"

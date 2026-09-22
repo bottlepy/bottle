@@ -34,7 +34,7 @@ Major Release (x.0)
     The major release number is increased on important milestones that change the design of core parts of the framework and break backward compatibility in some fundamental way. You probably have to change parts of your application to use a new major release. These releases are very rare, through.
 
 Minor Release (x.y)
-    The minor release number is increased whenever APIs or behavior changes in some backwards incompatible way or major features or new APIs are added. You might get some depreciation warnings any may have to tweak some configuration settings to restore the old behavior, but in most cases these changes are designed to be backward compatible for at least one minor release. You should update to stay up do date, but don't have to.
+    The minor release number is increased whenever APIs or behavior changes in some backwards incompatible way or major features or new APIs are added. You might get some deprecation warnings any may have to tweak some configuration settings to restore the old behavior, but in most cases these changes are designed to be backward compatible for at least one minor release. You should update to stay up do date, but don't have to.
 
 Patches (x.y.z)
     The patch number is increased on bug-fixes and other patches that do not change APIs or behaviour. You can safely update without editing your application code. In fact, you really should as soon as possible, because important security fixes are released this way.

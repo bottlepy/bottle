@@ -69,7 +69,7 @@ msgstr "Dynamische Routen und Schrägstriche"
 #: ../../faq.rst:40
 msgid ""
 "In :ref:`dynamic route syntax <tutorial-dynamic-routes>`, a placeholder "
-"token (``<name>``) matches everything up to the next slash. This equals to "
+"token (``<name>``) matches everything up to the next slash. This equals "
 "``[^/]+`` in regular expression syntax. To accept slashes too, you have to "
 "add a custom regular pattern to the placeholder. An example: "
 "``/images/<filepath:path>`` would match ``/images/icons/error.png`` but "

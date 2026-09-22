@@ -97,7 +97,7 @@ msgid "Further Software Necessities"
 msgstr ""
 
 #: ../../tutorial_app.rst:63
-msgid "As we use SQLite3 as a database, make sure it is installed. On Linux systems, most distributions have SQLite3 installed by default. SQLite is available for Windows and MacOS X as well and the `sqlite3` module is part of the python standard library."
+msgid "As we use SQLite3 as a database, make sure it is installed. On Linux systems, most distributions have SQLite3 installed by default. SQLite is available for Windows and macOS as well and the `sqlite3` module is part of the python standard library."
 msgstr ""
 
 #: ../../tutorial_app.rst:66
