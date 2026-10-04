@@ -39,6 +39,7 @@ Release 0.14 (in development)
 .. rubric:: Deprecated APIs or behavior
 
 * ``Route.get_undecorated_callback()`` was able to look into closure cells to guess the original function wrapped by a decorator, but this is too aggressive in some cases and may return the wrong function. To avoid this, we will depend on proper use of ``@functools.wraps(orig)`` or ``functools.update_wrapper(wrapper, orig)`` in decorators in the future.
+* ``bottle.local`` is deprecated. Use :class:`contextvars.ContextVar` or assign custom attributes to ``bottle.request`` if your application depends on thread-local or request-local but globally accessible state.
 
 .. rubric:: Removed APIs
 
@@ -46,10 +47,12 @@ Release 0.14 (in development)
 * Dropped support for Python 3.8 (EOL: 2024-10-07).
 * Removed the ``RouteReset`` exception and associated logic.
 * Removed the `bottle.py` console script entrypoint in favour of the new `bottle` script. You can still execute `bottle.py` directly or via `python -m bottle`. The only change is that the command installed by pip or similar tools into the bin/Scripts folder of the (virtual) environment is now called `bottle` to avoid circular import errors.
+* The bottle CLI no longer monkey-patches python standard libraries when selecting the `gevent` or `eventlet` server adapter. This was an incomplete workaround anyway and is no longer required by bottle itself, but if your own application depends on it, you may need to add ``gevent.monkey.patch_all()`` to your own wsgi application script.
 
 .. rubric:: Changes
 
 * Form values, query parameters, path elements and cookies are now always decoded as `utf8` with `errors='surrogateescape'`. This is the correct approach for almost all modern web applications, but still allows applications to recover the original byte sequence if needed. This also means that ``bottle.FormsDict`` no longer re-encodes PEP-3333 `latin1` strings to `utf8` on demand (via attribute access). The ``FormsDict.getunicode()`` and ``FormsDict.decode()`` methods are deprecated and do nothing, as all values are already transcoded to `utf8`.
+* Bottle now use :class:`contextvars.ContextVar` instead of :class:`threading.local` wherever possible. Contexts are natively supported by gevent and bottle no longer depends on monkey-patching in greenlet-based server environments. Running gunicorn with the gevent worker now *just works* without additional steps.
 
 .. rubric:: New features
 
