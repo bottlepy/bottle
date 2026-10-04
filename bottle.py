@@ -3444,6 +3444,13 @@ class WSGIRefServer(ServerAdapter):
             raise
 
 
+class WSGIServer(ServerAdapter):
+    def run(self, handler):
+        import wsgiserver
+        server = wsgiserver.WSGIServer(handler, self.host, self.port, **self.options)
+        server.start()
+
+
 class CherryPyServer(ServerAdapter):
     def run(self, handler):  # pragma: no cover
         depr(0, 13, "The wsgi server part of cherrypy was split into a new "
@@ -3732,6 +3739,7 @@ server_names = {
     'cgi': CGIServer,
     'flup': FlupFCGIServer,
     'wsgiref': WSGIRefServer,
+    'wsgiserver': WSGIServer,
     'waitress': WaitressServer,
     'cherrypy': CherryPyServer,
     'cheroot': CherootServer,
