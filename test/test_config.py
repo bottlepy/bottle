@@ -1,6 +1,7 @@
 import os
 import tempfile
 import unittest
+from pathlib import Path
 from bottle import ConfigDict
 
 
@@ -198,3 +199,8 @@ class TestINIConfigLoader(unittest.TestCase):
             'namespace.section.default': 'otherDefault',
             'namespace.section.sub.namespace.key': 'test2',
             'port': '8080'}, c)
+
+        # Test with pathlib.Path object
+        c2 = ConfigDict()
+        c2.load_config(Path(self.config_file.name))
+        self.assertDictEqual(c, c2)

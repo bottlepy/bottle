@@ -1,5 +1,6 @@
 import sys
 import unittest
+from pathlib import Path
 from bottle import static_file, request, response, parse_date, parse_range_header, Bottle, tob
 import bottle
 import wsgiref.util
@@ -56,6 +57,9 @@ class TestSendFile(unittest.TestCase):
         """ SendFile: Valid requests"""
         out = static_file(basename, root=root)
         self.assertEqual(open(__file__,'rb').read(), out.body.read())
+
+        out_path = static_file(Path(basename), root=Path(root))
+        self.assertEqual(open(__file__,'rb').read(), out_path.body.read())
 
     def test_invalid(self):
         """ SendFile: Invalid requests"""
