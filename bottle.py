@@ -435,11 +435,15 @@ class Router:
         methods = ('PROXY', 'HEAD', 'GET', 'ANY') if verb == 'HEAD' else ('PROXY', verb, 'ANY')
 
         for method in methods:
-            if method in self.static and path in self.static[method]:
-                target, getargs = self.static[method][path]
-                return target, getargs(path) if getargs else {}
-            elif method in self.dyna_regexes:
-                for combined, rules in self.dyna_regexes[method]:
+            static_map = self.static.get(method)
+            if static_map:
+                res = static_map.get(path)
+                if res is not None:
+                    target, getargs = res
+                    return target, getargs(path) if getargs else {}
+            dyna_rules = self.dyna_regexes.get(method)
+            if dyna_rules:
+                for combined, rules in dyna_rules:
                     match = combined(path)
                     if match:
                         target, getargs = rules[match.lastindex - 1]
@@ -1560,11 +1564,26 @@ class BaseRequest:
             raise AttributeError("Attribute not defined: %s" % name)
 
 
+_HKEY_CACHE = {}
+
+
 def _hkey(key):
+    try:
+        return _HKEY_CACHE[key]
+    except (KeyError, TypeError):
+        pass
+    orig = key
     key = touni(key)
     if '\n' in key or '\r' in key or '\0' in key:
         raise ValueError("Header names must not contain control characters: %r" % key)
-    return key.title().replace('_', '-')
+    res = key.title().replace('_', '-')
+    if len(_HKEY_CACHE) < 1024:
+        try:
+            _HKEY_CACHE[orig] = res
+            _HKEY_CACHE[res] = res
+        except TypeError:
+            pass
+    return res
 
 
 def _hval(value):
@@ -1751,7 +1770,7 @@ class BaseResponse:
         if self._cookies:
             for c in self._cookies.values():
                 out.append(('Set-Cookie', _hval(c.OutputString())))
-        out = [(k, v.encode('utf8', 'surrogateescape').decode('latin1')) for (k, v) in out]
+        out = [(k, v if isinstance(v, str) and v.isascii() else v.encode('utf8', 'surrogateescape').decode('latin1')) for (k, v) in out]
         return out
 
     content_type = HeaderProperty('Content-Type')
