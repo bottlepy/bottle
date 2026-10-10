@@ -435,13 +435,12 @@ class Router:
         methods = ('PROXY', 'HEAD', 'GET', 'ANY') if verb == 'HEAD' else ('PROXY', verb, 'ANY')
 
         for method in methods:
-            if method in self.static and path in self.static[method]:
-                target, getargs = self.static[method][path]
+            if (paths := self.static.get(method)) and (hit := paths.get(path)):
+                target, getargs = hit
                 return target, getargs(path) if getargs else {}
-            elif method in self.dyna_regexes:
-                for combined, rules in self.dyna_regexes[method]:
-                    match = combined(path)
-                    if match:
+            elif (dyna_rules := self.dyna_regexes.get(method)):
+                for combined, rules in dyna_rules:
+                    if match := combined(path):
                         target, getargs = rules[match.lastindex - 1]
                         return target, getargs(path) if getargs else {}
 
@@ -1059,14 +1058,14 @@ class Bottle:
         try:
             out = self._cast(self._handle(environ))
             # rfc2616 section 4.3
-            if response._status_code in (100, 101, 204, 304) \
+            if response._status[0] in (100, 101, 204, 304) \
                or environ['REQUEST_METHOD'] == 'HEAD':
                 if hasattr(out, 'close'): out.close()
                 out = []
             exc_info = environ.get('bottle.exc_info')
             if exc_info is not None:
                 del environ['bottle.exc_info']
-            start_response(response._wsgi_status_line(), response.headerlist, exc_info)
+            start_response(response.status_line, response.headerlist, exc_info)
             return out
         except (KeyboardInterrupt, SystemExit, MemoryError):
             raise
@@ -1620,10 +1619,12 @@ class BaseResponse:
         Additional keyword arguments are added to the list of headers.
         Underscores in the header name are replaced with dashes.
         """
+        self._status = self.default_status, HTTP_CODES[self.default_status]
         self._cookies = None
         self._headers = {}
         self.body = body
-        self.status = status or self.default_status
+        if status:
+            self._set_status(status)
         if headers:
             if isinstance(headers, dict):
                 headers = headers.items()
@@ -1638,7 +1639,7 @@ class BaseResponse:
         cls = cls or BaseResponse
         assert issubclass(cls, BaseResponse)
         copy = cls()
-        copy.status = self.status
+        copy._status = self._status
         copy._headers = dict((k, v[:]) for (k, v) in self._headers.items())
         if self._cookies:
             cookies = copy._cookies = SimpleCookie()
@@ -1657,39 +1658,34 @@ class BaseResponse:
     @property
     def status_line(self):
         """ The HTTP status line as a string (e.g. ``404 Not Found``)."""
-        return self._status_line
+        code, reason = self._status
+        return f"{code} {reason}" 
 
     @property
     def status_code(self):
         """ The HTTP status code as an integer (e.g. 404)."""
-        return self._status_code
+        return self._status[0]
 
     def _set_status(self, status):
         if isinstance(status, int):
-            code, status = status, _HTTP_STATUS_LINES.get(status)
-        elif ' ' in status:
-            if '\n' in status or '\r' in status or '\0' in status:
-                raise ValueError('Status line must not include control chars.')
-            status = status.strip()
-            code = int(status.split()[0])
+            code, reason = status, HTTP_CODES.get(status)
+        elif ' ' in status and status.isascii() and status.isprintable():
+            # ascii + printable is intentionally more strict than rfc7230
+            code, _, reason = status.partition(' ')
+            code, reason = int(code), reason.strip()
         else:
-            raise ValueError('String status line without a reason phrase.')
+            raise ValueError('Expected format: 3-digit status code followed by'
+                             ' space and a printable ASCII reason phrase')
         if not 100 <= code <= 999:
-            raise ValueError('Status code out of range.')
-        self._status_code = code
-        self._status_line = str(status or ('%d Unknown' % code))
+            raise ValueError('Status code out of range (100-999)')
+        self._status = code, reason or 'Unknown'
 
-    def _get_status(self):
-        return self._status_line
-
-    status = property(
-        _get_status, _set_status, None,
+    status = property(status_line.fget, _set_status, None,
         ''' A writeable property to change the HTTP response status. It accepts
             either a numeric code (100-999) or a string with a custom reason
             phrase (e.g. "404 Brain not found"). Both :data:`status_line` and
-            :data:`status_code` are updated accordingly. The return value is
-            always a status string. ''')
-    del _get_status, _set_status
+            :data:`status_code` are updated accordingly. The return value always
+            matches :data:`status_line`. ''')
 
     @property
     def headers(self):
@@ -1729,10 +1725,6 @@ class BaseResponse:
         """ Yield (header, value) tuples, skipping headers that are not
             allowed with the current response status code. """
         return self.headerlist
-
-    def _wsgi_status_line(self):
-        """ WSGI conform status line (latin1-encodeable) """
-        return self._status_line.encode('utf8', 'surrogateescape').decode('latin1')
 
     @property
     def headerlist(self):
@@ -1895,8 +1887,7 @@ class LocalResponse(BaseResponse):
         to build the HTTP response at the end of the request/response cycle.
     """
     bind = BaseResponse.__init__
-    _status_line = _local_property()
-    _status_code = _local_property()
+    _status = _local_property()
     _cookies = _local_property()
     _headers = _local_property()
     body = _local_property()
@@ -1919,8 +1910,7 @@ class HTTPResponse(Response, BottleException):
 
     def apply(self, other):
         """ Copy the state of this response to a different :class:`Response` object. """
-        other._status_code = self._status_code
-        other._status_line = self._status_line
+        other._status = self._status
         other._headers = self._headers
         other._cookies = self._cookies
         other.body = self.body
@@ -4449,8 +4439,6 @@ HTTP_CODES[429] = "Too Many Requests"
 HTTP_CODES[431] = "Request Header Fields Too Large"
 HTTP_CODES[451] = "Unavailable For Legal Reasons"  # RFC 7725
 HTTP_CODES[511] = "Network Authentication Required"
-_HTTP_STATUS_LINES = dict((k, '%d %s' % (k, v))
-                          for (k, v) in HTTP_CODES.items())
 
 #: The default template used for error pages. Override with @error()
 ERROR_PAGE_TEMPLATE = """

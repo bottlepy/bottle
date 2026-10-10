@@ -578,12 +578,12 @@ class TestResponse(unittest.TestCase):
         self.assertEqual(rs.status_code, 404) # last value
         self.assertEqual(rs.status_line, '404 Brain not Found') # last value
 
-        # Unicode in status line (thanks RFC7230 :/)
-        rs.status = '400 Non-ASÎÎ'
-        self.assertEqual(rs.status, rs.status_line)
-        self.assertEqual(rs.status_code, 400)
-        wire = rs._wsgi_status_line().encode('latin1')
-        self.assertEqual(rs.status, wire.decode('utf8'))
+        # We are intentionally more strict than RFC7230
+        self.assertRaises(ValueError, lambda: setattr(rs, 'status', '400 Non-ASÎÎ'))
+        self.assertRaises(ValueError, lambda: setattr(rs, 'status', '400 Non\tprintable'))
+        self.assertRaises(ValueError, lambda: setattr(rs, 'status', '400 really\0bad'))
+        self.assertRaises(ValueError, lambda: setattr(rs, 'status', '400 noo\noo'))
+        self.assertRaises(ValueError, lambda: setattr(rs, 'status', '400'))
 
     def test_content_type(self):
         rs = BaseResponse()
