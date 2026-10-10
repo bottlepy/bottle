@@ -986,8 +986,7 @@ class Bottle:
 
         # Empty output is done here
         if not out:
-            if 'Content-Length' not in response:
-                response['Content-Length'] = 0
+            response._setdefault_header('Content-Length', "0")
             return []
         # Join lists of byte or unicode strings. Mixed lists are NOT supported
         if isinstance(out, (tuple, list)) and isinstance(out[0], (bytes, str)):
@@ -997,8 +996,7 @@ class Bottle:
             out = out.encode(response.charset)
         # Byte Strings are just returned
         if isinstance(out, bytes):
-            if 'Content-Length' not in response:
-                response['Content-Length'] = len(out)
+            response._setdefault_header('Content-Length', len(out))
             return [out]
         # HTTPError or HTTPException (recursive, because they may wrap anything)
         # TODO: Handle these explicitly in handle() or make them iterable.
@@ -1013,8 +1011,8 @@ class Bottle:
 
         # File-like objects.
         if hasattr(out, 'read'):
-            if 'wsgi.file_wrapper' in request.environ:
-                return request.environ['wsgi.file_wrapper'](out)
+            if wrapper := request.environ.get('wsgi.file_wrapper'):
+                return wrapper(out)
             elif hasattr(out, 'close') or not hasattr(out, '__iter__'):
                 return WSGIFileWrapper(out)
 
@@ -1124,8 +1122,8 @@ class BaseRequest:
         """ Wrap a WSGI environ dictionary. """
         #: The wrapped WSGI environ dictionary. This is the only real attribute.
         #: All other attributes actually are read-only properties.
-        self.environ = {} if environ is None else environ
-        self.environ['bottle.request'] = self
+        self.environ = env = {} if environ is None else environ
+        env['bottle.request'] = self
 
     @DictProperty('environ', 'bottle.app', read_only=True)
     def app(self):
@@ -1716,6 +1714,9 @@ class BaseResponse:
         """ Create a new response header, replacing any previously defined
             headers with the same name. """
         self._headers[_hkey(name)] = [_hval(value)]
+
+    def _setdefault_header(self, name, value):
+        self._headers.setdefault(_hkey(name), [_hval(value)])
 
     def add_header(self, name, value):
         """ Add an additional response header, not removing duplicates. """
