@@ -1554,11 +1554,12 @@ class BaseRequest:
             raise AttributeError("Attribute not defined: %s" % name)
 
 
+@functools.lru_cache(1024)
 def _hkey(key):
     key = touni(key)
     if '\n' in key or '\r' in key or '\0' in key:
         raise ValueError("Header names must not contain control characters: %r" % key)
-    return key.title().replace('_', '-')
+    return key.strip().title().replace('_', '-')
 
 
 def _hval(value):
