@@ -1730,18 +1730,17 @@ class BaseResponse:
     @property
     def headerlist(self):
         """ WSGI conform list of (header, value) tuples. """
-        out = []
-        headers = list(self._headers.items())
-        if 'Content-Type' not in self._headers:
-            headers.append(('Content-Type', [self.default_content_type]))
-        if self._status_code in self.bad_headers:
-            bad_headers = self.bad_headers[self._status_code]
-            headers = [h for h in headers if h[0] not in bad_headers]
-        out += [(name, val) for (name, vals) in headers for val in vals]
+        headers, out = self._headers, []
+        remove = self.bad_headers.get(self._status[0]) or ()
+        for name, values in headers.items():
+            if name in remove: continue
+            for value in values:
+                out.append((name, value if value.isascii() else value.encode('utf8', 'surrogateescape').decode('latin1')))
+        if 'Content-Type' not in headers and 'Content-Type' not in remove:
+            out.append(('Content-Type', self.default_content_type))
         if self._cookies:
             for c in self._cookies.values():
-                out.append(('Set-Cookie', _hval(c.OutputString())))
-        out = [(k, v.encode('utf8', 'surrogateescape').decode('latin1')) for (k, v) in out]
+                out.append(('Set-Cookie', c.OutputString()))
         return out
 
     content_type = HeaderProperty('Content-Type')
