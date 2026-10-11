@@ -10,7 +10,7 @@ USING_UJSON = True
 
 try:
     import ujson
-except ImportError:
+except ImportError as e:
     USING_UJSON = False
 
 class TestOutputFilter(ServerTestBase):
