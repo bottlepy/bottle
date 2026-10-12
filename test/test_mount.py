@@ -110,6 +110,36 @@ class TestAppMounting(ServerTestBase):
         self.app.mount('/test/', self.subapp)
         self.assertBody('/test/test', '/test/test')
 
+    def test_mount_error_handler(self):
+        # Regression test for #1205: a natively mounted app should render
+        # errors raised inside its own routes through its own error handlers,
+        # not the parent's.
+        @self.subapp.error(500)
+        def child_handler(error):
+            return 'child-500'
+
+        @self.subapp.route('/boom')
+        def boom():
+            raise Exception('kaboom')
+
+        self.app.mount('/test/', self.subapp)
+        self.assertStatus(500, '/test/boom')
+        self.assertBody('child-500', '/test/boom')
+
+    def test_mount_error_handler_parent_unaffected(self):
+        # The parent's own routes must still use the parent's error handlers.
+        @self.app.error(500)
+        def parent_handler(error):
+            return 'parent-500'
+
+        @self.app.route('/boom')
+        def boom():
+            raise Exception('kaboom')
+
+        self.assertStatus(500, '/boom')
+        self.assertBody('parent-500', '/boom')
+
+
 
 class TestAppMerging(ServerTestBase):
     def setUp(self):
