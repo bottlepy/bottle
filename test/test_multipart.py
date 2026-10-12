@@ -127,7 +127,7 @@ class TestMultipartParser(BaseMultipartTest):
                 part.close()
 
     def test_file_seek(self):
-        ''' The file object should be readable withoud a seek(0). '''
+        ''' The file object should be readable without a seek(0). '''
         test_file = 'abc'*1024
         boundary = '---------------------------186454651713519341951581030105'
         request = BytesIO(bottle.tob('\r\n').join(map(bottle.tob,[
