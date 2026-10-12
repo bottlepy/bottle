@@ -357,6 +357,24 @@ class TestRequest(unittest.TestCase):
         self.assertEqual(['value2', '万难'], request.forms.getall('field2'))
         self.assertTrue('field2' not in request.files)
 
+    def test_multipart_many_small_files_above_memfile_total(self):
+        """ Environ: POST can parse multiple files that exceed MEMFILE_MAX in total. """
+        payload = 'x' * (BaseRequest.MEMFILE_MAX // 2 + 1)
+        e = tools.multipart_environ(fields=[], files=[
+            ('file1', 'filename1.txt', payload),
+            ('file2', 'filename2.txt', payload),
+        ])
+        request = BaseRequest(e)
+        files = request.files
+
+        try:
+            self.assertEqual(tob(payload), files['file1'].file.read())
+            self.assertEqual(tob(payload), files['file2'].file.read())
+        finally:
+            files['file1'].file.close()
+            files['file2'].file.close()
+            request.body.close()
+
     def test_json_empty(self):
         """ Environ: Request.json property with empty body. """
         self.assertEqual(BaseRequest({}).json, None)
