@@ -3264,9 +3264,8 @@ class _MultipartPart:
 
         if not line.strip():  # blank line -> end of header segment
             self.finish_header()
-        elif line[0] in " \t" and self.headerlist:
-            name, value = self.headerlist.pop()
-            self.headerlist.append((name, value + line.strip()))
+        elif line[0] in " \t":
+            raise MultipartError("Header continuation not supported")
         else:
             if ":" not in line:
                 raise MultipartError("Syntax error in header: No colon.")

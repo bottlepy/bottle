@@ -151,26 +151,6 @@ class TestMultipartParser(BaseMultipartTest):
         self.assertEqual(p[0].value, test_file)
         self.assertTrue(hasattr(p[0].value, 'encode'))
 
-    def test_multiline_header(self):
-        ''' HTTP allows headers to be multiline. '''
-        test_file = bottle.tob('abc'*1024)
-        test_text = u'Test text\n with\r\n ümläuts!'
-        boundary = '---------------------------186454651713519341951581030105'
-        request = BytesIO(bottle.tob('\r\n').join(map(bottle.tob,[
-        '--' + boundary,
-        'Content-Disposition: form-data;',
-        '\tname="file1"; filename="random.png"',
-        'Content-Type: image/png', '', test_file, '--' + boundary,
-        'Content-Disposition: form-data;',
-        ' name="text"', '', test_text,
-        '--' + boundary + '--',''])))
-        p = list(bottle._MultipartParser(request, boundary, charset='utf8').parse())
-        self.assertEqual(p[0].name, "file1")
-        self.assertEqual(p[0].file.read(), test_file)
-        self.assertEqual(p[0].filename, 'random.png')
-        self.assertEqual(p[1].name, "text")
-        self.assertEqual(p[1].value, test_text)
-
 
 class TestBrokenMultipart(BaseMultipartTest):
 
