@@ -357,6 +357,23 @@ class TestRequest(unittest.TestCase):
         self.assertEqual(['value2', '万难'], request.forms.getall('field2'))
         self.assertTrue('field2' not in request.files)
 
+    def test_multipart_file_larger_than_memfile_max(self):
+        content = 'x' * (BaseRequest.MEMFILE_MAX + 50)
+        e = tools.multipart_environ(fields=[], files=[('file1', 'big.bin', content)])
+        request = BaseRequest(e)
+        uploaded = request.files['file1']
+        self.assertEqual(len(uploaded.file.read()), BaseRequest.MEMFILE_MAX + 50)
+
+    def test_multipart_many_small_files_above_memfile_total(self):
+        chunk = 'x' * (BaseRequest.MEMFILE_MAX // 2 + 20)
+        e = tools.multipart_environ(fields=[], files=[
+            ('file1', 'a.bin', chunk),
+            ('file2', 'b.bin', chunk),
+        ])
+        request = BaseRequest(e)
+        self.assertEqual(len(request.files['file1'].file.read()), len(chunk))
+        self.assertEqual(len(request.files['file2'].file.read()), len(chunk))
+
     def test_json_empty(self):
         """ Environ: Request.json property with empty body. """
         self.assertEqual(BaseRequest({}).json, None)
