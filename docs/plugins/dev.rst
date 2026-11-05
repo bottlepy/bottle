@@ -86,11 +86,11 @@ Common patterns
 
 .. rubric:: Dependency or resource injection
 
-Plugins may checks if the callback accepts a specific keyboard parameter and only apply themselves if that parameter is present. For example, route callbacks that expect a ``db`` keyword argument need a database connection. Routes that do not expect such a parameter can be skipped and not decorated. The paramneter name should be configurable to avoid conflicts with other plugins or route parameters.
+Plugins may checks if the callback accepts a specific keyword parameter and only apply themselves if that parameter is present. For example, route callbacks that expect a ``db`` keyword argument need a database connection. Routes that do not expect such a parameter can be skipped and not decorated. The parameter name should be configurable to avoid conflicts with other plugins or route parameters.
 
 .. rubric:: Request context properties
 
-Plugins may add new request-local properties to the current :data:`request`, for example ``request.session`` for a durable session or ``request.user`` for logged in users. See :class:`Request.__setattr__ <BaseRequest.__setattr__>`.
+Plugins may add new request-local properties to the current :data:`request`, for example ``request.session`` for a durable session or ``request.user`` for logged-in users. See :class:`Request.__setattr__ <BaseRequest.__setattr__>`.
 
 .. rubric:: Response type mapping
 
