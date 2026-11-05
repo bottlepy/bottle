@@ -21,6 +21,28 @@ class TestMultiDict(unittest.TestCase):
         self.assertEqual('cay' in d, 'cay' in m)
         self.assertRaises(KeyError, lambda: m['cay'])
        
+    def test_views_are_reiterable_and_sized(self):
+        """ keys(), values() and items() should return dict-like views that
+            support len() and can be iterated more than once (see issue #1113). """
+        m = MultiDict(a=1, b=2, c=3)
+
+        for name, view in (('keys', m.keys()),
+                           ('values', m.values()),
+                           ('items', m.items())):
+            # Views must support len(), just like real dict views do.
+            self.assertEqual(len(view), 3, "len() failed for %s()" % name)
+            # Views must be re-iterable (generators are exhausted after one pass).
+            first = list(view)
+            second = list(view)
+            self.assertEqual(first, second,
+                             "%s() view is not re-iterable" % name)
+            self.assertEqual(len(first), 3)
+
+        # Views must reflect the newest value for each key, like dict access.
+        m['a'] = 10
+        self.assertEqual(sorted(m.values()), [2, 3, 10])
+        self.assertEqual(dict(m.items()), {'a': 10, 'b': 2, 'c': 3})
+
     def test_ismulti(self):
         """ MultiDict has some special features """
         m = MultiDict(a=5)
