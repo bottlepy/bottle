@@ -4,6 +4,7 @@ import unittest
 from bottle import SimpleTemplate, TemplateError, view, template, touni, tob, html_quote
 import re, os
 import traceback
+from pathlib import Path
 from .tools import chdir
 
 
@@ -23,6 +24,9 @@ class TestSimpleTemplate(unittest.TestCase):
     def test_file(self):
         with chdir(__file__):
             t = SimpleTemplate(name='./views/stpl_simple.tpl', lookup=['.'])
+            self.assertRenders(t, 'start var end\n', var='var')
+        with chdir(__file__):
+            t = SimpleTemplate(name='./views/stpl_simple.tpl', lookup=[Path('.')])
             self.assertRenders(t, 'start var end\n', var='var')
 
     def test_name(self):
