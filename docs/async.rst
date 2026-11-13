@@ -83,9 +83,15 @@ Finally: WebSockets
 
 Lets forget about the low-level details for a while and speak about WebSockets. Since you are reading this article, you probably know what WebSockets are: A bidirectional communication channel between a browser (client) and a web application (server).
 
-Thankfully the `gevent-websocket <https://pypi.python.org/pypi/gevent-websocket/>`_ package does all the hard work for us. Here is a simple WebSocket endpoint that receives messages and just sends them back to the client::
+Thankfully the `gevent-websocket <https://pypi.org/project/gevent-websocket/>`_ package does all the hard work for us. Here is a simple WebSocket endpoint that receives messages and just sends them back to the client::
+
+    from gevent import monkey; monkey.patch_all()
 
     from bottle import request, Bottle, abort
+    from gevent.pywsgi import WSGIServer
+    from geventwebsocket import WebSocketError
+    from geventwebsocket.handler import WebSocketHandler
+
     app = Bottle()
 
     @app.route('/websocket')
@@ -97,20 +103,20 @@ Thankfully the `gevent-websocket <https://pypi.python.org/pypi/gevent-websocket/
         while True:
             try:
                 message = wsock.receive()
+                if message is None:
+                    break
                 wsock.send("Your message was: %r" % message)
             except WebSocketError:
                 break
 
-    from gevent.pywsgi import WSGIServer
-    from geventwebsocket import WebSocketError
-    from geventwebsocket.handler import WebSocketHandler
-    server = WSGIServer(("0.0.0.0", 8080), app,
-                        handler_class=WebSocketHandler)
-    server.serve_forever()
+    if __name__ == '__main__':
+        server = WSGIServer(("0.0.0.0", 8080), app,
+                            handler_class=WebSocketHandler)
+        server.serve_forever()
 
-The while-loop runs until the client closes the connection. You get the idea :)
+The while-loop runs until the client closes the connection. Note that ``from gevent import monkey; monkey.patch_all()`` must be executed before importing Bottle or any other networking modules so that standard library blocking I/O calls are patched to be cooperative.
 
-The client-site JavaScript API is really straight forward, too::
+The client-side JavaScript API is really straight forward, too::
 
     <!DOCTYPE html>
     <html>
@@ -127,3 +133,32 @@ The client-site JavaScript API is really straight forward, too::
     </head>
     </html>
 
+Running with Gunicorn
+~~~~~~~~~~~~~~~~~~~~~
+
+The ``gevent-websocket`` library also ships with a ready-to-use worker class for Gunicorn. When running under Gunicorn, the manual ``WSGIServer`` setup code is no longer necessary. Simply launch your app with::
+
+    gunicorn -k "geventwebsocket.gunicorn.workers.GeventWebSocketWorker" my_app:app
+
+Gunicorn will handle worker lifecycle and WebSocket connections automatically.
+
+
+WSGI, ASGI, and Modern Alternatives
+-----------------------------------
+
+Bottle is a `WSGI <https://peps.python.org/pep-3333/>`_ framework. WSGI is synchronous by design, meaning Bottle request handlers are synchronous and cannot natively use Python's ``async`` and ``await`` syntax. While implementing native ASGI and asynchronous request handlers in Bottle would require rebuilding the framework from scratch, modern Python environments offer several practical patterns when asynchronous features or WebSockets are needed:
+
+* **Separate WebSocket Service Behind a Reverse Proxy (Recommended for Scale):**
+  For production applications with heavy real-time traffic, the cleanest and most scalable architecture separates concerns:
+
+  1. Let Bottle serve your synchronous HTTP endpoints, templates, and REST APIs.
+  2. Run a dedicated asynchronous service (using libraries like `websockets <https://websockets.readthedocs.io/>`_, an ASGI framework, or Node.js) specifically for WebSocket endpoints.
+  3. Put both services behind a reverse proxy (such as Nginx, Caddy, or Traefik), routing standard HTTP paths to Bottle and WebSocket paths (e.g. ``/ws``) to the asynchronous service.
+
+  This keeps your Bottle code simple and allows the WebSocket cluster to scale horizontally on its own.
+
+* **Mounting Bottle into an Asynchronous Server:**
+  If you prefer a single-process deployment:
+
+  * With **aiohttp**: Use `aiohttp-wsgi <https://aiohttp-wsgi.readthedocs.io/>`_ to mount your Bottle WSGI application inside an aiohttp server. aiohttp runs WSGI requests in a thread pool while serving asynchronous handlers and WebSockets on the event loop.
+  * With **ASGI servers** (such as Uvicorn or Hypercorn): Use a WSGI-to-ASGI adapter such as `a2wsgi <https://github.com/abersheeran/a2wsgi>`_ or Starlette's ``WSGIMiddleware``. This allows an existing Bottle application to run directly on top of an ASGI server alongside native ASGI routes.
