@@ -114,16 +114,7 @@ Thankfully the `gevent-websocket <https://pypi.org/project/gevent-websocket/>`_ 
                             handler_class=WebSocketHandler)
         server.serve_forever()
 
-The while-loop runs until the client closes the connection. Note that ``from gevent import monkey; monkey.patch_all()`` must be executed before importing Bottle or any other networking modules so that standard I/O calls are cooperativized.
-
-Running with Gunicorn
-~~~~~~~~~~~~~~~~~~~~~
-
-The ``gevent-websocket`` library also ships with a ready-to-use worker class for Gunicorn. When running under Gunicorn, the manual ``WSGIServer`` setup code is no longer necessary. Simply launch your app with::
-
-    gunicorn -k "geventwebsocket.gunicorn.workers.GeventWebSocketWorker" my_app:app
-
-Gunicorn will handle worker lifecycle and WebSocket connections automatically.
+The while-loop runs until the client closes the connection. Note that ``from gevent import monkey; monkey.patch_all()`` must be executed before importing Bottle or any other networking modules so that standard library blocking I/O calls are patched to be cooperative.
 
 The client-side JavaScript API is really straight forward, too::
 
@@ -141,6 +132,15 @@ The client-side JavaScript API is really straight forward, too::
       </script>
     </head>
     </html>
+
+Running with Gunicorn
+~~~~~~~~~~~~~~~~~~~~~
+
+The ``gevent-websocket`` library also ships with a ready-to-use worker class for Gunicorn. When running under Gunicorn, the manual ``WSGIServer`` setup code is no longer necessary. Simply launch your app with::
+
+    gunicorn -k "geventwebsocket.gunicorn.workers.GeventWebSocketWorker" my_app:app
+
+Gunicorn will handle worker lifecycle and WebSocket connections automatically.
 
 
 WSGI, ASGI, and Modern Alternatives
