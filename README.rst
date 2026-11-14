@@ -3,7 +3,6 @@
   :alt: Bottle Logo
   :align: right
 
-.. image:: https://github.com/bottlepy/bottle/workflows/Tests/badge.svg
     :target: https://github.com/bottlepy/bottle/workflows/Tests
     :alt: Tests Status
 
