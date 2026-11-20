@@ -30,7 +30,7 @@ class TestMakoTemplate(unittest.TestCase):
         self.assertRaises(Exception, MakoTemplate, '%for badsyntax')
 
     def test_inherit(self):
-        """ Templates: Mako lookup and inherience """
+        """ Templates: Mako lookup and inheritance """
         with chdir(__file__):
             t = MakoTemplate(name='mako_inherit', lookup=['./views/']).render(var='v')
             self.assertEqual('o\ncvc\no\n', t)

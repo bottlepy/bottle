@@ -369,7 +369,7 @@ msgid ":meth:`Bottle.mount` parameter order changed."
 msgstr ""
 
 #: ../../changelog.rst:147
-msgid ":meth:`Bottle.route` now accpets an import string for the ``callback`` parameter."
+msgid ":meth:`Bottle.route` now accepts an import string for the ``callback`` parameter."
 msgstr ""
 
 #: ../../changelog.rst:148

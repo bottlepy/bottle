@@ -39,7 +39,7 @@ class TestMultiDict(unittest.TestCase):
         self.assertEqual([('Abc-Def', '6'), ('Abc-Def', '7')], list(m.iterallitems()))
     
     def test_headergetbug(self):
-        ''' Assure HeaderDict.get() to be case insensitive '''
+        ''' Assure HeaderDict.get() to be case-insensitive '''
         d = HeaderDict()
         d['UPPER'] = 'UPPER'
         d['lower'] = 'lower'

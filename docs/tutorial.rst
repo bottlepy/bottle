@@ -274,7 +274,7 @@ Static files or assets such as images or CSS files are not served automatically.
 
 Note that we used the ``:path`` route filter here to allow slash characters in ``filepath`` and serve files from sub-directories, too.
 
-The :func:`static_file` helper function has a lot of benefits compared to handling files manually. Most importantly it prevents `directory traversal attacks <https://owasp.org/www-community/attacks/Path_Traversal>`_ (e.g. ``GET /static/../../../../etc/secrets``) by restricting file access to the specified ``root`` directory. Make sure to use an absolut path for ``root``, though. Relative paths (staring with ``./``) are resolved against the current work directory which may not always be the same as your project directory.
+The :func:`static_file` helper function has a lot of benefits compared to handling files manually. Most importantly it prevents `directory traversal attacks <https://owasp.org/www-community/attacks/Path_Traversal>`_ (e.g. ``GET /static/../../../../etc/secrets``) by restricting file access to the specified ``root`` directory. Make sure to use an absolute path for ``root``, though. Relative paths (staring with ``./``) are resolved against the current work directory which may not always be the same as your project directory.
 
 The :func:`static_file` function returns :class:`HTTPResponse` or :class:`HTTPError`, which can be raised as an exception if you need to.
 
@@ -542,8 +542,8 @@ Property                                       Data source
 ============================================   ==============================================================
 :attr:`Request.GET <BaseRequest.GET>`          Query parameters
 :attr:`Request.query <BaseRequest.query>`      Alias for :attr:`Request.GET <BaseRequest.GET>`
-:attr:`Request.POST <BaseRequest.POST>`        orm fields and file uploads combined
-:attr:`Request.forms <BaseRequest.forms>`      orm fields
+:attr:`Request.POST <BaseRequest.POST>`        Form fields and file uploads combined
+:attr:`Request.forms <BaseRequest.forms>`      Form fields
 :attr:`Request.files <BaseRequest.files>`      File uploads or very large form fields
 :attr:`Request.params <BaseRequest.params>`    Query parameters and form fields combined
 ============================================   ==============================================================
@@ -557,13 +557,13 @@ First of all, :class:`FormsDict` is a subclass of :class:`MultiDict` and can sto
   for choice in request.forms.getall('multiple_choice'):
       do_something(choice)
 
-Attribute-like access is also supported, returning empty strings for missing values. This simplifies code a lot whend ealing with lots of optional attributes::
+Attribute-like access is also supported, returning empty strings for missing values. This simplifies code a lot when dealing with lots of optional attributes::
 
   name = request.query.name    # may be an empty string
 
 .. rubric:: A word on unicode and character encodings
 
-Unicode characters in the request path, query parameters or cookies are a bit tricky. HTTP is a very old byte-based protocol that predates unicode and lacks explicit encoding information. This is why WSGI servers have to fall back on `ISO-8859-1` (aka `latin1`, a reversible input encoding) for those estrings. Modern browsers default to `utf8`, though. It's a bit much to ask application developers to translate every single user input string to the correct encoding manually. Bottle makes this easy and just assumes `utf8` for everything. All strings returned by Bottle APIs support the full range of unicode characters, as long as the webpage or HTTP client follows best practices and does not break with established standards.
+Unicode characters in the request path, query parameters or cookies are a bit tricky. HTTP is a very old byte-based protocol that predates unicode and lacks explicit encoding information. This is why WSGI servers have to fall back on `ISO-8859-1` (aka `latin1`, a reversible input encoding) for those strings. Modern browsers default to `utf8`, though. It's a bit much to ask application developers to translate every single user input string to the correct encoding manually. Bottle makes this easy and just assumes `utf8` for everything. All strings returned by Bottle APIs support the full range of unicode characters, as long as the webpage or HTTP client follows best practices and does not break with established standards.
 
 Query Parameters
 --------------------------------------------------------------------------------
@@ -656,7 +656,7 @@ JSON
 
 For JavaScript and REST APIs it is very common to send ``application/json`` to the server instead of from data.
 The :attr:`Request.json <BaseRequest.json>` attribute contains the parsed data structure if available, or ``None`` for empty
-requests or those that did not contain ``application/json`` data. Parsing errors trigger an appropiate :exc:`HTTPError`.
+requests or those that did not contain ``application/json`` data. Parsing errors trigger an appropriate :exc:`HTTPError`.
 
 
 Raw Request Data
