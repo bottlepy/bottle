@@ -1741,7 +1741,8 @@ class BaseResponse:
             out.append(('Content-Type', self.default_content_type))
         if self._cookies:
             for c in self._cookies.values():
-                out.append(('Set-Cookie', c.OutputString()))
+                value = c.OutputString()
+                out.append(('Set-Cookie', value if value.isascii() else value.encode('utf8', 'surrogateescape').decode('latin1')))
         return out
 
     content_type = HeaderProperty('Content-Type')

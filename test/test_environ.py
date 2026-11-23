@@ -608,6 +608,29 @@ class TestResponse(unittest.TestCase):
         self.assertEqual(cookies[0], 'name1=value; Max-Age=5')
         self.assertEqual(cookies[1], 'name2="value 2"; Path=/foo')
 
+    def test_set_cookie_non_latin1_value_is_recoded(self):
+        """ Set-Cookie values get the same utf8->latin1 recode as all
+            other headers, so headerlist stays encodable in latin1
+            (PEP 3333) even for cookie values outside of latin1. """
+        r = BaseResponse()
+        r.set_cookie('name', 'done✓')
+        r.set_header('X-Test', 'done✓')
+        for name, value in r.headerlist:
+            value.encode('latin1')  # Must not raise UnicodeEncodeError
+        cookies = [value for name, value in r.headerlist
+                   if name.title() == 'Set-Cookie']
+        headers = [value for name, value in r.headerlist
+                   if name.title() == 'X-Test']
+        self.assertEqual(cookies[0].split('=', 1)[1].strip('"'),
+                         headers[0])
+
+    def test_set_cookie_ascii_value_unchanged(self):
+        r = BaseResponse()
+        r.set_cookie('name', 'value')
+        cookies = [value for name, value in r.headerlist
+                   if name.title() == 'Set-Cookie']
+        self.assertEqual(cookies[0], 'name=value')
+
     def test_set_cookie_value_long_string(self):
         r = BaseResponse()
         self.assertRaises(ValueError, r.set_cookie, name='test', value='x' * 4097)
