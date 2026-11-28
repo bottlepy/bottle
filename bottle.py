@@ -69,7 +69,7 @@ if __name__ == '__main__':
 # Imports and Python 2/3 unification ##########################################
 ###############################################################################
 
-import base64, calendar, email.utils, functools, hmac, itertools,\
+import base64, codecs, calendar, email.utils, functools, hmac, itertools,\
        mimetypes, os, re, tempfile, threading, time, warnings, weakref, hashlib
 
 from types import FunctionType
@@ -3069,6 +3069,45 @@ def _lscmp(a, b):
                    for x, y in zip(a, b)) and len(a) == len(b)
 
 
+# fmt: off
+#: Known-good header charsets and some common aliases mapped to their actual name
+_KNOWN_CHARSETS = {
+    alias: codecs.lookup(alias).name
+    for alias in (
+        "utf-8", "utf8",
+        "ascii", "us-ascii",
+        "iso8859-1", "iso-8859-1", "latin1", "latin-1",
+    )
+}
+
+#: Python specific charsets that should never be used by valid clients.
+_BAD_CHARSETS = {
+    "unicode-escape", "punycode", "rot-13", "raw-unicode-escape", "hex",
+    "bz2", "palmos", "undefined", "zlib", "base64", "idna", "quopri",
+    "uu", "mbcs", "oem"
+}
+# fmt: on
+
+
+def _safe_charset(charset, fallback=None):
+    """Return the actual name of a given charset or common alias while
+    rejecting problematic or unknown charsets."""
+    if charset == "utf-8":
+        return "utf-8"
+    known = _KNOWN_CHARSETS.get(charset.lower())
+    if known:
+        return known
+    try:
+        info = codecs.lookup(charset)
+        if info.name not in _BAD_CHARSETS:
+            return info.name
+    except LookupError:
+        pass
+    if fallback:
+        return fallback
+    raise LookupError("Invalid or unknown charset: %r" % (charset,))
+
+
 def cookie_encode(data, key, digestmod=None):
     """ Encode and sign a pickle-able object. Return a (byte) string """
     depr(0, 13, "cookie_encode() will be removed soon.",
@@ -3232,7 +3271,7 @@ class _MultipartParser(object):
         mem_limit=2 ** 20,
         memfile_limit=2 ** 18,
         buffer_size=2 ** 16,
-        charset="latin1",
+        charset="utf-8",
     ):
         self.stream = stream
         self.boundary = boundary
@@ -3241,7 +3280,7 @@ class _MultipartParser(object):
         self.memfile_limit = memfile_limit
         self.mem_limit = min(mem_limit, self.disk_limit)
         self.buffer_size = min(buffer_size, self.mem_limit)
-        self.charset = charset
+        self.charset = _safe_charset(charset, "utf-8")
 
         if not boundary:
             raise MultipartError("No boundary.")
@@ -3347,7 +3386,7 @@ class _MultipartParser(object):
 
 
 class _MultipartPart(object):
-    def __init__(self, buffer_size=2 ** 16, memfile_limit=2 ** 18, charset="latin1"):
+    def __init__(self, buffer_size=2 ** 16, memfile_limit=2 ** 18, charset="utf-8"):
         self.headerlist = []
         self.headers = None
         self.file = False
@@ -3438,9 +3477,9 @@ class _MultipartPart(object):
 
     @property
     def value(self):
-        """ Data decoded with the specified charset """
-
-        return self.raw.decode(self.charset)
+        """Return the entire payload as a decoded text string.
+        Warning, this may consume a lot of memory, check :attr:`size` first."""
+        return self.raw.decode(_safe_charset(self.charset, "utf-8"))
 
     @property
     def raw(self):
