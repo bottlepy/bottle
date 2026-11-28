@@ -42,7 +42,7 @@ class BaseMultipartTest(unittest.TestCase):
             if part.name != name: continue
             self.assertEqual(part.filename, None)
             self.assertEqual(part.content_type, None)
-            self.assertEqual(part.charset, "utf8")
+            self.assertEqual(part.charset, "utf-8")
             self.assertEqual(part.value, data)
             break
         else:
