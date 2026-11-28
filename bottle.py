@@ -1002,8 +1002,21 @@ class Bottle:
         # TODO: Handle these explicitly in handle() or make them iterable.
         if isinstance(out, HTTPError):
             out.apply(response)
-            out = self.error_handler.get(out.status_code,
-                                         self.default_error_handler)(out)
+            # A natively mounted app's routes are merged into the parent's
+            # router, so an error raised inside one of them normally renders
+            # through the parent's error handlers. Prefer the error handler
+            # registered by the app that actually owns the matched route (the
+            # mounted child); fall back to ``self`` for errors with no
+            # attributable route, e.g. an unmatched URL (see issue #1205).
+            error_app = self
+            try:
+                route = request.route
+            except RuntimeError:
+                route = None
+            if route is not None and route.app is not self:
+                error_app = route.app
+            out = error_app.error_handler.get(out.status_code,
+                                              error_app.default_error_handler)(out)
             return self._cast(out)
         if isinstance(out, HTTPResponse):
             out.apply(response)
